@@ -4,9 +4,13 @@ FROM eclipse-temurin:23-jdk AS builder
 # Establecer el directorio de trabajo dentro del contenedor
 WORKDIR /app
 
+COPY ./mvnw /app/mvnw
+COPY ./pom.xml /app/pom.xml
+RUN apt-get update && apt-get install -y maven
+
 
 # Dar permisos de ejecución al mvnw (si es necesario)
-#RUN chmod +x mvnw
+RUN chmod +x mvnw
 
 
 #RUN  ./mvnw clean package -DskipTest
