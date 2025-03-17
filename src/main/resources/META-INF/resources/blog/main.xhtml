@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ui:composition lang="es"
+                xmlns:f="jakarta.faces.core"
+                xmlns:h="jakarta.faces.html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:fs="http://xmlns.jcp.org/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                template="/template/main.xhtml">
+
+    <h:head>
+        <title>Blog de Viajero</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f9;
+                margin: 0;
+                padding: 0;
+                display: flex;
+                flex-direction: column;
+                height: 100vh;
+            }
+
+            /* Barra de búsqueda */
+            .search-bar {
+                width: 100%;
+                background-color: #34495e;
+                padding: 10px;
+                color: white;
+                display: flex;
+                justify-content: center;
+                position: fixed;
+                top: 0;
+                left: 0;
+                z-index: 10;
+            }
+
+            .search-bar input[type="text"] {
+                width: 60%;
+                padding: 10px;
+                font-size: 16px;
+                border: none;
+                border-radius: 4px;
+                margin-right: 10px;
+            }
+
+            .search-bar button {
+                padding: 10px 20px;
+                font-size: 16px;
+                background-color: #2980b9;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+            }
+
+            .search-bar button:hover {
+                background-color: #3498db;
+            }
+
+            /* Carrusel */
+            .carousel {
+                width: 100%;
+                height: 300px;
+                background-color: #2c3e50;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                color: white;
+                font-size: 24px;
+                text-align: center;
+                margin-top: 60px; /* Espacio para la barra de búsqueda */
+            }
+
+            .carousel img {
+                width: 100%;
+                height: auto;
+            }
+
+            /* Lado izquierdo - Categorías */
+            .sidebar {
+                width: 25%;
+                background-color: #2c3e50;
+                padding: 20px;
+                color: white;
+                height: 100vh;
+                position: fixed;
+                top: 60px;
+                left: 0;
+                box-sizing: border-box;
+                z-index: 5;
+                overflow-y: auto;
+                border-right: 1px solid #7f8c8d;
+            }
+
+            .sidebar h2 {
+                color: #ecf0f1;
+                font-size: 24px;
+                margin-bottom: 20px;
+            }
+
+            .sidebar ul {
+                list-style-type: none;
+                padding-left: 0;
+            }
+
+            .sidebar ul li {
+                margin: 15px 0;
+            }
+
+            .sidebar ul li a {
+                color: #ecf0f1;
+                text-decoration: none;
+                font-size: 18px;
+                transition: color 0.3s;
+            }
+
+            .sidebar ul li a:hover {
+                color: #2980b9;
+                text-decoration: underline;
+            }
+
+            /* Lado derecho - Posts */
+            .main-content {
+                width: 75%;
+                padding: 20px;
+                margin-left: 30%;
+                background-color: #ffffff;
+                box-sizing: border-box;
+                height: calc(100vh - 120px);
+                overflow-y: auto;
+                padding-top: 20px;
+            }
+
+            .post {
+                border-radius: 10px;
+                padding: 20px;
+                margin-bottom: 20px;
+                background-color: #fafafa;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+            }
+
+            .post:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            }
+
+            .post img {
+                width: 100%;
+                height: 250px;
+                object-fit: cover;
+                border-radius: 8px;
+                margin-bottom: 15px;
+            }
+
+            .post h3 {
+                font-size: 24px;
+                color: #34495e;
+                margin-bottom: 10px;
+            }
+
+            .post p {
+                font-size: 16px;
+                color: #7f8c8d;
+                margin-bottom: 20px;
+            }
+
+            .read-more {
+                color: #2980b9;
+                text-decoration: none;
+                font-weight: bold;
+                transition: color 0.3s;
+            }
+
+            .read-more:hover {
+                text-decoration: underline;
+                color: #3498db;
+            }
+
+            /* Suscripción al boletín */
+            .subscribe {
+                background-color: #ecf0f1;
+                padding: 20px;
+                text-align: center;
+                margin-top: 30px;
+                border-radius: 8px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            }
+
+            .subscribe input[type="email"] {
+                padding: 10px;
+                font-size: 16px;
+                border-radius: 4px;
+                margin-right: 10px;
+                width: 50%;
+                margin-bottom: 10px;
+            }
+
+            .subscribe button {
+                padding: 10px 20px;
+                font-size: 16px;
+                background-color: #2980b9;
+                color: white;
+                border: none;
+                border-radius: 4px;
+            }
+
+            .subscribe button:hover {
+                background-color: #3498db;
+            }
+
+            /* Footer */
+            footer {
+                background-color: #34495e;
+                color: white;
+                text-align: center;
+                padding: 10px 0;
+                position: fixed;
+                bottom: 0;
+                width: 100%;
+            }
+
+            /* Iconos sociales */
+            .social-icons {
+                display: flex;
+                justify-content: center;
+                margin-top: 10px;
+            }
+
+            .social-icons a {
+                text-decoration: none;
+                margin: 0 15px;
+                color: white;
+            }
+        </style>
+    </h:head>
+
+    <ui:define name="contenido">
+      
+    <!-- Barra de búsqueda -->
+    <div class="search-bar">
+        <h:form>
+            <h:inputText value="#{searchBean.query}" placeholder="Buscar en los posts..." />
+            <h:commandButton value="Buscar" action="#{searchBean.search}" />
+        </h:form>
+    </div>
+
+    <!-- Carrusel de imágenes -->
+    <div class="carousel">
+        <p>¡Descubre nuestras nuevas rutas!</p>
+        <img src="images/cancun_vuelo.jpg" alt="Vuelo a Cancún" />
+    </div>
+
+    <!-- Contenido principal -->
+    <div style="display: flex; width: 100%; margin-top: 120px;">
+        <!-- Sidebar - Categorías -->
+        <div class="sidebar">
+            <h2>Categorías</h2>
+            <h:panelGroup>
+                <ul>
+                    <li><h:commandLink value="Vuelos" action="#"></h:commandLink></li>
+                    <li><h:commandLink value="Destinos" action="#"></h:commandLink></li>
+                    <li><h:commandLink value="Consejos para Viajeros" action="#"></h:commandLink></li>
+                </ul>
+            </h:panelGroup>
+        </div>
+
+        <!-- Main Content - Posts -->
+        <div class="main-content">
+            <div class="post">
+                <img src="images/vuelo_cancun.jpg" alt="Vuelo a Cancún" />
+                <h3><h:outputText value="¡Nuevo vuelo a Cancún! Descubre el paraíso" /></h3>
+                <p><h:outputText value="Estamos emocionados de anunciar nuestro nuevo vuelo directo a Cancún. ¡Reserva tu asiento ahora y prepárate para unas vacaciones inolvidables!" /></p>
+                <h:commandLink value="Leer más" action="#" styleClass="read-more" />
+            </div>
+
+            <div class="post">
+                <img src="images/vuelo_internacional.jpg" alt="Consejos para viajar" />
+                <h3><h:outputText value="Los mejores consejos para tu primer vuelo internacional" /></h3>
+                <p><h:outputText value="Si es tu primer vuelo internacional, aquí te damos algunos consejos útiles para hacer que tu experiencia sea más cómoda y sin estrés." /></p>
+                <h:commandLink value="Leer más" action="#" styleClass="read-more" />
+            </div>
+
+            <div class="post">
+                <img src="images/aerolinea.jpg" alt="Por qué elegir nuestra aerolínea" />
+                <h3><h:outputText value="¿Por qué elegir nuestra aerolínea para tu próximo viaje?" /></h3>
+                <p><h:outputText value="Con una flota moderna, un servicio excepcional y vuelos directos a más de 50 destinos, estamos listos para hacer de tu viaje una experiencia única." /></p>
+                <h:commandLink value="Leer más" action="#" styleClass="read-more" />
+            </div>
+        </div>
+    </div>
+
+    <!-- Suscripción al boletín -->
+    <div class="subscribe">
+        <h2>¡Suscríbete a nuestro boletín!</h2>
+        <h:form>
+            <h:inputText value="#{subscriptionBean.email}" placeholder="Ingresa tu email" required="true" />
+            <h:commandButton value="Suscribirse" action="#{subscriptionBean.subscribe}" />
+        </h:form>
+    </div>
+      
+    </ui:define>
+
+</ui:composition>

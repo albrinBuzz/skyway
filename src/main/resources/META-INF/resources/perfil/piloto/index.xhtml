@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ui:composition lang="es"
+                xmlns:f="jakarta.faces.core"
+                xmlns:h="jakarta.faces.html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:fs="http://xmlns.jcp.org/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                template="/home/template/main.xhtml">
+
+    <h:head>
+        <title>Próximos Vuelos</title>
+
+    </h:head>
+
+
+    <ui:define name="contenido">
+
+
+	<!-- Navbar End -->
+<!-- Header Start -->
+<div class="container-fluid bg-breadcrumb">
+    <div class="container text-center py-5" style="max-width: 900px;">
+        <h3 class="text-white display-3 mb-4">Perfil del Piloto</h3>
+        <ol class="breadcrumb justify-content-center mb-0">
+            <li class="breadcrumb-item"><h:link value="Home" outcome="/" /></li>
+            <li class="breadcrumb-item active text-white">Perfil del Piloto</li>
+        </ol>
+    </div>
+</div>
+<!-- Header End -->
+
+<!-- User Profile Start -->
+<div class="container py-5">
+    <h2 class="mb-4">Información Personal</h2>
+    <h:dataTable value="#{userBean.usuario}" var="usuario" border="1" styleClass="table table-bordered">
+        <h:column>
+            <f:facet name="header">RUT:</f:facet>
+            #{usuario.rutUsuario}
+        </h:column>
+        <h:column>
+            <f:facet name="header">Nombre</f:facet>
+            #{usuario.nombre}
+        </h:column>
+        <h:column>
+            <f:facet name="header">Correo Electrónico:</f:facet>
+            #{usuario.correoElectronico}
+        </h:column>
+        <h:column>
+            <f:facet name="header">Teléfono:</f:facet>
+            #{usuario.telefono}
+        </h:column>
+        <h:column>
+            <f:facet name="header">Fecha de Nacimiento:</f:facet>
+            #{usuario.fechaNacimiento}
+        </h:column>
+    </h:dataTable>
+
+    
+    <h2 class="mb-4"> Vuelos</h2>
+    <h:dataTable value="#{perfilView.vuelos}" var="vuelo" border="1" styleClass="table table-bordered">
+        <h:column>
+            <f:facet name="header">Número de Vuelo</f:facet>
+            #{vuelo.numeroVuelo}
+        </h:column>
+        <h:column>
+            <f:facet name="header">Fecha de Salida</f:facet>
+            #{vuelo.fechaHoraLlegada}
+        </h:column>
+        <h:column>
+            <f:facet name="header">Salida</f:facet>
+            #{vuelo.aeropuerto1.nombreAeropuerto} (#{vuelo.aeropuerto1.codigoIata})
+        </h:column>
+        <h:column>
+            <f:facet name="header">Estado</f:facet>
+            #{vuelo.estadoVuelo.descripcion}
+        </h:column>
+        <h:column>
+            <f:facet name="header">Cantidad Pasajeros</f:facet>
+            #{vuelo.reservas.size()}
+        </h:column>
+        <h:column>
+            <f:facet name="header">Acciones</f:facet>
+            <h:link value="Ver Detalles" outcome="detalle_vuelo" />
+        </h:column>
+    </h:dataTable>
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+<!-- User Profile End -->
+	
+	
+
+
+    </ui:define>
+
+</ui:composition>

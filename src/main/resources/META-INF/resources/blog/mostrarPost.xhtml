@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition lang="es"
+                xmlns:f="jakarta.faces.core"
+                xmlns:h="jakarta.faces.html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                template="/template/main.xhtml">
+
+    <h:head>
+        <title>Detalle del Post - Blog de Aerolínea</title>
+        <style>
+            body {
+                font-family: 'Roboto', sans-serif;
+                margin: 0;
+                padding: 0;
+                background-color: #f9f9f9;
+                display: flex;
+                flex-direction: column;
+            }
+
+            /* Contenedor principal del post */
+            .post-detail {
+                width: 80%;
+                max-width: 1000px;
+                margin: 80px auto;
+                background-color: #fff;
+                padding: 40px;
+                border-radius: 8px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+                font-size: 18px;
+            }
+
+            /* Título del post */
+            .post-detail h1 {
+                font-size: 40px;
+                color: #2c3e50;
+                margin-bottom: 20px;
+                font-weight: bold;
+            }
+
+            /* Información del post (fecha y autor) */
+            .post-detail .date {
+                font-size: 16px;
+                color: #95a5a6;
+                margin-bottom: 40px;
+            }
+
+            /* Estilo para las imágenes dentro del post */
+            .post-detail img {
+                width: 100%;
+                border-radius: 8px;
+                margin-bottom: 40px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            }
+
+            /* Texto del contenido del post */
+            .post-detail p {
+                font-size: 18px;
+                color: #7f8c8d;
+                line-height: 1.8;
+                margin-bottom: 30px;
+                text-align: justify;
+            }
+
+            /* Sección para los botones de redes sociales */
+            .social-share {
+                display: flex;
+                justify-content: space-between;
+                margin-top: 40px;
+                border-top: 2px solid #ecf0f1;
+                padding-top: 20px;
+            }
+
+            .social-share button {
+                padding: 12px 20px;
+                background-color: #2980b9;
+                color: white;
+                font-size: 16px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                transition: background-color 0.3s ease;
+                width: 48%;
+            }
+
+            .social-share button:hover {
+                background-color: #3498db;
+            }
+
+            /* Sección de comentarios */
+            .comment-section {
+                margin-top: 60px;
+                border-top: 2px solid #ecf0f1;
+                padding-top: 40px;
+            }
+
+            .comment-section h3 {
+                font-size: 28px;
+                color: #2c3e50;
+                margin-bottom: 20px;
+            }
+
+            .comment-section .comment-box {
+                display: flex;
+                flex-direction: column;
+                margin-bottom: 30px;
+            }
+
+            .comment-section input[type="text"] {
+                width: 100%;
+                padding: 12px;
+                font-size: 16px;
+                border-radius: 8px;
+                border: 1px solid #ecf0f1;
+                background-color: #f7f7f7;
+                margin-bottom: 15px;
+            }
+
+            .comment-section .comment-list {
+                margin-top: 20px;
+            }
+
+            .comment-section .comment {
+                padding: 15px;
+                border-radius: 8px;
+                background-color: #ecf0f1;
+                margin-bottom: 20px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            }
+
+            .comment-section .comment p {
+                margin: 0;
+                color: #2c3e50;
+            }
+
+            /* Footer */
+            footer {
+                background-color: #34495e;
+                color: white;
+                text-align: center;
+                padding: 30px;
+            }
+
+            .social-icons {
+                display: flex;
+                justify-content: center;
+                margin-top: 15px;
+            }
+
+            .social-icons a {
+                text-decoration: none;
+                color: white;
+                margin: 0 15px;
+                font-size: 18px;
+                transition: color 0.3s;
+            }
+
+            .social-icons a:hover {
+                color: #3498db;
+            }
+
+        </style>
+    </h:head>
+
+    <ui:define name="contenido">
+        <h:form id="formMostrarPost">
+            <!-- Detalle del Post -->
+            <div class="post-detail">
+  
+                <!-- Título y fecha del post -->
+                <h1><h:outputText value="¡Nuevo vuelo a Cancún! Descubre el paraíso" /></h1>
+                <p class="date">
+                    <h:outputText value="Publicado el 23 de Febrero, 2025 por Aerolínea SkyWay" />
+                </p>
+
+                <!-- Contenido del post -->
+                <div class="content">
+                    <h:outputText value="#{postBean.contenidoDesdeFlash}" escape="false" style="font-size: 18px;" />
+                </div>
+
+                <!-- Botones para compartir en redes sociales -->
+                <div class="social-share">
+                    <h:commandButton value="Compartir en Facebook" styleClass="social-share-button" />
+                    <h:commandButton value="Compartir en Twitter" styleClass="social-share-button" />
+                </div>
+
+                <!-- Sección de comentarios -->
+                <div class="comment-section">
+                    <h3>Comentarios</h3>
+                    <div class="comment-box">
+                        <h:form>
+                            <h:inputText value="#{commentBean.nuevoComentario}" placeholder="Escribe un comentario..." required="true" />
+                            <h:commandButton value="Comentar" action="#{commentBean.agregarComentario}" />
+                        </h:form>
+                    </div>
+
+                    <div class="comment-list">
+                        <ui:repeat value="#{commentBean.comentarios}" var="comentario">
+                            <div class="comment">
+                                <p><strong><h:outputText value="#{comentario.nombre}" /></strong>: <h:outputText value="#{comentario.texto}" /></p>
+                            </div>
+                        </ui:repeat>
+                    </div>
+                </div>
+
+                <h:commandLink value="Volver al Blog" action="#{postBean.volverAlBlog}" />
+            </div>
+
+        </h:form>
+    </ui:define>
+
+    <!-- Footer -->
+    <footer>
+        <p>© 2025 Aerolínea SkyWay. Todos los derechos reservados.</p>
+        <div class="social-icons">
+            <a href="#">Facebook</a>
+            <a href="#">Twitter</a>
+            <a href="#">Instagram</a>
+        </div>
+    </footer>
+
+</ui:composition>

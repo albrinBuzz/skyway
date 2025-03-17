@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en"  xmlns:th="http://www.thymeleaf.org">
+
+    <head>
+     <meta charset="utf-8">
+    <title>Travela - Tourism Website Template</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="" name="keywords">
+    <meta content="" name="description">
+
+    <!-- Google Web Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@500;600&family=Roboto&display=swap" rel="stylesheet"> 
+
+	<link rel="icon" th:href="@{/img/Spring.jpg}" type="image/png">
+    <!-- Icon Font Stylesheet -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Customized Bootstrap Stylesheet -->
+    <link th:href="@{css/bootstrap.min.css}" rel="stylesheet">
+
+    <!-- Template Stylesheet -->
+    <link th:href="@{css/style.css}" rel="stylesheet">
+        
+	   <style>
+		
+		.pagination-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.pagination {
+    list-style-type: none;
+    padding: 0;
+    display: flex;
+}
+
+.pagination .page-item {
+    margin: 0 5px;
+}
+
+.pagination .page-link {
+    text-decoration: none;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    color: #007bff;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.pagination .page-link:hover {
+    background-color: #f0f0f0;
+    color: #0056b3;
+}
+
+.pagination .active .page-link {
+    background-color: #007bff;
+    color: white;
+}
+
+.pagination .disabled .page-link {
+    color: #ccc;
+    pointer-events: none;
+}
+			
+		</style>   
+        
+    </head>
+	
+
+
+    <body>
+
+         <header th:insert="~{home/homeTemplate/home.html::header}"></header>
+
+<div class="container-fluid search-bar">
+    <div class="container">
+        <h2 class="text-center mb-4">Buscar Vuelos</h2>
+        <div class="position-relative rounded bg-light p-5 shadow">
+            <ul class="nav nav-tabs" id="searchTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link active" id="one-way-tab" data-bs-toggle="tab" href="#one-way" role="tab" aria-controls="one-way" aria-selected="true">Solo Ida</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="round-trip-tab" data-bs-toggle="tab" href="#round-trip" role="tab" aria-controls="round-trip" aria-selected="false">Ida y Vuelta</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="airline-tab" data-bs-toggle="tab" href="#airline" role="tab" aria-controls="airline" aria-selected="false">Aerolínea</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="price-tab" data-bs-toggle="tab" href="#price" role="tab" aria-controls="price" aria-selected="false">Precio</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="duration-tab" data-bs-toggle="tab" href="#duration" role="tab" aria-controls="duration" aria-selected="false">Duración del Vuelo</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="stops-tab" data-bs-toggle="tab" href="#stops" role="tab" aria-controls="stops" aria-selected="false">Escalas</a>
+                </li>
+            </ul>
+
+            <div class="tab-content mt-3" id="searchTabsContent">
+                <!-- Formulario Solo Ida -->
+                <div class="tab-pane fade show active" id="one-way" role="tabpanel" aria-labelledby="one-way-tab">
+                    <form method="GET" th:action="@{/buscar_vuelos}">
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3">
+                                <label for="departureCity" class="form-label">Desde (Ciudad de Salida)</label>
+                                <select class="form-select" id="departureCity" name="departureCity" required>
+                                    <option value="">Seleccione una ciudad</option>
+                                    <option value="Buenos Aires">Buenos Aires</option>
+                                    <option value="Santiago">Santiago</option>
+                                    <option value="Bogotá">Bogotá</option>
+                                    <option value="Madrid">Madrid</option>
+                                    <option value="Nueva York">Nueva York</option>
+                                    <option value="São Paulo">São Paulo</option>
+                                    <option value="Río de Janeiro">Río de Janeiro</option>
+                                    <option value="Ciudad de México">Ciudad de México</option>
+                                    <option value="Lima">Lima</option>
+                                    <option value="París">París</option>
+                                    <option value="Roma">Roma</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="arrivalCity" class="form-label">Hasta (Ciudad de Llegada)</label>
+                                <select class="form-select" id="arrivalCity" name="arrivalCity" required>
+                                    <option value="">Seleccione una ciudad</option>
+                                    <option value="Buenos Aires">Buenos Aires</option>
+                                    <option value="Santiago">Santiago</option>
+                                    <option value="Bogotá">Bogotá</option>
+                                    <option value="Madrid">Madrid</option>
+                                    <option value="Nueva York">Nueva York</option>
+                                    <option value="São Paulo">São Paulo</option>
+                                    <option value="Río de Janeiro">Río de Janeiro</option>
+                                    <option value="Ciudad de México">Ciudad de México</option>
+                                    <option value="Lima">Lima</option>
+                                    <option value="París">París</option>
+                                    <option value="Roma">Roma</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <label for="departureDate" class="form-label">Fecha de salida entre:</label>
+                            <div class="col-md-6 mb-3">
+                                <label for="departureDate" class="form-label">Fecha salida</label>
+                                <input type="date" class="form-control" id="departureDate" name="departureDate" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="returnDate" class="form-label">Fecha salida limite</label>
+                                <input type="date" class="form-control" id="returnDate" name="returnDate" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3">
+                                <label for="classTypeOneWay" class="form-label">Clase de Asiento</label>
+                                <select class="form-select" id="classTypeOneWay" name="classType" required>
+                                    <option value="">Seleccione una clase</option>
+                                    <option value="Económica">Económica</option>
+                                    <option value="Ejecutiva">Ejecutiva</option>
+                                    <option value="Primera">Primera</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary btn-lg">Buscar Vuelos</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Formulario Ida y Vuelta -->
+                <div class="tab-pane fade" id="round-trip" role="tabpanel" aria-labelledby="round-trip-tab">
+                    <form method="GET" th:action="@{/buscar_vuelos}">
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3">
+                                <label for="departureCityRound" class="form-label">Desde (Ciudad de Salida)</label>
+                                <select class="form-select" id="departureCityRound" name="departureCity" required>
+                                    <option value="">Seleccione una ciudad</option>
+                                    <option value="Buenos Aires">Buenos Aires</option>
+                                    <option value="Santiago">Santiago</option>
+                                    <option value="Bogotá">Bogotá</option>
+                                    <option value="Madrid">Madrid</option>
+                                    <option value="Nueva York">Nueva York</option>
+                                    <option value="São Paulo">São Paulo</option>
+                                    <option value="Río de Janeiro">Río de Janeiro</option>
+                                    <option value="Ciudad de México">Ciudad de México</option>
+                                    <option value="Lima">Lima</option>
+                                    <option value="París">París</option>
+                                    <option value="Roma">Roma</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="arrivalCityRound" class="form-label">Hasta (Ciudad de Llegada)</label>
+                                <select class="form-select" id="arrivalCityRound" name="arrivalCity" required>
+                                    <option value="">Seleccione una ciudad</option>
+                                    <option value="Buenos Aires">Buenos Aires</option>
+                                    <option value="Santiago">Santiago</option>
+                                    <option value="Bogotá">Bogotá</option>
+                                    <option value="Madrid">Madrid</option>
+                                    <option value="Nueva York">Nueva York</option>
+                                    <option value="São Paulo">São Paulo</option>
+                                    <option value="Río de Janeiro">Río de Janeiro</option>
+                                    <option value="Ciudad de México">Ciudad de México</option>
+                                    <option value="Lima">Lima</option>
+                                    <option value="París">París</option>
+                                    <option value="Roma">Roma</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3">
+                                <label for="departureDateRound" class="form-label">Fecha de Salida</label>
+                                <input type="date" class="form-control" id="departureDateRound" name="departureDate" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="returnDateRound" class="form-label">Fecha de Regreso</label>
+                                <input type="date" class="form-control" id="returnDateRound" name="returnDate" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3">
+                                <label for="classTypeRoundTrip" class="form-label">Clase de Asiento</label>
+                                <select class="form-select" id="classTypeRoundTrip" name="classType" required>
+                                    <option value="">Seleccione una clase</option>
+                                    <option value="Económica">Económica</option>
+                                    <option value="Ejecutiva">Ejecutiva</option>
+                                    <option value="Primera">Primera</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary btn-lg">Buscar Vuelos</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Formulario Aerolínea -->
+                <div class="tab-pane fade" id="airline" role="tabpanel" aria-labelledby="airline-tab">
+                    <form method="GET" th:action="@{/buscar_vuelos}">
+                        <div class="row mb-4">
+                            <div class="col-md-12 mb-3">
+                                <label for="airline" class="form-label">Selecciona Aerolínea</label>
+                                <select class="form-select" id="airline" name="airline">
+                                    <option value="">Seleccione una aerolínea</option>
+                                    <option value="Aerolínea 1">Aerolínea 1</option>
+                                    <option value="Aerolínea 2">Aerolínea 2</option>
+                                    <option value="Aerolínea 3">Aerolínea 3</option>
+                                    <option value="Aerolínea 4">Aerolínea 4</option>
+                                    <option value="Aerolínea 5">Aerolínea 5</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary btn-lg">Buscar Vuelos</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Formulario Precio -->
+                <div class="tab-pane fade" id="price" role="tabpanel" aria-labelledby="price-tab">
+                    <form method="GET" th:action="@{/buscar_vuelos}">
+                        <div class="row mb-4">
+                            <div class="col-md-12 mb-3">
+                                <label for="priceRange" class="form-label">Rango de Precio</label>
+                                <input type="number" class="form-control mb-2" id="minPrice" name="minPrice" placeholder="Precio Mínimo">
+                                <input type="number" class="form-control" id="maxPrice" name="maxPrice" placeholder="Precio Máximo">
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary btn-lg">Buscar Vuelos</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Formulario Duración del Vuelo -->
+                <div class="tab-pane fade" id="duration" role="tabpanel" aria-labelledby="duration-tab">
+                    <form method="GET" th:action="@{/buscar_vuelos}">
+                        <div class="row mb-4">
+                            <div class="col-md-12 mb-3">
+                                <label for="durationRange" class="form-label">Duración del Vuelo (en horas)</label>
+                                <input type="number" class="form-control mb-2" id="minDuration" name="minDuration" placeholder="Duración Mínima">
+                                <input type="number" class="form-control" id="maxDuration" name="maxDuration" placeholder="Duración Máxima">
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary btn-lg">Buscar Vuelos</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Formulario Escalas -->
+                <div class="tab-pane fade" id="stops" role="tabpanel" aria-labelledby="stops-tab">
+                    <form method="GET" th:action="@{/buscar_vuelos}">
+                        <div class="row mb-4">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Número de Escalas</label>
+                                <select class="form-select" name="stops">
+                                    <option value="">Seleccione el número de escalas</option>
+                                    <option value="0">Directo</option>
+                                    <option value="1">1 Escala</option>
+                                    <option value="2">2 Escalas</option>
+                                    <option value="3">3 Escalas</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary btn-lg">Buscar Vuelos</button>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+       
+
+       
+<!-- JavaScript para manejar los tabs -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var myTabs = new bootstrap.Tab(document.getElementById('searchTabs'));
+    });
+</script>
+
+        
+        
+			<!-- Resultados de Vuelos Simulados -->
+			<div class="mt-5">
+			    <h3 class="text-center mb-4">Resultados de Vuelos</h3>
+			    <div class="row">
+			        <div class="col-md-4 mb-4" th:each="vuelo, iterStat : ${vuelos}">
+			            <div class="card shadow-sm">
+			                <div class="card-body">
+			                    <h5 class="card-title" th:text="${vuelo.numeroVuelo}"></h5>
+			                    <p class="card-text"><strong>Desde:</strong> <span th:text="${vuelo.ciudadSalida}"></span></p>
+			                    <p class="card-text"><strong>Hasta:</strong> <span th:text="${vuelo.ciudadLlegada}"></span></p>
+			                    <p class="card-text"><strong>Salida:</strong> <span th:text="${vuelo.fechaHoraSalida}"></span></p>
+			                    <p class="card-text"><strong>Llegada:</strong> <span th:text="${vuelo.fechaHoraLlegada}"></span></p>
+			                    <p class="card-text"><strong>Precio:</strong> <span th:text="${vuelo.precio}"></span></p>
+			                    <p class="card-text"><strong>Duración:</strong> <span th:text="${vuelo.duracion}"></span></p>
+			                     <p class="card-text"><strong>Duración:</strong> <span th:text="${vuelo.modeloAvion}"></span></p>
+			                    <a th:href="@{/booking(vueloId=${vuelo.idVuelo})}" class="btn btn-primary">Reservar</a>
+			                </div>
+			            </div>
+			        </div>
+			        <div class="w-100 d-none d-md-block" ></div>
+			    </div>
+			</div>
+
+			
+			<style>
+			    .search-bar {
+			        background-color: #f8f9fa;
+			        padding: 50px 0;
+			    }
+			    .search-bar h2 {
+			        color: #007bff;
+			    }
+			    .card {
+			        border-radius: 10px;
+			        transition: transform 0.2s;
+			    }
+			    .card:hover {
+			        transform: scale(1.05);
+			        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+			    }
+			    .btn-primary {
+			        background-color: #007bff;
+			        border: none;
+			    }
+			    .btn-primary:hover {
+			        background-color: #0056b3;
+			    }
+			</style>
+			        
+
+        <!-- Navbar & Hero End -->
+
+		
+		       <!-- Packages Start -->
+				
+				<!-- Packages Start -->
+
+<!-- Packages Start -->
+<div class="container-fluid search-bar">
+    <div class="container mt-5">
+        <h3 class="text-center mb-4">Próximos Vuelos</h3>
+        <div class="row">
+            <div class="col-md-4 mb-4" th:each="vuelo : ${vuelosProx}">
+                <div class="card shadow-sm border-0 rounded-lg overflow-hidden">
+                    <div class="packages-img position-relative">
+                        <h5 class="text-white position-absolute top-0 start-0 m-3" th:text="${vuelo.destino}"></h5>
+                        <img src="img/packages-3.jpg" class="img-fluid w-100" alt="Vuelo a París">
+                        <div class="packages-price py-2" th:text="'Precio: ' + ${vuelo.precio}"></div>
+                    </div>
+                    <div class="packages-content bg-light p-4">
+                        <small class="text-muted">Número de Vuelo: <span th:text="${vuelo.numeroVuelo}"></span></small>
+                        <div class="mb-3 mt-2">
+                            <small><i class="fa fa-plane-departure me-2" th:text="'Desde: ' + ${vuelo.ciudadSalida}"></i></small><br>
+                            <small><i class="fa fa-plane-arrival me-2" th:text="'Hasta: ' + ${vuelo.ciudadLlegada}"></i></small><br>
+                            <small><i class="fa fa-clock me-2" th:text="'Duración: ' + ${vuelo.duracion}"></i></small><br>
+                            <small><i class="fa fa-calendar-alt me-2" th:text="'Salida: ' + ${#dates.format(vuelo.fechaHoraSalida, 'dd/MM/yyyy HH:mm')}"></i></small><br>
+                            <small><i class="fa fa-calendar-alt me-2" th:text="'Llegada: ' + ${#dates.format(vuelo.fechaHoraLlegada, 'dd/MM/yyyy HH:mm')}"></i></small><br>
+                            <small><i class="fa fa-plane me-2" th:text="'Avión: ' + ${vuelo.modeloAvion}"></i></small>
+                        </div>
+                        <p class="mb-4 text-muted">Disfruta de un viaje inolvidable con nuestro vuelo directo a tu destino soñado.</p>
+                        <div class="d-flex justify-content-between">
+                            <a href="#" class="btn btn-outline-primary">Leer Más</a>
+                            <a th:href="@{/booking(vueloId=${vuelo.idVuelo})}" class="btn btn-primary">Reservar Ahora</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="w-100 d-none d-md-block"></div>
+        </div>
+        
+    </div>
+
+    <!-- Paginación -->
+    <div th:if="${vuelosProx.totalPages > 0}" class="pagination-container text-center mt-4">
+        <nav aria-label="Paginación de vuelos">
+            <ul class="pagination justify-content-center">
+                
+                <!-- Botón de Página Anterior -->
+                <li class="page-item" th:classappend="${vuelosProx.number == 0} ? 'disabled' : ''">
+                    <a class="page-link" th:href="@{/(page=${vuelosProx.number}, size=${vuelosProx.size})}" 
+                       aria-label="Anterior">
+                       <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+
+                <!-- Números de Páginas -->
+                <li class="page-item" th:each="pageNumber : ${pageNumbers}" 
+                    th:classappend="${pageNumber == vuelosProx.number + 1} ? 'active' : ''">
+                    <a class="page-link" th:href="@{/(page=${pageNumber}, size=${vuelosProx.size})}"
+                       th:text="${pageNumber}" 
+                       th:aria-label="'Página ' + ${pageNumber}"></a>
+                </li>
+
+                <!-- Botón de Página Siguiente -->
+                <li class="page-item" th:classappend="${vuelosProx.number == vuelosProx.totalPages - 1} ? 'disabled' : ''">
+                    <a class="page-link" th:href="@{/(page=${vuelosProx.number + 2}, size=${vuelosProx.size})}" 
+                       aria-label="Siguiente">
+                       <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+</div>
+
+<!-- End of Packages -->
+
+
+<!-- End of Packages -->
+				
+
+<!-- Estilos adicionales -->
+<style>
+    .packages {
+        background-color: #f8f9fa;
+    }
+    .packages-img {
+        position: relative;
+    }
+    .packages-price {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #fff;
+        background-color: #007bff;
+        border-radius: 0 0 10px 10px;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        text-align: center;
+    }
+    .card {
+        border-radius: 20px;
+        transition: transform 0.2s, box-shadow 0.3s;
+    }
+    .card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    }
+    .btn-primary {
+        background-color: #007bff;
+        border: none;
+        transition: background-color 0.3s;
+    }
+    .btn-primary:hover {
+        background-color: #0056b3;
+    }
+    .btn-outline-primary {
+        border: 2px solid #007bff;
+        color: #007bff;
+        transition: background-color 0.3s, color 0.3s;
+    }
+    .btn-outline-primary:hover {
+        background-color: #007bff;
+        color: #fff;
+    }
+</style>
+			
+		
+      
+
+	    <!-- Booking Section End -->
+		<header th:insert="~{home/homeTemplate/home.html::footer}"></header>
+	
+        
+       
+        <!-- Copyright End -->
+
+        <!-- Back to Top -->
+        <a href="#" class="btn btn-primary btn-primary-outline-0 btn-md-square back-to-top"><i class="fa fa-arrow-up"></i></a>   
+
+        
+        <!-- JavaScript Libraries -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="lib/easing/easing.min.js"></script>
+        <script src="lib/waypoints/waypoints.min.js"></script>
+        <script src="lib/owlcarousel/owl.carousel.min.js"></script>
+        <script src="lib/lightbox/js/lightbox.min.js"></script>
+        
+
+        <!-- Template Javascript -->
+        <script src="js/main.js"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    </body>
+
+</html>

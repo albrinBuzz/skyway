@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cambiar Asiento</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+        }
+        .seat-container {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 10px;
+            max-width: 800px;
+            margin: 30px auto;
+        }
+        .seat {
+            width: 50px;
+            height: 50px;
+            border-radius: 5px;
+            background-color: #d1e7dd;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+        .seat.available:hover {
+            background-color: #badbcc;
+        }
+        .seat.selected {
+            background-color: #007bff;
+            color: white;
+        }
+        .seat.booked {
+            background-color: #f8d7da;
+            color: #721c24;
+            cursor: not-allowed;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border: none;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            border: none;
+        }
+        .selected-seat-list {
+            margin-top: 20px;
+        }
+        .change-log {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        .change-log ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .change-log li {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="text-center mb-4">Cambiar Asiento</h2>
+        <div class="row">
+            <div class="col-12">
+                <h4>Selecciona el asiento que deseas cambiar</h4>
+
+                <!-- Select para elegir el asiento original -->
+                <div class="mb-4">
+                    <label for="originalSeatSelect" class="form-label">Asiento Original:</label>
+                    <select id="originalSeatSelect" class="form-select">
+                        <!-- Opciones de asientos originales serán añadidas aquí -->
+                    </select>
+                </div>
+
+                <h4>Selecciona tu nuevo asiento</h4>
+                <div class="seat-container" id="seat-container">
+                    <!-- Asientos generados dinámicamente -->
+                </div>
+
+                <div class="mt-4">
+                    <button id="confirmButton" class="btn btn-primary" disabled>Confirmar Cambio</button>
+                    <button id="resetButton" class="btn btn-secondary">Resetear Selección</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mostrar el log de cambios -->
+        <div class="change-log">
+            <h5>Cambios Realizados:</h5>
+            <ul id="change-log-list">
+                <!-- Log de cambios de asientos -->
+            </ul>
+        </div>
+
+        <!-- Formulario oculto para enviar los datos al backend -->
+        <form id="changeSeatsForm" action="/cambiar-asientos" method="POST" style="display: none;">
+            <input type="hidden" name="originalSeats" id="originalSeats">
+            <input type="hidden" name="newSeats" id="newSeats">
+            <button type="submit" id="submitFormButton"></button>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Datos simulados de asientos previamente seleccionados y ocupados
+            const bookedSeats = ["A1", "B5", "C3", "D7"];  // Asientos ocupados (no seleccionables)
+            const initialSelectedSeats = ["A2", "B3"];  // Asientos ya seleccionados por el pasajero
+            let availableSeats = [];  // Asientos disponibles para seleccionar (no ocupados ni ya seleccionados)
+            const selectedSeats = [...initialSelectedSeats];
+            const changeLog = [];  // Array para llevar el registro de los cambios
+
+            // Crear asientos dinámicamente
+            const seatContainer = document.getElementById("seat-container");
+
+            for (let row = 1; row <= 10; row++) {
+                for (let col = 1; col <= 10; col++) {
+                    const seatID = String.fromCharCode(64 + row) + col;  // Ejemplo: A1, B1, etc.
+                    const seatDiv = document.createElement("div");
+                    seatDiv.classList.add("seat");
+
+                    if (bookedSeats.includes(seatID)) {
+                        seatDiv.classList.add("booked");  // Asientos ocupados
+                    } else if (selectedSeats.includes(seatID)) {
+                        seatDiv.classList.add("selected");  // Asientos previamente seleccionados
+                    } else {
+                        seatDiv.classList.add("available");  // Asientos disponibles
+                    }
+
+                    seatDiv.textContent = seatID;
+                    seatDiv.dataset.seatId = seatID;
+
+                    seatDiv.addEventListener("click", function() {
+                        handleSeatClick(seatID, seatDiv);
+                    });
+
+                    seatContainer.appendChild(seatDiv);
+
+                    if (!bookedSeats.includes(seatID) && !selectedSeats.includes(seatID)) {
+                        availableSeats.push(seatID);
+                    }
+                }
+            }
+
+            // Llenar el select con los asientos originales
+            const originalSeatSelect = document.getElementById("originalSeatSelect");
+            initialSelectedSeats.forEach(seatID => {
+                const option = document.createElement("option");
+                option.value = seatID;
+                option.textContent = seatID;
+                originalSeatSelect.appendChild(option);
+            });
+
+            let selectedOriginalSeat = null;  // Asiento original que el usuario quiere cambiar
+
+            // Función para manejar el click de un asiento
+            function handleSeatClick(seatID, seatDiv) {
+                if (!selectedOriginalSeat) {
+                    alert("Por favor, selecciona primero un asiento original para cambiar.");
+                    return;
+                }
+
+                if (seatDiv.classList.contains("booked")) {
+                    alert("Este asiento ya está ocupado.");
+                    return;
+                }
+
+                if (seatDiv.classList.contains("selected")) {
+                    // El usuario deselecciona el asiento que ha seleccionado previamente
+                    seatDiv.classList.remove("selected");
+                    addChangeLog(selectedOriginalSeat, `Reemplazo cancelado`);
+                    selectedOriginalSeat = null;
+                    updateChangeLogList();
+                } else {
+                    // Reemplazar el asiento previamente seleccionado
+                    seatDiv.classList.add("selected");
+                    addChangeLog(selectedOriginalSeat, `Reemplazado por ${seatID}`);
+                    selectedSeats.push(seatID);  // Agregar el nuevo asiento a los seleccionados
+                    removeSeatFromAvailable(selectedOriginalSeat);  // Eliminar el asiento original de la lista de disponibles
+                    removeSeatFromAvailable(seatID);  // Eliminar el asiento nuevo de la lista de disponibles
+                    selectedOriginalSeat = null;  // Resetear
+                    updateChangeLogList();
+                }
+
+                toggleConfirmButton();
+            }
+
+            // Función para agregar un cambio al log
+            function addChangeLog(seatID, message) {
+                changeLog.push(`${seatID} - ${message}`);
+                updateChangeLogList();
+            }
+
+            // Función para actualizar el log de cambios
+            function updateChangeLogList() {
+                const changeLogList = document.getElementById("change-log-list");
+                changeLogList.innerHTML = "";
+                changeLog.forEach(log => {
+                    const li = document.createElement("li");
+                    li.textContent = log;
+                    changeLogList.appendChild(li);
+                });
+            }
+
+            // Función para eliminar un asiento de la lista de disponibles
+            function removeSeatFromAvailable(seatID) {
+                const index = availableSeats.indexOf(seatID);
+                if (index !== -1) {
+                    availableSeats.splice(index, 1);
+                }
+            }
+
+            // Función para activar/desactivar el botón de confirmación
+            function toggleConfirmButton() {
+                const confirmButton = document.getElementById("confirmButton");
+                if (changeLog.length > 0) {
+                    confirmButton.disabled = false;
+                } else {
+                    confirmButton.disabled = true;
+                }
+            }
+
+            // Función para manejar el cambio de asiento original seleccionado desde el select
+            originalSeatSelect.addEventListener("change", function() {
+                selectedOriginalSeat = originalSeatSelect.value;
+            });
+
+            // Botón para confirmar la selección
+            document.getElementById("confirmButton").addEventListener("click", function() {
+                // Preparamos los datos para enviar al backend
+                const originalSeats = JSON.stringify(initialSelectedSeats);
+                const newSeats = JSON.stringify(selectedSeats);
+
+                document.getElementById("originalSeats").value = originalSeats;
+                document.getElementById("newSeats").value = newSeats;
+
+                // Enviar el formulario al backend
+                document.getElementById("submitFormButton").click();
+            });
+
+            // Botón para resetear la selección
+            document.getElementById("resetButton").addEventListener("click", function() {
+                selectedSeats.length = 0;
+                availableSeats = [...initialSelectedSeats];
+                changeLog.length = 0;
+                updateChangeLogList();
+                toggleConfirmButton();
+                alert("Selección de asientos resetada.");
+            });
+        });
+
+        // Función para manejar el click de un asiento
+function handleSeatClick(seatID, seatDiv) {
+    if (!selectedOriginalSeat) {
+        alert("Por favor, selecciona primero un asiento original para cambiar.");
+        return;
+    }
+
+    if (seatDiv.classList.contains("booked")) {
+        alert("Este asiento ya está ocupado.");
+        return;
+    }
+
+    if (seatDiv.classList.contains("selected")) {
+        // El usuario deselecciona el asiento que ha seleccionado previamente
+        seatDiv.classList.remove("selected");
+        addChangeLog(selectedOriginalSeat, `Reemplazo cancelado`);
+        selectedOriginalSeat = null;
+        updateChangeLogList();
+    } else {
+        // Reemplazar el asiento previamente seleccionado
+        seatDiv.classList.add("selected");
+        addChangeLog(selectedOriginalSeat, `Reemplazado por ${seatID}`);
+        selectedSeats.push(seatID);  // Agregar el nuevo asiento a los seleccionados
+        removeSeatFromAvailable(seatID);  // Eliminar el asiento nuevo de la lista de disponibles
+
+        // Desmarcar el asiento original y devolverlo a los disponibles
+        deselectOldSeat(selectedOriginalSeat);  // Desmarcar el asiento original
+        availableSeats.push(selectedOriginalSeat);  // Volver el asiento original a los disponibles
+        selectedSeats.splice(selectedSeats.indexOf(selectedOriginalSeat), 1); // Eliminar el asiento original de la lista de seleccionados
+
+        selectedOriginalSeat = null;  // Resetear
+        updateChangeLogList();
+    }
+
+    toggleConfirmButton();
+}
+
+// Función para desmarcar un asiento previamente seleccionado
+function deselectOldSeat(seatID) {
+    const seatDiv = document.querySelector(`[data-seat-id="${seatID}"]`);
+    if (seatDiv) {
+        seatDiv.classList.remove("selected");
+    }
+}
+
+// Función para eliminar un asiento de la lista de disponibles
+function removeSeatFromAvailable(seatID) {
+    const index = availableSeats.indexOf(seatID);
+    if (index !== -1) {
+        availableSeats.splice(index, 1);
+    }
+}
+
+// Función para actualizar el log de cambios
+function updateChangeLogList() {
+    const changeLogList = document.getElementById("change-log-list");
+    changeLogList.innerHTML = "";
+    changeLog.forEach(log => {
+        const li = document.createElement("li");
+        li.textContent = log;
+        changeLogList.appendChild(li);
+    });
+}
+
+// Función para activar/desactivar el botón de confirmación
+function toggleConfirmButton() {
+    const confirmButton = document.getElementById("confirmButton");
+    if (selectedSeats.length > 0 && changeLog.length > 0) {
+        confirmButton.disabled = false;
+    } else {
+        confirmButton.disabled = true;
+    }
+}
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,459 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html lang="es"
+	xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="jakarta.faces.html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:sec="https://joinfaces.org/security"
+	xmlns:ui="http://java.sun.com/jsf/facelets">
+
+<h:head>
+    <meta charset="utf-8" />
+    <title>Travela - Tourism Website Template</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta content="" name="keywords"/>
+    <meta content="" name="description"/>
+
+
+    <!-- Icon Font Stylesheet -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet"/>
+
+
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous"/>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+
+   <!--  <h:outputStylesheet name="#{request.contextPath}/css/bootstrap.min.css" />
+     <h:outputStylesheet name="#{request.contextPath}/css/style.css" />-->
+
+
+    <style  type="text/css">
+        /* Barra sticky */
+        .sticky-header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background-color: #007bff;
+            padding: 10px 0;
+        }
+
+        /* Estilo para el menú desplegable */
+        .dropdown-menu {
+            border-radius: 8px;
+            background-color: #ffffff;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            min-width: 250px;
+        }
+
+        .dropdown-item {
+            padding: 10px 20px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Efecto hover sobre las opciones del dropdown */
+        .dropdown-item:hover {
+            background-color: #007bff;
+            color: #ffffff;
+        }
+
+        /* Estilos de iconos */
+        .user-icon {
+            font-size: 1.7rem;
+            color: #007bff;
+            transition: transform 0.3s, color 0.3s;
+        }
+
+        .user-icon:hover {
+            transform: scale(1.1);
+            color: #0056b3;
+        }
+
+        /* Estilos de texto y separadores dentro del dropdown */
+        .dropdown-header {
+            background-color: #007bff;
+            color: #ffffff;
+            padding: 15px;
+            border-radius: 8px 8px 0 0;
+            text-align: center;
+        }
+
+        /* Espaciado y bordes en la barra */
+        .sticky-header .col-lg-4 {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .sticky-header .dropdown img {
+            margin-left: 10px;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+        }
+
+        /* Botones de login y opciones */
+        .dropdown-menu .btn-primary {
+            background-color: #007bff;
+            border: none;
+            width: 100%;
+            text-align: center;
+        }
+
+        .dropdown-menu .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .dropdown-menu .small {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .dropdown-menu .small:hover {
+            text-decoration: underline;
+        }
+        .notification-panel {
+    margin-bottom: 10px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.notification-panel .ui-panel-title {
+    font-weight: bold;
+    color: #333;
+}
+
+.notification-panel .ui-commandbutton {
+    background-color: #28a745;
+    color: white;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+}
+
+.notification-panel .ui-commandbutton:hover {
+    background-color: #218838;
+}
+        .footer {
+    background-color: #1a1a1a;
+    color: #fff;
+}
+
+.footer h4 {
+    font-weight: 600;
+}
+
+.footer .social-icons i {
+    color: #fff;
+    transition: color 0.3s ease;
+}
+
+.footer .social-icons i:hover {
+    color: #007bff;
+}
+
+.footer .footer-bank-card i {
+    color: #fff;
+    margin-right: 15px;
+    transition: transform 0.3s ease;
+}
+
+.footer .footer-bank-card i:hover {
+    transform: scale(1.1);
+}
+
+.footer a {
+    text-decoration: none;
+    color: #fff;
+    transition: color 0.3s ease;
+}
+
+.footer a:hover {
+    color: #007bff;
+}
+
+.footer .copyright {
+    background-color: #333;
+    color: #fff;
+    padding: 20px 0;
+}
+        
+        
+    </style>
+
+</h:head>
+
+<body>
+
+<div class="container-fluid bg-primary px-5 d-none d-lg-block sticky-header">
+
+    <div class="row gx-0">
+        <p:clock />
+        <!-- Botón para Volver al Inicio (izquierda) -->
+        <div class="col-lg-4 d-flex flex-column">
+            <p:link href="/" title="Regresar al inicio de la página">
+                <p:outputLabel id="labelHome" value="Regresar al Inicio" />
+            </p:link>
+
+
+        </div>
+
+        <!-- Contenido de la parte derecha (usuario o login) -->
+        <div class="col-lg-8 text-center text-lg-end">
+            <div class="d-inline-flex align-items-center" style="height: 45px;">
+
+
+
+				<!-- Mostrar el login solo si el usuario no está autenticado -->
+				<h:panelGroup rendered="#{!userBean.loggedIn}">
+				    <div class="dropdown">
+				        <a href="#" class="nav-link dropdown-toggle text-light" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Acceder al panel de login">
+				            <i class="fas fa-sign-in-alt me-2"></i><small>Login</small>
+				        </a>
+
+                        <div class="dropdown-menu p-4 rounded shadow-lg" style="min-width: 320px;">
+
+                            <!-- Formulario de login -->
+                            <h:form id="loginForm">
+                                <h:panelGroup>
+
+                                    <!-- Título del formulario -->
+                                    <div class="mb-3 text-center">
+                                        <h4>Iniciar sesión</h4>
+                                    </div>
+
+                                    <!-- Usuario -->
+                                    <div class="mb-3 position-relative">
+                                        <h:outputLabel for="username" value="Usuario:" class="form-label" />
+                                        <h:inputText id="username" value="#{loginBean.username}"
+                                                     required="true"
+                                                     label="Usuario"
+                                                     class="form-control"
+                                                     placeholder="Introduce tu usuario"
+                                                     aria-describedby="usernameHelp" />
+                                        <!-- Mensaje de error debajo del campo -->
+                                        <h:message for="username" styleClass="invalid-feedback d-block" />
+                                    </div>
+
+                                    <!-- Contraseña -->
+                                    <div class="mb-3 position-relative">
+                                        <h:outputLabel for="password" value="Contraseña:" class="form-label" />
+                                        <p:password id="password" value="#{loginBean.password}"
+                                                    toggleMask="true"
+                                                    redisplay="true"
+                                                    class="form-control"
+                                                    placeholder="Introduce tu contraseña"
+                                                    aria-describedby="passwordHelp" />
+                                        <!-- Mensaje de error debajo del campo -->
+                                        <h:message for="password" styleClass="invalid-feedback d-block" />
+                                    </div>
+
+                                    <!-- Mensajes globales de error -->
+                                    <h:messages id="loginMessages" styleClass="alert alert-danger mb-3" />
+
+                                    <!-- Botones -->
+                                    <div class="d-grid gap-2">
+                                        <h:commandButton value="Iniciar sesión" action="#{loginBean.login}" class="btn btn-primary btn-lg" />
+                                        <h:commandButton value="Cancelar" action="#{loginBean.cancelLogin}" class="btn btn-secondary btn-lg" />
+                                    </div>
+
+                                    <!-- Enlace para recuperar contraseña -->
+                                    <div class="text-center mt-3">
+                                        <a href="#" class="text-muted" role="button" onclick="showRecoverPasswordForm()">¿Olvidaste tu contraseña?</a>
+                                    </div>
+
+                                </h:panelGroup>
+                            </h:form>
+
+                        </div>
+
+
+                    </div>
+				</h:panelGroup>
+						
+<h:form id="menuForm">
+    <h:panelGroup rendered="#{userBean.loggedIn}">
+        <div class="dropdown">
+            <!-- Menú de usuario con el ícono de usuario -->
+            <a href="#" class="dropdown-toggle text-light d-flex align-items-center" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Menú de usuario">
+                <i class="fas fa-user-circle me-2 user-icon"></i>
+                <span><h:outputText value="#{userBean.name}" class="fw-bold" /></span>
+            </a>
+
+            <div class="dropdown-menu rounded shadow-lg border-0">
+                <div class="dropdown-header">
+                    <h6 class="mb-0">¡Bienvenido de nuevo, <h:outputText value="#{userBean.name}"/>!</h6>
+                    <small>¿Qué te gustaría hacer hoy?</small>
+                </div>
+                <div class="dropdown-divider"></div>
+
+                <!-- Opción Perfil -->
+                <p:link href="/perfil" class="dropdown-item d-flex align-items-center">
+                    <i class="fas fa-user-cog me-2" style="color: #007bff;"></i>
+                    <span>Perfil</span>
+                </p:link>
+
+                <!-- Opción Admin para el rol de Admin -->
+                <sec:authorize access="hasRole('ROLE_ADMIN')">
+                
+                    <p:link href="/admin/index.xhtml" class="dropdown-item d-flex align-items-center" 
+                  
+                            aria-label="Ir a la página de administración">
+                        <i class="fas fa-user-shield me-2" style="color: #007bff; font-size: 18px;"></i>
+                        <span style="font-size: 16px; font-weight: 500;">Admin</span>
+                    </p:link>
+                </sec:authorize>
+
+                <!-- Opción Cerrar sesión -->
+                <p:link href="/logout" class="dropdown-item d-flex align-items-center">
+                    <i class="fas fa-sign-out-alt me-2" style="color: #007bff;"></i>
+                    <span>Cerrar sesión</span>
+                </p:link>
+
+                <!-- Menú de Notificaciones -->
+                <div class="dropdown-divider"></div>
+                
+                <!-- Asegúrate de que el panel de notificaciones esté visible si hay notificaciones no leídas -->
+                <h:panelGroup id="notificationsDropdown" rendered="#{userBean.getUnreadNotificationsCount() > 0}">
+                    <p:menuitem value="Notificaciones" icon="pi pi-bell" disabled="true" />
+                    
+				 	<p:badge  value="#{userBean.getUnreadNotificationsCount()}" severity="danger">
+				         <p:commandButton value="Notificaciones" icon="pi pi-users" styleClass="ml-4" />
+				     </p:badge>
+            
+
+                    <!-- Lista de notificaciones no leídas -->
+                    <h:panelGroup id="notificationsList">
+                        <ui:repeat value="#{userBean.notifications}" var="notif">
+                            <p:panel header="#{notif.titulo}" toggleable="true" collapsible="true">
+                                <h:outputText value="#{notif.mensaje}" />
+                                <p:commandButton value="Marcar como leída" action="#{userBean.markAsRead(notif.idNotificacion)}" update=":menuForm:notificationsList"/>
+                            </p:panel>
+                        </ui:repeat>
+                    </h:panelGroup>
+                </h:panelGroup>
+            </div>
+        </div>
+    </h:panelGroup>
+</h:form>
+
+				
+
+            </div>
+        </div>
+    </div>
+</div>
+
+ 		
+ 		<ui:insert name="contenido"></ui:insert>
+
+<!-- Footer Start -->
+<div class="container-fluid bg-dark py-5 footer">
+    <div class="container py-5">
+        <div class="row g-5">
+            
+            <!-- Sección de Contacto -->
+            <div class="col-md-6 col-lg-3 col-xl-3">
+                <h4 class="mb-4 text-white">Contáctanos</h4>
+                <p class="text-white"><i class="fas fa-home me-2"></i> 123 Calle Principal, Ciudad, País</p>
+                <p class="text-white"><i class="fas fa-envelope me-2"></i> contacto@aerolinea.com</p>
+                <p class="text-white"><i class="fas fa-phone-alt me-2"></i> +012 345 67890</p>
+            </div>
+
+            <!-- Sección de Información de la Aerolínea -->
+          
+	          <div class="col-md-6 col-lg-3 col-xl-3">
+				    <h4 class="mb-4 text-white">Sobre Nosotros</h4>
+				    <!-- Enlaces a las secciones con parámetro tipo -->
+				    <h:link value="Quiénes Somos" outcome="/home/content.xhtml?tipo=informacion" class="text-white">
+				        <i class="fas fa-angle-right me-2"></i> Quiénes Somos
+				    </h:link><br></br>
+				
+				    <h:link value="Historia" outcome="/home/content.xhtml?tipo=informacion" class="text-white">
+				        <i class="fas fa-angle-right me-2"></i> Historia
+				    </h:link><br></br>
+				
+				    <h:link value="Servicios" outcome="/home/content.xhtml?tipo=servicios" class="text-white">
+				        <i class="fas fa-angle-right me-2"></i> Servicios
+				    </h:link><br></br>
+				
+				    <h:link value="Blog" outcome="/blog/index.xhtml" class="text-white">
+				        <i class="fas fa-angle-right me-2"></i> Blog
+				    </h:link>
+				</div>
+				
+				<!-- Sección de Ayuda y Políticas -->
+				<div class="col-md-6 col-lg-3 col-xl-3">
+				    <h4 class="mb-4 text-white">Atención al Cliente</h4>
+				    <!-- Enlaces de contacto, política y preguntas frecuentes -->
+				    <h:link value="Contacto" outcome="/home/content.xhtml?tipo=contacto" class="text-white">
+				        <i class="fas fa-angle-right me-2"></i> Contacto
+				    </h:link><br></br>
+				
+				    <h:link value="Políticas de Privacidad" outcome="/home/content.xhtml?tipo=Estático" class="text-white">
+				        <i class="fas fa-angle-right me-2"></i> Políticas de Privacidad
+				    </h:link><br></br>
+				
+				    <h:link value="Preguntas Frecuentes" outcome="/home/content.xhtml?tipo=faq" class="text-white">
+				        <i class="fas fa-angle-right me-2"></i> Preguntas Frecuentes
+				    </h:link><br></br>
+				
+				    <h:link value="Términos y Condiciones" outcome="/home/content.xhtml?tipo=Estático" class="text-white">
+				        <i class="fas fa-angle-right me-2"></i> Términos y Condiciones
+				    </h:link>
+				</div>
+          
+          
+
+            <!-- Sección de Redes Sociales y Pagos -->
+            <div class="col-md-6 col-lg-3 col-xl-3">
+                <h4 class="text-white mb-4">Síguenos</h4>
+                <div class="social-icons">
+                    <a href="https://facebook.com" target="_blank" class="text-white me-2">
+                        <i class="fab fa-facebook-f fa-2x"></i>
+                    </a>
+                    <a href="https://twitter.com" target="_blank" class="text-white me-2">
+                        <i class="fab fa-twitter fa-2x"></i>
+                    </a>
+                    <a href="https://instagram.com" target="_blank" class="text-white me-2">
+                        <i class="fab fa-instagram fa-2x"></i>
+                    </a>
+                    <a href="https://linkedin.com" target="_blank" class="text-white me-2">
+                        <i class="fab fa-linkedin fa-2x"></i>
+                    </a>
+                </div>
+                <h4 class="text-white mb-4">Métodos de Pago</h4>
+                <div class="footer-bank-card">
+                    <a href="#" class="text-white me-2"><i class="fab fa-cc-visa fa-2x"></i></a>
+                    <a href="#" class="text-white me-2"><i class="fab fa-cc-mastercard fa-2x"></i></a>
+                    <a href="#" class="text-white me-2"><i class="fab fa-cc-amex fa-2x"></i></a>
+                    <a href="#" class="text-white me-2"><i class="fas fa-credit-card fa-2x"></i></a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- Footer End -->
+
+<!-- Copyright Start -->
+<div class="container-fluid copyright text-body py-4 bg-dark">
+    <div class="container">
+        <div class="row g-4 align-items-center">
+            <div class="col-md-6 text-center text-md-end mb-md-0">
+                <i class="fas fa-copyright me-2"></i><a class="text-white" href="#">Aerolínea XYZ</a>, Todos los derechos reservados.
+            </div>
+            <div class="col-md-6 text-center text-md-start">
+                Diseñado por <a class="text-white" href="https://www.tuwebdiseño.com">Tu Web Diseño</a>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Copyright End -->
+
+ 		
+ 		
+</body>
+</html>

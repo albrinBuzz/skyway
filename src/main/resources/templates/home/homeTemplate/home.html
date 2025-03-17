@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="utf-8">
+    <title>Travela - Tourism Website Template</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="" name="keywords">
+    <meta content="" name="description">
+
+    <!-- Google Web Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@500;600&family=Roboto&display=swap" rel="stylesheet">
+
+    <!-- Icon Font Stylesheet -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
+
+	<link rel="icon" th:href="@{/img/Spring.jpg}" type="image/png">
+
+    <!-- Customized Bootstrap Stylesheet -->
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+
+    <!-- Template Stylesheet -->
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+
+    <style>
+        .sticky-header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background-color: #007bff; /* Same as primary color */
+        }
+
+        .dropdown-menu {
+            border-radius: 10px;
+            background-color: #ffffff;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .dropdown-menu .form-label {
+            font-weight: bold;
+        }
+
+        .dropdown-menu .btn-primary {
+            background-color: #007bff;
+            border: none;
+        }
+
+        .dropdown-menu .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .dropdown-menu .small {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .dropdown-menu .small:hover {
+            text-decoration: underline;
+        }
+
+        .user-icon {
+            transition: transform 0.2s, color 0.2s;
+        }
+
+        .user-icon:hover {
+            transform: scale(1.1);
+            color: #0056b3;
+        }
+        
+		        .sticky-header {
+		    position: sticky;
+		    top: 0;
+		    z-index: 1000;
+		    background-color: #007bff; /* Same as primary color */
+		}
+		
+		.sticky-header .col-lg-4 {
+		    display: flex;
+		    justify-content: flex-end;
+		    align-items: center;
+		}
+		
+		.sticky-header .d-inline-flex {
+		    display: inline-flex;
+		    align-items: center;
+		}
+		
+		.sticky-header .dropdown img {
+		    margin-left: 10px;
+		    width: 50px;  /* Ajusta según el tamaño que desees */
+		    height: auto;
+		}
+		
+		.sticky-header .ms-3 {
+		    margin-left: 1rem; /* Añade espacio entre el logo de Spring y el botón Login */
+		}
+		
+		.user-icon {
+		    transition: transform 0.2s, color 0.2s;
+		}
+		
+		.user-icon:hover {
+		    transform: scale(1.1);
+		    color: #0056b3;
+		}
+        
+    </style>
+</head>
+
+<body>
+
+    <div th:fragment="header">
+        <div class="container-fluid bg-primary px-5 d-none d-lg-block sticky-header">
+            <div class="row gx-0">
+                <div class="col-lg-8 text-center text-lg-start mb-2 mb-lg-0">
+          
+                    <img th:src="@{/img/logo.jpg}" class="img-fluid"  style="width: 100px;">
+                  
+                </div>
+
+                <div class="col-lg-4 text-center text-lg-end">
+                    <div class="d-inline-flex align-items-center" style="height: 45px;">
+                        <a href="#" class="btn btn-outline-light me-3" sec:authorize="!isAuthenticated()">
+                            <i class="fas fa-user-plus me-1"></i><small>Register</small>
+                        </a>
+                        <div sec:authorize="isAuthenticated()">
+		      Authenticated as <span sec:authentication="name"></span></div>
+		                        
+                        <div class="dropdown" sec:authorize="!isAuthenticated()">
+                            <a href="#" class="nav-link dropdown-toggle text-light" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-sign-in-alt me-1"></i><small>Login</small>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end rounded shadow-lg" style="min-width: 300px;">
+                                <li>
+                                    <form th:action="@{/login}" method="post" class="p-4">
+                                        <div th:if="${param.error}">
+                                            <div class="alert alert-danger">
+                                                <span th:text="#{login.error}"></span>
+                                            </div>
+                                        </div>
+                                        <h5 class="mb-3 text-center"><i class="fas fa-user-lock me-1"></i> Iniciar Sesión</h5>
+                                        <div class="mb-3">
+                                            <label for="username" class="form-label"><i class="fas fa-user me-1"></i> Usuario</label>
+                                            <input type="text" class="form-control" id="username" name="username" required placeholder="Ingresa tu usuario" aria-label="Usuario">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="password" class="form-label"><i class="fas fa-lock me-1"></i> Contraseña</label>
+                                            <input type="password" class="form-control" id="password" name="password" required placeholder="Ingresa tu contraseña" aria-label="Contraseña">
+                                        </div>
+                                        <button type="submit" class="btn btn-primary w-100">Iniciar Sesión</button>
+                                        <div class="text-center mt-3">
+                                            <a href="#" class="small text-decoration-underline">¿Olvidaste tu contraseña?</a>
+                                        </div>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                        <img th:src="@{/img/Spring.jpg}" class="img-fluid ms-3" style="width: 100px; height: auto;">
+                        <li sec:authorize="isAuthenticated()" class="nav-item dropdown">
+                            <div class="dropdown">
+                                <a href="#" class="dropdown-toggle text-light d-flex align-items-center" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-user-circle me-2 user-icon" style="font-size: 1.5rem; color: #007bff;"></i>
+                                    <span th:text="${session.usuario.getNombre()}" class="fw-bold"></span>
+                                </a>
+                                <div class="dropdown-menu rounded shadow-lg border-0" style="min-width: 250px;">
+                                    <div class="dropdown-header text-center bg-primary text-white py-3 rounded-top">
+                                        <h6 class="mb-0">¡Bienvenido de nuevo, <span th:text="${session.usuario.getNombre() }"></span>!</h6>
+                                        <small>¿Qué te gustaría hacer hoy?</small>
+                                    </div>
+                                    <div class="dropdown-divider"></div>
+                                    <a th:href="@{/perfil}" class="dropdown-item d-flex align-items-center">
+                                        <i class="fas fa-user-cog me-2" style="color: #007bff;"></i>
+                                        <span>Perfil</span>
+                                    </a>
+                                    <a href="#" class="dropdown-item d-flex align-items-center">
+                                        <i class="fas fa-envelope-open-text me-2" style="color: #007bff;"></i>
+                                        <span>Bandeja de entrada</span>
+                                    </a>
+                                    <a href="#" class="dropdown-item d-flex align-items-center">
+                                        <i class="fas fa-plane-departure me-2" style="color: #007bff;"></i>
+                                        <span>Mis Vuelos</span>
+                                    </a>
+                                    <a href="#" class="dropdown-item d-flex align-items-center">
+                                        <i class="fas fa-bell me-2" style="color: #007bff;"></i>
+                                        <span>Notificaciones</span>
+                                    </a>
+                                    <a href="#" class="dropdown-item d-flex align-items-center">
+                                        <i class="fas fa-user-shield me-2" style="color: #007bff;"></i>
+                                        <span>Configuración de cuenta</span>
+                                    </a>
+                                    
+                                        <div sec:authorize="hasRole('ROLE_ADMIN')" class="dropdown-divider"></div>
+					            <a th:href="@{/admin}" class="dropdown-item d-flex align-items-center">
+					                <i class="fas fa-cogs me-2" style="color: #007bff;"></i>
+					                <span>Admin</span>
+					            </a>
+		                                    
+                                    <div class="dropdown-divider"></div>
+                                    <a th:href="@{/logout}" class="dropdown-item text-danger d-flex align-items-center">
+                                        <i class="fas fa-sign-out-alt me-2"></i>
+                                        <span>Cerrar sesión</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </li>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${session.usuario != null}" class="welcome-banner text-center">
+            ¡Bienvenido, <span th:text="${session.usuario.nombre}"></span>! Disfruta tu visita.
+        </div>
+
+        <div class="container-fluid position-relative p-0">
+            <nav class="navbar navbar-expand-lg navbar-light px-4 px-lg-5 py-3 py-lg-0">
+                <a th:href="@{/}" class="navbar-brand p-0">
+                    <h1 class="m-0"><i class="fa fa-map-marker-alt me-3"></i>SkyWay</h1>
+                </a>
+                <!--   <img th:src="@{../../../static/img/logo.jpg}" alt="Descripción de la imagen" class="img-fluid mt-2">-->
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
+                    <span class="fa fa-bars"></span>
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <div th:fragment="footer">
+  		    <div class="container-fluid footer py-5">
+        <div class="container py-5">
+            <div class="row g-5">
+                <div class="col-md-6 col-lg-6 col-xl-3">
+                    <h4 class="mb-4 text-white">Get In Touch</h4>
+                    <a href=""><i class="fas fa-home me-2"></i> 123 Street, New York, USA</a>
+                    <a href=""><i class="fas fa-envelope me-2"></i> info@example.com</a>
+                    <a href=""><i class="fas fa-phone me-2"></i> +012 345 67890</a>
+                </div>
+                <div class="col-md-6 col-lg-6 col-xl-3">
+                    <h4 class="mb-4 text-white">Company</h4>
+                    <a href=""><i class="fas fa-angle-right me-2"></i> About</a>
+                    <a href=""><i class="fas fa-angle-right me-2"></i> Careers</a>
+                    <a href=""><i class="fas fa-angle-right me-2"></i> Blog</a>
+                </div>
+                <div class="col-md-6 col-lg-6 col-xl-3">
+                    <h4 class="mb-4 text-white">Support</h4>
+                    <a href=""><i class="fas fa-angle-right me-2"></i> Contact</a>
+                    <a href=""><i class="fas fa-angle-right me-2"></i> Privacy Policy</a>
+                </div>
+                <div class="col-md-6 col-lg-6 col-xl-3">
+                    <h4 class="text-white mb-3">Payments</h4>
+                    <div class="footer-bank-card">
+                        <a href="#" class="text-white me-2"><i class="fab fa-cc-amex fa-2x"></i></a>
+                        <a href="#" class="text-white me-2"><i class="fab fa-cc-visa fa-2x"></i></a>
+                        <a href="#" class="text-white me-2"><i class="fas fa-credit-card fa-2x"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Footer End -->
+
+    <!-- Copyright Start -->
+        <div class="container-fluid copyright text-body py-4">
+            <div class="container">
+                <div class="row g-4 align-items-center">
+                    <div class="col-md-6 text-center text-md-end mb-md-0">
+                        <i class="fas fa-copyright me-2"></i><a class="text-white" href="#">Your Site Name</a>, All right reserved.
+                    </div>
+                    <div class="col-md-6 text-center text-md-start">
+                        <!--/*** This template is free as long as you keep the below author’s credit link/attribution link/backlink. ***/-->
+                        <!--/*** If you'd like to use the template without the below author’s credit link/attribution link/backlink, ***/-->
+                        <!--/*** you can purchase the Credit Removal License from "https://htmlcodex.com/credit-removal". ***/-->
+                        Designed By <a class="text-white" href="https://htmlcodex.com">HTML Codex</a> Distributed By <a href="https://themewagon.com">ThemeWagon</a>
+                    </div>
+                    </div>
+                </div>
+            </div>
+    </div>
+
+    <!-- Modal Welcome -->
+    <div class="modal fade" id="welcomeModal" tabindex="-1" aria-labelledby="welcomeModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="welcomeModalLabel">¡Bienvenido!</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <p>Hola, <span th:text="${session.usuario.nombre}"></span>! Gracias por iniciar sesión.</p>
+                    <p>¿Qué deseas hacer hoy?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <a href="#" class="btn btn-primary">Ir a mi perfil</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script th:inline="javascript">
+        // Mostrar el modal de bienvenida si el usuario ha iniciado sesión
+        document.addEventListener("DOMContentLoaded", function() {
+            var isAuthenticated = [[${session.usuario != null}]];
+            if (isAuthenticated) {
+                var welcomeModal = new bootstrap.Modal(document.getElementById('welcomeModal'));
+                welcomeModal.show();
+            }
+        });
+    </script>
+
+    <script th:inline="javascript">
+        function validate() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (username === '' && password === '') {
+                alert([[#{login.username.required}]] + ' and ' + [[#{login.password.required}]]);
+                return false;
+            }
+            if (username === '') {
+                alert([[#{login.username.required}]]);
+                return false;
+            }
+            if (password === '') {
+                alert([[#{login.password.required}]]);
+                return false;
+            }
+            return true;
+        }
+    </script>
+</body>
+
+</html>

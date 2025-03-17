@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>Cambiar Asiento</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@500;600&family=Roboto&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+    <style>
+        /* Estilos CSS personalizados para los asientos */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f7fa;
+        }
+
+        .seat {
+            width: 50px;
+            height: 50px;
+            background-color: #d4edda;
+            border: 1px solid #28a745;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .seat.available:hover {
+            background-color: #c3e6cb;
+        }
+
+        .seat.selected {
+            background-color: #007bff;
+            border-color: #0056b3;
+            color: #fff;
+        }
+
+        .seat.originally-selected {
+            background-color: #ffc107;
+            border-color: #e0a800;
+            cursor: not-allowed;
+        }
+
+        .seat.booked {
+            background-color: #f8d7da;
+            border-color: #dc3545;
+            cursor: not-allowed;
+        }
+
+        .seat-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .modal-header, .modal-body, .modal-footer {
+            padding: 1rem;
+        }
+
+        .selected-seats-container {
+            max-width: 250px;
+        }
+
+        .form-control {
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header th:include="home/homeTemplate/home.html::header"></header>
+    
+    
+    <div class="container py-5">
+        <h2 class="mb-4">Cambiar Asiento</h2>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>Detalles del Vuelo</h4>
+                    <div class="border mb-4 p-3">
+                        <small th:text="'Número Vuelo: '+${vuelo.numeroVuelo}"></small><br>
+                        <small th:text="'Ciudad Salida: '+${vuelo.ciudadSalida}"></small><br>
+                        <small th:text="'Ciudad Llegada: '+${vuelo.ciudadLlegada}"></small><br>
+                        <small th:text="'Duración: '+${vuelo.duracion}"></small><br>
+                        <small th:text="'Fecha Salida: '+${vuelo.fechaHoraSalida}"></small><br>
+                        <small th:text="'Fecha Llegada: '+${vuelo.fechaHoraLlegada}"></small>
+                    </div>
+
+                    <h4>Instrucciones de Asientos</h4>
+                    <div class="seat-info border p-3">
+                        <div class="d-flex justify-content-start align-items-center mb-2">
+                            <div class="seat available me-2"></div>
+                            <span>Asiento Disponible</span>
+                        </div>
+                        <div class="d-flex justify-content-start align-items-center mb-2">
+                            <div class="seat booked me-2"></div>
+                            <span>Asiento Ocupado</span>
+                        </div>
+                        <div class="d-flex justify-content-start align-items-center mb-2">
+                            <div class="seat originally-selected me-2"></div>
+                            <span>Asiento Originalmente Seleccionado</span>
+                        </div>
+                        <div class="d-flex justify-content-start align-items-center mb-2">
+                            <div class="seat selected me-2"></div>
+                            <span>Asiento Seleccionado</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <h4>Selecciona tu Asiento</h4>
+                    <div class="seat-container" id="seatContainer">
+                        <!-- Asientos -->
+                        <div th:each="fila : ${asientosParticionados}">
+                            <div class="d-flex flex-row">
+                                <!-- Asientos -->
+                                <div th:each="asiento : ${fila}" 
+                                     th:class="${asiento.estado == 'ocupado' ? 'seat booked' : (asiento.estado == 'seleccionado' ? 'seat originally-selected' : 'seat available')}" 
+                                     th:data-seat="${asiento.idAsiento}" 
+                                     th:text="${asiento.numeroAsiento}"
+                                     th:attr="disabled=${asiento.estado == 'seleccionado'}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="selected-seats-container ms-4">
+                        <h4>Asientos Seleccionados</h4>
+                        <ul id="selectedSeats" class="list-group mb-4">
+                            <!-- Renderizar los asientos seleccionados -->
+                            <li class="list-group-item" th:each="asiento: ${asientosSeleccionados}">
+                                <span th:text="${asiento.numeroAsiento}"></span>
+                                <button type="button" class="btn btn-sm btn-danger float-end change-seat" th:data-seat="${asiento.idAsiento}">Cambiar</button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+
+
+    </div>
+
+    <!-- Modal de Selección de Asiento -->
+    <div class="modal fade" id="seatChangeModal" tabindex="-1" aria-labelledby="seatChangeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form id="bookingForm" method="post" th:action="@{/perfil/cambiar}">
+                    <input type="hidden" name="asientoOriginal" id="asientoOriginal" />
+                    <input type="hidden" name="asientoReemplazo" id="asientoReemplazo" />
+                    <input type="hidden" name="idVuelo" id="idVuelo" th:value="${vuelo.idVuelo}" />
+                    <input type="hidden" name="idReserva" id="idReserva" th:value="${idReserva}" />
+                    <div class="modal-header">
+                        
+                        <h5 class="modal-title" id="seatChangeModalLabel">Selecciona un nuevo asiento</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <h4>Instrucciones de Asientos</h4>
+                        <div class="seat-info border p-3">
+                            <div class="d-flex justify-content-start align-items-center mb-2">
+                                <div class="seat available me-2"></div>
+                                <span>Asiento Disponible</span>
+                            </div>
+                            <div class="d-flex justify-content-start align-items-center mb-2">
+                                <div class="seat booked me-2"></div>
+                                <span>Asiento Ocupado</span>
+                            </div>
+                            <div class="d-flex justify-content-start align-items-center mb-2">
+                                <div class="seat originally-selected me-2"></div>
+                                <span>Asiento Originalmente Seleccionado</span>
+                            </div>
+                            <div class="d-flex justify-content-start align-items-center mb-2">
+                                <div class="seat selected me-2"></div>
+                                <span>Asiento Seleccionado</span>
+                            </div>
+                        </div>
+
+                        <h4>Selecciona tu nuevo Asiento</h4>
+                        <div th:each="fila : ${asientosParticionados}">
+                            <div class="d-flex flex-row">
+                                <!-- Asientos -->
+                                <div th:each="asiento : ${fila}" 
+                                     th:class="${asiento.estado == 'ocupado' ? 'seat booked' : (asiento.estado == 'seleccionado' ? 'seat originally-selected' : 'seat available')}" 
+                                     th:data-seat="${asiento.idAsiento}" 
+                                     th:text="${asiento.numeroAsiento}"
+                                     th:attr="disabled=${asiento.estado == 'seleccionado'}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        <button type="button" id="confirmSeatChange" class="btn btn-primary" disabled>Confirmar Cambio</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+  <footer th:include="home/homeTemplate/home.html::footer"></footer>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+   
+
+    <script>
+        $(document).ready(function () {
+            var asientoOriginal = null;  // El asiento que el usuario seleccionó originalmente
+            var asientoReemplazo = null;  // El asiento con el que el usuario quiere reemplazar
+    
+            // Abrir el modal para cambiar el asiento
+            $('#selectedSeats').on('click', '.change-seat', function () {
+                asientoOriginal = $(this).data('seat');
+                $('#seatChangeModal').modal('show');
+                loadAvailableSeats();  // Cargar asientos disponibles en el modal
+            });
+    
+            // Cargar los asientos disponibles en el modal
+            function loadAvailableSeats() {
+                const modalSeatContainer = $('#modalSeatContainer');
+                modalSeatContainer.empty();  // Limpiar los asientos existentes
+    
+                // Aquí deberías cargar los asientos disponibles desde el servidor o la base de datos
+                // Ejemplo de asientos disponibles:
+                const availableSeats = [
+                    { id: 1, numeroAsiento: 'A1' },
+                    { id: 2, numeroAsiento: 'A2' },
+                    { id: 3, numeroAsiento: 'A3' },
+                ];
+    
+                availableSeats.forEach(seat => {
+                    const seatElement = `<div class="seat available" data-seat="${seat.id}">
+                                            ${seat.numeroAsiento}
+                                        </div>`;
+                    modalSeatContainer.append(seatElement);
+                });
+    
+                // Permitir seleccionar un asiento
+                $('.seat.available').on('click', function () {
+                    $('.seat').removeClass('selected');
+                    $(this).addClass('selected');
+                    asientoReemplazo = $(this).data('seat');  // Asignar el asiento de reemplazo
+                    $('#confirmSeatChange').prop('disabled', false);
+                });
+            }
+    
+            // Confirmar el cambio de asiento
+            $('#confirmSeatChange').on('click', function () {
+                if (asientoReemplazo) {
+                    // Asignar los valores de los campos ocultos
+                    $('#asientoOriginal').val(asientoOriginal);
+                    $('#asientoReemplazo').val(asientoReemplazo);
+    
+                    // Enviar el formulario
+                    $('#bookingForm').submit();
+    
+                    // Cerrar el modal
+                    $('#seatChangeModal').modal('hide');
+                }
+            });
+        });
+    </script>
+    
+
+</body>
+</html>

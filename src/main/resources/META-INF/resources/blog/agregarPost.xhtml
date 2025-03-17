@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ui:composition lang="es"
+                xmlns:f="jakarta.faces.core"
+                xmlns:h="jakarta.faces.html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:fs="http://xmlns.jcp.org/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                template="/template/main.xhtml">
+
+    <h:head>
+        <title>Agregar Post - Blog de Viajero</title>
+
+        <!-- Estilos CSS Directamente en la página -->
+        <style>
+            /* Estilos para el contenedor principal */
+            .post-form-container {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                background-color: #f8f9fa;
+                font-family: 'Arial', sans-serif;
+            }
+
+            /* Estilo del formulario */
+            .post-form {
+                max-width: 700px;
+                width: 100%;
+                padding: 40px;
+                background-color: #ffffff;
+                border-radius: 12px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+                border: 1px solid #e0e0e0;
+            }
+
+            /* Título del formulario */
+            .post-form h2 {
+                text-align: center;
+                margin-bottom: 30px;
+                color: #007bff;
+                font-size: 28px;
+                font-weight: 600;
+            }
+
+            /* Estilo de las etiquetas de los campos */
+            .form-group {
+                margin-bottom: 20px;
+            }
+
+            .form-group h:outputLabel {
+                font-weight: 500;
+                font-size: 16px;
+                color: #333;
+            }
+
+            /* Estilo de los campos de texto */
+            h:inputText, p:textEditor, h:inputTextarea {
+                width: 100%;
+                padding: 12px;
+                border-radius: 8px;
+                border: 1px solid #ccc;
+                font-size: 16px;
+                transition: all 0.3s ease;
+            }
+
+            h:inputText:focus, p:textEditor:focus, h:inputTextarea:focus {
+                border-color: #007bff;
+                box-shadow: 0 0 8px rgba(0, 123, 255, 0.5);
+            }
+
+            /* Estilo del botón de enviar */
+            .btn-primary {
+                width: 100%;
+                padding: 14px;
+                border-radius: 8px;
+                background-color: #007bff;
+                color: white;
+                font-size: 18px;
+                cursor: pointer;
+                transition: background-color 0.3s, transform 0.3s;
+            }
+
+            .btn-primary:hover {
+                background-color: #0056b3;
+                transform: translateY(-2px);
+            }
+
+            /* Estilos para el área del contenido del post */
+            .content-panel {
+                background-color: #fafafa;
+                padding: 20px;
+                border-radius: 8px;
+                border: 1px solid #f1f1f1;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            .content-panel p {
+                color: #555;
+                font-size: 14px;
+                line-height: 1.5;
+                margin-top: 10px;
+            }
+
+            /* Estilo de los mensajes de validación */
+            .ui-messages {
+                margin-top: 20px;
+            }
+
+            .ui-message-error {
+                background-color: #f8d7da;
+                color: #721c24;
+                border-color: #f5c6cb;
+            }
+        </style>
+    </h:head>
+
+    <ui:define name="contenido">
+        <!-- Contenedor centrado -->
+        <div class="post-form-container">
+            <h:form id="formAgregarPost" styleClass="post-form">
+                <h2>Agregar un Nuevo Post</h2>
+
+                <!-- Título del Post -->
+                <div class="form-group">
+                    <h:outputLabel for="titulo" value="Título del Post:" />
+                    <h:inputText id="titulo" value="#{postBean.titulo}" required="true" maxlength="255" 
+                                 styleClass="form-control" placeholder="Introduce el título del post"/>
+                    <h:message for="titulo" styleClass="ui-message-error" />
+                </div>
+
+                <!-- Descripción del Post -->
+                <div class="form-group">
+                    <h:outputLabel for="descripcion" value="Descripción del Post:" />
+                    <h:inputText id="descripcion" value="#{postBean.descripcion}" required="true" maxlength="255" 
+                                 styleClass="form-control" placeholder="Escribe una breve descripción"/>
+                    <h:message for="descripcion" styleClass="ui-message-error" />
+                </div>
+
+                <!-- Contenido del Post -->
+                <h:panelGrid columns="1" cellpadding="10" styleClass="content-panel">
+                    <h:outputLabel for="contenido" value="Contenido del Post:" />
+                    <p:textEditor id="contenido" value="#{postBean.contenido}" style="width:100%" required="true" 
+                                  secure="false" placeholder="Escribe el contenido de tu post aquí..."/>
+                    <h:message for="contenido" styleClass="ui-message-error" />
+                </h:panelGrid>
+
+                <!-- Botón de Guardar -->
+                <div class="form-group">
+                    <h:commandButton value="Guardar Post" action="#{postBean.guardarPost}" 
+                                     styleClass="btn-primary" />
+                </div>
+            </h:form>
+        </div>
+    </ui:define>
+
+</ui:composition>

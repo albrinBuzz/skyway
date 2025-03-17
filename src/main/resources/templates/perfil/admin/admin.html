@@ -1,0 +1,916 @@
+<!DOCTYPE HTML>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Vuelos</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        .container {
+            margin-top: 2rem;
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            width: 200px;
+            background-color: #222;
+            color: white;
+            padding-top: 20px;
+        }
+        .sidebar ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .sidebar ul li a {
+            color: white;
+            padding: 10px;
+            display: block;
+            text-decoration: none;
+        }
+        .sidebar ul li a:hover {
+            background-color: #444;
+        }
+        .content {
+            margin-left: 220px;
+        }
+        .card {
+            margin-bottom: 1rem;
+        }
+        .modal-header .close {
+            padding: 1rem;
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <ul>
+            <li><a href="#">Panel de Control</a></li>
+            <li><a href="#" data-toggle="collapse" data-target="#menuVuelos">Vuelos <span class="caret"></span></a>
+                <ul id="menuVuelos" class="collapse">
+                    <li><a href="#" data-toggle="modal" data-target="#modalAgregarVuelo">Agregar Nuevo Vuelo</a></li>
+                    <li><a href="#">Gestionar Vuelos</a></li>
+                </ul>
+            </li>
+            <li><a href="#" data-toggle="collapse" data-target="#menuAviones">Aviones <span class="caret"></span></a>
+                <ul id="menuAviones" class="collapse">
+                    <li><a href="#" data-toggle="modal" data-target="#modalAgregarAvion">Agregar Nuevo Avión</a></li>
+                    <li><a href="#">Gestionar Aviones</a></li>
+                </ul>
+            </li>
+            <li><a href="#">Pilotos</a></li>
+        </ul>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div class="content">
+        <h2>Gestionar Vuelos</h2>
+
+        <!-- Sección de Gestión de Vuelos -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Información de Vuelos</h3>
+            </div>
+            <div class="card-body">
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarVuelo">
+                    <i class="fa fa-plus"></i> Agregar Nuevo Vuelo
+                </button>
+                <table class="table table-bordered" id="tablaVuelos">
+                    <thead>
+                        <tr>
+                            <th>ID de Vuelo</th>
+                            <th>Número de Vuelo</th>
+                            <th>Origen</th>
+                            <th>Destino</th>
+                            <th>Fecha de Salida</th>
+                            <th>Fecha de Llegada</th>
+                            <th>Avión</th>
+                            <th>Piloto</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Filas de vuelos cargadas por AJAX -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Sección de Gestión de Aviones -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Gestión de Aviones</h3>
+            </div>
+            <div class="card-body">
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarAvion">
+                    <i class="fa fa-plus"></i> Agregar Nuevo Avión
+                </button>
+                <table class="table table-bordered" id="tablaAviones">
+                    <thead>
+                        <tr>
+                            <th>ID de Avión</th>
+                            <th>Número de Avión</th>
+                            <th>Modelo</th>
+                            <th>Capacidad Total</th>
+                            <th>Capacidad Primera Clase</th>
+                            <th>Capacidad Ejecutiva</th>
+                            <th>Capacidad Económica</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Filas de aviones cargadas por AJAX -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Sección de Gestión de Pilotos -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Gestión de Pilotos</h3>
+            </div>
+            <div class="card-body">
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarPiloto">
+                    <i class="fa fa-plus"></i> Agregar Nuevo Piloto
+                </button>
+                <table class="table table-bordered" id="tablaPilotos">
+                    <thead>
+                        <tr>
+                            <th>ID de Piloto</th>
+                            <th>Nombre</th>
+                            <th>Licencia</th>
+                            <th>Experiencia</th>
+                            <th>Email</th>
+                            <th>Teléfono</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Filas de pilotos cargadas por AJAX -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Agregar Vuelo -->
+    <div class="modal fade" id="modalAgregarVuelo" tabindex="-1" role="dialog" aria-labelledby="modalAgregarVueloLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="modalAgregarVueloLabel">Agregar Nuevo Vuelo</h4>
+                </div>
+                <div class="modal-body">
+                    <form id="formAgregarVuelo">
+                        <div class="form-group">
+                            <label for="nroVuelo">Número de Vuelo:</label>
+                            <input type="text" class="form-control" id="nroVuelo" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="origen">Origen:</label>
+                            <input type="text" class="form-control" id="origen" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="destino">Destino:</label>
+                            <input type="text" class="form-control" id="destino" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="fechaSalida">Fecha de Salida:</label>
+                            <input type="datetime-local" class="form-control" id="fechaSalida" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="fechaLlegada">Fecha de Llegada:</label>
+                            <input type="datetime-local" class="form-control" id="fechaLlegada" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="avion">Seleccionar Avión:</label>
+                            <select id="avion" class="form-control" required>
+                                <!-- Aviones cargados dinámicamente -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="piloto">Seleccionar Piloto:</label>
+                            <select id="piloto" class="form-control" required>
+                                <!-- Pilotos cargados dinámicamente -->
+                            </select>
+                        </div>
+
+                        <div class="col-sm-4">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title">Primera Clase</h4>
+                                </div>
+                                <div class="panel-body">
+                                    <div class="input-group">
+                                        <label>Asientos</label>
+                                        <input type="number" id="asientosPrimera" class="form-control" value="0" min="0" name="asientosPrimera" readonly required>
+                                    </div>
+                                    <div class="input-group">
+                                        <label class="price-label">Precio <small>(por asiento)</small></label>
+                                        <input type="number" id="precioPrimera" class="form-control price-input" value="0" min="0" name="precioPrimera" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Clase Ejecutiva -->
+                        <div class="col-sm-4">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title">Clase Ejecutiva</h4>
+                                </div>
+                                <div class="panel-body">
+                                    <div class="input-group">
+                                        <label>Asientos</label>
+                                        <input type="number" id="asientosEjecutiva" class="form-control" value="0" min="0" name="asientosEjecutiva" readonly required>
+                                    </div>
+                                    <div class="input-group">
+                                        <label class="price-label">Precio <small>(por asiento)</small></label>
+                                        <input type="number" id="precioEjecutiva" class="form-control price-input" value="0" min="0" name="precioEjecutiva" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Clase Económica -->
+                        <div class="col-sm-4">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title">Clase Económica</h4>
+                                </div>
+                                <div class="panel-body">
+                                    <div class="input-group">
+                                        <label>Asientos</label>
+                                        <input type="number" id="asientosEconomica" class="form-control" value="0" min="0" name="asientosEconomica" readonly required>
+                                    </div>
+                                    <div class="input-group">
+                                        <label class="price-label">Precio <small>(por asiento)</small></label>
+                                        <input type="number" id="precioEconomica" class="form-control price-input" value="0" min="0" name="precioEconomica" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Detalles del avión -->
+                        <div id="avionDetails"></div>
+
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                    <button type="submit" form="formAgregarVuelo" class="btn btn-primary">Guardar Vuelo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Agregar Avión -->
+<div class="modal fade" id="modalAgregarAvion" tabindex="-1" role="dialog" aria-labelledby="modalAgregarAvionLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="modalAgregarAvionLabel">Agregar Nuevo Avión</h4>
+            </div>
+            <div class="modal-body">
+                <!-- Formulario para Agregar Avión -->
+                <form id="formAgregarAvion">
+                    <div class="form-group">
+                        <label for="numeroDeRegistro">Número de Registro:</label>
+                        <input type="text" id="numeroDeRegistro" name="numeroDeRegistro" class="form-control" required>
+                        <div id="errorNumeroDeRegistro" class="text-danger"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="modelo">Modelo:</label>
+                        <input type="text" id="modelo" name="modelo" class="form-control" required>
+                        <div id="errorModelo" class="text-danger"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fabricante">Fabricante:</label>
+                        <input type="text" id="fabricante" name="fabricante" class="form-control" required>
+                        <div id="errorFabricante" class="text-danger"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="anoDeFabricacion">Año de Fabricación:</label>
+                        <input type="number" id="anoDeFabricacion" name="anoDeFabricacion" class="form-control" required>
+                        <div id="errorAnoDeFabricacion" class="text-danger"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="capacidadDePasajeros">Capacidad de Pasajeros:</label>
+                        <input type="number" id="capacidadDePasajeros" name="capacidadDePasajeros" class="form-control" required>
+                        <div id="errorCapacidadDePasajeros" class="text-danger"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="estadoDeMantenimiento">Estado de Mantenimiento:</label>
+                        <input type="text" id="estadoDeMantenimiento" name="estadoDeMantenimiento" class="form-control" required>
+                        <div id="errorEstadoDeMantenimiento" class="text-danger"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="capEconomica">Capacidad Económica:</label>
+                        <input type="number" id="capEconomica" name="capEconomica" class="form-control" required>
+                        <div id="errorCapEconomica" class="text-danger"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="capEjecutiva">Capacidad Ejecutiva:</label>
+                        <input type="number" id="capEjecutiva" name="capEjecutiva" class="form-control" required>
+                        <div id="errorCapEjecutiva" class="text-danger"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="capPrimera">Capacidad Primera:</label>
+                        <input type="number" id="capPrimera" name="capPrimera" class="form-control" required>
+                        <div id="errorCapPrimera" class="text-danger"></div>
+                    </div>
+
+                    <button type="submit" id="guardarAvionBtn" class="btn btn-primary">Guardar Avión</button>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+    
+    
+<!-- Modal para Editar Avión -->
+<div class="modal fade" id="modalEditarAvion" tabindex="-1" role="dialog" aria-labelledby="modalEditarAvionLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="modalEditarAvionLabel">Editar Avión</h4>
+            </div>
+            <div class="modal-body">
+                <form id="formEditarAvion">
+                    <div class="form-group">
+                        <label for="nroAvionEditar">Número de Avión:</label>
+                        <input type="text" class="form-control" id="nroAvionEditar" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="modeloEditar">Modelo:</label>
+                        <input type="text" class="form-control" id="modeloEditar" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="capacidadTotalEditar">Capacidad Total:</label>
+                        <input type="number" class="form-control" id="capacidadTotalEditar" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="capacidadPrimeraClaseEditar">Capacidad Primera Clase:</label>
+                        <input type="number" class="form-control" id="capacidadPrimeraClaseEditar" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="capacidadEjecutivaEditar">Capacidad Ejecutiva:</label>
+                        <input type="number" class="form-control" id="capacidadEjecutivaEditar" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="capacidadEconomicaEditar">Capacidad Económica:</label>
+                        <input type="number" class="form-control" id="capacidadEconomicaEditar" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                <button type="submit" form="formEditarAvion" class="btn btn-primary">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+</div>
+    
+
+    <!-- Modal Agregar Piloto -->
+    <div class="modal fade" id="modalAgregarPiloto" tabindex="-1" role="dialog" aria-labelledby="modalAgregarPilotoLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="modalAgregarPilotoLabel">Agregar Nuevo Piloto</h4>
+                </div>
+                <div class="modal-body">
+                    <form id="formAgregarPiloto">
+                        <div class="form-group">
+                            <label for="idPiloto">ID de Piloto:</label>
+                            <input type="text" class="form-control" id="idPiloto" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="nombrePiloto">Nombre:</label>
+                            <input type="text" class="form-control" id="nombrePiloto" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="licencia">Licencia:</label>
+                            <input type="text" class="form-control" id="licencia" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="experiencia">Experiencia:</label>
+                            <input type="text" class="form-control" id="experiencia" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                    <button type="submit" form="formAgregarPiloto" class="btn btn-primary">Guardar Piloto</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+       $(document).ready(function() {
+    // Función para cargar los vuelos, aviones y pilotos
+    cargarDatos();
+
+
+        // Función para validar el número de registro
+        function validarNumeroDeRegistro() {
+        var numeroDeRegistro = $('#numeroDeRegistro').val();
+        if (numeroDeRegistro.length < 5 || numeroDeRegistro.length > 20) {
+            $('#errorNumeroDeRegistro').text('El número de registro debe tener entre 5 y 20 caracteres.');
+            $('#numeroDeRegistro').css('border-color', 'red');
+            return false;
+        } else {
+            $('#errorNumeroDeRegistro').text('');
+            $('#numeroDeRegistro').css('border-color', 'green');
+            return true;
+        }
+    }
+
+    // Función para validar el modelo
+    function validarModelo() {
+        var modelo = $('#modelo').val();
+        if (modelo.length < 2 || modelo.length > 100) {
+            $('#errorModelo').text('El modelo debe tener entre 2 y 100 caracteres.');
+            $('#modelo').css('border-color', 'red');
+            return false;
+        } else {
+            $('#errorModelo').text('');
+            $('#modelo').css('border-color', 'green');
+            return true;
+        }
+    }
+
+    // Función para validar año de fabricación
+    function validarAnoDeFabricacion() {
+        var anoDeFabricacion = $('#anoDeFabricacion').val();
+        var currentYear = new Date().getFullYear();
+        if (anoDeFabricacion < 1900 || anoDeFabricacion > currentYear) {
+            $('#errorAnoDeFabricacion').text('El año de fabricación debe estar entre 1900 y el año actual.');
+            $('#anoDeFabricacion').css('border-color', 'red');
+            return false;
+        } else {
+            $('#errorAnoDeFabricacion').text('');
+            $('#anoDeFabricacion').css('border-color', 'green');
+            return true;
+        }
+    }
+
+    // Función para validar la capacidad de pasajeros
+    function validarCapacidadDePasajeros() {
+        var capacidadDePasajeros = $('#capacidadDePasajeros').val();
+        if (capacidadDePasajeros < 1 || capacidadDePasajeros > 500) {
+            $('#errorCapacidadDePasajeros').text('La capacidad de pasajeros debe estar entre 1 y 500.');
+            $('#capacidadDePasajeros').css('border-color', 'red');
+            return false;
+        } else {
+            $('#errorCapacidadDePasajeros').text('');
+            $('#capacidadDePasajeros').css('border-color', 'green');
+            return true;
+        }
+    }
+
+    // Función para validar el estado de mantenimiento
+    function validarEstadoDeMantenimiento() {
+        var estadoDeMantenimiento = $('#estadoDeMantenimiento').val();
+        if (estadoDeMantenimiento.length < 3 || estadoDeMantenimiento.length > 50) {
+            $('#errorEstadoDeMantenimiento').text('El estado de mantenimiento debe tener entre 3 y 50 caracteres.');
+            $('#estadoDeMantenimiento').css('border-color', 'red');
+            return false;
+        } else {
+            $('#errorEstadoDeMantenimiento').text('');
+            $('#estadoDeMantenimiento').css('border-color', 'green');
+            return true;
+        }
+    }
+
+    // Función para validar capacidades
+    function validarCapacidades() {
+        var capEconomica = $('#capEconomica').val();
+        var capEjecutiva = $('#capEjecutiva').val();
+        var capPrimera = $('#capPrimera').val();
+
+        var valid = true;
+
+        if (capEconomica < 0 || capEjecutiva < 0 || capPrimera < 0) {
+            $('#errorCapEconomica').text('Las capacidades no pueden ser menores a cero.');
+            $('#errorCapEjecutiva').text('Las capacidades no pueden ser menores a cero.');
+            $('#errorCapPrimera').text('Las capacidades no pueden ser menores a cero.');
+            valid = false;
+        } else {
+            $('#errorCapEconomica').text('');
+            $('#errorCapEjecutiva').text('');
+            $('#errorCapPrimera').text('');
+        }
+
+        return valid;
+    }
+
+
+    function cargarDatos() {
+        // Cargar Vuelos
+        $.ajax({
+            url: 'api/vuelos',  // Cambia esta URL por la correcta
+            type: 'GET',
+            success: function(data) {
+                var vuelosHtml = '';
+                data.forEach(function(vuelo) {
+                    vuelosHtml += `
+                        <tr>
+                            <td>${vuelo.id}</td>
+                            <td>${vuelo.nroVuelo}</td>
+                            <td>${vuelo.origen}</td>
+                            <td>${vuelo.destino}</td>
+                            <td>${vuelo.fechaSalida}</td>
+                            <td>${vuelo.fechaLlegada}</td>
+                            <td>${vuelo.avion}</td>
+                            <td>${vuelo.piloto}</td>
+                            <td>
+                                <button class="btn btn-warning"><i class="fa fa-edit"></i> Editar</button>
+                                <button class="btn btn-danger"><i class="fa fa-trash"></i> Eliminar</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                $('#tablaVuelos tbody').html(vuelosHtml);
+            }
+        });
+
+        // Cargar Aviones
+        $.ajax({
+            url: '/avion/',  // Cambia esta URL por la correcta
+            type: 'GET',
+            success: function(data) {
+                var avionesHtml = '';
+                data.forEach(function(avion) {
+                
+
+                    $('#avion').empty();
+                
+                    // Agregar una opción por defecto
+                    $('#avion').append('<option value="" disabled selected>Selecciona un avión</option>');
+                    
+                    // Llenar el select con los aviones
+                    data.forEach(function(avion) {
+                        
+                        $('#avion').append(`
+                            <option value="${avion.idAvion}">${avion.numeroDeRegistro} - ${avion.modelo}</option>
+                        `);
+                    });
+
+                    avionesHtml += `
+                        <tr>
+                            <td>${avion.idAvion}</td>
+                            <td>${avion.numeroDeRegistro}</td>
+                            <td>${avion.modelo}</td>
+                            <td>${avion.capacidadDeCarga}</td>
+                            <td>${avion.cap_primera}</td>
+                            <td>${avion.cap_ejecutiva}</td>
+                            <td>${avion.cap_economica}</td>
+                            <td>
+                                <button class="btn btn-warning btn-editar" data-id="${avion.idAvion}"><i class="fa fa-edit"></i> Editar</button>
+                                <button class="btn btn-danger btn-eliminar" data-id="${avion.idAvion}"><i class="fa fa-trash"></i> Eliminar</button>
+                            </td>
+                        </tr>
+                    `;
+                    
+                });
+                $('#tablaAviones tbody').html(avionesHtml);
+            }
+        });
+
+        // Cargar Pilotos
+        $.ajax({
+            url: 'api/pilotos/',  // Cambia esta URL por la correcta
+            type: 'GET',
+            success: function(data) {
+                var pilotosHtml = '';
+                data.forEach(function(piloto) {
+
+
+
+                    $('#piloto').empty();
+                
+                    // Agregar una opción por defecto
+                    $('#piloto').append('<option value="" disabled selected>Selecciona un piloto</option>');
+                    
+                    // Llenar el select con los aviones
+                    data.forEach(function(piloto) {
+                        
+                        console.log(piloto)
+
+                        $('#piloto').append(`
+                            <option value="${piloto.nombre}"> ${piloto.nombre} - ${piloto.rutUsuario}</option>
+                        `);
+                    });
+
+                    pilotosHtml += `
+                        <tr>
+                            <td>${piloto.id}</td>
+                            <td>${piloto.nombre}</td>
+                            <td>${piloto.licencia}</td>
+                            <td>${piloto.experiencia}</td>
+                            <td>${piloto.email}</td>
+                            <td>${piloto.telefono}</td>
+                            <td>
+                                <button class="btn btn-warning"><i class="fa fa-edit"></i> Editar</button>
+                                <button class="btn btn-danger"><i class="fa fa-trash"></i> Eliminar</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                $('#tablaPilotos tbody').html(pilotosHtml);
+            }
+        });
+    }
+
+
+
+
+    // Mostrar el modal con los datos del avión a editar
+    $('#tablaAviones').on('click', '.btn-editar', function() {
+        var avionId = $(this).data('id');
+
+        console.log(avionId);
+
+        // Obtener los detalles del avión a editar
+        $.ajax({
+            url: '/avion/getAvion/' + avionId,  // URL para obtener los detalles del avión
+            type: 'GET',
+            success: function(data) {
+                // Rellenar los campos del formulario del modal con los datos del avión
+                $('#nroAvionEditar').val(data.numeroDeRegistro);
+                $('#modeloEditar').val(data.modelo);
+                $('#capacidadTotalEditar').val(data.capacidadDeCarga);
+                $('#capacidadPrimeraClaseEditar').val(data.cap_primera);
+                $('#capacidadEjecutivaEditar').val(data.cap_ejecutiva);
+                $('#capacidadEconomicaEditar').val(data.cap_economica);
+                
+                // Mostrar el modal
+                $('#modalEditarAvion').modal('show');
+            }
+        });
+
+
+
+    });
+
+
+    $('#tablaAviones').on('click', '.btn-eliminar', function() {
+    var avionId = $(this).data('id');  // Obtiene el ID desde el atributo 'data-id'
+
+    console.log(avionId);  // Aquí debería aparecer el ID del avión que se va a eliminar
+
+    if (!confirm('¿Estás seguro de que deseas eliminar este avión?')) {
+        return;
+    }
+    console.log("eleiminado")
+
+    // Realiza la solicitud DELETE a la API
+    $.ajax({
+        url: '/avion/eliminar/' + avionId,  // Cambia la URL a la correcta para eliminar el avión
+        type: 'DELETE',
+        success: function(response) {
+            // Si la eliminación es exitosa, elimina la fila de la tabla
+            alert('El avión ha sido eliminado correctamente');
+            // Eliminar la fila correspondiente
+            $('button[data-id="' + avionId + '"]').closest('tr').remove();
+        },
+        error: function(xhr, status, error) {
+            console.log(error+' '+status)
+
+            alert('Error al eliminar el avión',error,status);
+        }
+    });
+});
+
+
+
+    // Guardar los cambios del avión
+    $('#formEditarAvion').on('submit', function(e) {
+        e.preventDefault();
+
+        var avionId = $('#tablaAviones .btn-editar').data('id');
+        var updatedAvion = {
+            numeroDeRegistro: $('#nroAvionEditar').val(),
+            modelo: $('#modeloEditar').val(),
+            capacidadDeCarga: $('#capacidadTotalEditar').val(),
+            cap_primera: $('#capacidadPrimeraClaseEditar').val(),
+            cap_ejecutiva: $('#capacidadEjecutivaEditar').val(),
+            cap_economica: $('#capacidadEconomicaEditar').val()
+        };
+
+        // Enviar los datos actualizados al servidor
+        $.ajax({
+            url: '/avion/' + avionId,  // URL para actualizar los detalles del avión
+            type: 'PUT',
+            contentType: 'application/json',
+            data: JSON.stringify(updatedAvion),
+            success: function(response) {
+                // Recargar los datos y cerrar el modal
+                cargarDatos();
+                $('#modalEditarAvion').modal('hide');
+            }
+        });
+    });
+
+    $('#formAgregarAvion').submit(function(event) {
+        event.preventDefault();  // Prevenir el envío por defecto del formulario
+
+        // Obtener los datos del formulario
+
+
+        
+        var isValid = true;
+
+        // Validar cada campo
+        if (!validarNumeroDeRegistro()) isValid = false;
+        if (!validarModelo()) isValid = false;
+        if (!validarAnoDeFabricacion()) isValid = false;
+        if (!validarCapacidadDePasajeros()) isValid = false;
+        if (!validarEstadoDeMantenimiento()) isValid = false;
+        if (!validarCapacidades()) isValid = false;
+
+
+        const avionData = {
+            numeroDeRegistro: $('#numeroDeRegistro').val(),
+            modelo: $('#modelo').val(),
+            fabricante: $('#fabricante').val(),
+            anoDeFabricacion: $('#anoDeFabricacion').val(),
+            capacidadDePasajeros: $('#capacidadDePasajeros').val(),
+            capacidadDeCarga: $('#capacidadDeCarga').val(),
+            estadoDeMantenimiento: $('#estadoDeMantenimiento').val(),
+            cap_primera: $('#capPrimera').val(),
+            cap_ejecutiva: $('#capEjecutiva').val(),
+            cap_economica: $('#capEconomica').val()    
+        };
+
+        console.log(JSON.stringify(avionData));
+
+        // Hacer la solicitud PUT para insertar el avión
+
+        if(isValid){
+            
+            $.ajax({
+                url: '/avion/agregarAvion/' ,  // Aquí se usa el número de registro como ID
+                type: 'PUT',
+                contentType: 'application/json',  // Asegúrate de que los datos se envíen como JSON
+                data: JSON.stringify(avionData),  // Convierte los datos a JSON
+                success: function(response) {
+                    alert('Avión agregado exitosamente');
+                    // Aquí puedes hacer algo después de que se haya agregado el avión
+                    // Como limpiar el formulario o cerrar el modal
+                    $('#formAgregarAvion')[0].reset();
+                },
+                error: function(xhr, status, error) {
+                    alert('Hubo un error al agregar el avión: ' + error);
+                }
+            });
+            
+        }
+
+    });
+
+
+
+    $('#formAgregarVuelo').submit(function(event) {
+        event.preventDefault();  // Prevenir el envío por defecto del formulario
+
+        // Obtener los datos del formulario
+
+
+        
+  
+        const vueloData = {
+            numeroVuelo: $('#nroVuelos').val(),
+            modelo: $('#origen').val(),
+            fabricante: $('#fabricante').val(),
+            anoDeFabricacion: $('#anoDeFabricacion').val(),
+            capacidadDePasajeros: $('#capacidadDePasajeros').val(),
+            capacidadDeCarga: $('#capacidadDeCarga').val(),
+            estadoDeMantenimiento: $('#estadoDeMantenimiento').val(),
+            cap_primera: $('#capPrimera').val(),
+            cap_ejecutiva: $('#capEjecutiva').val(),
+            cap_economica: $('#capEconomica').val()    
+        };
+
+        console.log(JSON.stringify(avionData));
+
+        // Hacer la solicitud PUT para insertar el avión
+
+
+            
+            $.ajax({
+                url: '/avion/agregarAvion/' ,  // Aquí se usa el número de registro como ID
+                type: 'PUT',
+                contentType: 'application/json',  // Asegúrate de que los datos se envíen como JSON
+                data: JSON.stringify(avionData),  // Convierte los datos a JSON
+                success: function(response) {
+                    alert('Avión agregado exitosamente');
+                    // Aquí puedes hacer algo después de que se haya agregado el avión
+                    // Como limpiar el formulario o cerrar el modal
+                    $('#formAgregarAvion')[0].reset();
+                },
+                error: function(xhr, status, error) {
+                    alert('Hubo un error al agregar el avión: ' + error);
+                }
+            });
+            
+        
+
+    });
+
+    });
+
+    
+
+
+    document.addEventListener("DOMContentLoaded", function() {
+    const avionSelect = document.getElementById('avion');
+
+    avionSelect.addEventListener('change', function() {
+        const avionId = avionSelect.value;
+            avionId.avionId
+        // Si se selecciona un avión
+        if (avionId) {
+            // Hacer la solicitud AJAX al servidor Spring Boot para obtener los detalles del avión
+            fetch(`/avion/getAvion/${avionId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())  // Convertir la respuesta en JSON
+            .then(data => {
+                if (data) {
+
+                    // Actualizar las clases y precios en el formulario
+                    document.getElementById('asientosPrimera').value = data.cap_primera;
+                    document.getElementById('precioPrimera').value = data.precioPrimera;
+
+                    document.getElementById('asientosEjecutiva').value = data.cap_ejecutiva;
+                    document.getElementById('precioEjecutiva').value = data.precioEjecutiva;
+
+                    document.getElementById('asientosEconomica').value = data.cap_economica;
+                    document.getElementById('precioEconomica').value = data.precioEconomica;
+                } else {
+                    // Si no se encuentra el avión, mostrar un mensaje
+                    document.getElementById('avionDetails').innerHTML = "<p>Detalles no disponibles para el avión seleccionado.</p>";
+                }
+            })
+            .catch(error => {
+                console.error('Error al obtener detalles del avión:', error);
+                document.getElementById('avionDetails').innerHTML = "<p>Ocurrió un error al obtener los detalles.</p>";
+            });
+        } else {
+            // Si no se selecciona un avión, limpiar los detalles
+            document.getElementById('avionDetails').innerHTML = "";
+            document.getElementById('asientosPrimera').value = "";
+            document.getElementById('precioPrimera').value = "";
+
+            document.getElementById('asientosEjecutiva').value = "";
+            document.getElementById('precioEjecutiva').value = "";
+
+            document.getElementById('asientosEconomica').value = "";
+            document.getElementById('precioEconomica').value = "";
+        }
+    });
+});
+
+    </script>
+</body>
+</html>

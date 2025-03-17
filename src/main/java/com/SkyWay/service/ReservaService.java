@@ -1,0 +1,22 @@
+package com.SkyWay.service;
+
+import java.util.List;
+import java.util.Optional;
+
+import com.SkyWay.dto.BoletoDTO;
+import com.SkyWay.dto.ReservaVueloDTO;
+import com.SkyWay.model.Reserva;
+
+public interface ReservaService {
+
+	  public List<Reserva> findAll();
+	  public Optional<Reserva> findById(Integer id);	  
+	  public Reserva save(Reserva reserva);
+	  public void deleteById(Integer id);
+	  public List<ReservaVueloDTO>getReservasUsuario(String rut);
+	  public void cancelarReserva(Integer id);
+	  public BoletoDTO getBoleto(Integer id);
+	 
+	  
+	
+}

@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ui:composition lang="es" 
+	  xmlns:f="jakarta.faces.core"
+      xmlns:h="jakarta.faces.html"	
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:fs="http://xmlns.jcp.org/jsf/core"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      template="/template/main.xhtml">
+      
+   <h:head>
+        <title>Reserva tu Vuelo</title>
+
+    <style >
+		
+.seat-row {
+    display: flex;
+    flex-direction: row; /* Asegura que los asientos se alineen horizontalmente */
+    justify-content: center; /* Centra los asientos en la fila */
+    gap: 10px; /* Espacio entre los asientos */
+}
+
+.seat {
+    width: 50px;
+    height: 50px;
+    background-color: #d4edda; /* Color de fondo para los disponibles */
+    border: 1px solid #28a745;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 5px;
+    cursor: pointer;
+}
+
+.seat.available {
+    background-color: #d4edda;
+    color: #28a745;
+}
+
+
+.seat.available:hover {
+    background-color: #c3e6cb;
+}
+
+.seat.booked {
+    background-color: #f8d7da;
+    color: #dc3545;
+    cursor: not-allowed;
+}
+
+  .cheap {
+		
+		  background-color: #f8d7da;
+    color: #dc3545;
+    cursor: not-allowed;
+    }
+
+.seat.selected {
+    background-color: #007bff;
+    border-color: #0056b3;
+    color: white;
+}
+
+.d-flex {
+    display: flex;
+}
+
+.mb-2 {
+    margin-bottom: 1rem;
+}
+
+		
+    
+           </style>
+    </h:head>
+   
+
+  <ui:define name="contenido">
+
+    
+	
+        <main class="container py-5">
+            <h2 class="mb-4">Reserva tu Vuelo</h2>
+
+        
+
+                <div class="row">
+                    <!-- Columna de Detalles del Vuelo y Resumen de los Asientos -->
+                    <div class="col-md-6">
+                        <!-- Detalles del vuelo -->
+                        <h4>Detalles del Vuelo</h4>
+                        <div class="border mb-4 p-3">
+                            <small>Numero Vuelo: <h:outputText value="#{bookingBean.vueloSeleccionado.numeroVuelo}" /></small><br></br>
+                            <small>Ciudad Salida: <h:outputText value="#{bookingBean.vueloSeleccionado.ciudadSalida}" /></small><br></br>
+                            <small>Ciudad Llegada: <h:outputText value="#{bookingBean.vueloSeleccionado.ciudadLlegada}" /></small><br></br>
+                            <small>Duración: <h:outputText value="#{bookingBean.vueloSeleccionado.duracion}" /></small><br></br>
+                            <small>Fecha Salida: <h:outputText value="#{bookingBean.vueloSeleccionado.formattedFechaHoraSalida}" /></small><br></br>
+                            <small>Fecha Llegada: <h:outputText value="#{bookingBean.vueloSeleccionado.formattedFechaHoraLlegada}" /></small>
+                        </div>
+
+                        <!-- Instrucciones de Asientos -->
+                        <h4>Instrucciones de Asientos</h4>
+                        <div class="seat-info border p-3">
+                            <div class="d-flex justify-content-start align-items-center mb-2">
+                                <div class="seat available me-2"></div>
+                                <span>Asiento Disponible</span>
+                            </div>
+                            <div class="d-flex justify-content-start align-items-center mb-2">
+                                <div class="seat booked me-2"></div>
+                                <span>Asiento Ocupado</span>
+                            </div>
+                            <div class="d-flex justify-content-start align-items-center mb-2">
+                                <div class="seat selected me-2"></div>
+                                <span>Asiento Seleccionado</span>
+                            </div>
+                        </div>
+
+      
+
+                        <!-- Resumen de los asientos seleccionados y total -->
+                    	  <h4>Resumen de Asientos Seleccionados</h4>
+                    	  <h:form id="form">
+    					<p:growl id="messages" showDetail="true" />
+			                <div id="selectedSeatsSummary" class="border p-3 mt-3">
+			            
+
+						    <p:dataTable id="dt-asientos" widgetVar="dtAsientos" var="asiento" value="#{bookingBean.asientosSeleccionados}" >
+						 
+						        
+						        <p:column headerText="Código" >
+						            <h:outputText value="#{asiento.numeroAsiento}" />
+						        </p:column>
+						        
+						        <p:column headerText="Clase" >
+						            <h:outputText value="#{asiento.clase}" />
+						        </p:column>
+
+						        <p:column headerText="Precio">
+						            <h:outputText value="#{asiento.precio}" />
+						        </p:column>
+						        
+						    
+						    </p:dataTable>
+			                   
+			                </div>
+
+					</h:form>			                    	
+                    		
+                        <!-- Total de la reserva -->
+                      <div id="totalReserva" class="mt-4">
+                   			 <h4>Total: $<h:outputText value="#{bookingBean.totalReserva}" id="totalAmount" /></h4>
+                	 </div>
+                    
+
+                        <!-- Botón de Confirmar Reserva -->
+                        <h:panelGroup  rendered="#{userBean.loggedIn}">
+
+                               <p:commandButton  value="Reservar" styleClass="btn btn-primary btn-lg" 
+                                                     actionListener="#{bookingBean.confirmarReserva()}" >
+                               </p:commandButton>
+                            
+                        </h:panelGroup>
+                        <h:panelGroup  rendered="#{!userBean.loggedIn}">
+                            <p class="alert alert-danger">Debe estar logeado para realizar la reserva.</p>
+                        </h:panelGroup>
+                    </div>
+
+                    <!-- Columna de Selección de Asientos -->
+					
+					     <div class="col-md-6">
+                <h4>Selecciona tu Asiento</h4>
+                <div class="card">
+                    <h:form>
+                        <p:dataTable var="asiento" 
+                                     value="#{bookingBean.asientos}" 
+                                     widgetVar="customersTable" 
+                                     rows="10"
+                                     paginator="true" 
+                                     paginatorPosition="both" 
+                                     selectionMode="single"
+                                     rowKey="#{asiento.numeroAsiento}"
+                                     style="margin-bottom:0" 
+                                     selectionPageOnly="false" 
+                                     selectionRowMode="none" 
+                                     cellNavigation="true"
+                                     filteredValue="#{bookingBean.asientosFiltrados}"
+				                     paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+				                     currentPageReportTemplate="{startRecord}-{endRecord} of {totalRecords} records"
+				                     rowsPerPageTemplate="5,10,{ShowAll|'All'}"
+                                     rowStyleClass="#{asiento.estado == 'ocupado' ? 'cheap' : null}">
+                            
+                            <!-- Filtros y selección de asiento 
+                            <p:ajax event="rowSelect" listener="#{bookingBean.onRowSelect}" update="totalAmount selectedSeatsSummary :form:dt-asientos" />
+                            <p:ajax event="rowUnselect" listener="#{bookingBean.onRowUnselect}" update="totalAmount selectedSeatsSummary :form:dt-asientos" />
+							-->
+                            <!-- Columna Asiento -->
+                            <p:column headerText="Asiento" sortBy="#{asiento.numeroAsiento}">
+                                <h:outputText value="#{asiento.numeroAsiento}" />
+                            </p:column>
+                            
+                             <p:column headerText="Asiento" sortBy="#{asiento.estado}">
+                                <h:outputText value="#{asiento.estado}" />
+                            </p:column>
+                            
+                            <p:column headerText="Asiento" sortBy="#{asiento.precio}">
+                              
+                                <h4>Precio: $ <h:outputText value="#{asiento.precio}" /></h4>
+                            </p:column>
+
+                            <!-- Columna Estado -->
+                            <p:column field="clase" headerText="Estado" filterMatchMode="exact">
+                                <f:facet name="filter">
+                                    <p:selectOneMenu onchange="PF('customersTable').filter()" styleClass="ui-custom-filter">
+                                        <f:selectItem itemLabel="Todos" itemValue="#{null}" noSelectionOption="true" />
+                                        <f:selectItems value="#{bookingBean.customerStatus}" />
+                                    </p:selectOneMenu>
+                                </f:facet>
+                                <span class="customer-badge status-#{asiento.clase}">#{asiento.clase}</span>
+                            </p:column>
+
+                            <!-- Columna Selección -->
+                            <p:column headerText="Seleccionar" >
+                                <p:commandButton 
+                
+                                    value="Reservar" 
+                                    styleClass="btn btn-primary btn-lg" 
+                                    actionListener="#{bookingBean.reservarAsiento(asiento)}" 
+                                    update="totalAmount selectedSeatsSummary" />
+                            </p:column>
+                        </p:dataTable>
+                    </h:form>
+                </div>
+            </div>	
+						
+						
+					
+               </div>
+        </main>
+   </ui:define>
+    
+</ui:composition>

@@ -1,0 +1,367 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ui:composition lang="es"
+                xmlns:f="jakarta.faces.core"
+                xmlns:h="jakarta.faces.html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:fs="http://xmlns.jcp.org/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                template="/template/main.xhtml">
+
+    <h:head>
+        <title>Próximos Vuelos</title>
+
+    </h:head>
+
+
+    <ui:define name="contenido">
+				
+				
+				<h:form>
+    <div class="container py-5">
+        <h2 class="mb-4">Cambiar Asiento</h2>
+
+        <div class="row">
+            <div class="col-md-6">
+                <h4>Detalles del Vuelo</h4>
+                <div class="border mb-4 p-3">
+                    <small>#{cambioView.vuelo.numeroVuelo}</small><br></br>
+                    <small>#{cambioView.vuelo.ciudadSalida}</small><br></br>
+                    <small>#{cambioView.vuelo.ciudadLlegada}</small><br></br>
+                    <small>#{cambioView.vuelo.duracion}</small><br></br>
+                    <small>#{cambioView.vuelo.fechaHoraSalida}</small><br></br>
+                    <small>#{cambioView.vuelo.fechaHoraLlegada}</small>
+                </div>
+						
+				<p:growl id="message" showDetail="true"/>		
+							
+				  <p:commandButton value="Abrir Distribucion" 
+                 action="#{cambioView.abrirDistribucion()}" />
+                 
+			
+				 <p:commandButton value="Confirmar" action="#{cambioView.confirmar('1')}" update="message" styleClass="mr-2" icon="pi pi-check">
+		            <p:confirm header="Confirmacion" message="¿Esta seguro del cambio de asiento?" icon="pi pi-exclamation-triangle"/>
+		        </p:commandButton>
+		        
+		          <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" width="350">
+		            <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-flat"/>
+		            <p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" />
+		        </p:confirmDialog>					
+
+
+
+					      <h4>Instrucciones de Asientos</h4>
+					<div class="seat-info border p-3">
+					    <p><strong>¿Cómo funciona la selección de asientos?</strong></p>
+					    <p>Los asientos se presentan en diferentes estados, y puedes ver claramente cuál está disponible, cuál ya ha sido ocupado y cuáles fueron seleccionados originalmente para ti.</p>
+					    
+					    <!-- Asiento Disponible -->
+					    <div class="d-flex justify-content-start align-items-center mb-2">
+					        <div class="seat libre me-2"></div>
+					        <span>Asiento Disponible - Puedes seleccionar este asiento.</span>
+					    </div>
+					
+					    <!-- Asiento Ocupado -->
+					    <div class="d-flex justify-content-start align-items-center mb-2">
+					        <div class="seat ocupado me-2"></div>
+					        <span>Asiento Ocupado - Este asiento ya ha sido reservado por otro pasajero.</span>
+					    </div>
+					
+					    <!-- Asiento Originalmente Seleccionado -->
+					    <div class="d-flex justify-content-start align-items-center mb-2">
+					        <div class="seat seleccionado  me-2"></div>
+					        <span>Asiento Originalmente Seleccionado - Este asiento era tu selección inicial.</span>
+					    </div>
+					    
+					    <hr />
+					    <h4>Asientos Seleccionados</h4>
+					    <p><strong>Estos son los asientos que has seleccionado originalmente:</strong></p>
+						
+						<ui:repeat value="#{cambioView.asientoSeleccionados}" var="asientoSeleccionado">
+						    <div class="d-flex justify-content-start align-items-center mb-4">
+						        
+						        <!-- Asiento Originalmente Seleccionado -->
+						        <div class="seat selected me-4 position-relative" style="background-color: #3498db; border-color: #2980b9; padding: 12px; border-radius: 8px;">
+						            <div class="seat-icon">
+						                <i class="fas fa-check-circle"></i> <!-- Ícono de selección -->
+						            </div>
+						            <h6 class="text-white mb-0">#{asientoSeleccionado.numeroAsiento}</h6>
+						        </div>
+						          <i class="fas fa-arrow-right"></i> <!-- Ícono de flecha -->
+						        <!-- Indicador de Cambio de Asiento -->
+						        <div class="seat change-indicator me-4 position-relative" style="background-color: #f39c12; border-color: #e67e22; padding: 12px; border-radius: 8px; box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);">
+						            <div class="seat-icon">
+						                <i class="fas fa-exchange-alt"></i> <!-- Ícono de cambio -->
+						            </div>
+						            <h6 class="text-white mb-0"> #{cambioView.getCambio(asientoSeleccionado.idAsiento)}</h6>
+						        </div>
+						
+						        <!-- Botón para Cambiar Asiento -->
+						        <p:commandButton value="Cambiar Asiento" 
+						                         action="#{cambioView.cambiarAsiento(asientoSeleccionado)}" 
+						                         update="modalAsientos" 
+						                         styleClass="btn btn-lg btn-outline-dark btn-change-seat">
+						  
+						        </p:commandButton>
+						
+						        <!-- Asiento Ocupado (si aplica) -->
+						        <div class="seat ocupado me-2" data-seat="#{asientoSeleccionado.numeroAsiento}" style="background-color: #e74c3c; color: white; padding: 10px; border-radius: 8px;">
+						            #{asientoSeleccionado.numeroAsiento}
+						        </div>
+						    </div>
+						</ui:repeat>
+						
+					    
+					    
+					</div>
+					      
+            </div>
+
+        				     <div class="col-md-6">
+                <h4>Selecciona tu Asiento</h4>
+                <div class="card">
+                    <h:form>
+                        <p:dataTable var="asiento" 
+                                     value="#{cambioView.asientos}" 
+                                     widgetVar="customersTable" 
+                                     rows="10"
+                                     paginator="true" 
+                                     paginatorPosition="both" 
+                                     selectionMode="single"
+                                     rowKey="#{asiento.numeroAsiento}"
+                                     style="margin-bottom:0" 
+                                     selectionPageOnly="false" 
+                                     selectionRowMode="none" 
+                                     cellNavigation="true"
+                                     filteredValue="#{cambioView.asientosFiltrados}"
+				                     paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+				                     currentPageReportTemplate="{startRecord}-{endRecord} of {totalRecords} records"
+				                     rowsPerPageTemplate="5,10,{ShowAll|'All'}"
+                                     rowStyleClass="#{asiento.estado == 'ocupado' ? 'cheap' : null}">
+                            
+                            <!-- Filtros y selección de asiento 
+                            <p:ajax event="rowSelect" listener="#{bookingBean.onRowSelect}" update="totalAmount selectedSeatsSummary :form:dt-asientos" />
+                            <p:ajax event="rowUnselect" listener="#{bookingBean.onRowUnselect}" update="totalAmount selectedSeatsSummary :form:dt-asientos" />
+							-->
+                            <!-- Columna Asiento -->
+                            <p:column headerText="Asiento" sortBy="#{asiento.numeroAsiento}">
+                                <h:outputText value="#{asiento.numeroAsiento}" />
+                            </p:column>
+                            
+                             <p:column headerText="Asiento" sortBy="#{asiento.estado}">
+                                <h:outputText value="#{asiento.estado}" />
+                            </p:column>
+                            
+                            <p:column headerText="Asiento" sortBy="#{asiento.precio}">
+                              
+                                <h4>Precio: $ <h:outputText value="#{asiento.precio}" /></h4>
+                            </p:column>
+
+                            <!-- Columna Estado -->
+                            <p:column field="clase" headerText="Estado" filterMatchMode="exact">
+                                <f:facet name="filter">
+                                    <p:selectOneMenu onchange="PF('customersTable').filter()" styleClass="ui-custom-filter">
+                                        <f:selectItem itemLabel="Todos" itemValue="#{null}" noSelectionOption="true" />
+                                        <f:selectItems value="#{cambioView.customerStatus}" />
+                                    </p:selectOneMenu>
+                                </f:facet>
+                                <span class="customer-badge status-#{asiento.clase}">#{asiento.clase}</span>
+                            </p:column>
+
+                            <!-- Columna Selección -->
+                            <p:column headerText="Seleccionar" >
+                                <p:commandButton  
+                                    value="Reservar" 
+                                    styleClass="btn btn-primary btn-lg" 
+                                    actionListener="#{cambioView.reservarAsiento(asiento)}" />
+                            </p:column>
+                        </p:dataTable>
+                    </h:form>
+                </div>
+            </div>	
+        </div>
+    </div>
+
+    <!-- Modal para Confirmar Cambio de Asiento -->
+    <p:dialog id="seatChangeModal" header="Selecciona un nuevo asiento" widgetVar="seatChangeModal" modal="true" showEffect="fade" hideEffect="fade">
+        <h:form>
+            <h:outputText value="Instrucciones de Asientos" styleClass="h4 mb-3" />
+            <div class="seat-info border p-3">
+                <div class="d-flex justify-content-start align-items-center mb-2">
+                    <div class="seat available me-2"></div>
+                    <span>Asiento Disponible</span>
+                </div>
+                <div class="d-flex justify-content-start align-items-center mb-2">
+                    <div class="seat booked me-2"></div>
+                    <span>Asiento Ocupado</span>
+                </div>
+                <div class="d-flex justify-content-start align-items-center mb-2">
+                    <div class="seat originally-selected me-2"></div>
+                    <span>Asiento Originalmente Seleccionado</span>
+                </div>
+                <div class="d-flex justify-content-start align-items-center mb-2">
+                    <div class="seat selected me-2"></div>
+                    <span>Asiento Seleccionado</span>
+                </div>
+            </div>
+
+            <h4>Selecciona tu nuevo Asiento</h4>
+            <ui:repeat value="#{cambioView.asientosParticionados}" var="fila">
+                <div class="d-flex flex-row">
+                    <ui:repeat value="#{fila}" var="asiento">
+                        <div class="seat" 
+                             styleClass="#{asiento.estado == 'ocupado' ? 'booked' : (asiento.estado == 'seleccionado' ? 'originally-selected' : 'available')}"
+                             data-seat="#{asiento.idAsiento}" 
+                             onclick="selectSeat(#{asiento.idAsiento})">
+                            #{asiento.numeroAsiento}
+                        </div>
+                    </ui:repeat>
+                </div>
+            </ui:repeat>
+
+            <p:commandButton value="Confirmar Cambio" action="#{cambioView.changeSeat}" styleClass="btn btn-primary" />
+        </h:form>
+    </p:dialog>
+</h:form>
+
+
+<p:dialog id="modalAsientos" header="Distribución de Asientos" widgetVar="modalAsientos" modal="true" showEffect="fade" hideEffect="fade" width="600" height="400">
+      <p:commandButton value="Cerrar" onclick="PF('modalAsientos').hide();" />
+    <h:form>
+        <h:outputText value="Seleccione un asiento:" />
+        <h:outputText value="#{cambioView.asientoActual.numeroAsiento}" />
+        
+        <!-- Contenedor para mostrar los asientos en filas -->
+        <div class="seat-container">
+            <!-- Primera Clase -->
+            <h:outputText value="Primera Clase" styleClass="class-label" />
+            <h:panelGrid columns="3" styleClass="seats first-class">
+                <ui:repeat value="#{cambioView.asientos}" var="asientoSeleccionado" varStatus="status">
+                    <!-- Solo mostramos los asientos de Primera Clase -->
+                    
+                     
+                    <h:panelGroup rendered="#{asientoSeleccionado.clase == 'Primera Clase'}">
+                   		  		 <div class="seat #{asientoSeleccionado.estado}" data-seat="#{asientoSeleccionado.numeroAsiento}" onclick="selectSeat('#{asientoSeleccionado.numeroAsiento}')">
+
+                          <h:commandButton styleClass="seat #{asientoSeleccionado.estado}"  value="#{asientoSeleccionado.numeroAsiento}" action="#{cambioView.setearAsiento(asientoSeleccionado)}"/>
+                                  </div>
+                    </h:panelGroup>
+                </ui:repeat>
+            </h:panelGrid>
+
+            <!-- Clase Ejecutiva -->
+            <h:outputText value="Clase Ejecutiva" styleClass="class-label" />
+            <h:panelGrid columns="2" styleClass="seats business-class">
+                <ui:repeat value="#{cambioView.asientos}" var="asientoSeleccionado" varStatus="status">
+                    <!-- Solo mostramos los asientos de Clase Ejecutiva -->
+                    <h:panelGroup rendered="#{asientoSeleccionado.clase == 'Ejecutiva'}">
+                     	
+                          <h:commandButton styleClass="seat #{asientoSeleccionado.estado}"  value="#{asientoSeleccionado.numeroAsiento}" action="#{cambioView.setearAsiento(asientoSeleccionado)}"/>
+                             
+                    </h:panelGroup>
+                </ui:repeat>
+            </h:panelGrid>
+
+            <!-- Clase Económica -->
+            <h:outputText value="Clase Económica" styleClass="class-label" />
+            <h:panelGrid columns="3" styleClass="seats economy-class">
+                <ui:repeat value="#{cambioView.asientos}" var="asientoSeleccionado" varStatus="status">
+                    <!-- Solo mostramos los asientos de Clase Económica -->
+                    <h:panelGroup rendered="#{asientoSeleccionado.clase == 'Económica'}">
+                     		
+                          <h:commandButton styleClass="seat #{asientoSeleccionado.estado}"  value="#{asientoSeleccionado.numeroAsiento}" action="#{cambioView.setearAsiento(asientoSeleccionado)}"/>
+                          
+                    </h:panelGroup>
+                </ui:repeat>
+            </h:panelGrid>
+        </div>
+        
+      
+    </h:form>
+</p:dialog>
+
+
+
+<!-- CSS para mejorar la apariencia -->
+<style>/* Contenedor principal para los asientos */
+.seat-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+/* Etiquetas de clase (Primera, Ejecutiva, Económica) */
+.class-label {
+    font-weight: bold;
+    text-align: center;
+    color: #2c3e50;
+    width: 100%;
+    margin-top: 20px;
+}
+
+/* Estilos comunes para las filas de asientos */
+.seats {
+    text-align: center;
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+
+/* Estilo para cada asiento */
+.seat {
+    width: 50px;
+    height: 50px;
+    margin: 5px;
+    border: 1px solid #2980b9;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    display: inline-block;
+}
+
+/* Colores por clase */
+.first-class {
+    background-color: #f39c12;
+}
+
+.business-class {
+    background-color: #16a085;
+}
+
+.economy-class {
+    background-color: #e74c3c;
+}
+
+/* Estilos adicionales */
+.aisle {
+    display: inline-block;
+    width: 30px;
+    height: 50px;
+    background-color: #ecf0f1;
+    border: 1px solid #bdc3c7;
+}
+
+/* Estado de los asientos */
+.seat.libre {
+    background-color: #3498db; /* Azul para asientos libres */
+}
+
+.seat.ocupado {
+    background-color: #e74c3c; /* Rojo para asientos ocupados */
+}
+
+.seat.seleccionado {
+    background-color: #f39c12; /* Amarillo para asientos seleccionados */
+}
+
+.seat:hover {
+    background-color: #2980b9;
+}
+
+</style>
+		
+
+
+    </ui:define>
+
+</ui:composition>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition lang="es"
+                xmlns:f="jakarta.faces.core"
+                xmlns:h="jakarta.faces.html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:fs="http://xmlns.jcp.org/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                template="/template/main.xhtml">
+
+    <h:head>
+        <title>#{contenidoView.titulo}</title>
+    </h:head>
+
+    <ui:define name="contenido">
+        <div class="container my-5">
+            <!-- Título Principal -->
+            <h1 class="text-center mb-4 text-primary">#{contenidoView.tipo}</h1>
+
+            <!-- Mostrar el contenido cargado dinámicamente -->
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <!-- Aquí se repite el contenido -->
+                    <h:panelGrid columns="1" styleClass="contenido-dinamico">
+                        <ui:repeat value="#{contenidoView.contenidos}" var="contenido">
+                            <!-- Título de la sección -->
+                            <h3 class="text-center text-primary mb-3">#{contenido.titulo}</h3>
+                            <!-- Contenido dinámico con formato -->
+                            <h:outputText value="#{contenido.contenido}" escape="false" styleClass="contenido-texto mb-4" />
+                        </ui:repeat>
+                    </h:panelGrid>
+                </div>
+            </div>
+
+            <!-- Enlace para regresar -->
+            <div class="text-center mt-4">
+                <h:link value="Volver a la Página Principal" outcome="/index" class="btn btn-primary" />
+            </div>
+        </div>
+    </ui:define>
+
+</ui:composition>

@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ui:composition lang="es"
+                xmlns:f="jakarta.faces.core"
+                xmlns:h="jakarta.faces.html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:fs="http://xmlns.jcp.org/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                template="/template/main.xhtml">
+
+    <h:head>
+        <title>Próximos Vuelos</title>
+
+		<style>
+		.table-success {
+    background-color: #28a745;
+    color: white;
+}
+
+.table-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.table-warning {
+    background-color: #ffc107;
+    color: black;
+}
+		
+		</style>
+
+    </h:head>
+
+
+		
+
+    <ui:define name="contenido">
+
+		
+		<!-- Navbar End -->
+
+<!-- Header Start -->
+<div class="container-fluid bg-breadcrumb">
+    <div class="container text-center py-5" style="max-width: 900px;">
+        <h3 class="text-white display-3 mb-4">Perfil del Pasajero</h3>
+        <ol class="breadcrumb justify-content-center mb-0">
+            <li class="breadcrumb-item"><h:link value="Home" outcome="/"></h:link></li>
+            <li class="breadcrumb-item active text-white">Perfil del Pasajero</li>
+        </ol>
+    </div>
+</div>
+<!-- Header End -->
+
+<!-- User Profile Start -->
+<div class="container py-5">
+    <h2 class="mb-4">Información Personal</h2>
+    <table class="table table-bordered">
+        <tr>
+            <th>RUT:</th>
+            <td>#{sessionScope.usuario.rutUsuario}</td>
+        </tr>
+        <tr>
+            <th>Nombre:</th>
+            <td>#{sessionScope.usuario.nombre} #{sessionScope.usuario.apellido}</td>
+        </tr>
+        <tr>
+            <th>Correo Electrónico:</th>
+            <td>#{sessionScope.usuario.correoElectronico}</td>
+        </tr>
+        <tr>
+            <th>Teléfono:</th>
+            <td>#{sessionScope.usuario.telefono}</td>
+        </tr>
+        <tr>
+            <th>Fecha de Nacimiento:</th>
+            <td>#{sessionScope.usuario.fechaNacimiento}</td>
+        </tr>
+    </table>
+
+    <h2 class="mb-4">Mis Reservas de Vuelo</h2>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Número de Vuelo</th>
+                <th>Fecha de Salida</th>
+                <th>Fecha de Llegada</th>
+                <th>Aeropuerto de Salida</th>
+                <th>Aeropuerto de Llegada</th>
+                <th>Estado de Reserva</th>
+                <th>Precio</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <ui:repeat value="#{perfilView.reservas}" var="vuelo">
+                <tr styleClass="#{
+                                vuelo.estadoReserva eq 'Programado' ? 'table-success' :
+                                (vuelo.estadoReserva eq 'Cancelado' ? 'table-danger' :
+                                (vuelo.estadoReserva eq 'Retrasado' ? 'table-warning' : ''))
+                            }">
+                    <td>#{vuelo.numeroVuelo}</td>
+                    <td>#{vuelo.fechaHoraSalida}</td>
+                    <td>#{vuelo.fechaHoraLlegada}</td>
+                    <td>#{vuelo.aeropuertoSalida}</td>
+                    <td>#{vuelo.aeropuertoLlegada}</td>
+                    <td>#{vuelo.estadoReserva}</td>
+                    <td>#{ vuelo.precio}</td>
+                    <td>
+                		 <p:linkButton outcome="detalleReserva.xhtml" value="VerDetalle" style="margin-right:20px;">
+					        <f:param name="productId" value="#{vuelo.id_reserva}"/>
+					    </p:linkButton>
+					    
+					     <p:linkButton outcome="cambioAsiento.xhtml" value="CambioAsietno" style="margin-right:20px;">
+					        <f:param name="idVuelo" value="#{vuelo.idVuelo}"/>
+					         <f:param name="idReserva" value="#{vuelo.id_reserva}"/>
+					    </p:linkButton>
+						
+						
+                    </td>
+                </tr>
+            </ui:repeat>
+        </tbody>
+    </table>
+
+    <h2 class="mb-4">Equipaje</h2>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>ID de Equipaje</th>
+                <th>Peso</th>
+                <th>Dimensiones</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>EQ123</td>
+                <td>23 kg</td>
+                <td>55x40x20 cm</td>
+                <td>Registrado</td>
+            </tr>
+            <tr>
+                <td>EQ124</td>
+                <td>10 kg</td>
+                <td>50x30x20 cm</td>
+                <td>Registrado</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+<!-- User Profile End -->
+		
+		
+
+    </ui:define>
+
+</ui:composition>

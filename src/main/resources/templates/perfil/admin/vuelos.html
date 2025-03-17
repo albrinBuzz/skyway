@@ -1,0 +1,182 @@
+<!DOCTYPE HTML>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Vuelos</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        .container {
+            margin-top: 2rem;
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            width: 220px;
+            background-color: #222;
+            color: white;
+            padding-top: 20px;
+        }
+        .sidebar ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .sidebar ul li a {
+            color: white;
+            padding: 10px;
+            display: block;
+            text-decoration: none;
+        }
+        .sidebar ul li a:hover {
+            background-color: #444;
+        }
+        .content {
+            margin-left: 240px;
+        }
+        .card {
+            margin-bottom: 1rem;
+        }
+        .modal-header .close {
+            padding: 1rem;
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <ul>
+            <li><a href="#">Panel de Control</a></li>
+            <li><a href="#" data-toggle="collapse" data-target="#menuVuelos">Vuelos <span class="caret"></span></a>
+                <ul id="menuVuelos" class="collapse">
+                    <li><a href="#" data-toggle="modal" data-target="#modalAgregarVuelo">Agregar Nuevo Vuelo</a></li>
+                    <li><a href="index.html">Gestionar Vuelos</a></li>
+                </ul>
+            </li>
+            <li><a href="#" data-toggle="collapse" data-target="#menuAviones">Aviones <span class="caret"></span></a>
+                <ul id="menuAviones" class="collapse">
+                    <li><a href="#" data-toggle="modal" data-target="#modalAgregarAvion">Agregar Nuevo Avión</a></li>
+                    <li><a href="aviones.html">Gestionar Aviones</a></li>
+                </ul>
+            </li>
+            <li><a href="#" data-toggle="collapse" data-target="#menuPilotos">Pilotos <span class="caret"></span></a>
+                <ul id="menuPilotos" class="collapse">
+                    <li><a href="#" data-toggle="modal" data-target="#modalAgregarPiloto">Agregar Piloto</a></li>
+                    <li><a href="pilotos.html">Gestionar Pilotos</a></li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div class="content">
+        <h2>Gestionar Vuelos</h2>
+        <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarVuelo">
+            <i class="fa fa-plus"></i> Agregar Nuevo Vuelo
+        </button>
+
+        <!-- Tabla de Vuelos -->
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>ID de Vuelo</th>
+                        <th>Número de Vuelo</th>
+                        <th>Origen</th>
+                        <th>Destino</th>
+                        <th>Fecha de Salida</th>
+                        <th>Fecha de Llegada</th>
+                        <th>Avión</th>
+                        <th>Piloto</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>ABC123</td>
+                        <td>Madrid</td>
+                        <td>Barcelona</td>
+                        <td>2024-12-15 08:00</td>
+                        <td>2024-12-15 09:30</td>
+                        <td>A320</td>
+                        <td>Juan Pérez</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" data-toggle="modal" data-target="#modalEditarVuelo"><i class="fa fa-edit"></i> Editar</button>
+                            <button class="btn btn-danger btn-sm" onclick="eliminarVuelo(1)"><i class="fa fa-trash"></i> Eliminar</button>
+                        </td>
+                    </tr>
+                    <!-- Otras filas de vuelos -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal Agregar Vuelo -->
+    <div class="modal fade" id="modalAgregarVuelo" tabindex="-1" role="dialog" aria-labelledby="modalAgregarVueloLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="modalAgregarVueloLabel">Agregar Nuevo Vuelo</h4>
+                </div>
+                <div class="modal-body">
+                    <form id="formAgregarVuelo">
+                        <div class="form-group">
+                            <label for="numeroVuelo">Número de Vuelo:</label>
+                            <input type="text" class="form-control" id="numeroVuelo" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="origenVuelo">Origen:</label>
+                            <input type="text" class="form-control" id="origenVuelo" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="destinoVuelo">Destino:</label>
+                            <input type="text" class="form-control" id="destinoVuelo" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="fechaSalidaVuelo">Fecha de Salida:</label>
+                            <input type="datetime-local" class="form-control" id="fechaSalidaVuelo" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="fechaLlegadaVuelo">Fecha de Llegada:</label>
+                            <input type="datetime-local" class="form-control" id="fechaLlegadaVuelo" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="avionVuelo">Avión:</label>
+                            <input type="text" class="form-control" id="avionVuelo" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="pilotoVuelo">Piloto:</label>
+                            <input type="text" class="form-control" id="pilotoVuelo" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Guardar Vuelo</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function eliminarVuelo(id) {
+            if (confirm("¿Está seguro de que desea eliminar este vuelo?")) {
+                alert("Vuelo eliminado: " + id);
+            }
+        }
+
+        // Simulación de agregar vuelo
+        $('#formAgregarVuelo').on('submit', function(e) {
+            e.preventDefault();
+            alert("Vuelo agregado correctamente");
+            $('#modalAgregarVuelo').modal('hide');
+        });
+    </script>
+</body>
+</html>
