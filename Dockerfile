@@ -5,7 +5,7 @@ FROM openjdk:17-jdk-slim
 WORKDIR /app
 
 # Copiar el archivo .jar generado al contenedor
-COPY target/SkyWay-0.0.1.jar /app/SkyWay-0.0.1.jar
+COPY ./SkyWay-0.0.1.jar /app/SkyWay-0.0.1.jar
 
 # Exponer el puerto en el que la aplicación Spring Boot está escuchando (por defecto es 8080)
 EXPOSE 8080
