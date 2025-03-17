@@ -2,12 +2,21 @@
 FROM eclipse-temurin:23-jdk AS builder
 
 # Establecer el directorio de trabajo dentro del contenedor
+WORKDIR /app
 
-RUN  ./mvnw clean package -DskipTest
+
+# Dar permisos de ejecución al mvnw (si es necesario)
+#RUN chmod +x mvnw
+
+
+#RUN  ./mvnw clean package -DskipTest
+
+RUN mvn clean package
+
 
 FROM eclipse-temurin:23-jre
 
-WORKDIR /app
+
 
 # Copiar el archivo .jar generado al contenedor
 #COPY ./target/SkyWay-0.0.1.jar /app/SkyWay-0.0.1.jar
@@ -20,3 +29,6 @@ EXPOSE 8080
 # Comando por defecto para ejecutar el .jar con Java
 #ENTRYPOINT ["java", "-jar", "/app/SkyWay-0.0.1.jar"]
 ENTRYPOINT ["java", "-jar", "/app.jar"]
+
+
+
