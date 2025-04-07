@@ -36,8 +36,6 @@ public class AuthController {
             else {
             	    return ResponseEntity.status(401).body("Credenciales incorrectas");
             }
-        } catch (BadCredentialsException e) {
-            return ResponseEntity.status(401).body("Credenciales incorrectas");
         } catch (Exception e) {
             return ResponseEntity.status(401).body("Credenciales incorrectas");
         }

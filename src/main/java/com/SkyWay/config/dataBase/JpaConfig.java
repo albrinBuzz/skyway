@@ -13,6 +13,7 @@ public class JpaConfig {
 
     private EntityManagerFactory emf;
 
+
     @Bean
     public EntityManager getEntityManager() {
         emf = Persistence.createEntityManagerFactory("mainPU");

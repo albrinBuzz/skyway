@@ -44,7 +44,7 @@ public class VueloServiceImpl implements VueloService{
     public Vuelo save(Vuelo vuelo) {
         return vueloRepository.save(vuelo);
     }
-    
+
     @Override
     public void deleteById(Integer id) {
         vueloRepository.deleteById(id);
