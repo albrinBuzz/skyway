@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -52,6 +53,7 @@ public class Reserva implements Serializable {
 	//bi-directional many-to-one association to Vuelo
 	@ManyToOne
 	@JoinColumn(name="id_vuelo")
+	@JsonBackReference
 	private Vuelo vuelo;
 
 	//bi-directional many-to-one association to ReservaAsiento

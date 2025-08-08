@@ -1,132 +1,151 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<ui:composition lang="es" 
+<ui:composition lang="es"
 	  xmlns:f="jakarta.faces.core"
-      xmlns:h="jakarta.faces.html"	
+      xmlns:h="jakarta.faces.html"
       xmlns:p="http://primefaces.org/ui"
       xmlns:fs="http://xmlns.jcp.org/jsf/core"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       template="/template/main.xhtml">
-      
+
     <h:head>
         <title>Próximos Vuelos</title>
         <style>
             /* Estructura General */
-            body {
-                font-family: 'Roboto', sans-serif;
-                background-color: #f8f9fa;
-                margin: 0;
-                padding: 0;
-            }
-            .search-bar {
-                background-color: #343a40;
-                padding: 50px 0;
-                color: white;
-                text-align: center;
-            }
-            .search-bar h2 {
-                font-size: 2rem;
-                color: #fff;
-                font-weight: 700;
-            }
+             body {
+                 font-family: 'Roboto', sans-serif;
+                 background-color: #f8f9fa;
+                 margin: 0;
+                 padding: 0;
+             }
 
-            /* Tarjetas de Vuelo */
-            .product-grid-item {
-                border-radius: 15px;
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-                overflow: hidden;
-                background: white;
-                transition: transform 0.3s ease, box-shadow 0.3s ease;
-                margin-bottom: 20px;
-            }
-            .product-grid-item:hover {
-                transform: translateY(-10px);
-                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-            }
-            .product-grid-item-content {
-                padding: 20px;
-            }
-            .product-name {
-                font-size: 1.75rem;
-                color: #007bff;
-                font-weight: 600;
-                margin-bottom: 10px;
-            }
-            .product-description {
-                font-size: 1rem;
-                color: #6c757d;
-                margin-bottom: 10px;
-            }
-            .product-price {
-                font-size: 1.25rem;
-                font-weight: 700;
-                color: #28a745;
-                margin-top: 10px;
-            }
-            .product-grid-item-top {
-                background-color: #f8f9fa;
-                padding: 10px;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-            .product-category-icon {
-                font-size: 1.5rem;
-                color: #007bff;
-            }
-            .product-badge {
-                font-size: 0.875rem;
-                color: #fff;
-                background-color: #007bff;
-                border-radius: 5px;
-                padding: 5px 10px;
-            }
-            .product-grid-item-bottom {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 10px 20px;
-                background-color: #f8f9fa;
-            }
-            .product-list-action {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-            }
-            .product-list-action button {
-                background-color: #007bff;
-                color: white;
-                border: none;
-                padding: 8px 15px;
-                font-weight: 600;
-                transition: background-color 0.3s;
-            }
-            .product-list-action button:hover {
-                background-color: #0056b3;
-            }
+             .search-bar {
+                 background-color: #343a40;
+                 padding: 50px 0;
+                 color: white;
+                 text-align: center;
+             }
 
-            /* Responsividad */
-            @media (max-width: 768px) {
-                .product-grid-item {
-                    width: 100%;
-                }
-                .product-grid-item-content {
-                    padding: 10px;
-                }
-                .product-name {
-                    font-size: 1.5rem;
-                }
-                .product-description, .product-price {
-                    font-size: 0.875rem;
-                }
-            }
+             .search-bar h2 {
+                 font-size: 2rem;
+                 color: #fff;
+                 font-weight: 700;
+             }
+
+             /* Tarjetas de Vuelo */
+             .product-grid-item {
+                 border-radius: 15px;
+                 box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                 overflow: hidden;
+                 background: white;
+                 transition: transform 0.3s ease, box-shadow 0.3s ease;
+                 margin-bottom: 20px;
+                 margin-right: 15px;
+                 cursor: pointer;
+                 max-width: 350px;
+             }
+
+             .product-grid-item:hover {
+                 transform: translateY(-10px);
+                 box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+             }
+
+             .product-grid-item-top {
+                 background-color: #007bff;
+                 color: white;
+                 padding: 15px;
+                 display: flex;
+                 justify-content: space-between;
+                 align-items: center;
+             }
+
+             .product-category-icon {
+                 font-size: 1.5rem;
+                 color: white;
+             }
+
+             .product-badge {
+                 font-size: 0.875rem;
+                 color: #fff;
+                 background-color: #28a745;
+                 border-radius: 5px;
+                 padding: 5px 10px;
+             }
+
+             .product-grid-item-content {
+                 padding: 15px;
+                 text-align: center;
+             }
+
+             .product-name {
+                 font-size: 1.5rem;
+                 color: #007bff;
+                 font-weight: 600;
+                 margin-bottom: 10px;
+             }
+
+             .product-description {
+                 font-size: 1rem;
+                 color: #6c757d;
+                 margin-bottom: 15px;
+             }
+
+             .product-price {
+                 font-size: 1.25rem;
+                 font-weight: 700;
+                 color: #28a745;
+                 margin-top: 10px;
+             }
+
+             .product-grid-item-bottom {
+                 display: flex;
+                 justify-content: space-between;
+                 align-items: center;
+                 padding: 15px;
+                 background-color: #f8f9fa;
+             }
+
+             .product-list-action {
+                 display: flex;
+                 align-items: center;
+                 justify-content: space-between;
+             }
+
+             .product-list-action button {
+                 background-color: #007bff;
+                 color: white;
+                 border: none;
+                 padding: 8px 15px;
+                 font-weight: 600;
+                 transition: background-color 0.3s;
+                 border-radius: 5px;
+             }
+
+             .product-list-action button:hover {
+                 background-color: #0056b3;
+             }
+
+             /* Paginación */
+             .ui-paginator {
+                 display: flex;
+                 justify-content: center;
+                 margin-top: 20px;
+             }
+
+             /* Responsividad */
+             @media (max-width: 768px) {
+                 .product-grid-item {
+                     width: 100%;
+                 }
+             }
+
 
         </style>
     </h:head>
 
 
 	  <ui:define name="contenido">
-		
+
 		<div class="container-fluid search-bar py-5">
             <div class="container">
                 <!-- Título Principal -->
@@ -178,41 +197,17 @@
                                 <div class="row mb-4">
                                     <!-- Ciudad de Salida -->
                                     <div class="col-md-6 mb-3">
-                                        <h:outputLabel for="departureCity" value="Desde (Ciudad de Salida)" />
-                                        <h:selectOneMenu id="departureCity" value="#{flightSearchBean.departureCity}" required="true" styleClass="form-control">
-                                            <f:selectItem itemValue="" itemLabel="Seleccione una ciudad"  />
-                                            <f:selectItem itemValue="Buenos Aires" itemLabel="Buenos Aires" />
-                                            <f:selectItem itemValue="Santiago" itemLabel="Santiago" />
-                                            <f:selectItem itemValue="Bogotá" itemLabel="Bogotá" />
-                                            <f:selectItem itemValue="Madrid" itemLabel="Madrid" />
-                                            <f:selectItem itemValue="Nueva York" itemLabel="Nueva York" />
-                                            <f:selectItem itemValue="São Paulo" itemLabel="São Paulo" />
-                                            <f:selectItem itemValue="Río de Janeiro" itemLabel="Río de Janeiro" />
-                                            <f:selectItem itemValue="Ciudad de México" itemLabel="Ciudad de México" />
-                                            <f:selectItem itemValue="Lima" itemLabel="Lima" />
-                                            <f:selectItem itemValue="París" itemLabel="París" />
-                                            <f:selectItem itemValue="Roma" itemLabel="Roma" />
-                                        
-								      
-                                        </h:selectOneMenu>
+                                        <p:selectOneMenu id="ciudadSalida" value="#{flightSearchBean.departureCity}" requiredMessage="Debe seleccionar una sucursal.">
+                                            <f:selectItems value="#{flightSearchBean.ciudads}" var="ciudad"
+                                                           itemLabel="#{ciudad.nombre}" itemValue="#{ciudad.nombre}" />
+                                        </p:selectOneMenu>
                                     </div>
                                     <!-- Ciudad de Llegada -->
                                     <div class="col-md-6 mb-3">
-                                        <h:outputLabel for="arrivalCity" value="Hasta (Ciudad de Llegada)" />
-                                        <h:selectOneMenu id="arrivalCity" value="#{flightSearchBean.arrivalCity}" required="true" styleClass="form-control">
-                                            <f:selectItem itemValue="" itemLabel="Seleccione una ciudad" />
-                                            <f:selectItem itemValue="Buenos Aires" itemLabel="Buenos Aires" />
-                                            <f:selectItem itemValue="Santiago" itemLabel="Santiago" />
-                                            <f:selectItem itemValue="Bogotá" itemLabel="Bogotá" />
-                                            <f:selectItem itemValue="Madrid" itemLabel="Madrid" />
-                                            <f:selectItem itemValue="Nueva York" itemLabel="Nueva York" />
-                                            <f:selectItem itemValue="São Paulo" itemLabel="São Paulo" />
-                                            <f:selectItem itemValue="Río de Janeiro" itemLabel="Río de Janeiro" />
-                                            <f:selectItem itemValue="Ciudad de México" itemLabel="Ciudad de México" />
-                                            <f:selectItem itemValue="Lima" itemLabel="Lima" />
-                                            <f:selectItem itemValue="París" itemLabel="París" />
-                                            <f:selectItem itemValue="Roma" itemLabel="Roma" />
-                                        </h:selectOneMenu>
+                                        <p:selectOneMenu id="ciudadLlegada" value="#{flightSearchBean.arrivalCity}" requiredMessage="Debe seleccionar una sucursal.">
+                                            <f:selectItems value="#{flightSearchBean.ciudads}" var="ciudad"
+                                                           itemLabel="#{ciudad.nombre}" itemValue="#{ciudad.nombre}" />
+                                        </p:selectOneMenu>
                                     </div>
                                 </div>
 
@@ -224,7 +219,7 @@
 					                <p:outputLabel for="range" value="Range Selection" />
 					                <p:datePicker id="range" selectionMode="range" value="#{flightSearchBean.range}" readonlyInput="true" hideOnRangeSelection="true" />
 					            </div>
-                                   
+
                                 </div>
 
                                 <!-- Clase de Asiento -->
@@ -247,19 +242,81 @@
                             </h:form>
                         </div>
 
-                        <!-- Aquí agregarías los demás formularios de las otras pestañas de manera similar. -->
+                        <!-- Formulario Solo Ida y Vuelta -->
+                        <div class="tab-pane fade" id="round-trip" role="tabpanel" aria-labelledby="round-trip-tab">
+
+                            <h:form method="GET" action="#{flightSearchBean.buscarVuelos}">
+                                <div class="row mb-4">
+                                    <!-- Ciudad de Salida -->
+                                    <div class="col-md-6 mb-3">
+
+                                        <p:selectOneMenu id="ciued" value="#{flightSearchBean.departureCity}" requiredMessage="Debe seleccionar una sucursal.">
+                                            <f:selectItems value="#{flightSearchBean.ciudads}" var="ciudad"
+                                                           itemLabel="#{ciudad.nombre}" itemValue="#{ciudad.nombre}" />
+                                        </p:selectOneMenu>
+
+                                    </div>
+
+                                    <!-- Ciudad de Llegada -->
+                                    <div class="col-md-6 mb-3">
+                                        <h:outputLabel for="arrivalCity" value="Hasta (Ciudad de Llegada)" />
+                                        <h:selectOneMenu id="arrivalCity" value="#{flightSearchBean.arrivalCity}" required="true" styleClass="form-control">
+                                            <f:selectItem itemValue="" itemLabel="Seleccione una ciudad" />
+                                            <f:selectItem itemValue="Buenos Aires" itemLabel="Buenos Aires" />
+                                            <f:selectItem itemValue="Santiago" itemLabel="Santiago" />
+                                            <f:selectItem itemValue="Bogotá" itemLabel="Bogotá" />
+                                            <f:selectItem itemValue="Madrid" itemLabel="Madrid" />
+                                            <f:selectItem itemValue="Nueva York" itemLabel="Nueva York" />
+                                            <f:selectItem itemValue="São Paulo" itemLabel="São Paulo" />
+                                            <f:selectItem itemValue="Río de Janeiro" itemLabel="Río de Janeiro" />
+                                            <f:selectItem itemValue="Ciudad de México" itemLabel="Ciudad de México" />
+                                            <f:selectItem itemValue="Lima" itemLabel="Lima" />
+                                            <f:selectItem itemValue="París" itemLabel="París" />
+                                            <f:selectItem itemValue="Roma" itemLabel="Roma" />
+                                        </h:selectOneMenu>
+                                    </div>
+                                </div>
+
+                                <!-- Fechas -->
+                                <div class="row mb-4">
+                                    <h:outputLabel for="departureDate" value="Fecha de salida:" />
+                                    <i class="pi pi-calendar"></i>
+                                    <div class="field col-12 md:col-4">
+                                        <p:datePicker id="fechaSalida" value="#{flightSearchBean.departureDate}" readonlyInput="true" hideOnRangeSelection="true" />
+                                    </div>
+                                </div>
+
+                                <!-- Fecha de Regreso - Solo visible si el viaje es Ida y Vuelta -->
+                                <div class="row mb-4" id="returnDateRow">
+                                    <h:outputLabel for="returnDate" value="Fecha de regreso:" />
+                                    <i class="pi pi-calendar"></i>
+                                    <div class="field col-12 md:col-4">
+                                        <p:datePicker id="fechaRetorno" value="#{flightSearchBean.returnDate}" readonlyInput="true" hideOnRangeSelection="true" />
+                                    </div>
+                                </div>
+
+                                <!-- Botón Buscar -->
+                                <div class="text-center">
+                                    <h:commandButton value="Buscar Vuelos" action="#{flightSearchBean.buscarVuelos}" styleClass="btn btn-primary btn-lg" />
+                                </div>
+                            </h:form>
+                        </div>
+
+
+
+
 
                     </div>
                 </div>
             </div>
         </div>
-        
-        
+
+
         <h:form>
     <div class="mt-5">
         <h3 class="text-center mb-4">Resultados de Vuelos</h3>
           <p:growl id="messages" showDetail="true" />
-        
+
         <h:dataTable value="#{flightSearchBean.vuelos}" var="vuelo" rows="4" border="1" styleClass="table">
             <h:column>
                 <div class="card shadow-sm">
@@ -288,11 +345,11 @@
                         <p class="card-text">
                             <strong>Modelo Avión:</strong> <h:outputText value="#{vuelo.modeloAvion}" />
                         </p>
-                        
+
                                <h:commandButton  value="Reservar" icon="pi pi-shopping-cart"
                                        action="#{flightSearchBean.reservarVuelo(vuelo)}" >
                        		</h:commandButton>
-                        
+
                     </div>
                 </div>
             </h:column>
@@ -301,75 +358,73 @@
 </h:form>
 
 
-        
-        
-        
-    
-        <!-- Contenido de vuelos -->
-        <div class="container mt-5">
-            <h3 class="text-center mb-4">Próximos Vuelos</h3>
-            <div class="row">
-                <h:form id="form">
-                    <p:dataView value="#{flightBean.vuelosProx}" var="vuelo" rows="12" paginator="true"
-                                rowsPerPageTemplate="3,6,12,16"
-                                paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
-                                gridIcon="pi pi-th-large" listIcon="pi pi-bars">
-                        <!-- Vista de Tarjetas de Vuelo -->
-                        <p:dataViewGridItem>
-                            <div class="product-grid-item">
-                                <div class="product-grid-item-top">
-                                    <div>
-                                        <i class="pi pi-plane product-category-icon"></i>
-                                        <span class="product-category">#{vuelo.modeloAvion}</span>
-                                    </div>
-                                    <span class="product-badge">#{vuelo.duracion}</span>
-                                </div>
-                                <div class="product-grid-item-content">
-                                    <div class="product-name">Vuelo a #{vuelo.destino}</div>
-                                    <div class="product-description">De #{vuelo.ciudadSalida} a #{vuelo.ciudadLlegada}</div>
-                                    <div class="product-description">Salida: #{vuelo.fechaHoraSalida} | Llegada: #{vuelo.fechaHoraLlegada}</div>
-                                </div>
-                                <div class="product-grid-item-bottom">
-                                    <h:outputText value="Precio: #{vuelo.precio}" styleClass="product-price">
-                                        <f:convertNumber currencySymbol="$" type="currency"/>
-                                    </h:outputText>
-                                    <p:commandButton  value="Reservar" icon="pi pi-shopping-cart"
-                                                     actionListener="#{flightSearchBean.reservarVuelo(vuelo)}" >
-                                    </p:commandButton>
-                                </div>
-                            </div>
-                        </p:dataViewGridItem>
 
-                        <!-- Vista en Lista de Vuelos -->
-                        <p:dataViewListItem>
-                            <div class="product-list-item">
-                                <div class="product-list-detail">
-                                <div class="product-name">#{vuelo.numeroVuelo}</div>
-                                    <div class="product-name">#{vuelo.destino}</div>
-                                    <div class="product-description">
-                                        <strong>Salida:</strong> #{vuelo.fechaHoraSalida} |
-                                        <strong>Llegada:</strong> #{vuelo.fechaHoraLlegada}
-                                    </div>
-                                    <div class="product-description">
-                                        <strong>Duración:</strong> #{vuelo.duracion}
-                                    </div>
-                                </div>
-                                <div class="product-list-action">
-                                    <h:outputText value="Precio: #{vuelo.precio}" styleClass="product-price">
-                                        <f:convertNumber currencySymbol="$" type="currency"/>
-                                    </h:outputText>
-                                       <h:commandButton  value="Reservar" icon="pi pi-shopping-cart"
-                                                     action="#{flightSearchBean.reservarVuelo(vuelo)}" >
-                                     </h:commandButton>
-                                     
-                                     
-                                </div>
-                            </div>
-                        </p:dataViewListItem>
-                    </p:dataView>
-                </h:form>
-            </div>
-        </div>
+
+
+          <div class="container mt-5">
+              <h3 class="text-center mb-4">Próximos Vuelos</h3>
+              <div class="row">
+                  <h:form id="form">
+                      <p:dataView value="#{flightBean.vuelosProx}" var="vuelo" rows="12" paginator="true"
+                                  rowsPerPageTemplate="3,6,12,16"
+                                  paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                                  gridIcon="pi pi-th-large" listIcon="pi pi-bars">
+
+                          <!-- Vista de Tarjetas de Vuelo -->
+                          <p:dataViewGridItem>
+                              <div class="product-grid-item">
+                                  <div class="product-grid-item-top">
+                                      <div>
+                                          <i class="pi pi-plane product-category-icon"></i>
+                                          <span class="product-category">#{vuelo.modeloAvion}</span>
+                                      </div>
+                                      <span class="product-badge">#{vuelo.duracion}</span>
+                                  </div>
+                                  <div class="product-grid-item-content">
+                                      <div class="product-name">Vuelo a #{vuelo.destino}</div>
+                                      <div class="product-description">De #{vuelo.ciudadSalida} a #{vuelo.ciudadLlegada}</div>
+                                      <div class="product-description">Salida: #{vuelo.fechaHoraSalida} | Llegada: #{vuelo.fechaHoraLlegada}</div>
+                                  </div>
+                                  <div class="product-grid-item-bottom">
+                                      <h:outputText value="Precio: #{vuelo.precio}" styleClass="product-price">
+                                          <f:convertNumber currencySymbol="$" type="currency"/>
+                                      </h:outputText>
+                                      <p:commandButton  value="Reservar" icon="pi pi-shopping-cart"
+                                                        actionListener="#{flightSearchBean.reservarVuelo(vuelo)}" >
+                                      </p:commandButton>
+                                  </div>
+                              </div>
+                          </p:dataViewGridItem>
+
+                          <!-- Vista en Lista de Vuelos -->
+                          <p:dataViewListItem>
+                              <div class="product-list-item">
+                                  <div class="product-list-detail">
+                                      <div class="product-name">#{vuelo.numeroVuelo}</div>
+                                      <div class="product-name">#{vuelo.destino}</div>
+                                      <div class="product-description">
+                                          <strong>Salida:</strong> #{vuelo.fechaHoraSalida} |
+                                          <strong>Llegada:</strong> #{vuelo.fechaHoraLlegada}
+                                      </div>
+                                      <div class="product-description">
+                                          <strong>Duración:</strong> #{vuelo.duracion}
+                                      </div>
+                                  </div>
+                                  <div class="product-list-action">
+                                      <h:outputText value="Precio: #{vuelo.precio}" styleClass="product-price">
+                                          <f:convertNumber currencySymbol="$" type="currency"/>
+                                      </h:outputText>
+                                      <h:commandButton  value="Reservar" icon="pi pi-shopping-cart"
+                                                        action="#{flightSearchBean.reservarVuelo(vuelo)}" >
+                                      </h:commandButton>
+                                  </div>
+                              </div>
+                          </p:dataViewListItem>
+                      </p:dataView>
+                  </h:form>
+              </div>
+          </div>
+
     </ui:define>
-    
+
 </ui:composition>

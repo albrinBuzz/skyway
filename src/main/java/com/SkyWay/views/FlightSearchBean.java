@@ -2,17 +2,20 @@ package com.SkyWay.views;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
+import com.SkyWay.dto.InfoAsientoDTO;
+import com.SkyWay.model.Ciudad;
+import com.SkyWay.service.*;
+import com.SkyWay.util.Logger;
+import jakarta.annotation.PostConstruct;
 import org.primefaces.PrimeFaces;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.SkyWay.dto.InfoVueloDTO;
-import com.SkyWay.service.AsientoService;
-import com.SkyWay.service.AvionService;
-import com.SkyWay.service.PasajeroService;
-import com.SkyWay.service.ReservaService;
-import com.SkyWay.service.VueloService;
 
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.faces.annotation.ManagedProperty;
@@ -29,12 +32,14 @@ public class FlightSearchBean {
 	
 		@Autowired
 	    private VueloService vueloService;
-		
+
 		@Autowired
 		private AsientoService asientoService;
 	
 		@Autowired
 		private AvionService avionService;
+		@Autowired
+		private CiudadService ciudadService;
 		
 		@Autowired
 		private PasajeroService pasajeroService;
@@ -43,14 +48,18 @@ public class FlightSearchBean {
 		private ReservaService reservaService;
 		
 		private	List<InfoVueloDTO> vuelos;
+		private List<Ciudad>ciudads;
 	
 		  @ManagedProperty("#{facesContext}")
 		    private FacesContext facesContext;
 
-		
+		private List<InfoAsientoDTO> asientoSeleccionados;
+
 	 	@Future
-	
-	 	private List<LocalDate> range;
+
+		private List<LocalDate> range;
+
+
 	 	 // Campos del formulario
 	    private String departureCity;
 	    private String arrivalCity;
@@ -61,6 +70,18 @@ public class FlightSearchBean {
 	    private String priceRange; // Rango de precio
 	    private String flightDuration; // Duración del vuelo
 	    private String stops; // Escalas
+
+		@PostConstruct
+		public void init(){
+			range = new ArrayList<>();
+			LocalDateTime fechaHora = LocalDateTime.now();
+			range.add(fechaHora.toLocalDate());
+			range.add(fechaHora.toLocalDate());
+
+			ciudads=ciudadService.getAllCiudades();
+
+		}
+
 
 	    // Getters y setters para cada campo
 
@@ -80,11 +101,15 @@ public class FlightSearchBean {
 	        this.arrivalCity = arrivalCity;
 	    }
 
-	    public LocalDate getDepartureDate() {
-	        return range.get(0);
-	    }
+		public LocalDate getDepartureDate() {
+			if (range != null && range.size() > 0) {
+				return range.get(0);
+			}
+			return null;  // or a default value, like LocalDate.now() or something else
+		}
 
-	    public void setDepartureDate(LocalDate departureDate) {
+
+		public void setDepartureDate(LocalDate departureDate) {
 	        this.range.set(0, departureDate);
 	    }
 
@@ -144,10 +169,20 @@ public class FlightSearchBean {
 	        this.stops = stops;
 	    }
 
-	 
-	    // Método para realizar la búsqueda de vuelos
+		public List<Ciudad> getCiudads() {
+			return ciudads;
+		}
+
+		public void setCiudads(List<Ciudad> ciudads) {
+			this.ciudads = ciudads;
+		}
+
+
+	// Método para realizar la búsqueda de vuelos
 	    public void buscarVuelos() {
-	    	
+
+			Logger.logInfo(departureCity+" "+arrivalCity+" "+ range.get(0) +" "+ range.get(1));
+
 	    	 vuelos= vueloService.buscarVuelo(departureCity, arrivalCity,String.valueOf( range.get(0)),String.valueOf( range.get(1)));
 	    	 
 	    	 System.out.println(vuelos);
@@ -158,7 +193,9 @@ public class FlightSearchBean {
 			}
 
 	    }
-	    
+
+
+
 	    public void reservarVuelo(InfoVueloDTO vuelo) {
 	 
 	    	 // Guardar el vuelo seleccionado en el contexto de la sesión o como atributo en el bean
@@ -192,9 +229,12 @@ public class FlightSearchBean {
 			return range;
 		}
 
-		public void setRange(List<LocalDate> range) {
-			this.range = range;
+	public void setRange(List<LocalDate> range) {
+		if (range == null) {
+			range = new ArrayList<>();  // Initialize if it's null
 		}
+		this.range = range;
+	}
 
 		public List<InfoVueloDTO> getVuelos() {
 			return vuelos;

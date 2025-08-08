@@ -44,15 +44,15 @@ public class UsuarioServiceImpl implements UsuarioService{
 	@Autowired
 	private PasajeroService pasajeroService;
 
-	@Autowired
-    private EntityManager em;
+	@PersistenceContext
+	private EntityManager em;
 	
-	private EntityManagerFactory emf ;
+	/*private EntityManagerFactory emf ;
 	
 	  public EntityManager getEntityManager() {
 	  	emf = Persistence.createEntityManagerFactory("mainPU");
 	    return emf.createEntityManager();
-	}
+	}*/
 	
 	
 	//@Autowired
@@ -163,14 +163,32 @@ public class UsuarioServiceImpl implements UsuarioService{
 		var rol = usuario.getRol();*/
 
         // Llamar a la fábrica para crear el usuario según el rol
+		TypedQuery<Usuario> query = em.createQuery(
+				"SELECT e FROM Usuario e WHERE e.correoElectronico = :valor", Usuario.class);
+		query.setParameter("valor", correo);
+		var usuario=query.getSingleResult();
+		if(usuario instanceof Piloto piloto) {
+			System.out.println(" ");
+			com.SkyWay.util.Logger.logInfo("es un piloto");
+			System.out.println();
+			com.SkyWay.util.Logger.logInfo(piloto.toString());
+		}else {
+			System.out.println(" ");
+			System.out.println("es un Pasajero");
+			com.SkyWay.util.Logger.logInfo("es un Pasajero");
+			System.out.println();
+			com.SkyWay.util.Logger.logInfo(usuario.toString());
+		}
 
-		return usuarioFactory(correo);
+
+        return usuario;
+		//return usuarioFactory(correo);
 	}
 
 
 	public Usuario usuarioFactory(String correo) {
 		// Preparar la consulta para el procedimiento almacenado
-		try (EntityManager em = getEntityManager()) {
+		try  {
 			StoredProcedureQuery query = em.createStoredProcedureQuery("sp_obtener_usuario_por_correo");
 
 			// Registrar los parámetros del procedimiento

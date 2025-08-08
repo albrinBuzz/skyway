@@ -28,72 +28,55 @@
    <!--  <h:outputStylesheet name="#{request.contextPath}/css/bootstrap.min.css" />
      <h:outputStylesheet name="#{request.contextPath}/css/style.css" />-->
 
-
-    <style  type="text/css">
-        /* Barra sticky */
+    <style type="text/css">
+        /* Barra sticky con fondo transparente y gradiente */
         .sticky-header {
             position: sticky;
             top: 0;
             z-index: 1000;
-            background-color: #007bff;
-            padding: 10px 0;
+            background: linear-gradient(to right, rgba(0, 123, 255, 0.9), rgba(0, 123, 255, 0.5));
+            padding: 15px 0;
         }
 
-        /* Estilo para el menú desplegable */
+        /* Menú desplegable con sombra y bordes redondeados */
         .dropdown-menu {
-            border-radius: 8px;
+            border-radius: 10px;
             background-color: #ffffff;
-            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
-            min-width: 250px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            min-width: 280px;
         }
 
         .dropdown-item {
-            padding: 10px 20px;
+            padding: 12px 20px;
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        /* Efecto hover sobre las opciones del dropdown */
         .dropdown-item:hover {
             background-color: #007bff;
             color: #ffffff;
         }
 
-        /* Estilos de iconos */
+        /* Efecto hover en los iconos de usuario */
         .user-icon {
             font-size: 1.7rem;
-            color: #007bff;
-            transition: transform 0.3s, color 0.3s;
+            color: #ffffff;
+            transition: transform 0.3s ease, color 0.3s ease;
         }
 
         .user-icon:hover {
             transform: scale(1.1);
-            color: #0056b3;
+            color: #ffc107;
         }
 
-        /* Estilos de texto y separadores dentro del dropdown */
+        /* Estilos de texto y botones dentro del dropdown */
         .dropdown-header {
             background-color: #007bff;
             color: #ffffff;
-            padding: 15px;
-            border-radius: 8px 8px 0 0;
+            padding: 18px;
+            border-radius: 10px 10px 0 0;
             text-align: center;
         }
 
-        /* Espaciado y bordes en la barra */
-        .sticky-header .col-lg-4 {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-        }
-
-        .sticky-header .dropdown img {
-            margin-left: 10px;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-        }
-
-        /* Botones de login y opciones */
         .dropdown-menu .btn-primary {
             background-color: #007bff;
             border: none;
@@ -105,255 +88,198 @@
             background-color: #0056b3;
         }
 
-        .dropdown-menu .small {
-            color: #007bff;
-            text-decoration: none;
+        /* Estilos de la barra de navegación y botones de login */
+        .sticky-header .col-lg-4 {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
         }
 
-        .dropdown-menu .small:hover {
-            text-decoration: underline;
+        .sticky-header .col-lg-8 {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
         }
-        .notification-panel {
-    margin-bottom: 10px;
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-}
 
-.notification-panel .ui-panel-title {
-    font-weight: bold;
-    color: #333;
-}
+        /* Mejorar el estilo del botón login */
+        .dropdown-toggle {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #ffffff;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
 
-.notification-panel .ui-commandbutton {
-    background-color: #28a745;
-    color: white;
-    font-weight: bold;
-    border: none;
-    border-radius: 5px;
-}
+        .dropdown-toggle:hover {
+            background-color: #0056b3;
+        }
 
-.notification-panel .ui-commandbutton:hover {
-    background-color: #218838;
-}
+        /* Mejoras en los botones de login */
+        .dropdown-menu .btn-secondary {
+            background-color: #6c757d;
+            border-radius: 8px;
+            color: white;
+        }
+
+        .dropdown-menu .btn-secondary:hover {
+            background-color: #495057;
+        }
+
         .footer {
-    background-color: #1a1a1a;
-    color: #fff;
-}
+            background-color: #343a40;
+            color: #fff;
+        }
 
-.footer h4 {
-    font-weight: 600;
-}
+        .footer h4 {
+            font-weight: 600;
+        }
 
-.footer .social-icons i {
-    color: #fff;
-    transition: color 0.3s ease;
-}
+        .footer .social-icons i {
+            color: #fff;
+            transition: color 0.3s ease;
+        }
 
-.footer .social-icons i:hover {
-    color: #007bff;
-}
+        .footer .social-icons i:hover {
+            color: #007bff;
+        }
 
-.footer .footer-bank-card i {
-    color: #fff;
-    margin-right: 15px;
-    transition: transform 0.3s ease;
-}
+        .footer .footer-bank-card i {
+            color: #fff;
+            margin-right: 15px;
+            transition: transform 0.3s ease;
+        }
 
-.footer .footer-bank-card i:hover {
-    transform: scale(1.1);
-}
+        .footer .footer-bank-card i:hover {
+            transform: scale(1.1);
+        }
 
-.footer a {
-    text-decoration: none;
-    color: #fff;
-    transition: color 0.3s ease;
-}
+        .footer a {
+            text-decoration: none;
+            color: #fff;
+            transition: color 0.3s ease;
+        }
 
-.footer a:hover {
-    color: #007bff;
-}
+        .footer a:hover {
+            color: #007bff;
+        }
 
-.footer .copyright {
-    background-color: #333;
-    color: #fff;
-    padding: 20px 0;
-}
-        
-        
+        .footer .copyright {
+            background-color: #333;
+            color: #fff;
+            padding: 20px 0;
+        }
     </style>
-
 </h:head>
 
 <body>
 
-<div class="container-fluid bg-primary px-5 d-none d-lg-block sticky-header">
-
+<div class="container-fluid px-5 d-none d-lg-block sticky-header">
     <div class="row gx-0">
-        <p:clock />
-        <!-- Botón para Volver al Inicio (izquierda) -->
-        <div class="col-lg-4 d-flex flex-column">
+        <div class="col-lg-4 d-flex justify-content-start align-items-center">
             <p:link href="/" title="Regresar al inicio de la página">
                 <p:outputLabel id="labelHome" value="Regresar al Inicio" />
             </p:link>
-
-
         </div>
 
-        <!-- Contenido de la parte derecha (usuario o login) -->
         <div class="col-lg-8 text-center text-lg-end">
-            <div class="d-inline-flex align-items-center" style="height: 45px;">
-
-
-
-				<!-- Mostrar el login solo si el usuario no está autenticado -->
-				<h:panelGroup rendered="#{!userBean.loggedIn}">
-				    <div class="dropdown">
-				        <a href="#" class="nav-link dropdown-toggle text-light" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Acceder al panel de login">
-				            <i class="fas fa-sign-in-alt me-2"></i><small>Login</small>
-				        </a>
+            <div class="d-inline-flex align-items-center">
+                <!-- Mostrar login si no está autenticado -->
+                <h:panelGroup rendered="#{!userBean.loggedIn}">
+                    <div class="dropdown">
+                        <a href="#" class="nav-link dropdown-toggle text-light" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-sign-in-alt me-2"></i><small>Login</small>
+                        </a>
 
                         <div class="dropdown-menu p-4 rounded shadow-lg" style="min-width: 320px;">
-
-                            <!-- Formulario de login -->
                             <h:form id="loginForm">
                                 <h:panelGroup>
-
-                                    <!-- Título del formulario -->
                                     <div class="mb-3 text-center">
                                         <h4>Iniciar sesión</h4>
                                     </div>
-
-                                    <!-- Usuario -->
+                                    <!-- Campos de usuario y contraseña -->
                                     <div class="mb-3 position-relative">
                                         <h:outputLabel for="username" value="Usuario:" class="form-label" />
-                                        <h:inputText id="username" value="#{loginBean.username}"
-                                                     required="true"
-                                                     label="Usuario"
-                                                     class="form-control"
-                                                     placeholder="Introduce tu usuario"
-                                                     aria-describedby="usernameHelp" />
-                                        <!-- Mensaje de error debajo del campo -->
+                                        <h:inputText id="username" value="#{loginBean.username}" required="true" class="form-control" placeholder="Introduce tu usuario" />
                                         <h:message for="username" styleClass="invalid-feedback d-block" />
                                     </div>
 
-                                    <!-- Contraseña -->
                                     <div class="mb-3 position-relative">
                                         <h:outputLabel for="password" value="Contraseña:" class="form-label" />
-                                        <p:password id="password" value="#{loginBean.password}"
-                                                    toggleMask="true"
-                                                    redisplay="true"
-                                                    class="form-control"
-                                                    placeholder="Introduce tu contraseña"
-                                                    aria-describedby="passwordHelp" />
-                                        <!-- Mensaje de error debajo del campo -->
+                                        <p:password id="password" value="#{loginBean.password}" toggleMask="true" class="form-control" placeholder="Introduce tu contraseña" />
                                         <h:message for="password" styleClass="invalid-feedback d-block" />
                                     </div>
 
-                                    <!-- Mensajes globales de error -->
                                     <h:messages id="loginMessages" styleClass="alert alert-danger mb-3" />
-
-                                    <!-- Botones -->
                                     <div class="d-grid gap-2">
                                         <h:commandButton value="Iniciar sesión" action="#{loginBean.login}" class="btn btn-primary btn-lg" />
                                         <h:commandButton value="Cancelar" action="#{loginBean.cancelLogin}" class="btn btn-secondary btn-lg" />
                                     </div>
-
-                                    <!-- Enlace para recuperar contraseña -->
                                     <div class="text-center mt-3">
-                                        <a href="#" class="text-muted" role="button" onclick="showRecoverPasswordForm()">¿Olvidaste tu contraseña?</a>
+                                        <a href="#" class="text-muted">¿Olvidaste tu contraseña?</a>
                                     </div>
 
+                                    <div class="text-center mt-3">
+
+                                    <p:link href="/home/registro.xhtml" class="dropdown-item d-flex align-items-center">
+                                        ¿No tienes cuenta? Regístrate aquí
+                                    </p:link>
+
+                                    </div>
                                 </h:panelGroup>
                             </h:form>
-
                         </div>
-
-
                     </div>
-				</h:panelGroup>
-						
-<h:form id="menuForm">
-    <h:panelGroup rendered="#{userBean.loggedIn}">
-        <div class="dropdown">
-            <!-- Menú de usuario con el ícono de usuario -->
-            <a href="#" class="dropdown-toggle text-light d-flex align-items-center" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Menú de usuario">
-                <i class="fas fa-user-circle me-2 user-icon"></i>
-                <span><h:outputText value="#{userBean.name}" class="fw-bold" /></span>
-            </a>
-
-            <div class="dropdown-menu rounded shadow-lg border-0">
-                <div class="dropdown-header">
-                    <h6 class="mb-0">¡Bienvenido de nuevo, <h:outputText value="#{userBean.name}"/>!</h6>
-                    <small>¿Qué te gustaría hacer hoy?</small>
-                </div>
-                <div class="dropdown-divider"></div>
-
-                <!-- Opción Perfil -->
-                <p:link href="/perfil" class="dropdown-item d-flex align-items-center">
-                    <i class="fas fa-user-cog me-2" style="color: #007bff;"></i>
-                    <span>Perfil</span>
-                </p:link>
-
-                <!-- Opción Admin para el rol de Admin -->
-                <sec:authorize access="hasRole('ROLE_ADMIN')">
-                
-                    <p:link href="/admin/index.xhtml" class="dropdown-item d-flex align-items-center" 
-                  
-                            aria-label="Ir a la página de administración">
-                        <i class="fas fa-user-shield me-2" style="color: #007bff; font-size: 18px;"></i>
-                        <span style="font-size: 16px; font-weight: 500;">Admin</span>
-                    </p:link>
-                </sec:authorize>
-
-                <!-- Opción Cerrar sesión -->
-                <p:link href="/logout" class="dropdown-item d-flex align-items-center">
-                    <i class="fas fa-sign-out-alt me-2" style="color: #007bff;"></i>
-                    <span>Cerrar sesión</span>
-                </p:link>
-
-                <!-- Menú de Notificaciones -->
-                <div class="dropdown-divider"></div>
-                
-                <!-- Asegúrate de que el panel de notificaciones esté visible si hay notificaciones no leídas -->
-                <h:panelGroup id="notificationsDropdown" rendered="#{userBean.getUnreadNotificationsCount() > 0}">
-                    <p:menuitem value="Notificaciones" icon="pi pi-bell" disabled="true" />
-                    
-				 	<p:badge  value="#{userBean.getUnreadNotificationsCount()}" severity="danger">
-				         <p:commandButton value="Notificaciones" icon="pi pi-users" styleClass="ml-4" />
-				     </p:badge>
-            
-
-                    <!-- Lista de notificaciones no leídas -->
-                    <h:panelGroup id="notificationsList">
-                        <ui:repeat value="#{userBean.notifications}" var="notif">
-                            <p:panel header="#{notif.titulo}" toggleable="true" collapsible="true">
-                                <h:outputText value="#{notif.mensaje}" />
-                                <p:commandButton value="Marcar como leída" action="#{userBean.markAsRead(notif.idNotificacion)}" update=":menuForm:notificationsList"/>
-                            </p:panel>
-                        </ui:repeat>
-                    </h:panelGroup>
                 </h:panelGroup>
-            </div>
-        </div>
-    </h:panelGroup>
-</h:form>
 
-				
+                <!-- Menú de usuario si está autenticado -->
+                <h:form id="menuForm">
+                    <h:panelGroup rendered="#{userBean.loggedIn}">
+                        <div class="dropdown">
+                            <a href="#" class="dropdown-toggle text-light d-flex align-items-center" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle me-2 user-icon"></i>
+                                <span><h:outputText value="#{userBean.name}" class="fw-bold" /></span>
+                            </a>
+                            <div class="dropdown-menu rounded shadow-lg">
+                                <div class="dropdown-header">
+                                    <h6 class="mb-0">¡Bienvenido de nuevo, <h:outputText value="#{userBean.name}"/>!</h6>
+                                    <small>¿Qué te gustaría hacer hoy?</small>
+                                </div>
+                                <div class="dropdown-divider"></div>
 
+                                <!-- Opción Perfil -->
+                                <p:link href="/perfil" class="dropdown-item d-flex align-items-center">
+                                    <i class="fas fa-user-cog me-2" style="color: #007bff;"></i>
+                                    <span>Perfil</span>
+                                </p:link>
+
+                                <!-- Opción Admin para el rol de Admin -->
+                                <sec:authorize access="hasRole('ROLE_ADMIN')">
+                                    <p:link href="/admin/index.xhtml" class="dropdown-item d-flex align-items-center">
+                                        <i class="fas fa-user-shield me-2" style="color: #007bff; font-size: 18px;"></i>
+                                        <span>Admin</span>
+                                    </p:link>
+                                </sec:authorize>
+
+                                <!-- Opción Cerrar sesión -->
+                                <p:link href="/logout" class="dropdown-item d-flex align-items-center">
+                                    <i class="fas fa-sign-out-alt me-2" style="color: #007bff;"></i>
+                                    <span>Cerrar sesión</span>
+                                </p:link>
+                            </div>
+                        </div>
+                    </h:panelGroup>
+                </h:form>
             </div>
         </div>
     </div>
 </div>
 
- 		
  		<ui:insert name="contenido"></ui:insert>
 
 <!-- Footer Start -->
 <div class="container-fluid bg-dark py-5 footer">
     <div class="container py-5">
         <div class="row g-5">
-            
+
             <!-- Sección de Contacto -->
             <div class="col-md-6 col-lg-3 col-xl-3">
                 <h4 class="mb-4 text-white">Contáctanos</h4>
@@ -363,27 +289,27 @@
             </div>
 
             <!-- Sección de Información de la Aerolínea -->
-          
+
 	          <div class="col-md-6 col-lg-3 col-xl-3">
 				    <h4 class="mb-4 text-white">Sobre Nosotros</h4>
 				    <!-- Enlaces a las secciones con parámetro tipo -->
 				    <h:link value="Quiénes Somos" outcome="/home/content.xhtml?tipo=informacion" class="text-white">
 				        <i class="fas fa-angle-right me-2"></i> Quiénes Somos
 				    </h:link><br></br>
-				
+
 				    <h:link value="Historia" outcome="/home/content.xhtml?tipo=informacion" class="text-white">
 				        <i class="fas fa-angle-right me-2"></i> Historia
 				    </h:link><br></br>
-				
+
 				    <h:link value="Servicios" outcome="/home/content.xhtml?tipo=servicios" class="text-white">
 				        <i class="fas fa-angle-right me-2"></i> Servicios
 				    </h:link><br></br>
-				
+
 				    <h:link value="Blog" outcome="/blog/index.xhtml" class="text-white">
 				        <i class="fas fa-angle-right me-2"></i> Blog
 				    </h:link>
 				</div>
-				
+
 				<!-- Sección de Ayuda y Políticas -->
 				<div class="col-md-6 col-lg-3 col-xl-3">
 				    <h4 class="mb-4 text-white">Atención al Cliente</h4>
@@ -391,21 +317,21 @@
 				    <h:link value="Contacto" outcome="/home/content.xhtml?tipo=contacto" class="text-white">
 				        <i class="fas fa-angle-right me-2"></i> Contacto
 				    </h:link><br></br>
-				
+
 				    <h:link value="Políticas de Privacidad" outcome="/home/content.xhtml?tipo=Estático" class="text-white">
 				        <i class="fas fa-angle-right me-2"></i> Políticas de Privacidad
 				    </h:link><br></br>
-				
+
 				    <h:link value="Preguntas Frecuentes" outcome="/home/content.xhtml?tipo=faq" class="text-white">
 				        <i class="fas fa-angle-right me-2"></i> Preguntas Frecuentes
 				    </h:link><br></br>
-				
+
 				    <h:link value="Términos y Condiciones" outcome="/home/content.xhtml?tipo=Estático" class="text-white">
 				        <i class="fas fa-angle-right me-2"></i> Términos y Condiciones
 				    </h:link>
 				</div>
-          
-          
+
+
 
             <!-- Sección de Redes Sociales y Pagos -->
             <div class="col-md-6 col-lg-3 col-xl-3">
@@ -453,7 +379,7 @@
 </div>
 <!-- Copyright End -->
 
- 		
- 		
+
+
 </body>
 </html>

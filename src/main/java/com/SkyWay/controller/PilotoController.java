@@ -25,8 +25,11 @@ public class PilotoController {
 	private static final Logger logger = LoggerFactory.getLogger(PilotoController.class);
 
 
-	@GetMapping(value =  "/",produces = {"application/json"})
+	//@GetMapping(value =  "/",produces = {"application/json"})
+	@GetMapping
 	public @ResponseBody List<Piloto> getAll() {
+
+		com.SkyWay.util.Logger.logInfo("Obteniendo sotos");
 		//System.out.println(piloService.findAll());
 		return piloService.findAll();
 	}

@@ -3,6 +3,7 @@ package com.SkyWay.serviceImpl;
 import java.util.List;
 import java.util.Optional;
 
+import jakarta.persistence.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,12 +13,7 @@ import com.SkyWay.model.Reserva;
 import com.SkyWay.model.ReservaAsiento;
 import com.SkyWay.repository.ReservaAsientoRepository;
 import com.SkyWay.service.ReservaAsientoService;
-
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.ParameterMode;
-import jakarta.persistence.Persistence;
-import jakarta.persistence.StoredProcedureQuery;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ReservaAsientoServiceImpl implements ReservaAsientoService{
@@ -27,12 +23,15 @@ public class ReservaAsientoServiceImpl implements ReservaAsientoService{
     @Autowired
     private ReservaAsientoRepository reservaAsientoRepository;
 
-    private EntityManagerFactory emf = null;
+    /*private EntityManagerFactory emf = null;
     
 	  public EntityManager getEntityManager() {
 		  	emf = Persistence.createEntityManagerFactory("mainPU");
 	        return emf.createEntityManager();
-	    }
+	    }*/
+
+	@PersistenceContext
+	private EntityManager em;
     
     // Crear o actualizar una reserva
     public ReservaAsiento guardarReserva(ReservaAsiento reservaAsiento) {
@@ -55,10 +54,9 @@ public class ReservaAsientoServiceImpl implements ReservaAsientoService{
     }
 
 	@Override
+	@Transactional
 	public boolean cambiarAsiento(Integer idAsiento, Integer idReserva,Integer id_asiento_org) {
 
-	
-		EntityManager em = getEntityManager();
 		
 		StoredProcedureQuery procedureQuery = em
 	              .createStoredProcedureQuery("sp_cambiarAsiento");
@@ -71,9 +69,19 @@ public class ReservaAsientoServiceImpl implements ReservaAsientoService{
 		procedureQuery.setParameter("p_id_asiento", idAsiento);
 		procedureQuery.setParameter("p_id_reserva", idReserva);
 		procedureQuery.setParameter("p_id_asiento_org", id_asiento_org);
-		
+
+		try {
+
+			procedureQuery.execute();
+			LOGGER.info("asiento cambiado");
+			return true;
+		} catch (Exception e) {
+
+            LOGGER.error("Error al cancelar  al cambiar asiento: {}", e.getMessage(), e);
+			return false;
+		}
 		 // Iniciar la transacción
-	    em.getTransaction().begin();
+	    /*em.getTransaction().begin();
 	    try {
 	        // Ejecutar el procedimiento
 	    	procedureQuery.execute();
@@ -87,7 +95,7 @@ public class ReservaAsientoServiceImpl implements ReservaAsientoService{
 	        return false;
 	    } finally {
 	        em.close();  // Asegúrate de cerrar el EntityManager
-	    }
+	    }*/
 		
 
 	}

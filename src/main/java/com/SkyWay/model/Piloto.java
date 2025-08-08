@@ -2,10 +2,14 @@ package com.SkyWay.model;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.NamedQuery;
+import jakarta.persistence.OneToMany;
 
 
 /**
@@ -49,8 +53,9 @@ public class Piloto extends Usuario implements Serializable {
 	private String correoElectronico;
 
 	//bi-directional many-to-one association to Vuelo
-	//@OneToMany(mappedBy="piloto")
-	//private List<Vuelo> vuelos;
+	@OneToMany(mappedBy="piloto")
+	@JsonIgnore
+	private List<Vuelo> vuelos;
 
 	public Piloto() {
 	}
@@ -150,7 +155,7 @@ public class Piloto extends Usuario implements Serializable {
 
 
 
-	/*public List<Vuelo> getVuelos() {
+	public List<Vuelo> getVuelos() {
 		return this.vuelos;
 	}
 
@@ -170,7 +175,7 @@ public class Piloto extends Usuario implements Serializable {
 		vuelo.setPiloto(null);
 
 		return vuelo;
-	}*/
+	}
 
 	@Override
 	public String getNombre() {

@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
+import com.SkyWay.util.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -167,6 +168,7 @@ public class VueloControllerApi {
     // Obtener un vuelo por ID
     @GetMapping("/{id}")
     public ResponseEntity<VueloDTO> getVueloById(@PathVariable Integer id) {
+        Logger.logInfo("Obteniendo sotos");
         Optional<Vuelo> vuelo = vueloService.findById(id);
         return vuelo.map(v -> {
             VueloDTO dto = new VueloDTO();

@@ -3,6 +3,7 @@ package com.SkyWay.serviceImpl;
 import java.util.List;
 import java.util.Optional;
 
+import jakarta.persistence.PersistenceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,7 @@ import com.SkyWay.service.VueloService;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
+import org.springframework.transaction.annotation.Transactional;
 
 
 @Service
@@ -27,7 +29,7 @@ public class VueloServiceImpl implements VueloService{
     @Autowired
     private VueloRepository vueloRepository;
     
-    @Autowired
+    @PersistenceContext
     private EntityManager em;
     
 
@@ -53,6 +55,7 @@ public class VueloServiceImpl implements VueloService{
 
 
 	@Override
+	@Transactional
 	public List<InfoVueloDTO> buscarVuelo(String departureCity, String arrivalCity, String departureDate, String returnDate) {
 		
 		// Crear la llamada al procedimiento almacenado
@@ -113,6 +116,7 @@ public class VueloServiceImpl implements VueloService{
 	}
 
 	@Override
+	@Transactional
 	public List<InfoVueloDTO> vuelosProximos() {
 
         Query query = em.createNativeQuery(

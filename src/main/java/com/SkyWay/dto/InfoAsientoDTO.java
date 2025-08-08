@@ -1,6 +1,7 @@
 package com.SkyWay.dto;
 
 
+import java.util.Objects;
 
 public class InfoAsientoDTO {
     private int idAsiento;
@@ -64,6 +65,18 @@ public class InfoAsientoDTO {
 		this.clase = clase;
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if (obj == null || getClass() != obj.getClass()) return false;
+		InfoAsientoDTO that = (InfoAsientoDTO) obj;
+		return this.idAsiento == that.idAsiento;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(idAsiento);
+	}
 	@Override
 	public String toString() {
 		return "InfoAsientoDTO{" +

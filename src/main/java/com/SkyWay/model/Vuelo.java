@@ -4,6 +4,9 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -49,6 +52,7 @@ public class Vuelo implements Serializable {
 
 	//bi-directional many-to-one association to Reserva
 	@OneToMany(mappedBy="vuelo",fetch = FetchType.LAZY,cascade = CascadeType.ALL)
+	@JsonIgnore
 	private List<Reserva> reservas;
 
 	//bi-directional many-to-one association to Aeropuerto
@@ -74,6 +78,7 @@ public class Vuelo implements Serializable {
 	//bi-directional many-to-one association to Piloto
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="RUT_PILOTO")
+
 	private Piloto piloto;
 
 	@OneToMany(mappedBy="vuelo",fetch = FetchType.LAZY,cascade = CascadeType.ALL)

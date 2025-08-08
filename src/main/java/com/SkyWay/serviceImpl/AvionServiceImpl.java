@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import javax.sql.DataSource;
 
+import jakarta.persistence.PersistenceContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,18 +22,19 @@ public class AvionServiceImpl implements AvionService{
 	@Autowired
 	private AvionRepository avionRepository;
 
-	@Autowired
-	private EntityManager em;
-	
+
 	@Autowired
     private  DataSource dataSource;
 	
-    private EntityManagerFactory emf = null;
-    
-	  public EntityManager getEntityManager() {
+    //private EntityManagerFactory emf = null;
+
+	@PersistenceContext
+	private EntityManager em;
+
+	  /*public EntityManager getEntityManager() {
 		  	emf = Persistence.createEntityManagerFactory("mainPU");
 	        return emf.createEntityManager();
-	    }
+	    }*/
 	  
 	
 	

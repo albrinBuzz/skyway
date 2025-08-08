@@ -18,16 +18,8 @@ import jakarta.persistence.Persistence;
 public class PasajeroServiceImpl implements PasajeroService{
 
 	@Autowired
-	
 	private PasajeroRepository pasajeroRepository;
-	
-    private EntityManagerFactory emf = null;
-    
-	  public EntityManager getEntityManager() {
-		  	emf = Persistence.createEntityManagerFactory("mainPU");
-	        return emf.createEntityManager();
-	    }
-	  
+
 	
 	@Override
 	public List<Pasajero> findAll() {

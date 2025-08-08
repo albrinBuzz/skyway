@@ -92,7 +92,7 @@ public class SecurityConfig {
 	            .csrf(csrf -> csrf.disable()) // Deshabilitar CSRF (Considerar habilitar en producción)
 	            .authorizeHttpRequests(authorizeRequests ->
 	                authorizeRequests
-	                	//.requestMatchers("/perfil/**").authenticated()
+	                	.requestMatchers("/perfil/**").authenticated()
 						//.requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
 						.requestMatchers(mvc.pattern("/home/login.xhtml")).permitAll()
 	                  	//.requestMatchers("/booking").authenticated()

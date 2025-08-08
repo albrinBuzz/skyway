@@ -2,7 +2,7 @@ package com.SkyWay.views;
 
 import java.io.IOException;
 
-import org.slf4j.Logger;
+import com.SkyWay.util.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -23,6 +23,8 @@ import jakarta.inject.Named;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
+import org.springframework.security.web.savedrequest.SavedRequest;
 
 @Named("loginBean")
 @RequestScoped
@@ -30,8 +32,7 @@ public class LoginBean {
 
     private String username;
     private String password;
-    private final Logger LOGGER = LoggerFactory.getLogger(LoginBean.class);
-    
+
     @Autowired
     private AuthenticationManager authenticationManager;
     
@@ -101,7 +102,23 @@ public class LoginBean {
                 // Manejo exitoso de autenticación
                 auth.onAuthenticationSuccess(request, response, chain, authentication);
 
-                System.out.println("URL ORIGNAL"+request.getQueryString());
+                //SavedRequest savedRequest = new HttpSessionRequestCache().getRequest(request, response);
+
+
+
+                Logger.logInfo("Autenticacion exitosas");
+                String redirectUrl;
+                /*if (savedRequest != null) {
+                    redirectUrl = savedRequest.getRedirectUrl();
+
+                } else {
+                    redirectUrl = request.getContextPath() + "/"; // Página por defecto
+                }
+                //System.out.println("Redirigiendo a URL original: " + redirectUrl);
+                // Redirigir
+                FacesContext.getCurrentInstance().getExternalContext().redirect(redirectUrl);*/
+
+                //System.out.println("URL ORIGNAL"+request.getQueryString());
                 
                 redigir();
             }

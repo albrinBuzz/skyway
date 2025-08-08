@@ -55,11 +55,11 @@ public class UserBean implements Serializable {
             this.isAdmin = authentication.getAuthorities().stream()
                                          .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
 
-            notifications=notificacionRepository.findByRut(usuario.getRutUsuario());
+           // notifications=notificacionRepository.findByRut(usuario.getRutUsuario());
             // Filtrar las notificaciones no leídas
-            this.unreadNotifications = notifications.stream()
+            /*this.unreadNotifications = notifications.stream()
                     .filter(notif -> !notif.getLeida())
-                    .collect(Collectors.toList());
+                    .collect(Collectors.toList());*/
         }
     }
     

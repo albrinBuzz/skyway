@@ -26,6 +26,7 @@ import jakarta.persistence.ParameterMode;
 import jakarta.persistence.Persistence;
 import jakarta.persistence.Query;
 import jakarta.persistence.StoredProcedureQuery;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AsientoServiceImpl implements AsientoService{
@@ -37,6 +38,7 @@ public class AsientoServiceImpl implements AsientoService{
     private ClaseAsientoRepository claseAsientoRepository;
 
 	private final Logger LOGGER = LoggerFactory.getLogger(AsientoServiceImpl.class);
+
 	@Autowired
 	private EntityManager em;
 	
@@ -87,11 +89,12 @@ public class AsientoServiceImpl implements AsientoService{
 	
 	
 	@Override
+	@Transactional
 	public List<InfoAsientoDTO> getAsientosDisponibles(Integer idAvion,Integer idVuelo) {
 		// TODO Auto-generated method stub
 		
 		
-		List<InfoAsientoDTO> asientos = new ArrayList<InfoAsientoDTO>();
+		List<InfoAsientoDTO> asientos;
 		/*StoredProcedureQuery query = em.createStoredProcedureQuery("sp_getAsientosAvion");
 	    
 	    // Registrar los parámetros del procedimiento
@@ -180,9 +183,10 @@ public class AsientoServiceImpl implements AsientoService{
 	}
 
 	@Override
+	@Transactional
 	public List<InfoAsientoDTO> getAsientosVuelo(Integer idReserva, Integer idVuelo) {
 		// TODO Auto-generated method stub
-		EntityManager em = getEntityManager();
+
 		List<InfoAsientoDTO> asientos = new ArrayList<InfoAsientoDTO>();
 		StoredProcedureQuery query = em.createStoredProcedureQuery("sp_getAsientoSeleccionados");
 	    
@@ -200,7 +204,7 @@ public class AsientoServiceImpl implements AsientoService{
 	    // Ejecutar el procedimiento
 	    query.execute();
 	    
-	    ResultSet cursor = (ResultSet) query.getOutputParameterValue("cursor_asientos");
+	    //ResultSet cursor = (ResultSet) query.getOutputParameterValue("cursor_asientos");
 	    
 	     List<Object[]> resultList = query.getResultList();
 	    // Mapeo a objetos DTO

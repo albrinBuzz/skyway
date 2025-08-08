@@ -1,5 +1,6 @@
 package com.SkyWay.service;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,7 +17,7 @@ public interface ReservaService {
 	  public List<ReservaVueloDTO>getReservasUsuario(String rut);
 	  public void cancelarReserva(Integer id);
 	  public BoletoDTO getBoleto(Integer id);
-	 
-	  
-	
+
+
+    String confirmarReserva(int idVuelo, Integer[] asientosArray, String rutUsuario) throws SQLException;
 }
