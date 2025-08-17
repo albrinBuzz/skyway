@@ -9,9 +9,9 @@ import java.util.List;
  * The persistent class for the metodo_pago database table.
  * 
  */
-@Entity
+/*@Entity
 @Table(name="metodo_pago")
-@NamedQuery(name="MetodoPago.findAll", query="SELECT m FROM MetodoPago m")
+@NamedQuery(name="MetodoPago.findAll", query="SELECT m FROM MetodoPago m")*/
 public class MetodoPago implements Serializable {
 	private static final long serialVersionUID = 1L;
 

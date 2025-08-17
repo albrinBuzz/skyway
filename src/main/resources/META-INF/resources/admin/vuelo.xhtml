@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ui:composition lang="es"
+                xmlns:f="jakarta.faces.core"
+                xmlns:h="jakarta.faces.html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:fs="http://xmlns.jcp.org/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                template="/template/main.xhtml">
+
+    <h:head>
+        <title>Próximos Vuelos</title>
+
+    </h:head>
+
+
+    <ui:define name="contenido">
+
+        <h:form id="formVuelo">
+            <p:panel header="Crear Vuelo" style="max-width: 900px; margin: auto;">
+                <h:panelGrid columns="2" columnClasses="label,value" styleClass="ui-fluid">
+
+
+                    <h:outputLabel for="estado" value="Estado de Vuelo" />
+                    <p:selectOneMenu id="estado" value="#{vueloBean.vuelo.estadoVuelo}">
+                        <f:selectItems value="#{vueloBean.estadoVuelos}" var="e" itemValue="#{e}" itemLabel="#{e.descripcion}" />
+                    </p:selectOneMenu>
+
+                    <h:outputLabel for="piloto" value="RUT Piloto" />
+                    <p:inputText id="piloto" value="#{vueloBean.vuelo.piloto}" />
+
+
+
+                      <h:outputLabel for="estado" value="Estado de Vuelo" />
+                      <p:selectOneMenu id="estado" value="#{vueloBean.vuelo.estadoVuelo}">
+                          <f:selectItems value="#{vueloBean.estadoVuelos}" var="e" itemValue="#{e}" itemLabel="#{e.descripcion}" />
+                      </p:selectOneMenu>
+
+                      <h:outputLabel for="avion" value="Avión" />
+                      <p:selectOneMenu id="avion" value="#{vueloBean.vuelo.avion}">
+                          <f:selectItems value="#{vueloBean.avions}" var="av" itemValue="#{av}" itemLabel="#{av.modeloAvion.nombre}" />
+                      </p:selectOneMenu>
+
+
+
+                  </h:panelGrid>
+
+                  <p:separator />
+
+                  <h3>Segmentos del Vuelo</h3>
+
+                  <ui:repeat var="seg" value="#{vueloBean.segmentos}">
+
+                  <h:panelGrid columns="2" styleClass="ui-fluid">
+                          <h:outputLabel value="Orden Segmento" />
+                          <p:inputNumber value="#{seg.ordenSegmento}" />
+
+                          <h:outputLabel value="Aeropuerto Origen" />
+                          <p:selectOneMenu value="#{seg.aeropuerto1}">
+                              <f:selectItems value="#{vueloBean.aeropuertos}" var="ao" itemValue="#{ao}" itemLabel="#{ao.codigoIata}" />
+                          </p:selectOneMenu>
+
+                          <h:outputLabel value="Aeropuerto Destino" />
+                          <p:selectOneMenu value="#{seg.aeropuerto2}">
+                              <f:selectItems value="#{vueloBean.aeropuertos}" var="ao" itemValue="#{ao}" itemLabel="#{ao.codigoIata}" />
+                          </p:selectOneMenu>
+
+                          <h:outputLabel value="Hora Salida" />
+                          <p:datePicker value="#{seg.horaSalida}" showTime="true" />
+
+                          <h:outputLabel value="Hora Llegada" />
+                          <p:datePicker value="#{seg.horaLlegada}" showTime="true" />
+                      </h:panelGrid>
+
+                      <p:commandButton icon="pi pi-trash" value="Eliminar Segmento" actionListener="#{vueloBean.eliminarSegmento(seg)}" update="@form" styleClass="ui-button-danger" />
+                      <p:separator />
+                  </ui:repeat>
+
+                  <p:commandButton value="Agregar Segmento" actionListener="#{vueloBean.agregarSegmento}" update="@form" icon="pi pi-plus" styleClass="ui-button-success" />
+
+                  <p:separator />
+
+                  <p:commandButton value="Guardar Vuelo" action="#{vueloBean.guardarVuelo}" icon="pi pi-save" update="@form" styleClass="ui-button-primary" />
+              </p:panel>
+          </h:form>
+
+      </ui:define>
+
+  </ui:composition>

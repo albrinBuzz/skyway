@@ -20,8 +20,7 @@ import jakarta.persistence.SequenceGenerator;
  * The persistent class for the avion database table.
  * 
  */
-@Entity
-@NamedQuery(name="Avion.findAll", query="SELECT a FROM Avion a")
+
 public class Avion implements Serializable {
 	private static final long serialVersionUID = 1L;
 

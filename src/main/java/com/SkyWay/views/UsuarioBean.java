@@ -1,11 +1,12 @@
 package com.SkyWay.views;
 
 
-import com.SkyWay.model.Rol;
-import com.SkyWay.model.Usuario;
 
-import com.SkyWay.service.RolService;
-import com.SkyWay.service.UsuarioService;
+
+import com.SkyWay.modules.usuario.domain.model.Usuario;
+import com.SkyWay.modules.rolusuario.domain.service.RolService;
+import com.SkyWay.modules.usuario.domain.service.UsuarioService;
+import com.SkyWay.util.Logger;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
@@ -17,7 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.Serializable;
 import java.util.Date;
-import java.util.Optional;
 
 @Named
 @RequestScoped
@@ -75,8 +75,9 @@ public class UsuarioBean implements Serializable {
             }
 
             // Asignar un rol al usuario (puede ser un valor por defecto)
-            Optional<Rol> rol = rolService.getRoleById(1); // Ejemplo: rol de usuario regular
-            usuario.setRol(rol.get());
+            Logger.logInfo("corregir, setear el rol al usuario");
+            //Optional<Rol> rol = rolService.getRoleById(1); // Ejemplo: rol de usuario regular
+            //usuario.setRol(rol.get());
 
             // Guardar el usuario en la base de datos
             //entityManager.persist(usuario);

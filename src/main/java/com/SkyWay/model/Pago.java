@@ -10,8 +10,8 @@ import java.sql.Timestamp;
  * The persistent class for the pago database table.
  * 
  */
-@Entity
-@NamedQuery(name="Pago.findAll", query="SELECT p FROM Pago p")
+/*@Entity
+@NamedQuery(name="Pago.findAll", query="SELECT p FROM Pago p")*/
 public class Pago implements Serializable {
 	private static final long serialVersionUID = 1L;
 

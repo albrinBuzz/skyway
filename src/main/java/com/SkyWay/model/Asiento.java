@@ -10,8 +10,7 @@ import jakarta.persistence.*;
  * The persistent class for the asiento database table.
  * 
  */
-@Entity
-@NamedQuery(name="Asiento.findAll", query="SELECT a FROM Asiento a")
+
 public class Asiento implements Serializable {
 	private static final long serialVersionUID = 1L;
 

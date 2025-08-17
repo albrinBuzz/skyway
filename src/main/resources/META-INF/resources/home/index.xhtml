@@ -197,15 +197,15 @@
                                 <div class="row mb-4">
                                     <!-- Ciudad de Salida -->
                                     <div class="col-md-6 mb-3">
-                                        <p:selectOneMenu id="ciudadSalida" value="#{flightSearchBean.departureCity}" requiredMessage="Debe seleccionar una sucursal.">
-                                            <f:selectItems value="#{flightSearchBean.ciudads}" var="ciudad"
+                                        <p:selectOneMenu id="ciudadSalida" value="#{itinerarioBean.departureCity}" requiredMessage="Debe seleccionar una sucursal.">
+                                            <f:selectItems value="#{itinerarioBean.ciudads}" var="ciudad"
                                                            itemLabel="#{ciudad.nombre}" itemValue="#{ciudad.nombre}" />
                                         </p:selectOneMenu>
                                     </div>
                                     <!-- Ciudad de Llegada -->
                                     <div class="col-md-6 mb-3">
-                                        <p:selectOneMenu id="ciudadLlegada" value="#{flightSearchBean.arrivalCity}" requiredMessage="Debe seleccionar una sucursal.">
-                                            <f:selectItems value="#{flightSearchBean.ciudads}" var="ciudad"
+                                        <p:selectOneMenu id="ciudadLlegada" value="#{itinerarioBean.arrivalCity}" requiredMessage="Debe seleccionar una sucursal.">
+                                            <f:selectItems value="#{itinerarioBean.ciudads}" var="ciudad"
                                                            itemLabel="#{ciudad.nombre}" itemValue="#{ciudad.nombre}" />
                                         </p:selectOneMenu>
                                     </div>
@@ -213,16 +213,16 @@
 
                                 <!-- Fechas -->
                                 <div class="row mb-4">
-                                    <h:outputLabel for="departureDate" value="Fecha de salida entre:" />
+                                    <h:outputLabel for="departureDate" value="Fecha de salida:" />
                                    	<i class="pi pi-calendar"></i>
-                                   <div class="field col-12 md:col-4">
-					                <p:outputLabel for="range" value="Range Selection" />
-					                <p:datePicker id="range" selectionMode="range" value="#{flightSearchBean.range}" readonlyInput="true" hideOnRangeSelection="true" />
-					            </div>
+
+                                    <div class="field col-12 md:col-4">
+                                        <p:datePicker id="basic" value="#{itinerarioBean.date1}" />
+                                    </div>
 
                                 </div>
 
-                                <!-- Clase de Asiento -->
+                                <!-- Clase de Asiento
                                 <div class="row mb-4">
                                     <div class="col-md-6 mb-3">
                                         <h:outputLabel for="classTypeOneWay" value="Clase de Asiento" />
@@ -233,11 +233,11 @@
                                             <f:selectItem itemValue="Primera" itemLabel="Primera" />
                                         </h:selectOneMenu>
                                     </div>
-                                </div>
+                                </div>-->
 
                                <!-- Botón Buscar -->
 							    <div class="text-center">
-							        <h:commandButton value="Buscar Vuelos" action="#{flightSearchBean.buscarVuelos}" styleClass="btn btn-primary btn-lg" />
+							        <h:commandButton value="Buscar Vuelos" action="#{itinerarioBean.buscarVuelos}" styleClass="btn btn-primary btn-lg" />
 							    </div>
                             </h:form>
                         </div>

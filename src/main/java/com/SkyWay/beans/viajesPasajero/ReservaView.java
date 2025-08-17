@@ -2,11 +2,12 @@ package com.SkyWay.beans.viajesPasajero;
 
 import java.io.IOException;
 
+import com.SkyWay.modules.reserva.domain.model.Reserva;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.SkyWay.dto.BoletoDTO;
-import com.SkyWay.model.Reserva;
-import com.SkyWay.service.ReservaService;
+
+import com.SkyWay.modules.reserva.domain.service.ReservaService;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.RequestScoped;

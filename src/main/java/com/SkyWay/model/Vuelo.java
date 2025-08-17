@@ -26,8 +26,8 @@ import jakarta.validation.constraints.FutureOrPresent;
  * The persistent class for the vuelo database table.
  * 
  */
-@Entity
-@NamedQuery(name="Vuelo.findAll", query="SELECT v FROM Vuelo v")
+/*@Entity
+@NamedQuery(name="Vuelo.findAll", query="SELECT v FROM Vuelo v")*/
 public class Vuelo implements Serializable {
 	private static final long serialVersionUID = 1L;
 

@@ -5,14 +5,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.SkyWay.modules.notificacion.domain.model.Notificacion;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import com.SkyWay.model.Notificacion;
+
 import com.SkyWay.model.Usuario;
-import com.SkyWay.repository.NotificacionRepository;
-import com.SkyWay.service.NotificacionService;
+import com.SkyWay.modules.notificacion.domain.repository.NotificacionRepository;
+import com.SkyWay.modules.notificacion.domain.service.NotificacionService;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.RequestScoped;
@@ -152,11 +153,11 @@ public class UserBean implements Serializable {
 		
     	   notificacionService.marcarComoLeida(notificacion.getIdNotificacion());
     	   
-    	   notifications=notificacionService.findByRut(usuario.getRutUsuario());
+    	   /*notifications=notificacionService.findByRut(usuario.getRutUsuario());
            // Filtrar las notificaciones no leídas
            this.unreadNotifications = notifications.stream()
-                   .filter(notif -> !notif.getLeida())
-                   .collect(Collectors.toList());
+                   .filter(notif -> !notif.getLeido())
+                   .collect(Collectors.toList());*/
     	   
        }
        

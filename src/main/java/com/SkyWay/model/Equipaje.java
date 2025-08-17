@@ -18,8 +18,8 @@ import jakarta.persistence.SequenceGenerator;
  * The persistent class for the equipaje database table.
  * 
  */
-@Entity
-@NamedQuery(name="Equipaje.findAll", query="SELECT e FROM Equipaje e")
+/*@Entity
+@NamedQuery(name="Equipaje.findAll", query="SELECT e FROM Equipaje e")*/
 public class Equipaje implements Serializable {
 	private static final long serialVersionUID = 1L;
 

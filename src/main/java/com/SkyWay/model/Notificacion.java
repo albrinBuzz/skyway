@@ -11,8 +11,8 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
 
-@Entity
-@Table(name = "notificacion")
+//@Entity
+//@Table(name = "notificacion")
 public class Notificacion {
 
     @Id

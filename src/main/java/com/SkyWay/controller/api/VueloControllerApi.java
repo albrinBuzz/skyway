@@ -2,11 +2,11 @@ package com.SkyWay.controller.api;
 
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
 
+import com.SkyWay.modules.avion.domain.model.Avion;
+import com.SkyWay.modules.piloto.domain.model.Piloto;
 import com.SkyWay.util.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,23 +18,17 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.SkyWay.dto.VueloDTO;
-import com.SkyWay.model.Aeropuerto;
-import com.SkyWay.model.Avion;
-import com.SkyWay.model.EstadoVuelo;
-import com.SkyWay.model.Piloto;
-import com.SkyWay.model.PrecioAsiento;
-import com.SkyWay.model.Vuelo;
-import com.SkyWay.service.AeropuertoService;
-import com.SkyWay.service.AvionService;
-import com.SkyWay.service.ClaseAsientoService;
-import com.SkyWay.service.EstadoVueloService;
-import com.SkyWay.service.PiloService;
-import com.SkyWay.service.PrecioAsientoService;
-import com.SkyWay.service.VueloService;
+
+import com.SkyWay.modules.aeropuerto.domain.service.AeropuertoService;
+import com.SkyWay.modules.avion.domain.service.AvionService;
+import com.SkyWay.modules.claseasiento.domain.service.ClaseAsientoService;
+import com.SkyWay.modules.estadovuelo.domain.service.EstadoVueloService;
+import com.SkyWay.modules.piloto.domain.service.PiloService;
+import com.SkyWay.modules.precioasiento.domain.service.PrecioAsientoService;
+import com.SkyWay.modules.vuelo.domain.service.VueloService;
 
 import jakarta.validation.Valid;
 
@@ -57,7 +51,7 @@ public class VueloControllerApi {
     @Autowired
     private PiloService pilotoService;
     
-    private HashMap<String,Piloto >pilotos;
+    private HashMap<String, Piloto>pilotos;
     
     private List<Piloto> listaPilotos;
     
@@ -73,9 +67,9 @@ public class VueloControllerApi {
         // Validaciones de fechas
         System.out.println(vueloDTO);
         
-        listaPilotos = pilotoService.findAll();
+        //listaPilotos = pilotoService.findAll();
         pilotos=new HashMap<String, Piloto>();
-        listaPilotos.forEach(t -> pilotos.put(t.getRutUsuario(), t));
+        listaPilotos.forEach(t -> pilotos.put(t.getRut(), t));
     	
     	LocalDateTime fechaActual = LocalDateTime.now();
         
@@ -93,7 +87,7 @@ public class VueloControllerApi {
         }
 
         // Asignar los valores de las relaciones usando IDs
-        Aeropuerto aeropuertoSalida = aeropuertoService.findById(vueloDTO.getAeropuerto1Id()).orElseThrow();
+        /*Aeropuerto aeropuertoSalida = aeropuertoService.findById(vueloDTO.getAeropuerto1Id()).orElseThrow();
         Aeropuerto aeropuertoLlegada = aeropuertoService.findById(vueloDTO.getAeropuerto2Id()).orElseThrow();
         EstadoVuelo estadoVuelo = estadoVueloService.findById(vueloDTO.getEstadoVueloId()).orElseThrow();
         //Piloto piloto = pilotoService.findByRut(vueloDTO.getPilotoRut()).orElseThrow();
@@ -102,7 +96,8 @@ public class VueloControllerApi {
         // Convertir VueloDTO a Vuelo (entidad)
         Vuelo vuelo = new Vuelo();
         vuelo.setPiloto(pilotos.get(vueloDTO.getPilotoRut()));
-        vuelo.setFechaHoraSalida(vueloDTO.getFechaHoraSalida());
+
+        /*vuelo.setFechaHoraSalida(vueloDTO.getFechaHoraSalida());
         vuelo.setFechaHoraLlegada(vueloDTO.getFechaHoraLlegada());
         vuelo.setNumeroVuelo(vueloDTO.getNumeroVuelo());
         vuelo.setPrecio(vueloDTO.getPrecio());
@@ -111,10 +106,10 @@ public class VueloControllerApi {
         vuelo.setEstadoVuelo(estadoVuelo);
         vuelo.setAvion(avion);
 
-        System.out.println(  vuelo);
+        System.out.println(  vuelo);*/
         // Guardar el vuelo
         try {
-    	    var vueloGuardado = vueloService.save(vuelo);
+    	    /*var vueloGuardado = vueloService.save(vuelo);
 
     	    // Configurar precios de asiento
     	    PrecioAsiento precioEco = new PrecioAsiento();
@@ -132,9 +127,9 @@ public class VueloControllerApi {
     	    
     	    List<PrecioAsiento> precios = Arrays.asList(precioEco, precioEje, precioPrim);
     	    for (PrecioAsiento precio : precios) {
-    	        precio.setVuelo(vueloGuardado);  // Asociar el vuelo
+    	       // precio.setVuelo(vueloGuardado);  // Asociar el vuelo
     	        precioAsientoService.guardarPrecioAsiento(precio);
-    	    }
+    	    }*/
 
             return new ResponseEntity<>("Vuelo creado corretamente",HttpStatus.CREATED);
         } catch (Exception e) {
@@ -146,7 +141,8 @@ public class VueloControllerApi {
     // Obtener todos los vuelos
     @GetMapping("/get")
     public ResponseEntity<List<VueloDTO>> getAllVuelos() {
-        List<Vuelo> vuelos = vueloService.findAll();
+        List<VueloDTO> vueloDTOs = List.of();
+        /*List<Vuelo> vuelos = vueloService.findAll();
         List<VueloDTO> vueloDTOs = vuelos.stream().map(vuelo -> {
             VueloDTO dto = new VueloDTO();
             dto.setIdVuelo(vuelo.getIdVuelo());
@@ -161,7 +157,7 @@ public class VueloControllerApi {
             dto.setPilotoRut(vuelo.getPiloto().getRutUsuario());
             
             return dto;
-        }).toList();
+        }).toList();*/
         return new ResponseEntity<>(vueloDTOs, HttpStatus.OK);
     }
 
@@ -169,7 +165,9 @@ public class VueloControllerApi {
     @GetMapping("/{id}")
     public ResponseEntity<VueloDTO> getVueloById(@PathVariable Integer id) {
         Logger.logInfo("Obteniendo sotos");
-        Optional<Vuelo> vuelo = vueloService.findById(id);
+        new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(HttpStatus.OK);
+        /*Optional<Vuelo> vuelo = vueloService.findById(id);
         return vuelo.map(v -> {
             VueloDTO dto = new VueloDTO();
             dto.setIdVuelo(v.getIdVuelo());
@@ -183,13 +181,14 @@ public class VueloControllerApi {
             dto.setEstadoVueloId(v.getEstadoVuelo().getIdEstadoVuelo());
             dto.setPilotoRut(v.getPiloto().getRutUsuario());
             return new ResponseEntity<>(dto, HttpStatus.OK);
-        }).orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        }).orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));*/
     }
 
     // Actualizar un vuelo
     @PutMapping("/{id}")
     public ResponseEntity<?> updateVuelo(@PathVariable Integer id, @Valid @RequestBody VueloDTO vueloDTO) {
-        Optional<Vuelo> existingVuelo = vueloService.findById(id);
+        return new ResponseEntity<>(HttpStatus.OK);
+        /*Optional<Vuelo> existingVuelo = vueloService.findById(id);
         if (existingVuelo.isPresent()) {
             Vuelo updatedVuelo = existingVuelo.get();
             updatedVuelo.setFechaHoraSalida(vueloDTO.getFechaHoraSalida());
@@ -214,7 +213,7 @@ public class VueloControllerApi {
             return new ResponseEntity<>(savedVuelo, HttpStatus.OK);
         } else {
             return new ResponseEntity<>("Vuelo no encontrado", HttpStatus.NOT_FOUND);
-        }
+        }*/
     }
 
     // Eliminar un vuelo
@@ -233,14 +232,16 @@ public class VueloControllerApi {
     	  return new ResponseEntity<>(avionService.findAll(), HttpStatus.OK);
   
     };
-    @GetMapping("aeropuertos")
+
+    /*@GetMapping("aeropuertos")
     public ResponseEntity<List<Aeropuerto>>getAeropuertos(){
     	  return new ResponseEntity<>(aeropuertoService.findAll(), HttpStatus.OK);
   
     };
     @GetMapping("pilotos")
     public ResponseEntity<List<Piloto>>getPilotos(){
-    	  return new ResponseEntity<>(pilotoService.findAll(), HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.OK);
+    	 // return new ResponseEntity<>(pilotoService.findAll(), HttpStatus.OK);
   
     };
     
@@ -256,6 +257,6 @@ public class VueloControllerApi {
 		Avion avion= avionService.findById(avion_id).get();
 		System.out.println(avion);
 		return avion;
-	}
+	}*/
 	
 }

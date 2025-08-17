@@ -5,10 +5,14 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+import com.SkyWay.modules.aeropuerto.domain.model.Aeropuerto;
+import com.SkyWay.modules.avion.domain.model.Avion;
+import com.SkyWay.modules.estadovuelo.domain.model.EstadoVuelo;
+import com.SkyWay.modules.piloto.domain.model.Piloto;
+import com.SkyWay.modules.vuelo.domain.model.Vuelo;
 import org.hibernate.exception.GenericJDBCException;
 import org.primefaces.PrimeFaces;
 import org.slf4j.Logger;
@@ -16,19 +20,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 
-import com.SkyWay.model.Aeropuerto;
-import com.SkyWay.model.Avion;
-import com.SkyWay.model.EstadoVuelo;
-import com.SkyWay.model.Piloto;
-import com.SkyWay.model.PrecioAsiento;
-import com.SkyWay.model.Vuelo;
-import com.SkyWay.service.AeropuertoService;
-import com.SkyWay.service.AvionService;
-import com.SkyWay.service.ClaseAsientoService;
-import com.SkyWay.service.EstadoVueloService;
-import com.SkyWay.service.PiloService;
-import com.SkyWay.service.PrecioAsientoService;
-import com.SkyWay.service.VueloService;
+
+
+import com.SkyWay.modules.aeropuerto.domain.service.AeropuertoService;
+import com.SkyWay.modules.avion.domain.service.AvionService;
+import com.SkyWay.modules.claseasiento.domain.service.ClaseAsientoService;
+import com.SkyWay.modules.estadovuelo.domain.service.EstadoVueloService;
+import com.SkyWay.modules.piloto.domain.service.PiloService;
+import com.SkyWay.modules.precioasiento.domain.service.PrecioAsientoService;
+import com.SkyWay.modules.vuelo.domain.service.VueloService;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
@@ -107,7 +107,7 @@ public class VueloBean implements Serializable {
         pilotos=new HashMap<String, Piloto>();
         listaAeropuertos.forEach(aeropuerto -> aeropuertos.put(aeropuerto.getNombreAeropuerto(),aeropuerto));
         listaAviones.forEach(t -> aviones.put(t.getIdAvion().toString(),t));
-        listaPilotos.forEach(t -> pilotos.put(t.getRutUsuario(), t));
+        listaPilotos.forEach(t -> pilotos.put(t.getRut(), t));
         //this.validator = Validation.buildDefaultValidatorFactory().getValidator();
     }
 
@@ -129,7 +129,7 @@ public class VueloBean implements Serializable {
         }
   
         // Verificar que la fecha de salida y la fecha de llegada sean iguales o mayores que la fecha actual
-        if (selectedVuelo.getFechaHoraSalida().isBefore(fechaActual)) {
+        /*if (selectedVuelo.getFechaHoraSalida().isBefore(fechaActual)) {
             FacesContext.getCurrentInstance().addMessage(null, new FacesMessage("La fecha de salida no puede ser anterior a la fecha actual"));
             return; // Detener el proceso de guardado
         }
@@ -149,16 +149,18 @@ public class VueloBean implements Serializable {
         if (selectedVuelo.getFechaHoraSalida().isAfter(selectedVuelo.getFechaHoraLlegada())) {
             FacesContext.getCurrentInstance().addMessage(null, new FacesMessage("La fecha de salida no puede ser despues a la fecha de llegada"));
             return; // Detener el proceso de guardado
-        }
+        }*/
         
         
 
-        selectedVuelo.setAeropuerto1(aeropuertos.get(aeropuerto2));
-        selectedVuelo.setAeropuerto2(aeropuertos.get(aeropuerto1));
+        //selectedVuelo.setAeropuerto1(aeropuertos.get(aeropuerto2));
+        //selectedVuelo.setAeropuerto2(aeropuertos.get(aeropuerto1));
         
         var estadto=listaEstadosVuelo.stream().filter(estadoVuelo1 -> estadoVuelo1.getEstado().equals(estadoVuelo)
                 ).findFirst().get();	
-        selectedVuelo.setEstadoVuelo(estadto);
+
+        //selectedVuelo.setEstadoVuelo(estadto);
+
         selectedVuelo.setPiloto(pilotos.get(piloto));
 
         selectedVuelo.setAvion(avionSeleccionado);
@@ -169,7 +171,7 @@ public class VueloBean implements Serializable {
         	    var vueloGuardado = vueloService.save(selectedVuelo);
 
         	    // Configurar precios de asiento
-        	    PrecioAsiento precioEco = new PrecioAsiento();
+        	    /*PrecioAsiento precioEco = new PrecioAsiento();
         	    PrecioAsiento precioPrim = new PrecioAsiento();
         	    PrecioAsiento precioEje = new PrecioAsiento();
 
@@ -184,9 +186,9 @@ public class VueloBean implements Serializable {
         	    
         	    List<PrecioAsiento> precios = Arrays.asList(precioEco, precioEje, precioPrim);
         	    for (PrecioAsiento precio : precios) {
-        	        precio.setVuelo(vueloGuardado);  // Asociar el vuelo
+        	        //precio.setVuelo(vueloGuardado);  // Asociar el vuelo
         	        precioAsientoService.guardarPrecioAsiento(precio);
-        	    }
+        	    }*/
 
         	    
         	    // Mostrar mensaje de éxito
@@ -307,9 +309,9 @@ public class VueloBean implements Serializable {
         System.out.println("Dentro del editar Vuelo");
         avionSeleccionado=vuelo.getAvion();
         selectedVuelo=vuelo;
-        piloto=selectedVuelo.getPiloto().getRutUsuario();
+        //piloto=selectedVuelo.getPiloto().getRutUsuario();
         seteo();
-        var precios=precioAsientoService.findByVuelo(selectedVuelo);
+        /*var precios=precioAsientoService.findByVuelo(selectedVuelo);
         
         //claseAsientoService.obtenerClaseAsientoPorId(1).get();
        precioEconomica=precios.stream()
@@ -328,15 +330,15 @@ public class VueloBean implements Serializable {
        		.filter(t -> t.getClaseAsiento().getIdClase()==3)
        		.findFirst()
        		.get()
-       		.getPrecio();
+       		.getPrecio();*/
     }
     public void seteo(){
         if (avionSeleccionado != null) {
         	System.out.println("elementos seteados");
             cantidadAsientos = avionSeleccionado.getCapacidadDePasajeros();
-            asientosPrimeraClase = avionSeleccionado.getCap_primera();
+            /*asientosPrimeraClase = avionSeleccionado.getCap_primera();
             asientosEjecutiva = avionSeleccionado.getCap_ejecutiva();
-            asientosEconomica = avionSeleccionado.getCap_economica();
+            asientosEconomica = avionSeleccionado.getCap_economica();*/
             
             
             /*precioEco.setClaseAsiento(claseAsientoService.obtenerClaseAsientoPorId(1).get());

@@ -3,14 +3,13 @@ package com.SkyWay.controller;
 import java.util.List;
 import java.util.Optional;
 
-import com.SkyWay.model.Vuelo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.SkyWay.model.Piloto;
-import com.SkyWay.service.PiloService;
+import com.SkyWay.modules.piloto.domain.service.PiloService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,15 +25,16 @@ public class PilotoController {
 
 
 	//@GetMapping(value =  "/",produces = {"application/json"})
-	@GetMapping
+	/*@GetMapping
 	public @ResponseBody List<Piloto> getAll() {
 
 		com.SkyWay.util.Logger.logInfo("Obteniendo sotos");
 		//System.out.println(piloService.findAll());
-		return piloService.findAll();
-	}
+		return new ResponseEntity<>(HttpStatus.OK);
+		//return piloService.findAll();
+	}*/
 
-	@GetMapping("/piloto/{pilotoId}")
+	/*@GetMapping("/piloto/{pilotoId}")
 	public ResponseEntity<Object> getVuelosByPiloto(@PathVariable String pilotoId) {
 		Optional<Piloto> piloto = piloService.findByCorreo(pilotoId);
 
@@ -47,7 +47,7 @@ public class PilotoController {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND)
 					.body(new ErrorResponse("Piloto no encontrado", "No se encontró un piloto con el RUT: " + pilotoId));
 		}
-	}
+	}*/
 
 	static class ErrorResponse {
 		private String error;

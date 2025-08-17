@@ -22,8 +22,8 @@ import jakarta.persistence.SequenceGenerator;
  * The persistent class for the reserva database table.
  * 
  */
-@Entity
-@NamedQuery(name="Reserva.findAll", query="SELECT r FROM Reserva r")
+/*@Entity
+@NamedQuery(name="Reserva.findAll", query="SELECT r FROM Reserva r")*/
 public class Reserva implements Serializable {
 	private static final long serialVersionUID = 1L;
 

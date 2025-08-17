@@ -9,9 +9,9 @@ import java.util.List;
  * The persistent class for the pais database table.
  * 
  */
-@Entity
+/*@Entity
 @Table(name="pais")
-@NamedQuery(name="Pai.findAll", query="SELECT p FROM Pai p")
+@NamedQuery(name="Pai.findAll", query="SELECT p FROM Pai p")*/
 public class Pai implements Serializable {
 	private static final long serialVersionUID = 1L;
 

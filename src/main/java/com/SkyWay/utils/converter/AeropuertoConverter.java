@@ -2,15 +2,11 @@ package com.SkyWay.utils.converter;
 
 
 import com.SkyWay.model.Aeropuerto;
-import com.SkyWay.service.AeropuertoService;
-import com.SkyWay.serviceImpl.AeropuertoServiceImpl;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.faces.component.UIComponent;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.convert.Converter;
 import jakarta.faces.convert.FacesConverter;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 @FacesConverter(value = "aeropuertoConverter",forClass = Aeropuerto.class)
 @RequestScoped

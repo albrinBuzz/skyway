@@ -9,8 +9,8 @@ import java.util.List;
  * The persistent class for the ciudad database table.
  * 
  */
-@Entity
-@NamedQuery(name="Ciudad.findAll", query="SELECT c FROM Ciudad c")
+//@Entity
+//@NamedQuery(name="Ciudad.findAll", query="SELECT c FROM Ciudad c")
 public class Ciudad implements Serializable {
 	private static final long serialVersionUID = 1L;
 

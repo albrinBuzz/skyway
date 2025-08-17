@@ -9,9 +9,9 @@ import java.util.List;
  * The persistent class for the clase_asiento database table.
  * 
  */
-@Entity
+/*@Entity
 @Table(name="clase_asiento")
-@NamedQuery(name="ClaseAsiento.findAll", query="SELECT c FROM ClaseAsiento c")
+@NamedQuery(name="ClaseAsiento.findAll", query="SELECT c FROM ClaseAsiento c")*/
 public class ClaseAsiento implements Serializable {
 	private static final long serialVersionUID = 1L;
 

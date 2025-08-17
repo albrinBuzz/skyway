@@ -7,6 +7,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import com.SkyWay.modules.pasajero.domain.model.Pasajero;
+import com.SkyWay.modules.reserva.domain.model.Reserva;
+import com.SkyWay.modules.reservaasiento.domain.model.ReservaAsiento;
+import com.SkyWay.modules.usuario.domain.model.Usuario;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,16 +28,12 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import com.SkyWay.dto.InfoAsientoDTO;
 import com.SkyWay.dto.InfoVueloDTO;
-import com.SkyWay.model.EstadoReserva;
-import com.SkyWay.model.Pasajero;
-import com.SkyWay.model.Reserva;
-import com.SkyWay.model.ReservaAsiento;
-import com.SkyWay.model.Usuario;
-import com.SkyWay.service.AsientoService;
-import com.SkyWay.service.AvionService;
-import com.SkyWay.service.PasajeroService;
-import com.SkyWay.service.ReservaService;
-import com.SkyWay.service.VueloService;
+
+import com.SkyWay.modules.asiento.domain.service.AsientoService;
+import com.SkyWay.modules.avion.domain.service.AvionService;
+import com.SkyWay.modules.pasajero.domain.service.PasajeroService;
+import com.SkyWay.modules.reserva.domain.service.ReservaService;
+import com.SkyWay.modules.vuelo.domain.service.VueloService;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -243,10 +243,10 @@ public class HomeController {
 
 		var pasajero= (Usuario) session.getAttribute("usuario");
 		
-		if (pasajero instanceof Pasajero) {
+		/*if (pasajero instanceof Pasajero) {
 			LOGGER.info("Informacion del pasajero {} ", pasajero);
 			reserva.setPasajero((Pasajero) pasajero);
-			reserva.setVuelo(vueloService.findById(idVuelo).get());
+			//reserva.setVuelo(vueloService.findById(idVuelo).get());
 			
 			//LOGGER.info("Informacion del pasajero {} ",informacionPasjero);
 			
@@ -262,7 +262,7 @@ public class HomeController {
 			reserva.setReservaAsientos(asientos);
 			reserva.setFechaReserva(new Timestamp(new Date().getTime()));
 			reservaService.save(reserva);
-		}
+		}*/
 
 		
 		

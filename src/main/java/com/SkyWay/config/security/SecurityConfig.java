@@ -22,7 +22,7 @@ import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
-import com.SkyWay.service.UsuarioService;
+import com.SkyWay.modules.usuario.domain.service.UsuarioService;
 
 @Configuration
 @EnableWebSecurity

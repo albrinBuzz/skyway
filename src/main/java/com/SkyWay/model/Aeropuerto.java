@@ -13,9 +13,9 @@ import jakarta.persistence.*;
  * The persistent class for the aeropuerto database table.
  * 
  */
-@Entity
-@NamedQuery(name="Aeropuerto.findAll", query="SELECT a FROM Aeropuerto a")
-@Table(name = "aeropuerto")
+//@Entity
+//@NamedQuery(name="Aeropuerto.findAll", query="SELECT a FROM Aeropuerto a")
+//@Table(name = "aeropuerto")
 public class Aeropuerto implements Serializable {
 	private static final long serialVersionUID = 1L;
 

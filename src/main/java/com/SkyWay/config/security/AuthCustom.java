@@ -13,7 +13,7 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.stereotype.Component;
 
 import com.SkyWay.model.Usuario;
-import com.SkyWay.service.UsuarioService;
+import com.SkyWay.modules.usuario.domain.service.UsuarioService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -28,21 +28,21 @@ public class AuthCustom implements AuthenticationSuccessHandler {
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
         // Obtener el usuario autenticado
-        Logger.logInfo("En el authSuccess");
+        Logger.logInfo("En el authSuccess se debe corrigir ");
         Object principal = authentication.getPrincipal();
         if (principal instanceof UserDetails userDetails) {
 
             //userDetails.getAuthorities().forEach(arg0 -> System.out.println(arg0.getAuthority()));;
-            Usuario usuario=usService.buscarPorCorreo(userDetails.getUsername());
+            //Usuario usuario=usService.buscarPorCorreo(userDetails.getUsername());
 
-        	if( usuario instanceof Pasajero) {
+        	/*if( usuario instanceof Pasajero) {
 
               Logger.logInfo( "Es un pasajero " +usuario);
         	}else if( usuario instanceof Piloto) {
                 Logger.logInfo( "Es un Piloto " +usuario);
         	}
 
-            request.getSession().setAttribute("usuario", usuario);
+            request.getSession().setAttribute("usuario", usuario);*/
 
         }else {
             Logger.logInfo("No tiene UserDetails");

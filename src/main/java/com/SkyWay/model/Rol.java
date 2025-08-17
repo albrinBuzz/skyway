@@ -2,8 +2,8 @@ package com.SkyWay.model;
 
 import jakarta.persistence.*;
 
-@Entity
-@Table(name = "Roles")
+//@Entity
+//@Table(name = "Roles")
 public class Rol {
 
     @Id

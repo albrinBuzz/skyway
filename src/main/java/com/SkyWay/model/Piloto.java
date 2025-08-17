@@ -16,8 +16,8 @@ import jakarta.persistence.OneToMany;
  * The persistent class for the piloto database table.
  * 
  */
-@Entity
-@NamedQuery(name="Piloto.findAll", query="SELECT p FROM Piloto p")
+/*@Entity
+@NamedQuery(name="Piloto.findAll", query="SELECT p FROM Piloto p")*/
 public class Piloto extends Usuario implements Serializable {
 	private static final long serialVersionUID = 1L;
 

@@ -20,9 +20,9 @@ import jakarta.persistence.Table;
  * The persistent class for the estado_vuelo database table.
  * 
  */
-@Entity
+/*@Entity
 @Table(name="estado_vuelo")
-@NamedQuery(name="EstadoVuelo.findAll", query="SELECT e FROM EstadoVuelo e")
+@NamedQuery(name="EstadoVuelo.findAll", query="SELECT e FROM EstadoVuelo e")*/
 public class EstadoVuelo implements Serializable {
 	private static final long serialVersionUID = 1L;
 

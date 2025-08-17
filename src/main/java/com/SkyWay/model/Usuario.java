@@ -10,9 +10,9 @@ import jakarta.persistence.*;
  * The persistent class for the usuario database table.
  * 
  */
-@Entity
+/*@Entity
 @NamedQuery(name="Usuario.findAll", query="SELECT u FROM Usuario u")
-@Inheritance(strategy = InheritanceType.JOINED)
+@Inheritance(strategy = InheritanceType.JOINED)*/
 public class Usuario implements Serializable {
 	private static final long serialVersionUID = 1L;
 

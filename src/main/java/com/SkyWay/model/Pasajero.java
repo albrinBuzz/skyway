@@ -13,8 +13,8 @@ import jakarta.persistence.OneToMany;
  * The persistent class for the pasajero database table.
  * 
  */
-@Entity
-@NamedQuery(name="Pasajero.findAll", query="SELECT p FROM Pasajero p")
+/*@Entity
+@NamedQuery(name="Pasajero.findAll", query="SELECT p FROM Pasajero p")*/
 public class Pasajero extends Usuario implements Serializable {
 	private static final long serialVersionUID = 1L;
 	

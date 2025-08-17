@@ -4,8 +4,8 @@ import java.io.Serializable;
 
 import jakarta.persistence.*;
 
-@Entity
-@Table(name = "precio_asiento")
+/*@Entity
+@Table(name = "precio_asiento")*/
 public class PrecioAsiento implements Serializable {
 
     private static final long serialVersionUID = 1L;

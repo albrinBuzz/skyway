@@ -9,9 +9,9 @@ import java.util.List;
  * The persistent class for the estado_reserva database table.
  * 
  */
-@Entity
+/*@Entity
 @Table(name="estado_reserva")
-@NamedQuery(name="EstadoReserva.findAll", query="SELECT e FROM EstadoReserva e")
+@NamedQuery(name="EstadoReserva.findAll", query="SELECT e FROM EstadoReserva e")*/
 public class EstadoReserva implements Serializable {
 	private static final long serialVersionUID = 1L;
 

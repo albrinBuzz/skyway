@@ -7,7 +7,6 @@ import java.util.*;
 
 
 import com.SkyWay.util.Logger;
-import jakarta.enterprise.context.RequestScoped;
 import org.hibernate.exception.GenericJDBCException;
 import org.primefaces.PrimeFaces;
 import org.primefaces.event.SelectEvent;
@@ -23,11 +22,11 @@ import com.SkyWay.model.Pasajero;
 import com.SkyWay.model.Reserva;
 import com.SkyWay.model.ReservaAsiento;
 import com.SkyWay.model.Usuario;
-import com.SkyWay.service.AsientoService;
-import com.SkyWay.service.AvionService;
-import com.SkyWay.service.PasajeroService;
-import com.SkyWay.service.ReservaService;
-import com.SkyWay.service.VueloService;
+import com.SkyWay.modules.asiento.domain.service.AsientoService;
+import com.SkyWay.modules.avion.domain.service.AvionService;
+import com.SkyWay.modules.pasajero.domain.service.PasajeroService;
+import com.SkyWay.modules.reserva.domain.service.ReservaService;
+import com.SkyWay.modules.vuelo.domain.service.VueloService;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
@@ -36,7 +35,6 @@ import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
 import jakarta.servlet.http.HttpSession;
-import org.springframework.dao.DataAccessException;
 
 
 @Named("bookingBean")
@@ -132,7 +130,8 @@ public class BookingBean implements Serializable{
         for (int i = 0; i < asientosSeleccionados.size(); i++) {
             var	asiento= asientoService.findById(asientosSeleccionados.get(i).getIdAsiento());
             reservaAsiento=new ReservaAsiento();
-            reservaAsiento.setAsiento(asiento.get());
+            Logger.logInfo("corregir");
+            //reservaAsiento.setAsiento(asiento.get());
             reservaAsiento.setReserva(reserva);
             asientos.add(reservaAsiento);
         }
@@ -150,7 +149,7 @@ public class BookingBean implements Serializable{
         if (pasajero instanceof Pasajero) {
             //LOGGER.info("Informacion del pasajero {} ", pasajero);
             reserva.setPasajero((Pasajero) pasajero);
-            reserva.setVuelo(vueloService.findById(vueloSeleccionado.getIdVuelo()).get());
+            //reserva.setVuelo(vueloService.findById(vueloSeleccionado.getIdVuelo()).get());
 
             //LOGGER.info("Informacion del pasajero {} ",informacionPasjero);
 

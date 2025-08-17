@@ -9,8 +9,8 @@ import com.SkyWay.model.Piloto;
 import com.SkyWay.model.RolEnum;
 import com.SkyWay.model.Usuario;
 import com.SkyWay.model.Vuelo;
-import com.SkyWay.service.ReservaService;
-import com.SkyWay.service.VueloService;
+import com.SkyWay.modules.reserva.domain.service.ReservaService;
+import com.SkyWay.modules.vuelo.domain.service.VueloService;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.RequestScoped;
@@ -40,14 +40,14 @@ public class PerfilBean {
 
 		//	Usuario usuario=(Usuario) new UserBean(session).getUsuario();
 		Usuario usuario=	(Usuario) session.getAttribute("usuario");
-	   System.out.println(usuario);
+	   //System.out.println(usuario);
 	
 		if(usuario.getRol().getNombre().equals(RolEnum.PASAJERO.getDescripcion())) {
 			reservas=reservaService.getReservasUsuario(usuario.getRutUsuario());
 			
 		}else if (usuario.getRol().getNombre().equals(RolEnum.PILOTO.getDescripcion())) {
 			Piloto piloto=(Piloto) usuario;
-			vuelos=vueloService.findByPiloto(piloto);
+			//vuelos=vueloService.findByPiloto(piloto);
 		
 		}
 			
