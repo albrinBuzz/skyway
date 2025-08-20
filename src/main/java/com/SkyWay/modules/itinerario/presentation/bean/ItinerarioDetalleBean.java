@@ -20,6 +20,7 @@ import java.io.Serializable;
 import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -32,11 +33,12 @@ public class ItinerarioDetalleBean implements Serializable {
     private String selectedVueloParadas;
     private Integer itinerario;  // Identificador único para cada vuelo
     private List<ItinerarioDTO> vuelos;
+    private List<ItinerarioDTO>vuelosSeleccionados;
     private String salida;
     private String llegada;
     private LocalDate fecha;
     private List<ItinerarioDetalleDTO>paradasVuelo;
-
+    private Integer total;
     @Autowired
     private ItinerarioService itinerarioService;
 
@@ -46,6 +48,7 @@ public class ItinerarioDetalleBean implements Serializable {
 
     @PostConstruct
     public void init() throws ParseException {
+
         try {
             ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
             // Obtener los parámetros de la URL
@@ -71,6 +74,8 @@ public class ItinerarioDetalleBean implements Serializable {
                 facesMessage = new FacesMessage(FacesMessage.SEVERITY_WARN, "Advertencia", "No se encontraron vuelos para los parámetros seleccionados.");
                 FacesContext.getCurrentInstance().addMessage(null, facesMessage);
             }
+            this.total=0;
+            vuelosSeleccionados=new ArrayList<>();
 
         } catch (Exception e) {
             facesMessage = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Hubo un problema al cargar los vuelos.");
@@ -99,8 +104,10 @@ public class ItinerarioDetalleBean implements Serializable {
         return selectedVueloParadas;
     }
     public void selectVuelo(ItinerarioDTO vuelo) {
-        Logger.logInfo("seleccionar vuelo");
+        Logger.logInfo("seleccionar vuelo"+vuelo.toString());
         this.selectedVuelo = vuelo;
+        this.total+=  vuelo.getPrecio();
+        this.vuelosSeleccionados.add(vuelo);
         // Aquí podrías guardar los detalles o proceder con alguna otra acción
     }
 
@@ -109,6 +116,37 @@ public class ItinerarioDetalleBean implements Serializable {
         // Lógica para proceder con la compra
         // Por ejemplo, redirigir al proceso de pago o mostrar un mensaje de éxito.
     }
+    public String confirmarCompra() {
+        if (vuelosSeleccionados == null || vuelosSeleccionados.isEmpty()) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_WARN, "No hay vuelos seleccionados", "Agrega al menos un vuelo antes de confirmar."));
+            //return;
+        }
+
+        // Aquí puedes procesar la compra o redirigir al resumen/finalizar
+        FacesContext.getCurrentInstance().addMessage(null,
+                new FacesMessage(FacesMessage.SEVERITY_INFO, "Compra confirmada", "Gracias por tu compra."));
+
+        // (Opcional) Limpiar la selección después de confirmar
+        //vuelosSeleccionados.clear();
+        //total = 0;
+        StringBuilder url=new StringBuilder();
+        url.append("seleccionAsientos.xhtml?faces-redirect=true&itinerarios=");
+        for (ItinerarioDTO vuelosSeleccionado : vuelosSeleccionados) {
+
+            url.append(vuelosSeleccionado.getItinerario());
+            url.append(",");
+        }
+
+        Logger.logInfo(url.substring(0,url.toString().length()-1));
+
+        return url.substring(0,url.toString().length()-1);
+
+
+        ///seleccionAsientos.xhtml?itinerarios=1001,1002
+        //return "seleccionAsientos.xhtml?faces-redirect=true&itinerarios=1001,1002";
+    }
+
 
     public Integer getItinerario() {
         return itinerario;
@@ -143,7 +181,7 @@ public class ItinerarioDetalleBean implements Serializable {
         return selectedVuelo.getDuracion();
     }
 
-    public String getPrecio() {
+    public Integer getPrecio() {
         return selectedVuelo.getPrecio();
     }
 
@@ -177,5 +215,17 @@ public class ItinerarioDetalleBean implements Serializable {
 
     public void setFecha(LocalDate fecha) {
         this.fecha = fecha;
+    }
+
+    public List<ItinerarioDTO> getVuelosSeleccionados() {
+        return vuelosSeleccionados;
+    }
+
+    public void setVuelosSeleccionados(List<ItinerarioDTO> vuelosSeleccionados) {
+        this.vuelosSeleccionados = vuelosSeleccionados;
+    }
+
+    public Integer getTotal() {
+        return total;
     }
 }

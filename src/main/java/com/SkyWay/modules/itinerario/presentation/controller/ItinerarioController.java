@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -63,6 +64,17 @@ public class ItinerarioController {
         List<ItinerarioDetalleDTO> detalles = itinerarioService.obtenerDetalleItinerario(id_itinerario);
         return ResponseEntity.ok(detalles);
     }
+
+    //GET /api/v1/itinerarios/detalle?ids=1001,1002
+    @GetMapping("/api/v1/itinerarios/detalle")
+    public ResponseEntity<List<ItinerarioDetalleDTO>> getDetalles(
+            @RequestParam List<Integer> ids) {
+
+        List<ItinerarioDetalleDTO> detalles=new ArrayList<>();
+        //List<ItinerarioDetalleDTO> detalles = itinerarioService.getDetallesByIds(ids);
+        return ResponseEntity.ok(detalles);
+    }
+
 
 
 }

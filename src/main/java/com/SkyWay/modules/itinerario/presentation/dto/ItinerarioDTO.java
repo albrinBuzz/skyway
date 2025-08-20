@@ -12,7 +12,7 @@ public class ItinerarioDTO implements Serializable {
     private String ciudadSalida;          // Ciudad y aeropuerto de salida
     private String ciudadLlegada;         // Ciudad y aeropuerto de llegada
     private String cantParadas;           // Cantidad de paradas
-    private String precio;                // Precio del vuelo en formato CLP
+    private Integer precio;                // Precio del vuelo en formato CLP
     private String duracion;              // Duración del vuelo en formato "X h Y min"
     private String horaSalida24h;         // Hora de salida en formato 24 horas
     private String horaLlegada24h;        // Hora de llegada en formato 24 horas
@@ -22,7 +22,7 @@ public class ItinerarioDTO implements Serializable {
 
     // Constructor con parámetros
     public ItinerarioDTO(Integer itinerario, String origen, String destino, String ciudadSalida,
-                         String ciudadLlegada, String cantParadas, String precio, String duracion,
+                         String ciudadLlegada, String cantParadas, Integer precio, String duracion,
                          String horaSalida24h, String horaLlegada24h) {
         this.itinerario = itinerario;
         this.origen = origen;
@@ -85,12 +85,12 @@ public class ItinerarioDTO implements Serializable {
         this.cantParadas = cantParadas;
     }
 
-    public String getPrecio() {
-        return precio;
+    public void setPrecio(Integer precio) {
+        this.precio = precio;
     }
 
-    public void setPrecio(String precio) {
-        this.precio = precio;
+    public Integer getPrecio() {
+        return precio;
     }
 
     public String getDuracion() {

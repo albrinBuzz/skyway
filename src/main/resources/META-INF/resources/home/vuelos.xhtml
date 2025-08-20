@@ -177,7 +177,10 @@ hr {
             <p:messages id="messages" />
 
 
-            <h1>Vuelos disponibles</h1>
+            <div style="display: flex; gap: 20px; align-items: flex-start;">
+
+            <!-- Sección izquierda: tabla de vuelos -->
+            <div style="flex: 2;">
 
             <!-- Tabla de vuelos -->
             <p:dataTable value="#{itinerarioDetalleBean.vuelos}" var="vuelo" paginator="true" rows="5" rowKey="#{vuelo.itinerario}" selectionMode="single" selection="#{itinerarioDetalleBean.selectedVuelo}">
@@ -213,12 +216,49 @@ hr {
                 <p:column>
                     <p:commandButton value="Seleccionar" icon="pi pi-check"
                                      action="#{itinerarioDetalleBean.selectVuelo(vuelo)}"
-                                     update="vueloForm:compraDialog"
-                                     oncomplete="PF('compraDialog').show();" />
+                                     update="vueloForm:compraPanel"
+                    process="@this" />
 
 
                 </p:column>
             </p:dataTable>
+            </div>
+
+
+                <!-- Sección derecha: resumen de compra -->
+                <!-- Resumen de compra debajo de la tabla -->
+                <p:panel id="compraPanel" header="Detalle de la compra"
+                         style="margin-top: 30px; background: #f9f9f9; border: 1px solid #ddd; padding: 20px; border-radius: 8px; max-width: 600px; flex: 1;">
+
+                    <ui:repeat value="#{itinerarioDetalleBean.vuelosSeleccionados}" var="vuelo" varStatus="status">
+                        <h3>#{status.index == 0 ? 'IDA' : 'VUELTA'} </h3>
+
+                        <p><strong>#{vuelo.ciudadSalida}</strong> (#{vuelo.origen})</p>
+                        <p><strong>#{vuelo.ciudadLlegada}</strong> (#{vuelo.destino})</p>
+                        <p>Fecha: #{itinerarioDetalleBean.fecha}</p>
+                        <p>Subtotal: <strong>CLP #{vuelo.precio}</strong></p>
+                    </ui:repeat>
+
+                    <hr/>
+
+                    <p><strong>Tasas e impuestos:</strong> CLP 35.000</p>
+                    <p><strong>Subtotal:</strong> CLP #{itinerarioDetalleBean.total}</p>
+                    <p><strong style="font-size: 1.2rem;">Total a pagar:</strong>
+                        <strong style="color: #0077cc;">CLP #{itinerarioDetalleBean.total + 35000}</strong>
+                    </p>
+
+                    <!-- Botón Confirmar -->
+                    <div style="text-align: right; margin-top: 20px;">
+                        <p:commandButton value="Confirmar compra" icon="pi pi-check"
+                                         action="#{itinerarioDetalleBean.confirmarCompra}"
+                                         update="@form"
+                                         styleClass="ui-button-success" />
+                    </div>
+
+                </p:panel>
+
+
+            </div>
 
             <!-- Modal de detalles de paradas -->
             <div class="card">
