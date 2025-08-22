@@ -23,6 +23,7 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 @Named("itinerarioDetalleBean")
 @ViewScoped
@@ -32,11 +33,15 @@ public class ItinerarioDetalleBean implements Serializable {
 
     private String selectedVueloParadas;
     private Integer itinerario;  // Identificador único para cada vuelo
-    private List<ItinerarioDTO> vuelos;
-    private List<ItinerarioDTO>vuelosSeleccionados;
+    private List<ItinerarioDTO> vuelosIda;
+    private List<ItinerarioDTO> vuelosRegreso;
+    private List<ItinerarioDTO> vuelosSeleccionados;
     private String salida;
     private String llegada;
-    private LocalDate fecha;
+    private LocalDate fechaIda;
+    private LocalDate fechaRegreso;
+    private String tipoViaje; // OW o RT
+
     private List<ItinerarioDetalleDTO>paradasVuelo;
     private Integer total;
     @Autowired
@@ -51,37 +56,51 @@ public class ItinerarioDetalleBean implements Serializable {
 
         try {
             ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-            // Obtener los parámetros de la URL
-            this.salida = externalContext.getRequestParameterMap().get("salida");
-            this.llegada = externalContext.getRequestParameterMap().get("llegada");
-            String fechaParam = externalContext.getRequestParameterMap().get("fecha");
+            Map<String, String> params = externalContext.getRequestParameterMap();
 
+            this.salida = params.get("salida");
+            this.llegada = params.get("llegada");
+            String fechaIdaStr = params.get("fecha");
+            String fechaRegresoStr = params.get("fechaRegreso");
+            this.tipoViaje = params.getOrDefault("trip", "OW").toUpperCase();
 
-            // Convertir el parámetro de fecha a LocalDate
-            // Validar que todos los parámetros estén presentes
-            if (salida == null || llegada == null || fechaParam == null) {
+            if (salida == null || llegada == null || fechaIdaStr == null) {
                 FacesContext.getCurrentInstance().addMessage(null,
                         new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                                "Los parámetros 'salida', 'llegada' y 'fecha' son requeridos", ""));
+                                "Faltan parámetros obligatorios (salida, llegada, fecha).", ""));
                 return;
             }
 
-            // Convertir la fecha solo si está presente
-            this.fecha = LocalDate.parse(fechaParam);
-            vuelos = itinerarioService.buscarItinerarios(salida, llegada, fecha.toString());
-            // Validación si no se encontraron vuelos
-            if (vuelos == null || vuelos.isEmpty()) {
-                facesMessage = new FacesMessage(FacesMessage.SEVERITY_WARN, "Advertencia", "No se encontraron vuelos para los parámetros seleccionados.");
+            this.fechaIda = LocalDate.parse(fechaIdaStr);
+            if ("RT".equals(tipoViaje) && fechaRegresoStr != null) {
+                this.fechaRegreso = LocalDate.parse(fechaRegresoStr);
+            }
+
+            // Carga vuelos de ida
+            vuelosIda = itinerarioService.buscarItinerarios(salida, llegada, fechaIda.toString());
+
+            // Carga vuelos de regreso si es viaje redondo
+            if ("RT".equals(tipoViaje) && fechaRegreso != null) {
+                vuelosRegreso = itinerarioService.buscarItinerarios(llegada, salida, fechaRegreso.toString());
+            }
+
+            if ((vuelosIda == null || vuelosIda.isEmpty()) &&
+                    ("RT".equals(tipoViaje) && (vuelosRegreso == null || vuelosRegreso.isEmpty()))) {
+                facesMessage = new FacesMessage(FacesMessage.SEVERITY_WARN, "Advertencia",
+                        "No se encontraron vuelos para los parámetros seleccionados.");
                 FacesContext.getCurrentInstance().addMessage(null, facesMessage);
             }
-            this.total=0;
-            vuelosSeleccionados=new ArrayList<>();
+
+            vuelosSeleccionados = new ArrayList<>();
+            total = 0;
 
         } catch (Exception e) {
-            facesMessage = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Hubo un problema al cargar los vuelos.");
+            facesMessage = new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                    "Error", "Hubo un problema al cargar los vuelos.");
             FacesContext.getCurrentInstance().addMessage(null, facesMessage);
             e.printStackTrace();
         }
+
     }
 
     public void showParadas(ItinerarioDTO vuelo) {
@@ -108,6 +127,7 @@ public class ItinerarioDetalleBean implements Serializable {
         this.selectedVuelo = vuelo;
         this.total+=  vuelo.getPrecio();
         this.vuelosSeleccionados.add(vuelo);
+        this.vuelosIda=vuelosRegreso;
         // Aquí podrías guardar los detalles o proceder con alguna otra acción
     }
 
@@ -158,14 +178,6 @@ public class ItinerarioDetalleBean implements Serializable {
 
 
     // Getter
-    public List<ItinerarioDTO> getVuelos() {
-        return vuelos;
-    }
-
-    // Setter
-    public void setVuelos(List<ItinerarioDTO> vuelos) {
-        this.vuelos = vuelos;
-    }
 
     public List<ItinerarioDetalleDTO> getParadasVuelo() {
         return paradasVuelo;
@@ -209,12 +221,28 @@ public class ItinerarioDetalleBean implements Serializable {
         this.llegada = llegada;
     }
 
-    public LocalDate getFecha() {
-        return fecha;
+    public LocalDate getFechaIda() {
+        return fechaIda;
     }
 
-    public void setFecha(LocalDate fecha) {
-        this.fecha = fecha;
+    public LocalDate getFechaRegreso() {
+        return fechaRegreso;
+    }
+
+    public void setFechaRegreso(LocalDate fechaRegreso) {
+        this.fechaRegreso = fechaRegreso;
+    }
+
+    public void setFechaIda(LocalDate fechaIda) {
+        this.fechaIda = fechaIda;
+    }
+
+    public List<ItinerarioDTO> getVuelosIda() {
+        return vuelosIda;
+    }
+
+    public List<ItinerarioDTO> getVuelosRegreso() {
+        return vuelosRegreso;
     }
 
     public List<ItinerarioDTO> getVuelosSeleccionados() {

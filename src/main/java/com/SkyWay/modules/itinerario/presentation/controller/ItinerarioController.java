@@ -5,14 +5,17 @@ package com.SkyWay.modules.itinerario.presentation.controller;
 import com.SkyWay.modules.itinerario.domain.model.Itinerario;
 
 import com.SkyWay.modules.itinerario.domain.service.ItinerarioService;
+import com.SkyWay.modules.itinerario.presentation.dto.ItinerarioBusquedaResponse;
 import com.SkyWay.modules.itinerario.presentation.dto.ItinerarioDTO;
 import com.SkyWay.modules.itinerario.presentation.dto.ItinerarioDetalleDTO;
 import com.SkyWay.util.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,25 +28,25 @@ public class ItinerarioController {
 
     @PostMapping
     public Itinerario crearItinerario(@RequestBody Itinerario itinerario) {
-        return itinerarioService.crearItinerario(itinerario);
+        return itinerarioService.save(itinerario);
     }
 
     @GetMapping
     public List<Itinerario> obtenerTodosItinerarios() {
-        return itinerarioService.obtenerTodosItinerarios();
+        return itinerarioService.findAll();
     }
 
     @GetMapping("/{id}")
     public Itinerario obtenerItinerarioPorId(@PathVariable Integer id) {
-        return itinerarioService.obtenerItinerarioPorId(id);
+        return itinerarioService.findById(id);
     }
 
     @DeleteMapping("/{id}")
     public void eliminarItinerario(@PathVariable Integer id) {
-        itinerarioService.eliminarItinerario(id);
+        itinerarioService.deleteById(id);
     }
 
-    @GetMapping("/buscar")
+    @GetMapping("/buscarIda")
     public ResponseEntity<List<ItinerarioDTO>> buscarItinerarios(
             @RequestParam("ciudad_salida") String ciudadSalida,
             @RequestParam("ciudad_llegada") String ciudadLlegada,
@@ -58,6 +61,32 @@ public class ItinerarioController {
             return ResponseEntity.badRequest().body(null);
         }
     }
+
+
+    //solo ida
+    //GET /api/itinerarios/buscar?salida=SCL&llegada=LAX&fecha=2025-08-23&trip=OW
+
+    //ida y vuelta
+    //GET /api/itinerarios/buscar?salida=SCL&llegada=LAX&fecha=2025-08-23&fechaRegreso=2025-09-17&trip=RT
+
+    @GetMapping("/buscar")
+    public ItinerarioBusquedaResponse buscarVuelos(
+            @RequestParam String salida,
+            @RequestParam String llegada,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaRegreso,
+            @RequestParam(defaultValue = "OW") String trip // OW o RT
+    ) throws ParseException {
+        List<ItinerarioDTO> ida = itinerarioService.buscarItinerarios(salida, llegada, fecha.toString());
+
+        List<ItinerarioDTO> regreso = null;
+        if ("RT".equalsIgnoreCase(trip) && fechaRegreso != null) {
+            regreso = itinerarioService.buscarItinerarios(llegada, salida, fechaRegreso.toString());
+        }
+
+        return new ItinerarioBusquedaResponse(ida, regreso);
+    }
+
 
     @GetMapping("/detalle/{id_itinerario}")
     public ResponseEntity<List<ItinerarioDetalleDTO>> obtenerDetalleItinerario(@PathVariable Integer id_itinerario) {

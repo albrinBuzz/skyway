@@ -61,7 +61,7 @@ public class Itinerario implements Serializable {
 
 
 	//bi-directional many-to-one association to ItinerarioVuelo
-	@OneToMany(mappedBy="itinerario")
+	@OneToMany(mappedBy="itinerario",fetch = FetchType.EAGER)
 	private List<ItinerarioVuelo> itinerarioVuelos;
 
 	//bi-directional many-to-one association to ReservaItinerario

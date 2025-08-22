@@ -103,7 +103,7 @@ public class BookingBean implements Serializable{
         if (vueloSeleccionado != null) {
             // Si se encontró el vuelo, obtener los asientos
             System.out.println("Vuelo seleccionado: " + vueloSeleccionado);
-            asientos = asientoService.getAsientosDisponibles(vueloSeleccionado.getIdAvion(), vueloSeleccionado.getIdVuelo());
+            asientos = asientoService.getAsientosDisponibles(vueloSeleccionado.getIdVuelo());
             asientosSeles=new HashMap<>();
             // Verificar si los asientos se cargaron correctamente
             System.out.println("Número de asientos cargados: " + (asientos != null ? asientos.size() : 0));

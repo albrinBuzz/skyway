@@ -229,6 +229,12 @@
             display: flex;
             justify-content: center;
             }
+            .vuelo-info div {
+            min-width: 180px;
+            padding: 10px;
+            font-size: 16px;
+            }
+
 
         </h:outputStylesheet>
 
@@ -237,125 +243,106 @@
     <ui:define name="contenido">
 
 
-
         <main class="container py-5">
 
+            <h:form id="seatForm">
+                <h3 style="text-align: center;">Distribución de Asientos</h3>
 
-        <h:form>
-            <h3 style="text-align: center;">Distribución de Asientos</h3>
-
-
-            <div class="legend">
-                <div class="legend-item">
-                    <div class="legend-box Disponible"></div> Disponible
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-box Disponible"></div> Disponible
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-box Ocupado"></div> Ocupado
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-box Seleccionado"></div> Seleccionado
+                    </div>
                 </div>
-                <div class="legend-item">
-                    <div class="legend-box Ocupado"></div> Ocupado
-                </div>
-                <div class="legend-item">
-                    <div class="legend-box Seleccionado"></div> Seleccionado
-                </div>
-            </div>
 
-            <div class="cabina">
-                <!-- Primera Clase: 2-2 -->
-                <div class="clase primera">
-                    <div class="class-label">Primera Clase</div>
-                    <ui:repeat value="#{seleccionAsientosBean.getFilasDistribuidas('Primera Clase')}" var="fila">
-                        <div class="fila">
-                            <div class="bloque">
-                                <ui:repeat value="#{fila[0]}" var="asiento">
-                                    <h:commandButton styleClass="seat #{asiento.estado} #{asiento.clase}"
+                <h:panelGroup rendered="#{not empty seleccionAsientosBean.asientosSeleccionadosList}">
+                    <h3 style="text-align:center">Asientos Seleccionados</h3>
+                    <ul style="list-style: none; text-align: center; padding: 0;">
+                        <ui:repeat value="#{seleccionAsientosBean.asientosSeleccionadosList}" var="asiento">
+                            <li>
+                                <p>
+                                    <strong>#{asiento.numeroAsiento}</strong> - #{asiento.clase}
+                                </p>
+                            </li>
+                        </ui:repeat>
+                    </ul>
+                </h:panelGroup>
 
-                                                     value="#{asiento.numeroAsiento}"
-                                                     disabled="#{asiento.estado == 'Ocupado'}"
-                                                     action="#{seleccionAsientosBean.setearAsiento(asiento)}"/>
-                                </ui:repeat>
-                            </div>
-                            <div class="pasillo"></div>
-                            <div class="bloque">
-                                <ui:repeat value="#{fila[1]}" var="asiento">
-                                    <h:commandButton styleClass="seat #{asiento.estado} #{asiento.clase}"
 
-                                                     value="#{asiento.numeroAsiento}"
-                                                     disabled="#{asiento.estado == 'Ocupado'}"
-                                                     action="#{seleccionAsientosBean.setearAsiento(asiento)}"/>
-                                </ui:repeat>
-                            </div>
+
+                <h:panelGroup id="vuelo-infoPanel" styleClass="vuelo-info" rendered="#{seleccionAsientosBean.vuelo != null}">
+                    <h2 style="text-align: center; color: #2c3e50;">Información del Vuelo</h2>
+
+                    <div style="display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; padding: 20px; background-color: #f8f9fa; border-radius: 10px; margin-bottom: 30px;">
+                        <div>
+                            <strong>Número de vuelo:</strong>
+                            <h:outputText value="#{seleccionAsientosBean.vuelo.numeroVuelo}" />
                         </div>
-                    </ui:repeat>
-                </div>
-
-                <!-- Ejecutiva: 2-3-2 -->
-                <div class="clase ejecutiva">
-                    <div class="class-label">Clase Ejecutiva</div>
-                    <ui:repeat value="#{seleccionAsientosBean.getFilasDistribuidas('Ejecutiva')}" var="fila">
-                        <div class="fila">
-                            <div class="bloque">
-                                <ui:repeat value="#{fila[0]}" var="asiento">
-                                    <h:commandButton styleClass="seat #{asiento.estado} #{asiento.clase}"
-
-                                                     value="#{asiento.numeroAsiento}"
-                                                     disabled="#{asiento.estado == 'Ocupado'}"
-                                                     action="#{seleccionAsientosBean.setearAsiento(asiento)}"/>
-                                </ui:repeat>
-                            </div>
-                            <div class="pasillo"></div>
-                            <div class="bloque">
-                                <ui:repeat value="#{fila[1]}" var="asiento">
-                                    <h:commandButton styleClass="seat #{asiento.estado} #{asiento.clase}"
-
-                                                     value="#{asiento.numeroAsiento}"
-                                                     disabled="#{asiento.estado == 'Ocupado'}"
-                                                     action="#{seleccionAsientosBean.setearAsiento(asiento)}"/>
-                                </ui:repeat>
-                            </div>
-                            <div class="pasillo"></div>
-                            <div class="bloque">
-                                <ui:repeat value="#{fila[2]}" var="asiento">
-                                    <h:commandButton styleClass="seat #{asiento.estado} #{asiento.clase}"
-
-                                                     value="#{asiento.numeroAsiento}"
-                                                     disabled="#{asiento.estado == 'Ocupado'}"
-                                                     action="#{seleccionAsientosBean.setearAsiento(asiento)}"/>
-                                </ui:repeat>
-                            </div>
+                        <div>
+                            <strong>Fecha de salida:</strong>
+                            <h:outputText value="#{seleccionAsientosBean.vuelo.fechaHoraSalida}">
+                                <f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+                            </h:outputText>
                         </div>
-                    </ui:repeat>
-                </div>
-
-                <!-- Económica: 3-3 -->
-                <div class="clase economica">
-                    <div class="class-label">Clase Económica</div>
-                    <ui:repeat value="#{seleccionAsientosBean.getFilasDistribuidas('Económica')}" var="fila">
-                        <div class="fila">
-                            <div class="bloque">
-                                <ui:repeat value="#{fila[0]}" var="asiento">
-                                    <h:commandButton styleClass="seat #{asiento.estado} #{asiento.clase}"
-
-                                                     value="#{asiento.numeroAsiento}"
-                                                     disabled="#{asiento.estado == 'Ocupado'}"
-                                                     action="#{seleccionAsientosBean.setearAsiento(asiento)}"/>
-                                </ui:repeat>
-                            </div>
-                            <div class="pasillo"></div>
-                            <div class="bloque">
-                                <ui:repeat value="#{fila[1]}" var="asiento">
-                                    <h:commandButton styleClass="seat #{asiento.estado} #{asiento.clase}"
-
-                                                     value="#{asiento.numeroAsiento}"
-                                                     disabled="#{asiento.estado == 'Ocupado'}"
-                                                     action="#{seleccionAsientosBean.setearAsiento(asiento)}"/>
-                                </ui:repeat>
-                            </div>
+                        <div>
+                            <strong>Fecha de llegada:</strong>
+                            <h:outputText value="#{seleccionAsientosBean.vuelo.fechaHoraLlegada}">
+                                <f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+                            </h:outputText>
                         </div>
-                    </ui:repeat>
+
+                    </div>
+                </h:panelGroup>
+
+
+
+                <div class="seat-container">
+                    <!-- Primera Clase -->
+                    <h:outputText value="Primera Clase" styleClass="class-label" />
+                    <h:panelGroup id="primeraClaseGroup">
+                        <h:panelGrid columns="4" styleClass="seats first-class">
+                            <ui:repeat value="#{seleccionAsientosBean.asientos}" var="asientoSeleccionado" varStatus="status">
+                                <h:panelGroup rendered="#{asientoSeleccionado.clase == 'Primera Clase'}">
+                                    <div class="seat #{asientoSeleccionado.estado}" data-seat="#{asientoSeleccionado.numeroAsiento}" onclick="selectSeat('#{asientoSeleccionado.numeroAsiento}')">
+                                        <h:commandButton styleClass="seat #{asientoSeleccionado.estado}" value="#{asientoSeleccionado.numeroAsiento}" action="#{seleccionAsientosBean.setearAsiento(asientoSeleccionado)}" update="seatForm vuelo-infoPanel"  />
+                                    </div>
+                                </h:panelGroup>
+                            </ui:repeat>
+                        </h:panelGrid>
+                    </h:panelGroup>
+
+                    <!-- Clase Ejecutiva -->
+                    <h:outputText value="Clase Ejecutiva" styleClass="class-label" />
+                    <h:panelGroup id="ejecutivaClaseGroup">
+                        <h:panelGrid columns="2" styleClass="seats business-class">
+                            <ui:repeat value="#{seleccionAsientosBean.asientos}" var="asientoSeleccionado" varStatus="status">
+                                <h:panelGroup rendered="#{asientoSeleccionado.clase == 'Ejecutiva'}">
+                                    <h:commandButton styleClass="seat #{asientoSeleccionado.estado}" value="#{asientoSeleccionado.numeroAsiento}" action="#{seleccionAsientosBean.setearAsiento(asientoSeleccionado)}" update="seatForm vuelo-infoPanel"  />
+                                </h:panelGroup>
+                            </ui:repeat>
+                        </h:panelGrid>
+                    </h:panelGroup>
+
+                    <!-- Clase Económica -->
+                    <h:outputText value="Clase Económica" styleClass="class-label" />
+                    <h:panelGroup id="economicaClaseGroup">
+                        <h:panelGrid columns="3" styleClass="seats economy-class">
+                            <ui:repeat value="#{seleccionAsientosBean.asientos}" var="asientoSeleccionado" varStatus="status">
+                                <h:panelGroup rendered="#{asientoSeleccionado.clase == 'Económica'}">
+                                    <h:commandButton styleClass="seat #{asientoSeleccionado.estado}"  value="#{asientoSeleccionado.numeroAsiento}" action="#{seleccionAsientosBean.setearAsiento(asientoSeleccionado)}"  update="seatForm vuelo-infoPanel" />
+                                </h:panelGroup>
+                            </ui:repeat>
+                        </h:panelGrid>
+                    </h:panelGroup>
                 </div>
-            </div>
-        </h:form>
 
 
-
+            </h:form>
 
         </main>
 

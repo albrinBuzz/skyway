@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                template="/template/main.xhtml">
+
+    <ui:define name="contenido">
+        <h:outputStylesheet>
+            .reserva-container {
+            max-width: 1000px;
+            margin: auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            }
+
+            .seccion {
+            margin-bottom: 40px;
+            }
+
+            .titulo {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 10px;
+            }
+
+            .info {
+            font-size: 16px;
+            margin: 8px 0;
+            }
+
+            .vuelo-box, .itinerario-box {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+            }
+
+            .asiento-box {
+            display: inline-block;
+            background-color: #3498db;
+            color: white;
+            font-weight: bold;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-left: 10px;
+            }
+
+            .btn-confirmar {
+            background-color: #27ae60;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 12px 30px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            display: block;
+            margin: 30px auto 0;
+            }
+
+            .btn-confirmar:hover {
+            background-color: #219150;
+            }
+        </h:outputStylesheet>
+
+        <div class="reserva-container">
+
+            <!-- Sección de Itinerarios -->
+            <!-- Total de la reserva -->
+            <div class="seccion">
+                <div class="titulo">Total de la Reserva</div>
+                <h:outputText value="#{reservaBean.total}">
+                    <f:convertNumber type="currency" currencySymbol="$" groupingUsed="true" maxFractionDigits="0" />
+                </h:outputText>
+            </div>
+
+
+            <div class="card">
+            <div class="seccion">
+                <p:accordionPanel multiple="true" widgetVar="itinerariosAccordion" scrollIntoView="center">
+                <p:tab title="Header I">
+                <div class="titulo">Itinerarios Seleccionados</div>
+
+                <ui:repeat value="#{reservaBean.itinerarios}" var="itinerario">
+                    <div class="itinerario-box">
+                        <div class="info">
+                            <strong>Origen:</strong> #{itinerario.aeropuertoOrigen.codigoIata}
+                        </div>
+                        <div class="info">
+                            <strong>Destino:</strong> #{itinerario.aeropuertoDestino.codigoIata}
+                        </div>
+                        <div class="info">
+                            <strong>Hora de salida:</strong>
+                            <h:outputText value="#{itinerario.horaSalida}">
+                                <f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+                            </h:outputText>
+                        </div>
+                        <div class="info">
+                            <strong>Hora de llegada:</strong>
+                            <h:outputText value="#{itinerario.horaLlegada}">
+                                <f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+                            </h:outputText>
+                        </div>
+                        <div class="info">
+                            <strong>Escalas:</strong> #{itinerario.numeroEscalas}
+                        </div>
+                        <div class="info">
+                            <strong>Precio Base:</strong>
+                            <h:outputText value="#{itinerario.precioBase}">
+                                <f:convertNumber type="currency" currencySymbol="$" groupingUsed="true" maxFractionDigits="0" />
+                            </h:outputText>
+                        </div>
+                    </div>
+                </ui:repeat>
+                </p:tab>
+                </p:accordionPanel>
+            </div>
+        </div>
+
+            <!-- Sección de Asientos Seleccionados -->
+        <div class="card">
+            <div class="seccion">
+                <div class="titulo">Asientos Seleccionados</div>
+                <p:accordionPanel multiple="true" widgetVar="asientosAccordion" scrollIntoView="center">
+                <p:tab title="Header I">
+
+                <ui:repeat value="#{reservaBean.asientosSeleccionados.entrySet()}" var="entry">
+                    <div class="vuelo-box">
+                        <div class="info">
+                            <strong>Vuelo:</strong> #{entry.key}
+                        </div>
+
+                        <h:panelGroup rendered="#{entry.value != null}">
+                            <div class="info">
+                                <strong>Asiento:</strong>
+                                <span class="asiento-box">#{entry.value.numeroAsiento}</span>
+                            </div>
+                            <div class="info">
+                                <strong>Clase:</strong> #{entry.value.clase}
+                            </div>
+                            <div class="info">
+                                <strong>Estado:</strong> #{entry.value.estado}
+                            </div>
+
+                            <div class="info">
+                                <strong>Precio Asiento:</strong>
+                                <h:outputText value="#{entry.value.precio}">
+                                    <f:convertNumber type="currency" currencySymbol="$" groupingUsed="true" maxFractionDigits="0" />
+                                </h:outputText>
+                            </div>
+
+
+                        </h:panelGroup>
+                    </div>
+                </ui:repeat>
+                </p:tab>
+                </p:accordionPanel>
+            </div>
+        </div>
+
+            <!-- Botón Confirmar -->
+            <h:form>
+                <h:commandButton value="Confirmar Reserva"
+                                 action="#{reservaBean.confirmarReserva}"
+                                 styleClass="btn-confirmar" />
+            </h:form>
+        </div>
+    </ui:define>
+</ui:composition>

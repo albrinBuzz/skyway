@@ -178,7 +178,7 @@ public class HomeController {
 		
 		
 		//List<Asiento> asientos=asientoService.findByAvion(avionService.findById(vuelo.getIdAvion()).get());
-		List<InfoAsientoDTO>asientos=asientoService.getAsientosDisponibles(vuelo.getIdAvion(),vuelo.getIdVuelo());
+		List<InfoAsientoDTO>asientos=asientoService.getAsientosDisponibles(vuelo.getIdVuelo());
 		model.addAttribute("asientos", asientos);
 		model.addAttribute("vuelo", vuelo);
 		

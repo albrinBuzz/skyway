@@ -16,7 +16,7 @@ public interface AsientoService {
 	  public Optional<Asiento> findById(Integer id);	  
 	  public Avion save(Asiento vuelo);
 	  public void deleteById(Integer id);
-	  public List<InfoAsientoDTO> getAsientosDisponibles(Integer idAvion,Integer idVuelo);
+	  public List<InfoAsientoDTO> getAsientosDisponibles(Integer idVuelo);
 	  public List<InfoAsientoDTO> getAsientosVuelo(Integer idReserva,Integer idVuelo);
 	  public List<Asiento> findByAvion(Avion avion);
 	  public List<ClaseAsiento> obtenerTodasLasClasesAsientos();

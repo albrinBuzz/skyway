@@ -12,18 +12,21 @@ import java.util.List;
 public interface ItinerarioService {
 
     // Crear un nuevo itinerario
-    Itinerario crearItinerario(Itinerario itinerario);
+    Itinerario save(Itinerario itinerario);
 
     // Buscar todos los itinerarios
-    List<Itinerario> obtenerTodosItinerarios();
+    List<Itinerario> findAll();
 
     // Buscar un itinerario por su id
-    Itinerario obtenerItinerarioPorId(Integer id);
+    Itinerario findById(Integer id);
 
     // Eliminar un itinerario por su id
-    void eliminarItinerario(Integer id);
+    void deleteById(Integer id);
 
-    public List<ItinerarioDTO> buscarItinerarios(String ciudadSalida, String ciudadLlegada, String fechaInicio) throws ParseException;
+    //public List<ItinerarioDTO> buscarItinerarios(String ciudadSalida, String ciudadLlegada, String fechaInicio) throws ParseException;
+
+    public List<ItinerarioDTO> buscarItinerarios(String codigoIataOrigen, String codigoIataDestino, String fecha) throws ParseException;
+
 
     public List<ItinerarioDetalleDTO> obtenerDetalleItinerario(Integer idItinerario);
 }

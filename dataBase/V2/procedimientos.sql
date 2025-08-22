@@ -21,18 +21,18 @@ $$;
 
 
 CREATE OR REPLACE FUNCTION fnBuscarVuelo(
-    p_ciudad_salida VARCHAR,
-    p_ciudad_llegada VARCHAR,
+    p_codigo_origen VARCHAR,
+    p_codigo_destino VARCHAR,
     p_fecha_inicio DATE
 )
 RETURNS TABLE (
-	itinerario int,
+    itinerario INT,
     origen VARCHAR,
     destino VARCHAR,
     ciudad_salida TEXT,
     ciudad_llegada TEXT,
-    cantParadas TEXT,
-    precio TEXT,
+    cant_paradas TEXT,
+    precio INT,
     duracion TEXT,
     hora_salida_24h TEXT,
     hora_llegada_24h TEXT
@@ -40,42 +40,39 @@ RETURNS TABLE (
 BEGIN
     RETURN QUERY
     SELECT
-		it.id_itinerario,
-        arp1.codigo_iata AS origen,
-        arp2.codigo_iata AS destino,
+        it.id_itinerario,
+        arp1.codigo_iata,
+        arp2.codigo_iata,
         ci1.nombre || ' - ' || arp1.nombre_aeropuerto || ' (' || arp1.codigo_iata || ')' AS ciudad_salida,
         ci2.nombre || ' - ' || arp2.nombre_aeropuerto || ' (' || arp2.codigo_iata || ')' AS ciudad_llegada,
         CASE
-            WHEN it.NUMERO_ESCALAS = 0 THEN 'sin paradas'
-            WHEN it.NUMERO_ESCALAS = 1 THEN '1 parada'
-            ELSE it.NUMERO_ESCALAS::TEXT || ' paradas'
-        END AS cantParadas,
-        'clp ' || TO_CHAR(it.precio_base, 'FM999G999G999') AS precio,
-        -- Duración calculada en horas y minutos, formato "X h Y min"
-        (EXTRACT(epoch FROM (it.HORA_LLEGADA - it.HORA_SALIDA)) / 3600)::int || ' h ' ||
-        ((EXTRACT(epoch FROM (it.HORA_LLEGADA - it.HORA_SALIDA)) % 3600) / 60)::int || ' min' AS duracion,
-        TO_CHAR(it.HORA_SALIDA, 'HH24:MI') AS hora_salida_24h,
-        TO_CHAR(it.HORA_LLEGADA, 'HH24:MI') AS hora_llegada_24h
+            WHEN it.numero_escalas = 0 THEN 'sin paradas'
+            WHEN it.numero_escalas = 1 THEN '1 parada'
+            ELSE it.numero_escalas::TEXT || ' paradas'
+        END AS cant_paradas,
+        it.precio_base,
+        (EXTRACT(epoch FROM (it.hora_llegada - it.hora_salida)) / 3600)::INT || ' h ' ||
+        ((EXTRACT(epoch FROM (it.hora_llegada - it.hora_salida)) % 3600) / 60)::INT || ' min' AS duracion,
+        TO_CHAR(it.hora_salida, 'HH24:MI'),
+        TO_CHAR(it.hora_llegada, 'HH24:MI')
     FROM itinerario it
-    JOIN itinerario_vuelo itv ON itv.id_itinerario = it.id_itinerario
     JOIN aeropuerto arp1 ON arp1.id_aeropuerto = it.origen_aeropuerto
     JOIN aeropuerto arp2 ON arp2.id_aeropuerto = it.destino_aeropuerto
     JOIN ciudad ci1 ON ci1.id_ciudad = arp1.id_ciudad
     JOIN ciudad ci2 ON ci2.id_ciudad = arp2.id_ciudad
-    WHERE ci1.nombre = p_ciudad_salida
-      AND ci2.nombre = p_ciudad_llegada
-      AND it.HORA_SALIDA >= p_fecha_inicio
-      AND it.HORA_SALIDA < p_fecha_inicio + INTERVAL '1 day'
-	  GROUP BY it.id_itinerario, arp1.codigo_iata,arp2.codigo_iata,ci1.nombre,ci2.nombre,
-	  arp1.nombre_aeropuerto,arp2.nombre_aeropuerto;
+    WHERE arp1.codigo_iata = p_codigo_origen
+      AND arp2.codigo_iata = p_codigo_destino
+      AND it.hora_salida >= p_fecha_inicio
+      AND it.hora_salida < p_fecha_inicio + INTERVAL '1 day';
 END;
 $$ LANGUAGE plpgsql;
 
 
+-- Buscar vuelo desde Santiago (SCL) a Nueva York (JFK, por ejemplo)
+SELECT * FROM fnBuscarVuelo('SCL', 'JFK', '2025-08-01');
 
-SELECT * FROM fnBuscarVuelo('Santiago', 'NuevaYork', '2025-08-01');
-
-SELECT * FROM fnBuscarVuelo('Santiago', 'LosAngeles', '2025-08-01');
+-- Buscar vuelo desde Santiago (SCL) a Los Ángeles (LAX)
+SELECT * FROM fnBuscarVuelo('SCL', 'LAX', '2025-08-01');
 
 
 -- 1. SCL -> JFK el 1 de agosto (3 resultados esperados: con escalas, directo, por Bogotá)
@@ -193,3 +190,53 @@ $$ LANGUAGE plpgsql;
 
 
 SELECT * FROM fnDTinitinerario(1);
+
+
+
+
+
+
+CREATE OR REPLACE FUNCTION fn_getAsientosAvion(in p_idVuelo int)
+RETURNS TABLE(
+	id_asiento int,
+    numero_asiento varchar,
+    estado text,
+	precio int,
+	clase varchar
+) AS $$
+BEGIN
+
+    RETURN QUERY
+
+		SELECT
+    a.ID_ASIENTO,
+    a.Numero_Asiento,
+    (CASE
+        WHEN ra.ID_RESERVA IS NOT NULL THEN 'ocupado'
+        ELSE 'libre'
+    END) AS Estado,
+	 (SELECT psa.precio FROM precio_asiento psa WHERE id_vuelo=p_idVuelo AND id_clase = a.id_clase LIMIT 1) AS precio_asiento,
+	cls.descripcion
+FROM
+    Asiento a
+JOIN
+    Avion av ON a.ID_AVION = av.ID_AVION
+LEFT JOIN
+    Reserva_Asiento ra ON a.ID_ASIENTO = ra.ID_ASIENTO
+LEFT JOIN
+    Reserva r ON ra.ID_RESERVA = r.ID_RESERVA
+left join clase_asiento cls
+	on cls.id_clase = a.id_clase
+WHERE
+    av.ID_AVION = (SELECT ID_AVION FROM Vuelo WHERE id_vuelo = p_idVuelo)
+ORDER BY
+    a.Numero_Asiento;
+
+
+END;
+$$ LANGUAGE plpgsql;
+
+
+SELECT * FROM fn_getAsientosAvion(25);
+
+

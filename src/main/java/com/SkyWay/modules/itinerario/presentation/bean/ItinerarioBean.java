@@ -29,6 +29,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.time.LocalDate;
@@ -67,15 +69,17 @@ public class ItinerarioBean implements Serializable {
     private List<Vuelo> vuelosAsignados;
     private ItinerarioVuelo itinerarioVuelo;
     private List<SegmentoVuelo>segmentoVuelos;
-    private String departureCity;
-    private String arrivalCity;
+    private String codigoIataOrigen;
+    private String codigoIataDestino;
+    private LocalDate fechaRetorno;
+    @Future
+    private LocalDate fechaIda;
     private String aeropuertoOrigen; // Cambiado de String a Aeropuerto
     private String aeropuertoDestino; // Cambiado de String a Aeropuerto
     private LocalDate fechaBusqueda;
     private String vueloId;
     private Vuelo vueloSeleccionado;
-    @Future
-    private LocalDate date1;
+
     private List<Ciudad>ciudads;
 
 
@@ -86,43 +90,46 @@ public class ItinerarioBean implements Serializable {
         itinerariosAsignados = new ArrayList<>();
         vuelosAsignados=new ArrayList<>();
         vuelos = vueloService.findAll();
+        vuelos.forEach(vuelo -> vuelosMap.put(vuelo.getIdVuelo().toString(), vuelo));
+
         ciudads=ciudadService.getAllCiudades();
         itinerarioVuelo=new ItinerarioVuelo();
-        for (Vuelo vuelo : vuelos) {
-            vuelosMap.put(vuelo.getIdVuelo().toString(),vuelo);
-        }
 
         aeropuertos=aeropuertoService.findAll();
         aeropuertos.forEach(aeropuerto -> aeropuertosMap.put(aeropuerto.getCodigoIata(),aeropuerto));
     }
 
-    public void buscarVuelos() throws ParseException {
-
-        Logger.logInfo(departureCity+" "+arrivalCity+" "+ date1);
-
+    public void buscarVuelosSoloIda() throws ParseException {
         try {
             ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-            String redirectUrl = "/home/vuelos.xhtml?salida=" + departureCity + "&llegada=" + arrivalCity + "&fecha=" + date1;
+            String redirectUrl = "/home/vuelos.xhtml"
+                    + "?salida=" + URLEncoder.encode(codigoIataOrigen, StandardCharsets.UTF_8)
+                    + "&llegada=" + URLEncoder.encode(codigoIataDestino, StandardCharsets.UTF_8)
+                    + "&fecha=" + fechaIda
+                    + "&trip=OW";
             externalContext.redirect(redirectUrl);
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        //itinerariosBusqueda=itinerarioService.buscarItinerarios(departureCity,arrivalCity,date1.toString());
-
-        //itinerariosBusqueda.forEach(itinerarioDTO -> Logger.logInfo(itinerarioDTO.toString()));
-
-
-        /*vuelos= vueloService.buscarVuelo(departureCity, arrivalCity,String.valueOf( range.get(0)),String.valueOf( range.get(1)));
-
-        System.out.println(vuelos);
-        if (vuelos.size()==0) {
-            System.out.println("no encontraron los vuelos");
-            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage("No se Encontraron Vuelos En Esas Fechas"));
-            PrimeFaces.current().ajax().update("form:messages");
-        }*/
-
     }
+
+
+    public void buscarVuelosIdaYVuelta() throws ParseException {
+        try {
+            ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
+            String redirectUrl = "/home/vuelos.xhtml"
+                    + "?salida=" + URLEncoder.encode(codigoIataOrigen, StandardCharsets.UTF_8)
+                    + "&llegada=" + URLEncoder.encode(codigoIataDestino, StandardCharsets.UTF_8)
+                    + "&fecha=" + fechaIda
+                    + "&retorno=" + fechaRetorno  // Asegúrate de tener returnDate en tu bean
+                    + "&trip=RT";
+            externalContext.redirect(redirectUrl);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
 
     public void buscarVuelosSegmento() {
 
@@ -195,7 +202,7 @@ public class ItinerarioBean implements Serializable {
         this.itinerario.setAeropuertoOrigen(aeropuertoOrigen);
         this.itinerario.setAeropuertoDestino(aeropuertoDestino);
 
-        var itinerarioGuardado = itinerarioService.crearItinerario(itinerario); // Reset form
+        var itinerarioGuardado = itinerarioService.save(itinerario); // Reset form
 
         for (ItinerarioVuelo iv : itinerariosAsignados) {
             iv.setItinerario(itinerarioGuardado);
@@ -226,28 +233,37 @@ public class ItinerarioBean implements Serializable {
 
     // Método que se llama cuando se hace clic en "Seleccionar"
 
-    public String getDepartureCity() {
-        return departureCity;
+
+    public String getCodigoIataDestino() {
+        return codigoIataDestino;
     }
 
-    public void setDepartureCity(String departureCity) {
-        this.departureCity = departureCity;
+    public String getCodigoIataOrigen() {
+        return codigoIataOrigen;
     }
 
-    public String getArrivalCity() {
-        return arrivalCity;
+    public void setCodigoIataDestino(String codigoIataDestino) {
+        this.codigoIataDestino = codigoIataDestino;
     }
 
-    public void setArrivalCity(String arrivalCity) {
-        this.arrivalCity = arrivalCity;
+    public void setCodigoIataOrigen(String codigoIataOrigen) {
+        this.codigoIataOrigen = codigoIataOrigen;
     }
 
-    public @Future LocalDate getDate1() {
-        return date1;
+    public void setFechaIda(@Future LocalDate fechaIda) {
+        this.fechaIda = fechaIda;
     }
 
-    public void setDate1(@Future LocalDate date1) {
-        this.date1 = date1;
+    public void setFechaRetorno(LocalDate fechaRetorno) {
+        this.fechaRetorno = fechaRetorno;
+    }
+
+    public @Future LocalDate getFechaIda() {
+        return fechaIda;
+    }
+
+    public LocalDate getFechaRetorno() {
+        return fechaRetorno;
     }
 
     public List<Ciudad> getCiudads() {

@@ -90,7 +90,7 @@ public class AsientoServiceImpl implements AsientoService {
 	
 	@Override
 	@Transactional
-	public List<InfoAsientoDTO> getAsientosDisponibles(Integer idAvion,Integer idVuelo) {
+	public List<InfoAsientoDTO> getAsientosDisponibles(Integer idVuelo) {
 		// TODO Auto-generated method stub
 		
 		
@@ -175,7 +175,7 @@ public class AsientoServiceImpl implements AsientoService {
 				"select * from fn_getAsientosAvion(:p_vuelo)",
 				InfoAsientoDTO.class);
 		query.setParameter("p_vuelo", idVuelo);
-	   LOGGER.info("Vuelo a buscar {} Avion a buscar {}",idAvion,idVuelo); 		
+	   LOGGER.info("Vuelo a buscar {} ",idVuelo);
 	
 	   	asientos= query.getResultList();
  		

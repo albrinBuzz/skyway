@@ -183,7 +183,7 @@ hr {
             <div style="flex: 2;">
 
             <!-- Tabla de vuelos -->
-            <p:dataTable value="#{itinerarioDetalleBean.vuelos}" var="vuelo" paginator="true" rows="5" rowKey="#{vuelo.itinerario}" selectionMode="single" selection="#{itinerarioDetalleBean.selectedVuelo}">
+            <p:dataTable id="tablaVuelos" value="#{itinerarioDetalleBean.vuelosIda}" var="vuelo" paginator="true" rows="5" rowKey="#{vuelo.itinerario}" selectionMode="single" selection="#{itinerarioDetalleBean.selectedVuelo}">
                 <p:column headerText="Hora de Salida">
                     <h:outputText value="#{vuelo.horaSalida24h}" />
                 </p:column>
@@ -216,7 +216,7 @@ hr {
                 <p:column>
                     <p:commandButton value="Seleccionar" icon="pi pi-check"
                                      action="#{itinerarioDetalleBean.selectVuelo(vuelo)}"
-                                     update="vueloForm:compraPanel"
+                                     update="vueloForm:compraPanel vueloForm:tablaVuelos"
                     process="@this" />
 
 
@@ -235,7 +235,7 @@ hr {
 
                         <p><strong>#{vuelo.ciudadSalida}</strong> (#{vuelo.origen})</p>
                         <p><strong>#{vuelo.ciudadLlegada}</strong> (#{vuelo.destino})</p>
-                        <p>Fecha: #{itinerarioDetalleBean.fecha}</p>
+                        <p>Fecha: #{itinerarioDetalleBean.fechaIda}</p>
                         <p>Subtotal: <strong>CLP #{vuelo.precio}</strong></p>
                     </ui:repeat>
 
