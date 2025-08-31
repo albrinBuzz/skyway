@@ -27,6 +27,14 @@ import com.SkyWay.service.PiloService;
 import com.SkyWay.service.ReservaService;
 import com.SkyWay.service.VueloService;
 
+/*
+curl -X GET http://localhost:8080/api2/vuelos
+curl -X GET http://localhost:8080/api2/vuelos/123
+curl -X GET http://localhost:8080/api2/vuelos/piloto/12345678-9
+curl -X GET http://localhost:8080/api2/vuelos/reservas/12345678-9
+
+
+ */
 @RestController
 @RequestMapping("/api2/vuelos")
 public class VueloController {

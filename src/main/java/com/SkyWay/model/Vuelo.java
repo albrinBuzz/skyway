@@ -81,6 +81,7 @@ public class Vuelo implements Serializable {
 
 	private Piloto piloto;
 
+	@JsonIgnore
 	@OneToMany(mappedBy="vuelo",fetch = FetchType.LAZY,cascade = CascadeType.ALL)
 	private List<PrecioAsiento> precios;
 

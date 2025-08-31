@@ -2,6 +2,8 @@ package com.SkyWay.beans;
 
 import java.util.List;
 
+import com.SkyWay.service.PiloService;
+import com.SkyWay.serviceImpl.PilotoServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.SkyWay.dto.ReservaVueloDTO;
@@ -25,6 +27,9 @@ public class PerfilBean {
 	private ReservaService reservaService;
 
 	@Autowired
+	PiloService piloService;
+
+	@Autowired
 	private HttpSession session;
 
 	List<ReservaVueloDTO>reservas;
@@ -46,7 +51,10 @@ public class PerfilBean {
 			reservas=reservaService.getReservasUsuario(usuario.getRutUsuario());
 			
 		}else if (usuario.getRol().getNombre().equals(RolEnum.PILOTO.getDescripcion())) {
-			Piloto piloto=(Piloto) usuario;
+
+			var piloto=piloService.findByRut(usuario.getRutUsuario()).get();
+			//Piloto piloto=(Piloto) usuario;
+
 			vuelos=vueloService.findByPiloto(piloto);
 		
 		}
