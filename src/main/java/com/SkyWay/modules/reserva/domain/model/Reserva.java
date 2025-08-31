@@ -218,4 +218,13 @@ public class Reserva implements Serializable {
 		return reservaItinerario;
 	}
 
+	@Override
+	public String toString() {
+		final StringBuffer sb = new StringBuffer("Reserva{");
+		sb.append("idReserva=").append(idReserva);
+		sb.append(", fechaReserva=").append(fechaReserva);
+		sb.append(", total=").append(total);
+		sb.append('}');
+		return sb.toString();
+	}
 }

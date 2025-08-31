@@ -89,8 +89,9 @@ public class ItinerarioBean implements Serializable {
         vuelosMap=new HashMap<>();
         itinerariosAsignados = new ArrayList<>();
         vuelosAsignados=new ArrayList<>();
-        vuelos = vueloService.findAll();
-        vuelos.forEach(vuelo -> vuelosMap.put(vuelo.getIdVuelo().toString(), vuelo));
+        //vuelos = vueloService.findAll();
+
+        //vuelos.forEach(vuelo -> vuelosMap.put(vuelo.getIdVuelo().toString(), vuelo));
 
         ciudads=ciudadService.getAllCiudades();
         itinerarioVuelo=new ItinerarioVuelo();
@@ -105,7 +106,7 @@ public class ItinerarioBean implements Serializable {
             String redirectUrl = "/home/vuelos.xhtml"
                     + "?salida=" + URLEncoder.encode(codigoIataOrigen, StandardCharsets.UTF_8)
                     + "&llegada=" + URLEncoder.encode(codigoIataDestino, StandardCharsets.UTF_8)
-                    + "&fecha=" + fechaIda
+                    + "&fechaIda=" + fechaIda
                     + "&trip=OW";
             externalContext.redirect(redirectUrl);
         } catch (IOException e) {
@@ -120,8 +121,8 @@ public class ItinerarioBean implements Serializable {
             String redirectUrl = "/home/vuelos.xhtml"
                     + "?salida=" + URLEncoder.encode(codigoIataOrigen, StandardCharsets.UTF_8)
                     + "&llegada=" + URLEncoder.encode(codigoIataDestino, StandardCharsets.UTF_8)
-                    + "&fecha=" + fechaIda
-                    + "&retorno=" + fechaRetorno  // Asegúrate de tener returnDate en tu bean
+                    + "&fechaIda=" + fechaIda
+                    + "&fechaRegreso=" + fechaRetorno  // Asegúrate de tener returnDate en tu bean
                     + "&trip=RT";
             externalContext.redirect(redirectUrl);
         } catch (IOException e) {
@@ -229,6 +230,19 @@ public class ItinerarioBean implements Serializable {
         //Logger.logInfo(initinerarioVuelo.toString());
         itinerariosAsignados.add(iv);
     }
+
+    public List<Aeropuerto> buscarAeropuertos(String query) {
+        String filtro = query.toLowerCase();
+
+        return aeropuertos.stream()
+                .filter(a ->
+                        a.getCodigoIata().toLowerCase().contains(filtro) ||
+                                a.getNombreAeropuerto().toLowerCase().contains(filtro) ||
+                                a.getCiudad().getNombre().toLowerCase().contains(filtro)
+                )
+                .toList();
+    }
+
 
 
     // Método que se llama cuando se hace clic en "Seleccionar"

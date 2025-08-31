@@ -100,14 +100,14 @@
                     <!-- Fecha de Salida -->
                     <p:column headerText="Salida" sortBy="#{vuelo.fechaHoraSalida}">
                         <h:outputText value="#{vuelo.fechaHoraSalida}">
-                            <f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+                            <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago"/>
                         </h:outputText>
                     </p:column>
 
                     <!-- Fecha de Llegada -->
                     <p:column headerText="Llegada" sortBy="#{vuelo.fechaHoraLlegada}">
                         <h:outputText value="#{vuelo.fechaHoraLlegada}">
-                            <f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+                            <f:convertDateTime pattern="dd/MM/yyyy hh:mm " timeZone="America/Santiago"/>
                         </h:outputText>
                     </p:column>
 
@@ -142,11 +142,17 @@
                                 </p:column>
 
                                 <p:column headerText="Salida">
-                                    <h:outputText value="#{segmento.horaSalida}" />
+                                    <h:outputText value="#{segmento.horaSalida}" >
+                                    <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago"/>
+                                </h:outputText>
                                 </p:column>
 
+
+
                                 <p:column headerText="Llegada">
-                                    <h:outputText value="#{segmento.horaLlegada}" />
+                                    <h:outputText value="#{segmento.horaLlegada}" >
+                                        <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago"/>
+                                    </h:outputText>
                                 </p:column>
                             </p:dataTable>
                         </p:panel>

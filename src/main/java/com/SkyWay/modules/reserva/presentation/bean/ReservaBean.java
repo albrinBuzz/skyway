@@ -3,21 +3,29 @@ package com.SkyWay.modules.reserva.presentation.bean;
 
 
 import com.SkyWay.dto.InfoAsientoDTO;
+import com.SkyWay.modules.estadoreserva.domain.model.EstadoReserva;
+import com.SkyWay.modules.estadoreserva.domain.service.EstadoReservaService;
 import com.SkyWay.modules.itinerario.domain.model.Itinerario;
 import com.SkyWay.modules.itinerario.domain.service.ItinerarioService;
 import com.SkyWay.modules.pasajero.domain.model.Pasajero;
+import com.SkyWay.modules.pasajero.domain.service.PasajeroService;
+import com.SkyWay.modules.reserva.domain.model.Reserva;
+import com.SkyWay.modules.reserva.domain.service.ReservaService;
+import com.SkyWay.modules.vuelo.domain.service.VueloService;
 import com.SkyWay.util.Logger;
 import jakarta.annotation.PostConstruct;
+import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
+import org.primefaces.PrimeFaces;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.math.BigDecimal;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.*;
 
 @Named("reservaBean")
 @ViewScoped
@@ -31,6 +39,16 @@ public class ReservaBean implements Serializable {
 
     @Autowired
     private ItinerarioService itinerarioService;
+    @Autowired
+    private VueloService vueloService;
+    @Autowired
+    private ReservaService reservaService;
+    @Autowired
+    private EstadoReservaService estadoReservaService;
+    @Autowired
+    private PasajeroService pasajeroService;
+
+
     // Simulamos una inyección de un servicio (puedes usar @Inject si usas CDI)
     // @Inject
     // private ReservaService reservaService;
@@ -50,6 +68,7 @@ public class ReservaBean implements Serializable {
         for (Integer id : idItinerarios) {
             //Logger.logInfo(String.valueOf(id));
             var itinerario=itinerarioService.findById(id);
+            Logger.logInfo(itinerario.toString());
             total+=itinerario.getPrecioBase();
             itinerarios.add(itinerario);
         }
@@ -78,12 +97,67 @@ public class ReservaBean implements Serializable {
     public String confirmarReserva() {
         // Aquí guardas la reserva en BD o llamas al servicio
         //System.out.println("Reserva confirmada para: " + cliente.getNombre());
+
+
+        var estatus=estadoReservaService.findById(2).get();
+        var pasajero=pasajeroService.findById("12345678-9").get();
+        var reserva=new Reserva();
+        reserva.setEstadoReservaBean(estatus);
+        reserva.setPasajero(pasajero);
+        reserva.setTotal(new BigDecimal(total));
+        reserva.setFechaReserva(new Timestamp(System.currentTimeMillis()));
+
+        var reservaGuardada= reservaService.save(reserva);
+
         asientosSeleccionados.forEach((idVuelo, asiento) -> {
-            System.out.println("Vuelo: " + idVuelo + ", Asiento: " + asiento.getNumeroAsiento());
+            Logger.logInfo("Vuelo: " + idVuelo + ", Asiento: " + asiento.getNumeroAsiento());
+
+            Integer[]asientos={asiento.getIdAsiento()};
+
+
+            try {
+                //Logger.logInfo(reservaGuardada.toString());
+
+                //Logger.logInfo("ID de reserva antes de llamar al procedimiento: " + reservaGuardada.getIdReserva());
+                String mensaje = reservaService.confirmarReserva(idVuelo, asientos, "12345678-9",reservaGuardada.getIdReserva());
+                Logger.logInfo(mensaje);
+
+                FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, "Reserva confirmada", mensaje);
+                PrimeFaces.current().dialog().showMessageDynamic(message);
+
+                addMessage(FacesMessage.SEVERITY_INFO, "Reserva confirmada", mensaje);
+
+            } catch (SQLException e) {
+                Logger.logInfo("Error SQL en la reserva: " + e.getMessage());
+
+                FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error en la reserva", e.getMessage());
+                PrimeFaces.current().dialog().showMessageDynamic(message);
+            } catch (Exception ex) {
+                Logger.logInfo("Error inesperado: " + ex.getMessage());
+                //FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error inesperado", ex.getMessage());
+                //PrimeFaces.current().dialog().showMessageDynamic(message);
+
+                addMessage(FacesMessage.SEVERITY_ERROR, "Error En la reserva", ex.getMessage());
+            }
+
+
         });
 
-        // Redirigir a página de éxito
+
+
+            // Redirigir a página de éxito
         return "reservaExitosa.xhtml?faces-redirect=true";
+    }
+
+    public void addMessage(FacesMessage.Severity severity, String summary, String detail) {
+        FacesContext.getCurrentInstance().
+                addMessage(null, new FacesMessage(severity, summary, detail));
+    }
+
+
+
+    public String getVuelo(Integer idVuelo){
+        return vueloService.findById(idVuelo).get().getNumeroVuelo();
     }
 
     public List<Itinerario> getItinerarios() {

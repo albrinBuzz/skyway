@@ -76,6 +76,11 @@
             <!-- Sección de Itinerarios -->
             <!-- Total de la reserva -->
             <div class="seccion">
+
+                <p:growl id="growl" showDetail="true" />
+
+
+
                 <div class="titulo">Total de la Reserva</div>
                 <h:outputText value="#{reservaBean.total}">
                     <f:convertNumber type="currency" currencySymbol="$" groupingUsed="true" maxFractionDigits="0" />
@@ -86,8 +91,8 @@
             <div class="card">
             <div class="seccion">
                 <p:accordionPanel multiple="true" widgetVar="itinerariosAccordion" scrollIntoView="center">
-                <p:tab title="Header I">
-                <div class="titulo">Itinerarios Seleccionados</div>
+                <p:tab title="Vuelos">
+
 
                 <ui:repeat value="#{reservaBean.itinerarios}" var="itinerario">
                     <div class="itinerario-box">
@@ -100,15 +105,18 @@
                         <div class="info">
                             <strong>Hora de salida:</strong>
                             <h:outputText value="#{itinerario.horaSalida}">
-                                <f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+                                <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago"/>
+
                             </h:outputText>
                         </div>
                         <div class="info">
                             <strong>Hora de llegada:</strong>
                             <h:outputText value="#{itinerario.horaLlegada}">
-                                <f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+                                <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago"/>
+
                             </h:outputText>
                         </div>
+
                         <div class="info">
                             <strong>Escalas:</strong> #{itinerario.numeroEscalas}
                         </div>
@@ -130,12 +138,14 @@
             <div class="seccion">
                 <div class="titulo">Asientos Seleccionados</div>
                 <p:accordionPanel multiple="true" widgetVar="asientosAccordion" scrollIntoView="center">
-                <p:tab title="Header I">
+                <p:tab title="Asientos">
 
                 <ui:repeat value="#{reservaBean.asientosSeleccionados.entrySet()}" var="entry">
                     <div class="vuelo-box">
                         <div class="info">
-                            <strong>Vuelo:</strong> #{entry.key}
+                            <strong>Vuelo:</strong>
+                            <h:outputText value="#{reservaBean.getVuelo(entry.key)}">
+                            </h:outputText>
                         </div>
 
                         <h:panelGroup rendered="#{entry.value != null}">
@@ -145,9 +155,6 @@
                             </div>
                             <div class="info">
                                 <strong>Clase:</strong> #{entry.value.clase}
-                            </div>
-                            <div class="info">
-                                <strong>Estado:</strong> #{entry.value.estado}
                             </div>
 
                             <div class="info">
@@ -170,6 +177,7 @@
             <h:form>
                 <h:commandButton value="Confirmar Reserva"
                                  action="#{reservaBean.confirmarReserva}"
+                                 update="growl"
                                  styleClass="btn-confirmar" />
             </h:form>
         </div>

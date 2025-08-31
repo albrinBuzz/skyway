@@ -20,5 +20,5 @@ public interface ReservaService {
 	  public BoletoDTO getBoleto(Integer id);
 
 
-    String confirmarReserva(int idVuelo, Integer[] asientosArray, String rutUsuario) throws SQLException;
+    String confirmarReserva(int idVuelo, Integer[] asientosArray, String rutUsuario,Integer idReserva) throws SQLException;
 }

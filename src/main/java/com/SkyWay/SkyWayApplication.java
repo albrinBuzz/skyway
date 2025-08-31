@@ -38,14 +38,11 @@ public class SkyWayApplication {
 		// Llamar al método confirmarReserva
 		//reservaService.confirmarReserva(6, asientos, "12345678-0");
 		try {
-			String mensaje =
-			reservaService.confirmarReserva(6, asientos, "12345678-0");
+			//String mensaje =
+			//reservaService.confirmarReserva(6, asientos, "12345678-0",1);
 
 			Logger.logInfo("exito");
 
-
-		} catch (SQLException e) {
-			Logger.logInfo("Error SQL en la reserva: " + e.getMessage());
 
 		} catch (Exception ex) {
 			Logger.logError("Error inesperado: " + ex.getMessage());

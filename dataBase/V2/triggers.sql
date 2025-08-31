@@ -111,6 +111,9 @@ EXECUTE FUNCTION fn_set_orden_itinerario_vuelo();
 
 
 
+
+
+
 CREATE OR REPLACE FUNCTION fn_set_orden_segmento_vuelo()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -140,6 +143,63 @@ FOR EACH ROW
 EXECUTE FUNCTION fn_set_orden_segmento_vuelo();
 
 
+
+CREATE OR REPLACE FUNCTION fn_set_numero_vuelo()
+RETURNS TRIGGER AS $$
+DECLARE
+   	secuencia_vuelo INT;
+	codigoArp1 varchar;
+	codigoArp2 varchar;
+	numeroVueloN varchar;
+BEGIN
+
+		SELECT currval('segmento_vuelo_seq') INTO secuencia_vuelo;
+
+	    IF NEW.ORDEN_SEGMENTO = 1 THEN
+
+			 SELECT apr1.Codigo_IATA INTO codigoArp1
+		    FROM aeropuerto apr1
+		    WHERE apr1.id_aeropuerto = NEW.ID_AEROPUERTO_ORIGEN;
+
+		    SELECT apr2.Codigo_IATA INTO codigoArp2
+		    FROM aeropuerto apr2
+		    WHERE apr2.id_aeropuerto = NEW.ID_AEROPUERTO_DESTINO;
+
+	    	numeroVueloN := codigoArp1 || '-' || codigoArp2 || secuencia_vuelo::TEXT;
+
+	        UPDATE vuelo
+	        SET numero_vuelo = numeroVueloN
+	        WHERE id_vuelo = NEW.ID_VUELO;
+
+	    ELSIF NEW.ORDEN_SEGMENTO > 1 THEN
+
+					 SELECT apr1.Codigo_IATA INTO codigoArp1
+		    FROM aeropuerto apr1
+		    WHERE apr1.id_aeropuerto = NEW.ID_AEROPUERTO_ORIGEN;
+
+		    SELECT apr2.Codigo_IATA INTO codigoArp2
+		    FROM aeropuerto apr2
+		    WHERE apr2.id_aeropuerto = NEW.ID_AEROPUERTO_DESTINO;
+
+	 		numeroVueloN := codigoArp1 || '-' || codigoArp2 || secuencia_vuelo::TEXT;
+
+	        UPDATE vuelo
+	        SET numero_vuelo = numeroVueloN
+	        WHERE id_vuelo = NEW.ID_VUELO;
+
+
+	    END IF;
+
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE TRIGGER trg_set_numero_vuelo
+AFTER INSERT ON Segmento_Vuelo
+FOR EACH ROW
+EXECUTE FUNCTION fn_set_numero_vuelo();
 
 
 CREATE OR REPLACE FUNCTION fn_set_fecha_itinerario()
@@ -200,4 +260,48 @@ AFTER INSERT ON Itinerario_Vuelo
 FOR EACH ROW
 EXECUTE FUNCTION fn_set_fecha_itinerario();
 
+
+
+
+
+CREATE OR REPLACE FUNCTION fn_set_fecha_vuelo()
+RETURNS TRIGGER AS $$
+DECLARE
+    fechaSalida TIMESTAMP;
+    fechaLlegada TIMESTAMP;
+BEGIN
+
+        SELECT sgv.hora_salida
+        INTO fechaSalida
+        FROM Segmento_Vuelo sgv
+        WHERE sgv.id_vuelo = NEW.ID_VUELO
+          AND sgv.ORDEN_SEGMENTO = 1;
+
+        SELECT sgv.hora_llegada
+        INTO fechaLlegada
+        FROM Segmento_Vuelo sgv
+        WHERE sgv.id_vuelo = NEW.ID_VUELO
+          AND sgv.ORDEN_SEGMENTO = (
+              SELECT MAX(sgv2.ORDEN_SEGMENTO)
+              FROM Segmento_Vuelo sgv2
+              WHERE sgv2.id_vuelo = NEW.ID_VUELO
+          );
+
+        UPDATE vuelo
+        SET Fecha_Hora_Salida = fechaSalida,
+            Fecha_Hora_Llegada = fechaLlegada
+        WHERE ID_VUELO = NEW.ID_VUELO;
+
+
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+CREATE TRIGGER trg_set_fecha_vuelo
+AFTER INSERT ON Segmento_Vuelo
+FOR EACH ROW
+EXECUTE FUNCTION fn_set_fecha_vuelo();
 

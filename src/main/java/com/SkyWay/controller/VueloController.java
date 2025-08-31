@@ -1,6 +1,14 @@
 package com.SkyWay.controller;
 
+import com.SkyWay.dto.ReservaVueloDTO;
+import com.SkyWay.modules.piloto.domain.model.Piloto;
+import com.SkyWay.modules.vuelo.domain.model.Vuelo;
+import com.SkyWay.util.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -10,6 +18,17 @@ import com.SkyWay.modules.estadovuelo.domain.service.EstadoVueloService;
 import com.SkyWay.modules.piloto.domain.service.PiloService;
 import com.SkyWay.modules.reserva.domain.service.ReservaService;
 import com.SkyWay.modules.vuelo.domain.service.VueloService;
+
+import java.util.List;
+import java.util.Optional;
+/*curl -X GET http://localhost:8080/api2/vuelos
+curl -X GET http://localhost:8080/api2/vuelos/123
+curl -X GET http://localhost:8080/api2/vuelos/piloto/12345678-9
+curl -X GET http://localhost:8080/api2/vuelos/reservas/12345678-9
+
+*/
+
+
 
 @RestController
 @RequestMapping("/api2/vuelos")
@@ -35,7 +54,7 @@ public class VueloController {
     }
 
     // Obtener todos los vuelos
-    /*@GetMapping
+    @GetMapping
     public List<Vuelo> getAllVuelos() {
         Logger.logInfo("Obteniendo sotos");
         return vueloService.findAll();

@@ -72,8 +72,9 @@ $$ LANGUAGE plpgsql;
 SELECT * FROM fnBuscarVuelo('SCL', 'JFK', '2025-08-01');
 
 -- Buscar vuelo desde Santiago (SCL) a Los Ángeles (LAX)
-SELECT * FROM fnBuscarVuelo('SCL', 'LAX', '2025-08-01');
+SELECT * FROM fnBuscarVuelo('SCL', 'LAX', '2025-08-22');
 
+SELECT * FROM fnBuscarVuelo('LAX', 'SCL', '2025-08-23');
 
 -- 1. SCL -> JFK el 1 de agosto (3 resultados esperados: con escalas, directo, por Bogotá)
 SELECT * FROM fnBuscarVuelo('Santiago', 'Nueva York', '2025-08-01');
@@ -104,9 +105,6 @@ SELECT * FROM fnBuscarVuelo('Santiago', 'Nueva York', '2025-08-02');
 
 -- 10. MVD -> GRU el 3 de agosto (vuelo del itinerario 4)
 SELECT * FROM fnBuscarVuelo('Montevideo', 'São Paulo', '2025-08-03');
-
-
-
 
 
 
@@ -142,10 +140,10 @@ BEGIN
     TO_CHAR(it.DURACION_TOTAL, 'HH24 "h" MI "min"') AS DURACION_TOTAL,  -- Aquí se formatea el INTERVAL
     it.NUMERO_ESCALAS,
     iv.ORDEN,
-    a1.Codigo_IATA || ' ' || TO_CHAR(sv.HORA_SALIDA, 'HH24:MI') AS Salida,
+    a1.Codigo_IATA || ' ' || TO_CHAR(sv.HORA_SALIDA, 'DD/MM/YYYY') || ' ' || TO_CHAR(sv.HORA_SALIDA, 'HH:MI AM') AS Salida,
     a1.Nombre_Aeropuerto AS Aeropuerto_Salida,
     c1.nombre AS Ciudad_Salida,
-    a2.Codigo_IATA || ' ' || TO_CHAR(sv.HORA_LLEGADA, 'HH24:MI') AS Llegada,
+    a2.Codigo_IATA || ' ' || TO_CHAR(sv.HORA_LLEGADA, 'DD/MM/YYYY') || ' ' || TO_CHAR(sv.HORA_LLEGADA, 'HH:MI AM') AS Llegada,
     a2.Nombre_Aeropuerto AS Aeropuerto_Llegada,
     c2.nombre AS Ciudad_Llegada,
 
@@ -218,25 +216,173 @@ BEGIN
 	 (SELECT psa.precio FROM precio_asiento psa WHERE id_vuelo=p_idVuelo AND id_clase = a.id_clase LIMIT 1) AS precio_asiento,
 	cls.descripcion
 FROM
-    Asiento a
-JOIN
-    Avion av ON a.ID_AVION = av.ID_AVION
+    vuelo vl
+join avion av
+on av.id_avion = vl.id_avion
+join asiento a
+	on a.id_avion = av.id_avion and a.id_avion = vl.id_avion
 LEFT JOIN
     Reserva_Asiento ra ON a.ID_ASIENTO = ra.ID_ASIENTO
-LEFT JOIN
-    Reserva r ON ra.ID_RESERVA = r.ID_RESERVA
+	and ra.id_vuelo = vl.id_vuelo
 left join clase_asiento cls
 	on cls.id_clase = a.id_clase
 WHERE
-    av.ID_AVION = (SELECT ID_AVION FROM Vuelo WHERE id_vuelo = p_idVuelo)
+    vl.id_vuelo=p_idVuelo
 ORDER BY
     a.Numero_Asiento;
-
 
 END;
 $$ LANGUAGE plpgsql;
 
 
-SELECT * FROM fn_getAsientosAvion(25);
+SELECT * FROM fn_getAsientosAvion(27)
+where numero_asiento='15C';
+
+
+
+CREATE OR REPLACE PROCEDURE spConfirmar_reserva(
+    IN p_idVuelo INT,
+	IN p_idReserva INT,
+    IN p_asientos INT[],
+    IN p_rutPasajero TEXT,
+    OUT p_resultado TEXT
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    reserva_id INT;
+    estado_reserva_id INT := 1;  -- Suponemos 1 = pendiente o confirmada
+    i INT;
+    id_avion INT;
+    id_asientoP INT;
+    asiento_en_reserva INT;
+    numero_asiento TEXT;
+    asientos_reservados TEXT := '';
+BEGIN
+    -- Obtener el avión asignado al vuelo
+    SELECT vl.id_avion INTO id_avion
+    FROM vuelo vl
+    WHERE id_vuelo = p_idVuelo;
+
+    -- Iniciar transacción (implícita en SP)
+    -- Crear la reserva
+    /*INSERT INTO reserva (rut_pasajero, fecha_reserva, estado_reserva, total)
+    VALUES (p_rutPasajero, CURRENT_TIMESTAMP, estado_reserva_id, 0)
+    RETURNING id_reserva INTO reserva_id;*/
+
+    FOR i IN 1..array_length(p_asientos, 1)
+    LOOP
+        id_asientoP := p_asientos[i];
+
+        -- Verificar si el asiento ya está reservado en este vuelo
+        SELECT 1 INTO asiento_en_reserva
+		FROM reserva_asiento ra
+		where ra.ID_VUELO=p_idVuelo
+		and ra.ID_ASIENTO=id_asientoP
+		FOR UPDATE;
+
+
+
+        IF asiento_en_reserva > 0 THEN
+            SELECT numero_asiento INTO numero_asiento
+            FROM asiento ast
+            WHERE ast.id_asiento = id_asientoP;
+
+            asientos_reservados := asientos_reservados || numero_asiento || ', ';
+        ELSE
+            -- Insertar en reserva_asiento
+            INSERT INTO reserva_asiento (id_reserva, id_asiento,ID_VUELO)
+            VALUES (p_idReserva, id_asientoP,p_idVuelo);
+        END IF;
+    END LOOP;
+
+    IF asientos_reservados <> '' THEN
+        p_resultado := 'ERROR: Asientos ya reservados: ' || LEFT(asientos_reservados, LENGTH(asientos_reservados) - 2);
+        -- Puedes eliminar la reserva si quedó sin asientos
+        DELETE FROM reserva WHERE id_reserva = p_idReserva;
+    ELSE
+        -- Asociar la reserva con el vuelo
+        --INSERT INTO id_asientoP (id_reserva, id_vuelo)
+        --VALUES (reserva_id, p_idVuelo);
+
+        p_resultado := 'OK: Reserva realizada correctamente.';
+    END IF;
+EXCEPTION
+    WHEN OTHERS THEN
+        -- Rollback seguro en caso de error
+        RAISE NOTICE 'Ocurrió un error: %', SQLERRM;
+        DELETE FROM reserva WHERE id_reserva = p_idReserva;
+        p_resultado := 'ERROR: No se pudo completar la reserva.'||SQLERRM;
+END;
+$$;
+
+
+
+
+CREATE OR REPLACE PROCEDURE spPreReserva(
+    IN p_idVuelo INT,
+    IN p_idReserva INT,
+    IN p_asientos INT[],
+    IN p_rutPasajero TEXT,
+    IN p_tiempo_pre_reserva INTERVAL DEFAULT '10 minutes',  -- Tiempo de pre-reserva
+    OUT p_resultado TEXT
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    id_asientoP INT;
+    numero_asiento TEXT;
+    asientos_reservados TEXT := '';
+    tiempo_actual TIMESTAMP := CURRENT_TIMESTAMP;
+    tiempo_expiracion TIMESTAMP;
+BEGIN
+    -- Establecer el tiempo de expiración para la pre-reserva
+    tiempo_expiracion := tiempo_actual + p_tiempo_pre_reserva;
+
+    -- Iniciar la transacción para realizar la pre-reserva
+    BEGIN
+        -- Reservar los asientos seleccionados
+        FOR i IN 1..array_length(p_asientos, 1)
+        LOOP
+            id_asientoP := p_asientos[i];
+
+            -- Verificar si el asiento ya está reservado para este vuelo
+            IF EXISTS (
+                SELECT 1
+                FROM reserva_asiento ra
+                WHERE ra.id_vuelo = p_idVuelo
+                AND ra.id_asiento = id_asientoP
+                AND ra.id_reserva != p_idReserva  -- No permitir que se reserven si ya está asociado a otra reserva
+                ) THEN
+                -- Si el asiento ya está reservado, agregar a la lista de asientos no disponibles
+                SELECT numero_asiento INTO numero_asiento
+                FROM asiento ast
+                WHERE ast.id_asiento = id_asientoP;
+
+                asientos_reservados := asientos_reservados || numero_asiento || ', ';
+            ELSE
+                -- Insertar el asiento como pre-reservado (sin completar)
+                INSERT INTO reserva_asiento (id_reserva, id_asiento, id_vuelo)
+                VALUES (p_idReserva, id_asientoP, p_idVuelo);
+            END IF;
+        END LOOP;
+
+        -- Si hay asientos que no se pudieron reservar, lanzar un error
+        IF asientos_reservados <> '' THEN
+            p_resultado := 'ERROR: Los siguientes asientos ya están reservados: ' || LEFT(asientos_reservados, LENGTH(asientos_reservados) - 2);
+            RAISE EXCEPTION 'Pre-reserva fallida';
+        ELSE
+            p_resultado := 'Pre-reserva exitosa';
+        END IF;
+
+        -- Aquí, puedes dejar la pre-reserva activa durante el tiempo definido por p_tiempo_pre_reserva.
+        COMMIT;
+    EXCEPTION
+        WHEN OTHERS THEN
+            ROLLBACK;
+            p_resultado := 'Error en la pre-reserva: ' || SQLERRM;
+    END;
+END;
+$$;
 
 

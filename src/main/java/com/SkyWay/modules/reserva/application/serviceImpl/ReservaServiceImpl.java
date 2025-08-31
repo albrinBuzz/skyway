@@ -168,18 +168,22 @@ public class ReservaServiceImpl implements ReservaService {
 
 	@Override
 	@Transactional
-	public String confirmarReserva(int idVuelo, Integer[] asientos, String rutPasajero) throws SQLException {
+	public String confirmarReserva(int idVuelo, Integer[] asientos, String rutPasajero, Integer idReserva) throws SQLException {
 		//String sql = "SELECT confirmar_reserva(:idVuelo, :asientos, :rutPasajero)";
 		StoredProcedureQuery query = em.createStoredProcedureQuery("spConfirmar_reserva");
+
+		Logger.logInfo("parametros: Vuelo-> "+idVuelo+" idReserva-> "+idReserva);
 
 		try {
 
 			query.registerStoredProcedureParameter("p_idVuelo", Integer.class, ParameterMode.IN);
+			query.registerStoredProcedureParameter("p_idReserva", Integer.class, ParameterMode.IN);
 			query.registerStoredProcedureParameter("p_asientos", Integer[].class, ParameterMode.IN);
 			query.registerStoredProcedureParameter("p_rutPasajero", String.class, ParameterMode.IN);
 			query.registerStoredProcedureParameter("p_resultado", String.class, ParameterMode.OUT);
 
 			query.setParameter("p_idVuelo", idVuelo);
+			query.setParameter("p_idReserva", idReserva);
 			query.setParameter("p_asientos", asientos);
 			query.setParameter("p_rutPasajero", rutPasajero);
 

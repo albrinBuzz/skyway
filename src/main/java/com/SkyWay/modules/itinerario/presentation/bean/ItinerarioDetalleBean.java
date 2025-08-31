@@ -41,8 +41,8 @@ public class ItinerarioDetalleBean implements Serializable {
     private LocalDate fechaIda;
     private LocalDate fechaRegreso;
     private String tipoViaje; // OW o RT
-
-    private List<ItinerarioDetalleDTO>paradasVuelo;
+    private String tipoVuelo;
+    private List<ItinerarioDetalleDTO> paradasVuelo;
     private Integer total;
     @Autowired
     private ItinerarioService itinerarioService;
@@ -60,10 +60,10 @@ public class ItinerarioDetalleBean implements Serializable {
 
             this.salida = params.get("salida");
             this.llegada = params.get("llegada");
-            String fechaIdaStr = params.get("fecha");
+            String fechaIdaStr = params.get("fechaIda");
             String fechaRegresoStr = params.get("fechaRegreso");
             this.tipoViaje = params.getOrDefault("trip", "OW").toUpperCase();
-
+            this.tipoVuelo = "Vuelos Ida";
             if (salida == null || llegada == null || fechaIdaStr == null) {
                 FacesContext.getCurrentInstance().addMessage(null,
                         new FacesMessage(FacesMessage.SEVERITY_ERROR,
@@ -81,6 +81,7 @@ public class ItinerarioDetalleBean implements Serializable {
 
             // Carga vuelos de regreso si es viaje redondo
             if ("RT".equals(tipoViaje) && fechaRegreso != null) {
+
                 vuelosRegreso = itinerarioService.buscarItinerarios(llegada, salida, fechaRegreso.toString());
             }
 
@@ -106,8 +107,10 @@ public class ItinerarioDetalleBean implements Serializable {
     public void showParadas(ItinerarioDTO vuelo) {
 
         this.selectedVueloParadas = "Detalles de paradas: " + vuelo.getCantParadas(); // Aquí puedes colocar más detalles.
-        paradasVuelo=itinerarioService.obtenerDetalleItinerario(vuelo.getItinerario());
+
+        paradasVuelo = itinerarioService.obtenerDetalleItinerario(vuelo.getItinerario());
         Logger.logInfo(selectedVueloParadas);
+        Logger.logInfo("itinerario. "+vuelo.getItinerario());
 
     }
 
@@ -122,12 +125,14 @@ public class ItinerarioDetalleBean implements Serializable {
     public String getSelectedVueloParadas() {
         return selectedVueloParadas;
     }
+
     public void selectVuelo(ItinerarioDTO vuelo) {
-        Logger.logInfo("seleccionar vuelo"+vuelo.toString());
+        Logger.logInfo("seleccionar vuelo" + vuelo.toString());
         this.selectedVuelo = vuelo;
-        this.total+=  vuelo.getPrecio();
+        this.total += vuelo.getPrecio();
         this.vuelosSeleccionados.add(vuelo);
-        this.vuelosIda=vuelosRegreso;
+        this.vuelosIda = vuelosRegreso;
+        this.tipoVuelo = "Vuelos Regreso";
         // Aquí podrías guardar los detalles o proceder con alguna otra acción
     }
 
@@ -136,6 +141,7 @@ public class ItinerarioDetalleBean implements Serializable {
         // Lógica para proceder con la compra
         // Por ejemplo, redirigir al proceso de pago o mostrar un mensaje de éxito.
     }
+
     public String confirmarCompra() {
         if (vuelosSeleccionados == null || vuelosSeleccionados.isEmpty()) {
             FacesContext.getCurrentInstance().addMessage(null,
@@ -150,7 +156,7 @@ public class ItinerarioDetalleBean implements Serializable {
         // (Opcional) Limpiar la selección después de confirmar
         //vuelosSeleccionados.clear();
         //total = 0;
-        StringBuilder url=new StringBuilder();
+        StringBuilder url = new StringBuilder();
         url.append("seleccionAsientos.xhtml?faces-redirect=true&itinerarios=");
         for (ItinerarioDTO vuelosSeleccionado : vuelosSeleccionados) {
 
@@ -158,9 +164,9 @@ public class ItinerarioDetalleBean implements Serializable {
             url.append(",");
         }
 
-        Logger.logInfo(url.substring(0,url.toString().length()-1));
+        Logger.logInfo(url.substring(0, url.toString().length() - 1));
 
-        return url.substring(0,url.toString().length()-1);
+        return url.substring(0, url.toString().length() - 1);
 
 
         ///seleccionAsientos.xhtml?itinerarios=1001,1002
@@ -251,6 +257,22 @@ public class ItinerarioDetalleBean implements Serializable {
 
     public void setVuelosSeleccionados(List<ItinerarioDTO> vuelosSeleccionados) {
         this.vuelosSeleccionados = vuelosSeleccionados;
+    }
+
+    public String getTipoViaje() {
+        return tipoViaje;
+    }
+
+    public void setTipoViaje(String tipoViaje) {
+        this.tipoViaje = tipoViaje;
+    }
+
+    public String getTipoVuelo() {
+        return tipoVuelo;
+    }
+
+    public void setTipoVuelo(String tipoVuelo) {
+        this.tipoVuelo = tipoVuelo;
     }
 
     public Integer getTotal() {

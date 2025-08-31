@@ -3,6 +3,7 @@ package com.SkyWay.modules.estadovuelo.domain.model;
 import java.io.Serializable;
 
 import com.SkyWay.modules.vuelo.domain.model.Vuelo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.util.List;
 
@@ -27,6 +28,7 @@ public class EstadoVuelo implements Serializable {
 
 	private String estado;
 
+	@JsonIgnore
 	//bi-directional many-to-one association to Vuelo
 	@OneToMany(mappedBy="estadoVuelo")
 	private List<Vuelo> vuelos;

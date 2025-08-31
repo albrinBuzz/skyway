@@ -193,6 +193,10 @@
 
                     <div class="tab-content mt-3" id="searchTabsContent">
 
+
+
+
+
                         <!-- 🔹 FORMULARIO: Solo Ida -->
                         <div class="tab-pane fade show active" id="one-way" role="tabpanel" aria-labelledby="one-way-tab">
                             <h:form id="formOneWay">
@@ -201,26 +205,36 @@
                                 <div class="row mb-4">
                                     <!-- Aeropuerto de Origen -->
                                     <div class="col-md-6 mb-3">
-                                        <h:outputLabel for="origen" value="Desde (Aeropuerto de salida)" />
-                                        <p:selectOneMenu id="origen" value="#{itinerarioBean.codigoIataOrigen}" required="true"
-                                                         requiredMessage="Debe seleccionar un aeropuerto de salida" styleClass="w-100">
-                                            <f:selectItem itemLabel="Seleccione un aeropuerto" itemValue="" />
-                                            <f:selectItems value="#{itinerarioBean.aeropuertos}" var="aeropuerto"
-                                                           itemLabel="#{aeropuerto.ciudad.nombre} - #{aeropuerto.nombreAeropuerto} (#{aeropuerto.codigoIata})"
-                                                           itemValue="#{aeropuerto.codigoIata}" />
-                                        </p:selectOneMenu>
+                                        <h:outputLabel for="aeropuertoSalida" value="Aeropuerto de salida" />
+                                        <p:autoComplete id="aeropuertoSalida"
+                                                        value="#{itinerarioBean.codigoIataOrigen}"
+                                                        completeMethod="#{itinerarioBean.buscarAeropuertos}"
+                                                        var="aeropuerto"
+                                                        itemLabel="#{aeropuerto.ciudad.nombre} - #{aeropuerto.nombreAeropuerto} (#{aeropuerto.codigoIata})"
+                                                        itemValue="#{aeropuerto.codigoIata}"
+                                                        forceSelection="true"
+                                                        dropdown="true"
+                                                        placeholder="Escribe para buscar aeropuerto"
+                                                        styleClass="w-100"
+                                                        required="true"
+                                                        requiredMessage="Debe seleccionar un aeropuerto de salida" />
                                     </div>
 
                                     <!-- Aeropuerto de Destino -->
                                     <div class="col-md-6 mb-3">
-                                        <h:outputLabel for="destino" value="Hasta (Aeropuerto de llegada)" />
-                                        <p:selectOneMenu id="destino" value="#{itinerarioBean.codigoIataDestino}" required="true"
-                                                         requiredMessage="Debe seleccionar un aeropuerto de llegada" styleClass="w-100">
-                                            <f:selectItem itemLabel="Seleccione un aeropuerto" itemValue="" />
-                                            <f:selectItems value="#{itinerarioBean.aeropuertos}" var="aeropuerto"
-                                                           itemLabel="#{aeropuerto.ciudad.nombre} - #{aeropuerto.nombreAeropuerto} (#{aeropuerto.codigoIata})"
-                                                           itemValue="#{aeropuerto.codigoIata}" />
-                                        </p:selectOneMenu>
+                                        <h:outputLabel for="aeropuertoLlegada" value="Aeropuerto de llegada" />
+                                        <p:autoComplete id="aeropuertoLlegada"
+                                                        value="#{itinerarioBean.codigoIataDestino}"
+                                                        completeMethod="#{itinerarioBean.buscarAeropuertos}"
+                                                        var="aeropuerto"
+                                                        itemLabel="#{aeropuerto.ciudad.nombre} - #{aeropuerto.nombreAeropuerto} (#{aeropuerto.codigoIata})"
+                                                        itemValue="#{aeropuerto.codigoIata}"
+                                                        forceSelection="true"
+                                                        dropdown="true"
+                                                        placeholder="Escribe para buscar aeropuerto"
+                                                        styleClass="w-100"
+                                                        required="true"
+                                                        requiredMessage="Debe seleccionar un aeropuerto de llegada" />
                                     </div>
                                 </div>
 
@@ -228,9 +242,15 @@
                                 <div class="row mb-4">
                                     <div class="col-md-6 mb-3">
                                         <h:outputLabel for="fechaSalida" value="Fecha de salida" />
-                                        <p:datePicker id="fechaSalida" value="#{itinerarioBean.fechaIda}" showIcon="true"
-                                                      required="true" requiredMessage="Debe seleccionar la fecha de salida"
-                                                      pattern="dd/MM/yyyy" readonlyInput="true" styleClass="w-100" />
+                                        <p:datePicker id="fechaSalida"
+                                                      value="#{itinerarioBean.fechaIda}"
+                                                      showIcon="true"
+                                                      required="true"
+                                                      requiredMessage="Debe seleccionar la fecha de salida"
+                                                      pattern="dd/MM/yyyy"
+                                                      readonlyInput="true"
+                                                      styleClass="w-100"
+                                                      mindate="#{java.time.LocalDate.now()}" />
                                     </div>
                                 </div>
 
@@ -247,6 +267,7 @@
                                 <p:messages id="messages" showSummary="true" showDetail="false" closable="true" />
                             </h:form>
                         </div>
+
 
                         <!-- 🔹 FORMULARIO: Ida y Vuelta -->
                         <div class="tab-pane fade" id="round-trip" role="tabpanel" aria-labelledby="round-trip-tab">

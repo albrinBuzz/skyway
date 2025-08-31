@@ -189,7 +189,7 @@ public class BookingBean implements Serializable{
                 .toArray(Integer[]::new);
 
         try {
-            String mensaje = reservaService.confirmarReserva(vueloSeleccionado.getIdVuelo(), asientos, pasajero.getRutUsuario());
+            String mensaje = reservaService.confirmarReserva(vueloSeleccionado.getIdVuelo(), asientos, pasajero.getRutUsuario(),1);
 
             FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, "Reserva confirmada", mensaje);
             PrimeFaces.current().dialog().showMessageDynamic(message);

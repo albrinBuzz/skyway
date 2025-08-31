@@ -6,6 +6,7 @@ import com.SkyWay.modules.asiento.domain.model.Asiento;
 import com.SkyWay.modules.capacidadclase.domain.model.CapacidadClase;
 import com.SkyWay.modules.modeloavion.domain.model.ModeloAvion;
 import com.SkyWay.modules.vuelo.domain.model.Vuelo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.sql.Timestamp;
 import java.util.List;
@@ -58,7 +59,7 @@ public class Avion implements Serializable {
 	private List<CapacidadClase> capacidadClases1;
 
 
-
+	@JsonIgnore
 	//bi-directional many-to-one association to Vuelo
 	@OneToMany(mappedBy="avion")
 	private List<Vuelo> vuelos;

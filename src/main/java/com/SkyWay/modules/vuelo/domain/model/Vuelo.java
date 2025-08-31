@@ -12,6 +12,7 @@ import com.SkyWay.modules.precioasiento.domain.model.PrecioAsiento;
 import com.SkyWay.modules.reservaasiento.domain.model.ReservaAsiento;
 import com.SkyWay.modules.segmentovuelo.domain.model.SegmentoVuelo;
 import com.SkyWay.modules.turno.domain.model.Turno;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.sql.Timestamp;
 import java.util.Date;
@@ -44,31 +45,38 @@ public class Vuelo implements Serializable {
 	private String numeroVuelo;
 
 	//bi-directional many-to-one association to ItinerarioVuelo
+	@JsonIgnore
 	@OneToMany(mappedBy="vuelo")
 	private List<ItinerarioVuelo> itinerarioVuelos;
 
 	//bi-directional many-to-one association to PrecioAsiento
+	@JsonIgnore
 	@OneToMany(mappedBy="vuelo")
 	private List<PrecioAsiento> precioAsientos;
 
 	//bi-directional many-to-one association to ReservaAsiento
+	@JsonIgnore
 	@OneToMany(mappedBy="vuelo")
 	private List<ReservaAsiento> reservaAsientos;
 
+	@JsonIgnore
 	//bi-directional many-to-one association to SegmentoVuelo
 	@OneToMany(mappedBy="vuelo",fetch = FetchType.EAGER)
 	private List<SegmentoVuelo> segmentoVuelos;
 
 	//bi-directional many-to-one association to Turno
+	@JsonIgnore
 	@OneToMany(mappedBy="vuelo")
 	private List<Turno> turnos;
 
 	//bi-directional many-to-one association to Aerolinea
+	@JsonIgnore
 	@ManyToOne
 	@JoinColumn(name="id_aerolinea")
 	private Aerolinea aerolinea;
 
 	//bi-directional many-to-one association to Avion
+	@JsonIgnore
 	@ManyToOne
 	@JoinColumn(name="id_avion")
 	private Avion avion;
@@ -79,6 +87,7 @@ public class Vuelo implements Serializable {
 	private EstadoVuelo estadoVuelo;
 
 	//bi-directional many-to-one association to Piloto
+	@JsonIgnore
 	@ManyToOne
 	@JoinColumn(name="rut_piloto")
 	private Piloto piloto;
