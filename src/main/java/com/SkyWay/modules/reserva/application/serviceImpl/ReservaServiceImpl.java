@@ -7,9 +7,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import com.SkyWay.modules.asiento.presentation.dto.InfoAsientoReservaDTO;
+import com.SkyWay.modules.pasajero.domain.model.Pasajero;
 import com.SkyWay.modules.reserva.domain.model.Reserva;
 import com.SkyWay.modules.reserva.domain.repository.ReservaRepository;
 import com.SkyWay.modules.reserva.domain.service.ReservaService;
+import com.SkyWay.modules.reserva.presentation.dto.TicketInfo;
 import com.SkyWay.util.Logger;
 import jakarta.persistence.*;
 
@@ -19,6 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.SkyWay.dto.BoletoDTO;
 import com.SkyWay.dto.ReservaVueloDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 
 @Service
@@ -115,6 +120,18 @@ public class ReservaServiceImpl implements ReservaService {
 		}
 	}
 
+	public List<Reserva> obtenerReservasPorPasajero(Pasajero pasajero) {
+		return reservaRepository.findByPasajero(pasajero);
+	}
+
+	public List<Reserva> obtenerReservasPorRut(String rut) {
+		return reservaRepository.findByPasajero_Rut(rut);
+	}
+
+	public Page<Reserva> obtenerReservasPorRut(String rut, Pageable pageable) {
+		return reservaRepository.findByPasajero_Rut(rut, pageable);
+	}
+
 	@Override
 	@Transactional
 	public BoletoDTO getBoleto(Integer id) {
@@ -164,6 +181,20 @@ public class ReservaServiceImpl implements ReservaService {
 
 		// Retornar el DTO con los datos mapeados
 		return boleto;
+	}
+
+	@Override
+	public List<TicketInfo> getTicket(String rut, Integer idReserva) {
+
+		Query query = em.createNativeQuery(
+				"SELECT * FROM fn_getTicket(:p_rut, :p_reserva);",
+				TicketInfo.class);
+		query.setParameter("p_rut", rut);
+		query.setParameter("p_reserva", idReserva);
+
+		//asientos= query.getResultList();
+
+		return query.getResultList();
 	}
 
 	@Override

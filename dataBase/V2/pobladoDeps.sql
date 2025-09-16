@@ -1,3 +1,13 @@
+INSERT INTO Continente (ID_CONTINENTE, Nombre) VALUES
+(1, 'América del Sur'),
+(2, 'América del Norte'),
+(3, 'Europa'),
+(4, 'Asia'),
+(5, 'Oceanía'),
+(6, 'África'),
+(7, 'Oriente Medio');
+
+
 INSERT INTO Pais (ID_PAIS, Nombre) VALUES
 (1, 'Chile'),
 (2, 'Uruguay'),
@@ -18,7 +28,64 @@ INSERT INTO Pais (ID_PAIS, Nombre) VALUES
 (17, 'Argentina'),
 (18, 'Panama'),
 (19, 'Qatar'),
-(20, 'Emiratos Arabes Unidos');
+(20, 'Emiratos Arabes Unidos'),
+(21, 'India'),
+(22, 'Corea del Sur'),
+(23, 'Sudáfrica'),
+(24, 'Egipto'),
+(25, 'Nueva Zelanda'),
+(26, 'Rusia'),
+(27, 'Turquía'),
+(28, 'Indonesia'),
+(29, 'Filipinas'),
+(30, 'Tailandia');
+-- Nuevos países (Europa)
+INSERT INTO Pais (ID_PAIS, Nombre, ID_CONTINENTE) VALUES
+(32, 'Países Bajos', 3),
+(33, 'Bélgica', 3),
+(34, 'Suiza', 3),
+(35, 'Austria', 3),
+(36, 'Dinamarca', 3),
+(37, 'Suecia', 3),
+(38, 'Portugal', 3),
+(39, 'Finlandia', 3),
+(40, 'Noruega', 3),
+(41, 'República Checa', 3),
+(42, 'Polonia', 3),           -- Europa
+(43, 'Hungría', 3),           -- Europa
+(44, 'Rumanía', 3),           -- Europa
+(45, 'Bulgaria', 3),          -- Europa
+(46, 'Croacia', 3),           -- Europa
+(47, 'Eslovenia', 3),         -- Europa
+(48, 'Serbia', 3),            -- Europa
+(49, 'Albania', 3),           -- Europa
+(50, 'Macedonia del Norte', 3); -- Europa
+
+
+
+-- Asignar Continente América del Sur
+UPDATE Pais SET ID_CONTINENTE = 1 WHERE Nombre IN ('Chile', 'Uruguay', 'Brasil', 'Perú', 'Colombia', 'Argentina');
+
+-- Asignar Continente América del Norte
+UPDATE Pais SET ID_CONTINENTE = 2 WHERE Nombre IN ('USA', 'Canada', 'Mexico', 'Panama');
+
+-- Asignar Continente Europa
+UPDATE Pais SET ID_CONTINENTE = 3 WHERE Nombre IN ('España', 'Francia', 'Reino Unido', 'Alemania', 'Italia');
+
+-- Asignar Continente Asia
+UPDATE Pais SET ID_CONTINENTE = 4 WHERE Nombre IN ('China', 'Japon', 'India', 'Corea del Sur', 'Rusia', 'Turquía', 'Indonesia', 'Filipinas', 'Tailandia');
+
+-- Asignar Continente Oceanía
+UPDATE Pais SET ID_CONTINENTE = 5 WHERE Nombre IN ('Australia', 'Nueva Zelanda');
+
+-- Asignar Continente Oriente Medio
+UPDATE Pais SET ID_CONTINENTE = 7 WHERE Nombre IN ('Qatar', 'Emiratos Arabes Unidos');
+
+-- Asignar Continente África
+UPDATE Pais SET ID_CONTINENTE = 6 WHERE Nombre IN ('Sudáfrica', 'Egipto');
+
+
+
 
 -- Insertar datos en la tabla Ciudad
 INSERT INTO Ciudad (ID_CIUDAD, Nombre, ID_PAIS) VALUES
@@ -50,20 +117,44 @@ INSERT INTO Ciudad (ID_CIUDAD, Nombre, ID_PAIS) VALUES
 (26, 'Frankfurt', 10),
 (27, 'PanamaCity', 18),
 (28, 'Chicago', 4),
-(29, 'Houston', 4);
-
-
-INSERT INTO Aerolinea (ID_AEROLINEA, Nombre, Codigo) VALUES
-  (1, 'LATAM Airlines Brasil', 'JJ'),
-  (2, 'Delta Air Lines', 'DL'),
-  (3, 'American Airlines', 'AA'),
-  (4, 'British Airways', 'BA'),
-  (5, 'Air France', 'AF'),
-  (6, 'Lufthansa', 'LH'),
-  (7, 'Emirates', 'EK'),
-  (8, 'Qatar Airways', 'QR'),
-  (9, 'Air Canada', 'AC'),
-  (10, 'Aeromexico', 'AM');
+(29, 'Houston', 4),
+(30, 'NuevaDelhi', 21),
+(31, 'Seul', 22),
+(32, 'CiudadDelCabo', 23),
+(33, 'ElCairo', 24),
+(34, 'Auckland', 25),
+(35, 'Moscu', 26),
+(36, 'Estambul', 27),
+(37, 'Yakarta', 28),
+(38, 'Manila', 29),
+(39, 'Bangkok', 30);
+-- Nuevas ciudades Europa (IDs 50 a 59)
+INSERT INTO Ciudad (ID_CIUDAD, Nombre, ID_PAIS) VALUES
+(50, 'Ámsterdam', 32),
+(51, 'Bruselas', 33),
+(52, 'Zurich', 34),
+(53, 'Viena', 35),
+(54, 'Copenhague', 36),
+(55, 'Estocolmo', 37),
+(56, 'Lisboa', 38),
+(57, 'Helsinki', 39),
+(58, 'Oslo', 40),
+(59, 'Praga', 41),
+(60, 'San Francisco', 4),
+(61, 'Washington D.C.', 4),
+(62, 'Boston', 4),
+(63, 'Budapest', 43),              -- Hungría
+(64, 'Cluj-Napoca', 44),           -- Rumanía
+(65, 'Sofia', 45),                 -- Bulgaria
+(66, 'Zagreb', 46),                -- Croacia
+(67, 'Ljubljana', 47),             -- Eslovenia
+(68, 'Belgrado', 48),              -- Serbia
+(69, 'Tirana', 49),                -- Albania
+(70, 'Skopie', 50),                -- Macedonia del Norte
+(71, 'Melbourne', 14),             -- Australia
+(72, 'Auckland', 25),              -- Nueva Zelanda
+(73, 'Brisbane', 14),              -- Australia
+(74, 'Wellington', 25);            -- Nueva Zelanda
 
 INSERT INTO Aeropuerto (ID_AEROPUERTO, Nombre_Aeropuerto, Codigo_IATA, ID_CIUDAD) VALUES
 (1, 'Aeropuerto Internacional Comodoro Arturo Merino Benítez', 'SCL', 1),
@@ -93,9 +184,44 @@ INSERT INTO Aeropuerto (ID_AEROPUERTO, Nombre_Aeropuerto, Codigo_IATA, ID_CIUDAD
 (25, 'Dubai Intl. Airport', 'DXB', 25),
 (26, 'Frankfurt am Main', 'FRA', 26),
 (27, 'Tocumen Intl.', 'PTY', 27),
-(28, 'Chicago O\'Hare', 'ORD', 28),
+(28, 'Chicago OHare', 'ORD', 28),
 (29, 'George Bush Intercontinental', 'IAH', 29),
-(30, 'Gatwick Airport', 'LGW', 13);
+(30, 'Gatwick Airport', 'LGW', 13),
+(31, 'Indira Gandhi Intl.', 'DEL', 30),
+(32, 'Incheon Intl.', 'ICN', 31),
+(33, 'Cape Town Intl.', 'CPT', 32),
+(34, 'Cairo Intl.', 'CAI', 33),
+(35, 'Auckland Intl.', 'AKL', 34),
+(36, 'Sheremetyevo Intl.', 'SVO', 35),
+(37, 'Istanbul Airport', 'IST', 36),
+(38, 'Soekarno-Hatta Intl.', 'CGK', 37),
+(39, 'Ninoy Aquino Intl.', 'MNL', 38),
+(40, 'Suvarnabhumi Airport', 'BKK', 39);
+
+INSERT INTO Aeropuerto (ID_AEROPUERTO, Nombre_Aeropuerto, Codigo_IATA, ID_CIUDAD) VALUES
+(51, 'Amsterdam Schiphol Airport', 'AMS', 50),
+(52, 'Brussels Airport', 'BRU', 51),
+(53, 'Zurich Airport', 'ZRH', 52),
+(54, 'Vienna International Airport', 'VIE', 53),
+(55, 'Copenhagen Airport', 'CPH', 54),
+(56, 'Stockholm Arlanda Airport', 'ARN', 55),
+(57, 'Humberto Delgado Airport', 'LIS', 56),
+(58, 'Helsinki-Vantaa Airport', 'HEL', 57),
+(59, 'Oslo Gardermoen Airport', 'OSL', 58),
+(60, 'Václav Havel Airport Prague', 'PRG', 59),
+(61, 'San Francisco International Airport', 'SFO', 60),
+(62, 'Washington D.C. Dulles International Airport', 'IAD', 61),
+(63, 'Logan International Airport', 'BOS', 62),
+(64, 'Budapest Ferenc Liszt International Airport', 'BUD', 63),   -- Budapest, Hungría
+(65, 'Cluj-Napoca International Airport', 'CLJ', 64),            -- Cluj-Napoca, Rumanía
+(66, 'Sofia Airport', 'SOF', 65),                                 -- Sofia, Bulgaria
+(67, 'Zagreb International Airport', 'ZAG', 66),                 -- Zagreb, Croacia
+(68, 'Ljubljana Jože Pučnik Airport', 'LJU', 67),                -- Ljubljana, Eslovenia
+(69, 'Belgrade Nikola Tesla Airport', 'BEG', 68),                -- Belgrado, Serbia
+(70, 'Tirana International Airport', 'TIA', 69),                 -- Tirana, Albania
+(71, 'Skopje Alexander the Great Airport', 'SKP', 70),           -- Skopie, Macedonia del Norte
+(72, 'Brisbane Airport', 'BNE', 73),                              -- Brisbane, Australia
+(73, 'Wellington Airport', 'WLG', 74);                            -- Wellington, Nueva Zelanda
 
 
 -- Suponiendo que ya existen Aeropuertos con ID 1 al 5
@@ -277,6 +403,224 @@ INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
 ('HH3', 'South Terminal', 30);
 
 
+-- Puertas de embarque Europa (Aeropuertos 51–60)
+INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
+-- AMS
+('AAA1', 'Terminal 1', 51),
+('AAA2', 'Terminal 1', 51),
+('AAA3', 'Terminal 2', 51),
+-- BRU
+('BBB1', 'Terminal A', 52),
+('BBB2', 'Terminal A', 52),
+('BBB3', 'Terminal B', 52),
+-- ZRH
+('CCC1', 'Terminal A', 53),
+('CCC2', 'Terminal A', 53),
+('CCC3', 'Terminal B', 53),
+-- VIE
+('DDD1', 'Terminal 1', 54),
+('DDD2', 'Terminal 2', 54),
+('DDD3', 'Terminal 2', 54),
+-- CPH
+('EEE1', 'Terminal 1', 55),
+('EEE2', 'Terminal 1', 55),
+('EEE3', 'Terminal 3', 55),
+-- ARN
+('FFF1', 'Terminal 2', 56),
+('FFF2', 'Terminal 2', 56),
+('FFF3', 'Terminal 5', 56),
+-- LIS
+('GGG1', 'Terminal 1', 57),
+('GGG2', 'Terminal 1', 57),
+('GGG3', 'Terminal 2', 57),
+-- HEL
+('HHH1', 'Terminal 1', 58),
+('HHH2', 'Terminal 1', 58),
+('HHH3', 'Terminal 2', 58),
+-- OSL
+('III1', 'Terminal 1', 59),
+('III2', 'Terminal 1', 59),
+('III3', 'Terminal 2', 59),
+-- PRG
+('JJJ1', 'Terminal 1', 60),
+('JJJ2', 'Terminal 1', 60),
+('JJJ3', 'Terminal 2', 60);
+
+-- Puertas de embarque para Ninoy Aquino Intl. (MNL)
+INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
+('P001', 'Terminal 1', 39),
+('P002', 'Terminal 1', 39),
+('P003', 'Terminal 2', 39);
+
+-- Puertas de embarque para Cape Town Intl. (CPT)
+INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
+('P004', 'Terminal A', 33),
+('P005', 'Terminal B', 33),
+('P006', 'Terminal C', 33);
+
+-- Puertas de embarque para Indira Gandhi Intl. (DEL)
+INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
+('P007', 'Terminal 1', 31),
+('P008', 'Terminal 2', 31),
+('P009', 'Terminal 3', 31);
+
+-- Puertas de embarque para Cairo Intl. (CAI)
+INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
+('P010', 'Terminal 1', 34),
+('P011', 'Terminal 2', 34),
+('P012', 'Terminal 3', 34);
+
+-- Puertas de embarque para Suvarnabhumi Airport (BKK)
+INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
+('P013', 'Terminal 1', 40),
+('P014', 'Terminal 2', 40),
+('P015', 'Terminal 3', 40);
+
+-- Puertas de embarque para Istanbul Airport (IST)
+INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
+('P016', 'Terminal 1', 37),
+('P017', 'Terminal 2', 37),
+('P018', 'Terminal 3', 37);
+
+-- Puertas de embarque para Incheon Intl. (ICN)
+INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
+('P019', 'Terminal 1', 32),
+('P020', 'Terminal 2', 32),
+('P021', 'Terminal 3', 32);
+
+-- Puertas de embarque para Soekarno-Hatta Intl. (CGK)
+INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
+('P022', 'Terminal 1', 38),
+('P023', 'Terminal 2', 38),
+('P024', 'Terminal 3', 38);
+
+-- Puertas de embarque para Sheremetyevo Intl. (SVO)
+INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
+('P025', 'Terminal A', 36),
+('P026', 'Terminal B', 36),
+('P027', 'Terminal C', 36);
+
+-- Puertas de embarque para Auckland Intl. (AKL)
+INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
+('P028', 'Terminal 1', 35),
+('P029', 'Terminal 2', 35),
+('P030', 'Terminal 3', 35);
+
+-- Puertas de embarque para el Aeropuerto Internacional de San Francisco
+INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
+('A1', 'Terminal 1', 60),    -- San Francisco International Airport
+('A2', 'Terminal 1', 60),    -- San Francisco International Airport
+('B1', 'Terminal 2', 60),    -- San Francisco International Airport
+('B2', 'Terminal 2', 60),    -- San Francisco International Airport
+('C1', 'Terminal 3', 60),    -- San Francisco International Airport
+('C2', 'Terminal 3', 60);    -- San Francisco International Airport
+
+-- Puertas de embarque para el Aeropuerto Internacional Dulles de Washington D.C.
+INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
+('A10', 'Terminal A', 61),    -- Washington D.C. Dulles International Airport
+('A11', 'Terminal A', 61),    -- Washington D.C. Dulles International Airport
+('B10', 'Terminal B', 61),    -- Washington D.C. Dulles International Airport
+('B11', 'Terminal B', 61),    -- Washington D.C. Dulles International Airport
+('C10', 'Terminal C', 61),    -- Washington D.C. Dulles International Airport
+('C11', 'Terminal C', 61);    -- Washington D.C. Dulles International Airport
+
+-- Puertas de embarque para el Aeropuerto Internacional Logan de Boston
+INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
+('A2', 'Terminal A', 62),    -- Logan International Airport (Boston, USA)
+('A3', 'Terminal A', 62),    -- Logan International Airport (Boston, USA)
+('B3', 'Terminal B', 62),    -- Logan International Airport (Boston, USA)
+('B4', 'Terminal B', 62),    -- Logan International Airport (Boston, USA)
+('C1', 'Terminal C', 62),    -- Logan International Airport (Boston, USA)
+('C2', 'Terminal C', 62);    -- Logan International Airport (Boston, USA)
+
+-- Puertas de embarque para el Aeropuerto Internacional Ferenc Liszt de Budapest
+INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
+('1A', 'Terminal A', 63),    -- Budapest Ferenc Liszt International Airport (Budapest, Hungría)
+('1B', 'Terminal A', 63),    -- Budapest Ferenc Liszt International Airport (Budapest, Hungría)
+('2A', 'Terminal B', 63),    -- Budapest Ferenc Liszt International Airport (Budapest, Hungría)
+('2B', 'Terminal B', 63),    -- Budapest Ferenc Liszt International Airport (Budapest, Hungría)
+('3A', 'Terminal C', 63),    -- Budapest Ferenc Liszt International Airport (Budapest, Hungría)
+('3B', 'Terminal C', 63);    -- Budapest Ferenc Liszt International Airport (Budapest, Hungría)
+
+-- Puertas de embarque para el Aeropuerto Internacional de Cluj-Napoca
+INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
+('10', 'Terminal 1', 64),    -- Cluj-Napoca International Airport (Cluj-Napoca, Rumanía)
+('11', 'Terminal 1', 64),    -- Cluj-Napoca International Airport (Cluj-Napoca, Rumanía)
+('12', 'Terminal 2', 64),    -- Cluj-Napoca International Airport (Cluj-Napoca, Rumanía)
+('13', 'Terminal 2', 64);    -- Cluj-Napoca International Airport (Cluj-Napoca, Rumanía)
+
+-- Puertas de embarque para el Aeropuerto Internacional de Sofia
+INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
+('1', 'Terminal 1', 65),    -- Sofia Airport (Sofia, Bulgaria)
+('2', 'Terminal 1', 65),    -- Sofia Airport (Sofia, Bulgaria)
+('3', 'Terminal 2', 65),    -- Sofia Airport (Sofia, Bulgaria)
+('4', 'Terminal 2', 65);    -- Sofia Airport (Sofia, Bulgaria)
+
+-- Puertas de embarque para el Aeropuerto Internacional de Zagreb
+INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
+('A1', 'Terminal A', 66),    -- Zagreb International Airport (Zagreb, Croacia)
+('A2', 'Terminal A', 66),    -- Zagreb International Airport (Zagreb, Croacia)
+('B1', 'Terminal B', 66),    -- Zagreb International Airport (Zagreb, Croacia)
+('B2', 'Terminal B', 66);    -- Zagreb International Airport (Zagreb, Croacia)
+
+-- Puertas de embarque para el Aeropuerto Internacional de Ljubljana
+INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
+('1', 'Terminal 1', 67),    -- Ljubljana Jože Pučnik Airport (Ljubljana, Eslovenia)
+('2', 'Terminal 1', 67),    -- Ljubljana Jože Pučnik Airport (Ljubljana, Eslovenia)
+('3', 'Terminal 2', 67),    -- Ljubljana Jože Pučnik Airport (Ljubljana, Eslovenia)
+('4', 'Terminal 2', 67);    -- Ljubljana Jože Pučnik Airport (Ljubljana, Eslovenia)
+
+-- Puertas de embarque para el Aeropuerto Internacional Nikola Tesla de Belgrado
+INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
+('A1', 'Terminal A', 68),    -- Belgrade Nikola Tesla Airport (Belgrado, Serbia)
+('A2', 'Terminal A', 68),    -- Belgrade Nikola Tesla Airport (Belgrado, Serbia)
+('B1', 'Terminal B', 68),    -- Belgrade Nikola Tesla Airport (Belgrado, Serbia)
+('B2', 'Terminal B', 68);    -- Belgrade Nikola Tesla Airport (Belgrado, Serbia)
+
+-- Puertas de embarque para el Aeropuerto Internacional de Tirana
+INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
+('1', 'Terminal 1', 69),    -- Tirana International Airport (Tirana, Albania)
+('2', 'Terminal 1', 69),    -- Tirana International Airport (Tirana, Albania)
+('3', 'Terminal 2', 69);    -- Tirana International Airport (Tirana, Albania)
+
+-- Puertas de embarque para -- Tirana International Airport (Tirana, Albania)
+INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
+('A1', 'Terminal 1', 70),
+('A2', 'Terminal 1', 70),
+('B1', 'Terminal 2', 70);
+
+-- Puertas de embarque para el Aeropuerto Internacional de Skopje
+INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
+('A1', 'Terminal 1', 71),    -- Skopje Alexander the Great Airport (Skopie, Macedonia del Norte)
+('A2', 'Terminal 1', 71),    -- Skopje Alexander the Great Airport (Skopie, Macedonia del Norte)
+('B1', 'Terminal 2', 71);    -- Skopje Alexander the Great Airport (Skopie, Macedonia del Norte)
+
+-- Puertas de embarque para el Aeropuerto Internacional de Brisbane
+INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
+('1A', 'Terminal 1', 72),    -- Brisbane Airport (Brisbane, Australia)
+('1B', 'Terminal 1', 72),    -- Brisbane Airport (Brisbane, Australia)
+('2A', 'Terminal 2', 72),    -- Brisbane Airport (Brisbane, Australia)
+('2B', 'Terminal 2', 72);    -- Brisbane Airport (Brisbane, Australia)
+
+-- Puertas de embarque para el Aeropuerto Internacional de Wellington
+INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
+('1', 'Terminal 1', 73),    -- Wellington Airport (Wellington, Nueva Zelanda)
+('2', 'Terminal 2', 73);    -- Wellington Airport (Wellington, Nueva Zelanda)
+
+select * from aeropuerto where id_aeropuerto=71;
+
+
+INSERT INTO Aerolinea (ID_AEROLINEA, Nombre, Codigo) VALUES
+  (1, 'LATAM Airlines Brasil', 'JJ'),
+  (2, 'Delta Air Lines', 'DL'),
+  (3, 'American Airlines', 'AA'),
+  (4, 'British Airways', 'BA'),
+  (5, 'Air France', 'AF'),
+  (6, 'Lufthansa', 'LH'),
+  (7, 'Emirates', 'EK'),
+  (8, 'Qatar Airways', 'QR'),
+  (9, 'Air Canada', 'AC'),
+  (10, 'Aeromexico', 'AM');
 
 
 INSERT INTO Clase_asiento (Descripcion) VALUES
@@ -509,3 +853,10 @@ VALUES
 INSERT INTO Pasajero (RUT, Nacionalidad)
 VALUES
 ('12345678-9', 'Chilena');
+
+
+select * from aeropuerto arp
+join puerta_embarque prt
+on prt.id_aeropuerto = arp.id_aeropuerto
+where prt.id_aeropuerto is null;
+

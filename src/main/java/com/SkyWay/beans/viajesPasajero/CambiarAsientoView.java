@@ -9,7 +9,7 @@ import java.util.Optional;
 import org.primefaces.PrimeFaces;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.SkyWay.dto.InfoAsientoDTO;
+import com.SkyWay.modules.asiento.presentation.dto.InfoAsientoDTO;
 import com.SkyWay.dto.InfoVueloDTO;
 import com.SkyWay.modules.asiento.domain.service.AsientoService;
 import com.SkyWay.modules.reservaasiento.domain.service.ReservaAsientoService;

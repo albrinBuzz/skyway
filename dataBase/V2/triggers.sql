@@ -1,23 +1,44 @@
-DO $$
+-- Crear la función del trigger
+CREATE OR REPLACE FUNCTION fn_insertarAsientos()
+RETURNS TRIGGER AS $$
 DECLARE
-
-	 cursoFunciones  cursor for
-		SELECT routine_name AS function_name,
-		routine_type AS function_type
-		FROM information_schema.routines
-		WHERE   routine_schema = 'public'
-		order by routine_type;
+    indice INTEGER;
+    letra CHAR;
+    asiento VARCHAR;
 BEGIN
+    FOR indice IN 0 .. NEW.cantidad - 1 LOOP
+        letra := chr(65 + (indice % 6));  -- A-F
+        asiento := (indice + 1) || letra;
 
-	for cols in cursoFunciones
-	loop
-     RAISE NOTICE 'ID: %, Name: %', cols.function_name, cols.function_type;
+        INSERT INTO Asiento (Numero_Asiento, ID_CLASE, ID_AVION)
+        VALUES (asiento, NEW.ID_CLASE, NEW.ID_AVION);
+    END LOOP;
 
-	execute ' drop  '|| cols.function_type ||' '||cols.function_name||' cascade';
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
-	end loop;
 
-END $$;
+
+
+-- Crear el trigger que llama a la función cuando se inserta un avión
+CREATE TRIGGER trigger_insertar_asientos
+AFTER INSERT ON Capacidad_Clase
+FOR EACH ROW
+EXECUTE FUNCTION fn_insertarAsientos();
+
+
+/*ALTER TABLE Segmento_Vuelo DISABLE TRIGGER trg_set_orden_segmento_vuelo;
+
+ALTER TABLE Segmento_Vuelo DISABLE TRIGGER trg_set_numero_vuelo;
+
+ALTER TABLE Segmento_Vuelo DISABLE TRIGGER trg_set_fecha_vuelo;
+
+ALTER TABLE Itinerario_Vuelo DISABLE TRIGGER trg_set_fecha_itinerario;
+
+ALTER TABLE Itinerario_Vuelo DISABLE TRIGGER trg_set_orden_itinerario_vuelo;*/
+
+
 
 
 DO $$
@@ -144,6 +165,7 @@ EXECUTE FUNCTION fn_set_orden_segmento_vuelo();
 
 
 
+
 CREATE OR REPLACE FUNCTION fn_set_numero_vuelo()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -200,6 +222,8 @@ CREATE TRIGGER trg_set_numero_vuelo
 AFTER INSERT ON Segmento_Vuelo
 FOR EACH ROW
 EXECUTE FUNCTION fn_set_numero_vuelo();
+
+
 
 
 CREATE OR REPLACE FUNCTION fn_set_fecha_itinerario()
@@ -305,3 +329,58 @@ AFTER INSERT ON Segmento_Vuelo
 FOR EACH ROW
 EXECUTE FUNCTION fn_set_fecha_vuelo();
 
+
+/*ALTER TABLE Segmento_Vuelo DISABLE TRIGGER trg_set_orden_segmento_vuelo;
+
+ALTER TABLE Segmento_Vuelo DISABLE TRIGGER trg_set_numero_vuelo;
+
+ALTER TABLE Segmento_Vuelo DISABLE TRIGGER trg_set_fecha_vuelo;
+
+ALTER TABLE Itinerario_Vuelo DISABLE TRIGGER trg_set_fecha_itinerario;
+
+ALTER TABLE Itinerario_Vuelo DISABLE TRIGGER trg_set_orden_itinerario_vuelo;*/
+
+
+SELECT
+    c1.nombre || '-' || aprt1.nombre_aeropuerto || ' ' || aprt1.codigo_iata AS origen,
+    c2.nombre || '-' || aprt2.nombre_aeropuerto || ' ' || aprt2.codigo_iata AS destino,
+    it.hora_salida,
+	it.hora_llegada
+FROM itinerario it
+JOIN aeropuerto aprt1 ON aprt1.id_aeropuerto = it.origen_aeropuerto
+JOIN aeropuerto aprt2 ON aprt2.id_aeropuerto = it.destino_aeropuerto
+JOIN ciudad c1 ON c1.id_ciudad = aprt1.id_ciudad
+JOIN ciudad c2 ON c2.id_ciudad = aprt2.id_ciudad
+WHERE it.hora_salida >= NOW()
+  AND it.hora_salida < NOW() + INTERVAL '7 days'
+ORDER BY it.hora_salida ASC;
+
+SELECT
+    v.id_vuelo,
+    v.numero_vuelo,
+    c.descripcion,
+    MAX(p.precio) AS precio_maximo
+FROM vuelo v
+JOIN precio_asiento p ON p.id_vuelo = v.id_vuelo
+JOIN clase_asiento c ON c.id_clase = p.id_clase
+GROUP BY v.id_vuelo, v.numero_vuelo, c.descripcion
+ORDER BY precio_maximo DESC
+LIMIT 20;
+
+--CREATE INDEX idx_precioAsientoIdx ON precio_asiento(precio);
+
+--CREATE INDEX idx_aeropuertoOrg ON segmento_vuelo(id_aeropuerto_origen);
+
+--CREATE INDEX idx_aeropuertoDest ON segmento_vuelo(id_aeropuerto_destino);
+
+--drop INDEX idx_aeropuertoDest;
+
+
+select
+sgm.id_vuelo
+from segmento_vuelo sgm
+where sgm.id_aeropuerto_destino=120 and sgm.id_aeropuerto_origen=90;
+
+
+--select
+--ALTER TABLE Reserva_Asiento ADD CONSTRAINT unique_reserva_asiento UNIQUE (ID_VUELO, ID_ASIENTO);

@@ -45,7 +45,7 @@ public class Pasajero implements Serializable {
 	private Usuario usuario;
 
 	//bi-directional many-to-one association to Reserva
-	@OneToMany(mappedBy="pasajero")
+	@OneToMany(mappedBy="pasajero",fetch = FetchType.LAZY)
 	private List<Reserva> reservas;
 
 	public Pasajero() {

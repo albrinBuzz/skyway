@@ -284,7 +284,7 @@ BEGIN
 
 
         IF asiento_en_reserva > 0 THEN
-            SELECT numero_asiento INTO numero_asiento
+            SELECT ast.numero_asiento INTO numero_asiento
             FROM asiento ast
             WHERE ast.id_asiento = id_asientoP;
 
@@ -319,7 +319,7 @@ $$;
 
 
 
-CREATE OR REPLACE PROCEDURE spPreReserva(
+/*CREATE OR REPLACE PROCEDURE spPreReserva(
     IN p_idVuelo INT,
     IN p_idReserva INT,
     IN p_asientos INT[],
@@ -383,6 +383,6 @@ BEGIN
             p_resultado := 'Error en la pre-reserva: ' || SQLERRM;
     END;
 END;
-$$;
+$$;*/
 
 

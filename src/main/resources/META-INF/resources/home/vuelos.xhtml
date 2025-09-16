@@ -119,9 +119,12 @@
     </h:head>
 
     <ui:define name="contenido">
+        <h:messages globalOnly="true" />
+        <p:growl id="growl"/>
+        <p:messages id="messages" showSummary="true" showDetail="true" closable="true" autoUpdate="true" />
+
         <h:form id="vueloForm">
-            <h:messages globalOnly="true" />
-            <p:messages id="messages" />
+
 
             <div class="flex-container">
                 <!-- Sección izquierda: tabla de vuelos -->
@@ -129,7 +132,10 @@
                     <!-- Mensaje de tipo de vuelo -->
                     <h:outputText id="tipoVuelo" value="Tipo de vuelo: #{itinerarioDetalleBean.tipoVuelo}" styleClass="tipo-vuelo-msg" />
 
-                    <p:dataTable id="tablaVuelos" value="#{itinerarioDetalleBean.vuelosIda}" var="vuelo" paginator="true" rows="5" rowKey="#{vuelo.itinerario}" selectionMode="single" selection="#{itinerarioDetalleBean.selectedVuelo}">
+                    <p:dataTable id="tablaVuelos" value="#{itinerarioDetalleBean.vuelosIda}"
+                                 var="vuelo" paginator="true" rows="5"
+                                 rowKey="#{vuelo.itinerario}" selectionMode="single" selection="#{itinerarioDetalleBean.selectedVuelo}"
+                                 emptyMessage="🚫 No se encontraron vuelos para la fecha seleccionada, cambie de destino o fecha.">
                         <p:column headerText="Hora de Salida">
                             <h:outputText value="#{vuelo.horaSalida24h}" />
                         </p:column>
@@ -141,7 +147,7 @@
                         </p:column>
                         <p:column headerText="Cantidad de Paradas">
                             <h:outputText value="#{vuelo.cantParadas}" />
-                            <p:commandButton value="Ver Detalles" icon="pi pi-info-circle" action="#{itinerarioDetalleBean.showParadas(vuelo)}" update=":vueloForm:sidebarParadas"
+                            <p:commandButton value="Ver Detalles" icon="pi pi-info-circle" action="#{itinerarioDetalleBean.showParadas(vuelo.itinerario)}" update=":vueloForm:sidebarParadas"
                                              oncomplete="PF('sidebarParadas').show();" />
                         </p:column>
                         <p:column headerText="Duración">

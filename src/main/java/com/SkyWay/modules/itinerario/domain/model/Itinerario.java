@@ -42,6 +42,7 @@ public class Itinerario implements Serializable {
 	@Column(name="hora_salida")
 	private Timestamp horaSalida;
 
+
 	@Column(name="numero_escalas")
 	private Integer numeroEscalas;
 
@@ -69,6 +70,7 @@ public class Itinerario implements Serializable {
 	private List<ReservaItinerario> reservaItinerarios;
 
 	public Itinerario() {
+
 	}
 
 	public Integer getIdItinerario() {

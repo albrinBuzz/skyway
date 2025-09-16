@@ -1,4 +1,4 @@
-package com.SkyWay.modules.segmentovuelo.presentation.bean;
+package com.SkyWay.views.Vuelo;
 
 import com.SkyWay.modules.segmentovuelo.domain.service.SegmentoVueloService;
 import jakarta.faces.view.ViewScoped;

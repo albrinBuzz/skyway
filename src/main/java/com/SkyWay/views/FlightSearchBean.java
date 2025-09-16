@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.SkyWay.dto.InfoAsientoDTO;
+import com.SkyWay.modules.asiento.presentation.dto.InfoAsientoDTO;
 
 import com.SkyWay.modules.asiento.domain.service.AsientoService;
 import com.SkyWay.modules.avion.domain.service.AvionService;

@@ -9,6 +9,7 @@ import javax.sql.DataSource;
 import com.SkyWay.modules.asiento.domain.model.Asiento;
 import com.SkyWay.modules.asiento.domain.repository.AsientoRepository;
 import com.SkyWay.modules.asiento.domain.service.AsientoService;
+import com.SkyWay.modules.asiento.presentation.dto.InfoAsientoReservaDTO;
 import com.SkyWay.modules.avion.domain.model.Avion;
 import com.SkyWay.modules.claseasiento.domain.model.ClaseAsiento;
 import org.slf4j.Logger;
@@ -16,7 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.SkyWay.dto.InfoAsientoDTO;
+import com.SkyWay.modules.asiento.presentation.dto.InfoAsientoDTO;
 
 import com.SkyWay.modules.claseasiento.domain.repository.ClaseAsientoRepository;
 
@@ -181,6 +182,20 @@ public class AsientoServiceImpl implements AsientoService {
  		
 		return asientos;
 	}
+	@Override
+	public List<InfoAsientoReservaDTO> getAsientosReservados(Integer idReserva, Integer idItinerario) {
+		  List<InfoAsientoReservaDTO>asientos;
+		Query query = em.createNativeQuery(
+				"SELECT * FROM fn_getAsientosPorItinerarioYReserva(:p_itinerario, :p_reserva);",
+				InfoAsientoReservaDTO.class);
+		query.setParameter("p_itinerario", idReserva);
+		query.setParameter("p_reserva", idItinerario);
+
+		asientos= query.getResultList();
+
+		return asientos;
+	}
+
 
 	@Override
 	@Transactional

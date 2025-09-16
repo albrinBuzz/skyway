@@ -1,4 +1,4 @@
-package com.SkyWay.dto;
+package com.SkyWay.modules.asiento.presentation.dto;
 
 
 import java.util.Objects;

@@ -5,8 +5,14 @@ package com.SkyWay.modules.itinerario.domain.service;
 import com.SkyWay.modules.itinerario.domain.model.Itinerario;
 import com.SkyWay.modules.itinerario.presentation.dto.ItinerarioDTO;
 import com.SkyWay.modules.itinerario.presentation.dto.ItinerarioDetalleDTO;
+import com.SkyWay.modules.itinerario.presentation.dto.ItinerarioResumenDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.query.Param;
 
 import java.text.ParseException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ItinerarioService {
@@ -29,4 +35,15 @@ public interface ItinerarioService {
 
 
     public List<ItinerarioDetalleDTO> obtenerDetalleItinerario(Integer idItinerario);
+
+    Page<Itinerario> findItinerariosByRut(@Param("rut") String rut, Pageable pageable);
+
+    List<ItinerarioResumenDTO> findResumenByRut(
+            @Param("rut") String rut,
+            @Param("limit") int limit,
+            @Param("offset") int offset
+    );
+
+
+    List<ItinerarioResumenDTO> buscarConFiltroFechas(String rut, LocalDate fechaInicio, LocalDate fechaFin, int limit, int offset);
 }

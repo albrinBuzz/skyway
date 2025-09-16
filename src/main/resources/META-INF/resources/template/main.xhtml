@@ -240,7 +240,7 @@
                             </a>
                             <div class="dropdown-menu rounded shadow-lg">
                                 <div class="dropdown-header">
-                                    <h6 class="mb-0">¡Bienvenido de nuevo, <h:outputText value="#{userBean.name}"/>!</h6>
+                                    <h6 class="mb-0">¡Bienvenido de nuevo, <h:outputText value="#{userBean.usuario.nombre}"/>!</h6>
                                     <small>¿Qué te gustaría hacer hoy?</small>
                                 </div>
                                 <div class="dropdown-divider"></div>
@@ -252,12 +252,30 @@
                                 </p:link>
 
                                 <!-- Opción Admin para el rol de Admin -->
-                                <sec:authorize access="hasRole('ROLE_ADMIN')">
+                                <!-- 👮‍♂️ ADMIN -->
+                                <h:panelGroup rendered="#{userBean.hasRole('ROLE_ADMIN')}">
                                     <p:link href="/admin/index.xhtml" class="dropdown-item d-flex align-items-center">
                                         <i class="fas fa-user-shield me-2" style="color: #007bff; font-size: 18px;"></i>
                                         <span>Admin</span>
                                     </p:link>
-                                </sec:authorize>
+                                </h:panelGroup>
+
+                                <!-- 🧍‍♂️ PASAJERO -->
+                                <h:panelGroup rendered="#{userBean.hasRole('ROLE_PASAJERO')}">
+                                    <p:link href="/perfil/pasajero/index.xhtml" class="dropdown-item d-flex align-items-center">
+                                        <i class="fas fa-plane-departure me-2" style="color: #28a745; font-size: 18px;"></i>
+                                        <span>Vuelos Pasajero</span>
+                                    </p:link>
+                                </h:panelGroup>
+
+                                <!-- 🧑‍✈️ PILOTO -->
+                                <h:panelGroup rendered="#{userBean.hasRole('ROLE_PILOTO')}">
+                                    <p:link href="/perfil/piloto/index.xhtml" class="dropdown-item d-flex align-items-center">
+                                        <i class="fas fa-user-tie me-2" style="color: #fd7e14; font-size: 18px;"></i>
+                                        <span>Vuelos Piloto</span>
+                                    </p:link>
+                                </h:panelGroup>
+
 
                                 <!-- Opción Cerrar sesión -->
                                 <p:link href="/logout" class="dropdown-item d-flex align-items-center">

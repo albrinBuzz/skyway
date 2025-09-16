@@ -16,14 +16,10 @@ DROP SEQUENCE IF EXISTS pago_seq CASCADE;
 DROP SEQUENCE IF EXISTS equipaje_seq CASCADE;
 DROP SEQUENCE IF EXISTS reserva_asiento_seq CASCADE;
 DROP SEQUENCE IF EXISTS precio_asiento_seq CASCADE;
-DROP SEQUENCE IF EXISTS ruta_seq CASCADE;
 DROP SEQUENCE IF EXISTS escala_seq CASCADE;
 DROP SEQUENCE IF EXISTS puerta_seq CASCADE;
 DROP SEQUENCE IF EXISTS checkin_seq CASCADE;
 DROP SEQUENCE IF EXISTS estado_vuelo_seq CASCADE;
-DROP SEQUENCE IF EXISTS vuelo_charter_seq CASCADE;
-DROP SEQUENCE IF EXISTS seguro_vuelo_seq CASCADE;
-DROP SEQUENCE IF EXISTS vuelo_conexion_seq CASCADE;
 DROP SEQUENCE IF EXISTS habilidad_tripulacion_seq CASCADE;
 DROP SEQUENCE IF EXISTS turno_tripulacion_seq CASCADE;
 DROP SEQUENCE IF EXISTS aerolinea_seq CASCADE;
@@ -39,7 +35,7 @@ DROP SEQUENCE IF EXISTS turno_seq CASCADE;
 DROP SEQUENCE IF EXISTS reserva_itinerario_seq CASCADE;
 DROP SEQUENCE IF EXISTS itinerario_vuelo_seq CASCADE;
 DROP SEQUENCE IF EXISTS rolusuario_id_seq CASCADE;
-
+DROP SEQUENCE IF EXISTS tipo_turno_seq CASCADE;
 
 -- Eliminar Tablas con CASCADE
 DROP TABLE IF EXISTS estado_vuelo CASCADE;
@@ -82,6 +78,7 @@ DROP TABLE IF EXISTS Itinerario_Vuelo CASCADE;
 DROP TABLE IF EXISTS Itinerario CASCADE;
 DROP TABLE IF EXISTS Reserva_Itinerario CASCADE;
 DROP TABLE IF EXISTS Turno CASCADE;
+DROP TABLE IF EXISTS Continente CASCADE;
 
 
 
@@ -103,14 +100,11 @@ CREATE SEQUENCE pago_seq;
 CREATE SEQUENCE equipaje_seq;
 CREATE SEQUENCE reserva_asiento_seq;
 CREATE SEQUENCE precio_asiento_seq;
-CREATE SEQUENCE ruta_seq;
 CREATE SEQUENCE escala_seq;
 CREATE SEQUENCE puerta_seq;
 CREATE SEQUENCE checkin_seq;
 CREATE SEQUENCE estado_vuelo_seq START WITH 1;
-CREATE SEQUENCE vuelo_charter_seq;
-CREATE SEQUENCE seguro_vuelo_seq;
-CREATE SEQUENCE vuelo_conexion_seq;
+
 CREATE SEQUENCE habilidad_tripulacion_seq;
 
 CREATE SEQUENCE turno_tripulacion_seq;
@@ -125,8 +119,11 @@ CREATE SEQUENCE segmento_vuelo_seq START 1;
 CREATE SEQUENCE asignacion_puerta_seq START 1;
 CREATE SEQUENCE itinerario_seq START 1;
 CREATE SEQUENCE notificacion_seq START 1;
+CREATE SEQUENCE tipo_turno_seq START 1;
 CREATE SEQUENCE capacidad_clase_seq START 1;
 CREATE SEQUENCE rolusuario_id_seq START 1 INCREMENT 1;
+
+
 
 
 -- TABLAS Usuarios
@@ -220,16 +217,25 @@ CREATE TABLE Tipo_Equipaje (
 
 
 CREATE TABLE Tipo_Turno (
-    ID_TIPO INT PRIMARY KEY,
+    ID_TIPO INT PRIMARY KEY DEFAULT nextval('tipo_turno_seq'), -- Secuencia añadida,
     Nombre VARCHAR(100)
 );
 
+
+CREATE TABLE Continente (
+    ID_CONTINENTE INT PRIMARY KEY,
+    Nombre VARCHAR(100) NOT NULL
+);
 
 -- LOCALIZACIÓN
 CREATE TABLE Pais (
     ID_PAIS INT PRIMARY KEY DEFAULT nextval('pais_seq'),
     Nombre VARCHAR(100) NOT NULL
 );
+
+ALTER TABLE Pais ADD COLUMN ID_CONTINENTE INT;
+
+ALTER TABLE Pais ADD CONSTRAINT fk_pais_continente FOREIGN KEY (ID_CONTINENTE) REFERENCES Continente(ID_CONTINENTE);
 
 CREATE TABLE Ciudad (
     ID_CIUDAD INT PRIMARY KEY DEFAULT nextval('ciudad_seq'),
@@ -296,8 +302,8 @@ CREATE TABLE Capacidad_Clase (
     ID_CLASE INT REFERENCES Clase_asiento(ID_CLASE),                         -- Referencia a la clase de asiento
     Cantidad INT NOT NULL,                                                    -- Cantidad de asientos disponibles
     CONSTRAINT fk_avion FOREIGN KEY (ID_AVION) REFERENCES Avion(ID_AVION) ON DELETE CASCADE,
-    CONSTRAINT fk_clase FOREIGN KEY (ID_CLASE) REFERENCES Clase_asiento(ID_CLASE) ON DELETE CASCADE,
-    CONSTRAINT unique_avion_clase UNIQUE (ID_AVION, ID_CLASE)                 -- Se mantiene la unicidad de la combinación
+    CONSTRAINT fk_clase FOREIGN KEY (ID_CLASE) REFERENCES Clase_asiento(ID_CLASE) ON DELETE CASCADE
+    --CONSTRAINT unique_avion_clase UNIQUE (ID_AVION, ID_CLASE)                 -- Se mantiene la unicidad de la combinación
 );
 
 CREATE TABLE Asiento (
@@ -323,7 +329,7 @@ CREATE TABLE Estado_Vuelo (
 
 CREATE TABLE Vuelo (
     ID_VUELO INT PRIMARY KEY DEFAULT nextval('vuelo_seq'),
-    Numero_Vuelo VARCHAR(50) ,  -- Número de vuelo (más corto)
+    Numero_Vuelo VARCHAR(255) ,  -- Número de vuelo (más corto)
     Fecha_Hora_Salida TIMESTAMP,  -- Fecha y hora de salida
     Fecha_Hora_Llegada TIMESTAMP,  -- Fecha y hora de llegada
     ID_ESTADO_VUELO INT REFERENCES Estado_Vuelo(ID_ESTADO_VUELO),  -- Estado del vuelo
@@ -361,7 +367,9 @@ CREATE TABLE Asignacion_Puerta (
     ID_ASIGNACION INT PRIMARY KEY DEFAULT nextval('asignacion_puerta_seq'),
     ID_SEGMENTO INT REFERENCES Segmento_Vuelo(ID_SEGMENTO),
     ID_PUERTA INT REFERENCES Puerta_Embarque(ID_PUERTA),
-    Hora_Asignacion TIMESTAMP DEFAULT NOW()
+    Hora_Asignacion TIMESTAMP DEFAULT NOW(),
+    CONSTRAINT unique_asignacion_puerta UNIQUE(ID_SEGMENTO)
+
 );
 
 CREATE TABLE Itinerario (
@@ -504,3 +512,34 @@ CREATE TABLE Notificacion (
     Leido BOOLEAN DEFAULT FALSE,
     Fecha TIMESTAMP DEFAULT NOW()
 );
+
+
+CREATE INDEX idx_idItinerario ON itinerario_vuelo(id_itinerario);
+
+CREATE INDEX idx_idAsientoAvion ON asiento(id_avion);
+
+/*ALTER TABLE Precio_Asiento DROP CONSTRAINT IF EXISTS precio_asiento_id_vuelo_fkey;
+ALTER TABLE Segmento_Vuelo DROP CONSTRAINT IF EXISTS segmento_vuelo_id_vuelo_fkey;
+ALTER TABLE Turno DROP CONSTRAINT IF EXISTS turno_id_vuelo_fkey;
+ALTER TABLE Itinerario_Vuelo DROP CONSTRAINT IF EXISTS itinerario_vuelo_id_vuelo_fkey;
+ALTER TABLE Reserva_Asiento DROP CONSTRAINT IF EXISTS reserva_asiento_id_vuelo_fkey;
+
+ALTER TABLE Precio_Asiento
+ADD CONSTRAINT precio_asiento_id_vuelo_fkey
+FOREIGN KEY (ID_VUELO) REFERENCES Vuelo(ID_VUELO) ON DELETE CASCADE;
+
+ALTER TABLE Segmento_Vuelo
+ADD CONSTRAINT segmento_vuelo_id_vuelo_fkey
+FOREIGN KEY (ID_VUELO) REFERENCES Vuelo(ID_VUELO) ON DELETE CASCADE;
+
+ALTER TABLE Turno
+ADD CONSTRAINT turno_id_vuelo_fkey
+FOREIGN KEY (ID_VUELO) REFERENCES Vuelo(ID_VUELO) ON DELETE CASCADE;
+
+ALTER TABLE Itinerario_Vuelo
+ADD CONSTRAINT itinerario_vuelo_id_vuelo_fkey
+FOREIGN KEY (ID_VUELO) REFERENCES Vuelo(ID_VUELO) ON DELETE CASCADE;
+
+ALTER TABLE Reserva_Asiento
+ADD CONSTRAINT reserva_asiento_id_vuelo_fkey
+FOREIGN KEY (ID_VUELO) REFERENCES Vuelo(ID_VUELO) ON DELETE CASCADE;*/

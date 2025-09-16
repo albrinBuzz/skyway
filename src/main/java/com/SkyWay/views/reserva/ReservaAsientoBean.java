@@ -1,7 +1,7 @@
-package com.SkyWay.modules.reservaasiento.presentation.bean;
+package com.SkyWay.views.reserva;
 
 
-import com.SkyWay.dto.InfoAsientoDTO;
+import com.SkyWay.modules.asiento.presentation.dto.InfoAsientoDTO;
 import com.SkyWay.dto.InfoVueloDTO;
 import com.SkyWay.modules.asiento.domain.service.AsientoService;
 import com.SkyWay.modules.itinerario.domain.model.Itinerario;
@@ -20,10 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Named("seleccionAsientosBean")
@@ -42,13 +39,22 @@ public class ReservaAsientoBean implements Serializable {
     private int cantVuelos;
     List<Integer>idVuelos;
     private Vuelo vuelo;
-    private HashMap<Integer,InfoAsientoDTO>asientosSeleccionados;
+    private HashMap<Integer,List<InfoAsientoDTO>>asientosSeleccionados;
+    private HashMap<Integer,List<Integer>> itinerariosAsientos=new HashMap<>();
+
     private List<InfoAsientoDTO> asientosSeleccionadosList = new ArrayList<>();
+    private Integer cantAdultos;
     List<Itinerario>itinerarios=new ArrayList<>();
     List<Integer> idsItinerarios;
+    private Integer idxAsientoSeleccion;
     @PostConstruct
     public void init() {
         ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
+        Map<String, String> params = externalContext.getRequestParameterMap();
+
+        String adultosStr = params.getOrDefault("adultos", "1");
+        cantAdultos= Integer.valueOf(adultosStr);
+
         String idsParam = externalContext.getRequestParameterMap().get("itinerarios");
 
         if (idsParam != null && !idsParam.isEmpty()) {
@@ -73,7 +79,7 @@ public class ReservaAsientoBean implements Serializable {
 
 
                 for (ItinerarioVuelo itinerarioVuelo : itinerario.getItinerarioVuelos()) {
-                    Logger.logInfo(itinerarioVuelo.toString());
+
 
                     idVuelos.add(itinerarioVuelo.getVuelo().getIdVuelo());
 
@@ -81,9 +87,7 @@ public class ReservaAsientoBean implements Serializable {
 
             }
 
-            for (Integer idVuelo : idVuelos) {
-                    Logger.logInfo(idVuelo.toString());
-            }
+
 
 
 
@@ -91,6 +95,7 @@ public class ReservaAsientoBean implements Serializable {
 
             this.cantVuelos=idVuelos.size();
             this.idxVuelo=0;
+            idxAsientoSeleccion=0;
             //this.asientos = generarAsientosMock();
             this.vuelo = vueloService.findById(idVuelos.get(idxVuelo)).get();
             Logger.logInfo(vuelo.toString());
@@ -157,7 +162,6 @@ public class ReservaAsientoBean implements Serializable {
 
 
     public void setearAsiento(InfoAsientoDTO asiento) {
-        Logger.logInfo(asiento.toString());
 
         if ("Ocupado".equalsIgnoreCase(asiento.getEstado())) {
             return; // No permitir seleccionar
@@ -172,8 +176,20 @@ public class ReservaAsientoBean implements Serializable {
             asiento.setEstado("Seleccionado");
         }
 
+
         // Guardar selección en el mapa (clave = id del vuelo, valor = asiento)
-        asientosSeleccionados.put(vuelo.getIdVuelo(), asiento);
+        //asientosSeleccionados.put(vuelo.getIdVuelo(), );
+        if (asientosSeleccionados.containsKey(vuelo.getIdVuelo())){
+            asientosSeleccionados.get(vuelo.getIdVuelo()).add(asiento);
+        }else{
+            List<InfoAsientoDTO>list=new ArrayList<>();
+            list.add(asiento);
+            asientosSeleccionados.put(vuelo.getIdVuelo(),list);
+        }
+
+        //asientosSeleccionados.computeIfAbsent(vuelo.getIdVuelo(), k -> new ArrayList<>()).add(asiento);
+
+        idxAsientoSeleccion++;
 
 
 
@@ -196,13 +212,17 @@ public class ReservaAsientoBean implements Serializable {
             return;
         }
 
-        // Si aún hay vuelos, cargar el siguiente
-        int vueloId = idVuelos.get(idxVuelo);
-        Logger.logInfo("Siguiente vuelo -> " + vueloId);
-        this.asientos = asientoService.getAsientosDisponibles(vueloId);
-        this.vuelo = vueloService.findById(vueloId).orElse(null);
-        Logger.logInfo("Siguiente vuelo -> " + vuelo.toString());
-        idxVuelo++;
+        if (idxAsientoSeleccion>=cantAdultos){
+            // Si aún hay vuelos, cargar el siguiente
+            int vueloId = idVuelos.get(idxVuelo);
+            Logger.logInfo("Siguiente vuelo -> " + vueloId);
+            this.asientos = asientoService.getAsientosDisponibles(vueloId);
+            this.vuelo = vueloService.findById(vueloId).orElse(null);
+            Logger.logInfo("Siguiente vuelo -> " + vuelo.toString());
+            idxVuelo++;
+            idxAsientoSeleccion=0;
+        }
+
     }
 
 
@@ -268,7 +288,7 @@ public class ReservaAsientoBean implements Serializable {
         this.vuelo = vuelo;
     }
 
-    public HashMap<Integer, InfoAsientoDTO> getAsientosSeleccionados() {
+    public HashMap<Integer, List<InfoAsientoDTO>> getAsientosSeleccionados() {
         return asientosSeleccionados;
     }
 

@@ -2,16 +2,19 @@ package com.SkyWay.views;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.SkyWay.modules.notificacion.domain.model.Notificacion;
+import com.SkyWay.modules.usuario.domain.model.Usuario;
+import com.SkyWay.util.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 
-import com.SkyWay.model.Usuario;
+
 import com.SkyWay.modules.notificacion.domain.repository.NotificacionRepository;
 import com.SkyWay.modules.notificacion.domain.service.NotificacionService;
 
@@ -47,12 +50,15 @@ public class UserBean implements Serializable {
             try {
             	this.usuario = (Usuario) session.getAttribute("usuario");
             	this.name = usuario.getNombre();
+                //Logger.logInfo(usuario.toString());
             } catch (Exception e) {
-                System.out.println(e.getMessage());
+                Logger.logInfo(e.getMessage());
             }
 
             // Comprobamos si el usuario tiene el rol de administrador
+            //Logger.logInfo(Arrays.toString(authentication.getAuthorities().toArray()));
             rol = authentication.getAuthorities().toArray()[0].toString();
+
             this.isAdmin = authentication.getAuthorities().stream()
                                          .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
 
@@ -63,9 +69,43 @@ public class UserBean implements Serializable {
                     .collect(Collectors.toList());*/
         }
     }
-    
-    @PostConstruct
-    
+
+    // Marcar una notificación como leída
+    public void markAsRead(int notificationId) {
+
+
+        var notificacion=  notifications.stream()
+                .filter(n -> n.getIdNotificacion() == notificationId)
+                .findFirst()
+                .orElse(null);
+
+        if (notificacion!=null) {
+
+            notificacionService.marcarComoLeida(notificacion.getIdNotificacion());
+
+    	   /*notifications=notificacionService.findByRut(usuario.getRutUsuario());
+           // Filtrar las notificaciones no leídas
+           this.unreadNotifications = notifications.stream()
+                   .filter(notif -> !notif.getLeido())
+                   .collect(Collectors.toList());*/
+
+        }
+    }
+
+    public boolean hasRole(String role) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth.getAuthorities().stream()
+                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals(role));
+    }
+
+    // Método para cerrar sesión
+    public String logout() {
+        SecurityContextHolder.clearContext();  // Limpiar el contexto de seguridad
+        this.loggedIn = false;
+        this.isAuthenticated = false;
+        return "index?faces-redirect=true";  // Redirigir a la página de inicio
+    }
+
 
     // Getter y setter para 'name' y 'loggedIn'
     public String getName() {
@@ -140,39 +180,5 @@ public class UserBean implements Serializable {
         return unreadNotifications;
     }
 
-    // Marcar una notificación como leída
-    public void markAsRead(int notificationId) {
 
-       
-       var notificacion=  notifications.stream()
-        .filter(n -> n.getIdNotificacion() == notificationId)
-        .findFirst()
-       .orElse(null);
-        
-       if (notificacion!=null) {
-		
-    	   notificacionService.marcarComoLeida(notificacion.getIdNotificacion());
-    	   
-    	   /*notifications=notificacionService.findByRut(usuario.getRutUsuario());
-           // Filtrar las notificaciones no leídas
-           this.unreadNotifications = notifications.stream()
-                   .filter(notif -> !notif.getLeido())
-                   .collect(Collectors.toList());*/
-    	   
-       }
-       
-       
-        
-   
-       
-       
-    }
-
-    // Método para cerrar sesión
-    public String logout() {
-        SecurityContextHolder.clearContext();  // Limpiar el contexto de seguridad
-        this.loggedIn = false;
-        this.isAuthenticated = false;
-        return "index?faces-redirect=true";  // Redirigir a la página de inicio
-    }
 }

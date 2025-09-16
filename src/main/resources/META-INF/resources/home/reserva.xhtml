@@ -69,6 +69,32 @@
             .btn-confirmar:hover {
             background-color: #219150;
             }
+
+
+
+            .ui-inputfield {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+            }
+
+            .ui-datepicker {
+            z-index: 10000 !important;
+            }
+
+
+            .ui-panelgrid-blank .ui-inputfield,
+            .ui-selectonemenu {
+            width: 100%;
+            box-sizing: border-box;
+            }
+
+            .ui-selectonemenu-label {
+            padding-left: 8px;
+            }
+
         </h:outputStylesheet>
 
         <div class="reserva-container">
@@ -140,38 +166,129 @@
                 <p:accordionPanel multiple="true" widgetVar="asientosAccordion" scrollIntoView="center">
                 <p:tab title="Asientos">
 
-                <ui:repeat value="#{reservaBean.asientosSeleccionados.entrySet()}" var="entry">
-                    <div class="vuelo-box">
-                        <div class="info">
-                            <strong>Vuelo:</strong>
-                            <h:outputText value="#{reservaBean.getVuelo(entry.key)}">
-                            </h:outputText>
+                    <ui:repeat value="#{reservaBean.asientosSeleccionados.entrySet()}" var="entry">
+                        <div class="vuelo-box" style="border:1px solid #ccc; padding:15px; margin-bottom:20px; border-radius:8px; background:#f9f9f9;">
+                            <div class="info" style="margin-bottom:10px;">
+                                <h3 style="margin:0; color:#2c3e50;">
+                                    Vuelo: <span style="font-weight:normal;">#{reservaBean.getVuelo(entry.key)}</span>
+                                </h3>
+                            </div>
+
+                            <h:panelGroup rendered="#{not empty entry.value}">
+                                <table style="width:100%; border-collapse: collapse;">
+                                    <thead>
+                                    <tr style="background:#2c3e50; color:#fff;">
+                                        <th style="padding:8px; text-align:left;">Asiento</th>
+                                        <th style="padding:8px; text-align:left;">Clase</th>
+                                        <th style="padding:8px; text-align:right;">Precio</th>
+                                        <th style="padding:8px; text-align:left;">Estado</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <ui:repeat value="#{entry.value}" var="asiento">
+                                        <tr style="border-bottom:1px solid #ddd;">
+                                            <td style="padding:8px;">#{asiento.numeroAsiento}</td>
+                                            <td style="padding:8px;">#{asiento.clase}</td>
+                                            <td style="padding:8px; text-align:right;">
+                                                <h:outputText value="#{asiento.precio}">
+                                                    <f:convertNumber type="currency" currencySymbol="$" groupingUsed="true" maxFractionDigits="0" />
+                                                </h:outputText>
+                                            </td>
+                                            <td style="padding:8px;">#{asiento.estado}</td>
+                                        </tr>
+                                    </ui:repeat>
+                                    </tbody>
+                                </table>
+                            </h:panelGroup>
+
+                            <h:panelGroup rendered="#{empty entry.value}">
+                                <p>No hay asientos seleccionados para este vuelo.</p>
+                            </h:panelGroup>
                         </div>
-
-                        <h:panelGroup rendered="#{entry.value != null}">
-                            <div class="info">
-                                <strong>Asiento:</strong>
-                                <span class="asiento-box">#{entry.value.numeroAsiento}</span>
-                            </div>
-                            <div class="info">
-                                <strong>Clase:</strong> #{entry.value.clase}
-                            </div>
-
-                            <div class="info">
-                                <strong>Precio Asiento:</strong>
-                                <h:outputText value="#{entry.value.precio}">
-                                    <f:convertNumber type="currency" currencySymbol="$" groupingUsed="true" maxFractionDigits="0" />
-                                </h:outputText>
-                            </div>
+                    </ui:repeat>
 
 
-                        </h:panelGroup>
-                    </div>
-                </ui:repeat>
                 </p:tab>
                 </p:accordionPanel>
             </div>
         </div>
+
+            <!-- Sección Datos del Pasajero -->
+            <h:panelGroup rendered="#{!userBean.loggedIn}">
+                <!-- Sección Datos del Pasajero -->
+                <div class="card">
+                    <div class="seccion">
+                        <div class="titulo">Datos del Pasajero</div>
+
+                        <h:form id="pasajeroForm">
+                            <!-- Información Personal -->
+                            <h3 style="color: #34495e; margin-bottom: 15px;">Información Personal</h3>
+
+                            <p:panelGrid columns="2"
+                                         styleClass="ui-panelgrid-blank"
+                                         columnClasses="ui-grid-col-2,ui-grid-col-10"
+                                         style="width:100%; margin-bottom: 40px;"
+                                         layout="grid">
+
+                                <p:outputLabel for="rut" value="RUT:" />
+                                <p:inputText id="rut" value="#{reservaBean.pasajero.rut}" required="true" placeholder="Ej: 12.345.678-9" />
+
+                                <p:outputLabel for="nombre" value="Nombre:" />
+                                <p:inputText id="nombre" value="#{reservaBean.pasajero.usuario.nombre}" required="true" placeholder="Nombre del pasajero" />
+
+                                <p:outputLabel for="apellido" value="Apellido:" />
+                                <p:inputText id="apellido" value="#{reservaBean.pasajero.usuario.apellido}" required="true" placeholder="Apellido del pasajero" />
+
+                                <p:outputLabel for="correo" value="Correo Electrónico:" />
+                                <p:inputText id="correo" value="#{reservaBean.pasajero.usuario.correoElectronico}" required="true" placeholder="ejemplo@correo.com" />
+
+                                <p:outputLabel for="telefono" value="Teléfono:" />
+                                <p:inputMask id="telefono" mask="(99) 9999-9999" value="#{reservaBean.pasajero.usuario.telefono}" required="true" placeholder="Ej: (56) 91234-5678" />
+
+                                <p:outputLabel for="documentoIdentidad" value="Documento de Identidad:" />
+                                <p:inputText id="documentoIdentidad" value="#{reservaBean.pasajero.usuario.documentoIdentidad}" required="true" placeholder="N° de documento" />
+
+                                <p:outputLabel for="fechaNacimiento" value="Fecha de Nacimiento:" />
+                                <p:datePicker id="fechaNacimiento"
+                                              value="#{reservaBean.pasajero.usuario.fechaNacimiento}"
+                                              yearNavigator="true" monthNavigator="true"
+                                              pattern="dd/MM/yyyy"
+                                              showIcon="true"
+                                              required="true"
+                                              placeholder="dd/mm/aaaa" />
+                            </p:panelGrid>
+
+                            <!-- Identificación y Nacionalidad -->
+                            <h3 style="color: #34495e; margin-bottom: 15px;">Identificación y Nacionalidad</h3>
+
+                            <p:panelGrid columns="2"
+                                         styleClass="ui-panelgrid-blank"
+                                         columnClasses="ui-grid-col-2,ui-grid-col-10"
+                                         style="width:100%;"
+                                         layout="grid">
+
+                                <p:outputLabel for="tipoDocumento" value="Tipo de Documento:" />
+                                <p:selectOneMenu id="tipoDocumento" value="#{reservaBean.pasajero.tipoDocumento}" required="true" style="width: 100%">
+                                    <f:selectItem itemLabel="Seleccione" itemValue="" />
+                                    <f:selectItem itemLabel="Pasaporte" itemValue="Pasaporte" />
+                                    <f:selectItem itemLabel="Cédula de Identidad" itemValue="Cédula de Identidad" />
+                                    <f:selectItem itemLabel="Otro" itemValue="Otro" />
+                                </p:selectOneMenu>
+
+                                <p:outputLabel for="numeroDocumento" value="Número de Documento:" />
+                                <p:inputText id="numeroDocumento" value="#{reservaBean.pasajero.numeroDocumento}" required="true" placeholder="N° del documento" />
+
+                                <p:outputLabel for="nacionalidad" value="Nacionalidad:" />
+                                <p:inputText id="nacionalidad" value="#{reservaBean.pasajero.nacionalidad}" required="true" placeholder="Ej: Chilena" />
+                            </p:panelGrid>
+                        </h:form>
+                    </div>
+                </div>
+
+            </h:panelGroup>
+
+
+
 
             <!-- Botón Confirmar -->
             <h:form>

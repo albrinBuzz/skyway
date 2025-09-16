@@ -2,9 +2,10 @@ package com.SkyWay.modules.usuario.application.serviceImpl;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.SkyWay.modules.usuario.domain.model.Usuario;
-import org.slf4j.Logger;
+import com.SkyWay.util.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -19,8 +20,7 @@ public class UsuarioDetails implements UserDetails{
 	private Usuario usuario;
 	
 	
-	private final Logger LOGGER = LoggerFactory.getLogger(UsuarioDetails.class);
-	
+
 	
 	public UsuarioDetails(Usuario usuario) {
 		super();
@@ -29,14 +29,21 @@ public class UsuarioDetails implements UserDetails{
 
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {
-		/*SimpleGrantedAuthority authorities=new  SimpleGrantedAuthority("ROLE_" +usuario.getRol().getNombre().toUpperCase());
 
-		LOGGER.info("Rol {} ",authorities);
+		var roles= usuario.getRoles().stream()
+				.map(rol -> new SimpleGrantedAuthority("ROLE_" +rol.getNombre().toUpperCase()))
+				.toList();
+
+		//Logger.logInfo(roles.toString());
+
+		//SimpleGrantedAuthority authorities=new  SimpleGrantedAuthority("ROLE_" +usuario.getRol().getNombre().toUpperCase());
+
+
 		//authorities.add();
 		
-		return List.of(authorities);*/
-		LOGGER.info("corregir setear roles all usuario");
-		return null;
+		//return List.of(authorities);
+		//Logger.logInfo("corregir setear roles all usuario");
+		return roles;
 	}
 
 	@Override

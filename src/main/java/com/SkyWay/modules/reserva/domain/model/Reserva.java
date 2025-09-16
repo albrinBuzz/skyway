@@ -36,15 +36,15 @@ public class Reserva implements Serializable {
 	private BigDecimal total;
 
 	//bi-directional many-to-one association to Checkin
-	@OneToMany(mappedBy="reserva")
+	@OneToMany(mappedBy="reserva",fetch = FetchType.LAZY)
 	private List<Checkin> checkins;
 
 	//bi-directional many-to-one association to Equipaje
-	@OneToMany(mappedBy="reserva")
+	@OneToMany(mappedBy="reserva",fetch = FetchType.LAZY)
 	private List<Equipaje> equipajes;
 
 	//bi-directional many-to-one association to Pago
-	@OneToMany(mappedBy="reserva")
+	@OneToMany(mappedBy="reserva",fetch = FetchType.LAZY)
 	private List<Pago> pagos;
 
 	//bi-directional many-to-one association to EstadoReserva
@@ -58,11 +58,11 @@ public class Reserva implements Serializable {
 	private Pasajero pasajero;
 
 	//bi-directional many-to-one association to ReservaAsiento
-	@OneToMany(mappedBy="reserva")
+	@OneToMany(mappedBy="reserva",fetch = FetchType.LAZY)
 	private List<ReservaAsiento> reservaAsientos;
 
 	//bi-directional many-to-one association to ReservaItinerario
-	@OneToMany(mappedBy="reserva")
+	@OneToMany(mappedBy="reserva",fetch = FetchType.LAZY)
 	private List<ReservaItinerario> reservaItinerarios;
 
 	public Reserva() {

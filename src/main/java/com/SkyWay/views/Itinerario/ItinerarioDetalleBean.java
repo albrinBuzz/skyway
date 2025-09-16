@@ -1,14 +1,12 @@
-package com.SkyWay.modules.itinerario.presentation.bean;
+package com.SkyWay.views.Itinerario;
 
 
 
-import com.SkyWay.modules.ciudad.domain.service.CiudadService;
 import com.SkyWay.modules.itinerario.domain.service.ItinerarioService;
 import com.SkyWay.modules.itinerario.presentation.dto.ItinerarioDTO;
 import com.SkyWay.modules.itinerario.presentation.dto.ItinerarioDetalleDTO;
 import com.SkyWay.util.Logger;
 import jakarta.annotation.PostConstruct;
-import jakarta.enterprise.context.SessionScoped;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.ExternalContext;
 import jakarta.faces.context.FacesContext;
@@ -17,13 +15,8 @@ import jakarta.inject.Named;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.Serializable;
-import java.text.ParseException;
 import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Named("itinerarioDetalleBean")
 @ViewScoped
@@ -46,14 +39,13 @@ public class ItinerarioDetalleBean implements Serializable {
     private Integer total;
     @Autowired
     private ItinerarioService itinerarioService;
-
+    private Integer cantAdultos;
 
     // Variable para los mensajes de la vista
     private FacesMessage facesMessage;
 
     @PostConstruct
-    public void init() throws ParseException {
-
+    public void init() {
         try {
             ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
             Map<String, String> params = externalContext.getRequestParameterMap();
@@ -63,33 +55,57 @@ public class ItinerarioDetalleBean implements Serializable {
             String fechaIdaStr = params.get("fechaIda");
             String fechaRegresoStr = params.get("fechaRegreso");
             this.tipoViaje = params.getOrDefault("trip", "OW").toUpperCase();
-            this.tipoVuelo = "Vuelos Ida";
-            if (salida == null || llegada == null || fechaIdaStr == null) {
+            String adultosStr = params.getOrDefault("adultos", "1");
+
+            cantAdultos = Integer.parseInt(adultosStr);
+
+            if (salida == null || llegada == null || fechaIdaStr == null || salida.isBlank() || llegada.isBlank()) {
                 FacesContext.getCurrentInstance().addMessage(null,
-                        new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                                "Faltan parámetros obligatorios (salida, llegada, fecha).", ""));
+                        new FacesMessage(FacesMessage.SEVERITY_ERROR, "Parámetros incompletos", "Debes completar origen, destino y fecha."));
+                return;
+            }
+
+            if (salida.equalsIgnoreCase(llegada)) {
+                FacesContext.getCurrentInstance().addMessage(null,
+                        new FacesMessage(FacesMessage.SEVERITY_WARN, "Destino inválido", "El destino no puede ser igual al origen."));
                 return;
             }
 
             this.fechaIda = LocalDate.parse(fechaIdaStr);
-            if ("RT".equals(tipoViaje) && fechaRegresoStr != null) {
-                this.fechaRegreso = LocalDate.parse(fechaRegresoStr);
+            if (fechaIda.isBefore(LocalDate.now())) {
+                FacesContext.getCurrentInstance().addMessage(null,
+                        new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fecha inválida", "La fecha de ida no puede estar en el pasado."));
+                return;
             }
 
-            // Carga vuelos de ida
+            if ("RT".equals(tipoViaje) && fechaRegresoStr != null) {
+                this.fechaRegreso = LocalDate.parse(fechaRegresoStr);
+                if (fechaRegreso.isBefore(fechaIda)) {
+                    FacesContext.getCurrentInstance().addMessage(null,
+                            new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fechas inválidas", "La fecha de regreso no puede ser antes que la de ida."));
+                    return;
+                }
+            }
+
+            this.tipoVuelo = "RT".equals(tipoViaje) ? "Ida y Vuelta" : "Solo Ida";
+
             vuelosIda = itinerarioService.buscarItinerarios(salida, llegada, fechaIda.toString());
+            vuelosIda.sort(Comparator.comparing(ItinerarioDTO::getHoraLlegada24h));
 
-            // Carga vuelos de regreso si es viaje redondo
             if ("RT".equals(tipoViaje) && fechaRegreso != null) {
-
                 vuelosRegreso = itinerarioService.buscarItinerarios(llegada, salida, fechaRegreso.toString());
+                vuelosRegreso.sort(Comparator.comparing(ItinerarioDTO::getHoraLlegada24h));
             }
 
             if ((vuelosIda == null || vuelosIda.isEmpty()) &&
                     ("RT".equals(tipoViaje) && (vuelosRegreso == null || vuelosRegreso.isEmpty()))) {
-                facesMessage = new FacesMessage(FacesMessage.SEVERITY_WARN, "Advertencia",
-                        "No se encontraron vuelos para los parámetros seleccionados.");
-                FacesContext.getCurrentInstance().addMessage(null, facesMessage);
+                //addMessage(FacesMessage.SEVERITY_WARN, "Warn Message", "Message Content");
+                /*FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_WARN, "Advertencia",
+                        "No se encontraron vuelos para las fechas seleccionadas, cambie de destino o fecha"));*/
+
+                FacesMessage mensaje = new FacesMessage(FacesMessage.SEVERITY_WARN,
+                        "Sin resultados", "No se encontraron vuelos en las fechas seleccionadas.");
+                FacesContext.getCurrentInstance().addMessage(null, mensaje);
             }
 
             vuelosSeleccionados = new ArrayList<>();
@@ -101,18 +117,19 @@ public class ItinerarioDetalleBean implements Serializable {
             FacesContext.getCurrentInstance().addMessage(null, facesMessage);
             e.printStackTrace();
         }
-
     }
 
-    public void showParadas(ItinerarioDTO vuelo) {
+    public void showParadas(Integer idItinerario) {
 
-        this.selectedVueloParadas = "Detalles de paradas: " + vuelo.getCantParadas(); // Aquí puedes colocar más detalles.
+        //this.selectedVueloParadas = "Detalles de paradas: " + vuelo.getCantParadas(); // Aquí puedes colocar más detalles.
 
-        paradasVuelo = itinerarioService.obtenerDetalleItinerario(vuelo.getItinerario());
+        paradasVuelo = itinerarioService.obtenerDetalleItinerario(idItinerario);
         Logger.logInfo(selectedVueloParadas);
-        Logger.logInfo("itinerario. "+vuelo.getItinerario());
+        //Logger.logInfo("itinerario. "+vuelo.getItinerario());
 
     }
+
+
 
     public void setSelectedVuelo(ItinerarioDTO selectedVuelo) {
         this.selectedVuelo = selectedVuelo;
@@ -126,13 +143,24 @@ public class ItinerarioDetalleBean implements Serializable {
         return selectedVueloParadas;
     }
 
-    public void selectVuelo(ItinerarioDTO vuelo) {
+    public String selectVuelo(ItinerarioDTO vuelo) {
+
         Logger.logInfo("seleccionar vuelo" + vuelo.toString());
         this.selectedVuelo = vuelo;
         this.total += vuelo.getPrecio();
         this.vuelosSeleccionados.add(vuelo);
-        this.vuelosIda = vuelosRegreso;
-        this.tipoVuelo = "Vuelos Regreso";
+        if (tipoViaje.equals("RT")){
+            this.vuelosIda = vuelosRegreso;
+            this.tipoVuelo = "Vuelos Regreso";
+            if (vuelosSeleccionados.size()>=2){
+                return redireccionar();
+            }
+        }else {
+            return redireccionar();
+        }
+
+        return "";
+
         // Aquí podrías guardar los detalles o proceder con alguna otra acción
     }
 
@@ -164,13 +192,35 @@ public class ItinerarioDetalleBean implements Serializable {
             url.append(",");
         }
 
-        Logger.logInfo(url.substring(0, url.toString().length() - 1));
 
+        url.append("&adultos=").append(cantAdultos);
+        Logger.logInfo(url.substring(0, url.toString().length() - 1));
         return url.substring(0, url.toString().length() - 1);
 
 
         ///seleccionAsientos.xhtml?itinerarios=1001,1002
         //return "seleccionAsientos.xhtml?faces-redirect=true&itinerarios=1001,1002";
+    }
+
+    public String redireccionar(){
+        FacesContext.getCurrentInstance().addMessage(null,
+                new FacesMessage(FacesMessage.SEVERITY_INFO, "Compra confirmada", "Gracias por tu compra."));
+
+        StringBuilder url = new StringBuilder();
+        url.append("seleccionAsientos.xhtml?faces-redirect=true&itinerarios=");
+        for (ItinerarioDTO vuelosSeleccionado : vuelosSeleccionados) {
+
+            url.append(vuelosSeleccionado.getItinerario());
+            url.append(",");
+        }
+
+        url.delete(url.toString().length() - 1,url.toString().length());
+        url.append("&adultos=").append(cantAdultos);
+        Logger.logInfo(cantAdultos.toString());
+
+        Logger.logInfo(url.toString());
+
+        return url.toString();
     }
 
 

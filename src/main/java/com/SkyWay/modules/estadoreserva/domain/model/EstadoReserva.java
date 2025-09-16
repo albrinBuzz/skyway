@@ -26,7 +26,7 @@ public class EstadoReserva implements Serializable {
 	private String descripcion;
 
 	//bi-directional many-to-one association to Reserva
-	@OneToMany(mappedBy="estadoReservaBean")
+	@OneToMany(mappedBy="estadoReservaBean",fetch = FetchType.LAZY)
 	private List<Reserva> reservas;
 
 	public EstadoReserva() {

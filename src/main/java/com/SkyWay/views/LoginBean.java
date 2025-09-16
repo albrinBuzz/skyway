@@ -107,20 +107,8 @@ public class LoginBean {
 
 
                 Logger.logInfo("Autenticacion exitosas");
-                String redirectUrl;
-                /*if (savedRequest != null) {
-                    redirectUrl = savedRequest.getRedirectUrl();
-
-                } else {
-                    redirectUrl = request.getContextPath() + "/"; // Página por defecto
-                }
-                //System.out.println("Redirigiendo a URL original: " + redirectUrl);
-                // Redirigir
-                FacesContext.getCurrentInstance().getExternalContext().redirect(redirectUrl);*/
-
-                //System.out.println("URL ORIGNAL"+request.getQueryString());
-                
-                redigir();
+                redigir(request, response);
+                //redigir();
             }
         } catch (BadCredentialsException e) {
             // Error específico para credenciales incorrectas
@@ -134,19 +122,48 @@ public class LoginBean {
         }
     }
 
-    private void redigir(){
+    private void redigir(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // Guardar el vuelo seleccionado en el contexto de la sesión o como atributo en el bean
-        FacesContext facesContext = FacesContext.getCurrentInstance();
-        ExternalContext externalContext = facesContext.getExternalContext();
+        HttpSessionRequestCache requestCache = new HttpSessionRequestCache();
+        SavedRequest savedRequest = requestCache.getRequest(request, response);
 
+        // Variable para la URL de redirección
+        String redirectUrl = "/";
+
+        // Verificar si hay una URL guardada en la sesión (cuando la solicitud fue interceptada)
+        if (savedRequest != null) {
+            // Obtener la URL original a la que el usuario quería acceder
+            redirectUrl = savedRequest.getRedirectUrl();
+
+            // Registrar información detallada sobre la redirección
+            Logger.logInfo("Redirección a URL original detectada.");
+            Logger.logInfo("URL original (guardada en sesión): " + redirectUrl);
+            Logger.logInfo("Método HTTP original: " + savedRequest.getMethod());
+            Logger.logInfo("Query String original: " + savedRequest.getRedirectUrl());
+            Logger.logInfo("Context Path: " + request.getContextPath());
+        } else {
+            // Si no hay URL guardada, redirigir al URI actual
+            redirectUrl = request.getRequestURI();
+
+            // Registrar información detallada sobre la redirección cuando no hay URL guardada
+            Logger.logInfo("No se detectó URL original guardada en sesión.");
+            Logger.logInfo("Redirigiendo a la URI actual: " + redirectUrl);
+        }
+
+        // Registrar más información sobre la solicitud
+        Logger.logInfo("Redirigiendo a URL final: " + redirectUrl);
+        Logger.logInfo("Request URI: " + request.getRequestURI());
+        Logger.logInfo("Request URL: " + request.getRequestURL().toString());
+
+        // Realizar la redirección a la URL correspondiente
         try {
-            externalContext.redirect("/");
-            /*externalContext.redirect(externalContext.getRequestContextPath()
-                    + "/");*/
+            FacesContext.getCurrentInstance().getExternalContext().redirect(redirectUrl);
         } catch (IOException e) {
-            e.printStackTrace();
+            Logger.logError("Error durante la redirección: " + e.getMessage());
+            throw e;
         }
     }
+
 
 
     // Método de logout

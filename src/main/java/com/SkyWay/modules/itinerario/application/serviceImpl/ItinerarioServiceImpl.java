@@ -8,17 +8,23 @@ import com.SkyWay.modules.itinerario.domain.repository.ItinerarioRepository;
 import com.SkyWay.modules.itinerario.domain.service.ItinerarioService;
 import com.SkyWay.modules.itinerario.presentation.dto.ItinerarioDTO;
 import com.SkyWay.modules.itinerario.presentation.dto.ItinerarioDetalleDTO;
+import com.SkyWay.modules.itinerario.presentation.dto.ItinerarioResumenDTO;
 import com.SkyWay.util.Logger;
 import jakarta.persistence.Query;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import jakarta.persistence.EntityManager;
@@ -53,6 +59,7 @@ public class ItinerarioServiceImpl implements ItinerarioService {
     }
 
 
+
     @Override
     public Itinerario save(Itinerario itinerario) {
         return itinerarioRepository.save(itinerario);
@@ -70,6 +77,32 @@ public class ItinerarioServiceImpl implements ItinerarioService {
         Optional<Itinerario> itinerario = itinerarioRepository.findById(id);
         return itinerario.orElse(null);  // Retorna null si no se encuentra el itinerario
     }
+
+    @Override
+    public List<ItinerarioResumenDTO> buscarConFiltroFechas(String rut, LocalDate fechaInicio, LocalDate fechaFin, int limit, int offset) {
+        Timestamp tsInicio = null;
+        Timestamp tsFin = null;
+
+        if (fechaInicio != null) {
+            tsInicio = Timestamp.valueOf(fechaInicio.atStartOfDay());
+        }
+        if (fechaFin != null) {
+            tsFin = Timestamp.valueOf(fechaFin.atTime(23, 59, 59));
+        }
+
+        String sql = "SELECT * FROM fn_getItinerariosPorRutYFechas(:rut, :limit, :offset, :fechaIni, :fechaFin)";
+
+        Query query = entityManager.createNativeQuery(sql, ItinerarioResumenDTO.class);
+        query.setParameter("rut", rut);
+        query.setParameter("limit", limit);
+        query.setParameter("offset", offset);
+        query.setParameter("fechaIni", tsInicio); // tipo java.sql.Timestamp
+        query.setParameter("fechaFin", tsFin);    // tipo java.sql.Timestamp
+
+        return (List<ItinerarioResumenDTO>) query.getResultList();
+        //return itinerarioRepository.buscarConFiltroFechas(rut, tsInicio, tsFin, limit, offset);
+    }
+
 
     @Override
     public void deleteById(Integer id) {
@@ -119,5 +152,27 @@ public class ItinerarioServiceImpl implements ItinerarioService {
         List<ItinerarioDetalleDTO> detalles = query.getResultList();
 
         return detalles;
+    }
+
+    @Override
+    public Page<Itinerario> findItinerariosByRut(String rut, Pageable pageable) {
+        return itinerarioRepository.findItinerariosByRut(rut,pageable);
+    }
+
+    @Override
+    public List<ItinerarioResumenDTO> findResumenByRut(String rut, int limit, int offset) {
+        //return itinerarioRepository.findResumenByRut(rut, limit, offset);
+        //SELECT * FROM fn_getItinerariosRut('12345678-9', 100, 0);
+        Logger.logInfo("buscado iitinerarios");
+        String queryString = "SELECT * FROM fn_getItinerariosPorRutYFechas(:p_rut,:p_limit,:offset)";
+
+        Query query = entityManager.createNativeQuery(queryString, ItinerarioResumenDTO.class);
+        //query.setParameter("p_id_itinerario", idItinerario);
+        query.setParameter("p_rut", rut);
+        query.setParameter("p_limit", limit);
+        query.setParameter("offset", offset);
+
+        // Ejecutar la consulta y obtener los resultados
+        return (List<ItinerarioResumenDTO>) query.getResultList();
     }
 }

@@ -1,4 +1,4 @@
-package com.SkyWay.modules.itinerario.presentation.bean;
+package com.SkyWay.views.Itinerario;
 
 
 import com.SkyWay.modules.aeropuerto.domain.model.Aeropuerto;
@@ -8,7 +8,6 @@ import com.SkyWay.modules.ciudad.domain.service.CiudadService;
 import com.SkyWay.modules.itinerario.domain.model.Itinerario;
 import com.SkyWay.modules.itinerario.domain.service.ItinerarioService;
 import com.SkyWay.modules.itinerario.presentation.dto.ItinerarioDTO;
-import com.SkyWay.modules.itinerario.presentation.dto.ItinerarioDetalleDTO;
 import com.SkyWay.modules.itinerariovuelo.domain.model.ItinerarioVuelo;
 import com.SkyWay.modules.itinerariovuelo.domain.service.ItinerarioVueloService;
 import com.SkyWay.modules.segmentovuelo.domain.model.SegmentoVuelo;
@@ -17,14 +16,11 @@ import com.SkyWay.modules.vuelo.domain.model.Vuelo;
 import com.SkyWay.modules.vuelo.domain.service.VueloService;
 import com.SkyWay.util.Logger;
 import jakarta.annotation.PostConstruct;
-import jakarta.enterprise.context.RequestScoped;
-import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.ExternalContext;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
 import jakarta.validation.constraints.Future;
-import org.primefaces.PrimeFaces;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
@@ -34,7 +30,6 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
 
 @Named("itinerarioBean")
@@ -79,7 +74,7 @@ public class ItinerarioBean implements Serializable {
     private LocalDate fechaBusqueda;
     private String vueloId;
     private Vuelo vueloSeleccionado;
-
+    private Integer adultos=1;
     private List<Ciudad>ciudads;
 
 
@@ -89,6 +84,7 @@ public class ItinerarioBean implements Serializable {
         vuelosMap=new HashMap<>();
         itinerariosAsignados = new ArrayList<>();
         vuelosAsignados=new ArrayList<>();
+
         //vuelos = vueloService.findAll();
 
         //vuelos.forEach(vuelo -> vuelosMap.put(vuelo.getIdVuelo().toString(), vuelo));
@@ -107,6 +103,7 @@ public class ItinerarioBean implements Serializable {
                     + "?salida=" + URLEncoder.encode(codigoIataOrigen, StandardCharsets.UTF_8)
                     + "&llegada=" + URLEncoder.encode(codigoIataDestino, StandardCharsets.UTF_8)
                     + "&fechaIda=" + fechaIda
+                    + "&adultos=" + adultos
                     + "&trip=OW";
             externalContext.redirect(redirectUrl);
         } catch (IOException e) {
@@ -123,6 +120,7 @@ public class ItinerarioBean implements Serializable {
                     + "&llegada=" + URLEncoder.encode(codigoIataDestino, StandardCharsets.UTF_8)
                     + "&fechaIda=" + fechaIda
                     + "&fechaRegreso=" + fechaRetorno  // Asegúrate de tener returnDate en tu bean
+                    + "&adultos=" + adultos
                     + "&trip=RT";
             externalContext.redirect(redirectUrl);
         } catch (IOException e) {
@@ -247,6 +245,14 @@ public class ItinerarioBean implements Serializable {
 
     // Método que se llama cuando se hace clic en "Seleccionar"
 
+
+    public void setAdultos(Integer adultos) {
+        this.adultos = adultos;
+    }
+
+    public Integer getAdultos() {
+        return adultos;
+    }
 
     public String getCodigoIataDestino() {
         return codigoIataDestino;

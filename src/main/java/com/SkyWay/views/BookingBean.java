@@ -15,7 +15,7 @@ import org.primefaces.model.FilterMeta;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.SkyWay.dto.InfoAsientoDTO;
+import com.SkyWay.modules.asiento.presentation.dto.InfoAsientoDTO;
 import com.SkyWay.dto.InfoVueloDTO;
 import com.SkyWay.model.EstadoReserva;
 import com.SkyWay.model.Pasajero;
