@@ -156,6 +156,7 @@ public class PerfilBean implements Serializable {
 		Logger.logInfo("Obteniendo el ticket para  "+itinerario.getIdReserva()+"-"+itinerario.getIdItinerario());
 
 		ticketInfos= reservaService.getTicket(usuario.getRut(),itinerario.getIdReserva());
+		Logger.logInfo(ticketInfos.toString());
 
 		for (TicketInfo ticketInfo : ticketInfos) {
 			Logger.logInfo(ticketInfo.toString());

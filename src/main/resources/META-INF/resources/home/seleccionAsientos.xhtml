@@ -286,13 +286,13 @@
                         <div>
                             <strong>Fecha de salida:</strong>
                             <h:outputText value="#{seleccionAsientosBean.vuelo.fechaHoraSalida}">
-                                <f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+                                <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago"/>
                             </h:outputText>
                         </div>
                         <div>
                             <strong>Fecha de llegada:</strong>
                             <h:outputText value="#{seleccionAsientosBean.vuelo.fechaHoraLlegada}">
-                                <f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+                                <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago"/>
                             </h:outputText>
                         </div>
 
@@ -305,7 +305,7 @@
                     <!-- Primera Clase -->
                     <h:outputText value="Primera Clase" styleClass="class-label" />
                     <h:panelGroup id="primeraClaseGroup">
-                        <h:panelGrid columns="4" styleClass="seats first-class">
+                        <h:panelGrid columns="2" styleClass="seats first-class">
                             <ui:repeat value="#{seleccionAsientosBean.asientos}" var="asientoSeleccionado" varStatus="status">
                                 <h:panelGroup rendered="#{asientoSeleccionado.clase == 'Primera Clase'}">
                                     <div class="seat #{asientoSeleccionado.estado}" data-seat="#{asientoSeleccionado.numeroAsiento}" onclick="selectSeat('#{asientoSeleccionado.numeroAsiento}')">

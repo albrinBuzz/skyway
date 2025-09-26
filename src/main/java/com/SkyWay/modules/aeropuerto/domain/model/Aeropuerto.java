@@ -8,6 +8,7 @@ import com.SkyWay.modules.puertaembarque.domain.model.PuertaEmbarque;
 import com.SkyWay.modules.segmentovuelo.domain.model.SegmentoVuelo;
 import jakarta.persistence.*;
 import java.util.List;
+import java.util.Objects;
 
 
 /**
@@ -229,6 +230,27 @@ public class Aeropuerto implements Serializable {
 		return segmentoVuelos2;
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if (obj == null || getClass() != obj.getClass()) return false;
+		Aeropuerto other = (Aeropuerto) obj;
+		return Objects.equals(idAeropuerto, other.idAeropuerto);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(idAeropuerto);
+	}
 
 
+	@Override
+	public String toString() {
+		final StringBuffer sb = new StringBuffer("Aeropuerto{");
+		sb.append("idAeropuerto=").append(idAeropuerto);
+		sb.append(", codigoIata='").append(codigoIata).append('\'');
+		sb.append(", nombreAeropuerto='").append(nombreAeropuerto).append('\'');
+		sb.append('}');
+		return sb.toString();
+	}
 }

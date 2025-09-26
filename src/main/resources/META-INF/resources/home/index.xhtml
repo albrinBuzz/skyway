@@ -206,15 +206,17 @@
                                     <!-- Aeropuerto de Origen -->
                                     <div class="col-md-6 mb-3">
                                         <h:outputLabel for="aeropuertoSalida" value="Aeropuerto de salida" />
+
+
                                         <p:autoComplete id="aeropuertoSalida"
-                                                        value="#{itinerarioBean.codigoIataOrigen}"
-                                                        completeMethod="#{itinerarioBean.buscarAeropuertos}"
+                                                        value="#{itinerarioBusquedaBean.codigoIataOrigen}"
+                                                        completeMethod="#{itinerarioBusquedaBean.buscarAeropuertos}"
                                                         var="aeropuerto"
+                                                        placeholder="Escribe para buscar aeropuerto"
                                                         itemLabel="#{aeropuerto.ciudad.nombre} - #{aeropuerto.nombreAeropuerto} (#{aeropuerto.codigoIata})"
                                                         itemValue="#{aeropuerto.codigoIata}"
                                                         forceSelection="true"
                                                         dropdown="true"
-                                                        placeholder="Escribe para buscar aeropuerto"
                                                         styleClass="w-100"
                                                         required="true"
                                                         requiredMessage="Debe seleccionar un aeropuerto de salida" />
@@ -224,8 +226,8 @@
                                     <div class="col-md-6 mb-3">
                                         <h:outputLabel for="aeropuertoLlegada" value="Aeropuerto de llegada" />
                                         <p:autoComplete id="aeropuertoLlegada"
-                                                        value="#{itinerarioBean.codigoIataDestino}"
-                                                        completeMethod="#{itinerarioBean.buscarAeropuertos}"
+                                                        value="#{itinerarioBusquedaBean.codigoIataDestino}"
+                                                        completeMethod="#{itinerarioBusquedaBean.buscarAeropuertos}"
                                                         var="aeropuerto"
                                                         itemLabel="#{aeropuerto.ciudad.nombre} - #{aeropuerto.nombreAeropuerto} (#{aeropuerto.codigoIata})"
                                                         itemValue="#{aeropuerto.codigoIata}"
@@ -243,7 +245,7 @@
                                     <div class="col-md-6 mb-3">
                                         <h:outputLabel for="fechaSalida" value="Fecha de salida" />
                                         <p:datePicker id="fechaSalida"
-                                                      value="#{itinerarioBean.fechaIda}"
+                                                      value="#{itinerarioBusquedaBean.fechaIda}"
                                                       showIcon="true"
                                                       required="true"
                                                       requiredMessage="Debe seleccionar la fecha de salida"
@@ -258,7 +260,7 @@
                                     <div class="col-md-4 mb-3">
                                         <h:outputLabel for="adultos" value="Pasajeros" styleClass="form-label" />
                                         <p:spinner id="adultos"
-                                                   value="#{itinerarioBean.adultos}"
+                                                   value="#{itinerarioBusquedaBean.adultos}"
                                                    min="1"
                                                    max="9"
                                                    stepFactor="1"
@@ -274,7 +276,7 @@
                                 <!-- Botón de búsqueda -->
                                 <div class="text-center mt-4">
                                     <p:commandButton value="Buscar Vuelos"
-                                                     action="#{itinerarioBean.buscarVuelosSoloIda}"
+                                                     action="#{itinerarioBusquedaBean.buscarVuelosSoloIda}"
                                                      styleClass="btn btn-primary btn-lg"
                                                      icon="pi pi-search"
                                                      update="@form messages" />
@@ -295,10 +297,10 @@
                                     <!-- Aeropuerto de Origen -->
                                     <div class="col-md-6 mb-3">
                                         <h:outputLabel for="origenRT" value="Desde (Aeropuerto de salida)" />
-                                        <p:selectOneMenu id="origenRT" value="#{itinerarioBean.codigoIataOrigen}" required="true"
+                                        <p:selectOneMenu id="origenRT" value="#{itinerarioBusquedaBean.codigoIataOrigen}" required="true"
                                                          requiredMessage="Debe seleccionar un aeropuerto de salida" styleClass="w-100">
                                             <f:selectItem itemLabel="Seleccione un aeropuerto" itemValue="" />
-                                            <f:selectItems value="#{itinerarioBean.aeropuertos}" var="aeropuerto"
+                                            <f:selectItems value="#{itinerarioBusquedaBean.aeropuertos}" var="aeropuerto"
                                                            itemLabel="#{aeropuerto.ciudad.nombre} - #{aeropuerto.nombreAeropuerto} (#{aeropuerto.codigoIata})"
                                                            itemValue="#{aeropuerto.codigoIata}" />
                                         </p:selectOneMenu>
@@ -307,10 +309,10 @@
                                     <!-- Aeropuerto de Destino -->
                                     <div class="col-md-6 mb-3">
                                         <h:outputLabel for="destinoRT" value="Hasta (Aeropuerto de llegada)" />
-                                        <p:selectOneMenu id="destinoRT" value="#{itinerarioBean.codigoIataDestino}" required="true"
+                                        <p:selectOneMenu id="destinoRT" value="#{itinerarioBusquedaBean.codigoIataDestino}" required="true"
                                                          requiredMessage="Debe seleccionar un aeropuerto de llegada" styleClass="w-100">
                                             <f:selectItem itemLabel="Seleccione un aeropuerto" itemValue="" />
-                                            <f:selectItems value="#{itinerarioBean.aeropuertos}" var="aeropuerto"
+                                            <f:selectItems value="#{itinerarioBusquedaBean.aeropuertos}" var="aeropuerto"
                                                            itemLabel="#{aeropuerto.ciudad.nombre} - #{aeropuerto.nombreAeropuerto} (#{aeropuerto.codigoIata})"
                                                            itemValue="#{aeropuerto.codigoIata}" />
                                         </p:selectOneMenu>
@@ -322,7 +324,7 @@
                                     <!-- Fecha de Ida -->
                                     <div class="col-md-6 mb-3">
                                         <h:outputLabel for="fechaIda" value="Fecha de salida" />
-                                        <p:datePicker id="fechaIda" value="#{itinerarioBean.fechaIda}" showIcon="true"
+                                        <p:datePicker id="fechaIda" value="#{itinerarioBusquedaBean.fechaIda}" showIcon="true"
                                                       required="true" requiredMessage="Debe seleccionar la fecha de salida"
                                                       pattern="dd/MM/yyyy" readonlyInput="true" styleClass="w-100" />
                                     </div>
@@ -330,7 +332,7 @@
                                     <!-- Fecha de Retorno -->
                                     <div class="col-md-6 mb-3">
                                         <h:outputLabel for="fechaRetorno" value="Fecha de regreso" />
-                                        <p:datePicker id="fechaRetorno" value="#{itinerarioBean.fechaRetorno}" showIcon="true"
+                                        <p:datePicker id="fechaRetorno" value="#{itinerarioBusquedaBean.fechaRetorno}" showIcon="true"
                                                       required="true" requiredMessage="Debe seleccionar la fecha de regreso"
                                                       pattern="dd/MM/yyyy" readonlyInput="true" styleClass="w-100" />
                                     </div>
@@ -339,7 +341,7 @@
                                 <!-- Botón de búsqueda -->
                                 <div class="text-center mt-4">
                                     <p:commandButton value="Buscar Vuelos"
-                                                     action="#{itinerarioBean.buscarVuelosIdaYVuelta}"
+                                                     action="#{itinerarioBusquedaBean.buscarVuelosIdaYVuelta}"
                                                      styleClass="btn btn-primary btn-lg"
                                                      icon="pi pi-search"
                                                      update="@form messages" />

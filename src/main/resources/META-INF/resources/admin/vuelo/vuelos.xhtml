@@ -1,118 +1,89 @@
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:h="jakarta.faces.html"
-      xmlns:f="jakarta.faces.core"
-      xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:p="http://primefaces.org/ui">
-<h:head>
-    <title>Agregar Vuelo</title>
-    <style>
-        .form-container {
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            max-width: 900px;
-            margin: auto;
-        }
+<?xml version="1.0" encoding="UTF-8"?>
 
-        .remove-btn {
-            background-color: red;
-            color: white;
-            border: none;
-            padding: 5px 8px;
-            border-radius: 3px;
-            cursor: pointer;
-        }
-    </style>
-</h:head>
-<h:body>
-    <h:form id="formVuelo">
-        <div class="form-container">
-            <h2>Agregar Vuelo</h2>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                template="/template/main.xhtml">
+    <h:outputStylesheet library="primefaces" name="themes/saga/theme.css"/>
 
-            <p:panelGrid columns="2" columnClasses="ui-grid-col-4,ui-grid-col-8" layout="grid" styleClass="ui-panelgrid-blank">
+    <ui:define name="contenido">
 
-                <p:outputLabel for="numeroVuelo" value="Número de Vuelo:" />
-                <p:inputText id="numeroVuelo" value="#{vueloBean.numeroVuelo}" required="true"/>
+        <h1>Próximos Vuelos</h1>
 
-                <p:outputLabel for="fechaSalida" value="Fecha y Hora de Salida:" />
-                <p:datePicker id="fechaSalida" value="#{vueloBean.fechaSalida}" showTime="true" required="true"/>
+        <!-- Colocamos un formulario alrededor de la tabla para asegurar que los botones se procesen correctamente -->
+        <h:form id="vueloForm">
 
-                <p:outputLabel for="fechaLlegada" value="Fecha y Hora de Llegada:" />
-                <p:datePicker id="fechaLlegada" value="#{vueloBean.fechaLlegada}" showTime="true" required="true"/>
-
-                <p:outputLabel for="precioBase" value="Precio Base:" />
-                <p:inputNumber id="precioBase" value="#{vueloBean.precioBase}" required="true"/>
-
-                <p:outputLabel for="aerolinea" value="Aerolínea:" />
-                <p:selectOneMenu id="aerolinea" value="#{vueloBean.aerolineaId}" required="true">
-                    <f:selectItem itemLabel="Seleccione" itemValue="" />
-                    <f:selectItem itemLabel="LATAM" itemValue="1" />
-                    <f:selectItem itemLabel="American Airlines" itemValue="2" />
-                </p:selectOneMenu>
-
-            </p:panelGrid>
-
-            <h3>Segmentos del Vuelo</h3>
-
-            <p:panelGrid columns="2" columnClasses="ui-grid-col-4,ui-grid-col-8" layout="grid">
-
-                <p:outputLabel for="orden" value="Orden Segmento:" />
-                <p:inputText id="orden" value="#{vueloBean.nuevoSegmento.orden}" />
-
-                <p:outputLabel for="origen" value="Aeropuerto Origen:" />
-                <p:selectOneMenu id="origen" value="#{vueloBean.nuevoSegmento.origen}">
-                    <f:selectItem itemLabel="Seleccione" itemValue="" />
-                    <f:selectItem itemLabel="SCL - Santiago" itemValue="1" />
-                    <f:selectItem itemLabel="LIM - Lima" itemValue="2" />
-                </p:selectOneMenu>
-
-                <p:outputLabel for="destino" value="Aeropuerto Destino:" />
-                <p:selectOneMenu id="destino" value="#{vueloBean.nuevoSegmento.destino}">
-                    <f:selectItem itemLabel="Seleccione" itemValue="" />
-                    <f:selectItem itemLabel="MIA - Miami" itemValue="3" />
-                    <f:selectItem itemLabel="JFK - New York" itemValue="4" />
-                </p:selectOneMenu>
-
-                <p:outputLabel for="horaSalida" value="Hora Salida Segmento:" />
-                <p:datePicker id="horaSalida" value="#{vueloBean.nuevoSegmento.horaSalida}" showTime="true" />
-
-                <p:outputLabel for="horaLlegada" value="Hora Llegada Segmento:" />
-                <p:datePicker id="horaLlegada" value="#{vueloBean.nuevoSegmento.horaLlegada}" showTime="true" />
-
-                <p:outputLabel for="duracion" value="Duración Estimada (minutos):" />
-                <p:inputText id="duracion" value="#{vueloBean.nuevoSegmento.duracion}" />
-            </p:panelGrid>
-
-            <p:commandButton value="Agregar Segmento" actionListener="#{vueloBean.agregarSegmento}" update="tablaSegmentos" styleClass="ui-button-success" />
-
-            <p:dataTable id="tablaSegmentos" value="#{vueloBean.segmentos}" var="seg" style="margin-top:20px">
-                <p:column headerText="Orden">
-                    <h:outputText value="#{seg.orden}" />
+            <p:dataTable value="#{vueloBean.vuelos}" var="vuelo"
+                         responsiveLayout="scroll"
+                         styleClass="table"
+                         rowIndexVar="index"
+                         expandableRowGroups="true"
+                         rowKey="#{vuelo.idVuelo}">
+                <p:column style="width:2rem" ariaHeaderText="Detalles">
+                    <p:rowToggler />
                 </p:column>
-                <p:column headerText="Origen">
-                    <h:outputText value="#{seg.origen}" />
+
+                <p:column headerText="N° Vuelo">
+                    #{vuelo.numeroVuelo}
                 </p:column>
-                <p:column headerText="Destino">
-                    <h:outputText value="#{seg.destino}" />
+
+                <p:column headerText="Fecha Salida">
+                    <h:outputText value="#{vuelo.fechaHoraSalida}">
+                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+                    </h:outputText>
                 </p:column>
-                <p:column headerText="Salida">
-                    <h:outputText value="#{seg.horaSalida}" />
+
+                <p:column headerText="Fecha Llegada">
+                    <h:outputText value="#{vuelo.fechaHoraLlegada}">
+                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+                    </h:outputText>
                 </p:column>
-                <p:column headerText="Llegada">
-                    <h:outputText value="#{seg.horaLlegada}" />
+
+                <p:column headerText="Acciones" styleClass="text-center">
+                    <!-- Botón para Editar dentro del formulario -->
+                    <p:commandButton value="Editar"
+                                     icon="pi pi-pencil"
+                                     styleClass="p-button-warning"
+                                     action="#{vueloBean.editarVuelo(vuelo)}"
+                                     update="vueloForm"
+                                     ajax="true"/>
                 </p:column>
-                <p:column headerText="Duración">
-                    <h:outputText value="#{seg.duracion} min" />
-                </p:column>
-                <p:column headerText="Acciones">
-                    <p:commandButton icon="pi pi-times" actionListener="#{vueloBean.eliminarSegmento(seg)}" update="tablaSegmentos" styleClass="remove-btn"/>
-                </p:column>
+
+                <p:rowExpansion>
+                    <p:panelGrid columns="1" style="width:100%">
+                        <p:dataTable value="#{vuelo.segmentoVuelos}" var="segmento"
+                                     styleClass="nested-table">
+
+                            <p:column headerText="Orden">
+                                #{segmento.ordenSegmento}
+                            </p:column>
+                            <p:column headerText="Hora Salida">
+                                <h:outputText value="#{segmento.horaSalida}">
+                                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+                                </h:outputText>
+                            </p:column>
+                            <p:column headerText="Hora Llegada">
+                                <h:outputText value="#{segmento.horaLlegada}">
+                                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+                                </h:outputText>
+                            </p:column>
+                            <p:column headerText="Origen">
+                                #{segmento.aeropuertoOrigen.codigoIata}
+                            </p:column>
+                            <p:column headerText="Destino">
+                                #{segmento.aeropuertoDestino.codigoIata}
+                            </p:column>
+
+                        </p:dataTable>
+                    </p:panelGrid>
+                </p:rowExpansion>
+
             </p:dataTable>
 
-            <p:commandButton value="Guardar Vuelo" action="#{vueloBean.guardarVuelo}" styleClass="ui-button-success" update="@form" />
-        </div>
-    </h:form>
-</h:body>
-</html>
+        </h:form>
+
+    </ui:define>
+
+</ui:composition>

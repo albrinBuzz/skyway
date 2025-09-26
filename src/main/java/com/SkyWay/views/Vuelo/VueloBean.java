@@ -36,6 +36,7 @@ import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -59,11 +60,14 @@ public class VueloBean implements Serializable {
     private Integer idAvion;
     private Integer idEstadoVuelo;
     private Vuelo vuelo;
+    private Vuelo vueloSeleccionado;
+    private SegmentoVuelo segmentoEditado; // El segmento que estamos editando
 
     private SegmentoVuelo segmentoNuevo = new SegmentoVuelo();
     private List<SegmentoVuelo> segmentos = new ArrayList<>();
     private List<Avion>avions;
     private List<Aerolinea>aerolineas;
+    private List<Vuelo> vuelos;
     @Autowired
     private VueloService vueloService; // Servicio para acceder a la lógica de negocio y persistencia
     @Autowired
@@ -143,6 +147,7 @@ public class VueloBean implements Serializable {
         preciosPorClase=new HashMap<>();
         preciosAsientos=new ArrayList<>();
         nuevoSegmento=new SegmentoVuelo();
+
         if (idVuelo!=null){
             segmentos=segmentoVueloService.findByIdVuelo(Integer.valueOf(idVuelo));
 
@@ -169,19 +174,62 @@ public class VueloBean implements Serializable {
 
 
             segmentos=new ArrayList<>();
+            vuelos=vueloService.findAll();
             //segmentos=simularSegmentos();
 
         }
-
+        segmentoEditado=new SegmentoVuelo();
 
     }
 
+
+
+    public void editarVuelo(Vuelo vuelo) throws IOException {
+        this.vueloSeleccionado = vuelo;
+        //Logger.logInfo(vuelo.toString());
+        // Aquí podrías redirigir a un formulario de edición si lo deseas
+        FacesContext.getCurrentInstance().getExternalContext()
+                .redirect("/admin/vuelo/vuelo.xhtml?vueloId=" + vuelo.getIdVuelo());
+
+        FacesContext.getCurrentInstance().addMessage(null,
+                new FacesMessage(FacesMessage.SEVERITY_INFO, "Vuelo seleccionado", vuelo.getNumeroVuelo()));
+    }
 
     public void eliminarSegmento(SegmentoVuelo segmento) {
         if (segmento != null) {
             segmentoVueloService.deleteById(segmento.getIdSegmento());  // O el método correspondiente en tu servicio
             segmentos.remove(segmento);
             Logger.logInfo("Segmento eliminado: " + segmento.getIdSegmento());
+        }
+    }
+
+    public void editarSegmento(SegmentoVuelo segmento) {
+        Logger.logInfo("editanto segmento-> "+segmento.toString());
+        this.segmentoEditado = segmento;
+        this.segmentoVueloService.save(segmento);
+    }
+
+    public SegmentoVuelo getSegmentoEditado() {
+        return segmentoEditado;
+    }
+
+    public void setSegmentoEditado(SegmentoVuelo segmentoEditado) {
+        this.segmentoEditado = segmentoEditado;
+    }
+
+    // Método que se ejecuta al guardar los cambios en el segmento
+    public void guardarSegmentoEditado() {
+        // Aquí actualizamos el vuelo con la nueva fecha de salida
+        if (segmentoEditado != null) {
+            for (SegmentoVuelo seg : vuelo.getSegmentoVuelos()) {
+                if (seg.equals(segmentoEditado)) {
+                    // Asumimos que 'horaSalida' es la fecha seleccionada por el usuario en el formulario
+                    seg.setHoraSalida(segmentoEditado.getHoraSalida());
+                    seg.setHoraLlegada(segmentoEditado.getHoraLlegada());
+                    break;
+                }
+            }
+            // Ahora, podrías guardar los cambios en la base de datos o realizar cualquier otra operación
         }
     }
 
@@ -366,6 +414,14 @@ public class VueloBean implements Serializable {
             return Timestamp.from(instant);
         }
         return null;
+    }
+
+    public Vuelo getVueloSeleccionado() {
+        return vueloSeleccionado;
+    }
+
+    public void setVueloSeleccionado(Vuelo vueloSeleccionado) {
+        this.vueloSeleccionado = vueloSeleccionado;
     }
 
     public String getNumeroVuelo() {
@@ -553,7 +609,9 @@ public class VueloBean implements Serializable {
     public void setPreciosAsientos(List<ClaseAsientoPrecioDto> preciosAsientos) {
         this.preciosAsientos = preciosAsientos;
     }
-
+    public List<Vuelo> getVuelos() {
+        return vuelos;
+    }
     public List<PuertaEmbarque> getPuertaEmbarques() {
         return puertaEmbarques;
     }
@@ -568,5 +626,9 @@ public class VueloBean implements Serializable {
 
     public void setPuertaEmbarqueSeleccion(String puertaEmbarqueSeleccion) {
         this.puertaEmbarqueSeleccion = puertaEmbarqueSeleccion;
+    }
+
+    public AeropuertoService getAeropuertoService() {
+        return aeropuertoService;
     }
 }

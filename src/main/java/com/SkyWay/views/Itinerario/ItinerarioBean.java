@@ -64,17 +64,13 @@ public class ItinerarioBean implements Serializable {
     private List<Vuelo> vuelosAsignados;
     private ItinerarioVuelo itinerarioVuelo;
     private List<SegmentoVuelo>segmentoVuelos;
-    private String codigoIataOrigen;
-    private String codigoIataDestino;
-    private LocalDate fechaRetorno;
-    @Future
-    private LocalDate fechaIda;
+
+
     private String aeropuertoOrigen; // Cambiado de String a Aeropuerto
     private String aeropuertoDestino; // Cambiado de String a Aeropuerto
     private LocalDate fechaBusqueda;
     private String vueloId;
     private Vuelo vueloSeleccionado;
-    private Integer adultos=1;
     private List<Ciudad>ciudads;
 
 
@@ -85,9 +81,9 @@ public class ItinerarioBean implements Serializable {
         itinerariosAsignados = new ArrayList<>();
         vuelosAsignados=new ArrayList<>();
 
-        //vuelos = vueloService.findAll();
+        vuelos = vueloService.findAll();
 
-        //vuelos.forEach(vuelo -> vuelosMap.put(vuelo.getIdVuelo().toString(), vuelo));
+        vuelos.forEach(vuelo -> vuelosMap.put(vuelo.getIdVuelo().toString(), vuelo));
 
         ciudads=ciudadService.getAllCiudades();
         itinerarioVuelo=new ItinerarioVuelo();
@@ -96,58 +92,8 @@ public class ItinerarioBean implements Serializable {
         aeropuertos.forEach(aeropuerto -> aeropuertosMap.put(aeropuerto.getCodigoIata(),aeropuerto));
     }
 
-    public void buscarVuelosSoloIda() throws ParseException {
-        try {
-            ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-            String redirectUrl = "/home/vuelos.xhtml"
-                    + "?salida=" + URLEncoder.encode(codigoIataOrigen, StandardCharsets.UTF_8)
-                    + "&llegada=" + URLEncoder.encode(codigoIataDestino, StandardCharsets.UTF_8)
-                    + "&fechaIda=" + fechaIda
-                    + "&adultos=" + adultos
-                    + "&trip=OW";
-            externalContext.redirect(redirectUrl);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
 
-    public void buscarVuelosIdaYVuelta() throws ParseException {
-        try {
-            ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-            String redirectUrl = "/home/vuelos.xhtml"
-                    + "?salida=" + URLEncoder.encode(codigoIataOrigen, StandardCharsets.UTF_8)
-                    + "&llegada=" + URLEncoder.encode(codigoIataDestino, StandardCharsets.UTF_8)
-                    + "&fechaIda=" + fechaIda
-                    + "&fechaRegreso=" + fechaRetorno  // Asegúrate de tener returnDate en tu bean
-                    + "&adultos=" + adultos
-                    + "&trip=RT";
-            externalContext.redirect(redirectUrl);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-
-
-    public void buscarVuelosSegmento() {
-
-        Logger.logInfo("buscando vuelos");
-
-        // Aquí se puede realizar la búsqueda de vuelos según los filtros establecidos
-        // Este ejemplo es solo una simulación
-        vuelos = new ArrayList<>(); // Resetear la lista de vuelos
-        // Filtrar vuelos según los criterios de búsqueda
-        // Simulamos algunos vuelos para demostrar el funcionamiento
-        Logger.logInfo(aeropuertoOrigen+"->"+aeropuertoDestino+" : "+fechaBusqueda);
-        if (aeropuertoOrigen != null && aeropuertoDestino != null && fechaBusqueda != null) {
-            Logger.logInfo(aeropuertoOrigen+"->"+aeropuertoDestino+" : "+fechaBusqueda);
-            vuelos.add(new Vuelo("1234", new Date(), "AER1", "AER2"));
-            vuelos.add(new Vuelo("5678", new Date(), "AER3", "AER2"));
-        }else {
-            Logger.logInfo("estan los campos nulos");
-        }
-    }
 
 
     public void saveItinerario() {
@@ -246,45 +192,6 @@ public class ItinerarioBean implements Serializable {
     // Método que se llama cuando se hace clic en "Seleccionar"
 
 
-    public void setAdultos(Integer adultos) {
-        this.adultos = adultos;
-    }
-
-    public Integer getAdultos() {
-        return adultos;
-    }
-
-    public String getCodigoIataDestino() {
-        return codigoIataDestino;
-    }
-
-    public String getCodigoIataOrigen() {
-        return codigoIataOrigen;
-    }
-
-    public void setCodigoIataDestino(String codigoIataDestino) {
-        this.codigoIataDestino = codigoIataDestino;
-    }
-
-    public void setCodigoIataOrigen(String codigoIataOrigen) {
-        this.codigoIataOrigen = codigoIataOrigen;
-    }
-
-    public void setFechaIda(@Future LocalDate fechaIda) {
-        this.fechaIda = fechaIda;
-    }
-
-    public void setFechaRetorno(LocalDate fechaRetorno) {
-        this.fechaRetorno = fechaRetorno;
-    }
-
-    public @Future LocalDate getFechaIda() {
-        return fechaIda;
-    }
-
-    public LocalDate getFechaRetorno() {
-        return fechaRetorno;
-    }
 
     public List<Ciudad> getCiudads() {
         return ciudads;

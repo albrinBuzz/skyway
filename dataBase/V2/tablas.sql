@@ -126,6 +126,7 @@ CREATE SEQUENCE rolusuario_id_seq START 1 INCREMENT 1;
 
 
 
+
 -- TABLAS Usuarios
 
 CREATE TABLE Roles (
@@ -230,12 +231,14 @@ CREATE TABLE Continente (
 -- LOCALIZACIÓN
 CREATE TABLE Pais (
     ID_PAIS INT PRIMARY KEY DEFAULT nextval('pais_seq'),
-    Nombre VARCHAR(100) NOT NULL
+    Nombre VARCHAR(100) NOT NULL,
+    ID_CONTINENTE INT,
+    CONSTRAINT fk_pais_continente FOREIGN KEY (ID_CONTINENTE) REFERENCES Continente(ID_CONTINENTE)
 );
 
-ALTER TABLE Pais ADD COLUMN ID_CONTINENTE INT;
+--ALTER TABLE Pais ADD COLUMN ID_CONTINENTE INT;
 
-ALTER TABLE Pais ADD CONSTRAINT fk_pais_continente FOREIGN KEY (ID_CONTINENTE) REFERENCES Continente(ID_CONTINENTE);
+--ALTER TABLE Pais ADD CONSTRAINT fk_pais_continente FOREIGN KEY (ID_CONTINENTE) REFERENCES Continente(ID_CONTINENTE);
 
 CREATE TABLE Ciudad (
     ID_CIUDAD INT PRIMARY KEY DEFAULT nextval('ciudad_seq'),
@@ -298,8 +301,8 @@ CREATE TABLE Avion (
 
 CREATE TABLE Capacidad_Clase (
     ID_CAPACIDAD_CLASE INT PRIMARY KEY DEFAULT nextval('capacidad_clase_seq'), -- Usar la secuencia
-    ID_AVION INT REFERENCES Avion(ID_AVION),                                 -- Referencia al avión
-    ID_CLASE INT REFERENCES Clase_asiento(ID_CLASE),                         -- Referencia a la clase de asiento
+    ID_AVION INT,                                 -- Referencia al avión
+    ID_CLASE INT ,                         -- Referencia a la clase de asiento
     Cantidad INT NOT NULL,                                                    -- Cantidad de asientos disponibles
     CONSTRAINT fk_avion FOREIGN KEY (ID_AVION) REFERENCES Avion(ID_AVION) ON DELETE CASCADE,
     CONSTRAINT fk_clase FOREIGN KEY (ID_CLASE) REFERENCES Clase_asiento(ID_CLASE) ON DELETE CASCADE
@@ -354,8 +357,8 @@ CREATE TABLE Segmento_Vuelo (
     ID_SEGMENTO INT PRIMARY KEY DEFAULT nextval('segmento_vuelo_seq'),
     ID_VUELO INT REFERENCES Vuelo(ID_VUELO),       -- A qué vuelo pertenece este segmento
     ORDEN_SEGMENTO INT ,                   -- Para saber qué tramo es (1º, 2º, etc.)
-    ID_AEROPUERTO_ORIGEN INT REFERENCES Aeropuerto(ID_AEROPUERTO),
-    ID_AEROPUERTO_DESTINO INT REFERENCES Aeropuerto(ID_AEROPUERTO),
+    ID_AEROPUERTO_ORIGEN INT ,
+    ID_AEROPUERTO_DESTINO INT ,
     HORA_SALIDA TIMESTAMP,
     HORA_LLEGADA TIMESTAMP,
     DURACION_ESTIMADA INTERVAL DEFAULT '0',
@@ -375,8 +378,8 @@ CREATE TABLE Asignacion_Puerta (
 CREATE TABLE Itinerario (
     ID_ITINERARIO INT PRIMARY KEY DEFAULT nextval('itinerario_seq'),
     FECHA_CREACION TIMESTAMP DEFAULT NOW(),
-    ORIGEN_AEROPUERTO INT REFERENCES Aeropuerto(ID_AEROPUERTO),
-    DESTINO_AEROPUERTO INT REFERENCES Aeropuerto(ID_AEROPUERTO),
+    ORIGEN_AEROPUERTO INT ,
+    DESTINO_AEROPUERTO INT ,
     HORA_SALIDA TIMESTAMP,
     HORA_LLEGADA TIMESTAMP,
     DURACION_TOTAL INTERVAL,
@@ -410,8 +413,8 @@ CREATE TABLE Turno (
 
 CREATE TABLE Turno_Tripulacion (
     ID_TURNO_Tripulacion INT PRIMARY KEY DEFAULT nextval('turno_tripulacion_seq'),
-    RUT_TRIPULACION VARCHAR(12) NOT NULL REFERENCES Tripulacion(RUT),  -- Relacionado al tripulante
-    ID_TURNO INT NOT NULL REFERENCES Turno(ID_TURNO),  -- Relacionado al turno específico
+    RUT_TRIPULACION VARCHAR(12) NOT NULL ,  -- Relacionado al tripulante
+    ID_TURNO INT NOT NULL,  -- Relacionado al turno específico
     CONSTRAINT fk_tripulacion FOREIGN KEY (RUT_TRIPULACION) REFERENCES Tripulacion(RUT),  -- Relación con tripulante
     CONSTRAINT fk_turno FOREIGN KEY (ID_TURNO) REFERENCES Turno(ID_TURNO)  -- Relación con turno
 );
@@ -511,6 +514,16 @@ CREATE TABLE Notificacion (
     Mensaje TEXT,
     Leido BOOLEAN DEFAULT FALSE,
     Fecha TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE Seguimiento_Vuelo (
+    ID_SEGUIMIENTO SERIAL PRIMARY KEY,
+    ID_VUELO INT REFERENCES Vuelo(ID_VUELO),
+    Latitud DECIMAL(9,6),
+    Longitud DECIMAL(9,6),
+    Altitud INT,
+    Velocidad INT,
+    Timestamp TIMESTAMP DEFAULT now()
 );
 
 

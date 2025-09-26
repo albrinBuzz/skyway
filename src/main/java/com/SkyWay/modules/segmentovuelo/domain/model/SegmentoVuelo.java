@@ -13,6 +13,7 @@ import jakarta.validation.constraints.FutureOrPresent;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 
@@ -102,6 +103,22 @@ public class SegmentoVuelo implements Serializable {
 		return horaSalida;
 	}
 
+	public Date getHoraSalidaDate() {
+		return (horaSalida != null) ? new Date(horaSalida.getTime()) : null;
+	}
+
+	public void setHoraSalidaDate(Date date) {
+		this.horaSalida = (date != null) ? new Timestamp(date.getTime()) : null;
+	}
+
+	public Date getHoraLlegadaDate() {
+		return (horaLlegada != null) ? new Date(horaLlegada.getTime()) : null;
+	}
+
+	public void setHoraLlegadaDate(Date date) {
+		this.horaLlegada = (date != null) ? new Timestamp(date.getTime()) : null;
+	}
+
 	public Integer getOrdenSegmento() {
 		return this.ordenSegmento;
 	}
@@ -171,6 +188,7 @@ public class SegmentoVuelo implements Serializable {
 		});
 		return puertas.toString();
 	}
+
 	@Override
 	public String toString() {
 		final StringBuffer sb = new StringBuffer("SegmentoVuelo{");
@@ -178,7 +196,8 @@ public class SegmentoVuelo implements Serializable {
 		sb.append(", horaLlegada=").append(horaLlegada);
 		sb.append(", horaSalida=").append(horaSalida);
 		sb.append(", ordenSegmento=").append(ordenSegmento);
-		//sb.append(", asignacionPuertas=").append(getPuertas());
+		sb.append(", aeropuertoDestino=").append(aeropuertoDestino.getNombreAeropuerto());
+		sb.append(", aeropuertoOrigen=").append(aeropuertoOrigen.getNombreAeropuerto());
 		sb.append('}');
 		return sb.toString();
 	}

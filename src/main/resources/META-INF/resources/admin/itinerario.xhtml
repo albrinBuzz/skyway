@@ -161,29 +161,7 @@
             </p:panel>
         </h:form>
 
-        <!-- FORMULARIO DE VUELO SELECCIONADO -->
-        <h:form id="formVueloSeleccionado">
-            <p:panel header="Detalle del Vuelo Seleccionado" rendered="#{not empty itinerarioBean.vueloSeleccionado}">
-                <h:panelGrid columns="2" cellpadding="5">
-                    <p:outputLabel value="N° de Vuelo:" />
-                    <h:outputText value="#{itinerarioBean.vueloSeleccionado.numeroVuelo}" />
 
-                    <p:outputLabel value="Fecha Salida:" />
-                    <h:outputText value="#{itinerarioBean.vueloSeleccionado.fechaHoraSalida}">
-                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
-                    </h:outputText>
-                </h:panelGrid>
-
-                <p:separator />
-
-                <p:commandButton value="Confirmar y Agregar Vuelo al Itinerario"
-                                 icon="pi pi-check"
-                                 actionListener="#{itinerarioBean.saveItinerarioVuelo}"
-                                 update="formVuelosAsignados:tablaVuelos formVueloSeleccionado"
-                                 process="@form"
-                                 styleClass="ui-button-primary" />
-            </p:panel>
-        </h:form>
 
         <!-- FORMULARIO DE VUELOS ASIGNADOS -->
         <h:form id="formVuelosAsignados">

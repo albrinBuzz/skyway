@@ -116,47 +116,6 @@ public class ReservaAsientoBean implements Serializable {
     }
 
 
-    /**
-     * Genera una lista de asientos de prueba con clases y estados variados
-     */
-    private List<InfoAsientoDTO> generarAsientosMock() {
-        List<InfoAsientoDTO> mockAsientos = new ArrayList<>();
-
-        // Primera Clase (6 asientos)
-        for (int i = 1; i <= 15; i++) {
-            mockAsientos.add(new InfoAsientoDTO(
-                    i,
-                    "1A" + i,
-                    i % 2 == 0 ? "ocupado" : "libre", // alternar estado
-                    500,
-                    "Primera Clase"
-            ));
-        }
-
-        // Ejecutiva (8 asientos)
-        for (int i = 7; i <= 30; i++) {
-            mockAsientos.add(new InfoAsientoDTO(
-                    i,
-                    "2B" + (i - 6),
-                    i % 3 == 0 ? "ocupado" : "libre",
-                    300,
-                    "Ejecutiva"
-            ));
-        }
-
-        // Económica (20 asientos)
-        for (int i = 15; i <= 150; i++) {
-            mockAsientos.add(new InfoAsientoDTO(
-                    i,
-                    "3C" + (i - 14),
-                    i % 4 == 0 ? "ocupado" : "libre",
-                    150,
-                    "Económica"
-            ));
-        }
-
-        return mockAsientos;
-    }
 
 
 
