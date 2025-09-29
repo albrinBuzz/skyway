@@ -36,6 +36,9 @@ DROP SEQUENCE IF EXISTS reserva_itinerario_seq CASCADE;
 DROP SEQUENCE IF EXISTS itinerario_vuelo_seq CASCADE;
 DROP SEQUENCE IF EXISTS rolusuario_id_seq CASCADE;
 DROP SEQUENCE IF EXISTS tipo_turno_seq CASCADE;
+DROP SEQUENCE IF EXISTS tarifa_seq CASCADE;
+DROP SEQUENCE IF EXISTS itinerario_tarifa_seq CASCADE;
+
 
 -- Eliminar Tablas con CASCADE
 DROP TABLE IF EXISTS estado_vuelo CASCADE;
@@ -80,6 +83,8 @@ DROP TABLE IF EXISTS Reserva_Itinerario CASCADE;
 DROP TABLE IF EXISTS Turno CASCADE;
 DROP TABLE IF EXISTS Continente CASCADE;
 DROP TABLE IF EXISTS seguimiento_vuelo CASCADE;
+DROP TABLE IF EXISTS Itinerario_Tarifa CASCADE;
+DROP TABLE IF EXISTS Tarifa CASCADE;
 
 
 
@@ -123,6 +128,17 @@ CREATE SEQUENCE notificacion_seq START 1;
 CREATE SEQUENCE tipo_turno_seq START 1;
 CREATE SEQUENCE capacidad_clase_seq START 1;
 CREATE SEQUENCE rolusuario_id_seq START 1 INCREMENT 1;
+CREATE SEQUENCE tarifa_seq
+    START WITH 1
+    INCREMENT BY 1
+    MINVALUE 1
+    NO CYCLE;
+
+CREATE SEQUENCE itinerario_tarifa_seq
+    START WITH 1
+    INCREMENT BY 1
+    MINVALUE 1
+    NO CYCLE;
 
 
 
@@ -222,6 +238,7 @@ CREATE TABLE Tipo_Turno (
     ID_TIPO INT PRIMARY KEY DEFAULT nextval('tipo_turno_seq'), -- Secuencia añadida,
     Nombre VARCHAR(100)
 );
+
 
 
 CREATE TABLE Continente (
@@ -400,6 +417,23 @@ CREATE TABLE Itinerario_Vuelo (
 );
 
 
+CREATE TABLE Tarifa (
+    ID_TARIFA INT PRIMARY KEY DEFAULT nextval('tarifa_seq'),
+    Nombre VARCHAR(50) NOT NULL UNIQUE, -- Básica, Flexible, Premium
+    Permite_Cambios BOOLEAN NOT NULL DEFAULT FALSE,
+    Horas_Minimas_Cambio INT, -- e.g. 48, 24 (NULL si no aplica)
+    Permite_Cancelacion BOOLEAN NOT NULL DEFAULT FALSE,
+    Reembolso_Permitido BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+-- Tabla Itinerario_Tarifa con ID autoincremental y restricción única para combinación
+CREATE TABLE Itinerario_Tarifa (
+    ID_ITINERARIO_TARIFA INT PRIMARY KEY DEFAULT nextval('itinerario_tarifa_seq'),
+    ID_ITINERARIO INT NOT NULL REFERENCES Itinerario(ID_ITINERARIO) ON DELETE CASCADE,
+    ID_TARIFA INT NOT NULL REFERENCES Tarifa(ID_TARIFA) ON DELETE CASCADE,
+    Precio DECIMAL(10,2) NOT NULL,
+    CONSTRAINT unique_itinerario_tarifa UNIQUE (ID_ITINERARIO, ID_TARIFA)
+);
 
 CREATE TABLE Turno (
     ID_TURNO INT PRIMARY KEY DEFAULT nextval('turno_seq'), -- Secuencia añadida
@@ -449,8 +483,9 @@ CREATE TABLE Reserva (
 
 CREATE TABLE Reserva_Itinerario (
     ID_RESERVA_ITINERARIO INT PRIMARY KEY DEFAULT nextval('reserva_itinerario_seq'),
-    ID_RESERVA INT NOT NULL REFERENCES Reserva(ID_RESERVA),  -- Relacionado con Reserva
-    ID_ITINERARIO INT NOT NULL REFERENCES Itinerario(ID_ITINERARIO)  -- Relacionado con Itinerario
+    ID_RESERVA INT NOT NULL REFERENCES Reserva(ID_RESERVA),
+    ID_ITINERARIO INT NOT NULL REFERENCES Itinerario(ID_ITINERARIO),
+    ID_TARIFA INT NOT NULL REFERENCES Tarifa(ID_TARIFA)
 );
 
 

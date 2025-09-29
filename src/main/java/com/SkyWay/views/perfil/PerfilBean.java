@@ -1,6 +1,7 @@
-package com.SkyWay.views;
+package com.SkyWay.views.perfil;
 
 import com.SkyWay.modules.asiento.domain.service.AsientoService;
+import com.SkyWay.modules.asiento.presentation.dto.InfoAsientoDTO;
 import com.SkyWay.modules.asiento.presentation.dto.InfoAsientoReservaDTO;
 import com.SkyWay.modules.itinerario.domain.model.Itinerario;
 import com.SkyWay.modules.itinerario.domain.service.ItinerarioService;
@@ -14,12 +15,14 @@ import com.SkyWay.modules.vuelo.domain.model.Vuelo;
 import com.SkyWay.modules.vuelo.domain.service.VueloService;
 import com.SkyWay.util.Logger;
 import jakarta.annotation.PostConstruct;
+import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
 import jakarta.servlet.http.HttpSession;
 import org.primefaces.PrimeFaces;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -152,6 +155,15 @@ public class PerfilBean implements Serializable {
 		//this.itinerarioDetalle = itinerarioService.findById(itinerario.getIdItinerario());;
 		PrimeFaces.current().executeScript("PF('dialogAsientos').show();");
 	}
+	public void cambiarAsiento(InfoAsientoReservaDTO infoAsientoDTO) throws IOException {
+
+		Logger.logInfo(infoAsientoDTO.toString());
+
+		FacesContext.getCurrentInstance().getExternalContext()
+				.redirect("/perfil/pasajero/cambioAsiento.xhtml?idVuelo="+infoAsientoDTO.getIdVuelo()
+						+"&idReserva="+infoAsientoDTO.getIdReserva());
+	}
+
 	public void getTicket(ItinerarioResumenDTO itinerario){
 		Logger.logInfo("Obteniendo el ticket para  "+itinerario.getIdReserva()+"-"+itinerario.getIdItinerario());
 

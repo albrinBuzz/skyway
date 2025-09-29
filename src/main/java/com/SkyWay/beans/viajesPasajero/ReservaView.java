@@ -36,7 +36,7 @@ public class ReservaView {
 		 if (idReserva!=null) {
 			 reserva=reservaService.findById(Integer.parseInt(idReserva)).get();
 			 
-			 System.out.println(reserva);
+			 System.out.println(reserva.toString());
 	     		
 		}
 	

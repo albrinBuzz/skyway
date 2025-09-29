@@ -22,26 +22,24 @@
         <h2 class="mb-4">Cambiar Asiento</h2>
 
         <div class="row">
-            <div class="col-md-6">
+
                 <h4>Detalles del Vuelo</h4>
                 <div class="border mb-4 p-3">
-                    <small>#{cambioView.vuelo.numeroVuelo}</small><br></br>
-                    <small>#{cambioView.vuelo.ciudadSalida}</small><br></br>
-                    <small>#{cambioView.vuelo.ciudadLlegada}</small><br></br>
-                    <small>#{cambioView.vuelo.duracion}</small><br></br>
-                    <small>#{cambioView.vuelo.fechaHoraSalida}</small><br></br>
-                    <small>#{cambioView.vuelo.fechaHoraLlegada}</small>
+                    <small>#{cambioBean.vuelo.numeroVuelo}</small><br></br>
+                    <small>#{cambioBean.vuelo.fechaHoraSalida}</small>
+                    <small>#{cambioBean.vuelo.fechaHoraLlegada}</small><br></br>
                 </div>
 						
 				<p:growl id="message" showDetail="true"/>		
 							
-				  <p:commandButton value="Abrir Distribucion" 
-                 action="#{cambioView.abrirDistribucion()}" />
+
                  
 			
-				 <p:commandButton value="Confirmar" action="#{cambioView.confirmar('1')}" update="message" styleClass="mr-2" icon="pi pi-check">
+				 <p:commandButton value="Confirmar" action="#{cambioBean.confirmar('1')}" update="message" styleClass="mr-2" icon="pi pi-check">
 		            <p:confirm header="Confirmacion" message="¿Esta seguro del cambio de asiento?" icon="pi pi-exclamation-triangle"/>
 		        </p:commandButton>
+
+
 		        
 		          <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" width="350">
 		            <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-flat"/>
@@ -77,7 +75,7 @@
 					    <h4>Asientos Seleccionados</h4>
 					    <p><strong>Estos son los asientos que has seleccionado originalmente:</strong></p>
 						
-						<ui:repeat value="#{cambioView.asientoSeleccionados}" var="asientoSeleccionado">
+						<ui:repeat value="#{cambioBean.asientoSeleccionados}" var="asientoSeleccionado">
 						    <div class="d-flex justify-content-start align-items-center mb-4">
 						        
 						        <!-- Asiento Originalmente Seleccionado -->
@@ -93,12 +91,12 @@
 						            <div class="seat-icon">
 						                <i class="fas fa-exchange-alt"></i> <!-- Ícono de cambio -->
 						            </div>
-						            <h6 class="text-white mb-0"> #{cambioView.getCambio(asientoSeleccionado.idAsiento)}</h6>
+						            <h6 class="text-white mb-0"> #{cambioBean.getCambio(asientoSeleccionado.idAsiento)}</h6>
 						        </div>
 						
 						        <!-- Botón para Cambiar Asiento -->
 						        <p:commandButton value="Cambiar Asiento" 
-						                         action="#{cambioView.cambiarAsiento(asientoSeleccionado)}" 
+						                         action="#{cambioBean.cambiarAsiento(asientoSeleccionado)}" 
 						                         update="modalAsientos" 
 						                         styleClass="btn btn-lg btn-outline-dark btn-change-seat">
 						  
@@ -115,70 +113,9 @@
 					    
 					</div>
 					      
-            </div>
 
-        				     <div class="col-md-6">
-                <h4>Selecciona tu Asiento</h4>
-                <div class="card">
-                    <h:form>
-                        <p:dataTable var="asiento" 
-                                     value="#{cambioView.asientos}" 
-                                     widgetVar="customersTable" 
-                                     rows="10"
-                                     paginator="true" 
-                                     paginatorPosition="both" 
-                                     selectionMode="single"
-                                     rowKey="#{asiento.numeroAsiento}"
-                                     style="margin-bottom:0" 
-                                     selectionPageOnly="false" 
-                                     selectionRowMode="none" 
-                                     cellNavigation="true"
-                                     filteredValue="#{cambioView.asientosFiltrados}"
-				                     paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
-				                     currentPageReportTemplate="{startRecord}-{endRecord} of {totalRecords} records"
-				                     rowsPerPageTemplate="5,10,{ShowAll|'All'}"
-                                     rowStyleClass="#{asiento.estado == 'ocupado' ? 'cheap' : null}">
-                            
-                            <!-- Filtros y selección de asiento 
-                            <p:ajax event="rowSelect" listener="#{bookingBean.onRowSelect}" update="totalAmount selectedSeatsSummary :form:dt-asientos" />
-                            <p:ajax event="rowUnselect" listener="#{bookingBean.onRowUnselect}" update="totalAmount selectedSeatsSummary :form:dt-asientos" />
-							-->
-                            <!-- Columna Asiento -->
-                            <p:column headerText="Asiento" sortBy="#{asiento.numeroAsiento}">
-                                <h:outputText value="#{asiento.numeroAsiento}" />
-                            </p:column>
-                            
-                             <p:column headerText="Asiento" sortBy="#{asiento.estado}">
-                                <h:outputText value="#{asiento.estado}" />
-                            </p:column>
-                            
-                            <p:column headerText="Asiento" sortBy="#{asiento.precio}">
-                              
-                                <h4>Precio: $ <h:outputText value="#{asiento.precio}" /></h4>
-                            </p:column>
 
-                            <!-- Columna Estado -->
-                            <p:column field="clase" headerText="Estado" filterMatchMode="exact">
-                                <f:facet name="filter">
-                                    <p:selectOneMenu onchange="PF('customersTable').filter()" styleClass="ui-custom-filter">
-                                        <f:selectItem itemLabel="Todos" itemValue="#{null}" noSelectionOption="true" />
-                                        <f:selectItems value="#{cambioView.customerStatus}" />
-                                    </p:selectOneMenu>
-                                </f:facet>
-                                <span class="customer-badge status-#{asiento.clase}">#{asiento.clase}</span>
-                            </p:column>
 
-                            <!-- Columna Selección -->
-                            <p:column headerText="Seleccionar" >
-                                <p:commandButton  
-                                    value="Reservar" 
-                                    styleClass="btn btn-primary btn-lg" 
-                                    actionListener="#{cambioView.reservarAsiento(asiento)}" />
-                            </p:column>
-                        </p:dataTable>
-                    </h:form>
-                </div>
-            </div>	
         </div>
     </div>
 
@@ -206,7 +143,7 @@
             </div>
 
             <h4>Selecciona tu nuevo Asiento</h4>
-            <ui:repeat value="#{cambioView.asientosParticionados}" var="fila">
+            <ui:repeat value="#{cambioBean.asientosParticionados}" var="fila">
                 <div class="d-flex flex-row">
                     <ui:repeat value="#{fila}" var="asiento">
                         <div class="seat" 
@@ -219,7 +156,7 @@
                 </div>
             </ui:repeat>
 
-            <p:commandButton value="Confirmar Cambio" action="#{cambioView.changeSeat}" styleClass="btn btn-primary" />
+            <p:commandButton value="Confirmar Cambio" action="#{cambioBean.changeSeat}" styleClass="btn btn-primary" />
         </h:form>
     </p:dialog>
 </h:form>
@@ -229,21 +166,21 @@
       <p:commandButton value="Cerrar" onclick="PF('modalAsientos').hide();" />
     <h:form>
         <h:outputText value="Seleccione un asiento:" />
-        <h:outputText value="#{cambioView.asientoActual.numeroAsiento}" />
+        <h:outputText value="#{cambioBean.asientoActual.numeroAsiento}" />
         
         <!-- Contenedor para mostrar los asientos en filas -->
         <div class="seat-container">
             <!-- Primera Clase -->
             <h:outputText value="Primera Clase" styleClass="class-label" />
             <h:panelGrid columns="3" styleClass="seats first-class">
-                <ui:repeat value="#{cambioView.asientos}" var="asientoSeleccionado" varStatus="status">
+                <ui:repeat value="#{cambioBean.asientos}" var="asientoSeleccionado" varStatus="status">
                     <!-- Solo mostramos los asientos de Primera Clase -->
                     
                      
                     <h:panelGroup rendered="#{asientoSeleccionado.clase == 'Primera Clase'}">
                    		  		 <div class="seat #{asientoSeleccionado.estado}" data-seat="#{asientoSeleccionado.numeroAsiento}" onclick="selectSeat('#{asientoSeleccionado.numeroAsiento}')">
 
-                          <h:commandButton styleClass="seat #{asientoSeleccionado.estado}"  value="#{asientoSeleccionado.numeroAsiento}" action="#{cambioView.setearAsiento(asientoSeleccionado)}"/>
+                          <h:commandButton styleClass="seat #{asientoSeleccionado.estado}"  value="#{asientoSeleccionado.numeroAsiento}" action="#{cambioBean.setearAsiento(asientoSeleccionado)}"/>
                                   </div>
                     </h:panelGroup>
                 </ui:repeat>
@@ -252,11 +189,11 @@
             <!-- Clase Ejecutiva -->
             <h:outputText value="Clase Ejecutiva" styleClass="class-label" />
             <h:panelGrid columns="2" styleClass="seats business-class">
-                <ui:repeat value="#{cambioView.asientos}" var="asientoSeleccionado" varStatus="status">
+                <ui:repeat value="#{cambioBean.asientos}" var="asientoSeleccionado" varStatus="status">
                     <!-- Solo mostramos los asientos de Clase Ejecutiva -->
                     <h:panelGroup rendered="#{asientoSeleccionado.clase == 'Ejecutiva'}">
                      	
-                          <h:commandButton styleClass="seat #{asientoSeleccionado.estado}"  value="#{asientoSeleccionado.numeroAsiento}" action="#{cambioView.setearAsiento(asientoSeleccionado)}"/>
+                          <h:commandButton styleClass="seat #{asientoSeleccionado.estado}"  value="#{asientoSeleccionado.numeroAsiento}" action="#{cambioBean.setearAsiento(asientoSeleccionado)}"/>
                              
                     </h:panelGroup>
                 </ui:repeat>
@@ -265,11 +202,11 @@
             <!-- Clase Económica -->
             <h:outputText value="Clase Económica" styleClass="class-label" />
             <h:panelGrid columns="3" styleClass="seats economy-class">
-                <ui:repeat value="#{cambioView.asientos}" var="asientoSeleccionado" varStatus="status">
+                <ui:repeat value="#{cambioBean.asientos}" var="asientoSeleccionado" varStatus="status">
                     <!-- Solo mostramos los asientos de Clase Económica -->
                     <h:panelGroup rendered="#{asientoSeleccionado.clase == 'Económica'}">
                      		
-                          <h:commandButton styleClass="seat #{asientoSeleccionado.estado}"  value="#{asientoSeleccionado.numeroAsiento}" action="#{cambioView.setearAsiento(asientoSeleccionado)}"/>
+                          <h:commandButton styleClass="seat #{asientoSeleccionado.estado}"  value="#{asientoSeleccionado.numeroAsiento}" action="#{cambioBean.setearAsiento(asientoSeleccionado)}"/>
                           
                     </h:panelGroup>
                 </ui:repeat>

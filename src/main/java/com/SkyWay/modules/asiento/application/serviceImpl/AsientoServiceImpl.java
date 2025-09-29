@@ -182,6 +182,7 @@ public class AsientoServiceImpl implements AsientoService {
  		
 		return asientos;
 	}
+
 	@Override
 	public List<InfoAsientoReservaDTO> getAsientosReservados(Integer idReserva, Integer idItinerario) {
 		  List<InfoAsientoReservaDTO>asientos;
@@ -200,85 +201,15 @@ public class AsientoServiceImpl implements AsientoService {
 	@Override
 	@Transactional
 	public List<InfoAsientoDTO> getAsientosVuelo(Integer idReserva, Integer idVuelo) {
-		// TODO Auto-generated method stub
+		List<InfoAsientoDTO> asientos;
+		  Query query = em.createNativeQuery(
+				"select * from fn_getAsientosAvion(:p_vuelo,:p_reserva)",
+				InfoAsientoDTO.class);
+		query.setParameter("p_vuelo", idVuelo);
+		query.setParameter("p_reserva", idReserva);
+		LOGGER.info("Vuelo a buscar {} ",idVuelo);
 
-		List<InfoAsientoDTO> asientos = new ArrayList<InfoAsientoDTO>();
-		StoredProcedureQuery query = em.createStoredProcedureQuery("sp_getAsientoSeleccionados");
-	    
-	    // Registrar los parámetros del procedimiento
-	    query.registerStoredProcedureParameter("p_id_reserva", Integer.class, ParameterMode.IN);
-	    query.registerStoredProcedureParameter("p_idVuelo", Integer.class, ParameterMode.IN);
-	    query.registerStoredProcedureParameter("cursor_asientos", void.class, ParameterMode.REF_CURSOR);
-	    
-	    // Establecer los valores de los parámetros
-	    query.setParameter("p_id_reserva", idReserva);
-	    query.setParameter("p_idVuelo", idVuelo);
-	    //query.setParameter(2, ParameterMode.REF_CURSOR);
-	 
-	    
-	    // Ejecutar el procedimiento
-	    query.execute();
-	    
-	    //ResultSet cursor = (ResultSet) query.getOutputParameterValue("cursor_asientos");
-	    
-	     List<Object[]> resultList = query.getResultList();
-	    // Mapeo a objetos DTO
-	    
-	    // Obtener el cursor
-	
-	
-	    
-	    for (Object[] row : resultList) {
-	        InfoAsientoDTO asiento=new InfoAsientoDTO();
-	        asiento.setIdAsiento((Integer) row[0]);
-	        asiento.setNumeroAsiento((String) row[1]);
-	        asiento.setEstado((String) row[2]); 
-	        asiento.setPrecio((Integer)row[3]);
-	        asiento.setClase((String)row[4]);
-	       
-	        //asiento.setEstado( (estado) ? "libre" : "ocupado"));
-
-	        
-	        asientos.add(asiento);
-	    }
-	    
-	
-
-	  /* try (Connection conn = dataSource.getConnection();
-	    		   CallableStatement stmt = conn.prepareCall("CALL sp_getAsientosAvion(?, ?)")) {
-	        
-	        stmt.setInt(1, idAvion);
-	        stmt.registerOutParameter(2, Types.REF_CURSOR);
-
-	        // Ejecutar el procedimiento
-	        stmt.execute();
-
-	        // Obtener el cursor
-	        try (ResultSet rs = (ResultSet) stmt.getObject(2)) {
-	            while (rs.next()) {
-	                InfoAsientoDTO asiento = new InfoAsientoDTO();
-	                asiento.setIdAsiento(rs.getInt(1));
-	                asiento.setNumeroAsiento(rs.getString(2));
-	                String estado= rs.getString(3);
-	    	        
-	    	        if(estado.equals("libre")) {
-	    	          	asiento.setEstado(true);
-	    	        }else {
-	    	          	asiento.setEstado(false);
-	    	        }
-	                asientos.add(asiento);
-	            }
-	        }
-	    } catch (SQLException e) {
-	    	System.out.println(e.getMessage());
-	    	e.printStackTrace();
-		  
-    		//throw new RuntimeException("Error al llamar al procedimiento: " + e.getMessage());
-		}*/
-		
-		
-	          		
-		return asientos;
+	 return  query.getResultList();
 	}
 	
 	

@@ -149,10 +149,11 @@ public class Reserva implements Serializable {
 
 	@Override
 	public String toString() {
-		return "Reserva [fechaReserva=" + fechaReserva + ", pasajero=" + pasajero + "]";
+		final StringBuffer sb = new StringBuffer("Reserva{");
+		sb.append("idReserva=").append(idReserva);
+		sb.append(", fechaReserva=").append(fechaReserva);
+		sb.append(", pasajero=").append(pasajero.toString());
+		sb.append('}');
+		return sb.toString();
 	}
-	
-	
-	
-
 }

@@ -167,62 +167,130 @@
             color: #fff;
             padding: 20px 0;
         }
+
+        .sticky-header {
+    background: linear-gradient(to right, #0d6efd, #0b5ed7);
+    color: white;
+    z-index: 999;
+    position: sticky;
+    top: 0;
+    padding: 12px 0;
+}
+
+.navbar-nav .nav-link {
+    margin: 0 10px;
+    font-weight: 500;
+}
+
+.dropdown-menu {
+    border-radius: 10px;
+    min-width: 320px;
+}
+
+.dropdown-toggle::after {
+    margin-left: 0.5rem;
+}
+
     </style>
 </h:head>
 
 <body>
 
-<div class="container-fluid px-5 d-none d-lg-block sticky-header">
-    <div class="row gx-0">
-        <div class="col-lg-4 d-flex justify-content-start align-items-center">
-            <p:link href="/" title="Regresar al inicio de la página">
-                <p:outputLabel id="labelHome" value="Regresar al Inicio" />
+<div class="container-fluid px-5 sticky-header shadow-sm">
+    <div class="row gx-0 align-items-center">
+
+        <!-- LOGO -->
+        <div class="col-lg-3 d-flex align-items-center">
+            <p:link href="/" styleClass="navbar-brand text-white fs-4 fw-bold">
+                <i class="fas fa-plane-departure me-2"></i> AeroViajes
             </p:link>
         </div>
 
-        <div class="col-lg-8 text-center text-lg-end">
+        <!-- MENÚ DE NAVEGACIÓN -->
+        <div class="col-lg-6 d-none d-lg-flex justify-content-center">
+            <nav class="navbar navbar-expand-lg navbar-dark">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <p:link href="/home/index.xhtml" styleClass="nav-link text-white">
+                            <i class="fas fa-home me-1"></i>Inicio
+                        </p:link>
+                    </li>
+                    <li class="nav-item">
+                        <p:link href="/home/reservas.xhtml" styleClass="nav-link text-white">
+                            <i class="fas fa-ticket-alt me-1"></i>Reservar Vuelo
+                        </p:link>
+                    </li>
+                    <li class="nav-item">
+                        <p:link href="/estado-vuelo.xhtml" styleClass="nav-link text-white">
+                            <i class="fas fa-plane me-1"></i>Estado de Vuelo
+                        </p:link>
+                    </li>
+                    <li class="nav-item">
+                        <p:link href="/checkin.xhtml" styleClass="nav-link text-white">
+                            <i class="fas fa-luggage-cart me-1"></i>Check-In
+                        </p:link>
+                    </li>
+                    <li class="nav-item">
+                        <p:link href="/ofertas.xhtml" styleClass="nav-link text-white">
+                            <i class="fas fa-tags me-1"></i>Ofertas
+                        </p:link>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+        <!-- LOGIN / USUARIO -->
+        <div class="col-lg-3 d-flex justify-content-end">
             <div class="d-inline-flex align-items-center">
-                <!-- Mostrar login si no está autenticado -->
+
+                <!-- SI NO ESTÁ AUTENTICADO -->
                 <h:panelGroup rendered="#{!userBean.loggedIn}">
                     <div class="dropdown">
-                        <a href="#" class="nav-link dropdown-toggle text-light" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-sign-in-alt me-2"></i><small>Login</small>
+                        <a href="#" class="btn btn-outline-light dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="fas fa-sign-in-alt me-2"></i> Iniciar Sesión
                         </a>
-
-                        <div class="dropdown-menu p-4 rounded shadow-lg" style="min-width: 320px;">
+                        <div class="dropdown-menu dropdown-menu-end p-4 rounded shadow-lg" style="min-width: 320px;">
                             <h:form id="loginForm">
                                 <h:panelGroup>
                                     <div class="mb-3 text-center">
                                         <h4>Iniciar sesión</h4>
                                     </div>
-                                    <!-- Campos de usuario y contraseña -->
-                                    <div class="mb-3 position-relative">
+
+                                    <!-- Usuario -->
+                                    <div class="mb-3">
                                         <h:outputLabel for="username" value="Usuario:" class="form-label" />
-                                        <h:inputText id="username" value="#{loginBean.username}" required="true" class="form-control" placeholder="Introduce tu usuario" />
+                                        <h:inputText id="username" value="#{loginBean.username}" required="true"
+                                                     class="form-control" placeholder="Introduce tu usuario" />
                                         <h:message for="username" styleClass="invalid-feedback d-block" />
                                     </div>
 
-                                    <div class="mb-3 position-relative">
+                                    <!-- Contraseña -->
+                                    <div class="mb-3">
                                         <h:outputLabel for="password" value="Contraseña:" class="form-label" />
-                                        <p:password id="password" value="#{loginBean.password}" toggleMask="true" class="form-control" placeholder="Introduce tu contraseña" />
+                                        <p:password id="password" value="#{loginBean.password}" toggleMask="true"
+                                                    class="form-control" placeholder="Introduce tu contraseña" />
                                         <h:message for="password" styleClass="invalid-feedback d-block" />
                                     </div>
 
+                                    <!-- Mensajes de error -->
                                     <h:messages id="loginMessages" styleClass="alert alert-danger mb-3" />
+
+                                    <!-- Botones -->
                                     <div class="d-grid gap-2">
-                                        <h:commandButton value="Iniciar sesión" action="#{loginBean.login}" class="btn btn-primary btn-lg" />
-                                        <h:commandButton value="Cancelar" action="#{loginBean.cancelLogin}" class="btn btn-secondary btn-lg" />
+                                        <h:commandButton value="Iniciar sesión" action="#{loginBean.login}" class="btn btn-primary" />
+                                        <h:commandButton value="Cancelar" action="#{loginBean.cancelLogin}" class="btn btn-secondary" />
                                     </div>
+
+                                    <!-- Recuperar contraseña -->
                                     <div class="text-center mt-3">
                                         <a href="#" class="text-muted">¿Olvidaste tu contraseña?</a>
                                     </div>
 
-                                    <div class="text-center mt-3">
-
-                                    <p:link href="/home/registro.xhtml" class="dropdown-item d-flex align-items-center">
-                                        ¿No tienes cuenta? Regístrate aquí
-                                    </p:link>
-
+                                    <!-- Registro -->
+                                    <div class="text-center mt-2">
+                                        <p:link href="/home/registro.xhtml" class="text-primary">
+                                            ¿No tienes cuenta? Regístrate
+                                        </p:link>
                                     </div>
                                 </h:panelGroup>
                             </h:form>
@@ -230,66 +298,43 @@
                     </div>
                 </h:panelGroup>
 
-                <!-- Menú de usuario si está autenticado -->
-                <h:form id="menuForm">
-                    <h:panelGroup rendered="#{userBean.loggedIn}">
-                        <div class="dropdown">
-                            <a href="#" class="dropdown-toggle text-light d-flex align-items-center" data-bs-toggle="dropdown">
-                                <i class="fas fa-user-circle me-2 user-icon"></i>
-                                <span><h:outputText value="#{userBean.name}" class="fw-bold" /></span>
-                            </a>
-                            <div class="dropdown-menu rounded shadow-lg">
-                                <div class="dropdown-header">
-                                    <h6 class="mb-0">¡Bienvenido de nuevo, <h:outputText value="#{userBean.usuario.nombre}"/>!</h6>
-                                    <small>¿Qué te gustaría hacer hoy?</small>
-                                </div>
-                                <div class="dropdown-divider"></div>
-
-                                <!-- Opción Perfil -->
-                                <p:link href="/perfil" class="dropdown-item d-flex align-items-center">
-                                    <i class="fas fa-user-cog me-2" style="color: #007bff;"></i>
-                                    <span>Perfil</span>
+                <!-- SI ESTÁ AUTENTICADO -->
+                <h:panelGroup rendered="#{userBean.loggedIn}">
+                    <div class="dropdown">
+                        <a href="#" class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-2"></i>
+                            <h:outputText value="#{userBean.usuario.nombre}" />
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end shadow">
+                            <h:panelGroup rendered="#{userBean.hasRole('ROLE_PASAJERO')}">
+                                <p:link href="/perfil/pasajero/index.xhtml" styleClass="dropdown-item">
+                                    <i class="fas fa-suitcase-rolling me-2"></i> Mis Reservas
                                 </p:link>
-
-                                <!-- Opción Admin para el rol de Admin -->
-                                <!-- 👮‍♂️ ADMIN -->
-                                <h:panelGroup rendered="#{userBean.hasRole('ROLE_ADMIN')}">
-                                    <p:link href="/admin/index.xhtml" class="dropdown-item d-flex align-items-center">
-                                        <i class="fas fa-user-shield me-2" style="color: #007bff; font-size: 18px;"></i>
-                                        <span>Admin</span>
-                                    </p:link>
-                                </h:panelGroup>
-
-                                <!-- 🧍‍♂️ PASAJERO -->
-                                <h:panelGroup rendered="#{userBean.hasRole('ROLE_PASAJERO')}">
-                                    <p:link href="/perfil/pasajero/index.xhtml" class="dropdown-item d-flex align-items-center">
-                                        <i class="fas fa-plane-departure me-2" style="color: #28a745; font-size: 18px;"></i>
-                                        <span>Vuelos Pasajero</span>
-                                    </p:link>
-                                </h:panelGroup>
-
-                                <!-- 🧑‍✈️ PILOTO -->
-                                <h:panelGroup rendered="#{userBean.hasRole('ROLE_PILOTO')}">
-                                    <p:link href="/perfil/piloto/index.xhtml" class="dropdown-item d-flex align-items-center">
-                                        <i class="fas fa-user-tie me-2" style="color: #fd7e14; font-size: 18px;"></i>
-                                        <span>Vuelos Piloto</span>
-                                    </p:link>
-                                </h:panelGroup>
-
-
-                                <!-- Opción Cerrar sesión -->
-                                <p:link href="/logout" class="dropdown-item d-flex align-items-center">
-                                    <i class="fas fa-sign-out-alt me-2" style="color: #007bff;"></i>
-                                    <span>Cerrar sesión</span>
+                            </h:panelGroup>
+                            <h:panelGroup rendered="#{userBean.hasRole('ROLE_PILOTO')}">
+                                <p:link href="/perfil/piloto/index.xhtml" styleClass="dropdown-item">
+                                    <i class="fas fa-user-tie me-2"></i> Vuelos Asignados
                                 </p:link>
-                            </div>
+                            </h:panelGroup>
+                            <h:panelGroup rendered="#{userBean.hasRole('ROLE_ADMIN')}">
+                                <p:link href="/admin/index.xhtml" styleClass="dropdown-item">
+                                    <i class="fas fa-tools me-2"></i> Panel Admin
+                                </p:link>
+                            </h:panelGroup>
+                            <div class="dropdown-divider"></div>
+                            <p:link href="/logout" styleClass="dropdown-item text-danger">
+                                <i class="fas fa-sign-out-alt me-2"></i> Cerrar Sesión
+                            </p:link>
                         </div>
-                    </h:panelGroup>
-                </h:form>
+                    </div>
+                </h:panelGroup>
+
             </div>
         </div>
     </div>
 </div>
+
+
 
  		<ui:insert name="contenido"></ui:insert>
 
