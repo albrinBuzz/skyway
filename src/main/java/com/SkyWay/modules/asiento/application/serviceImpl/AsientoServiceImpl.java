@@ -171,12 +171,12 @@ public class AsientoServiceImpl implements AsientoService {
 	        		    InfoAsientoDTO.class);
 	          		query.setParameter("idAvion", idAvion);
 	          		query.setParameter("p_vuelo", idVuelo);*/
-
+		com.SkyWay.util.Logger.logInfo("Vuelo-> :"+idVuelo);
 		Query query = em.createNativeQuery(
 				"select * from fn_getAsientosAvion(:p_vuelo)",
 				InfoAsientoDTO.class);
 		query.setParameter("p_vuelo", idVuelo);
-	   LOGGER.info("Vuelo a buscar {} ",idVuelo);
+
 	
 	   	asientos= query.getResultList();
  		

@@ -12,6 +12,9 @@ import com.SkyWay.modules.reserva.domain.model.Reserva;
 import com.SkyWay.modules.reserva.domain.service.ReservaService;
 import com.SkyWay.modules.reservaitinerario.domain.model.ReservaItinerario;
 import com.SkyWay.modules.reservaitinerario.domain.service.ReservaItinerarioService;
+import com.SkyWay.modules.tarifa.domain.service.TarifaService;
+import com.SkyWay.modules.tarifaItinerario.domain.model.ItinerarioTarifa;
+import com.SkyWay.modules.tarifaItinerario.domain.service.ItinerarioTarifaService;
 import com.SkyWay.modules.usuario.domain.model.Usuario;
 import com.SkyWay.modules.usuario.domain.service.UsuarioService;
 import com.SkyWay.modules.vuelo.domain.service.VueloService;
@@ -55,7 +58,16 @@ public class ReservaBean implements Serializable {
     private PasajeroService pasajeroService;
     @Autowired
     private UsuarioService usuarioService;
+
+    @Autowired
+    private TarifaService tarifaService;
+
+    @Autowired
+    private ItinerarioTarifaService itinerarioTarifaService;
+
     private Pasajero pasajero = new Pasajero();
+    private HashMap<Integer,Integer>tarifasItinerarios;
+
 
     @Autowired
     private HttpSession session;
@@ -77,6 +89,9 @@ public class ReservaBean implements Serializable {
         Map<String, Object> sessionMap = context.getExternalContext().getSessionMap();
 
         var idItinerarios = (List<Integer>) sessionMap.get("itinerarios");
+
+        tarifasItinerarios= (HashMap<Integer, Integer>) sessionMap.get("tarifasItinerios");
+
         if (idItinerarios==null){
             return;
         }
@@ -129,6 +144,7 @@ public class ReservaBean implements Serializable {
 
 
         var estatus=estadoReservaService.findById(2).get();
+
         //var pasajero=pasajeroService.findById("12345678-9").get();
 
         reserva.setEstadoReservaBean(estatus);
@@ -178,11 +194,39 @@ public class ReservaBean implements Serializable {
         });
 
 
+        Logger.logInfo("arreglar la asignacion de la tarifa, solo se setea un vaalor preestablecido");
+
+
+        /*tarifasItinerarios.forEach((idItinerario, idTarifa) -> {
+
+           var  itinerario=  itinerarioService.findById(idItinerario);
+            ReservaItinerario rersv=new ReservaItinerario();
+            rersv.setReserva(reservaGuardada);
+            rersv.setItinerario(itinerario);
+            Logger.logInfo(idItinerario+"->"+idTarifa);
+            var tarifaItinerario = itinerarioTarifaService.getByTarifaAndItinerario(idTarifa,idItinerario);
+            if (tarifaItinerario == null) {
+                Logger.logInfo("No se encontró ItinerarioTarifa para itinerario " + idTarifa + " y tarifa " + idItinerario);
+                throw new IllegalStateException("No se encontró ItinerarioTarifa para itinerario " + idTarifa + " y tarifa " + idItinerario);
+            }
+            rersv.setItinerarioTarifa(tarifaItinerario);
+
+            Logger.logInfo(tarifaItinerario.toString());
+
+
+            reservaItinerarioService.save(rersv);
+        });*/
+
         for (Itinerario itinerario : itinerarios) {
 
             ReservaItinerario rersv=new ReservaItinerario();
             rersv.setReserva(reservaGuardada);
             rersv.setItinerario(itinerario);
+
+            //esto corregir
+            var tarifas=itinerarioTarifaService.findByItinerario(itinerario.getIdItinerario());
+            rersv.setItinerarioTarifa(tarifas.get(0));
+
             reservaItinerarioService.save(rersv);
 
         }

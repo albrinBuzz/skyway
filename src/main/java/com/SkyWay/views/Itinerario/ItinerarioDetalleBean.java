@@ -2,9 +2,14 @@ package com.SkyWay.views.Itinerario;
 
 
 
+import com.SkyWay.dto.VueloDTO;
+import com.SkyWay.modules.itinerario.domain.model.Itinerario;
 import com.SkyWay.modules.itinerario.domain.service.ItinerarioService;
 import com.SkyWay.modules.itinerario.presentation.dto.ItinerarioDTO;
 import com.SkyWay.modules.itinerario.presentation.dto.ItinerarioDetalleDTO;
+import com.SkyWay.modules.tarifaItinerario.domain.model.ItinerarioTarifa;
+import com.SkyWay.modules.tarifaItinerario.domain.service.ItinerarioTarifaService;
+import com.SkyWay.modules.vuelo.domain.model.Vuelo;
 import com.SkyWay.util.Logger;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
@@ -12,6 +17,7 @@ import jakarta.faces.context.ExternalContext;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
+import org.primefaces.event.SelectEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.Serializable;
@@ -29,6 +35,7 @@ public class ItinerarioDetalleBean implements Serializable {
     private List<ItinerarioDTO> vuelosIda;
     private List<ItinerarioDTO> vuelosRegreso;
     private List<ItinerarioDTO> vuelosSeleccionados;
+    private HashMap<Integer,Integer>itinerariosTarifas;
     private String salida;
     private String llegada;
     private LocalDate fechaIda;
@@ -41,6 +48,8 @@ public class ItinerarioDetalleBean implements Serializable {
     private ItinerarioService itinerarioService;
     private Integer cantAdultos;
 
+    @Autowired
+    private ItinerarioTarifaService itinerarioTarifaService;
     // Variable para los mensajes de la vista
     private FacesMessage facesMessage;
 
@@ -87,7 +96,7 @@ public class ItinerarioDetalleBean implements Serializable {
                 }
             }
 
-            this.tipoVuelo = "RT".equals(tipoViaje) ? "Ida y Vuelta" : "Solo Ida";
+            this.tipoVuelo = "RT".equals(tipoViaje) ? " Vuelos Ida" : "Solo Ida";
 
             vuelosIda = itinerarioService.buscarItinerarios(salida, llegada, fechaIda.toString());
             vuelosIda.sort(Comparator.comparing(ItinerarioDTO::getHoraLlegada24h));
@@ -109,6 +118,7 @@ public class ItinerarioDetalleBean implements Serializable {
             }
 
             vuelosSeleccionados = new ArrayList<>();
+            itinerariosTarifas=new HashMap<>();
             total = 0;
 
         } catch (Exception e) {
@@ -143,12 +153,13 @@ public class ItinerarioDetalleBean implements Serializable {
         return selectedVueloParadas;
     }
 
-    public String selectVuelo(ItinerarioDTO vuelo) {
+    public String selectVuelo(ItinerarioDTO vuelo,ItinerarioTarifa tarifa) {
 
         Logger.logInfo("seleccionar vuelo" + vuelo.toString());
         this.selectedVuelo = vuelo;
         this.total += vuelo.getPrecio();
         this.vuelosSeleccionados.add(vuelo);
+        this.itinerariosTarifas.put(vuelo.getItinerario(),tarifa.getIdItinerarioTarifa());
         if (tipoViaje.equals("RT")){
             this.vuelosIda = vuelosRegreso;
             this.tipoVuelo = "Vuelos Regreso";
@@ -193,7 +204,16 @@ public class ItinerarioDetalleBean implements Serializable {
         }
 
 
+
         url.append("&adultos=").append(cantAdultos);
+        Logger.logInfo(url.substring(0, url.toString().length() - 1));
+        url.append("&tarifas=").append(cantAdultos);
+        this.itinerariosTarifas.forEach((integer, integer2) -> {
+            url.append(integer2);
+            url.append(",");
+        });
+
+        Logger.logInfo(url.toString());
         Logger.logInfo(url.substring(0, url.toString().length() - 1));
         return url.substring(0, url.toString().length() - 1);
 
@@ -208,20 +228,45 @@ public class ItinerarioDetalleBean implements Serializable {
 
         StringBuilder url = new StringBuilder();
         url.append("seleccionAsientos.xhtml?faces-redirect=true&itinerarios=");
-        for (ItinerarioDTO vuelosSeleccionado : vuelosSeleccionados) {
 
-            url.append(vuelosSeleccionado.getItinerario());
+        this.itinerariosTarifas.forEach((integer, integer2) -> {
+
+            url.append(integer);
             url.append(",");
-        }
+        });
 
         url.delete(url.toString().length() - 1,url.toString().length());
         url.append("&adultos=").append(cantAdultos);
-        Logger.logInfo(cantAdultos.toString());
 
+
+        url.append("&tarifas=").append(cantAdultos);
+        this.itinerariosTarifas.forEach((integer, integer2) -> {
+
+            url.append(integer2);
+            url.append(",");
+        });
+
+        url.delete(url.toString().length() - 1,url.toString().length());
         Logger.logInfo(url.toString());
 
         return url.toString();
     }
+
+    public List<ItinerarioTarifa> getTarifasPorItinerario(Integer itinerario) {
+        return itinerarioTarifaService.findByItinerario(itinerario);
+    }
+
+    public void seleccionarTarifa(VueloDTO vuelo, ItinerarioTarifa tarifaSeleccionada) {
+        //vuelo.setTarifaSeleccionada(tarifaSeleccionada);
+        // recalcular total, aplicar impuestos, etc.
+    }
+
+    public void onVueloSelect(SelectEvent<ItinerarioDTO> event) {
+        this.selectedVuelo = event.getObject();
+        // cualquier lógica extra aquí si necesitas
+    }
+
+
 
 
     public Integer getItinerario() {

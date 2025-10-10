@@ -1,0 +1,208 @@
+<ui:composition lang="es"
+                xmlns:f="jakarta.faces.core"
+                xmlns:h="jakarta.faces.html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:fs="http://xmlns.jcp.org/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                template="/admin/template.xhtml">
+
+    <h:head>
+        <title>Crear Itinerario</title>
+    </h:head>
+
+    <ui:define name="contenido-admin">
+
+        <!-- Formulario para Crear el Itinerario -->
+        <h:form id="formCrearItinerario">
+            <p:panel header="Crear nuevo itinerario" styleClass="panel-itinerario">
+                <h:panelGrid columns="2" cellpadding="5">
+
+                    <h:outputLabel value="Aeropuerto Origen:" />
+                    <p:selectOneMenu value="#{itinerarioBean.aeropuertoOrigen}">
+                        <f:selectItems value="#{itinerarioBean.aeropuertos}" var="a"
+                                       itemValue="#{a.codigoIata}" itemLabel="#{a.nombreAeropuerto}" />
+                    </p:selectOneMenu>
+
+                    <h:outputLabel value="Aeropuerto Destino:" />
+                    <p:selectOneMenu value="#{itinerarioBean.aeropuertoDestino}">
+                        <f:selectItems value="#{itinerarioBean.aeropuertos}" var="a"
+                                       itemValue="#{a.codigoIata}" itemLabel="#{a.nombreAeropuerto}" />
+                    </p:selectOneMenu>
+
+                    <h:outputLabel value="Precio base:" />
+                    <p:inputText value="#{itinerarioBean.itinerario.precioBase}" />
+
+                </h:panelGrid>
+
+                <p:commandButton value="Confirmar Itinerario" action="#{itinerarioBean.saveItinerario}" update="@form" />
+            </p:panel>
+        </h:form>
+
+
+
+
+
+        <h:form id="formBuscarVuelo">
+            <p:panel header="Buscar Vuelo" styleClass="panel-vuelo">
+                <h:panelGrid columns="2" columnClasses="label,value" cellpadding="5">
+
+
+                    <h:outputLabel value="Aeropuerto Origen:" />
+
+                    <p:selectOneMenu value="#{itinerarioBean.aeropuertoOrigen}" style="width:300px">
+                        <f:selectItem itemLabel="-- Seleccione Origen --" itemValue="#{null}" />
+                        <f:selectItems value="#{itinerarioBean.aeropuertos}" var="a"
+                                       itemValue="#{a.codigoIata}" itemLabel="#{a.nombreAeropuerto}" />
+                    </p:selectOneMenu>
+
+                    <p:outputLabel value="Aeropuerto Destino:" />
+                    <p:selectOneMenu value="#{itinerarioBean.aeropuertoDestino}" style="width:300px">
+                        <f:selectItem itemLabel="-- Seleccione Destino --" itemValue="#{null}" />
+                        <f:selectItems value="#{itinerarioBean.aeropuertos}" var="a"
+                                       itemValue="#{a.codigoIata}" itemLabel="#{a.nombreAeropuerto}" />
+                    </p:selectOneMenu>
+
+
+                    <p:outputLabel value="Fecha de Salida:" />
+                    <p:datePicker id="basic" value="#{itinerarioBean.fechaBusqueda}" />
+
+                </h:panelGrid>
+
+
+                <p:commandButton value="Buscar Vuelos" action="#{itinerarioBean.buscarVuelosSegmento}"  update="formBusquedaVuelos:tablaVuelos" />
+
+            </p:panel>
+        </h:form>
+
+
+        <!-- FORMULARIO DE BÚSQUEDA Y RESULTADOS DE VUELOS -->
+        <h:form id="formBusquedaVuelos">
+            <p:panel header="Resultados de Vuelos Disponibles">
+                <p:dataTable id="tablaVuelos"
+                             value="#{itinerarioBean.vuelos}"
+                             var="vuelo"
+                             paginator="true"
+                             rows="10"
+                             rowKey="#{vuelo.idVuelo}"
+                             expandableRowGroups="true"
+                             emptyMessage="No se encontraron vuelos disponibles.">
+
+                    <!-- Expandir detalles -->
+                    <p:column style="width:2rem" ariaHeaderText="Detalles">
+                        <p:rowToggler />
+                    </p:column>
+
+                    <!-- Número de Vuelo -->
+                    <p:column headerText="N° Vuelo" sortBy="#{vuelo.numeroVuelo}">
+                        <h:outputText value="#{vuelo.numeroVuelo}" />
+                    </p:column>
+
+                    <!-- Fecha de Salida -->
+                    <p:column headerText="Salida" sortBy="#{vuelo.fechaHoraSalida}">
+                        <h:outputText value="#{vuelo.fechaHoraSalida}">
+                            <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago"/>
+                        </h:outputText>
+                    </p:column>
+
+                    <!-- Fecha de Llegada -->
+                    <p:column headerText="Llegada" sortBy="#{vuelo.fechaHoraLlegada}">
+                        <h:outputText value="#{vuelo.fechaHoraLlegada}">
+                            <f:convertDateTime pattern="dd/MM/yyyy hh:mm " timeZone="America/Santiago"/>
+                        </h:outputText>
+                    </p:column>
+
+                    <!-- Seleccionar vuelo -->
+                    <p:column headerText="Acción">
+                        <p:commandButton icon="pi pi-plus"
+                                         title="Asignar vuelo al itinerario"
+                                         action="#{itinerarioBean.agregarVuelo(vuelo)}"
+                                         update="formVuelosAsignados:tablaVuelos formVueloSeleccionado"
+                                         process="@this"
+                                         styleClass="ui-button-success" />
+                    </p:column>
+
+                    <!-- DETALLES DE SEGMENTOS (expansión de fila) -->
+                    <p:rowExpansion>
+                        <p:panel header="Segmentos del Vuelo #{vuelo.numeroVuelo}" styleClass="ui-panel ui-widget-content">
+                            <p:dataTable value="#{vuelo.segmentoVuelos}" var="segmento"
+                                         style="margin:0; font-size:0.9em;"
+                                         rendered="#{not empty vuelo.segmentoVuelos}"
+                                         rowIndexVar="idx">
+
+                                <p:column headerText="#" style="width:2rem">
+                                    <h:outputText value="#{idx + 1}" />
+                                </p:column>
+
+                                <p:column headerText="Origen">
+                                    <h:outputText value="#{segmento.aeropuertoOrigen.codigoIata} - #{segmento.aeropuertoOrigen.nombreAeropuerto} (#{segmento.aeropuertoOrigen.ciudad.nombre})" />
+                                </p:column>
+
+                                <p:column headerText="Destino">
+                                    <h:outputText value="#{segmento.aeropuertoDestino.codigoIata} - #{segmento.aeropuertoDestino.nombreAeropuerto} (#{segmento.aeropuertoDestino.ciudad.nombre})" />
+                                </p:column>
+
+                                <p:column headerText="Salida">
+                                    <h:outputText value="#{segmento.horaSalida}" >
+                                    <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago"/>
+                                </h:outputText>
+                                </p:column>
+
+
+
+                                <p:column headerText="Llegada">
+                                    <h:outputText value="#{segmento.horaLlegada}" >
+                                        <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago"/>
+                                    </h:outputText>
+                                </p:column>
+                            </p:dataTable>
+                        </p:panel>
+                    </p:rowExpansion>
+                </p:dataTable>
+            </p:panel>
+        </h:form>
+
+
+
+        <!-- FORMULARIO DE VUELOS ASIGNADOS -->
+        <h:form id="formVuelosAsignados">
+            <p:panel header="Vuelos Asignados al Itinerario" styleClass="panel-vuelos">
+                <p:dataTable id="tablaVuelos"
+                             value="#{itinerarioBean.itinerariosAsignados}"
+                             var="iv"
+                             emptyMessage="No hay vuelos asignados aún.">
+
+                    <p:column headerText="N° Vuelo">
+                        <h:outputText value="#{iv.vuelo.numeroVuelo}" />
+                    </p:column>
+
+                    <p:column headerText="Salida">
+                        <h:outputText value="#{iv.vuelo.fechaHoraSalida}">
+                            <f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+                        </h:outputText>
+                    </p:column>
+
+                    <p:column headerText="Orden">
+                        <h:outputText value="#{iv.orden}" />
+                    </p:column>
+
+                    <p:column headerText="Tipo de Conexión">
+                        <h:outputText value="#{iv.tipoConexion}" />
+                    </p:column>
+                </p:dataTable>
+
+                <p:separator />
+
+                <p:commandButton value="Guardar Itinerario Completo"
+                                 action="#{itinerarioBean.guardarItinerario}"
+                                 update="@form"
+                                 process="@form"
+                                 icon="pi pi-save"
+                                 styleClass="ui-button-success" />
+            </p:panel>
+        </h:form>
+
+
+
+    </ui:define>
+
+</ui:composition>

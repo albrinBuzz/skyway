@@ -86,13 +86,13 @@ public class PerfilController {
 	
 		if(usuario.getRol().getNombre().equals(RolEnum.PASAJERO.getDescripcion())) {
 
-			 return new RedirectView("perfil/pasajero/index.xhtml");
+			 return new RedirectView("perfil/pasajero/template.xhtml");
 		}else if (usuario.getRol().getNombre().equals(RolEnum.PILOTO.getDescripcion())) {
 			
-			 return new RedirectView("perfil/piloto/index.xhtml");
+			 return new RedirectView("perfil/piloto/template.xhtml");
 		}
 		else {
-			 return new RedirectView("perfil/pasajero/index.xhtml");
+			 return new RedirectView("perfil/pasajero/template.xhtml");
 		}
         
 		//return "protegido/index";

@@ -37,14 +37,7 @@ import jakarta.servlet.http.HttpSession;
 @Controller
 @RequestMapping("/")
 public class HomeController {
-	
 
-    
-    private static final int BUTTONS_TO_SHOW = 5;
-    private static final int INITIAL_PAGE = 0;
-    private static final int INITIAL_PAGE_SIZE = 5;
-    private static final int[] PAGE_SIZES = {5, 10, 20};
-	
     @GetMapping("")
     public RedirectView home() {
 		Logger.logInfo("dentro del controaldor");
@@ -55,13 +48,7 @@ public class HomeController {
 	/*@GetMapping("")
 	public String home() {
 		Logger.logInfo("dentro del controaldor");
-		return "/home/index.xhtml";
+		return "/home/template.xhtml";
 	}*/
 
-
-
-    
-
-
-	
 }

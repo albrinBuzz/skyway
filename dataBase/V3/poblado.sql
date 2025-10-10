@@ -1105,8 +1105,8 @@ INSERT INTO Asignacion_Puerta (ID_SEGMENTO, ID_PUERTA) VALUES (16, 20);
 
 INSERT INTO Tarifa (Nombre, Permite_Cambios, Horas_Minimas_Cambio, Permite_Cancelacion, Reembolso_Permitido)
 VALUES
-('Básica', FALSE, NULL, FALSE, FALSE),
-('Flexible', TRUE, 48, TRUE, TRUE),
+('Básica', FALSE, NULL, TRUE, FALSE),
+('Flexible', TRUE, 48, TRUE, FALSE),
 ('Premium', TRUE, 24, TRUE, TRUE);
 
 -- 10. Itinerarios (IDs hardcoded)
@@ -1216,7 +1216,7 @@ INSERT INTO Reserva (Fecha_Reserva, Estado_Reserva, RUT_PASAJERO, Total) VALUES
 ('2025-08-04 10:10', 1, '65432109-4', 530000.00); -- Ana
 
 -- Asociar reservas con el Itinerario 10 (GRU → JFK)
-INSERT INTO reserva_itinerario (id_reserva, id_itinerario, id_tarifa)
+INSERT INTO reserva_itinerario (id_reserva, id_itinerario, id_itinerario_tarifa)
 VALUES (1, 10, 1), -- Aquí 1 es el id_tarifa que corresponde a 'Básica' o el que corresponda
        (2, 10, 1),
        (3, 10, 1);

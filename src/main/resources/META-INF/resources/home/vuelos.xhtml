@@ -116,6 +116,9 @@
                 margin-bottom: 20px;
             }
         </style>
+
+
+
     </h:head>
 
     <ui:define name="contenido">
@@ -129,47 +132,139 @@
             <div class="flex-container">
                 <!-- Sección izquierda: tabla de vuelos -->
                 <div style="flex: 2;">
-                    <!-- Mensaje de tipo de vuelo -->
-                    <h:outputText id="tipoVuelo" value="Tipo de vuelo: #{itinerarioDetalleBean.tipoVuelo}" styleClass="tipo-vuelo-msg" />
+                    <h:outputText id="tipoVuelo" value="✈️ Tipo de vuelo: #{itinerarioDetalleBean.tipoVuelo}"
+                                  style="font-size: 1.4rem; font-weight: bold; color: #0077cc; margin-bottom: 10px; display: block;" />
 
-                    <p:dataTable id="tablaVuelos" value="#{itinerarioDetalleBean.vuelosIda}"
+                    <p:dataTable id="tablaVuelos" widgetVar="tablaVuelosWidget"
+                                 value="#{itinerarioDetalleBean.vuelosIda}"
                                  var="vuelo" paginator="true" rows="5"
-                                 rowKey="#{vuelo.itinerario}" selectionMode="single" selection="#{itinerarioDetalleBean.selectedVuelo}"
-                                 emptyMessage="🚫 No se encontraron vuelos para la fecha seleccionada, cambie de destino o fecha.">
-                        <p:column headerText="Hora de Salida">
-                            <h:outputText value="#{vuelo.horaSalida24h}" />
+                                 rowKey="#{vuelo.itinerario}"
+                                 selectionMode="single"
+                                 rowExpandMode="single"
+                                 selection="#{itinerarioDetalleBean.selectedVuelo}"
+                                 emptyMessage="🚫 No se encontraron vuelos para la fecha seleccionada, cambie de destino o fecha."
+                                 styleClass="ui-datatable-striped ui-datatable-hoverable"
+                                 style="border-radius: 10px; overflow: hidden;">
+
+                        <p:ajax event="rowSelect" oncomplete="rowExpansion(PF('tablaVuelosWidget'));" />
+
+                        <!-- Expansión -->
+                        <!-- Toggler Column -->
+                        <p:column style="width: 2rem;" ariaHeaderText="Detalles">
+                            <p:rowToggler />
                         </p:column>
-                        <p:column headerText="Origen">
-                            <h:outputText value="#{vuelo.origen}" />
+
+                        <!-- Hora de Salida -->
+                        <p:column headerText="🕐 Salida" style="width: 110px; text-align: center;">
+                            <h:outputText value="#{vuelo.horaSalida24h}"
+                                          style="font-weight: bold; font-size: 1rem; color: #0077cc;" />
                         </p:column>
-                        <p:column headerText="Ciudad de Salida">
-                            <h:outputText value="#{vuelo.ciudadSalida}" />
+
+                        <!-- Origen -->
+                        <p:column headerText="🛫 Origen" style="width: 120px;">
+                            <h:outputText value="#{vuelo.origen}"
+                                          style="font-weight: 500; text-transform: uppercase;" />
                         </p:column>
-                        <p:column headerText="Cantidad de Paradas">
-                            <h:outputText value="#{vuelo.cantParadas}" />
-                            <p:commandButton value="Ver Detalles" icon="pi pi-info-circle" action="#{itinerarioDetalleBean.showParadas(vuelo.itinerario)}" update=":vueloForm:sidebarParadas"
-                                             oncomplete="PF('sidebarParadas').show();" />
+
+                        <!-- Ciudad de Salida -->
+                        <p:column headerText="🌆 Ciudad Origen" style="min-width: 140px;">
+                            <h:outputText value="#{vuelo.ciudadSalida}"
+                                          style="font-style: italic;" />
                         </p:column>
-                        <p:column headerText="Duración">
-                            <h:outputText value="#{vuelo.duracion}" />
+
+                        <!-- Cantidad de Paradas + Botón Detalles -->
+                        <p:column headerText="🔁 Paradas" style="width: 150px; text-align: center;">
+                            <h:outputText value="#{vuelo.cantParadas}" style="font-weight: bold;" />
+                            <p:commandButton icon="pi pi-info-circle"
+                                             title="Ver paradas"
+                                             action="#{itinerarioDetalleBean.showParadas(vuelo.itinerario)}"
+                                             update=":vueloForm:sidebarParadas"
+                                             oncomplete="PF('sidebarParadas').show();"
+                                             styleClass="rounded-button ui-button-flat ui-button-sm"
+                                             style="margin-left: 8px;" />
                         </p:column>
-                        <p:column headerText="Hora de Llegada">
-                            <h:outputText value="#{vuelo.horaLlegada24h}" />
+
+                        <!-- Duración -->
+                        <p:column headerText="⏳ Duración" style="width: 100px; text-align: center;">
+                            <h:outputText value="#{vuelo.duracion}" style="font-family: monospace; color: #444;" />
                         </p:column>
-                        <p:column headerText="Destino">
-                            <h:outputText value="#{vuelo.destino}" />
+
+                        <!-- Hora de Llegada -->
+                        <p:column headerText="🕓 Llegada" style="width: 110px; text-align: center;">
+                            <h:outputText value="#{vuelo.horaLlegada24h}" style="font-weight: bold; color: #28a745;" />
                         </p:column>
-                        <p:column headerText="Ciudad de Llegada">
-                            <h:outputText value="#{vuelo.ciudadLlegada}" />
+
+                        <!-- Destino -->
+                        <p:column headerText="🛬 Destino" style="width: 120px;">
+                            <h:outputText value="#{vuelo.destino}" style="font-weight: 500; text-transform: uppercase;" />
                         </p:column>
-                        <p:column headerText="Precio">
-                            <h:outputText value="#{vuelo.precio}" />
+
+                        <!-- Ciudad de Llegada -->
+                        <p:column headerText="🌇 Ciudad Destino" style="min-width: 140px;">
+                            <h:outputText value="#{vuelo.ciudadLlegada}" style="font-style: italic;" />
                         </p:column>
-                        <p:column>
-                            <p:commandButton value="Seleccionar" icon="pi pi-check" action="#{itinerarioDetalleBean.selectVuelo(vuelo)}" update="vueloForm:compraPanel vueloForm:tablaVuelos vueloForm:tipoVuelo" />
+
+                        <!-- Precio -->
+                        <p:column headerText="💰 Precio" style="width: 130px; text-align: center;">
+                            <h:outputText value="#{vuelo.precio}" style="font-weight: bold; color: #dc3545; font-size: 1.1rem;">
+                                <f:convertNumber type="currency" currencySymbol="CLP " maxFractionDigits="0" />
+                            </h:outputText>
                         </p:column>
+
+
+
+                        <!-- Expansión de tarifas -->
+                        <p:rowExpansion>
+                            <h:panelGroup layout="block" style="padding: 10px;">
+                                <h3 style="color: #0077cc; font-size: 1.5rem; margin-bottom: 20px;">
+                                    ✈️ Tarifas disponibles para este vuelo
+                                </h3>
+
+                                <p:dataGrid value="#{itinerarioDetalleBean.getTarifasPorItinerario(vuelo.itinerario)}"
+                                            var="tarifa" columns="2" layout="grid"
+                                            styleClass="p-grid p-nogutter" style="margin-top: 10px;">
+
+                                    <p:panel style="margin: 10px; border: 1px solid #dce0e6; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); background-color: #ffffff;">
+                                        <f:facet name="header">
+                                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <span style="font-size: 1.3rem; font-weight: bold; color: #0077cc;">
+                                    #{tarifa.tarifa.nombre}
+                                </span>
+                                                <p:badge value="CLP #{tarifa.precio}" severity="info" style="font-size: 1rem;" />
+                                            </div>
+                                        </f:facet>
+
+                                        <h:panelGrid columns="2" columnClasses="label,value" style="width: 100%; margin-top: 15px; font-size: 0.95rem;">
+                                            <h:outputText value="💱 Cambios:" />
+                                            <h:outputText style="color: #{tarifa.tarifa.permiteCambios ? 'green' : 'red'}; font-weight: bold;"
+                                                          value="#{tarifa.tarifa.permiteCambios ? 'Sí' : 'No'}" />
+
+                                            <h:outputText value="⏱️ Horas mín. cambio:" />
+                                            <h:outputText value="#{tarifa.tarifa.horasMinimasCambio != null ? tarifa.tarifa.horasMinimasCambio : 'No aplica'} h" />
+
+                                            <h:outputText value="❌ Cancelación:" />
+                                            <h:outputText style="color: #{tarifa.tarifa.permiteCancelacion ? 'green' : 'red'}; font-weight: bold;"
+                                                          value="#{tarifa.tarifa.permiteCancelacion ? 'Sí' : 'No'}" />
+
+                                            <h:outputText value="💰 Reembolsable:" />
+                                            <h:outputText style="color: #{tarifa.tarifa.reembolsoPermitido ? 'green' : 'red'}; font-weight: bold;"
+                                                          value="#{tarifa.tarifa.reembolsoPermitido ? 'Sí' : 'No'}" />
+                                        </h:panelGrid>
+
+                                        <p:commandButton value="Seleccionar"
+                                                         icon="pi pi-check-circle"
+                                                         action="#{itinerarioDetalleBean.selectVuelo(vuelo, tarifa)}"
+                                                         update="vueloForm:compraPanel vueloForm:tablaVuelos vueloForm:tipoVuelo"
+                                                         styleClass="ui-button-info"
+                                                         style="margin-top: 15px; width: 100%;" />
+                                    </p:panel>
+                                </p:dataGrid>
+                            </h:panelGroup>
+                        </p:rowExpansion>
+
                     </p:dataTable>
                 </div>
+
 
                 <!-- Sección derecha: resumen de compra -->
                 <p:panel id="compraPanel" header="Detalle de la compra" styleClass="panel-compra">
@@ -192,116 +287,111 @@
                 </p:panel>
             </div>
 
-            <!-- Modal de detalles de paradas -->
-            <p:sidebar widgetVar="sidebarParadas" position="right" id="sidebarParadas" width="400" showEffect="slideIn" hideEffect="slideOut">
-            <h3 style="text-align: center; color: #4CAF50; margin-bottom: 20px; font-size: 22px; font-weight: bold;">Detalles de las Paradas</h3>
+            <!-- Sidebar de Detalles de Paradas -->
+            <p:sidebar widgetVar="sidebarParadas" position="right" id="sidebarParadas" width="420" showEffect="slideIn" hideEffect="slideOut" styleClass="sidebar-detalles-vuelo">
+                <h3 style="text-align: center; color: #0077cc; margin-bottom: 25px; font-size: 24px; font-weight: bold;">
+                    ✈️ Detalles de las Paradas
+                </h3>
 
-            <p:scrollPanel style="width: 100%; height: 100%;" mode="native" class="sidebar-content">
-            <div class="scrollable-content">
-            <ui:repeat value="#{itinerarioDetalleBean.paradasVuelo}" var="parada" varStatus="status">
-            <div class="flight-segment" style="background-color: #f9f9f9; margin-bottom: 25px; border-radius: 10px; padding: 20px; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);">
+                <p:scrollPanel style="width: 100%; height: 100%;" mode="native" class="sidebar-content">
+                    <div class="scrollable-content">
 
-            <!-- Título de la parada -->
-            <h4 style="color: #333; font-size: 20px; margin-bottom: 15px; font-weight: bold;">Parada #{status.index + 1}</h4>
+                        <ui:repeat value="#{itinerarioDetalleBean.paradasVuelo}" var="parada" varStatus="status">
+                            <div class="parada-card" style="background-color: #fefefe; margin-bottom: 30px; border-radius: 12px; padding: 20px; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);">
 
-            <!-- Sección destacada: Aeropuertos de salida y llegada -->
-            <div class="airport-info" style="background-color: #e0f7fa; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
-                <h5 style="color: #00796b; margin-bottom: 20px; font-size: 18px; font-weight: bold;">Información de Aeropuertos</h5>
+                                <!-- Título -->
+                                <h4 style="font-size: 20px; color: #37474F; font-weight: bold; margin-bottom: 20px;">
+                                    🛑 Parada #{status.index + 1}
+                                </h4>
 
-                <!-- Aeropuerto de Origen -->
-                <div class="details" style="margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;">
-                    <i class="pi pi-plane" style="color: #00796b; font-size: 1.8em; margin-right: 15px;"></i>
-                    <div>
-                        <span class="label" style="font-size: 16px; color: #333;">Aeropuerto Origen:</span><br />
-                        <span class="text" style="font-size: 16px; color: #4CAF50; font-weight: bold;">#{parada.aeropuertoSalida}</span>
+                                <!-- Bloque de Aeropuertos -->
+                                <div class="airport-info" style="background-color: #e3f2fd; padding: 18px; border-radius: 10px; margin-bottom: 20px;">
+                                    <h5 style="color: #1565c0; font-size: 17px; font-weight: bold; margin-bottom: 15px;">🛬 Aeropuertos</h5>
+
+                                    <div style="margin-bottom: 12px;">
+                                        <i class="pi pi-plane" style="color: #00796b; margin-right: 8px;"></i>
+                                        <b>Aeropuerto Origen:</b> <span style="color: #2e7d32;">#{parada.aeropuertoSalida}</span>
+                                    </div>
+
+                                    <div style="margin-bottom: 12px;">
+                                        <i class="pi pi-calendar" style="color: #ff7043; margin-right: 8px;"></i>
+                                        <b>Salida:</b> <span style="color: #ff5722;">#{parada.salida}</span>
+                                    </div>
+
+                                    <div style="margin-bottom: 12px;">
+                                        <i class="pi pi-plane-slash" style="color: #00796b; margin-right: 8px;"></i>
+                                        <b>Aeropuerto Destino:</b> <span style="color: #2e7d32;">#{parada.aeropuertoLlegada}</span>
+                                    </div>
+
+                                    <div>
+                                        <i class="pi pi-calendar" style="color: #ff7043; margin-right: 8px;"></i>
+                                        <b>Llegada:</b> <span style="color: #ff5722;">#{parada.llegada}</span>
+                                    </div>
+                                </div>
+
+                                <!-- Info del Vuelo -->
+                                <div class="vuelo-info" style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px;">
+
+                                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                                        <div class="info-box" style="flex: 1; background: #ffffff; border: 1px solid #e0e0e0; padding: 15px; border-radius: 8px;">
+                                            <div><i class="pi pi-plane" style="color: #4CAF50; margin-right: 8px;"></i><b>Vuelo:</b></div>
+                                            <div style="font-weight: bold; margin-top: 5px;">#{parada.vuelo}</div>
+                                        </div>
+
+                                        <div class="info-box" style="flex: 1; background: #ffffff; border: 1px solid #e0e0e0; padding: 15px; border-radius: 8px;">
+                                            <div><i class="pi pi-clock" style="color: #4CAF50; margin-right: 8px;"></i><b>Duración:</b></div>
+                                            <div style="font-weight: bold; margin-top: 5px;">#{parada.duracion}</div>
+                                        </div>
+                                    </div>
+
+                                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                                        <div class="info-box" style="flex: 1; background: #ffffff; border: 1px solid #e0e0e0; padding: 15px; border-radius: 8px;">
+                                            <div><i class="pi pi-calendar" style="color: #4CAF50; margin-right: 8px;"></i><b>Duración Total:</b></div>
+                                            <div style="font-weight: bold; margin-top: 5px;">#{parada.duracionTotal}</div>
+                                        </div>
+
+                                        <div class="info-box" style="flex: 1; background: #ffffff; border: 1px solid #e0e0e0; padding: 15px; border-radius: 8px;">
+                                            <div><i class="pi pi-hourglass" style="color: #4CAF50; margin-right: 8px;"></i><b>Tiempo Espera:</b></div>
+                                            <div style="font-weight: bold; margin-top: 5px;">#{parada.tiempoEspera}</div>
+                                        </div>
+                                    </div>
+
+                                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                                        <div class="info-box" style="flex: 1; background: #ffffff; border: 1px solid #e0e0e0; padding: 15px; border-radius: 8px;">
+                                            <div><i class="pi pi-tag" style="color: #4CAF50; margin-right: 8px;"></i><b>Aerolínea:</b></div>
+                                            <div style="font-weight: bold; margin-top: 5px;">#{parada.aerolinea}</div>
+                                        </div>
+
+                                        <div class="info-box" style="flex: 1; background: #ffffff; border: 1px solid #e0e0e0; padding: 15px; border-radius: 8px;">
+                                            <div><i class="pi pi-cogs" style="color: #4CAF50; margin-right: 8px;"></i><b>Avión:</b></div>
+                                            <div style="font-weight: bold; margin-top: 5px;">#{parada.modeloAvion}</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Descripción -->
+                                <div class="descripcion" style="margin-bottom: 15px;">
+                                    <i class="pi pi-align-left" style="color: #4CAF50; margin-right: 8px;"></i>
+                                    <b>Descripción:</b>
+                                    <div style="margin-top: 5px; font-weight: bold;">#{parada.descripcionVuelo}</div>
+                                </div>
+
+                                <!-- Tiempo de espera total -->
+                                <div style="background-color: #f5f5f5; padding: 12px 15px; border-radius: 6px; margin-top: 20px; font-weight: bold; color: #333;">
+                                    <i class="pi pi-hourglass" style="color: #4CAF50; margin-right: 8px;"></i>
+                                    Tiempo de espera total en esta parada: #{parada.tiempoEspera}
+                                </div>
+                            </div>
+
+                            <p:divider style="margin: 40px 0;" />
+                        </ui:repeat>
                     </div>
-                </div>
 
-                <!-- Fecha y Hora de Salida -->
-                <div class="details" style="margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;">
-                    <i class="pi pi-calendar" style="color: #00796b; font-size: 1.8em; margin-right: 15px;"></i>
-                    <div>
-                        <span class="label" style="font-size: 16px; color: #333;">Fecha y Hora de Salida:</span><br />
-                        <span class="text" style="font-size: 16px; color: #FF7043; font-weight: bold;">#{parada.salida}</span>
-                    </div>
-                </div>
-
-                <!-- Aeropuerto de Destino -->
-                <div class="details" style="margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;">
-                    <i class="pi pi-plane-slash" style="color: #00796b; font-size: 1.8em; margin-right: 15px;"></i>
-                    <div>
-                        <span class="label" style="font-size: 16px; color: #333;">Aeropuerto Destino:</span><br />
-                        <span class="text" style="font-size: 16px; color: #FF7043; font-weight: bold;">#{parada.aeropuertoLlegada}</span>
-                    </div>
-                </div>
-
-                <!-- Fecha y Hora de Llegada -->
-                <div class="details" style="margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;">
-                    <i class="pi pi-calendar" style="color: #00796b; font-size: 1.8em; margin-right: 15px;"></i>
-                    <div>
-                        <span class="label" style="font-size: 16px; color: #333;">Fecha y Hora de Llegada:</span><br />
-                        <span class="text" style="font-size: 16px; color: #FF7043; font-weight: bold;">#{parada.llegada}</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Información adicional del vuelo -->
-            <div class="details-group" style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 20px; margin-bottom: 20px;">
-
-                <!-- Información sobre el vuelo -->
-                <div class="info-card" style="flex: 1; min-width: 180px; background-color: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-                    <div class="details" style="margin-bottom: 10px;">
-                        <i class="pi pi-plane" style="color: #4CAF50; margin-right: 10px;"></i><span class="label">Vuelo:</span>
-                        <span class="text" style="font-weight: bold;">#{parada.vuelo}</span>
-                    </div>
-                    <div class="details" style="margin-bottom: 10px;">
-                        <i class="pi pi-calendar" style="color: #4CAF50; margin-right: 10px;"></i><span class="label">Duración Total:</span>
-                        <span class="text" style="font-weight: bold;">#{parada.duracionTotal}</span>
-                    </div>
-                    <div class="details" style="margin-bottom: 10px;">
-                        <i class="pi pi-clock" style="color: #4CAF50; margin-right: 10px;"></i><span class="label">Duración:</span>
-                        <span class="text" style="font-weight: bold;">#{parada.duracion}</span>
-                    </div>
-                </div>
-
-                <!-- Información adicional del aeropuerto y ciudad -->
-                <div class="info-card" style="flex: 1; min-width: 180px; background-color: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-                    <div class="details" style="margin-bottom: 10px;">
-                        <i class="pi pi-clock" style="color: #4CAF50; margin-right: 10px;"></i><span class="label">Tiempo de Espera:</span>
-                        <span class="text" style="font-weight: bold;">#{parada.tiempoEspera}</span>
-                    </div>
-                    <div class="details" style="margin-bottom: 10px;">
-                        <i class="pi pi-tag" style="color: #4CAF50; margin-right: 10px;"></i><span class="label">Aerolínea:</span>
-                        <span class="text" style="font-weight: bold;">#{parada.aerolinea}</span>
-                    </div>
-                    <div class="details" style="margin-bottom: 10px;">
-                        <i class="pi pi-cogs" style="color: #4CAF50; margin-right: 10px;"></i><span class="label">Modelo de Avión:</span>
-                        <span class="text" style="font-weight: bold;">#{parada.modeloAvion}</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Detalles adicionales -->
-            <div class="details-group" style="margin-top: 15px;">
-            <div class="details" style="margin-bottom: 10px;">
-            <i class="pi pi-calendar-plus" style="color: #4CAF50; margin-right: 10px;"></i><span class="label">Descripción:</span>
-                <span class="text" style="font-weight: bold;">#{parada.descripcionVuelo}</span>
-            </div>
-            </div>
-
-                <!-- Tiempo de espera entre paradas -->
-                <div class="layover" style="background-color: #f0f0f0; padding: 15px; border-radius: 8px; margin-top: 15px; font-weight: bold;">
-                    <i class="pi pi-hourglass" style="color: #4CAF50; margin-right: 10px;"></i> Tiempo de espera entre paradas: #{parada.tiempoEspera}
-                </div>
-            </div>
-                <hr />
-            </ui:repeat>
-            </div>
-
-                <!-- Botón de scroll -->
-                <p:scrollTop target="parent" threshold="100" styleClass="custom-scrolltop" icon="pi pi-arrow-up" />
-            </p:scrollPanel>
+                    <!-- Scroll to top button -->
+                    <p:scrollTop target="parent" threshold="100" styleClass="custom-scrolltop" icon="pi pi-arrow-up" />
+                </p:scrollPanel>
             </p:sidebar>
+
 
 
 
@@ -315,5 +405,28 @@
 
         </h:form>
 
+        <script type="text/javascript">
+            $(document).ready(function() {
+                   rowExpansion(PF('tablaVuelosWidget'));
+                });
+
+            function rowExpansion(dataTable) {
+                   //dataTable should be the widgetVar object
+                   var $this = dataTable;
+                   //add the 'hand' when hovering on row
+                   $this.tbody.children('tr').css('cursor', 'pointer')
+                   $this.tbody.off('click.datatable-expansion', '> tr')
+                      .on('click.datatable-expansion', '> tr', null, function() {
+                         //before expanding collapse all rows
+                         $this.collapseAllRows();
+                         //toggle the current row the old toggler
+                         $this.toggleExpansion($(this).find('div.ui-row-toggler'));
+                       });
+            }
+        </script>
+
     </ui:define>
+
+
+
 </ui:composition>

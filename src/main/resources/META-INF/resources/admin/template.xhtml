@@ -1,0 +1,29 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                template="/template/main.xhtml">
+
+    <ui:define name="contenido">
+        <div class="grid" style="min-height: 80vh;"> <!-- Contenedor con grid horizontal -->
+
+            <!-- Sidebar izquierdo -->
+            <div class="col-12 md:col-3 lg:col-2" style="padding: 1rem;">
+                <p:panel header="Administración">
+                    <p:menu>
+                        <p:menuitem value="Vuelos" outcome="/admin/index.xhtml" icon="pi pi-plane"/>
+                        <p:menuitem value="Itinerarios" outcome="/admin/itinerario/itinerario.xhtml" icon="pi pi-calendar"/>
+                        <!-- Agrega más items si quieres -->
+                    </p:menu>
+                </p:panel>
+            </div>
+
+            <!-- Contenido a la derecha -->
+            <div class="col-12 md:col-9 lg:col-10" style="padding: 1rem;">
+                <ui:insert name="contenido-admin"/>
+            </div>
+
+        </div>
+    </ui:define>
+</ui:composition>

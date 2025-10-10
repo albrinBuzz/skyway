@@ -55,7 +55,7 @@ public class ReservaView {
 	        try {
 
 	            externalContext.redirect(externalContext.getRequestContextPath()
-	                    + "/perfil/pasajero/index.xhtml");
+	                    + "/perfil/pasajero/template.xhtml");
 	        } catch (IOException e) {
 	            e.printStackTrace();
 	        }

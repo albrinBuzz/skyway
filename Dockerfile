@@ -27,4 +27,4 @@ EXPOSE 8080
 
 # Comando por defecto para ejecutar el .jar con Java
 #ENTRYPOINT ["java", "-jar", "/app/app.jar"]
-ENTRYPOINT ["java", "-Xmx1024m", "-Xms512m", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-Xmx512m", "-Xms512m", "-jar", "/app/app.jar"]

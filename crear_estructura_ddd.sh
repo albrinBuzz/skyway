@@ -45,6 +45,8 @@ DOMAINS=(
   "rolusuario"
   "tripulacion"
   "usuario"
+  "tarifa"
+  "tarifaItinerario"
 )
 
 # Crear directorios para cada dominio y sus respectivas capas DDD

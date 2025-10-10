@@ -4,6 +4,8 @@ import java.io.Serializable;
 
 import com.SkyWay.modules.itinerario.domain.model.Itinerario;
 import com.SkyWay.modules.reserva.domain.model.Reserva;
+import com.SkyWay.modules.tarifa.domain.model.Tarifa;
+import com.SkyWay.modules.tarifaItinerario.domain.model.ItinerarioTarifa;
 import jakarta.persistence.*;
 
 
@@ -33,6 +35,11 @@ public class ReservaItinerario implements Serializable {
 	@JoinColumn(name="id_reserva")
 	private Reserva reserva;
 
+	// bi-directional many-to-one association to Tarifa
+	@ManyToOne
+	@JoinColumn(name = "id_itinerario_tarifa", nullable = false)
+	private ItinerarioTarifa itinerarioTarifa;
+
 	public ReservaItinerario() {
 	}
 
@@ -60,4 +67,11 @@ public class ReservaItinerario implements Serializable {
 		this.reserva = reserva;
 	}
 
+	public ItinerarioTarifa getItinerarioTarifa() {
+		return itinerarioTarifa;
+	}
+
+	public void setItinerarioTarifa(ItinerarioTarifa itinerarioTarifa) {
+		this.itinerarioTarifa = itinerarioTarifa;
+	}
 }

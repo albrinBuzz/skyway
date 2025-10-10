@@ -46,6 +46,8 @@ public class ReservaAsientoBean implements Serializable {
     private Integer cantAdultos;
     List<Itinerario>itinerarios=new ArrayList<>();
     List<Integer> idsItinerarios;
+    private HashMap<Integer,Integer>tarifasItinerarios;
+
     private Integer idxAsientoSeleccion;
     @PostConstruct
     public void init() {
@@ -54,10 +56,33 @@ public class ReservaAsientoBean implements Serializable {
 
         String adultosStr = params.getOrDefault("adultos", "1");
         cantAdultos= Integer.valueOf(adultosStr);
+        tarifasItinerarios=new HashMap<>();
+
 
         String idsParam = externalContext.getRequestParameterMap().get("itinerarios");
 
-        if (idsParam != null && !idsParam.isEmpty()) {
+        String idsTarifas = externalContext.getRequestParameterMap().get("tarifas");
+
+        if (idsParam != null && !idsParam.isEmpty() && idsTarifas != null && !idsTarifas.isEmpty()) {
+            var idsIte = idsParam.split(",");
+            var idsTar=idsTarifas.split(",");
+
+            if (idsIte.length != idsTar.length) {
+                Logger.logInfo("⚠️ La cantidad de itinerarios y tarifas no coincide.");
+                return;
+            }
+
+            Logger.logInfo("esto puede generar error en la association de las tarifas y los itinerarios");
+            for (int i = 0; i < idsIte.length; i++) {
+                try {
+                    int idItinerario = Integer.parseInt(idsIte[i].trim());
+                    int idTarifa = Integer.parseInt(idsTar[i].trim());
+                    tarifasItinerarios.put(idItinerario, idTarifa);
+                } catch (NumberFormatException e) {
+                    System.err.println("❌ Error al convertir a entero: " + idsIte[i] + " o " + idsTar[i]);
+                }
+            }
+
             idsItinerarios = Arrays.stream(idsParam.split(","))
                     .map(String::trim)
                     .map(Integer::parseInt)
@@ -101,6 +126,7 @@ public class ReservaAsientoBean implements Serializable {
             Logger.logInfo(vuelo.toString());
 
             this.asientos = asientoService.getAsientosDisponibles(vuelo.getIdVuelo());
+            //Logger.logInfo(asientos.toString());
 
             idxVuelo++;
             //asientosSeleccionados=new ArrayList<InfoAsientoDTO>();
@@ -161,6 +187,9 @@ public class ReservaAsientoBean implements Serializable {
 
                 FacesContext.getCurrentInstance().getExternalContext()
                         .getSessionMap().put("itinerarios", idsItinerarios);
+
+                FacesContext.getCurrentInstance().getExternalContext()
+                        .getSessionMap().put("tarifasItinerios", tarifasItinerarios);
 
                 FacesContext.getCurrentInstance().getExternalContext()
                         .redirect("/home/reserva.xhtml");
