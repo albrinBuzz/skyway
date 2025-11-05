@@ -162,6 +162,78 @@
         </h:form>
 
 
+        <h:panelGroup layout="block" style="padding: 10px;">
+            <h3 style="color: #0077cc; font-size: 1.5rem; margin-bottom: 20px;">
+                ✈️ Tarifas disponibles para este vuelo
+            </h3>
+
+            <p:dataGrid value="#{itinerarioBean.tarifas}"
+                        var="tarifa" columns="2" layout="grid"
+                        styleClass="p-grid p-nogutter" style="margin-top: 10px;">
+
+                <p:panel style="margin: 10px; border: 1px solid #dce0e6; border-radius: 10px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.05); background-color: #ffffff;">
+                    <f:facet name="header">
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span style="font-size: 1.3rem; font-weight: bold; color: #0077cc;">
+                    #{tarifa.nombre}
+                </span>
+                        </div>
+                    </f:facet>
+
+                    <!-- Renderizar características dinámicas -->
+                    <h:panelGrid columns="2" columnClasses="label,value"
+                                 style="width: 100%; margin-top: 15px; font-size: 0.95rem;">
+                        <ui:repeat value="#{tarifa.tarifaCaracteristicas}" var="carac">
+                            <h:panelGroup layout="block" style="padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
+                                <h:outputText value="#{carac.caracteristica.nombre}:" style="font-weight: 600;" />
+                            </h:panelGroup>
+
+                            <h:panelGroup layout="block" style="padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
+                                <h:outputText rendered="#{carac.caracteristica.tipoDato eq 'boolean'}"
+                                              value="#{carac.valorBool ? '✔️ Sí' : '❌ No'}"
+                                              style="font-weight: bold; color: #{carac.valorBool ? 'green' : 'red'};" />
+
+                                <h:outputText rendered="#{carac.caracteristica.tipoDato eq 'int'}"
+                                              value="#{carac.valorInt}"
+                                              style="font-weight: bold;" />
+
+                                <h:outputText rendered="#{carac.caracteristica.tipoDato eq 'text'}"
+                                              value="#{carac.valorTexto}"
+                                              style="font-weight: bold;" />
+                            </h:panelGroup>
+                        </ui:repeat>
+                    </h:panelGrid>
+
+                    <!-- NUEVA SECCIÓN: Precio de la tarifa -->
+                    <p:separator />
+                    <h:form id="formPrecioTarifa">
+
+                        <h:panelGrid columns="3" cellpadding="5" style="margin-top:10px;">
+                            <h:outputLabel value="Precio Tarifa:" for="precioTarifa" style="font-weight:bold;" />
+
+                            <p:inputNumber id="precioTarifa"
+                                           value="#{itinerarioBean.precioTarifa}"
+                                           minValue="0"
+                                           maxValue="999999"
+                                           symbol="$"
+                                           decimalPlaces="0"
+                                           style="width:120px;" />
+
+                            <p:commandButton value="Guardar Precio"
+                                             action="#{itinerarioBean.actualizarPrecioTarifa(tarifa)}"
+                                             update="@this"
+                                             process="@form"
+                                             icon="pi pi-save"
+                                             styleClass="ui-button-info" />
+                        </h:panelGrid>
+                    </h:form>
+                </p:panel>
+            </p:dataGrid>
+
+
+        </h:panelGroup>
+
 
         <!-- FORMULARIO DE VUELOS ASIGNADOS -->
         <h:form id="formVuelosAsignados">

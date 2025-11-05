@@ -1,7 +1,7 @@
 package com.SkyWay.utils.converter;
 
-import com.SkyWay.model.Aeropuerto;
-import com.SkyWay.model.EstadoVuelo;
+
+import com.SkyWay.modules.estadovuelo.domain.model.EstadoVuelo;
 import jakarta.faces.component.UIComponent;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.convert.Converter;

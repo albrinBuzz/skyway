@@ -47,6 +47,8 @@ DOMAINS=(
   "usuario"
   "tarifa"
   "tarifaItinerario"
+  "CaracteristicaTarifa"
+  "TarifaCaracteristica"
 )
 
 # Crear directorios para cada dominio y sus respectivas capas DDD

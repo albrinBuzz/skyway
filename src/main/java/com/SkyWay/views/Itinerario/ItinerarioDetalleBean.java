@@ -7,6 +7,7 @@ import com.SkyWay.modules.itinerario.domain.model.Itinerario;
 import com.SkyWay.modules.itinerario.domain.service.ItinerarioService;
 import com.SkyWay.modules.itinerario.presentation.dto.ItinerarioDTO;
 import com.SkyWay.modules.itinerario.presentation.dto.ItinerarioDetalleDTO;
+import com.SkyWay.modules.tarifa.presentation.dto.TarifaDTO;
 import com.SkyWay.modules.tarifaItinerario.domain.model.ItinerarioTarifa;
 import com.SkyWay.modules.tarifaItinerario.domain.service.ItinerarioTarifaService;
 import com.SkyWay.modules.vuelo.domain.model.Vuelo;
@@ -153,13 +154,13 @@ public class ItinerarioDetalleBean implements Serializable {
         return selectedVueloParadas;
     }
 
-    public String selectVuelo(ItinerarioDTO vuelo,ItinerarioTarifa tarifa) {
+    public String selectVuelo(ItinerarioDTO vuelo,TarifaDTO tarifa) {
 
         Logger.logInfo("seleccionar vuelo" + vuelo.toString());
         this.selectedVuelo = vuelo;
         this.total += vuelo.getPrecio();
         this.vuelosSeleccionados.add(vuelo);
-        this.itinerariosTarifas.put(vuelo.getItinerario(),tarifa.getIdItinerarioTarifa());
+        this.itinerariosTarifas.put(vuelo.getItinerario(),tarifa.getIdTarifa());
         if (tipoViaje.equals("RT")){
             this.vuelosIda = vuelosRegreso;
             this.tipoVuelo = "Vuelos Regreso";
@@ -181,46 +182,7 @@ public class ItinerarioDetalleBean implements Serializable {
         // Por ejemplo, redirigir al proceso de pago o mostrar un mensaje de éxito.
     }
 
-    public String confirmarCompra() {
-        if (vuelosSeleccionados == null || vuelosSeleccionados.isEmpty()) {
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_WARN, "No hay vuelos seleccionados", "Agrega al menos un vuelo antes de confirmar."));
-            //return;
-        }
 
-        // Aquí puedes procesar la compra o redirigir al resumen/finalizar
-        FacesContext.getCurrentInstance().addMessage(null,
-                new FacesMessage(FacesMessage.SEVERITY_INFO, "Compra confirmada", "Gracias por tu compra."));
-
-        // (Opcional) Limpiar la selección después de confirmar
-        //vuelosSeleccionados.clear();
-        //total = 0;
-        StringBuilder url = new StringBuilder();
-        url.append("seleccionAsientos.xhtml?faces-redirect=true&itinerarios=");
-        for (ItinerarioDTO vuelosSeleccionado : vuelosSeleccionados) {
-
-            url.append(vuelosSeleccionado.getItinerario());
-            url.append(",");
-        }
-
-
-
-        url.append("&adultos=").append(cantAdultos);
-        Logger.logInfo(url.substring(0, url.toString().length() - 1));
-        url.append("&tarifas=").append(cantAdultos);
-        this.itinerariosTarifas.forEach((integer, integer2) -> {
-            url.append(integer2);
-            url.append(",");
-        });
-
-        Logger.logInfo(url.toString());
-        Logger.logInfo(url.substring(0, url.toString().length() - 1));
-        return url.substring(0, url.toString().length() - 1);
-
-
-        ///seleccionAsientos.xhtml?itinerarios=1001,1002
-        //return "seleccionAsientos.xhtml?faces-redirect=true&itinerarios=1001,1002";
-    }
 
     public String redireccionar(){
         FacesContext.getCurrentInstance().addMessage(null,
@@ -239,7 +201,7 @@ public class ItinerarioDetalleBean implements Serializable {
         url.append("&adultos=").append(cantAdultos);
 
 
-        url.append("&tarifas=").append(cantAdultos);
+        url.append("&tarifas=");
         this.itinerariosTarifas.forEach((integer, integer2) -> {
 
             url.append(integer2);
@@ -254,7 +216,14 @@ public class ItinerarioDetalleBean implements Serializable {
 
     public List<ItinerarioTarifa> getTarifasPorItinerario(Integer itinerario) {
         return itinerarioTarifaService.findByItinerario(itinerario);
+
     }
+    public List<TarifaDTO> getTarifasItinerario(Integer idItinerario) {
+        // Consulta SQL → JSON → Mapear con Jackson/Gson o manualmente
+        // Cada tarifa tendrá una lista de características dinámica
+        return itinerarioTarifaService.getTarifasItinerario(idItinerario);
+    }
+
 
     public void seleccionarTarifa(VueloDTO vuelo, ItinerarioTarifa tarifaSeleccionada) {
         //vuelo.setTarifaSeleccionada(tarifaSeleccionada);

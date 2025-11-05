@@ -33,7 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.SkyWay.dto.ReservaVueloDTO;
 
-import com.SkyWay.model.RolEnum;
+
 
 
 import com.SkyWay.modules.reserva.domain.service.ReservaService;

@@ -62,6 +62,7 @@ public class ReservaAsientoBean implements Serializable {
         String idsParam = externalContext.getRequestParameterMap().get("itinerarios");
 
         String idsTarifas = externalContext.getRequestParameterMap().get("tarifas");
+        Logger.logInfo(idsTarifas);
 
         if (idsParam != null && !idsParam.isEmpty() && idsTarifas != null && !idsTarifas.isEmpty()) {
             var idsIte = idsParam.split(",");

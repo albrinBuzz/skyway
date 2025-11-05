@@ -2,6 +2,7 @@ package com.SkyWay.modules.reservaitinerario.domain.service;
 
 import com.SkyWay.modules.reservaitinerario.domain.model.ReservaItinerario;
 import com.SkyWay.modules.reservaitinerario.domain.repository.ReservaItinerarioRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -36,5 +37,11 @@ public class ReservaItinerarioService {
 
     public void delete(ReservaItinerario reservaItinerario) {
         reservaItinerarioRepository.delete(reservaItinerario);
+    }
+
+    public ReservaItinerario obtenerReservaItinerario(Integer idReserva, Integer idItinerario) {
+        return reservaItinerarioRepository
+                .findByReserva_IdReservaAndItinerario_IdItinerario(idReserva, idItinerario)
+                .orElseThrow(() -> new EntityNotFoundException("Reserva-Itinerario no encontrado"));
     }
 }

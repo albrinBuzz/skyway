@@ -13,7 +13,6 @@ import com.SkyWay.modules.reserva.domain.service.ReservaService;
 import com.SkyWay.modules.reservaitinerario.domain.model.ReservaItinerario;
 import com.SkyWay.modules.reservaitinerario.domain.service.ReservaItinerarioService;
 import com.SkyWay.modules.tarifa.domain.service.TarifaService;
-import com.SkyWay.modules.tarifaItinerario.domain.model.ItinerarioTarifa;
 import com.SkyWay.modules.tarifaItinerario.domain.service.ItinerarioTarifaService;
 import com.SkyWay.modules.usuario.domain.model.Usuario;
 import com.SkyWay.modules.usuario.domain.service.UsuarioService;
@@ -33,6 +32,7 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Named("reservaBean")
 @ViewScoped
@@ -153,7 +153,7 @@ public class ReservaBean implements Serializable {
         reserva.setFechaReserva(new Timestamp(System.currentTimeMillis()));
 
         var reservaGuardada= reservaService.save(reserva);
-
+        AtomicReference<String> mensaje = new AtomicReference<>();
         asientosSeleccionados.forEach((idVuelo, asientos) -> {
             asientos.forEach(asiento -> {
                 Logger.logInfo("Vuelo: " + idVuelo + ", Asiento: " + asiento.getNumeroAsiento());
@@ -167,13 +167,10 @@ public class ReservaBean implements Serializable {
                     Logger.logInfo(Arrays.toString(asientosIds));
                     //Logger.logInfo("ID de reserva antes de llamar al procedimiento: " + reservaGuardada.getIdReserva());
                     //String mensaje = reservaService.confirmarReserva(idVuelo, asientos, "12345678-9",reservaGuardada.getIdReserva());
-                    String mensaje = reservaService.confirmarReserva(idVuelo, asientosIds, pasajero.getRut(),reservaGuardada.getIdReserva());
-                    Logger.logInfo(mensaje);
+                     mensaje.set(reservaService.confirmarReserva(idVuelo, asientosIds, pasajero.getRut(), reservaGuardada.getIdReserva()));
+                    Logger.logInfo(mensaje.get());
 
-                    FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, "Reserva confirmada", mensaje);
-                    PrimeFaces.current().dialog().showMessageDynamic(message);
 
-                    addMessage(FacesMessage.SEVERITY_INFO, "Reserva confirmada", mensaje);
 
                 } catch (SQLException e) {
                     Logger.logInfo("Error SQL en la reserva: " + e.getMessage());
@@ -193,21 +190,25 @@ public class ReservaBean implements Serializable {
 
         });
 
+        FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, "Reserva confirmada", mensaje.get());
+        PrimeFaces.current().dialog().showMessageDynamic(message);
+
+        addMessage(FacesMessage.SEVERITY_INFO, "Reserva confirmada", mensaje.get());
 
         Logger.logInfo("arreglar la asignacion de la tarifa, solo se setea un vaalor preestablecido");
 
 
-        /*tarifasItinerarios.forEach((idItinerario, idTarifa) -> {
+        tarifasItinerarios.forEach((idItinerario, idTarifa) -> {
 
            var  itinerario=  itinerarioService.findById(idItinerario);
             ReservaItinerario rersv=new ReservaItinerario();
             rersv.setReserva(reservaGuardada);
             rersv.setItinerario(itinerario);
             Logger.logInfo(idItinerario+"->"+idTarifa);
-            var tarifaItinerario = itinerarioTarifaService.getByTarifaAndItinerario(idTarifa,idItinerario);
+            var tarifaItinerario = itinerarioTarifaService.getByTarifaAndItinerario(idItinerario,idTarifa);
             if (tarifaItinerario == null) {
-                Logger.logInfo("No se encontró ItinerarioTarifa para itinerario " + idTarifa + " y tarifa " + idItinerario);
-                throw new IllegalStateException("No se encontró ItinerarioTarifa para itinerario " + idTarifa + " y tarifa " + idItinerario);
+                Logger.logInfo("No se encontró ItinerarioTarifa para itinerario " + idItinerario + " y tarifa " + idItinerario);
+                throw new IllegalStateException("No se encontró ItinerarioTarifa para itinerario " + idItinerario + " y tarifa " + idTarifa);
             }
             rersv.setItinerarioTarifa(tarifaItinerario);
 
@@ -215,9 +216,9 @@ public class ReservaBean implements Serializable {
 
 
             reservaItinerarioService.save(rersv);
-        });*/
+        });
 
-        for (Itinerario itinerario : itinerarios) {
+        /*for (Itinerario itinerario : itinerarios) {
 
             ReservaItinerario rersv=new ReservaItinerario();
             rersv.setReserva(reservaGuardada);
@@ -229,7 +230,7 @@ public class ReservaBean implements Serializable {
 
             reservaItinerarioService.save(rersv);
 
-        }
+        }*/
 
 
 

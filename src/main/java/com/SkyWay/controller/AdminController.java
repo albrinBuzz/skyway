@@ -1,10 +1,11 @@
 package com.SkyWay.controller;
 
-import com.SkyWay.model.Vuelo;
+
 import com.SkyWay.modules.aeropuerto.domain.service.AeropuertoService;
 import com.SkyWay.modules.avion.domain.service.AvionService;
 import com.SkyWay.modules.estadovuelo.domain.service.EstadoVueloService;
 import com.SkyWay.modules.piloto.domain.service.PiloService;
+import com.SkyWay.modules.vuelo.domain.model.Vuelo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;

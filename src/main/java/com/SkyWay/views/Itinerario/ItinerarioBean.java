@@ -1,6 +1,7 @@
 package com.SkyWay.views.Itinerario;
 
 
+import com.SkyWay.modules.TarifaCaracteristica.domain.model.TarifaCaracteristica;
 import com.SkyWay.modules.aeropuerto.domain.model.Aeropuerto;
 import com.SkyWay.modules.aeropuerto.domain.service.AeropuertoService;
 import com.SkyWay.modules.ciudad.domain.model.Ciudad;
@@ -12,10 +13,15 @@ import com.SkyWay.modules.itinerariovuelo.domain.model.ItinerarioVuelo;
 import com.SkyWay.modules.itinerariovuelo.domain.service.ItinerarioVueloService;
 import com.SkyWay.modules.segmentovuelo.domain.model.SegmentoVuelo;
 import com.SkyWay.modules.segmentovuelo.domain.service.SegmentoVueloService;
+import com.SkyWay.modules.tarifa.domain.model.Tarifa;
+import com.SkyWay.modules.tarifa.domain.service.TarifaService;
+import com.SkyWay.modules.tarifaItinerario.domain.model.ItinerarioTarifa;
+import com.SkyWay.modules.tarifaItinerario.domain.service.ItinerarioTarifaService;
 import com.SkyWay.modules.vuelo.domain.model.Vuelo;
 import com.SkyWay.modules.vuelo.domain.service.VueloService;
 import com.SkyWay.util.Logger;
 import jakarta.annotation.PostConstruct;
+import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.ExternalContext;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
@@ -25,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
@@ -55,7 +62,18 @@ public class ItinerarioBean implements Serializable {
     @Autowired
     private SegmentoVueloService segmentoVueloService;
 
+    @Autowired
+    private TarifaService tarifaService;
+
+    @Autowired
+    private ItinerarioTarifaService itinerarioTarifaService;
+
+
+
+
     private Itinerario itinerario = new Itinerario();
+    private List<Tarifa>tarifas;
+    private HashMap<Integer,Integer>precioTarifas;
     private List<Aeropuerto> aeropuertos;
     private HashMap<String,Aeropuerto> aeropuertosMap;
     private HashMap<String,Vuelo> vuelosMap;
@@ -64,7 +82,7 @@ public class ItinerarioBean implements Serializable {
     private List<Vuelo> vuelosAsignados;
     private ItinerarioVuelo itinerarioVuelo;
     private List<SegmentoVuelo>segmentoVuelos;
-
+    private Integer precioTarifa;
 
     private String aeropuertoOrigen; // Cambiado de String a Aeropuerto
     private String aeropuertoDestino; // Cambiado de String a Aeropuerto
@@ -87,6 +105,18 @@ public class ItinerarioBean implements Serializable {
 
         ciudads=ciudadService.getAllCiudades();
         itinerarioVuelo=new ItinerarioVuelo();
+        precioTarifas=new HashMap<>();
+
+         tarifas=tarifaService.listarTarifas();
+        for (Tarifa tarifa : tarifas) {
+            //Logger.logInfo(tarifa.toString());
+            for (TarifaCaracteristica tarifaCaracteristica : tarifa.getTarifaCaracteristicas()) {
+                var carateristica= tarifaCaracteristica.getCaracteristica();
+                //.logInfo(carateristica.toString());
+
+            }
+            //Logger.logInfo("--");
+        }
 
         aeropuertos=aeropuertoService.findAll();
         aeropuertos.forEach(aeropuerto -> aeropuertosMap.put(aeropuerto.getCodigoIata(),aeropuerto));
@@ -155,7 +185,19 @@ public class ItinerarioBean implements Serializable {
             Logger.logInfo(itineraioVueloGuardado.toString());
 
         }
-        Logger.logInfo("itinerarioGuardado"+itinerario.toString());
+        //var tarifas= tarifaService.listarTarifas();
+
+        precioTarifas.forEach((integer, integer2) -> {
+            var tarifa=tarifaService.buscarPorId(integer);
+            ItinerarioTarifa itinerarioTarifa=new ItinerarioTarifa();
+            itinerarioTarifa.setTarifa(tarifa.get());
+            itinerarioTarifa.setItinerario(itinerarioGuardado);
+            itinerarioTarifa.setPrecio(new BigDecimal(integer2));
+            var itinerarioTarifaGuardado= itinerarioTarifaService.save(itinerarioTarifa);
+            Logger.logInfo(itinerarioTarifaGuardado.toString());
+        });
+
+
 
     }
 
@@ -187,6 +229,21 @@ public class ItinerarioBean implements Serializable {
                 .toList();
     }
 
+
+    public void actualizarPrecioTarifa(Tarifa tarifa) {
+        Logger.logInfo("seteando precio tarifa->"+precioTarifa);
+        try {
+            //tarifaService.actualizarPrecio(tarifa); // o como manejes la persistencia
+            precioTarifas.put(tarifa.getIdTarifa(),precioTarifa);
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_INFO,
+                            "Precio actualizado", "Nuevo precio: $" + precioTarifa));
+        } catch (Exception e) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Error al actualizar el precio", e.getMessage()));
+        }
+    }
 
 
     // Método que se llama cuando se hace clic en "Seleccionar"
@@ -273,5 +330,19 @@ public class ItinerarioBean implements Serializable {
       return this.vuelosAsignados;
     }
 
+    public List<Tarifa> getTarifas() {
+        return tarifas;
+    }
 
+    public void setTarifas(List<Tarifa> tarifas) {
+        this.tarifas = tarifas;
+    }
+
+    public void setPrecioTarifa(Integer precioTarifa) {
+        this.precioTarifa = precioTarifa;
+    }
+
+    public Integer getPrecioTarifa() {
+        return precioTarifa;
+    }
 }

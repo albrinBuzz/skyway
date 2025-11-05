@@ -4,7 +4,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-import com.SkyWay.model.Rol;
+
+import com.SkyWay.modules.rolusuario.domain.model.Role;
 import com.SkyWay.modules.usuario.domain.model.Usuario;
 import com.SkyWay.modules.pasajero.domain.service.PasajeroService;
 import com.SkyWay.modules.piloto.domain.service.PiloService;
@@ -248,7 +249,7 @@ public class UsuarioServiceImpl implements UsuarioService{
 
 
 
-	public Usuario usuarioFactory(String correo, Rol rol) {
+	public Usuario usuarioFactory(String correo, Role rol) {
 		LOGGER.info("Iniciando búsqueda de usuario por correo: {} y rol: {}", correo, rol.getNombre());
 
 		// Validación previa del rol

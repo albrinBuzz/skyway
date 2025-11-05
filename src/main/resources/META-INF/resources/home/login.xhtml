@@ -4,7 +4,6 @@
       xmlns:h="jakarta.faces.html"
       xmlns:p="http://primefaces.org/ui"
       xmlns:f="http://xmlns.jcp.org/jsf/core"
-      xmlns:sec="http://www.springframework.org/security/tags"
       xmlns:ui="http://java.sun.com/jsf/facelets">
 <h:head>
     <title>Login</title>
@@ -51,6 +50,13 @@
             width: 80px;
             margin-bottom: 20px;
             animation: fadeIn 1s ease-out;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            cursor: pointer;
+        }
+
+        .login-logo:hover {
+            transform: scale(1.1);
+            opacity: 0.9;
         }
 
         /* Título */
@@ -98,11 +104,6 @@
             box-shadow: 0 0 10px rgba(28, 146, 210, 0.2);
         }
 
-        /* Icono de campo */
-        .input-field::placeholder {
-            color: #888;
-        }
-
         /* Botón de login */
         .btn-login {
             width: 100%;
@@ -127,7 +128,7 @@
             margin-top: 10px;
         }
 
-        /* Estilo para el enlace de olvido de contraseña */
+        /* Enlace de olvido de contraseña */
         .forgot-password {
             display: block;
             margin-top: 15px;
@@ -140,7 +141,12 @@
             text-decoration: underline;
         }
 
-        /* Estilo para iconos de los campos */
+        /* Contenedor de input con icono */
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
         .input-icon {
             position: absolute;
             top: 14px;
@@ -149,25 +155,23 @@
             font-size: 18px;
         }
 
-        /* Contenedor de input con icono */
-        .input-group {
-            position: relative;
-            margin-bottom: 20px;
-        }
-
         /* Animación de fade-in */
         @keyframes fadeIn {
             0% { opacity: 0; }
             100% { opacity: 1; }
         }
-
     </style>
 </h:head>
+
 <h:body>
     <div class="login-container">
-        <!-- Logo (opcional) -->
-        <img src="https://www.clipartmax.com/png/small/354-3543373_spring-framework-logo-svg-png-download-java-spring.png" alt="Logo" class="login-logo" />
-			
+        <!-- Logo clickeable -->
+        <h:link outcome="/">
+            <h:graphicImage value="https://www.clipartmax.com/png/middle/201-2011455_logo-de-peruvian-airlines-vector-and-clip-art-inspiration-peruvian-airlines.png"
+                            alt="Logo"
+                            styleClass="login-logo" />
+        </h:link>
+
         <h1 class="login-title">Iniciar sesión</h1>
         <p class="login-subtitle">Accede a tu cuenta para continuar</p>
 
@@ -188,15 +192,17 @@
                                class="input-field" placeholder="Ingresa tu contraseña" />
             </div>
 
-            <h:commandButton value="Iniciar sesión" action="#{loginBean.login}" class="btn-login" />
+            <h:commandButton value="Iniciar sesión"
+                             action="#{loginBean.login}"
+                             class="btn-login" />
 
-            <h:messages globalOnly="true" style="color: red;" class="error-message" />
+            <h:messages globalOnly="true" class="error-message" />
 
             <a href="#" class="forgot-password">¿Olvidaste tu contraseña?</a>
         </h:form>
     </div>
 
-    <!-- Fuentes para iconos -->
+    <!-- Font Awesome -->
     <h:outputScript name="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js" />
 </h:body>
 </html>

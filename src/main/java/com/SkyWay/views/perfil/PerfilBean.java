@@ -1,5 +1,7 @@
 package com.SkyWay.views.perfil;
 
+import com.SkyWay.modules.TarifaCaracteristica.domain.model.TarifaCaracteristica;
+import com.SkyWay.modules.TarifaCaracteristica.infrastructure.validator.TarifaCaracteristicaValidator;
 import com.SkyWay.modules.asiento.domain.service.AsientoService;
 import com.SkyWay.modules.asiento.presentation.dto.InfoAsientoDTO;
 import com.SkyWay.modules.asiento.presentation.dto.InfoAsientoReservaDTO;
@@ -9,12 +11,16 @@ import com.SkyWay.modules.itinerario.presentation.dto.ItinerarioResumenDTO;
 import com.SkyWay.modules.piloto.domain.service.PiloService;
 import com.SkyWay.modules.reserva.domain.service.ReservaService;
 import com.SkyWay.modules.reserva.presentation.dto.TicketInfo;
+import com.SkyWay.modules.reservaitinerario.domain.service.ReservaItinerarioService;
 import com.SkyWay.modules.rolusuario.domain.model.Role;
+import com.SkyWay.modules.tarifa.domain.model.Tarifa;
+import com.SkyWay.modules.tarifaItinerario.domain.service.ItinerarioTarifaService;
 import com.SkyWay.modules.usuario.domain.model.Usuario;
 import com.SkyWay.modules.vuelo.domain.model.Vuelo;
 import com.SkyWay.modules.vuelo.domain.service.VueloService;
 import com.SkyWay.util.Logger;
 import jakarta.annotation.PostConstruct;
+import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
@@ -49,6 +55,15 @@ public class PerfilBean implements Serializable {
 	@Autowired
 	private HttpSession session;
 
+	@Autowired
+	private ReservaItinerarioService reservaItinerarioService;
+
+	@Autowired
+	private ItinerarioTarifaService itinerarioTarifaService;
+
+	@Autowired
+	private TarifaCaracteristicaValidator tarifaValidator;
+
 	private List<ItinerarioResumenDTO> listaItinerarios;             // Todos los itinerarios
 	private List<ItinerarioResumenDTO> listaItinerariosFiltrados;    // Itinerarios filtrados
 	private Itinerario itinerarioDetalle;
@@ -57,6 +72,7 @@ public class PerfilBean implements Serializable {
 	private LocalDate fechaInicioFiltro;
 	private LocalDate fechaFinFiltro;
 	private List<TicketInfo>ticketInfos;
+	private Tarifa tarifaActual;
 
 
 	@Autowired
@@ -144,9 +160,18 @@ public class PerfilBean implements Serializable {
 	}
 
 	public void verAsientoItinerario(ItinerarioResumenDTO itinerario) {
-		Logger.logInfo("buscando los asientos para "+itinerario.getIdReserva()+"-"+itinerario.getIdItinerario());
+		Logger.logInfo("IdReserva: "+itinerario.getIdReserva()+" IdItinerario: "+itinerario.getIdItinerario());
 
 		listaAsientosReservados=asientoService.getAsientosReservados(itinerario.getIdItinerario(),itinerario.getIdReserva());
+
+		var reservaItinerario= reservaItinerarioService.obtenerReservaItinerario(itinerario.getIdReserva(),itinerario.getIdItinerario());
+
+		tarifaActual =reservaItinerario.getItinerarioTarifa().getTarifa();
+		Logger.logInfo(tarifaActual.toString());
+
+
+
+		//itinerarioTarifaService.getTarifasItinerario(itinerario.getIdItinerario());
 
 		/*for (InfoAsientoReservaDTO asientoReservaDTO : listaAsientosReservados) {
 			Logger.logInfo(asientoReservaDTO.toString());
@@ -156,12 +181,27 @@ public class PerfilBean implements Serializable {
 		PrimeFaces.current().executeScript("PF('dialogAsientos').show();");
 	}
 	public void cambiarAsiento(InfoAsientoReservaDTO infoAsientoDTO) throws IOException {
+		if (!tarifaValidator.permiteCambio(tarifaActual.getTarifaCaracteristicas())) {
+			Logger.logInfo("la tarifa no permite cambios");
 
-		Logger.logInfo(infoAsientoDTO.toString());
 
-		FacesContext.getCurrentInstance().getExternalContext()
-				.redirect("/perfil/pasajero/cambioAsiento.xhtml?idVuelo="+infoAsientoDTO.getIdVuelo()
-						+"&idReserva="+infoAsientoDTO.getIdReserva());
+			FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, "Error","La tarifa no permite cambios");
+
+			PrimeFaces.current().dialog().showMessageDynamic(message);
+
+			addMessage(FacesMessage.SEVERITY_INFO, "Error", "La tarifa no permite cambios");
+
+			// No redirect aquí para que el mensaje se muestre en la misma vista
+		} else {
+			FacesContext.getCurrentInstance().getExternalContext()
+					.redirect("/perfil/pasajero/cambioAsiento.xhtml?idVuelo=" + infoAsientoDTO.getIdVuelo()
+							+ "&idReserva=" + infoAsientoDTO.getIdReserva());
+		}
+	}
+
+	public void addMessage(FacesMessage.Severity severity, String summary, String detail) {
+		FacesContext.getCurrentInstance().
+				addMessage(null, new FacesMessage(severity, summary, detail));
 	}
 
 	public void getTicket(ItinerarioResumenDTO itinerario){

@@ -173,8 +173,8 @@
 
 
     <ui:define name="contenido">
+        <h:messages id="msgs" globalOnly="true" styleClass="ui-messages ui-widget" />
 
-        <h:messages globalOnly="true" style="color: red;" />
         <div class="container">
             <header class="profile-header">
                 <h1>Bienvenido, <span class="user-name">#{sessionScope.usuario.nombre} #{sessionScope.usuario.apellido}</span></h1>
@@ -188,10 +188,11 @@
 
             <h2 style="margin-bottom: 15px;">Tus Itinerarios</h2>
 
+
             <!-- FORMULARIO DE FILTRO DE FECHAS -->
             <h:form id="formFiltroFechas" prependId="false">
                 <p:messages id="messages" showSummary="true" showDetail="false" closable="true" style="margin-bottom: 1rem;" />
-
+                <p:growl id="message" showDetail="true"/>
                 <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
 
                     <div style="flex: 1; min-width: 150px;">
@@ -236,6 +237,7 @@
 
             <!-- FORMULARIO PRINCIPAL DE VUELOS Y BOTONES DE FILTRO -->
             <h:form id="formVuelos">
+                <p:growl id="message" showDetail="true"/>
                 <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
                     <p:commandButton value="Hoy"
                                      action="#{perfilPasajeroView.filtrarVuelosHoy}"

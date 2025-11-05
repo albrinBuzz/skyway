@@ -1,44 +1,32 @@
 package com.SkyWay.modules.tarifa.domain.model;
 
-import java.io.Serializable;
-
-import com.SkyWay.modules.tarifaItinerario.domain.model.ItinerarioTarifa;
+import com.SkyWay.modules.TarifaCaracteristica.domain.model.TarifaCaracteristica;
 import jakarta.persistence.*;
+import java.io.Serializable;
+import java.util.List;
 
 @Entity
 @NamedQuery(name = "Tarifa.findAll", query = "SELECT t FROM Tarifa t")
+@Table(name = "Tarifa")
 public class Tarifa implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "tarifa_seq")
     @SequenceGenerator(name = "tarifa_seq", sequenceName = "tarifa_seq", allocationSize = 1)
-    @Column(name = "id_tarifa")
+    @Column(name = "ID_TARIFA")
     private Integer idTarifa;
 
-    @Column(name = "nombre", nullable = false, unique = true)
+    @Column(name = "Nombre", nullable = false, unique = true, length = 50)
     private String nombre;
 
-    @Column(name = "permite_cambios", nullable = false)
-    private Boolean permiteCambios;
+    // bi-directional one-to-many association to TarifaCaracteristica
+    @OneToMany(mappedBy = "tarifa", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
+    private List<TarifaCaracteristica> tarifaCaracteristicas;
 
-    @Column(name = "horas_minimas_cambio")
-    private Integer horasMinimasCambio;
+    public Tarifa() {}
 
-    @Column(name = "permite_cancelacion", nullable = false)
-    private Boolean permiteCancelacion;
-
-    @Column(name = "reembolso_permitido", nullable = false)
-    private Boolean reembolsoPermitido;
-
-    // Bi-directional one-to-many to ItinerarioTarifa
-    @OneToMany(mappedBy = "tarifa", fetch = FetchType.LAZY)
-    private java.util.List<ItinerarioTarifa> itinerarioTarifas;
-
-    public Tarifa() {
-    }
-
-    // Getters y Setters
+    // Getters y setters
     public Integer getIdTarifa() {
         return idTarifa;
     }
@@ -55,43 +43,20 @@ public class Tarifa implements Serializable {
         this.nombre = nombre;
     }
 
-    public Boolean getPermiteCambios() {
-        return permiteCambios;
+    public List<TarifaCaracteristica> getTarifaCaracteristicas() {
+        return tarifaCaracteristicas;
     }
 
-    public void setPermiteCambios(Boolean permiteCambios) {
-        this.permiteCambios = permiteCambios;
+    public void setTarifaCaracteristicas(List<TarifaCaracteristica> tarifaCaracteristicas) {
+        this.tarifaCaracteristicas = tarifaCaracteristicas;
     }
 
-    public Integer getHorasMinimasCambio() {
-        return horasMinimasCambio;
-    }
-
-    public void setHorasMinimasCambio(Integer horasMinimasCambio) {
-        this.horasMinimasCambio = horasMinimasCambio;
-    }
-
-    public Boolean getPermiteCancelacion() {
-        return permiteCancelacion;
-    }
-
-    public void setPermiteCancelacion(Boolean permiteCancelacion) {
-        this.permiteCancelacion = permiteCancelacion;
-    }
-
-    public Boolean getReembolsoPermitido() {
-        return reembolsoPermitido;
-    }
-
-    public void setReembolsoPermitido(Boolean reembolsoPermitido) {
-        this.reembolsoPermitido = reembolsoPermitido;
-    }
-
-    public java.util.List<ItinerarioTarifa> getItinerarioTarifas() {
-        return itinerarioTarifas;
-    }
-
-    public void setItinerarioTarifas(java.util.List<ItinerarioTarifa> itinerarioTarifas) {
-        this.itinerarioTarifas = itinerarioTarifas;
+    @Override
+    public String toString() {
+        final StringBuffer sb = new StringBuffer("Tarifa{");
+        sb.append("nombre='").append(nombre).append('\'');
+        sb.append(", idTarifa=").append(idTarifa);
+        sb.append('}');
+        return sb.toString();
     }
 }

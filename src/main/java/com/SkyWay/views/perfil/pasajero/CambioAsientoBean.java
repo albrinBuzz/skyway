@@ -1,7 +1,6 @@
 package com.SkyWay.views.perfil.pasajero;
 
 
-import com.SkyWay.dto.InfoVueloDTO;
 import com.SkyWay.modules.asiento.domain.service.AsientoService;
 import com.SkyWay.modules.asiento.presentation.dto.InfoAsientoDTO;
 import com.SkyWay.modules.reserva.domain.service.ReservaService;

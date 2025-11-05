@@ -4,6 +4,9 @@ import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.SkyWay.modules.pasajero.domain.model.Pasajero;
+import com.SkyWay.modules.usuario.domain.model.Usuario;
+import com.SkyWay.modules.vuelo.domain.model.Vuelo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,11 +24,7 @@ import org.springframework.web.servlet.view.RedirectView;
 import com.SkyWay.modules.asiento.presentation.dto.InfoAsientoDTO;
 import com.SkyWay.dto.InfoVueloDTO;
 import com.SkyWay.dto.ReservaVueloDTO;
-import com.SkyWay.model.Pasajero;
-import com.SkyWay.model.Piloto;
-import com.SkyWay.model.RolEnum;
-import com.SkyWay.model.Usuario;
-import com.SkyWay.model.Vuelo;
+
 import com.SkyWay.modules.aeropuerto.domain.service.AeropuertoService;
 import com.SkyWay.modules.asiento.domain.service.AsientoService;
 import com.SkyWay.modules.avion.domain.service.AvionService;
@@ -84,7 +83,7 @@ public class PerfilController {
 
 		Usuario usuario=(Usuario) session.getAttribute("usuario");
 	
-		if(usuario.getRol().getNombre().equals(RolEnum.PASAJERO.getDescripcion())) {
+		/*if(usuario.getRol().getNombre().equals(RolEnum.PASAJERO.getDescripcion())) {
 
 			 return new RedirectView("perfil/pasajero/template.xhtml");
 		}else if (usuario.getRol().getNombre().equals(RolEnum.PILOTO.getDescripcion())) {
@@ -93,7 +92,8 @@ public class PerfilController {
 		}
 		else {
 			 return new RedirectView("perfil/pasajero/template.xhtml");
-		}
+		}*/
+		return new RedirectView("/");
         
 		//return "protegido/index";
 	}
@@ -240,7 +240,7 @@ public class PerfilController {
 		
 		reservaService.cancelarReserva(id);
 		
-		Usuario usuario=(Usuario) session.getAttribute("usuario");
+		/*Usuario usuario=(Usuario) session.getAttribute("usuario");
 		model.addAttribute("usuario", session.getAttribute("usuario"));
 		
 		if(usuario instanceof Pasajero) {
@@ -252,7 +252,8 @@ public class PerfilController {
 			model.addAttribute("piloto", piloto);
 			
 			return "perfil/perfilPiloto";
-		}
+		}*/
+		return "perfil/perfilPiloto";
 
 	}
 	

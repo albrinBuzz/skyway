@@ -1103,11 +1103,33 @@ INSERT INTO Asignacion_Puerta (ID_SEGMENTO, ID_PUERTA) VALUES (15, 34);
 INSERT INTO Asignacion_Puerta (ID_SEGMENTO, ID_PUERTA) VALUES (16, 20);
 
 
-INSERT INTO Tarifa (Nombre, Permite_Cambios, Horas_Minimas_Cambio, Permite_Cancelacion, Reembolso_Permitido)
-VALUES
-('Básica', FALSE, NULL, TRUE, FALSE),
-('Flexible', TRUE, 48, TRUE, FALSE),
-('Premium', TRUE, 24, TRUE, TRUE);
+INSERT INTO Tarifa (ID_TARIFA, Nombre) VALUES
+(1, 'Básica'),
+(2, 'Flexible'),
+(3, 'Premium');
+
+INSERT INTO Caracteristica_Tarifa (ID_CARACTERISTICA, Nombre, Descripcion) VALUES
+(1, 'Permite Cambios', 'Permite cambiar la reserva'),
+(2, 'Horas Minimas Cambio', 'Horas mínimas antes del vuelo para cambiar'),
+(3, 'Permite Cancelacion', 'Permite cancelar la reserva');
+
+-- Básica
+INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor) VALUES
+(1, 1, 'false'),  -- Permite_Cambios
+(1, 3, 'true');  -- Permite_Cancelacion
+
+-- Flexible
+INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor) VALUES
+(2, 1, 'true'),   -- Permite_Cambios
+(2, 2, '48'),     -- Horas_Minimas_Cambio
+(2, 3, 'true');   -- Permite_Cancelacion
+
+-- Premium
+INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor) VALUES
+(3, 1, 'true'),          -- Permite_Cambios
+(3, 2, '24'),             -- Horas_Minimas_Cambio
+(3, 3, 'true');          -- Permite_Cancelacion
+
 
 -- 10. Itinerarios (IDs hardcoded)
 INSERT INTO Itinerario ( ORIGEN_AEROPUERTO, DESTINO_AEROPUERTO, DURACION_TOTAL, NUMERO_ESCALAS,Precio_Base) VALUES

@@ -220,36 +220,51 @@
                                     ✈️ Tarifas disponibles para este vuelo
                                 </h3>
 
-                                <p:dataGrid value="#{itinerarioDetalleBean.getTarifasPorItinerario(vuelo.itinerario)}"
+                                <p:dataGrid value="#{itinerarioDetalleBean.getTarifasItinerario(vuelo.itinerario)}"
                                             var="tarifa" columns="2" layout="grid"
                                             styleClass="p-grid p-nogutter" style="margin-top: 10px;">
 
                                     <p:panel style="margin: 10px; border: 1px solid #dce0e6; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); background-color: #ffffff;">
                                         <f:facet name="header">
                                             <div style="display: flex; align-items: center; justify-content: space-between;">
-                                <span style="font-size: 1.3rem; font-weight: bold; color: #0077cc;">
-                                    #{tarifa.tarifa.nombre}
-                                </span>
+                                        <span style="font-size: 1.3rem; font-weight: bold; color: #0077cc;">
+                                            #{tarifa.nombre}
+                                        </span>
                                                 <p:badge value="CLP #{tarifa.precio}" severity="info" style="font-size: 1rem;" />
                                             </div>
                                         </f:facet>
 
+                                        <!-- Renderizar características dinámicas -->
                                         <h:panelGrid columns="2" columnClasses="label,value" style="width: 100%; margin-top: 15px; font-size: 0.95rem;">
-                                            <h:outputText value="💱 Cambios:" />
-                                            <h:outputText style="color: #{tarifa.tarifa.permiteCambios ? 'green' : 'red'}; font-weight: bold;"
-                                                          value="#{tarifa.tarifa.permiteCambios ? 'Sí' : 'No'}" />
+                                            <ui:repeat value="#{tarifa.caracteristicas}" var="carac">
+                                                <!-- Nombre de la característica -->
+                                                <h:panelGroup layout="block" style="padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
+                                                    <h:outputText value="#{carac.nombre}:" style="font-weight: 600;" />
+                                                </h:panelGroup>
 
-                                            <h:outputText value="⏱️ Horas mín. cambio:" />
-                                            <h:outputText value="#{tarifa.tarifa.horasMinimasCambio != null ? tarifa.tarifa.horasMinimasCambio : 'No aplica'} h" />
+                                                <!-- Valor según tipo de dato -->
+                                                <h:panelGroup layout="block" style="padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
 
-                                            <h:outputText value="❌ Cancelación:" />
-                                            <h:outputText style="color: #{tarifa.tarifa.permiteCancelacion ? 'green' : 'red'}; font-weight: bold;"
-                                                          value="#{tarifa.tarifa.permiteCancelacion ? 'Sí' : 'No'}" />
+                                                    <!-- Si es booleano -->
+                                                    <h:outputText rendered="#{carac.tipoDato eq 'boolean'}"
+                                                                  value="#{carac.valorBool ? '✔️ Sí' : '❌ No'}"
+                                                                  style="font-weight: bold; color: #{carac.valorBool ? 'green' : 'red'};" />
 
-                                            <h:outputText value="💰 Reembolsable:" />
-                                            <h:outputText style="color: #{tarifa.tarifa.reembolsoPermitido ? 'green' : 'red'}; font-weight: bold;"
-                                                          value="#{tarifa.tarifa.reembolsoPermitido ? 'Sí' : 'No'}" />
+                                                    <!-- Si es entero -->
+                                                    <h:outputText rendered="#{carac.tipoDato eq 'int'}"
+                                                                  value="#{carac.valorInt}"
+                                                                  style="font-weight: bold;" />
+
+                                                    <!-- Si es texto -->
+                                                    <h:outputText rendered="#{carac.tipoDato eq 'text'}"
+                                                                  value="#{carac.valorTexto}"
+                                                                  style="font-weight: bold;" />
+
+                                                </h:panelGroup>
+                                            </ui:repeat>
+
                                         </h:panelGrid>
+
 
                                         <p:commandButton value="Seleccionar"
                                                          icon="pi pi-check-circle"
@@ -259,6 +274,7 @@
                                                          style="margin-top: 15px; width: 100%;" />
                                     </p:panel>
                                 </p:dataGrid>
+
                             </h:panelGroup>
                         </p:rowExpansion>
 

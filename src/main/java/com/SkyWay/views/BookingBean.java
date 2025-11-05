@@ -6,6 +6,11 @@ import java.sql.Timestamp;
 import java.util.*;
 
 
+import com.SkyWay.modules.estadoreserva.domain.model.EstadoReserva;
+import com.SkyWay.modules.pasajero.domain.model.Pasajero;
+import com.SkyWay.modules.reserva.domain.model.Reserva;
+import com.SkyWay.modules.reservaasiento.domain.model.ReservaAsiento;
+import com.SkyWay.modules.usuario.domain.model.Usuario;
 import com.SkyWay.util.Logger;
 import org.hibernate.exception.GenericJDBCException;
 import org.primefaces.PrimeFaces;
@@ -17,11 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.SkyWay.modules.asiento.presentation.dto.InfoAsientoDTO;
 import com.SkyWay.dto.InfoVueloDTO;
-import com.SkyWay.model.EstadoReserva;
-import com.SkyWay.model.Pasajero;
-import com.SkyWay.model.Reserva;
-import com.SkyWay.model.ReservaAsiento;
-import com.SkyWay.model.Usuario;
+
 import com.SkyWay.modules.asiento.domain.service.AsientoService;
 import com.SkyWay.modules.avion.domain.service.AvionService;
 import com.SkyWay.modules.pasajero.domain.service.PasajeroService;
@@ -146,7 +147,7 @@ public class BookingBean implements Serializable{
 
         var pasajero= (Usuario) session.getAttribute("usuario");
 
-        if (pasajero instanceof Pasajero) {
+        /*if (pasajero instanceof Pasajero) {
             //LOGGER.info("Informacion del pasajero {} ", pasajero);
             reserva.setPasajero((Pasajero) pasajero);
             //reserva.setVuelo(vueloService.findById(vueloSeleccionado.getIdVuelo()).get());
@@ -164,13 +165,13 @@ public class BookingBean implements Serializable{
             reserva.setEstadoReservaBean(esadoReserva);
             reserva.setReservaAsientos(asientos);
             reserva.setFechaReserva(new Timestamp(new Date().getTime()));
-            //reservaService.save(reserva);
+            //reservaService.save(reserva)
 
 
             FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, "Message", "Reserva lista");
 
             PrimeFaces.current().dialog().showMessageDynamic(message);
-        }
+        }*/
 
 
         return "reservaConfirmada.xhtml?faces-redirect=true"; // Redirige a la página de confirmación
@@ -188,7 +189,7 @@ public class BookingBean implements Serializable{
                 .boxed()
                 .toArray(Integer[]::new);
 
-        try {
+        /*try {
             String mensaje = reservaService.confirmarReserva(vueloSeleccionado.getIdVuelo(), asientos, pasajero.getRutUsuario(),1);
 
             FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, "Reserva confirmada", mensaje);
@@ -203,7 +204,7 @@ public class BookingBean implements Serializable{
             Logger.logInfo("Error inesperado: " + ex.getMessage());
             FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error inesperado", ex.getMessage());
             PrimeFaces.current().dialog().showMessageDynamic(message);
-        }
+        }*/
     }
 
 

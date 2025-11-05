@@ -38,6 +38,8 @@ DROP SEQUENCE IF EXISTS rolusuario_id_seq CASCADE;
 DROP SEQUENCE IF EXISTS tipo_turno_seq CASCADE;
 DROP SEQUENCE IF EXISTS tarifa_seq CASCADE;
 DROP SEQUENCE IF EXISTS itinerario_tarifa_seq CASCADE;
+DROP SEQUENCE IF EXISTS caracteristica_tarifa_seq CASCADE;
+DROP SEQUENCE IF EXISTS tarifa_caracteristica_seq CASCADE;
 
 
 -- Eliminar Tablas con CASCADE
@@ -85,7 +87,8 @@ DROP TABLE IF EXISTS Continente CASCADE;
 DROP TABLE IF EXISTS seguimiento_vuelo CASCADE;
 DROP TABLE IF EXISTS Itinerario_Tarifa CASCADE;
 DROP TABLE IF EXISTS Tarifa CASCADE;
-
+DROP TABLE IF EXISTS Caracteristica_Tarifa CASCADE;
+DROP TABLE IF EXISTS Tarifa_Caracteristica CASCADE;
 
 
 
@@ -128,6 +131,9 @@ CREATE SEQUENCE notificacion_seq START 1;
 CREATE SEQUENCE tipo_turno_seq START 1;
 CREATE SEQUENCE capacidad_clase_seq START 1;
 CREATE SEQUENCE rolusuario_id_seq START 1 INCREMENT 1;
+CREATE SEQUENCE caracteristica_tarifa_seq START 1 INCREMENT 1;
+CREATE SEQUENCE tarifa_caracteristica_seq START 1 INCREMENT 1;
+
 CREATE SEQUENCE tarifa_seq
     START WITH 1
     INCREMENT BY 1
@@ -419,11 +425,25 @@ CREATE TABLE Itinerario_Vuelo (
 
 CREATE TABLE Tarifa (
     ID_TARIFA INT PRIMARY KEY DEFAULT nextval('tarifa_seq'),
-    Nombre VARCHAR(50) NOT NULL UNIQUE, -- Básica, Flexible, Premium
-    Permite_Cambios BOOLEAN NOT NULL DEFAULT FALSE,
-    Horas_Minimas_Cambio INT, -- e.g. 48, 24 (NULL si no aplica)
-    Permite_Cancelacion BOOLEAN NOT NULL DEFAULT FALSE,
-    Reembolso_Permitido BOOLEAN NOT NULL DEFAULT FALSE
+    Nombre VARCHAR(50) NOT NULL UNIQUE
+);
+
+
+CREATE TABLE Caracteristica_Tarifa (
+    ID_CARACTERISTICA INT PRIMARY KEY DEFAULT nextval('caracteristica_tarifa_seq'),
+    Nombre VARCHAR(100) NOT NULL UNIQUE,
+    Descripcion TEXT,
+	Tipo_Dato VARCHAR(20)  CHECK (Tipo_Dato IN ('boolean', 'int', 'text'))
+);
+
+CREATE TABLE Tarifa_Caracteristica (
+    ID_TARIFA_CARACTERISTICA INT PRIMARY KEY DEFAULT nextval('tarifa_caracteristica_seq'),
+    ID_TARIFA INT REFERENCES Tarifa(ID_TARIFA) ON DELETE CASCADE,
+    ID_CARACTERISTICA INT REFERENCES Caracteristica_Tarifa(ID_CARACTERISTICA) ON DELETE CASCADE,
+    Valor VARCHAR(100),
+	Valor_Bool BOOLEAN,
+    Valor_Int INT,
+    CONSTRAINT unique_tarifa_caracteristica UNIQUE (ID_TARIFA, ID_CARACTERISTICA)
 );
 
 -- Tabla Itinerario_Tarifa con ID autoincremental y restricción única para combinación
