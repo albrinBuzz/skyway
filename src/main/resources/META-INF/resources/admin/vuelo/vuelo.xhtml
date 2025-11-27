@@ -68,7 +68,7 @@
                 <p:commandButton value="Guardar Vuelo"
                                  action="#{vueloBean.guardarVuelo}"
                                  icon="pi pi-save"
-                                 update="segmentosPanel"
+                                 update="segmentosPanel formVuelo"
                                  styleClass="ui-button-primary"
                                  rendered="#{!vueloBean.vueloCreado}" />
 
@@ -84,7 +84,8 @@
         </h:form>
 
             <!-- Solo si el vuelo fue creado, mostrar sección de segmentos -->
-            <p:panel header="Segmentos del Vuelo"  id="segmentosPanel"   style="margin-top: 30px;">
+
+            <p:panel header="Segmentos del Vuelo"  id="segmentosPanel"   style="margin-top: 30px;" >
 
                 <h:outputText value="Número de Vuelo: #{vueloBean.vuelo.numeroVuelo}" styleClass="titulo-vuelo" />
 
@@ -153,10 +154,12 @@
                 <p:commandButton value="Agregar Segmetno" icon="pi pi-plus" actionListener="#{vueloBean.openNewSegmento}"
                                  update=":formSegmentoCrear:manage-segmento-content" title="Agregar nuevo segmento"
                                  oncomplete="PF('dlgNuevoSegmento').show()"
+                                 rendered="#{vueloBean.vueloCreado}"
                                  styleClass="ui-button-success" style="margin-top: 10px;">
                 </p:commandButton>
 
             </p:panel>
+
 
 
 
@@ -216,7 +219,7 @@
 
                 <p:commandButton value="Guardar Segmento"
                                  actionListener="#{vueloBean.guardarSegmentoNuevo}"
-                                 update="@form :formVuelo:segmentosPanel"
+                                 update="@form segmentosPanel"
                                  process="@form"
                                  styleClass="ui-button-primary" />
 

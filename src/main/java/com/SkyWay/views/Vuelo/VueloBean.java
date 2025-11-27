@@ -279,8 +279,9 @@ public class VueloBean implements Serializable {
             asignacionPuerta.setSegmentoVuelo(segmentoGuardado);
             asignacionPuertaService.save(asignacionPuerta);
             //var segmentofind=segmentoVueloService.findById(segmentoGuardado.getIdSegmento()).get();
-            segmentos.add(segmentoGuardado);
-            Logger.logInfo(segmentoGuardado.toString());
+            segmentos.add(segmentoVueloService.findById(segmentoGuardado.getIdSegmento()).get());
+            Logger.logInfo(segmentoVueloService.findById(segmentoGuardado.getIdSegmento()).get().toString());
+
 
 
         }

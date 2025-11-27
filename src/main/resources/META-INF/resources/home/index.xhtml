@@ -8,365 +8,903 @@
       xmlns:ui="http://java.sun.com/jsf/facelets"
       template="/template/main.xhtml">
 
-    <h:head>
+    <ui:define name="head">
         <title>Próximos Vuelos</title>
-        <style>
-            /* Estructura General */
-             body {
-                 font-family: 'Roboto', sans-serif;
-                 background-color: #f8f9fa;
-                 margin: 0;
-                 padding: 0;
-             }
+        <!-- Leaflet CSS y JS -->
+        <!-- Leaflet CSS -->
+        <!-- Leaflet JS -->
+        <script
+                src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+                integrity="sha512‑gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
+                crossorigin="">
+        </script>
 
-             .search-bar {
-                 background-color: #343a40;
-                 padding: 50px 0;
-                 color: white;
-                 text-align: center;
-             }
+        <!-- Script para inicializar el mapa -->
+        <script type="text/javascript">
+            <![CDATA[
+              document.addEventListener("DOMContentLoaded", function () {
+                var map = L.map("leafletMap").setView([20, 0], 2);
 
-             .search-bar h2 {
-                 font-size: 2rem;
-                 color: #fff;
-                 font-weight: 700;
-             }
+                L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                  attribution: "© <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors"
+                }).addTo(map);
 
-             /* Tarjetas de Vuelo */
-             .product-grid-item {
-                 border-radius: 15px;
-                 box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-                 overflow: hidden;
-                 background: white;
-                 transition: transform 0.3s ease, box-shadow 0.3s ease;
-                 margin-bottom: 20px;
-                 margin-right: 15px;
-                 cursor: pointer;
-                 max-width: 350px;
-             }
+                var locations = [
+                  { name: "Nueva York, EE.UU.", lat: 40.7128, lng: -74.0060 },
+                  { name: "Madrid, España", lat: 40.4168, lng: -3.7038 },
+                  { name: "Río de Janeiro, Brasil", lat: -22.9068, lng: -43.1729 }
+                ];
 
-             .product-grid-item:hover {
-                 transform: translateY(-10px);
-                 box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-             }
+                locations.forEach(function (loc) {
+                  L.marker([loc.lat, loc.lng])
+                   .addTo(map)
+                   .bindPopup(loc.name);
+                });
 
-             .product-grid-item-top {
-                 background-color: #007bff;
-                 color: white;
-                 padding: 15px;
-                 display: flex;
-                 justify-content: space-between;
-                 align-items: center;
-             }
+                // Forzar recalculo del tamaño después de renderizar
+                setTimeout(function () {
+                  map.invalidateSize();
+                }, 200);
+              });
+            ]]>
+        </script>
 
-             .product-category-icon {
-                 font-size: 1.5rem;
-                 color: white;
-             }
 
-             .product-badge {
-                 font-size: 0.875rem;
-                 color: #fff;
-                 background-color: #28a745;
-                 border-radius: 5px;
-                 padding: 5px 10px;
-             }
 
-             .product-grid-item-content {
-                 padding: 15px;
-                 text-align: center;
-             }
 
-             .product-name {
-                 font-size: 1.5rem;
-                 color: #007bff;
-                 font-weight: 600;
-                 margin-bottom: 10px;
-             }
 
-             .product-description {
-                 font-size: 1rem;
-                 color: #6c757d;
-                 margin-bottom: 15px;
-             }
-
-             .product-price {
-                 font-size: 1.25rem;
-                 font-weight: 700;
-                 color: #28a745;
-                 margin-top: 10px;
-             }
-
-             .product-grid-item-bottom {
-                 display: flex;
-                 justify-content: space-between;
-                 align-items: center;
-                 padding: 15px;
-                 background-color: #f8f9fa;
-             }
-
-             .product-list-action {
-                 display: flex;
-                 align-items: center;
-                 justify-content: space-between;
-             }
-
-             .product-list-action button {
-                 background-color: #007bff;
-                 color: white;
-                 border: none;
-                 padding: 8px 15px;
-                 font-weight: 600;
-                 transition: background-color 0.3s;
-                 border-radius: 5px;
-             }
-
-             .product-list-action button:hover {
-                 background-color: #0056b3;
-             }
-
-             /* Paginación */
-             .ui-paginator {
-                 display: flex;
-                 justify-content: center;
-                 margin-top: 20px;
-             }
-
-             /* Responsividad */
-             @media (max-width: 768px) {
-                 .product-grid-item {
-                     width: 100%;
+        <style type="text/css">
+            #leafletMap {
+                   height: 400px;
+                   /* ya tienes border y radio, está bien */
                  }
-             }
+
+                 /* Clase interna de Leaflet para asegurar la altura */
+                 .leaflet-container {
+                   height: 100%;
+                   width: 100%;
+                 }
+
+
+                       /* ===========================================
+                 🌓 PALETA MARINO OSCURO GLOBAL
+                 =========================================== */
+              body {
+                  background: #0a1224 !important; /* azul marino casi negro */
+                  color: #e2e8f0 !important;
+
+              }
+
+                /* ======== GLOBAL ======== */
+            body, .ui-widget {
+                color: #E6EEF7 !important;
+                font-family: 'Segoe UI', sans-serif;
+            }
+
+
+
+              input, select, textarea {
+                  background: #0a1224 !important;
+                  border: 1px solid #1e2a44 !important;
+                  color: #e2e8f0 !important;
+              }
+
+              input::placeholder {
+                  color: #8b9bb8 !important;
+              }
+
+              label,
+              h\:outputLabel {
+                  color: #cbd5e1 !important;
+              }
+
+              /* ===========================================
+                 🔷 SEARCH BAR
+                 =========================================== */
+              .search-bar {
+                  background: #0a1224 !important;
+                  padding: 50px 0;
+              }
+
+              .search-bar h2 {
+                  color: #3b82f6 !important;
+                  font-weight: 700;
+              }
+
+              /* ===========================================
+                 🟦 TARJETA PRINCIPAL
+                 =========================================== */
+              .card {
+                  background: #101b33 !important;
+                  border: 1px solid #1e2a44 !important;
+                  border-radius: 12px !important;
+              }
+
+              /* ===========================================
+                 🟦 TABS
+                 =========================================== */
+              .nav-tabs {
+                  border-bottom: 1px solid #1e2a44 !important;
+              }
+
+              .nav-tabs .nav-link {
+                  background: #0a1224 !important;
+                  color: #94a3b8 !important;
+                  border: 1px solid #1e2a44 !important;
+                  border-radius: 6px 6px 0 0 !important;
+              }
+
+              .nav-tabs .nav-link.active {
+                  background: #101b33 !important;
+                  color: white !important;
+                  border-color: #3b82f6 !important;
+              }
+
+              .nav-tabs .nav-link:hover {
+                  background: #101b33 !important;
+                  color: white !important;
+              }
+
+              /* ===========================================
+                 🧩 INPUTS PRIMEFACES
+                 =========================================== */
+              .p-inputtext,
+              .ui-inputfield,
+              .p-autocomplete-input,
+              .p-selectonemenu,
+              .p-calendar {
+                  background: #0a1224 !important;
+                  color: #e2e8f0 !important;
+                  border: 1px solid #1e2a44 !important;
+              }
+
+
+                .ui-inputfield {
+                    width: 100% !important;  /* Asegura que el campo de texto del autocompletar ocupe todo el ancho */
+                }
+
+
+              .p-inputtext:focus,
+              .ui-inputfield:focus {
+                  border-color: #3b82f6 !important;
+                  box-shadow: 0 0 4px #3b82f6 !important;
+              }
+
+              /* ===========================================
+                 ✈ AUTOCOMPLETE
+                 =========================================== */
+              .p-autocomplete,
+              .p-autocomplete .p-inputtext {
+                  background: #0a1224 !important;
+                  color: #e2e8f0 !important;
+                  border: 1px solid #1e2a44 !important;
+              }
+
+              .p-autocomplete-panel {
+                  background: #101b33 !important;
+                  border: 1px solid #1e2a44 !important;
+              }
+
+              .p-autocomplete-item {
+                  background: #101b33 !important;
+                  color: #e2e8f0 !important;
+              }
+
+              .p-autocomplete-item:hover,
+              .p-autocomplete-item.p-highlight {
+                  background: #223458 !important;
+                  color: #fff !important;
+              }
+
+              /* ===========================================
+                 📅 DATE PICKER COMPLETO
+                 =========================================== */
+              .p-datepicker-input {
+                  background: #0a1224 !important;
+                  color: #e2e8f0 !important;
+                  border: 1px solid #1e2a44 !important;
+              }
+
+              .p-datepicker {
+                  background: #101b33 !important;
+                  border: 1px solid #1e2a44 !important;
+              }
+
+              .p-datepicker-header {
+                  background: #1e2a44 !important;
+                  color: white !important;
+                  border-bottom: 1px solid #223458 !important;
+              }
+
+              /* Navegación */
+              .p-datepicker-prev,
+              .p-datepicker-next {
+                  color: white !important;
+              }
+
+              .p-datepicker-prev:hover,
+              .p-datepicker-next:hover {
+                  color: #3b82f6 !important;
+              }
+
+              /* Días */
+              .p-datepicker table td > span {
+                  color: #e2e8f0 !important;
+                  background: transparent !important;
+              }
+
+              .p-datepicker table td > span:hover {
+                  background: #3b82f6 !important;
+                  color: white !important;
+              }
+
+              /* Día seleccionado */
+              .p-datepicker table td.p-highlight > span {
+                  background: #3b82f6 !important;
+                  color: white !important;
+              }
+
+              /* ===========================================
+                 📦 SELECT ONE MENU
+                 =========================================== */
+              .p-selectonemenu {
+                  background: #0a1224 !important;
+                  border: 1px solid #1e2a44 !important;
+                  color: #e2e8f0 !important;
+              }
+
+              .p-selectonemenu-label {
+                  background: #0a1224 !important;
+                  color: #e2e8f0 !important;
+              }
+
+              .p-selectonemenu-trigger {
+                  background: #1e2a44 !important;
+                  border-left: 1px solid #223458 !important;
+              }
+
+              /* Panel */
+              .p-selectonemenu-panel {
+                  background: #101b33 !important;
+                  border: 1px solid #1e2a44 !important;
+              }
+
+              .p-selectonemenu-item {
+                  background: #101b33 !important;
+                  color: #e2e8f0 !important;
+              }
+
+              .p-selectonemenu-item:hover,
+              .p-selectonemenu-item.p-highlight {
+                  background: #223458 !important;
+                  color: white !important;
+              }
+
+              /* ===========================================
+                 🔢 SPINNER
+                 =========================================== */
+              .p-spinner input {
+                  background: #0a1224 !important;
+                  border: 1px solid #1e2a44 !important;
+                  color: white !important;
+              }
+
+              .p-spinner-button {
+                  background: #1e2a44 !important;
+                  color: white !important;
+              }
+
+              .p-spinner-button:hover {
+                  background: #223458 !important;
+              }
+
+              /* ===========================================
+                 🔵 BOTONES
+                 =========================================== */
+              .btn-primary,
+              .p-button,
+              .p-button-primary {
+                  background: #3b82f6 !important;
+                  color: white !important;
+                  border: none !important;
+                  border-radius: 10px !important;
+              }
+
+              .btn-primary:hover,
+              .p-button:hover {
+                  background: #2563eb !important;
+              }
+
+              /* ===========================================
+                 📢 MENSAJES (PrimeFaces)
+                 =========================================== */
+              .p-messages,
+              .p-message {
+                  background: #101b33 !important;
+                  border-left: 3px solid #3b82f6 !important;
+                  color: white !important;
+              }
+
+
+
+
+
+/* ======== INPUTS ======== */
+.ui-inputfield, .p-inputtext {
+    background-color: #11263F !important;
+    border: 1px solid #1E3A5C !important;
+    color: #E6EEF7 !important;
+}
+
+.ui-inputfield:focus, .p-inputtext:focus {
+    border-color: #4AA3FF !important;
+    box-shadow: 0 0 4px #4AA3FF !important;
+}
+
+/* ======== BOTONES ======== */
+.ui-button {
+    background: #1E3A5C !important;
+    border: 1px solid #204A85 !important;
+    color: #E6EEF7 !important;
+}
+
+.ui-button:hover {
+    background: #204A85 !important;
+    border-color: #4AA3FF !important;
+}
+
+/* ======== PANEL Y TARJETAS ======== */
+.ui-panel, .ui-accordion, .ui-datatable, .ui-card,
+.p-panel, .p-card {
+    background: #11263F !important;
+    border: 1px solid #1E3A5C !important;
+    color: #E6EEF7 !important;
+}
+
+/* ======== p:datePicker ======== */
+/* Input */
+.p-datepicker .p-inputtext,
+.ui-datepicker .ui-inputfield {
+    background: #11263F !important;
+    color: #E6EEF7 !important;
+    border: 1px solid #1E3A5C !important;
+}
+
+/* Panel del calendario */
+.p-datepicker, .ui-datepicker {
+    background: #0A1A2F !important;
+    border: 1px solid #1E3A5C !important;
+}
+
+/* Cabecera del calendario */
+.p-datepicker-header, .ui-datepicker-header {
+    background: #11263F !important;
+    color: #E6EEF7 !important;
+    border-bottom: 1px solid #1E3A5C !important;
+}
+
+/* Días normales */
+.p-datepicker table td > span,
+.p-datepicker table td > a,
+.ui-datepicker-calendar td a {
+    color: #E6EEF7 !important;
+    background: #11263F !important;
+    border-radius: 4px !important;
+}
+
+/* Hover */
+.p-datepicker table td > a:hover {
+    background: #204A85 !important;
+    color: white !important;
+}
+
+/* Día seleccionado */
+.p-datepicker .p-highlight,
+.ui-state-active {
+    background: #204A85 !important;
+    color: #fff !important;
+}
+
+
+
 
 
         </style>
-    </h:head>
-
-
-	  <ui:define name="contenido">
-
-		<div class="container-fluid search-bar py-5">
-            <div class="container">
-                <!-- Título Principal -->
-                <h2 class="text-center mb-4 text-primary">Buscar Vuelos</h2>
-
-                <!-- Tarjeta principal de búsqueda -->
-                <div class="card shadow-lg p-4">
-                    <!-- Tabs -->
-                    <ul class="nav nav-tabs" id="searchTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link active" id="one-way-tab" data-bs-toggle="tab" href="#one-way" role="tab" aria-controls="one-way" aria-selected="true">
-                                <i class="bi bi-arrow-right-circle"></i> Solo Ida
-                            </a>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link" id="round-trip-tab" data-bs-toggle="tab" href="#round-trip" role="tab" aria-controls="round-trip" aria-selected="false">
-                                <i class="bi bi-arrow-left-right"></i> Ida y Vuelta
-                            </a>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link" id="airline-tab" data-bs-toggle="tab" href="#airline" role="tab" aria-controls="airline" aria-selected="false">
-                                <i class="bi bi-airplane-engines"></i> Aerolínea
-                            </a>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link" id="price-tab" data-bs-toggle="tab" href="#price" role="tab" aria-controls="price" aria-selected="false">
-                                <i class="bi bi-cash"></i> Precio
-                            </a>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link" id="duration-tab" data-bs-toggle="tab" href="#duration" role="tab" aria-controls="duration" aria-selected="false">
-                                <i class="bi bi-clock"></i> Duración del Vuelo
-                            </a>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link" id="stops-tab" data-bs-toggle="tab" href="#stops" role="tab" aria-controls="stops" aria-selected="false">
-                                <i class="bi bi-stopwatch"></i> Escalas
-                            </a>
-                        </li>
-                    </ul>
-
-
-
-                    <!-- Contenido de Tabs -->
-
-                    <div class="tab-content mt-3" id="searchTabsContent">
-
-
-
-
-
-                        <!-- 🔹 FORMULARIO: Solo Ida -->
-                        <div class="tab-pane fade show active" id="one-way" role="tabpanel" aria-labelledby="one-way-tab">
-                            <h:form id="formOneWay">
-
-                                <!-- Selección de Aeropuertos -->
-                                <div class="row mb-4">
-                                    <!-- Aeropuerto de Origen -->
-                                    <div class="col-md-6 mb-3">
-                                        <h:outputLabel for="aeropuertoSalida" value="Aeropuerto de salida" />
-
-
-                                        <p:autoComplete id="aeropuertoSalida"
-                                                        value="#{itinerarioBusquedaBean.codigoIataOrigen}"
-                                                        completeMethod="#{itinerarioBusquedaBean.buscarAeropuertos}"
-                                                        var="aeropuerto"
-                                                        placeholder="Escribe para buscar aeropuerto"
-                                                        itemLabel="#{aeropuerto.ciudad.nombre} - #{aeropuerto.nombreAeropuerto} (#{aeropuerto.codigoIata})"
-                                                        itemValue="#{aeropuerto.codigoIata}"
-                                                        forceSelection="true"
-                                                        dropdown="true"
-                                                        styleClass="w-100"
-                                                        required="true"
-                                                        requiredMessage="Debe seleccionar un aeropuerto de salida" />
-                                    </div>
-
-                                    <!-- Aeropuerto de Destino -->
-                                    <div class="col-md-6 mb-3">
-                                        <h:outputLabel for="aeropuertoLlegada" value="Aeropuerto de llegada" />
-                                        <p:autoComplete id="aeropuertoLlegada"
-                                                        value="#{itinerarioBusquedaBean.codigoIataDestino}"
-                                                        completeMethod="#{itinerarioBusquedaBean.buscarAeropuertos}"
-                                                        var="aeropuerto"
-                                                        itemLabel="#{aeropuerto.ciudad.nombre} - #{aeropuerto.nombreAeropuerto} (#{aeropuerto.codigoIata})"
-                                                        itemValue="#{aeropuerto.codigoIata}"
-                                                        forceSelection="true"
-                                                        dropdown="true"
-                                                        placeholder="Escribe para buscar aeropuerto"
-                                                        styleClass="w-100"
-                                                        required="true"
-                                                        requiredMessage="Debe seleccionar un aeropuerto de llegada" />
-                                    </div>
-                                </div>
-
-                                <!-- Fecha de salida -->
-                                <div class="row mb-4">
-                                    <div class="col-md-6 mb-3">
-                                        <h:outputLabel for="fechaSalida" value="Fecha de salida" />
-                                        <p:datePicker id="fechaSalida"
-                                                      value="#{itinerarioBusquedaBean.fechaIda}"
-                                                      showIcon="true"
-                                                      required="true"
-                                                      requiredMessage="Debe seleccionar la fecha de salida"
-                                                      pattern="dd/MM/yyyy"
-                                                      readonlyInput="true"
-                                                      styleClass="w-100"
-                                                      mindate="#{java.time.LocalDate.now()}" />
-                                    </div>
-                                </div>
-                                <!-- Cantidad de Pasajeros -->
-                                <div class="row mb-4">
-                                    <div class="col-md-4 mb-3">
-                                        <h:outputLabel for="adultos" value="Pasajeros" styleClass="form-label" />
-                                        <p:spinner id="adultos"
-                                                   value="#{itinerarioBusquedaBean.adultos}"
-                                                   min="1"
-                                                   max="9"
-                                                   stepFactor="1"
-                                                   styleClass="w-100"
-                                                   size="2"
-                                                   required="true"
-                                                   requiredMessage="Debe seleccionar al menos un adulto" />
-                                        <h:message for="adultos" styleClass="text-danger" />
-                                    </div>
-                                </div>
-
-
-                                <!-- Botón de búsqueda -->
-                                <div class="text-center mt-4">
-                                    <p:commandButton value="Buscar Vuelos"
-                                                     action="#{itinerarioBusquedaBean.buscarVuelosSoloIda}"
-                                                     styleClass="btn btn-primary btn-lg"
-                                                     icon="pi pi-search"
-                                                     update="@form messages" />
-                                </div>
-
-                                <!-- Mensajes de validación -->
-                                <p:messages id="messages" showSummary="true" showDetail="false" closable="true" />
-                            </h:form>
-                        </div>
-
-
-                        <!-- 🔹 FORMULARIO: Ida y Vuelta -->
-                        <div class="tab-pane fade" id="round-trip" role="tabpanel" aria-labelledby="round-trip-tab">
-                            <h:form id="formRoundTrip">
-
-                                <!-- Selección de Aeropuertos -->
-                                <div class="row mb-4">
-                                    <!-- Aeropuerto de Origen -->
-                                    <div class="col-md-6 mb-3">
-                                        <h:outputLabel for="origenRT" value="Desde (Aeropuerto de salida)" />
-                                        <p:selectOneMenu id="origenRT" value="#{itinerarioBusquedaBean.codigoIataOrigen}" required="true"
-                                                         requiredMessage="Debe seleccionar un aeropuerto de salida" styleClass="w-100">
-                                            <f:selectItem itemLabel="Seleccione un aeropuerto" itemValue="" />
-                                            <f:selectItems value="#{itinerarioBusquedaBean.aeropuertos}" var="aeropuerto"
-                                                           itemLabel="#{aeropuerto.ciudad.nombre} - #{aeropuerto.nombreAeropuerto} (#{aeropuerto.codigoIata})"
-                                                           itemValue="#{aeropuerto.codigoIata}" />
-                                        </p:selectOneMenu>
-                                    </div>
-
-                                    <!-- Aeropuerto de Destino -->
-                                    <div class="col-md-6 mb-3">
-                                        <h:outputLabel for="destinoRT" value="Hasta (Aeropuerto de llegada)" />
-                                        <p:selectOneMenu id="destinoRT" value="#{itinerarioBusquedaBean.codigoIataDestino}" required="true"
-                                                         requiredMessage="Debe seleccionar un aeropuerto de llegada" styleClass="w-100">
-                                            <f:selectItem itemLabel="Seleccione un aeropuerto" itemValue="" />
-                                            <f:selectItems value="#{itinerarioBusquedaBean.aeropuertos}" var="aeropuerto"
-                                                           itemLabel="#{aeropuerto.ciudad.nombre} - #{aeropuerto.nombreAeropuerto} (#{aeropuerto.codigoIata})"
-                                                           itemValue="#{aeropuerto.codigoIata}" />
-                                        </p:selectOneMenu>
-                                    </div>
-                                </div>
-
-                                <!-- Fechas -->
-                                <div class="row mb-4">
-                                    <!-- Fecha de Ida -->
-                                    <div class="col-md-6 mb-3">
-                                        <h:outputLabel for="fechaIda" value="Fecha de salida" />
-                                        <p:datePicker id="fechaIda" value="#{itinerarioBusquedaBean.fechaIda}" showIcon="true"
-                                                      required="true" requiredMessage="Debe seleccionar la fecha de salida"
-                                                      pattern="dd/MM/yyyy" readonlyInput="true" styleClass="w-100" />
-                                    </div>
-
-                                    <!-- Fecha de Retorno -->
-                                    <div class="col-md-6 mb-3">
-                                        <h:outputLabel for="fechaRetorno" value="Fecha de regreso" />
-                                        <p:datePicker id="fechaRetorno" value="#{itinerarioBusquedaBean.fechaRetorno}" showIcon="true"
-                                                      required="true" requiredMessage="Debe seleccionar la fecha de regreso"
-                                                      pattern="dd/MM/yyyy" readonlyInput="true" styleClass="w-100" />
-                                    </div>
-                                </div>
-
-                                <!-- Botón de búsqueda -->
-                                <div class="text-center mt-4">
-                                    <p:commandButton value="Buscar Vuelos"
-                                                     action="#{itinerarioBusquedaBean.buscarVuelosIdaYVuelta}"
-                                                     styleClass="btn btn-primary btn-lg"
-                                                     icon="pi pi-search"
-                                                     update="@form messages" />
-                                </div>
-
-                                <!-- Mensajes de validación -->
-                                <p:messages id="messages" showSummary="true" showDetail="false" closable="true" />
-                            </h:form>
-                        </div>
-                    </div>
-
-
-                </div>
-            </div>
-        </div>
-
-
-
-
-
-
-
 
 
 
     </ui:define>
+
+
+	  <ui:define name="contenido">
+
+          <div class="container py-5">
+
+              <div class="card shadow-lg p-4 rounded-3">
+
+                  <h2 class="text-center mb-4 text-primary">Buscar Vuelos</h2>
+
+                  <!-- TABS con Bootstrap -->
+                  <ul class="nav nav-tabs" id="searchTabs" role="tablist">
+                      <!-- Tab Solo Ida -->
+                      <li class="nav-item" role="presentation">
+                          <a class="nav-link active rounded-3" id="one-way-tab" data-bs-toggle="tab" href="#one-way" role="tab" aria-controls="one-way" aria-selected="true">
+                              <i class="bi bi-arrow-right-circle"></i> Solo Ida
+                          </a>
+                      </li>
+
+                      <!-- Tab Ida y Vuelta -->
+                      <li class="nav-item" role="presentation">
+                          <a class="nav-link rounded-3" id="round-trip-tab" data-bs-toggle="tab" href="#round-trip" role="tab" aria-controls="round-trip" aria-selected="false">
+                              <i class="bi bi-arrow-left-right"></i> Ida y Vuelta
+                          </a>
+                      </li>
+                  </ul>
+
+                  <div class="tab-content mt-3" id="searchTabsContent">
+
+                      <!-- Formulario Solo Ida -->
+                      <div class="tab-pane fade show active" id="one-way" role="tabpanel" aria-labelledby="one-way-tab">
+                          <h:form id="formOneWay">
+
+                              <!-- Aeropuertos -->
+                              <div class="row mb-4">
+                                  <!-- Origen -->
+                                  <div class="col-md-6 mb-3">
+                                      <h:outputLabel for="aeropuertoSalida" value="Aeropuerto de salida" />
+                                      <p:autoComplete id="aeropuertoSalida"
+                                                      value="#{itinerarioBusquedaBean.codigoIataOrigen}"
+                                                      completeMethod="#{itinerarioBusquedaBean.buscarAeropuertos}"
+                                                      var="a"
+                                                      itemLabel="#{itinerarioBusquedaBean.getItemLabel(a)}"
+                                                      itemValue="#{a.codigoIata}"
+                                                      dropdown="true"
+                                                      forceSelection="true"
+                                                      placeholder="Buscar aeropuerto..."
+                                                      class="form-control rounded-3 w-100"
+                                                      required="true"
+                                                      requiredMessage="Debe seleccionar un aeropuerto de salida" />
+                                  </div>
+
+
+                                  <!-- Destino -->
+                                  <div class="col-md-6 mb-3">
+                                      <h:outputLabel for="aeropuertoLlegada" value="Aeropuerto de llegada" />
+                                      <p:autoComplete id="aeropuertoLlegada"
+                                                      value="#{itinerarioBusquedaBean.codigoIataDestino}"
+                                                      completeMethod="#{itinerarioBusquedaBean.buscarAeropuertos}"
+                                                      var="a"
+                                                      itemLabel="#{itinerarioBusquedaBean.getItemLabel(a)}"
+                                                      itemValue="#{a.codigoIata}"
+                                                      dropdown="true"
+                                                      forceSelection="true"
+                                                      placeholder="Buscar aeropuerto..."
+                                                      class="form-control rounded-3 w-100"
+                                                      required="true"
+                                                      requiredMessage="Debe seleccionar un aeropuerto de llegada" />
+
+                                  </div>
+                              </div>
+
+                              <!-- Fecha de salida -->
+                              <div class="row mb-4">
+                                  <div class="col-md-6 mb-3">
+                                      <h:outputLabel for="fechaSalida" value="Fecha de salida" />
+                                      <p:datePicker id="fechaSalida"
+                                                    value="#{itinerarioBusquedaBean.fechaIda}"
+                                                    showIcon="true"
+                                                    iconDisplay="input"
+                                                    mindate="#{java.time.LocalDate.now()}"
+                                                    pattern="dd/MM/yyyy"
+                                                    class="form-control rounded-3"
+                                                    placeholder="Fecha De Salida..."
+                                                    required="true"
+                                                    requiredMessage="Debe seleccionar la fecha de salida"/>
+                                  </div>
+                              </div>
+
+                              <!-- Pasajeros -->
+                              <div class="row mb-4">
+                                  <div class="col-md-4 mb-3">
+                                      <h:outputLabel for="adultos" value="Pasajeros (Adultos)" />
+                                      <p:spinner id="adultos"
+                                                 value="#{itinerarioBusquedaBean.adultos}"
+                                                 min="1"
+                                                 max="9"
+                                                 stepFactor="1"
+                                                 class="form-control rounded-3"
+                                                 required="true"
+                                                 requiredMessage="Debe seleccionar al menos un adulto" />
+                                      <h:message for="adultos" styleClass="text-danger" />
+                                  </div>
+                              </div>
+
+                              <!-- Botón de búsqueda -->
+                              <div class="text-center mt-4">
+                                  <p:commandButton value="Buscar Vuelos"
+                                                   icon="pi pi-search"
+                                                   styleClass="btn btn-primary btn-lg rounded-3"
+                                                   update="@form"
+                                                   action="#{itinerarioBusquedaBean.buscarVuelosSoloIda}" />
+                              </div>
+
+                              <p:messages id="messages" closable="true" showSummary="true" />
+                          </h:form>
+                      </div>
+
+                      <!-- Formulario Ida y Vuelta -->
+                      <div class="tab-pane fade" id="round-trip" role="tabpanel" aria-labelledby="round-trip-tab">
+                          <h:form id="formRoundTrip">
+
+                              <!-- Aeropuertos -->
+                              <div class="row mb-4">
+                                  <!-- Origen -->
+                                  <div class="col-md-6 mb-3">
+                                      <h:outputLabel for="origenRT" value="Aeropuerto de salida" />
+                                      <p:selectOneMenu id="origenRT"
+                                                       value="#{itinerarioBusquedaBean.codigoIataOrigen}"
+                                                       required="true"
+                                                       class="form-select rounded-3">
+                                          <f:selectItem itemLabel="Seleccione un aeropuerto" itemValue="" />
+                                          <f:selectItems value="#{itinerarioBusquedaBean.aeropuertos}"
+                                                         var="a"
+                                                         itemLabel="#{a.ciudad.nombre} - #{a.nombreAeropuerto} (#{a.codigoIata})"
+                                                         itemValue="#{a.codigoIata}" />
+                                      </p:selectOneMenu>
+                                  </div>
+
+                                  <!-- Destino -->
+                                  <div class="col-md-6 mb-3">
+                                      <h:outputLabel for="destinoRT" value="Aeropuerto de llegada" />
+                                      <p:selectOneMenu id="destinoRT"
+                                                       value="#{itinerarioBusquedaBean.codigoIataDestino}"
+                                                       required="true"
+                                                       class="form-select rounded-3">
+                                          <f:selectItem itemLabel="Seleccione un aeropuerto" itemValue="" />
+                                          <f:selectItems value="#{itinerarioBusquedaBean.aeropuertos}"
+                                                         var="a"
+                                                         itemLabel="#{a.ciudad.nombre} - #{a.nombreAeropuerto} (#{a.codigoIata})"
+                                                         itemValue="#{a.codigoIata}" />
+                                      </p:selectOneMenu>
+                                  </div>
+                              </div>
+
+                              <!-- Fechas -->
+                              <div class="row mb-4">
+                                  <!-- Fecha de ida -->
+                                  <div class="col-md-6 mb-3">
+                                      <h:outputLabel for="fechaIda" value="Fecha de salida" />
+                                      <p:datePicker id="fechaIda"
+                                                    value="#{itinerarioBusquedaBean.fechaIda}"
+                                                    showIcon="true"
+                                                    pattern="dd/MM/yyyy"
+                                                    class="form-control rounded-3"
+                                                    required="true" />
+                                  </div>
+
+                                  <!-- Fecha de regreso -->
+                                  <div class="col-md-6 mb-3">
+                                      <h:outputLabel for="fechaRetorno" value="Fecha de regreso" />
+                                      <p:datePicker id="fechaRetorno"
+                                                    value="#{itinerarioBusquedaBean.fechaRetorno}"
+                                                    showIcon="true"
+                                                    pattern="dd/MM/yyyy"
+                                                    class="form-control rounded-3"
+                                                    required="true" />
+                                  </div>
+                              </div>
+
+                              <!-- Botón de búsqueda -->
+                              <div class="text-center mt-4">
+                                  <p:commandButton value="Buscar Vuelos"
+                                                   icon="pi pi-search"
+                                                   styleClass="btn btn-primary btn-lg rounded-3"
+                                                   update="@form"
+                                                   action="#{itinerarioBusquedaBean.buscarVuelosIdaYVuelta}" />
+                              </div>
+
+                              <p:messages id="messagesRT" closable="true" showSummary="true" />
+                          </h:form>
+                      </div>
+
+                  </div>
+              </div>
+          </div>
+
+
+
+          <!-- ========================================================= -->
+          <!-- ⭐ SECCIÓN: Beneficios -->
+          <!-- ========================================================= -->
+          <div class="container mt-5">
+              <h3 class="text-center mb-4" style="color:#3b82f6;">¿Por qué reservar con nosotros?</h3>
+
+              <div class="row text-center">
+
+                  <div class="col-md-3 mb-4">
+                      <div class="p-4 rounded" style="background:#101b33; border:1px solid #1e2a44;">
+                          <i class="pi pi-shield text-primary" style="font-size:2rem;"></i>
+                          <h5 class="mt-3">Pago Seguro</h5>
+                          <p style="color:#94a3b8;">Protección total en todas tus compras.</p>
+                      </div>
+                  </div>
+
+                  <div class="col-md-3 mb-4">
+                      <div class="p-4 rounded" style="background:#101b33; border:1px solid #1e2a44;">
+                          <i class="pi pi-percentage text-primary" style="font-size:2rem;"></i>
+                          <h5 class="mt-3">Mejores Precios</h5>
+                          <p style="color:#94a3b8;">Ofertas exclusivas y sin cargos ocultos.</p>
+                      </div>
+                  </div>
+
+                  <div class="col-md-3 mb-4">
+                      <div class="p-4 rounded" style="background:#101b33; border:1px solid #1e2a44;">
+                          <i class="pi pi-headphones text-primary" style="font-size:2rem;"></i>
+                          <h5 class="mt-3">Atención 24/7</h5>
+                          <p style="color:#94a3b8;">Soporte en todo momento durante tu viaje.</p>
+                      </div>
+                  </div>
+
+                  <div class="col-md-3 mb-4">
+                      <div class="p-4 rounded" style="background:#101b33; border:1px solid #1e2a44;">
+                          <i class="pi pi-plane text-primary" style="font-size:2rem;"></i>
+                          <h5 class="mt-3">+120 Aerolíneas</h5>
+                          <p style="color:#94a3b8;">Acceso a miles de rutas en todo el mundo.</p>
+                      </div>
+                  </div>
+
+              </div>
+          </div>
+
+
+          <!-- ========================================================= -->
+          <!-- ⭐ SECCIÓN: Métodos de Pago -->
+          <!-- ========================================================= -->
+          <div class="container mt-5">
+              <h3 class="text-center mb-4" style="color:#3b82f6;">Métodos de Pago Aceptados</h3>
+
+              <div class="row justify-content-center text-center">
+
+                  <div class="col-6 col-md-2 mb-3">
+                      <div class="p-3 rounded" style="background:#101b33; border:1px solid #1e2a44;">
+                          <i class="pi pi-credit-card text-primary" style="font-size:2rem;"></i>
+                          <p class="mt-2">Visa</p>
+                      </div>
+                  </div>
+
+                  <div class="col-6 col-md-2 mb-3">
+                      <div class="p-3 rounded" style="background:#101b33; border:1px solid #1e2a44;">
+                          <i class="pi pi-credit-card text-primary" style="font-size:2rem;"></i>
+                          <p class="mt-2">Mastercard</p>
+                      </div>
+                  </div>
+
+                  <div class="col-6 col-md-2 mb-3">
+                      <div class="p-3 rounded" style="background:#101b33; border:1px solid #1e2a44;">
+                          <i class="pi pi-paypal text-primary" style="font-size:2rem;"></i>
+                          <p class="mt-2">PayPal</p>
+                      </div>
+                  </div>
+
+                  <div class="col-6 col-md-2 mb-3">
+                      <div class="p-3 rounded" style="background:#101b33; border:1px solid #1e2a44;">
+                          <i class="pi pi-money-bill text-primary" style="font-size:2rem;"></i>
+                          <p class="mt-2">Transferencia</p>
+                      </div>
+                  </div>
+
+                  <div class="col-6 col-md-2 mb-3">
+                      <div class="p-3 rounded" style="background:#101b33; border:1px solid #1e2a44;">
+                          <i class="pi pi-bitcoin text-primary" style="font-size:2rem;"></i>
+                          <p class="mt-2">Criptomonedas</p>
+                      </div>
+                  </div>
+
+              </div>
+          </div>
+
+
+          <!-- ========================================================= -->
+          <!-- ⭐ SECCIÓN EXTRA: Destinos Recomendados -->
+          <!-- ========================================================= -->
+          <div class="container mt-5 mb-5">
+              <h3 class="text-center mb-4" style="color:#3b82f6;">Destinos Recomendados</h3>
+
+              <div class="row">
+
+                  <!-- Nueva York -->
+                  <div class="col-md-4 mb-4">
+                      <div class="card shadow" style="background:#101b33; border:1px solid #1e2a44;">
+                          <img src="https://pixabay.com/photos/new-york-manhattan-nyc-city-usa-4725115/" alt="Nueva York" />
+                          <h:graphicImage
+                                  value="file:///home/cris/Descargas/new-york-4725115_640.jpg"
+                                  styleClass="sky-logo"
+                                  alt="Skyway Logo"/>
+                          <div class="card-body">
+                              <h5 class="card-title text-white">Nueva York</h5>
+                              <p class="card-text" style="color:#94a3b8;">La ciudad que nunca duerme.</p>
+                              <p:commandButton value="Ver vuelos" styleClass="p-button-sm" icon="pi pi-search" />
+                          </div>
+                      </div>
+                  </div>
+
+                  <!-- Madrid -->
+                  <div class="col-md-4 mb-4">
+                      <div class="card shadow" style="background:#101b33; border:1px solid #1e2a44;">
+                          <img src="https://www.istockphoto.com/photo/new-york-city-skyline-and-statue-of-liberty-at-dusk-gm1439643582-479862037" class="card-img-top" alt="Madrid" />
+                          <div class="card-body">
+                              <h5 class="card-title text-white">Madrid</h5>
+                              <p class="card-text" style="color:#94a3b8;">Historia, cultura y gastronomía.</p>
+                              <p:commandButton value="Ver vuelos" styleClass="p-button-sm" icon="pi pi-search" />
+                          </div>
+                      </div>
+                  </div>
+
+                  <!-- Río de Janeiro -->
+                  <div class="col-md-4 mb-4">
+                      <div class="card shadow" style="background:#101b33; border:1px solid #1e2a44;">
+                          <img src="https://www.istockphoto.com/photo/new-york-city-skyline-and-statue-of-liberty-at-dusk-gm1439643582-479862037" class="card-img-top" alt="Río de Janeiro" />
+                          <h:graphicImage
+                                  value="https://cdn-icons-png.flaticon.com/512/1530/1530627.png"
+                                  styleClass="sky-logo"
+                                  alt="Skyway Logo"/>
+                          <div class="card-body">
+                              <h5 class="card-title text-white">Río de Janeiro</h5>
+                              <p class="card-text" style="color:#94a3b8;">Playas, samba y alegría.</p>
+                              <p:commandButton value="Ver vuelos" styleClass="p-button-sm" icon="pi pi-search" />
+                          </div>
+                      </div>
+                  </div>
+
+              </div>
+          </div>
+
+
+          <!-- ========================================================= -->
+          <!-- SECCIÓN: Mapa Interactivo -->
+          <!-- ========================================================= -->
+          <!-- SECCIÓN LEAFLET MAP INTERACTIVO -->
+          <div class="container mt-5">
+              <h3 class="text-center mb-4" style="color:#3b82f6;">Nuestros Destinos en el Mapa</h3>
+              <div id="leafletMap" style="border:1px solid #1e2a44; border-radius:8px;"></div>
+          </div>
+
+
+
+
+          <!-- ========================================================= -->
+          <!-- SECCIÓN: Blog / Artículos de Viaje -->
+          <!-- ========================================================= -->
+          <div class="container mt-5">
+              <h3 class="text-center mb-4" style="color:#3b82f6;">Blog de Viajes</h3>
+              <div class="row">
+
+                  <div class="col-md-4 mb-4">
+                      <div class="card" style="background:#101b33; border:1px solid #1e2a44;">
+                          <div class="card-body">
+                              <h5 class="card-title text-white">Cómo viajar barato en 2025</h5>
+                              <p class="card-text" style="color:#94a3b8;">
+                                  Consejos prácticos para conseguir vuelos, hospedaje y más sin gastar de más.
+                              </p>
+                              <p:commandButton value="Leer más" styleClass="p-button-sm" icon="pi pi-book" />
+                          </div>
+                      </div>
+                  </div>
+
+                  <div class="col-md-4 mb-4">
+                      <div class="card" style="background:#101b33; border:1px solid #1e2a44;">
+                          <div class="card-body">
+                              <h5 class="card-title text-white">Destinos sostenibles para visitar</h5>
+                              <p class="card-text" style="color:#94a3b8;">
+                                  Lugares eco-friendly que puedes conocer sin dañar el medioambiente.
+                              </p>
+                              <p:commandButton value="Leer más" styleClass="p-button-sm" icon="pi pi-book" />
+                          </div>
+                      </div>
+                  </div>
+
+                  <div class="col-md-4 mb-4">
+                      <div class="card" style="background:#101b33; border:1px solid #1e2a44;">
+                          <div class="card-body">
+                              <h5 class="card-title text-white">¿Cuándo es la mejor temporada para viajar?</h5>
+                              <p class="card-text" style="color:#94a3b8;">
+                                  Guía para elegir las mejores fechas según clima, festividades y precios.
+                              </p>
+                              <p:commandButton value="Leer más" styleClass="p-button-sm" icon="pi pi-book" />
+                          </div>
+                      </div>
+                  </div>
+
+              </div>
+          </div>
+
+
+          <!-- ========================================================= -->
+          <!-- SECCIÓN: FAQ (Preguntas frecuentes) -->
+          <!-- ========================================================= -->
+          <div class="container mt-5 mb-5">
+              <h3 class="text-center mb-4" style="color:#3b82f6;">Preguntas Frecuentes</h3>
+              <div class="accordion" id="faqAccordion">
+
+                  <div class="accordion-item" style="background:#101b33; border:1px solid #1e2a44;">
+                      <h2 class="accordion-header" id="faqHeadingOne">
+                          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                  data-bs-target="#faqCollapseOne" aria-expanded="false" aria-controls="faqCollapseOne"
+                                  style="background:#101b33; color:#e2e8f0;">
+                              ¿Cómo puedo cambiar o cancelar mi vuelo?
+                          </button>
+                      </h2>
+                      <div id="faqCollapseOne" class="accordion-collapse collapse" aria-labelledby="faqHeadingOne"
+                           data-bs-parent="#faqAccordion">
+                          <div class="accordion-body" style="color:#94a3b8; background:#0a1224;">
+                              Puedes cambiar o cancelar tu vuelo hasta 24 horas antes, dependiendo de la tarifa. Consulta nuestra política de cambios
+                              en la sección de Términos y Condiciones o contáctanos para asistencia personalizada.
+                          </div>
+                      </div>
+                  </div>
+
+                  <div class="accordion-item" style="background:#101b33; border:1px solid #1e2a44;">
+                      <h2 class="accordion-header" id="faqHeadingTwo">
+                          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                  data-bs-target="#faqCollapseTwo" aria-expanded="false" aria-controls="faqCollapseTwo"
+                                  style="background:#101b33; color:#e2e8f0;">
+                              ¿Qué métodos de pago aceptan?
+                          </button>
+                      </h2>
+                      <div id="faqCollapseTwo" class="accordion-collapse collapse" aria-labelledby="faqHeadingTwo"
+                           data-bs-parent="#faqAccordion">
+                          <div class="accordion-body" style="color:#94a3b8; background:#0a1224;">
+                              Aceptamos tarjetas Visa, Mastercard, PayPal, transferencia bancaria y criptomonedas. Todos los pagos son seguros y están protegidos.
+                          </div>
+                      </div>
+                  </div>
+
+                  <div class="accordion-item" style="background:#101b33; border:1px solid #1e2a44;">
+                      <h2 class="accordion-header" id="faqHeadingThree">
+                          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                  data-bs-target="#faqCollapseThree" aria-expanded="false" aria-controls="faqCollapseThree"
+                                  style="background:#101b33; color:#e2e8f0;">
+                              ¿Puedo reservar solo ida o ida y vuelta?
+                          </button>
+                      </h2>
+                      <div id="faqCollapseThree" class="accordion-collapse collapse" aria-labelledby="faqHeadingThree"
+                           data-bs-parent="#faqAccordion">
+                          <div class="accordion-body" style="color:#94a3b8; background:#0a1224;">
+                              Sí, ofrecemos ambas opciones. Puedes seleccionar “Solo Ida” o “Ida y Vuelta” en el buscador según tus necesidades.
+                          </div>
+                      </div>
+                  </div>
+
+                  <div class="accordion-item" style="background:#101b33; border:1px solid #1e2a44;">
+                      <h2 class="accordion-header" id="faqHeadingFour">
+                          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                  data-bs-target="#faqCollapseFour" aria-expanded="false" aria-controls="faqCollapseFour"
+                                  style="background:#101b33; color:#e2e8f0;">
+                              ¿Cómo se asegura la privacidad de mis datos personales?
+                          </button>
+                      </h2>
+                      <div id="faqCollapseFour" class="accordion-collapse collapse" aria-labelledby="faqHeadingFour"
+                           data-bs-parent="#faqAccordion">
+                          <div class="accordion-body" style="color:#94a3b8; background:#0a1224;">
+                              Usamos encriptación SSL para todas las transacciones y almacenamos tus datos con los más altos estándares de seguridad. No compartimos tu información con terceros.
+                          </div>
+                      </div>
+                  </div>
+
+              </div>
+          </div>
+
+
+
+
+
+
+
+
+
+
+
+
+      </ui:define>
 
 </ui:composition>

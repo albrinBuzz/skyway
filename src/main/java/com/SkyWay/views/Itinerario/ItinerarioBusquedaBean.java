@@ -110,6 +110,7 @@ public class ItinerarioBusquedaBean implements Serializable {
 
     public List<Aeropuerto> buscarAeropuertos(String query) {
         String filtro = query.toLowerCase();
+        Logger.logInfo(filtro);
 
         return aeropuertos.stream()
                 .filter(a ->
@@ -118,6 +119,26 @@ public class ItinerarioBusquedaBean implements Serializable {
                                 a.getCiudad().getNombre().toLowerCase().contains(filtro)
                 )
                 .toList();
+    }
+
+    public String getItemLabel(Aeropuerto a) {
+        if (a == null) {
+            return "";
+        }
+
+        String ciudadNombre = (a.getCiudad() != null && a.getCiudad().getNombre() != null)
+                ? a.getCiudad().getNombre()
+                : "Desconocida";
+
+        String aeropuertoNombre = (a.getNombreAeropuerto() != null)
+                ? a.getNombreAeropuerto()
+                : "Aeropuerto desconocido";
+
+        String codigoIata = (a.getCodigoIata() != null)
+                ? a.getCodigoIata()
+                : "N/A";
+
+        return ciudadNombre + " - " + aeropuertoNombre + " (" + codigoIata + ")";
     }
 
 
