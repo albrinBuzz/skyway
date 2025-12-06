@@ -6,24 +6,139 @@
                 template="/template/main.xhtml">
 
     <ui:define name="contenido">
-        <div class="grid" style="min-height: 80vh;"> <!-- Contenedor con grid horizontal -->
 
-            <!-- Sidebar izquierdo -->
-            <div class="col-12 md:col-3 lg:col-2" style="padding: 1rem;">
-                <p:panel header="Administración">
-                    <p:menu>
-                        <p:menuitem value="Vuelos" outcome="/admin/index.xhtml" icon="pi pi-plane"/>
-                        <p:menuitem value="Itinerarios" outcome="/admin/itinerario/itinerario.xhtml" icon="pi pi-calendar"/>
-                        <!-- Agrega más items si quieres -->
-                    </p:menu>
-                </p:panel>
-            </div>
+        <style type="text/css">
+            /* =============== CONTENEDOR GENERAL ==================== */
+            .admin-wrapper {
+                display: flex;
+                width: 100%;
+                min-height: 100vh;
+                background: #eef1f7;
+                transition: all .3s ease;
+                font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+            }
 
-            <!-- Contenido a la derecha -->
-            <div class="col-12 md:col-9 lg:col-10" style="padding: 1rem;">
-                <ui:insert name="contenido-admin"/>
-            </div>
+            /* =============== SIDEBAR ==================== */
+            .sidebar {
+                width: 250px;
+                background: linear-gradient(180deg, #1e1f26, #2b2d35);
+                color: white;
+                padding: 25px 20px;
+                box-shadow: 4px 0 12px rgba(0,0,0,0.15);
+                overflow: hidden;
+                transition: width .3s ease, padding .3s ease;
+            }
+
+            .sidebar.collapsed {
+                width: 80px;
+                padding: 25px 10px;
+            }
+
+            .logo {
+                font-size: 26px;
+                font-weight: bold;
+                margin-bottom: 35px;
+                text-align: center;
+                letter-spacing: 2px;
+                color: #4c7cf3;
+                text-shadow: 0 0 6px rgba(76,124,243,0.5);
+                border-bottom: 1px solid rgba(255,255,255,0.15);
+                padding-bottom: 15px;
+                transition: all .3s ease;
+            }
+
+            .menu-link {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 12px 18px;
+                background: rgba(255,255,255,0.05);
+                border-radius: 8px;
+                color: white !important;
+                text-decoration: none;
+                transition: all .25s ease;
+                border-left: 4px solid transparent;
+                font-size: 15px;
+                opacity: 0.9;
+            }
+
+            .menu-link:hover {
+                background: rgba(255,255,255,0.15);
+                border-left: 4px solid #4c7cf3;
+                transform: translateX(6px);
+                box-shadow: 0 3px 10px rgba(76,124,243,0.35);
+                opacity: 1;
+            }
+
+            /* =============== CONTENIDO ==================== */
+            .content {
+                flex: 1;
+                padding: 40px;
+                background: #001f3f; /* Fondo azul oscuro corporativo */
+                transition: all .3s ease;
+            }
+
+            #view-container {
+                background: #002b5c; /* Azul más claro que el fondo general */
+                padding: 30px;
+                border-radius: 15px;
+                box-shadow: 0 5px 25px rgba(0,0,0,0.12);
+                animation: fadeIn .3s ease;
+            }
+
+            /* Animación */
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+        </style>
+
+        <script>
+            function toggleSidebar() {
+                const sidebar = document.getElementById("sidebar");
+                sidebar.classList.toggle("collapsed");
+            }
+        </script>
+
+        <!-- ====== CONTENIDO ====== -->
+        <div class="admin-wrapper">
+
+            <!-- Sidebar -->
+            <aside id="sidebar" class="sidebar">
+                <div class="sidebar-toggle-inside" onclick="toggleSidebar()">
+                    <i class="pi pi-arrow-down-left"></i>
+                </div>
+                <!-- Hacemos que el logo ADMIN sea un link hacia index -->
+                <h:link outcome="/admin/index.xhtml" styleClass="logo" >
+                    ADMIN
+                </h:link>
+                <ul class="menu">
+                    <li class="#{navigationBean.active('/admin/index') ? 'active' : ''}">
+                        <h:link outcome="/admin/index.xhtml" class="menu-link">
+                            <i class="pi pi-book"></i>
+                            <span>Vuelos</span>
+                        </h:link>
+                    </li>
+                    <li class="#{navigationBean.active('/admin/itinerario') ? 'active' : ''}">
+                        <h:link outcome="/admin/itinerario/itinerario.xhtml" class="menu-link">
+                            <i class="pi pi-calendar"></i>
+                            <span>Itinerarios</span>
+                        </h:link>
+                    </li>
+                </ul>
+            </aside>
+
+
+            <!-- Contenido -->
+            <main class="content">
+                <div id="view-container">
+                    <div style="padding: 1rem;">
+                        <ui:insert name="contenido-admin"/>
+                    </div>
+                </div>
+            </main>
 
         </div>
+
     </ui:define>
 </ui:composition>

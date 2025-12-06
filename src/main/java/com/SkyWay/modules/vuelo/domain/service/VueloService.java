@@ -33,7 +33,7 @@ public interface VueloService {
 		vueloRepository.save(vuelo);
 	   */
 	  public void deleteById(Integer id);
-	  public  List<InfoVueloDTO>  buscarVuelo(String departureCity,String arrivalCity, String departureDate, String returnDate);
+	  public  List<Vuelo>  buscarVuelo(String departureCity,String arrivalCity, String fachaSalida);
 	  public List<InfoVueloDTO> vuelosProximos();
 	  public InfoVueloDTO getInfoVuelo(int idVuelo);
 	  List<Vuelo> findByPiloto(Piloto piloto);

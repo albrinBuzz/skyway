@@ -9,358 +9,652 @@
     <ui:define name="head">
         <title>Vuelos</title>
         <style type="text/css">
-            #leafletMap {
-              height: 400px;
-              /* ya tienes border y radio, está bien */
-            }
+            /* ======== GLOBAL ======== */
+           body {
+               background: #0A1224 !important;
+               color: #EAF0F6 !important;
+               font-family: 'Inter', 'Segoe UI', sans-serif;
+           }
 
-            /* Clase interna de Leaflet para asegurar la altura */
-            .leaflet-container {
-              height: 100%;
-              width: 100%;
-            }
+           /* Inputs, selects y textareas */
+           input, select, textarea, .p-inputtext, .ui-inputfield {
+               background: #11263F !important;
+               border: 1px solid #1E3A5C !important;
+               color: #EAF0F6 !important;
+               border-radius: 6px;
+               transition: 0.2s all;
+           }
+           input::placeholder {
+               color: #8B9BB8 !important;
+           }
+           input:focus, .p-inputtext:focus, .ui-inputfield:focus {
+               border-color: #4AA3FF !important;
+               box-shadow: 0 0 4px #4AA3FF !important;
+           }
 
+           /* Botones corporativos */
+           .ui-button, .p-button, .p-button-primary, .btn-primary {
+               background: #3B82F6 !important;
+               color: #fff !important;
+               border-radius: 8px !important;
+               border: none !important;
+               transition: 0.2s all;
+           }
+           .ui-button:hover, .p-button:hover {
+               background: #2563EB !important;
+               box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+           }
 
-                  /* ===========================================
-            🌓 PALETA MARINO OSCURO GLOBAL
-            =========================================== */
-         body {
-             background: #0a1224 !important; /* azul marino casi negro */
-             color: #e2e8f0 !important;
+           /* Panels, tarjetas y datatable */
+           .ui-panel, .ui-card, .p-panel, .p-card, .ui-datatable {
+               background: #101B33 !important;
+               border: 1px solid #1E2A44 !important;
+               color: #EAF0F6 !important;
+               border-radius: 10px;
+           }
+           .ui-datatable th {
+               background: #1D2A38 !important;
+               color: #84B8E6 !important;
+               font-weight: 600;
+               font-size: 13px;
+               text-transform: uppercase;
+           }
+           .ui-datatable td {
+               padding: 10px;
+               border: none;
+               color: #EAF0F6 !important;
+           }
+           .ui-datatable tr:hover {
+               background: #233244 !important;
+           }
+           .ui-datatable tr.ui-state-highlight {
+               background: #2E445C !important;
+           }
 
-         }
+           /* Sidebar minimalista */
+           .sidebar-corporativo {
+               background-color: #1A2430 !important;
+               color: #EAF0F6;
+               border-left: none;
+               box-shadow: none;
+               padding: 0;
+           }
+           .header-titulo {
+               padding: 18px 22px;
+               background: #1D2A38;
+               border-bottom: 1px solid #253445;
+               font-size: 18px;
+               font-weight: 600;
+               display: flex;
+               align-items: center;
+               gap: 10px;
+           }
+           .header-titulo i {
+               opacity: 0.75;
+               font-size: 20px;
+           }
 
-           /* ======== GLOBAL ======== */
-       body, .ui-widget {
-           color: #E6EEF7 !important;
-           font-family: 'Segoe UI', sans-serif;
-       }
+           /* Timeline de paradas */
+           .timeline-item::before {
+               width: 2px;
+               background: #2C3D4F;
+           }
+           .timeline-marker i {
+               font-size: 12px;
+               color: #84B8E6;
+           }
 
+           /* DataTable botones de acción */
+           .rounded-button.ui-button-flat.ui-button-sm {
+               padding: 4px 6px;
+               border: 1px solid #35516F !important;
+               background: transparent !important;
+               color: #9EC5E3 !important;
+               border-radius: 6px !important;
+           }
+           .rounded-button.ui-button-flat.ui-button-sm:hover {
+               background: #2E455F !important;
+           }
 
+           /* Panel expandido tarifas */
+           .panel-dark {
+               background: #1D2A38 !important;
+               border-left: 2px solid #35516F !important;
+               padding: 16px;
+           }
+           .panel-tarifa-dark {
+               background: #233244 !important;
+               border: 1px solid #2E3E50 !important;
+               border-radius: 6px;
+               padding: 12px;
+           }
+           .ui-badge-info {
+               background: #4A7FB2 !important;
+               color: #fff !important;
+           }
 
-         input, select, textarea {
-             background: #0a1224 !important;
-             border: 1px solid #1e2a44 !important;
-             color: #e2e8f0 !important;
-         }
-
-         input::placeholder {
-             color: #8b9bb8 !important;
-         }
-
-         label,
-         h\:outputLabel {
-             color: #cbd5e1 !important;
-         }
-
-         /* ===========================================
-            🔷 SEARCH BAR
-            =========================================== */
-         .search-bar {
-             background: #0a1224 !important;
-             padding: 50px 0;
-         }
-
-         .search-bar h2 {
-             color: #3b82f6 !important;
-             font-weight: 700;
-         }
-
-         /* ===========================================
-            🟦 TARJETA PRINCIPAL
-            =========================================== */
-         .card {
-             background: #101b33 !important;
-             border: 1px solid #1e2a44 !important;
-             border-radius: 12px !important;
-         }
-
-         /* ===========================================
-            🟦 TABS
-            =========================================== */
-         .nav-tabs {
-             border-bottom: 1px solid #1e2a44 !important;
-         }
-
-         .nav-tabs .nav-link {
-             background: #0a1224 !important;
-             color: #94a3b8 !important;
-             border: 1px solid #1e2a44 !important;
-             border-radius: 6px 6px 0 0 !important;
-         }
-
-         .nav-tabs .nav-link.active {
-             background: #101b33 !important;
-             color: white !important;
-             border-color: #3b82f6 !important;
-         }
-
-         .nav-tabs .nav-link:hover {
-             background: #101b33 !important;
-             color: white !important;
-         }
-
-         /* ===========================================
-            🧩 INPUTS PRIMEFACES
-            =========================================== */
-         .p-inputtext,
-         .ui-inputfield,
-         .p-autocomplete-input,
-         .p-selectonemenu,
-         .p-calendar {
-             background: #0a1224 !important;
-             color: #e2e8f0 !important;
-             border: 1px solid #1e2a44 !important;
-         }
-
-
-           .ui-inputfield {
-               width: 100% !important;  /* Asegura que el campo de texto del autocompletar ocupe todo el ancho */
+           /* Descripción y secciones */
+           .section-title {
+               color: #A7BCCE !important;
+               font-size: 13px;
+               font-weight: 600;
+               letter-spacing: 0.4px;
+           }
+           .descripcion {
+               color: #C0CCD8 !important;
+               border-left: 2px solid #34475A;
+               padding-left: 12px;
+               font-size: 13px;
            }
 
 
-         .p-inputtext:focus,
-         .ui-inputfield:focus {
-             border-color: #3b82f6 !important;
-             box-shadow: 0 0 4px #3b82f6 !important;
-         }
 
-         /* ===========================================
-            ✈ AUTOCOMPLETE
-            =========================================== */
-         .p-autocomplete,
-         .p-autocomplete .p-inputtext {
-             background: #0a1224 !important;
-             color: #e2e8f0 !important;
-             border: 1px solid #1e2a44 !important;
-         }
-
-         .p-autocomplete-panel {
-             background: #101b33 !important;
-             border: 1px solid #1e2a44 !important;
-         }
-
-         .p-autocomplete-item {
-             background: #101b33 !important;
-             color: #e2e8f0 !important;
-         }
-
-         .p-autocomplete-item:hover,
-         .p-autocomplete-item.p-highlight {
-             background: #223458 !important;
-             color: #fff !important;
-         }
-
-         /* ===========================================
-            📅 DATE PICKER COMPLETO
-            =========================================== */
-         .p-datepicker-input {
-             background: #0a1224 !important;
-             color: #e2e8f0 !important;
-             border: 1px solid #1e2a44 !important;
-         }
-
-         .p-datepicker {
-             background: #101b33 !important;
-             border: 1px solid #1e2a44 !important;
-         }
-
-         .p-datepicker-header {
-             background: #1e2a44 !important;
-             color: white !important;
-             border-bottom: 1px solid #223458 !important;
-         }
-
-         /* Navegación */
-         .p-datepicker-prev,
-         .p-datepicker-next {
-             color: white !important;
-         }
-
-         .p-datepicker-prev:hover,
-         .p-datepicker-next:hover {
-             color: #3b82f6 !important;
-         }
-
-         /* Días */
-         .p-datepicker table td > span {
-             color: #e2e8f0 !important;
-             background: transparent !important;
-         }
-
-         .p-datepicker table td > span:hover {
-             background: #3b82f6 !important;
-             color: white !important;
-         }
-
-         /* Día seleccionado */
-         .p-datepicker table td.p-highlight > span {
-             background: #3b82f6 !important;
-             color: white !important;
-         }
-
-         /* ===========================================
-            📦 SELECT ONE MENU
-            =========================================== */
-         .p-selectonemenu {
-             background: #0a1224 !important;
-             border: 1px solid #1e2a44 !important;
-             color: #e2e8f0 !important;
-         }
-
-         .p-selectonemenu-label {
-             background: #0a1224 !important;
-             color: #e2e8f0 !important;
-         }
-
-         .p-selectonemenu-trigger {
-             background: #1e2a44 !important;
-             border-left: 1px solid #223458 !important;
-         }
-
-         /* Panel */
-         .p-selectonemenu-panel {
-             background: #101b33 !important;
-             border: 1px solid #1e2a44 !important;
-         }
-
-         .p-selectonemenu-item {
-             background: #101b33 !important;
-             color: #e2e8f0 !important;
-         }
-
-         .p-selectonemenu-item:hover,
-         .p-selectonemenu-item.p-highlight {
-             background: #223458 !important;
-             color: white !important;
-         }
-
-         /* ===========================================
-            🔢 SPINNER
-            =========================================== */
-         .p-spinner input {
-             background: #0a1224 !important;
-             border: 1px solid #1e2a44 !important;
-             color: white !important;
-         }
-
-         .p-spinner-button {
-             background: #1e2a44 !important;
-             color: white !important;
-         }
-
-         .p-spinner-button:hover {
-             background: #223458 !important;
-         }
-
-         /* ===========================================
-            🔵 BOTONES
-            =========================================== */
-         .btn-primary,
-         .p-button,
-         .p-button-primary {
-             background: #3b82f6 !important;
-             color: white !important;
-             border: none !important;
-             border-radius: 10px !important;
-         }
-
-         .btn-primary:hover,
-         .p-button:hover {
-             background: #2563eb !important;
-         }
-
-         /* ===========================================
-            📢 MENSAJES (PrimeFaces)
-            =========================================== */
-         .p-messages,
-         .p-message {
-             background: #101b33 !important;
-             border-left: 3px solid #3b82f6 !important;
-             color: white !important;
-         }
-
-
-
-
-
-/* ======== INPUTS ======== */
-.ui-inputfield, .p-inputtext {
-background-color: #11263F !important;
-border: 1px solid #1E3A5C !important;
-color: #E6EEF7 !important;
+           /* ======== DATA TABLE CORPORATIVA ======== */
+#tablaVuelos.ui-datatable {
+    background: #101B33 !important;
+    color: #EAF0F6 !important;
+    border: none !important;
+    width: 100%;
+    font-size: 14px;
 }
 
-.ui-inputfield:focus, .p-inputtext:focus {
-border-color: #4AA3FF !important;
-box-shadow: 0 0 4px #4AA3FF !important;
+/* Encabezados */
+#tablaVuelos .ui-datatable-thead > tr > th {
+    background: #1D2A38 !important;
+    color: #84B8E6 !important;
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #253445 !important;
+    text-align: center;
+    padding: 12px 10px;
 }
 
-/* ======== BOTONES ======== */
-.ui-button {
-background: #1E3A5C !important;
-border: 1px solid #204A85 !important;
-color: #E6EEF7 !important;
-}
-
-.ui-button:hover {
-background: #204A85 !important;
-border-color: #4AA3FF !important;
-}
-
-/* ======== PANEL Y TARJETAS ======== */
-.ui-panel, .ui-accordion, .ui-datatable, .ui-card,
-.p-panel, .p-card {
-background: #11263F !important;
-border: 1px solid #1E3A5C !important;
-color: #E6EEF7 !important;
-}
-
-/* ======== p:datePicker ======== */
-/* Input */
-.p-datepicker .p-inputtext,
-.ui-datepicker .ui-inputfield {
-background: #11263F !important;
-color: #E6EEF7 !important;
-border: 1px solid #1E3A5C !important;
-}
-
-/* Panel del calendario */
-.p-datepicker, .ui-datepicker {
-background: #0A1A2F !important;
-border: 1px solid #1E3A5C !important;
-}
-
-/* Cabecera del calendario */
-.p-datepicker-header, .ui-datepicker-header {
-background: #11263F !important;
-color: #E6EEF7 !important;
-border-bottom: 1px solid #1E3A5C !important;
-}
-
-/* Días normales */
-.p-datepicker table td > span,
-.p-datepicker table td > a,
-.ui-datepicker-calendar td a {
-color: #E6EEF7 !important;
-background: #11263F !important;
-border-radius: 4px !important;
+/* Filas */
+#tablaVuelos .ui-datatable-data > tr {
+    background: #101B33 !important;
+    border-bottom: 1px solid #1E2A44 !important;
+    transition: background 0.2s;
 }
 
 /* Hover */
-.p-datepicker table td > a:hover {
-background: #204A85 !important;
-color: white !important;
+#tablaVuelos .ui-datatable-data > tr:hover {
+    background-color: #233244 !important;
 }
 
-/* Día seleccionado */
-.p-datepicker .p-highlight,
-.ui-state-active {
-background: #204A85 !important;
-color: #fff !important;
+/* Fila seleccionada */
+#tablaVuelos .ui-datatable-data > tr.ui-state-highlight {
+    background-color: #2E445C !important;
+    color: #fff !important;
+}
+
+/* Celdas */
+#tablaVuelos .ui-datatable-data td {
+    padding: 12px 10px !important;
+    text-align: center;
+    border: none;
+    color: #EAF0F6 !important;
+}
+
+/* Columnas de texto secundario */
+.text-secondary {
+    color: #B7C4D1 !important;
+    font-style: italic;
+}
+
+/* Columnas de acento (hora, precio, destacado) */
+.text-accent {
+    color: #3B82F6 !important;
+    font-weight: 600;
+}
+
+/* Textos positivos / negativos */
+.text-success {
+    color: #7FE2A5 !important;
+    font-weight: 600;
+}
+.text-danger {
+    color: #E57373 !important;
+    font-weight: 600;
+}
+
+/* Monospace para duración o códigos */
+.text-monospace {
+    font-family: monospace !important;
+}
+
+/* Botón “ver paradas” minimalista */
+.rounded-button.ui-button-flat.ui-button-sm {
+    padding: 4px 6px;
+    background: transparent !important;
+    border: 1px solid #35516F !important;
+    color: #84B8E6 !important;
+    border-radius: 6px !important;
+    transition: 0.2s all;
+}
+.rounded-button.ui-button-flat.ui-button-sm:hover {
+    background: #2E455F !important;
+    color: #fff !important;
+}
+
+/* Panel de tarifas expandido */
+.panel-dark {
+    background: #1D2A38 !important;
+    border-left: 2px solid #35516F !important;
+    padding: 16px;
+    border-radius: 6px;
+}
+.panel-tarifa-dark {
+    background: #233244 !important;
+    border: 1px solid #2E3E50 !important;
+    color: #EAF0F6;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+}
+.ui-badge-info {
+    background: #4A7FB2 !important;
+    color: #fff !important;
+}
+
+/* Botón “Seleccionar” */
+.ui-button-info {
+    background: #3B82F6 !important;
+    border: none !important;
+    color: #fff !important;
+    border-radius: 6px !important;
+    transition: 0.2s all;
+}
+.ui-button-info:hover {
+    background: #2563EB !important;
+}
+
+/* RowToggler estilo sobrio */
+.ui-row-toggler {
+    color: #84B8E6 !important;
+}
+.ui-row-toggler:hover {
+    color: #fff !important;
+}
+
+/* ======== DATA TABLE CORPORATIVA ======== */
+#tablaVuelos.ui-datatable {
+    background: #101B33 !important;
+    color: #EAF0F6 !important;
+    border: none !important;
+    font-size: 14px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Encabezados */
+#tablaVuelos .ui-datatable-thead > tr > th {
+    background: #1D2A38 !important;
+    color: #84B8E6 !important;
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    border-bottom: 1px solid #253445 !important;
+    padding: 12px 10px;
+    text-align: center;
+}
+
+/* Filas */
+#tablaVuelos .ui-datatable-data > tr {
+    background: #101B33 !important;
+    border-bottom: 1px solid #1E2A44 !important;
+}
+
+/* Hover */
+#tablaVuelos .ui-datatable-data > tr:hover {
+    background-color: #233244 !important;
+}
+
+/* Fila seleccionada */
+#tablaVuelos .ui-datatable-data > tr.ui-state-highlight {
+    background-color: #2E445C !important;
+    color: #fff !important;
+}
+
+/* Celdas */
+#tablaVuelos .ui-datatable-data td {
+    padding: 12px 10px !important;
+    text-align: center;
+    color: #EAF0F6 !important;
+}
+
+/* Columnas de texto secundario */
+.text-secondary {
+    color: #B7C4D1 !important;
+    font-style: italic;
+}
+
+/* Columnas de acento (hora, precio, destacado) */
+.text-accent {
+    color: #3B82F6 !important;
+    font-weight: 600;
+}
+
+/* Botón "ver paradas" */
+.rounded-button.ui-button-flat.ui-button-sm {
+    background: transparent !important;
+    border: 1px solid #35516F !important;
+    color: #84B8E6 !important;
+    border-radius: 6px !important;
+}
+
+.rounded-button.ui-button-flat.ui-button-sm:hover {
+    background
+/* ======== DATA TABLE CORPORATIVA ======== */
+#tablaVuelos.ui-datatable {
+    background: #101B33 !important;
+    color: #EAF0F6 !important;
+    border: none !important;
+    font-size: 14px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Encabezados */
+#tablaVuelos .ui-datatable-thead > tr > th {
+    background-color: #2C3E50 !important;
+    color: #fff !important;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* Estilo para las filas de la tabla */
+#tablaVuelos .ui-datatable-tbody > tr > td {
+    background-color: #1D2A38 !important;
+    border-bottom: 1px solid #35516F;
+    color: #EAF0F6;
+    padding: 12px;
+    text-align: center;
+}
+
+/* Mejoras en los paneles de tarifas */
+.panel-tarifa-dark {
+    background: #233244 !important;
+    border: 1px solid #2E3E50 !important;
+    color: #EAF0F6;
+    padding: 16px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.panel-tarifa-dark .ui-panel-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #4A90E2;
+}
+
+.ui-button-info {
+    background: #4A7FB2 !important;
+    color: #fff !important;
+    border-radius: 6px;
+    font-weight: bold;
+}
+
+.ui-button-info:hover {
+    background: #3B82F6 !important;
 }
 
 
+/* Panel de tarifa */
+.panel-tarifa-dark {
+    background-color: #2E3E50 !important;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    padding: 16px;
+    color: #EAF0F6;
+    margin-bottom: 15px;
+}
+
+/* Encabezado de la tarifa */
+.panel-tarifa-dark .ui-panel-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #4A90E2;
+}
+
+/* Badge de precio */
+.badge-tarifa {
+    font-size: 14px;
+    font-weight: bold;
+    color: #fff;
+    background-color: #27ae60 !important;
+    padding: 5px 10px;
+    border-radius: 6px;
+}
+
+/* Características de la tarifa */
+.tarifa-caracteristicas {
+    margin-top: 10px;
+}
+
+.tarifa-caracteristica {
+    padding: 8px;
+    border-bottom: 1px solid #35516F;
+    margin-bottom: 8px;
+}
+
+.caracteristica-titulo {
+    font-weight: bold;
+    font-size: 14px;
+    color: #4A90E2;
+    margin-bottom: 4px;
+}
+
+.caracteristica-valor {
+    font-size: 14px;
+    color: #EAF0F6;
+}
+
+.caracteristica-valor .text-success {
+    color: #2ecc71 !important;
+}
+
+.caracteristica-valor .text-danger {
+    color: #e74c3c !important;
+}
+
+/* Botón de selección */
+.ui-button-info {
+    background: #4A7FB2 !important;
+    color: #fff !important;
+    border-radius: 6px;
+    font-weight: bold;
+}
+
+.ui-button-info:hover {
+    background: #3B82F6 !important;
+}
+
+
+
+
+
+
+
+
+
+
+
+                       /* === DATA TABLE MINIMALISTA === */
+           #tablaVuelos.ui-datatable {
+               background: #1A2430;
+               color: #EAF0F6;
+               border: none;
+               width: 100%;
+           }
+
+           /* Head minimalista */
+           #tablaVuelos .ui-datatable-header,
+           #tablaVuelos .ui-datatable-footer {
+               background: transparent;
+               border: none;
+           }
+
+           /* ENCABEZADOS */
+           #tablaVuelos .ui-datatable-thead > tr > th {
+               background: #1D2A38;
+               border: none;
+               padding: 12px 10px;
+               font-size: 13px;
+               font-weight: 600;
+               color: #9CB8CE;
+               text-transform: uppercase;
+               letter-spacing: 0.5px;
+           }
+
+           /* Filas */
+           #tablaVuelos .ui-datatable-data > tr {
+               background: transparent;
+               border-bottom: 1px solid #253445;
+           }
+
+           /* Hover */
+           #tablaVuelos .ui-datatable-data > tr:hover {
+               background-color: #233244 !important;
+           }
+
+           /* Fila seleccionada */
+           #tablaVuelos .ui-datatable-data > tr.ui-state-highlight {
+               background-color: #2E445C !important;
+               color: #fff !important;
+           }
+
+           /* Celdas */
+           #tablaVuelos .ui-datatable-data td {
+               padding: 12px 10px;
+               border: none;
+           }
+
+           /* Texto */
+           .text-bold { font-weight: 600; }
+           .text-secondary { color: #B7C4D1; }
+           .text-accent { color: #84B8E6; }
+           .text-danger { color: #E57373; }
+           .text-success { color: #7FE2A5; }
+           .text-uppercase { text-transform: uppercase; }
+           .text-monospace { font-family: monospace; }
+
+           /* Botón "ver paradas" minimalista */
+           .rounded-button.ui-button-flat.ui-button-sm {
+               padding: 4px 6px;
+               background: transparent !important;
+               border: 1px solid #35516F !important;
+               color: #9EC5E3 !important;
+               border-radius: 6px !important;
+               transition: 0.2s;
+           }
+
+           .rounded-button.ui-button-flat.ui-button-sm:hover {
+               background: #2E455F !important;
+           }
+
+           /* Row toggler minimalista */
+           .ui-row-toggler {
+               color: #9CB8CE;
+               border: none;
+           }
+           .ui-row-toggler:hover {
+               color: #FFFFFF;
+           }
+
+           /* === PANEL EXPANDIDO === */
+           .panel-dark {
+               background: #1D2A38;
+               border-left: 2px solid #35516F;
+               padding: 16px;
+               margin: 0;
+           }
+
+           .panel-dark h3 {
+               margin-top: 0;
+               color: #9EC5E3;
+           }
+
+           /* Tarjetas de tarifa */
+           .panel-tarifa-dark {
+               background: #233244 !important;
+               border: 1px solid #2E3E50 !important;
+               color: #EAF0F6;
+               padding: 12px;
+               border-radius: 6px;
+           }
+
+           .panel-tarifa-dark .ui-panel-titlebar {
+               background: none;
+               border: none;
+           }
+
+           /* Badge de precio */
+           .ui-badge-info {
+               background: #4A7FB2 !important;
+               color: #fff !important;
+           }
+
+           /* Botón seleccionar */
+           .ui-button-info {
+               background: #7FAED9 !important;
+               border: none !important;
+               color: #1A2430 !important;
+           }
+
+
+/* Caja para representar el precio */
+.panel-precio {
+    background-color: #2C3E50;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    color: #EAF0F6;
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Contenedor para el texto y el icono */
+.precio-contenedor {
+    display: flex;
+    align-items: center;
+}
+
+/* Icono del precio (símbolo de CLP) */
+.precio-contenedor i {
+    margin-right: 10px;
+}
+
+/* Estilo del texto con el valor del precio */
+.precio-texto {
+    font-size: 20px;
+    font-weight: bold;
+    color: #EAF0F6;
+    margin: 0;
+}
+
+/* Estilo para el valor del precio */
+.precio-valor {
+    color: #27ae60;
+    font-size: 24px;
+}
+
+/* Responsividad */
+@media (max-width: 768px) {
+    .panel-precio {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .precio-texto {
+        font-size: 18px;
+    }
+
+    .precio-valor {
+        font-size: 22px;
+    }
+}
 
 
         </style>
@@ -373,10 +667,9 @@ color: #fff !important;
 
         <h:form id="vueloForm">
             <div class="flex-container dark-bg">
-
                 <!-- Sección izquierda: tabla de vuelos -->
                 <div class="flex-left">
-                    <h:outputText id="tipoVuelo" value="✈️ Tipo de vuelo: #{itinerarioDetalleBean.tipoVuelo}"
+                    <h:outputText id="tipoVuelo" value="Tipo de vuelo: #{itinerarioDetalleBean.tipoVuelo}"
                                   styleClass="tipo-vuelo-msg" />
 
                     <p:dataTable id="tablaVuelos" widgetVar="tablaVuelosWidget"
@@ -386,29 +679,36 @@ color: #fff !important;
                                  selectionMode="single"
                                  rowExpandMode="single"
                                  selection="#{itinerarioDetalleBean.selectedVuelo}"
-                                 emptyMessage="🚫 No se encontraron vuelos para la fecha seleccionada, cambie de destino o fecha."
+                                 emptyMessage="No se encontraron vuelos para la fecha seleccionada."
                                  styleClass="ui-datatable-striped ui-datatable-hoverable p-datatable-dark">
 
                         <p:ajax event="rowSelect" oncomplete="rowExpansion(PF('tablaVuelosWidget'));" />
 
+                        <!-- Columnas con iconos -->
                         <p:column styleClass="text-center" style="width: 2rem;">
                             <p:rowToggler />
                         </p:column>
 
+                        <!-- Salida -->
                         <p:column headerText="🕐 Salida" styleClass="text-center">
                             <h:outputText value="#{vuelo.horaSalida24h}" styleClass="text-accent text-bold" />
                         </p:column>
 
+                        <!-- Origen -->
                         <p:column headerText="🛫 Origen">
                             <h:outputText value="#{vuelo.origen}" styleClass="text-bold text-uppercase" />
                         </p:column>
 
+                        <!-- Ciudad de origen -->
                         <p:column headerText="🌆 Ciudad Origen">
                             <h:outputText value="#{vuelo.ciudadSalida}" styleClass="text-italic text-secondary" />
                         </p:column>
 
+                        <!-- Paradas -->
                         <p:column headerText="🔁 Paradas" styleClass="text-center">
                             <h:outputText value="#{vuelo.cantParadas}" styleClass="text-bold" />
+                            <p:spacer width="20"
+                                      height="20"/>
                             <p:commandButton icon="pi pi-info-circle"
                                              title="Ver paradas"
                                              action="#{itinerarioDetalleBean.showParadas(vuelo.itinerario)}"
@@ -417,22 +717,27 @@ color: #fff !important;
                                              styleClass="rounded-button ui-button-flat ui-button-sm" />
                         </p:column>
 
+                        <!-- Duración -->
                         <p:column headerText="⏳ Duración" styleClass="text-center">
                             <h:outputText value="#{vuelo.duracion}" styleClass="text-monospace text-secondary" />
                         </p:column>
 
+                        <!-- Llegada -->
                         <p:column headerText="🕓 Llegada" styleClass="text-center">
                             <h:outputText value="#{vuelo.horaLlegada24h}" styleClass="text-success text-bold" />
                         </p:column>
 
+                        <!-- Destino -->
                         <p:column headerText="🛬 Destino">
                             <h:outputText value="#{vuelo.destino}" styleClass="text-bold text-uppercase" />
                         </p:column>
 
+                        <!-- Ciudad de destino -->
                         <p:column headerText="🌇 Ciudad Destino">
                             <h:outputText value="#{vuelo.ciudadLlegada}" styleClass="text-italic text-secondary" />
                         </p:column>
 
+                        <!-- Precio -->
                         <p:column headerText="💰 Precio" styleClass="text-center">
                             <h:outputText value="#{vuelo.precio}" styleClass="text-danger text-bold">
                                 <f:convertNumber type="currency" currencySymbol="CLP " maxFractionDigits="0" />
@@ -442,35 +747,45 @@ color: #fff !important;
                         <!-- Expansión de tarifas -->
                         <p:rowExpansion>
                             <h:panelGroup layout="block" styleClass="panel-dark">
-                                <h3 class="text-accent text-bold">✈️ Tarifas disponibles para este vuelo</h3>
+                                <h3 class="text-accent text-bold">Tarifas disponibles para este vuelo</h3>
 
                                 <p:dataGrid value="#{itinerarioDetalleBean.getTarifasItinerario(vuelo.itinerario)}"
                                             var="tarifa" columns="2" layout="grid"
                                             styleClass="p-grid p-nogutter">
 
+                                    <!-- Panel de cada tarifa -->
                                     <p:panel styleClass="panel-tarifa-dark">
                                         <f:facet name="header">
                                             <div class="flex justify-content-between">
-                                                <span class="text-accent text-bold">#{tarifa.nombre}</span>
-                                                <p:badge value="CLP #{tarifa.precio}" severity="info" />
+                                                <span class="text-accent text-bold" style="font-size: 16px;">#{tarifa.nombre}</span>
+
+                                                <p:spacer width="20"
+                                                          height="20"/>
+                                                    CLP <span class="precio-valor">
+                                                        <h:outputText value="#{tarifa.precio}" >
+                                                            <f:convertNumber type="currency" currencySymbol="CLP " maxFractionDigits="0" />
+                                                        </h:outputText>
+                                                    </span>
                                             </div>
                                         </f:facet>
 
-                                        <h:panelGrid columns="2" columnClasses="label,value" styleClass="text-secondary">
+                                        <!-- Características de la tarifa en un formato más organizado -->
+                                        <h:panelGrid columns="2" styleClass="tarifa-caracteristicas">
                                             <ui:repeat value="#{tarifa.caracteristicas}" var="carac">
-                                                <h:panelGroup layout="block" styleClass="text-bold">
-                                                    <h:outputText value="#{carac.nombre}:" />
-                                                </h:panelGroup>
-                                                <h:panelGroup layout="block" styleClass="text-bold">
-                                                    <h:outputText rendered="#{carac.tipoDato eq 'boolean'}"
-                                                                  value="#{carac.valorBool ? '✔️ Sí' : '❌ No'}"
-                                                                  styleClass="#{carac.valorBool ? 'text-success' : 'text-danger'}" />
-                                                    <h:outputText rendered="#{carac.tipoDato eq 'int'}" value="#{carac.valorInt}" />
-                                                    <h:outputText rendered="#{carac.tipoDato eq 'text'}" value="#{carac.valorTexto}" />
+                                                <h:panelGroup layout="block" styleClass="tarifa-caracteristica">
+                                                    <h:outputText value="#{carac.nombre}:" styleClass="caracteristica-titulo" />
+                                                    <h:panelGroup layout="block" styleClass="caracteristica-valor">
+                                                        <h:outputText rendered="#{carac.tipoDato eq 'boolean'}"
+                                                                      value="#{carac.valorBool ? '✔️ Sí' : '❌ No'}"
+                                                                      styleClass="#{carac.valorBool ? 'text-success' : 'text-danger'}" />
+                                                        <h:outputText rendered="#{carac.tipoDato eq 'int'}" value="#{carac.valorInt}" />
+                                                        <h:outputText rendered="#{carac.tipoDato eq 'text'}" value="#{carac.valorTexto}" />
+                                                    </h:panelGroup>
                                                 </h:panelGroup>
                                             </ui:repeat>
                                         </h:panelGrid>
 
+                                        <!-- Botón "Seleccionar" -->
                                         <p:commandButton value="Seleccionar"
                                                          icon="pi pi-check-circle"
                                                          action="#{itinerarioDetalleBean.selectVuelo(vuelo, tarifa)}"
@@ -479,54 +794,321 @@ color: #fff !important;
                                     </p:panel>
                                 </p:dataGrid>
                             </h:panelGroup>
+
+
+
                         </p:rowExpansion>
                     </p:dataTable>
                 </div>
-
-                <!-- Sección derecha: resumen de compra -->
-                <p:panel id="compraPanel" header="Detalle de la compra" styleClass="panel-compra-dark">
-                    <ui:repeat value="#{itinerarioDetalleBean.vuelosSeleccionados}" var="vuelo" varStatus="status">
-                        <h3 class="text-accent text-bold">#{status.index == 0 ? 'IDA' : 'VUELTA'} </h3>
-                        <p><strong>#{vuelo.ciudadSalida}</strong> (#{vuelo.origen})</p>
-                        <p><strong>#{vuelo.ciudadLlegada}</strong> (#{vuelo.destino})</p>
-                        <p>Fecha: #{itinerarioDetalleBean.fechaIda}</p>
-                        <p>Subtotal: <strong>CLP #{vuelo.precio}</strong></p>
-                    </ui:repeat>
-                    <hr />
-                    <p><strong>Tasas e impuestos:</strong> CLP 35.000</p>
-                    <p><strong>Subtotal:</strong> CLP #{itinerarioDetalleBean.total}</p>
-                    <p class="text-accent text-bold">Total a pagar: CLP #{itinerarioDetalleBean.total + 35000}</p>
-                    <div class="text-right">
-                        <p:commandButton value="Confirmar compra" icon="pi pi-check" action="#{itinerarioDetalleBean.confirmarCompra}" update="@form" styleClass="ui-button-success" />
-                    </div>
-                </p:panel>
             </div>
 
+
             <!-- Sidebar de Detalles de Paradas -->
-            <p:sidebar widgetVar="sidebarParadas" position="right" id="sidebarParadas" width="420" showEffect="slideIn" hideEffect="slideOut" styleClass="sidebar-dark">
-                <h3 class="text-accent text-bold text-center">✈️ Detalles de las Paradas</h3>
-                <p:scrollPanel styleClass="sidebar-content">
-                    <ui:repeat value="#{itinerarioDetalleBean.paradasVuelo}" var="parada" varStatus="status">
-                        <div class="parada-card-dark">
-                            <h4 class="text-accent text-bold">🛑 Parada #{status.index + 1}</h4>
-                            <div class="info-box-dark">
-                                <b>🛬 Aeropuerto Origen:</b> #{parada.aeropuertoSalida}<br/>
-                                <b>Salida:</b> #{parada.salida}<br/>
-                                <b>🛬 Aeropuerto Destino:</b> #{parada.aeropuertoLlegada}<br/>
-                                <b>Llegada:</b> #{parada.llegada}<br/>
-                                <b>Vuelo:</b> #{parada.vuelo}<br/>
-                                <b>Duración:</b> #{parada.duracion}<br/>
-                                <b>Tiempo de espera:</b> #{parada.tiempoEspera}<br/>
-                                <b>Aerolínea:</b> #{parada.aerolinea}<br/>
-                                <b>Avión:</b> #{parada.modeloAvion}<br/>
-                                <b>Descripción:</b> #{parada.descripcionVuelo}
+            <!-- Sidebar de Detalles de Paradas -->
+            <!-- ============================ -->
+            <!--  SIDEBAR ITINERARIO (COMPLETO) -->
+            <!-- ============================ -->
+
+            <p:sidebar widgetVar="sidebarParadas" position="right" id="sidebarParadas"
+                       width="520" showEffect="slideIn" hideEffect="slideOut"
+                       styleClass="sidebar-corporativo">
+
+                <!-- Título -->
+                <div class="header-titulo">
+                    <i class="pi pi-route"></i> Detalle del Itinerario
+                </div>
+
+                <p:scrollPanel style="width:100%; height:100%;" mode="native">
+                    <div class="timeline">
+
+                        <ui:repeat value="#{itinerarioDetalleBean.paradasVuelo}" var="p" varStatus="st">
+
+                            <!-- BLOQUE DE PARADA -->
+                            <div class="timeline-item tramo-bloque">
+
+
+
+
+                                <!-- TARJETA DEL TRAMO -->
+                                <div class="timeline-content card-parada card-parada-separada">
+
+                                    <div class="card-header">
+                                        Parada #{st.index + 1}
+                                    </div>
+
+                                    <!-- TRAMO ORIGEN / DESTINO -->
+                                    <div class="section">
+                                        <div class="section-title">
+                                            <i class="pi pi-map-marker"></i> Tramo del Vuelo
+                                        </div>
+
+                                        <div class="timeline-leg">
+                                            <div class="city-block">
+                                                <div class="city-code">#{p.aeropuertoSalida}</div>
+                                                <div class="city-time">
+                                                    <i class="pi pi-calendar"></i> #{p.salida}
+                                                </div>
+                                            </div>
+
+                                            <div class="timeline-arrow">
+                                                <i class="pi pi-arrow-down"></i>
+                                            </div>
+
+                                            <div class="city-block">
+                                                <div class="city-code">#{p.aeropuertoLlegada}</div>
+                                                <div class="city-time">
+                                                    <i class="pi pi-clock"></i> #{p.llegada}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- INFORMACIÓN DEL VUELO -->
+                                    <div class="section">
+                                        <div class="section-title">
+                                            <i class="pi pi-info-circle"></i> Información del Vuelo
+                                        </div>
+
+                                        <div class="info-grid">
+                                            <div class="info-item">
+                                                <span class="label">Vuelo:</span>
+                                                <span class="value"><i class="pi pi-plane"></i> #{p.vuelo}</span>
+                                            </div>
+
+                                            <div class="info-item">
+                                                <span class="label">Duración:</span>
+                                                <span class="value"><i class="pi pi-clock"></i> #{p.duracion}</span>
+                                            </div>
+
+
+                                            <div class="info-item">
+                                                <span class="label">Espera:</span>
+                                                <span class="value"><i class="pi pi-hourglass"></i> #{p.tiempoEspera}</span>
+                                            </div>
+
+                                            <div class="info-item">
+                                                <span class="label">Aerolínea:</span>
+                                                <span class="value"><i class="pi pi-building"></i> #{p.aerolinea}</span>
+                                            </div>
+
+                                            <div class="info-item">
+                                                <span class="label">Aeronave:</span>
+                                                <span class="value"><i class="pi pi-cog"></i> #{p.modeloAvion}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- DESCRIPCIÓN -->
+                                    <div class="section">
+                                        <div class="section-title">
+                                            <i class="pi pi-align-left"></i> Descripción
+                                        </div>
+                                        <div class="descripcion descripcion-espaciada">
+                                            #{p.descripcionVuelo}
+                                        </div>
+                                    </div>
+
+                                </div>
                             </div>
-                        </div>
-                        <p:divider />
-                    </ui:repeat>
-                    <p:scrollTop target="parent" threshold="100" styleClass="custom-scrolltop" icon="pi pi-arrow-up" />
+                            <!-- FIN BLOQUE PARADA -->
+
+                        </ui:repeat>
+                    </div>
+
+                    <!-- Botón scroll top -->
+                    <p:scrollTop target="parent" threshold="100" icon="pi pi-arrow-up"
+                                 styleClass="btn-scrolltop" />
                 </p:scrollPanel>
             </p:sidebar>
+
+
+
+            <!-- ======================================================== -->
+            <!--  CSS DE ESTILO COMPLETO PARA EL COMPONENTE (COPIAR TODO) -->
+            <!-- ======================================================== -->
+
+            <style>
+
+                /* ===== Sidebar general ===== */
+                .sidebar-corporativo {
+                    background: #f7f9fc !important;
+                    padding: 0 !important;
+                }
+
+                /* ===== Título ===== */
+                .header-titulo {
+                    background: #003366;
+                    color: #fff;
+                    padding: 22px 26px;
+                    font-size: 19px;
+                    font-weight: 600;
+                    letter-spacing: .6px;
+                    margin-bottom: 20px;
+                }
+
+                .header-titulo i { margin-right: 8px; }
+
+                /* ===== Timeline ===== */
+
+                .timeline {
+                    padding: 0 28px 30px 28px;
+                }
+
+                /* Separación clara entre paradas */
+                .tramo-bloque {
+                    margin-bottom: 55px !important;
+                    padding-bottom: 10px;
+                    position: relative;
+                }
+
+                /* Línea separadora suave entre tramos */
+                .tramo-bloque::after {
+                    content: "";
+                    position: absolute;
+                    bottom: -28px;
+                    left: 5%;
+                    width: 90%;
+                    height: 1px;
+                    background: #d5dce3;
+                }
+
+                /* ===== Tarjetas ===== */
+                .card-parada {
+                    background: #ffffff;
+                }
+
+                .card-parada-separada {
+                    padding: 30px !important;
+                    border-radius: 14px;
+                    border: 1px solid #e4e7ea;
+                    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+                    border-left: 6px solid #004a99;  /* Marca corporativa */
+                    transition: 0.25s ease;
+                }
+
+                .card-parada-separada:hover {
+                    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+                }
+
+                /* Header de tarjeta */
+                .card-header {
+                    font-size: 18px;
+                    font-weight: 700;
+                    color: #003366;
+                    margin-bottom: 20px;
+                    padding-bottom: 8px;
+                    border-bottom: 2px solid #dde3ea;
+                }
+
+                /* ===== Datos de tramo ===== */
+
+              .timeline-leg {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 18px;
+                    margin-top: 10px;
+                }
+
+                .city-block {
+                    text-align: center;
+                    width: 100%;
+                }
+
+                .city-code {
+                    font-size: 22px;
+                    font-weight: 700;
+                    color: #003366;
+                }
+
+                .city-time {
+                    font-size: 14px;
+                    margin-top: 4px;
+                    color: #555;
+                }
+
+                .timeline-arrow {
+                    font-size: 22px;
+                    color: #00509e;
+                }
+
+
+                /* ===== Grid de información ===== */
+
+                .info-grid {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 22px 32px;
+                    margin-top: 10px;
+                }
+
+                .label {
+                    font-weight: 600;
+                    font-size: 14px;
+                    color: #003366;
+                }
+
+                .value {
+                    font-size: 14px;
+                    color: #444;
+                }
+
+                /* ===== Títulos de sección ===== */
+                .section {
+                    margin-top: 28px;
+                    margin-bottom: 28px;
+                }
+
+                .section-title {
+                    font-size: 15px;
+                    color: #00509e;
+                    font-weight: 600;
+                    margin-bottom: 14px;
+                    display: flex;
+                    align-items: center;
+                }
+
+                .section-title i {
+                    margin-right: 6px;
+                    color: #003366;
+                }
+
+                /* ===== Descripción ===== */
+                .descripcion-espaciada {
+                    padding: 18px 20px;
+                    background: #f1f3f6;
+                    border-radius: 10px;
+                    line-height: 1.55;
+                    font-size: 14px;
+                    color: #444;
+                }
+
+                /* ===== Marcadores Timeline ===== */
+
+                .timeline-marker {
+                    width: 40px;
+                    display: flex;
+                    justify-content: center;
+                }
+
+                .marker-circle {
+                    width: 14px;
+                    height: 14px;
+                    background: #00509e;
+                    border-radius: 50%;
+                    border: 3px solid #003366;
+                }
+
+
+                /* ===== Scroll Top ===== */
+                .btn-scrolltop {
+                    background: #003366 !important;
+                    border-radius: 50% !important;
+                }
+            </style>
+
+
+
 
             <!-- Modal confirmar vuelo -->
             <p:dialog id="compraDialog" header="Confirmar Selección" widgetVar="compraDialog" modal="true" width="400">

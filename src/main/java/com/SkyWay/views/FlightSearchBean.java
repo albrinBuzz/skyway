@@ -188,7 +188,7 @@ public class FlightSearchBean {
 
 			Logger.logInfo(departureCity+" "+arrivalCity+" "+ range.get(0) +" "+ range.get(1));
 
-	    	 vuelos= vueloService.buscarVuelo(departureCity, arrivalCity,String.valueOf( range.get(0)),String.valueOf( range.get(1)));
+	    	 //vuelos= vueloService.buscarVuelo(departureCity, arrivalCity,String.valueOf( range.get(0)));
 	    	 
 	    	 System.out.println(vuelos);
 	    	 if (vuelos.size()==0) {

@@ -12,6 +12,7 @@
 
     <ui:define name="contenido-admin">
 
+
         <!-- Formulario para Crear el Itinerario -->
         <h:form id="formCrearItinerario">
             <p:panel header="Crear nuevo itinerario" styleClass="panel-itinerario">
@@ -34,13 +35,78 @@
 
                 </h:panelGrid>
 
-                <p:commandButton value="Confirmar Itinerario" action="#{itinerarioBean.saveItinerario}" update="@form" />
+                <p:commandButton value="Confirmar Itinerario" action="#{itinerarioBean.saveItinerario}" update="@form formBusquedaVuelos" />
             </p:panel>
         </h:form>
 
 
 
 
+
+
+
+        <p:dataGrid value="#{itinerarioBean.tarifas}"
+                    var="tarifa" columns="2" layout="grid"
+                    styleClass="p-grid p-nogutter" style="margin-top: 10px;">
+
+                <p:accordionPanel id="accordionTarifas"
+                                  multiple="true"
+                                  activeIndex="-1"
+                                  style="margin:10px; border-radius:10px;">
+
+
+                <p:tab title="#{tarifa.nombre}">
+
+                    <!-- Renderizar características dinámicas -->
+                    <h:panelGrid columns="2" columnClasses="label,value"
+                                 style="width: 100%; margin-top: 15px; font-size: 0.95rem;">
+                        <ui:repeat value="#{tarifa.tarifaCaracteristicas}" var="carac">
+                            <h:panelGroup layout="block" style="padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
+                                <h:outputText value="#{carac.caracteristica.nombre}:" style="font-weight: 600;" />
+                            </h:panelGroup>
+
+                            <h:panelGroup layout="block" style="padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
+                                <h:outputText rendered="#{carac.caracteristica.tipoDato eq 'boolean'}"
+                                              value="#{carac.valorBool ? '✔️ Sí' : '❌ No'}"
+                                              style="font-weight: bold; color: #{carac.valorBool ? 'green' : 'red'};" />
+
+                                <h:outputText rendered="#{carac.caracteristica.tipoDato eq 'int'}"
+                                              value="#{carac.valorInt}"
+                                              style="font-weight: bold;" />
+
+                                <h:outputText rendered="#{carac.caracteristica.tipoDato eq 'text'}"
+                                              value="#{carac.valorTexto}"
+                                              style="font-weight: bold;" />
+                            </h:panelGroup>
+                        </ui:repeat>
+                    </h:panelGrid>
+
+                    <p:separator />
+
+                    <!-- Formulario de precio -->
+                    <h:form id="formPrecioTarifa">
+                        <h:panelGrid columns="3" cellpadding="5" style="margin-top:10px;">
+                            <h:outputLabel value="Precio Tarifa:" style="font-weight:bold;" />
+
+                            <p:inputNumber id="precioTarifa"
+                                           value="#{itinerarioBean.precioTarifa}"
+                                           minValue="0" maxValue="999999"
+                                           symbol="$" decimalPlaces="0"
+                                           style="width:120px;" />
+
+                            <p:commandButton value="Guardar Precio"
+                                             action="#{itinerarioBean.actualizarPrecioTarifa(tarifa)}"
+                                             update="@this"
+                                             process="@form"
+                                             icon="pi pi-save"
+                                             styleClass="ui-button-info" />
+                        </h:panelGrid>
+                    </h:form>
+
+                </p:tab>
+            </p:accordionPanel>
+
+        </p:dataGrid>
 
         <h:form id="formBuscarVuelo">
             <p:panel header="Buscar Vuelo" styleClass="panel-vuelo">
@@ -49,14 +115,14 @@
 
                     <h:outputLabel value="Aeropuerto Origen:" />
 
-                    <p:selectOneMenu value="#{itinerarioBean.aeropuertoOrigen}" style="width:300px">
+                    <p:selectOneMenu value="#{itinerarioBean.aeropuertoOrigenBusqueda}" style="width:300px">
                         <f:selectItem itemLabel="-- Seleccione Origen --" itemValue="#{null}" />
                         <f:selectItems value="#{itinerarioBean.aeropuertos}" var="a"
                                        itemValue="#{a.codigoIata}" itemLabel="#{a.nombreAeropuerto}" />
                     </p:selectOneMenu>
 
                     <p:outputLabel value="Aeropuerto Destino:" />
-                    <p:selectOneMenu value="#{itinerarioBean.aeropuertoDestino}" style="width:300px">
+                    <p:selectOneMenu value="#{itinerarioBean.aeropuertoDestinoBusqueda}" style="width:300px">
                         <f:selectItem itemLabel="-- Seleccione Destino --" itemValue="#{null}" />
                         <f:selectItems value="#{itinerarioBean.aeropuertos}" var="a"
                                        itemValue="#{a.codigoIata}" itemLabel="#{a.nombreAeropuerto}" />
@@ -69,11 +135,12 @@
                 </h:panelGrid>
 
 
-                <p:commandButton value="Buscar Vuelos" action="#{itinerarioBean.buscarVuelosSegmento}"  update="formBusquedaVuelos:tablaVuelos" />
+                <p:commandButton value="Buscar Vuelos" action="#{itinerarioBean.buscarVuelos}"  update="formBusquedaVuelos:tablaVuelos" />
+
+
 
             </p:panel>
         </h:form>
-
 
         <!-- FORMULARIO DE BÚSQUEDA Y RESULTADOS DE VUELOS -->
         <h:form id="formBusquedaVuelos">
@@ -162,81 +229,14 @@
         </h:form>
 
 
-        <h:panelGroup layout="block" style="padding: 10px;">
-            <h3 style="color: #0077cc; font-size: 1.5rem; margin-bottom: 20px;">
-                ✈️ Tarifas disponibles para este vuelo
-            </h3>
 
-            <p:dataGrid value="#{itinerarioBean.tarifas}"
-                        var="tarifa" columns="2" layout="grid"
-                        styleClass="p-grid p-nogutter" style="margin-top: 10px;">
-
-                <p:panel style="margin: 10px; border: 1px solid #dce0e6; border-radius: 10px;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.05); background-color: #ffffff;">
-                    <f:facet name="header">
-                        <div style="display: flex; align-items: center; justify-content: space-between;">
-                <span style="font-size: 1.3rem; font-weight: bold; color: #0077cc;">
-                    #{tarifa.nombre}
-                </span>
-                        </div>
-                    </f:facet>
-
-                    <!-- Renderizar características dinámicas -->
-                    <h:panelGrid columns="2" columnClasses="label,value"
-                                 style="width: 100%; margin-top: 15px; font-size: 0.95rem;">
-                        <ui:repeat value="#{tarifa.tarifaCaracteristicas}" var="carac">
-                            <h:panelGroup layout="block" style="padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
-                                <h:outputText value="#{carac.caracteristica.nombre}:" style="font-weight: 600;" />
-                            </h:panelGroup>
-
-                            <h:panelGroup layout="block" style="padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
-                                <h:outputText rendered="#{carac.caracteristica.tipoDato eq 'boolean'}"
-                                              value="#{carac.valorBool ? '✔️ Sí' : '❌ No'}"
-                                              style="font-weight: bold; color: #{carac.valorBool ? 'green' : 'red'};" />
-
-                                <h:outputText rendered="#{carac.caracteristica.tipoDato eq 'int'}"
-                                              value="#{carac.valorInt}"
-                                              style="font-weight: bold;" />
-
-                                <h:outputText rendered="#{carac.caracteristica.tipoDato eq 'text'}"
-                                              value="#{carac.valorTexto}"
-                                              style="font-weight: bold;" />
-                            </h:panelGroup>
-                        </ui:repeat>
-                    </h:panelGrid>
-
-                    <!-- NUEVA SECCIÓN: Precio de la tarifa -->
-                    <p:separator />
-                    <h:form id="formPrecioTarifa">
-
-                        <h:panelGrid columns="3" cellpadding="5" style="margin-top:10px;">
-                            <h:outputLabel value="Precio Tarifa:" for="precioTarifa" style="font-weight:bold;" />
-
-                            <p:inputNumber id="precioTarifa"
-                                           value="#{itinerarioBean.precioTarifa}"
-                                           minValue="0"
-                                           maxValue="999999"
-                                           symbol="$"
-                                           decimalPlaces="0"
-                                           style="width:120px;" />
-
-                            <p:commandButton value="Guardar Precio"
-                                             action="#{itinerarioBean.actualizarPrecioTarifa(tarifa)}"
-                                             update="@this"
-                                             process="@form"
-                                             icon="pi pi-save"
-                                             styleClass="ui-button-info" />
-                        </h:panelGrid>
-                    </h:form>
-                </p:panel>
-            </p:dataGrid>
-
-
-        </h:panelGroup>
 
 
         <!-- FORMULARIO DE VUELOS ASIGNADOS -->
         <h:form id="formVuelosAsignados">
+
+            <p:growl id="growl" showDetail="true" />
+
             <p:panel header="Vuelos Asignados al Itinerario" styleClass="panel-vuelos">
                 <p:dataTable id="tablaVuelos"
                              value="#{itinerarioBean.itinerariosAsignados}"

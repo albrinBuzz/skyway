@@ -108,6 +108,7 @@ public class ReservaAsientoBean implements Serializable {
 
 
                     idVuelos.add(itinerarioVuelo.getVuelo().getIdVuelo());
+                    Logger.logInfo(itinerarioVuelo.getVuelo().getIdVuelo().toString());
 
                 }
 
@@ -129,7 +130,7 @@ public class ReservaAsientoBean implements Serializable {
             this.asientos = asientoService.getAsientosDisponibles(vuelo.getIdVuelo());
             //Logger.logInfo(asientos.toString());
 
-            idxVuelo++;
+            //idxVuelo++;
             //asientosSeleccionados=new ArrayList<InfoAsientoDTO>();
             //asientos = asientoService.getAsientosDisponibles(vueloSeleccionado.getIdAvion(), vueloSeleccionado.getIdVuelo());
 
@@ -179,38 +180,56 @@ public class ReservaAsientoBean implements Serializable {
 
 
 
-        if (idxVuelo >= cantVuelos) {
-            // Redireccionar a la página de reserva
-            try {
 
-                FacesContext.getCurrentInstance().getExternalContext()
-                        .getSessionMap().put("asientosSeleccionados", asientosSeleccionados);
 
-                FacesContext.getCurrentInstance().getExternalContext()
-                        .getSessionMap().put("itinerarios", idsItinerarios);
-
-                FacesContext.getCurrentInstance().getExternalContext()
-                        .getSessionMap().put("tarifasItinerios", tarifasItinerarios);
-
-                FacesContext.getCurrentInstance().getExternalContext()
-                        .redirect("/home/reserva.xhtml");
-
-            } catch (IOException e) {
-                Logger.logInfo("Redirección fallida a reserva.xhtml" +e.getMessage());
-            }
-            return;
-        }
+        Logger.logInfo(idxAsientoSeleccion+"-"+cantAdultos);
 
         if (idxAsientoSeleccion>=cantAdultos){
             // Si aún hay vuelos, cargar el siguiente
-            int vueloId = idVuelos.get(idxVuelo);
-            Logger.logInfo("Siguiente vuelo -> " + vueloId);
-            this.asientos = asientoService.getAsientosDisponibles(vueloId);
-            this.vuelo = vueloService.findById(vueloId).orElse(null);
-            Logger.logInfo("Siguiente vuelo -> " + vuelo.toString());
-            idxVuelo++;
-            idxAsientoSeleccion=0;
+            Logger.logInfo(String.valueOf(idxVuelo));
+
+
+            for (Integer idVuelo : idVuelos) {
+                Logger.logInfo(String.valueOf(idVuelo));
+            }
+
+
+
+
+            if (idxVuelo+1 >= cantVuelos&&idxAsientoSeleccion>=cantAdultos) {
+                // Redireccionar a la página de reserva
+                try {
+
+                    FacesContext.getCurrentInstance().getExternalContext()
+                            .getSessionMap().put("asientosSeleccionados", asientosSeleccionados);
+
+                    FacesContext.getCurrentInstance().getExternalContext()
+                            .getSessionMap().put("itinerarios", idsItinerarios);
+
+                    FacesContext.getCurrentInstance().getExternalContext()
+                            .getSessionMap().put("tarifasItinerios", tarifasItinerarios);
+
+                    FacesContext.getCurrentInstance().getExternalContext()
+                            .redirect("/home/reserva.xhtml");
+
+                } catch (IOException e) {
+                    Logger.logInfo("Redirección fallida a reserva.xhtml" +e.getMessage());
+                }
+                return;
+            }else {
+                idxVuelo++;
+                idxAsientoSeleccion=0;
+
+                int vueloId = idVuelos.get(idxVuelo);
+                Logger.logInfo("Siguiente vuelo -> " + vueloId);
+                this.asientos = asientoService.getAsientosDisponibles(vueloId);
+                this.vuelo = vueloService.findById(vueloId).orElse(null);
+                Logger.logInfo("Siguiente vuelo -> " + vuelo.toString());
+            }
+
+
         }
+
 
     }
 

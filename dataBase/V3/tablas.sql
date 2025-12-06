@@ -150,6 +150,9 @@ CREATE SEQUENCE itinerario_tarifa_seq
 
 
 
+
+
+
 -- TABLAS Usuarios
 
 CREATE TABLE Roles (
@@ -276,6 +279,15 @@ CREATE TABLE Aeropuerto (
     ID_CIUDAD INT REFERENCES Ciudad(ID_CIUDAD),
     Codigo_IATA VARCHAR(255) NOT NULL UNIQUE
 );
+
+/*CREATE TABLE aeropuertos (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(255) NOT NULL,
+    ciudad VARCHAR(255) NOT NULL,
+    codigo_iata VARCHAR(3) NOT NULL,
+    latitud DOUBLE PRECISION NOT NULL,
+    longitud DOUBLE PRECISION NOT NULL
+);*/
 
 CREATE TABLE Aerolinea (
     ID_AEROLINEA INT PRIMARY KEY DEFAULT nextval('aerolinea_seq'),

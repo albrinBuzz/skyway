@@ -1,5 +1,6 @@
 package com.SkyWay.modules.asiento.application.serviceImpl;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -197,6 +198,52 @@ public class AsientoServiceImpl implements AsientoService {
 		return asientos;
 	}
 
+	@Override
+	@Transactional
+	public String verificarDisponibilidad(int idVuelo, Integer[] asientos) throws SQLException {
+		StoredProcedureQuery query = em.createStoredProcedureQuery("spVerificarDisponinibilidadAsientos");
+
+		//com.SkyWay.util.Logger.logInfo("parametros: Vuelo-> "+idVuelo+" idReserva-> "+idReserva);
+
+		try {
+
+			query.registerStoredProcedureParameter("p_idVuelo", Integer.class, ParameterMode.IN);
+			query.registerStoredProcedureParameter("p_asientos", Integer[].class, ParameterMode.IN);
+			query.registerStoredProcedureParameter("p_resultado", String.class, ParameterMode.OUT);
+
+			query.setParameter("p_idVuelo", idVuelo);
+			query.setParameter("p_asientos", asientos);
+
+			query.execute();
+
+			String res = (String) query.getOutputParameterValue("p_resultado");
+			LOGGER.info(res);
+			Optional<String> resultado = Optional.ofNullable(res);
+
+
+
+
+			if (resultado.isPresent()&&resultado.get().startsWith("ERROR:")) {
+				// Forzar rollback lanzando excepción
+				com.SkyWay.util.Logger.logInfo(resultado.get());
+				throw new RuntimeException(resultado.get().substring(6).trim());
+			}
+
+		} catch (Exception ex) {
+			Throwable causa = ex.getCause();
+			if (causa instanceof SQLException sqlException) {
+				// Extraer mensaje personalizado (RAISE EXCEPTION '...') de PostgreSQL
+				String error = extractErrorMessage(sqlException); // tu método personalizado
+				com.SkyWay.util.Logger.logInfo("Mensaje de Postgres: " + error);
+				throw new SQLException(error); // Relanza la excepción con el mensaje real
+			}
+
+			// Si no fue SQLException, relanzar la original
+			throw ex;
+		}
+		return "";
+	}
+
 
 	@Override
 	@Transactional
@@ -211,7 +258,21 @@ public class AsientoServiceImpl implements AsientoService {
 
 	 return  query.getResultList();
 	}
-	
-	
+
+	private String extractErrorMessage(Throwable cause) {
+		// Extraemos el mensaje de error después del primer ":"
+		String message = cause.getMessage();
+
+		if (message != null && message.contains(":")) {
+			String mensaje=message.substring(message.indexOf(":") + 1,
+					message.lastIndexOf(":")).trim();
+			int idx= mensaje.indexOf("Where");
+			return mensaje.substring(0,idx).trim();
+			//return mensaje.substring()
+
+
+		}
+		return "Error desconocido";
+	}
 
 }

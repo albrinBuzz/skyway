@@ -6,8 +6,10 @@ package com.SkyWay.modules.segmentovuelo.application.serviceImpl;
 import com.SkyWay.modules.segmentovuelo.domain.model.SegmentoVuelo;
 import com.SkyWay.modules.segmentovuelo.domain.repository.SegmentoVueloRepository;
 import com.SkyWay.modules.segmentovuelo.domain.service.SegmentoVueloService;
+import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,6 +18,8 @@ import java.util.Optional;
 public class SegmentoVueloServiceImpl implements SegmentoVueloService {
 
     private final SegmentoVueloRepository segmentoVueloRepository;
+    @Autowired
+    private EntityManager entityManager;
 
     @Autowired
     public SegmentoVueloServiceImpl(SegmentoVueloRepository segmentoVueloRepository) {
@@ -23,9 +27,18 @@ public class SegmentoVueloServiceImpl implements SegmentoVueloService {
     }
 
     @Override
+    @Transactional
     public SegmentoVuelo save(SegmentoVuelo segmentoVuelo) {
-        return segmentoVueloRepository.save(segmentoVuelo);
+        segmentoVuelo = segmentoVueloRepository.save(segmentoVuelo);
+
+        // Refrescar usando native query para forzar recarga desde DB
+
+        return (SegmentoVuelo) entityManager
+                .createNativeQuery("SELECT * FROM Segmento_Vuelo WHERE id_segmento = ?", SegmentoVuelo.class)
+                .setParameter(1, segmentoVuelo.getIdSegmento())
+                .getSingleResult();
     }
+
 
     @Override
     public SegmentoVuelo update(SegmentoVuelo segmentoVuelo) {

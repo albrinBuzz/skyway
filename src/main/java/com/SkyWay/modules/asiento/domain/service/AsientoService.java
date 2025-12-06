@@ -1,5 +1,6 @@
 package com.SkyWay.modules.asiento.domain.service;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,6 +21,7 @@ public interface AsientoService {
 	  public List<InfoAsientoDTO> getAsientosDisponibles(Integer idVuelo);
 	  public List<InfoAsientoDTO> getAsientosVuelo(Integer idReserva,Integer idVuelo);
 	public List<InfoAsientoReservaDTO> getAsientosReservados(Integer idReserva, Integer idItinerario);
+	public String verificarDisponibilidad (int idVuelo, Integer[] asientos) throws SQLException;
 
 	public List<Asiento> findByAvion(Avion avion);
 	  public List<ClaseAsiento> obtenerTodasLasClasesAsientos();

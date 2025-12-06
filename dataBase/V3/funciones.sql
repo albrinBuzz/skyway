@@ -46,6 +46,65 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+CREATE OR REPLACE FUNCTION FnbuscarVuelos(
+    p_codigo_origen  VARCHAR,
+    p_codigo_destino VARCHAR,
+    p_fecha_inicio DATE DEFAULT NULL
+)
+RETURNS SETOF vuelo
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        v.*
+    FROM vuelo v
+
+    -- Primer segmento (origen)
+    LEFT JOIN segmento_vuelo sgmv1
+        ON sgmv1.id_vuelo = v.id_vuelo
+       AND sgmv1.orden_segmento = 1
+
+    -- Último segmento (destino final)
+    JOIN (
+        SELECT DISTINCT ON (id_vuelo)
+            id_vuelo,
+            id_aeropuerto_destino
+        FROM segmento_vuelo
+        ORDER BY id_vuelo, orden_segmento DESC
+    ) sgmv2
+        ON sgmv2.id_vuelo = v.id_vuelo
+
+    JOIN aeropuerto arp1
+        ON arp1.id_aeropuerto = sgmv1.id_aeropuerto_origen
+
+    JOIN aeropuerto arp2
+        ON arp2.id_aeropuerto = sgmv2.id_aeropuerto_destino
+
+    WHERE arp1.codigo_iata = p_codigo_origen
+      AND arp2.codigo_iata = p_codigo_destino
+	 AND (
+            p_fecha_inicio IS NULL
+            OR (
+                sgmv1.hora_salida >= p_fecha_inicio
+                AND sgmv1.hora_salida < p_fecha_inicio + INTERVAL '1 day'
+            )
+      );
+END;
+$$;
+
+SELECT * FROM FnbuscarVuelos('SCL', 'JFK', '2025-12-05');
+
+SELECT * FROM FnbuscarVuelos('SCL', 'JFK', NULL);
+
+
+select
+*
+from vuelo v
+ join segmento_vuelo sg ON sg.id_vuelo = v.id_vuelo
+order by v.id_vuelo;
+
+
 
 
 CREATE OR REPLACE FUNCTION fnDTinitinerario(p_id_itinerario INT)

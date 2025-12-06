@@ -266,6 +266,7 @@ public class VueloBean implements Serializable {
             Logger.logError("Error: Los aeropuertos no se han asignado correctamente al segmento.");
             return;
         }
+        vuelo= vueloService.save(vuelo);
 
         // Continuar con el guardado del segmento
         Logger.logInfo("Guardando un nuevo segmento...");
@@ -273,6 +274,8 @@ public class VueloBean implements Serializable {
             var puertaEmbarque=puertaService.findById(Integer.valueOf(puertaEmbarqueSeleccion)).get();
             nuevoSegmento.setVuelo(vuelo);
             var segmentoGuardado= segmentoVueloService.save(nuevoSegmento);
+
+            Logger.logInfo(segmentoGuardado.toString());
             AsignacionPuerta asignacionPuerta=new AsignacionPuerta();
 
             asignacionPuerta.setPuertaEmbarque(puertaEmbarque);
@@ -282,8 +285,29 @@ public class VueloBean implements Serializable {
             segmentos.add(segmentoVueloService.findById(segmentoGuardado.getIdSegmento()).get());
             Logger.logInfo(segmentoVueloService.findById(segmentoGuardado.getIdSegmento()).get().toString());
 
+            for (ClaseAsientoPrecioDto dto : preciosAsientos) {
+                PrecioAsiento precioAsiento = new PrecioAsiento();
+                precioAsiento.setVuelo(vuelo);
+                precioAsiento.setPrecio(dto.getPrecio());
+                precioAsiento.setClaseAsiento(
+                        claseAsientoService.obtenerClaseAsientoPorId(dto.getClaseAsiento())
+                                .orElseThrow(() -> new RuntimeException("Clase de asiento no encontrada"))
+                );
+                precioAsientoService.guardarPrecioAsiento(precioAsiento);
 
+            }
 
+        }
+
+        segmentos=segmentoVueloService.findByIdVuelo(vuelo.getIdVuelo());
+
+        for (SegmentoVuelo segmento : segmentos) {
+            Logger.logInfo("segmento"+segmento.getIdSegmento());
+            List<AsignacionPuerta> asignaciones = asignacionPuertaService.findBySegmentoVuelo(segmento);
+            for (AsignacionPuerta asignacione : asignaciones) {
+                Logger.logInfo("puerta-> "+asignacione.getPuertaEmbarque().getTerminal());
+
+            }
         }
 
         nuevoSegmento = new SegmentoVuelo(); // Aquí se instancia el nuevo segmento
@@ -318,24 +342,15 @@ public class VueloBean implements Serializable {
             vuelo.setAerolinea(aerolineaEncontrada);
             vuelo.setEstadoVuelo(estadoInicial);
 
-            Vuelo vueloGuardado = vueloService.save(vuelo);
-            vuelo=vueloGuardado;
+            //Vuelo vueloGuardado = vueloService.save(vuelo);
+            //vuelo=vueloGuardado;
             vueloCreado = true;
             //vuelo = new Vuelo();
 
-            Logger.logInfo("Vuelo guardado: " + vueloGuardado);
+            //Logger.logInfo("Vuelo guardado: " + vueloGuardado);
 
             // Guardar precios por clase
-            for (ClaseAsientoPrecioDto dto : preciosAsientos) {
-                PrecioAsiento precioAsiento = new PrecioAsiento();
-                precioAsiento.setVuelo(vueloGuardado);
-                precioAsiento.setPrecio(dto.getPrecio());
-                precioAsiento.setClaseAsiento(
-                        claseAsientoService.obtenerClaseAsientoPorId(dto.getClaseAsiento())
-                                .orElseThrow(() -> new RuntimeException("Clase de asiento no encontrada"))
-                );
-                precioAsientoService.guardarPrecioAsiento(precioAsiento);
-            }
+
 
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Vuelo creado correctamente."));

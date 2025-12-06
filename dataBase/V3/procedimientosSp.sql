@@ -76,6 +76,59 @@ $$;
 
 
 
+CREATE OR REPLACE PROCEDURE spVerificarDisponinibilidadAsientos(
+    IN p_idVuelo INT,
+    IN p_asientos INT[],
+    OUT p_resultado TEXT
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    reserva_id INT;
+    estado_reserva_id INT := 1;  -- Suponemos 1 = pendiente o confirmada
+    i INT;
+    id_avion INT;
+    id_asientoP INT;
+    asiento_en_reserva INT;
+    numero_asiento TEXT;
+    asientos_reservados TEXT := '-';
+BEGIN
+    -- Obtener el avión asignado al vuelo
+    SELECT vl.id_avion INTO id_avion
+    FROM vuelo vl
+    WHERE id_vuelo = p_idVuelo;
+
+
+    FOR i IN 1..array_length(p_asientos, 1)
+    LOOP
+        id_asientoP := p_asientos[i];
+
+        -- Verificar si el asiento ya está reservado en este vuelo
+        SELECT 1 INTO asiento_en_reserva
+		FROM reserva_asiento ra
+		where ra.ID_VUELO=p_idVuelo
+		and ra.ID_ASIENTO=id_asientoP
+		FOR UPDATE;
+
+
+
+        IF asiento_en_reserva > 0 THEN
+            asientos_reservados := asientos_reservados || numero_asiento || ', ';
+        END IF;
+    END LOOP;
+
+    IF asientos_reservados <> '-' THEN
+        p_resultado := 'ERROR: Asientos ya reservados: ' || LEFT(asientos_reservados, LENGTH(asientos_reservados) - 2);
+    END IF;
+EXCEPTION
+    WHEN OTHERS THEN
+        -- Rollback seguro en caso de error
+        RAISE NOTICE 'Ocurrió un error: %', SQLERRM;
+        p_resultado := 'ERROR: No se pudo completar la reserva.'||SQLERRM;
+END;
+$$;
+
+
 CREATE or replace PROCEDURE sp_cambiarAsiento(
    in p_id_asiento int ,
    in p_id_reserva int,

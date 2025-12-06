@@ -27,6 +27,7 @@ import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
 import jakarta.validation.constraints.Future;
+import org.primefaces.PrimeFaces;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
@@ -86,6 +87,9 @@ public class ItinerarioBean implements Serializable {
 
     private String aeropuertoOrigen; // Cambiado de String a Aeropuerto
     private String aeropuertoDestino; // Cambiado de String a Aeropuerto
+    private String aeropuertoOrigenBusqueda; // Cambiado de String a Aeropuerto
+    private String aeropuertoDestinoBusqueda; // Cambiado de String a Aeropuerto
+
     private LocalDate fechaBusqueda;
     private String vueloId;
     private Vuelo vueloSeleccionado;
@@ -133,11 +137,32 @@ public class ItinerarioBean implements Serializable {
         itinerario.setFechaCreacion(new Timestamp(new Date().getTime()));
         this.itinerario.setAeropuertoOrigen(aeropuertoOrigen);
         this.itinerario.setAeropuertoDestino(aeropuertoDestino);
+        //Logger.logInfo(aeropuertoOrigen.getCodigoIata()+"-"+aeropuertoDestino.getCodigoIata()+"-"+fechaBusqueda.toString());
 
 
         Logger.logInfo("itinerarioGuardado"+itinerario.toString());
     }
 
+    public void buscarVuelos(){
+
+        Logger.logInfo(aeropuertoOrigenBusqueda+"-"+aeropuertoDestinoBusqueda);
+        if (fechaBusqueda!=null){
+            vuelos=vueloService.buscarVuelo(aeropuertoOrigenBusqueda,aeropuertoDestinoBusqueda,fechaBusqueda.toString());
+        }else {
+
+            vuelos=vueloService.buscarVuelo(aeropuertoOrigenBusqueda,aeropuertoDestinoBusqueda,null);
+        }
+
+        vuelos.forEach(vuelo -> {
+
+            Logger.logInfo(vuelo.toString());
+
+        });
+
+
+        //Logger.logInfo("itinerarioGuardado"+itinerario.toString());
+
+    }
     public void addVuelo() {
         var vuelo=vuelosMap.get(this.vueloId);
         ItinerarioVuelo iv = new ItinerarioVuelo();
@@ -168,38 +193,75 @@ public class ItinerarioBean implements Serializable {
 
 
     }
-    public void guardarItinerario(){
+    public void guardarItinerario() {
 
-
-        var aeropuertoOrigen=aeropuertosMap.get(this.aeropuertoOrigen);
-        var aeropuertoDestino=aeropuertosMap.get(this.aeropuertoDestino);
-        itinerario.setFechaCreacion(new Timestamp(new Date().getTime()));
-        this.itinerario.setAeropuertoOrigen(aeropuertoOrigen);
-        this.itinerario.setAeropuertoDestino(aeropuertoDestino);
-
-        var itinerarioGuardado = itinerarioService.save(itinerario); // Reset form
-
-        for (ItinerarioVuelo iv : itinerariosAsignados) {
-            iv.setItinerario(itinerarioGuardado);
-            var itineraioVueloGuardado= itinVueloService.save(iv);
-            Logger.logInfo(itineraioVueloGuardado.toString());
-
+        if (precioTarifas == null || precioTarifas.isEmpty()) {
+            FacesContext.getCurrentInstance().addMessage(
+                    null,
+                    new FacesMessage(FacesMessage.SEVERITY_WARN, "Error", "No hay tarifas definidas")
+            );
+            return; // salir del método
         }
-        //var tarifas= tarifaService.listarTarifas();
-
-        precioTarifas.forEach((integer, integer2) -> {
-            var tarifa=tarifaService.buscarPorId(integer);
-            ItinerarioTarifa itinerarioTarifa=new ItinerarioTarifa();
-            itinerarioTarifa.setTarifa(tarifa.get());
-            itinerarioTarifa.setItinerario(itinerarioGuardado);
-            itinerarioTarifa.setPrecio(new BigDecimal(integer2));
-            var itinerarioTarifaGuardado= itinerarioTarifaService.save(itinerarioTarifa);
-            Logger.logInfo(itinerarioTarifaGuardado.toString());
-        });
 
 
 
-    }
+
+        boolean ok;
+        ok = true; // inicializamos la variable
+        Logger.logInfo("dkdk");
+        for (Map.Entry<Integer, Integer> entry : precioTarifas.entrySet()) {
+            Logger.logInfo("!kkkk");
+            Integer key = entry.getKey();
+            Integer value = entry.getValue();
+            Logger.logInfo(key+"->"+key);
+
+            if (value == null) {
+                FacesContext.getCurrentInstance().addMessage(
+                        null,
+                        new FacesMessage(FacesMessage.SEVERITY_INFO, "Error", "DEbe seter el valor de las tarifas")
+                );
+                ok = false;
+            }
+        }
+
+        if (ok) {
+
+        Logger.logInfo("todo ok");
+
+            var itinerarioGuardado = itinerarioService.save(itinerario); // Reset form
+
+            for (ItinerarioVuelo iv : itinerariosAsignados) {
+                iv.setItinerario(itinerarioGuardado);
+                var itineraioVueloGuardado = itinVueloService.save(iv);
+                Logger.logInfo(itineraioVueloGuardado.toString());
+
+            }
+
+            //var tarifas= tarifaService.listarTarifas();
+
+            precioTarifas.forEach((integer, integer2) -> {
+                if (integer2 != null) {
+                    var tarifa = tarifaService.buscarPorId(integer);
+                    ItinerarioTarifa itinerarioTarifa = new ItinerarioTarifa();
+                    itinerarioTarifa.setTarifa(tarifa.get());
+                    itinerarioTarifa.setItinerario(itinerarioGuardado);
+                    itinerarioTarifa.setPrecio(new BigDecimal(integer2));
+                    var itinerarioTarifaGuardado = itinerarioTarifaService.save(itinerarioTarifa);
+                    Logger.logInfo(itinerarioTarifaGuardado.toString());
+                } else {
+
+                }
+
+            });
+
+        Logger.logInfo(itinerarioGuardado.toString());
+            //FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Itinerario Creado con exito", "Creacion Exitosa del itinerario");
+            //PrimeFaces.current().dialog().showMessageDynamic(message);
+
+            FacesContext.getCurrentInstance().
+                    addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, "Itinerario Creado con exito", "Creacion Exitosa del itinerario"));
+            }
+        }
 
     public void agregarVuelo(Vuelo vuelo){
         Logger.logInfo("agregando vuelo");
@@ -280,6 +342,23 @@ public class ItinerarioBean implements Serializable {
 
     public String getAeropuertoDestino() {
         return aeropuertoDestino;
+    }
+
+    public void setAeropuertoDestinoBusqueda(String aeropuertoDestinoBusqueda) {
+        this.aeropuertoDestinoBusqueda = aeropuertoDestinoBusqueda;
+    }
+
+
+    public void setAeropuertoOrigenBusqueda(String aeropuertoOrigenBusqueda) {
+        this.aeropuertoOrigenBusqueda = aeropuertoOrigenBusqueda;
+    }
+
+    public String getAeropuertoDestinoBusqueda() {
+        return aeropuertoDestinoBusqueda;
+    }
+
+    public String getAeropuertoOrigenBusqueda() {
+        return aeropuertoOrigenBusqueda;
     }
 
     public String getVueloId() {

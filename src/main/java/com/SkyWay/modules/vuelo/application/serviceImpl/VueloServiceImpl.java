@@ -1,5 +1,6 @@
 package com.SkyWay.modules.vuelo.application.serviceImpl;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -57,62 +58,25 @@ public class VueloServiceImpl implements VueloService {
 
 	@Override
 	@Transactional
-	public List<InfoVueloDTO> buscarVuelo(String departureCity, String arrivalCity, String departureDate, String returnDate) {
-		
-		// Crear la llamada al procedimiento almacenado
-	    /*StoredProcedureQuery query = em.createStoredProcedureQuery("obtener_info_vuelo");
-	    
-	    // Registrar los parámetros del procedimiento
-	    query.registerStoredProcedureParameter("p_ciudad_salida", String.class, ParameterMode.IN);
-	    query.registerStoredProcedureParameter("p_ciudad_llegada", String.class, ParameterMode.IN);
-	    query.registerStoredProcedureParameter("p_fecha_inicio", String.class, ParameterMode.IN);
-	    query.registerStoredProcedureParameter("p_fecha_fin", String.class, ParameterMode.IN);
-	    query.registerStoredProcedureParameter("p_cursor", void.class, ParameterMode.REF_CURSOR);
-	    
-	    // Establecer los valores de los parámetros
-	    query.setParameter("p_ciudad_salida", departureCity);
-	    query.setParameter("p_ciudad_llegada", arrivalCity);
-	    query.setParameter("p_fecha_inicio", departureDate);
-	    query.setParameter("p_fecha_fin", returnDate);
-	    
-	    // Ejecutar el procedimiento
-	    query.execute();
-	    
-	    // Obtener el cursor
-	    List<Object[]> resultList = query.getResultList();
-	    
-	    // Mapeo a objetos DTO
-	    List<InfoVueloDTO> vuelos = new ArrayList<>();
-	    for (Object[] row : resultList) {
-	        InfoVueloDTO vuelo = new InfoVueloDTO();
-	        vuelo.setIdAvion((Integer) row[0]);
-	        vuelo.setIdVuelo((Integer) row[1]);
-	        vuelo.setNumeroVuelo((String) row[2]);
-	        vuelo.setCiudadSalida((String) row[3]);
-	        vuelo.setCiudadLlegada((String) row[4]);
-	        vuelo.setFechaHoraSalida((Timestamp) row[5]);
-	        vuelo.setFechaHoraLlegada((Timestamp) row[6]);
-	        vuelo.setPrecio((String) row[7]);
-	        vuelo.setModeloAvion((String) row[8]);
-	        vuelo.setDuracion((String) row[9]);
-	        vuelos.add(vuelo);
-	    }*/
-		
-		
-		
+	public List<Vuelo> buscarVuelo(String departureCity, String arrivalCity, String departureDate) {
+		String sql;
+		Query query;
 
-        Query query = em.createNativeQuery(
-       		 "SELECT * FROM public.obtener_info_vuelo(:ciudadSalida,:ciudadLlegada, :fechaIn,:fechaFin)",
-       		    InfoVueloDTO.class);
-         		query.setParameter("ciudadSalida", departureCity);
-         		query.setParameter("ciudadLlegada", arrivalCity);
-         		query.setParameter("fechaIn", departureDate);
-         		query.setParameter("fechaFin", returnDate);
-         		
-         		
-         		//LOGGER.info("Resultado {}",query.getResultList());
-         		List<InfoVueloDTO> vuelos= query.getResultList();
-         		
+		if (departureDate != null && !departureDate.isEmpty()) {
+			sql = "SELECT * FROM public.FnbuscarVuelos(:ciudadSalida, :ciudadLlegada, :fechaIn)";
+			query = em.createNativeQuery(sql, Vuelo.class);
+			query.setParameter("fechaIn", java.sql.Date.valueOf(LocalDate.parse(departureDate)));
+		} else {
+			sql = "SELECT * FROM public.FnbuscarVuelos(:ciudadSalida, :ciudadLlegada)";
+			query = em.createNativeQuery(sql, Vuelo.class);
+		}
+
+		query.setParameter("ciudadSalida", departureCity);
+		query.setParameter("ciudadLlegada", arrivalCity);
+
+		List<Vuelo> vuelos = query.getResultList();
+
+
 		return vuelos;
 	}
 

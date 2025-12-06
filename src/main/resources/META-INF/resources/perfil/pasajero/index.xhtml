@@ -176,16 +176,8 @@
         <h:messages id="msgs" globalOnly="true" styleClass="ui-messages ui-widget" />
 
         <div class="container">
-            <header class="profile-header">
-                <h1>Bienvenido, <span class="user-name">#{sessionScope.usuario.nombre} #{sessionScope.usuario.apellido}</span></h1>
-            </header>
 
-            <div class="profile-card">
-                <h2>Datos del Usuario</h2>
-                <div class="profile-item"><strong>Email:</strong> #{sessionScope.usuario.correoElectronico}</div>
-                <div class="profile-item"><strong>Teléfono:</strong> #{sessionScope.usuario.telefono}</div>
-            </div>
-
+            <!-- Título Itinerarios -->
             <h2 style="margin-bottom: 15px;">Tus Itinerarios</h2>
 
 
@@ -408,11 +400,10 @@
 
 
             <h:form id="formAsientos">
+                <p:growl id="growl" showDetail="true" sticky="true" />
+
                 <!-- Botón para abrir el diálogo -->
-                <p:commandButton value="Ver Asientos Reservados"
-                                 icon="pi pi-list"
-                                 onclick="PF('dlgAsientos').show();"
-                                 styleClass="ui-button-success" />
+
 
                 <!-- Diálogo con la tabla de asientos -->
                 <p:dialog header="Asientos Reservados"
@@ -454,6 +445,8 @@
                             <p:commandButton value="CambiarAsiento"
                                              icon="pi pi-search"
                                              styleClass="btn-detail"
+                                             update="@form"
+                                             process="@form"
                                              actionListener="#{perfilPasajeroView.cambiarAsiento(asiento)}"
                             />
                         </p:column>

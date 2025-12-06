@@ -9,10 +9,12 @@
 
 <h:head>
     <meta charset="utf-8" />
-    <title>Travela - Tourism Website Template</title>
+    <title>SkyWay</title>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <meta content="" name="keywords"/>
-    <meta content="" name="description"/>
+    <link rel="icon" type="image/png" href="#{resource['assets/icons/aviones.png']}" />
+    <link rel="shortcut icon" href="#{resource['assets/icons/aviones.png']}" />
+
+
 
 
     <!-- Icon Font Stylesheet -->
@@ -34,17 +36,6 @@
             href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
             rel="stylesheet"/>
     <!-- Scripts personalizados -->
-    <h:outputScript library="js" name="funciones.js" target="head"/>
-    <h:outputStylesheet library="admin/css" name="sb-admin-2.min.css"/>
-
-    <!-- Scripts personalizados -->
-    <h:outputScript library="admin/vendor/jquery" name="jquery.min.js" target="head"/>
-    <h:outputScript library="admin/vendor/bootstrap/js" name="bootstrap.bundle.min.js" target="head"/>
-    <h:outputScript library="admin/vendor/jquery-easing" name="jquery.easing.min.js" target="head"/>
-    <h:outputScript library="admin/js" name="sb-admin-2.min.js" target="head"/>
-    <h:outputScript library="admin/vendor/chart.js" name="Chart.min.js" target="head"/>
-    <h:outputScript library="admin/js/demo" name="chart-area-demo.js" target="head"/>
-    <h:outputScript library="admin/js/demo" name="chart-pie-demo.js" target="head"/>
 
 
     <ui:insert name="head"/>
@@ -403,7 +394,20 @@ label,
 .user-item-logout:hover i {
     color: #fca5a5 !important;
 }
-
+    .footer ul {
+      padding: 0;
+      list-style: none;
+    }
+    .footer a.text-white:hover {
+      color: #3b82f6;
+      text-decoration: none;
+    }
+    .footer .fa-2x {
+      transition: transform 0.2s;
+    }
+    .footer .fa-2x:hover {
+      transform: scale(1.15);
+    }
 
 
     </style>
@@ -418,9 +422,10 @@ label,
         <div class="col-lg-3 d-flex align-items-center">
             <p:link href="/" styleClass="navbar-brand">
                 <h:graphicImage
-                        value="https://cdn-icons-png.flaticon.com/512/1530/1530627.png"
+                        value="#{resource['assets/icons/aviones.png']}"
                         styleClass="sky-logo"
-                        alt="Skyway Logo"/>
+                        alt="Skyway Logo" />
+
                 SKYWAY
             </p:link>
         </div>
@@ -615,82 +620,100 @@ label,
     <div class="container py-5">
         <div class="row g-5">
 
-            <!-- Sección de Contacto -->
-            <div class="col-md-6 col-lg-3 col-xl-3">
+            <!-- Contacto / Oficina central -->
+            <div class="col-md-6 col-lg-3">
                 <h4 class="mb-4 text-white">Contáctanos</h4>
-                <p class="text-white"><i class="fas fa-home me-2"></i> 123 Calle Principal, Ciudad, País</p>
-                <p class="text-white"><i class="fas fa-envelope me-2"></i> contacto@aerolinea.com</p>
-                <p class="text-white"><i class="fas fa-phone-alt me-2"></i> +012 345 67890</p>
+                <p class="text-white mb-1">
+                    <i class="fas fa-map-marker-alt me-2"></i>
+                    Av. Libertador Bernardo O’Higgins 1234, Santiago, Chile
+                </p>
+                <p class="text-white mb-1">
+                    <i class="fas fa-envelope me-2"></i>
+                    contacto@skyWay.cl
+                </p>
+                <p class="text-white mb-1">
+                    <i class="fas fa-phone-alt me-2"></i>
+                    +56 2 1234 5678 — Línea nacional
+                </p>
+                <p class="text-white mb-0">
+                    <small>Horario: Lunes a Domingo, 08:00‑20:00 (CLT)</small>
+                </p>
             </div>
 
-            <!-- Sección de Información de la Aerolínea -->
+            <!-- Sobre la aerolínea -->
+            <!-- Sobre la aerolínea -->
+            <div class="col-md-6 col-lg-3">
+                <h4 class="mb-4 text-white">Sobre Nosotros</h4>
+                <ul class="list-unstyled">
+                    <li>
+                        <h:outputLink value="/home/about.xhtml" styleClass="text-white text-decoration-none">
+                            <i class="fas fa-angle-right me-2"></i>Quiénes somos
+                        </h:outputLink>
+                    </li>
+                    <li>
+                        <h:outputLink value="/home/history.xhtml" styleClass="text-white text-decoration-none">
+                            <i class="fas fa-angle-right me-2"></i>Nuestra historia
+                        </h:outputLink>
+                    </li>
+                    <li>
+                        <h:outputLink value="/home/services.xhtml" styleClass="text-white text-decoration-none">
+                            <i class="fas fa-angle-right me-2"></i>Servicios
+                        </h:outputLink>
+                    </li>
+                    <li>
+                        <h:outputLink value="/blog/index.xhtml" styleClass="text-white text-decoration-none">
+                            <i class="fas fa-angle-right me-2"></i>Blog
+                        </h:outputLink>
+                    </li>
+                </ul>
+            </div>
 
-	          <div class="col-md-6 col-lg-3 col-xl-3">
-				    <h4 class="mb-4 text-white">Sobre Nosotros</h4>
-				    <!-- Enlaces a las secciones con parámetro tipo -->
-				    <h:link value="Quiénes Somos" outcome="/home/content.xhtml?tipo=informacion" class="text-white">
-				        <i class="fas fa-angle-right me-2"></i> Quiénes Somos
-				    </h:link><br></br>
-
-				    <h:link value="Historia" outcome="/home/content.xhtml?tipo=informacion" class="text-white">
-				        <i class="fas fa-angle-right me-2"></i> Historia
-				    </h:link><br></br>
-
-				    <h:link value="Servicios" outcome="/home/content.xhtml?tipo=servicios" class="text-white">
-				        <i class="fas fa-angle-right me-2"></i> Servicios
-				    </h:link><br></br>
-
-				    <h:link value="Blog" outcome="/blog/index.xhtml" class="text-white">
-				        <i class="fas fa-angle-right me-2"></i> Blog
-				    </h:link>
-				</div>
-
-				<!-- Sección de Ayuda y Políticas -->
-				<div class="col-md-6 col-lg-3 col-xl-3">
-				    <h4 class="mb-4 text-white">Atención al Cliente</h4>
-				    <!-- Enlaces de contacto, política y preguntas frecuentes -->
-				    <h:link value="Contacto" outcome="/home/content.xhtml?tipo=contacto" class="text-white">
-				        <i class="fas fa-angle-right me-2"></i> Contacto
-				    </h:link><br></br>
-
-				    <h:link value="Políticas de Privacidad" outcome="/home/content.xhtml?tipo=Estático" class="text-white">
-				        <i class="fas fa-angle-right me-2"></i> Políticas de Privacidad
-				    </h:link><br></br>
-
-				    <h:link value="Preguntas Frecuentes" outcome="/home/content.xhtml?tipo=faq" class="text-white">
-				        <i class="fas fa-angle-right me-2"></i> Preguntas Frecuentes
-				    </h:link><br></br>
-
-				    <h:link value="Términos y Condiciones" outcome="/home/content.xhtml?tipo=Estático" class="text-white">
-				        <i class="fas fa-angle-right me-2"></i> Términos y Condiciones
-				    </h:link>
-				</div>
+            <!-- Atención al cliente / políticas -->
+            <div class="col-md-6 col-lg-3">
+                <h4 class="mb-4 text-white">Atención al Cliente</h4>
+                <ul class="list-unstyled">
+                    <li>
+                        <h:outputLink value="/home/contact.xhtml" styleClass="text-white text-decoration-none">
+                            <i class="fas fa-angle-right me-2"></i>Contacto
+                        </h:outputLink>
+                    </li>
+                    <li>
+                        <h:outputLink value="/home/faq.xhtml" styleClass="text-white text-decoration-none">
+                            <i class="fas fa-angle-right me-2"></i>Preguntas frecuentes
+                        </h:outputLink>
+                    </li>
+                    <li>
+                        <h:outputLink value="/home/privacy.xhtml" styleClass="text-white text-decoration-none">
+                            <i class="fas fa-angle-right me-2"></i>Políticas de Privacidad
+                        </h:outputLink>
+                    </li>
+                    <li>
+                        <h:outputLink value="/home/terms.xhtml" styleClass="text-white text-decoration-none">
+                            <i class="fas fa-angle-right me-2"></i>Términos y Condiciones
+                        </h:outputLink>
+                    </li>
+                </ul>
+            </div>
 
 
-
-            <!-- Sección de Redes Sociales y Pagos -->
-            <div class="col-md-6 col-lg-3 col-xl-3">
+            <!-- Redes sociales + Métodos de pago -->
+            <div class="col-md-6 col-lg-3">
                 <h4 class="text-white mb-4">Síguenos</h4>
-                <div class="social-icons">
-                    <a href="https://facebook.com" target="_blank" class="text-white me-2">
-                        <i class="fab fa-facebook-f fa-2x"></i>
-                    </a>
-                    <a href="https://twitter.com" target="_blank" class="text-white me-2">
-                        <i class="fab fa-twitter fa-2x"></i>
-                    </a>
-                    <a href="https://instagram.com" target="_blank" class="text-white me-2">
-                        <i class="fab fa-instagram fa-2x"></i>
-                    </a>
-                    <a href="https://linkedin.com" target="_blank" class="text-white me-2">
-                        <i class="fab fa-linkedin fa-2x"></i>
-                    </a>
+                <div class="mb-4">
+                    <a href="https://facebook.com" target="_blank" class="text-white me-3"><i class="fab fa-facebook-f fa-2x"></i></a>
+                    <a href="https://instagram.com" target="_blank" class="text-white me-3"><i class="fab fa-instagram fa-2x"></i></a>
+                    <a href="https://twitter.com" target="_blank" class="text-white me-3"><i class="fab fa-twitter fa-2x"></i></a>
                 </div>
-                <h4 class="text-white mb-4">Métodos de Pago</h4>
-                <div class="footer-bank-card">
-                    <a href="#" class="text-white me-2"><i class="fab fa-cc-visa fa-2x"></i></a>
-                    <a href="#" class="text-white me-2"><i class="fab fa-cc-mastercard fa-2x"></i></a>
-                    <a href="#" class="text-white me-2"><i class="fab fa-cc-amex fa-2x"></i></a>
-                    <a href="#" class="text-white me-2"><i class="fas fa-credit-card fa-2x"></i></a>
+                <h4 class="text-white mb-4">Formas de Pago</h4>
+                <div class="d-flex flex-wrap">
+                    <!-- Tarjetas más comunes -->
+                    <a href="#" class="text-white me-3 mb-2"><i class="fab fa-cc-visa fa-2x"></i></a>
+                    <a href="#" class="text-white me-3 mb-2"><i class="fab fa-cc-mastercard fa-2x"></i></a>
+                    <a href="#" class="text-white me-3 mb-2"><i class="fab fa-cc-amex fa-2x"></i></a>
+                    <!-- Pago local / transferencia -->
+                    <a href="#" class="text-white me-3 mb-2"><i class="fas fa-money-bill-wave fa-2x"></i></a>
+                    <!-- Pago online chileno — representa WebPay/Flow/etc -->
+                    <a href="#" class="text-white me-3 mb-2"><i class="fas fa-credit-card fa-2x"></i></a>
                 </div>
             </div>
 
@@ -699,20 +722,21 @@ label,
 </div>
 <!-- Footer End -->
 
-<!-- Copyright Start -->
-<div class="container-fluid copyright text-body py-4 bg-dark">
+<!-- Copyright -->
+<div class="container-fluid bg-dark text-body py-4">
     <div class="container">
-        <div class="row g-4 align-items-center">
-            <div class="col-md-6 text-center text-md-end mb-md-0">
-                <i class="fas fa-copyright me-2"></i><a class="text-white" href="#">Aerolínea XYZ</a>, Todos los derechos reservados.
+        <div class="row align-items-center">
+            <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+                <small class="text-white">2025 SkyWay Todos los derechos reservados.</small>
             </div>
-            <div class="col-md-6 text-center text-md-start">
-                Diseñado por <a class="text-white" href="https://www.tuwebdiseño.com">Tu Web Diseño</a>
+            <div class="col-md-6 text-center text-md-end">
+                <small class="text-white">Desarrollado por <a href="https://www.tuwebdiseño.com" class="text-decoration-none text-white">Tu Web Diseño</a></small>
             </div>
         </div>
     </div>
 </div>
-<!-- Copyright End -->
+
+
 
 
 

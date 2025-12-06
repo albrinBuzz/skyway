@@ -1,88 +1,136 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <ui:composition xmlns="http://www.w3.org/1999/xhtml"
                 xmlns:h="jakarta.faces.html"
                 xmlns:f="jakarta.faces.core"
                 xmlns:ui="http://java.sun.com/jsf/facelets"
                 xmlns:p="http://primefaces.org/ui">
 
-    <h:outputStylesheet library="primefaces" name="themes/saga/theme.css"/>
+    <!-- Estilos para azul oscuro corporativo -->
+    <h:outputStylesheet>
+        body {
+        background-color: #001f3f; /* Azul oscuro corporativo */
+        color: #ffffff;           /* Texto blanco */
+        }
 
+        .ui-datatable, .nested-table {
+        background-color: #002b5c !important; /* Tablas más claras que el fondo */
+        color: #ffffff !important;
+        }
 
+        .ui-datatable th, .nested-table th {
+        background-color: #003366 !important; /* Encabezados más oscuros */
+        color: #ffffff !important;
+        }
 
-        <h1>Próximos Vuelos</h1>
+        .ui-datatable td, .nested-table td {
+        background-color: #002b5c !important;
+        color: #ffffff !important;
+        }
 
-        <!-- Colocamos un formulario alrededor de la tabla para asegurar que los botones se procesen correctamente -->
-        <h:form id="vueloForm">
+        .p-panel {
+        background-color: #002b5c !important;
+        color: #ffffff !important;
+        }
 
-            <p:dataTable value="#{vueloBean.vuelos}" var="vuelo"
-                         responsiveLayout="scroll"
-                         styleClass="table"
-                         rowIndexVar="index"
-                         expandableRowGroups="true"
-                         rowKey="#{vuelo.idVuelo}">
-                <p:column style="width:2rem" ariaHeaderText="Detalles">
-                    <p:rowToggler />
-                </p:column>
+        .p-button {
+        background-color: #004080 !important;
+        color: #ffffff !important;
+        border: none !important;
+        }
 
-                <p:column headerText="N° Vuelo">
-                    #{vuelo.numeroVuelo}
-                </p:column>
+        .p-button:hover {
+        background-color: #0059b3 !important;
+        }
 
-                <p:column headerText="Fecha Salida">
-                    <h:outputText value="#{vuelo.fechaHoraSalida}">
-                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
-                    </h:outputText>
-                </p:column>
+        h1 {
+        color: #ffffff;
+        }
 
-                <p:column headerText="Fecha Llegada">
-                    <h:outputText value="#{vuelo.fechaHoraLlegada}">
-                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
-                    </h:outputText>
-                </p:column>
+        input, select {
+        background-color: #003366 !important;
+        color: #ffffff !important;
+        border: 1px solid #0059b3 !important;
+        }
+    </h:outputStylesheet>
 
-                <p:column headerText="Acciones" styleClass="text-center">
-                    <!-- Botón para Editar dentro del formulario -->
-                    <p:commandButton value="Editar"
-                                     icon="pi pi-pencil"
-                                     styleClass="p-button-warning"
-                                     action="#{vueloBean.editarVuelo(vuelo)}"
-                                     update="vueloForm"
-                                     ajax="true"/>
-                </p:column>
+    <h1>Próximos Vuelos</h1>
 
-                <p:rowExpansion>
-                    <p:panelGrid columns="1" style="width:100%">
-                        <p:dataTable value="#{vuelo.segmentoVuelos}" var="segmento"
-                                     styleClass="nested-table">
+    <div style="text-align: right; margin-bottom: 1rem;">
+        <h:link outcome="/admin/vuelo/vuelo.xhtml" class="menu-link">
+            <i class="pi pi-plus"></i> Agregar Vuelo
+        </h:link>
+    </div>
 
-                            <p:column headerText="Orden">
-                                #{segmento.ordenSegmento}
-                            </p:column>
-                            <p:column headerText="Hora Salida">
-                                <h:outputText value="#{segmento.horaSalida}">
-                                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
-                                </h:outputText>
-                            </p:column>
-                            <p:column headerText="Hora Llegada">
-                                <h:outputText value="#{segmento.horaLlegada}">
-                                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
-                                </h:outputText>
-                            </p:column>
-                            <p:column headerText="Origen">
-                                #{segmento.aeropuertoOrigen.codigoIata}
-                            </p:column>
-                            <p:column headerText="Destino">
-                                #{segmento.aeropuertoDestino.codigoIata}
-                            </p:column>
+    <h:form id="vueloForm">
 
-                        </p:dataTable>
-                    </p:panelGrid>
-                </p:rowExpansion>
+        <p:dataTable value="#{vueloBean.vuelos}" var="vuelo"
+                     responsiveLayout="scroll"
+                     styleClass="table"
+                     rowIndexVar="index"
+                     expandableRowGroups="true"
+                     rowKey="#{vuelo.idVuelo}">
 
-            </p:dataTable>
+            <p:column style="width:2rem" ariaHeaderText="Detalles">
+                <p:rowToggler />
+            </p:column>
 
-        </h:form>
+            <p:column headerText="N° Vuelo">
+                #{vuelo.numeroVuelo}
+            </p:column>
 
+            <p:column headerText="Fecha Salida">
 
+                <h:outputText value="#{vuelo.fechaHoraSalida}" >
+                    <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago"/>
+                </h:outputText>
+            </p:column>
+
+            <p:column headerText="Fecha Llegada">
+
+                <h:outputText value="#{vuelo.fechaHoraLlegada}" >
+                    <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago"/>
+                </h:outputText>
+            </p:column>
+
+            <p:column headerText="Acciones" styleClass="text-center">
+                <p:commandButton value="Editar"
+                                 icon="pi pi-pencil"
+                                 styleClass="p-button-warning"
+                                 action="#{vueloBean.editarVuelo(vuelo)}"
+                                 update="vueloForm"
+                                 ajax="true"/>
+            </p:column>
+
+            <p:rowExpansion>
+                <p:panelGrid columns="1" style="width:100%">
+                    <p:dataTable value="#{vuelo.segmentoVuelos}" var="segmento"
+                                 styleClass="nested-table">
+
+                        <p:column headerText="Orden">
+                            #{segmento.ordenSegmento}
+                        </p:column>
+                        <p:column headerText="Hora Salida">
+                            <h:outputText value="#{segmento.horaSalida}">
+                                <f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+                            </h:outputText>
+                        </p:column>
+                        <p:column headerText="Hora Llegada">
+                            <h:outputText value="#{segmento.horaLlegada}">
+                                <f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+                            </h:outputText>
+                        </p:column>
+                        <p:column headerText="Origen">
+                            #{segmento.aeropuertoOrigen.codigoIata}
+                        </p:column>
+                        <p:column headerText="Destino">
+                            #{segmento.aeropuertoDestino.codigoIata}
+                        </p:column>
+
+                    </p:dataTable>
+                </p:panelGrid>
+            </p:rowExpansion>
+
+        </p:dataTable>
+
+    </h:form>
 
 </ui:composition>

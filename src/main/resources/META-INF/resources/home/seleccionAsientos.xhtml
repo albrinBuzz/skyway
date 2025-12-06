@@ -8,337 +8,144 @@
 
     <h:head>
         <title>Selección de Asientos</title>
-        <h:outputStylesheet>
-            body {
-            background: linear-gradient(to bottom, #e6f2ff, #ffffff);
-            font-family: "Segoe UI", sans-serif;
-            }
-
-            .cabina {
-            display: flex;
-            flex-direction: column;
-            gap: 60px;
-            padding: 40px;
-            background-color: #ffffff;
-            border-radius: 20px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
-            max-width: 1200px;
-            margin: auto;
-            }
-
-            .clase {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-            }
-
-            .class-label {
-            font-size: 26px;
-            font-weight: 700;
-            margin-bottom: 20px;
-            padding: 10px 20px;
-            border-radius: 8px;
-            text-align: center;
-            color: white;
-            text-transform: uppercase;
-            }
-
-            .clase:nth-child(1) .class-label {
-            background-color: #1abc9c; /* Primera Clase */
-            }
-
-            .clase:nth-child(2) .class-label {
-            background-color: #3498db; /* Ejecutiva */
-            }
-
-            .clase:nth-child(3) .class-label {
-            background-color: #9b59b6; /* Económica */
-            }
-
-            .fila {
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            margin: 16px 0;
-            }
-
-            .bloque {
-            display: flex;
-            gap: 15px;
-            }
-
-            .pasillo {
-            width: 50px;
-            }
-
-            .seat {
-            width: 55px;
-            height: 55px;
-            border-radius: 10px;
-            font-weight: bold;
-            font-size: 14px;
-            text-align: center;
-            line-height: 55px;
-            border: none;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-            }
-
-            .seat:hover {
-            transform: scale(1.07);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            }
-
-            .Disponible {
-            background-color: #2ecc71;
-            color: white;
-            }
-
-            .Ocupado {
-            background-color: #e74c3c;
-            color: white;
-            cursor: not-allowed;
-            opacity: 0.7;
-            }
-
-            .Seleccionado {
-            background-color: #f39c12;
-            color: white;
-            }
-
-            .legend {
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-            margin-bottom: 30px;
-            }
-
-            .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 15px;
-            }
-
-            .legend-box {
-            width: 22px;
-            height: 22px;
-            border-radius: 5px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-            }
-
-            .legend-box.Disponible {
-            background-color: #2ecc71;
-            }
-
-            .legend-box.Ocupado {
-            background-color: #e74c3c;
-            }
-
-            .legend-box.Seleccionado {
-            background-color: #f39c12;
-            }
-
-            h3 {
-            font-size: 30px;
-            margin-top: 40px;
-            margin-bottom: 20px;
-            text-align: center;
-            color: #2c3e50;
-            }
-
-            /* === Colores de fondo de cabina por clase === */
-            .clase.primera {
-            background: #e8f8f5;
-            }
-
-            .clase.ejecutiva {
-            background: #ebf5fb;
-            }
-
-            .clase.economica {
-            background: #f5eef8;
-            }
-
-            /* === Colores de botones por clase + estado === */
-            .seat.Primera {
-            border: 2px solid #1abc9c;
-            }
-
-            .seat.Ejecutiva {
-            border: 2px solid #3498db;
-            }
-
-            .seat.Económica {
-            border: 2px solid #9b59b6;
-            }
-
-            /* Mejor contraste entre estados */
-            .seat.Disponible.Primera {
-            background-color: #1abc9c;
-            }
-
-            .seat.Disponible.Ejecutiva {
-            background-color: #3498db;
-            }
-
-            .seat.Disponible.Económica {
-            background-color: #9b59b6;
-            }
-
-            .seat.Ocupado {
-            background-color: #e74c3c;
-            color: white;
-            cursor: not-allowed;
-            opacity: 0.7;
-            }
-
-            .seat.Seleccionado {
-            background-color: #f39c12;
-            color: white;
-            }
-
-            .legend-box.Disponible {
-            background-color: #2ecc71;
-            }
-
-            .legend-box.Ocupado {
-            background-color: #e74c3c;
-            }
-
-            .legend-box.Seleccionado {
-            background-color: #f39c12;
-            }
-
-            h3 {
-            font-size: 30px;
-            margin-top: 30px;
-            margin-bottom: 15px;
-            text-align: center;
-            color: #2c3e50;
-            }
-
-            /* Estilos para mejorar la apariencia de las filas */
-            .fila {
-            gap: 12px; /* Reducir el espacio entre los asientos */
-            }
-
-            .bloque {
-            display: flex;
-            justify-content: center;
-            }
-            .vuelo-info div {
-            min-width: 180px;
-            padding: 10px;
-            font-size: 16px;
-            }
-
-
-        </h:outputStylesheet>
-
     </h:head>
 
     <ui:define name="contenido">
 
-
         <main class="container py-5">
 
             <h:form id="seatForm">
-                <h3 style="text-align: center;">Distribución de Asientos</h3>
 
-                <div class="legend">
-                    <div class="legend-item">
-                        <div class="legend-box Disponible"></div> Disponible
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-box Ocupado"></div> Ocupado
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-box Seleccionado"></div> Seleccionado
-                    </div>
-                </div>
+                <!-- TÍTULO GENERAL -->
+                <h2 class="page-title">
+                    <i class="pi pi-th-large"></i> Distribución de Asientos
+                </h2>
 
+                <!-- ASIENTOS SELECCIONADOS -->
                 <h:panelGroup rendered="#{not empty seleccionAsientosBean.asientosSeleccionadosList}">
-                    <h3 style="text-align:center">Asientos Seleccionados</h3>
-                    <ul style="list-style: none; text-align: center; padding: 0;">
+                    <h3 class="subheader-selected">Asientos Seleccionados</h3>
+
+                    <ul class="selected-seat-list">
                         <ui:repeat value="#{seleccionAsientosBean.asientosSeleccionadosList}" var="asiento">
-                            <li>
-                                <p>
-                                    <strong>#{asiento.numeroAsiento}</strong> - #{asiento.clase}
-                                </p>
-                            </li>
+                            <li><strong>#{asiento.numeroAsiento}</strong> – #{asiento.clase}</li>
                         </ui:repeat>
                     </ul>
                 </h:panelGroup>
 
 
+                <!-- ======================= -->
+                <!--   INFORMACIÓN DEL VUELO  -->
+                <!-- ======================= -->
+                <h:panelGroup id="vuelo-infoPanel" styleClass="vuelo-info-premium"
+                              rendered="#{seleccionAsientosBean.vuelo != null}">
 
-                <h:panelGroup id="vuelo-infoPanel" styleClass="vuelo-info" rendered="#{seleccionAsientosBean.vuelo != null}">
-                    <h2 style="text-align: center; color: #2c3e50;">Información del Vuelo</h2>
+                    <div class="flight-header">
+                        <i class="pi pi-plane"></i>
+                        Información del Vuelo
+                    </div>
 
-                    <div style="display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; padding: 20px; background-color: #f8f9fa; border-radius: 10px; margin-bottom: 30px;">
-                        <div>
-                            <strong>Número de vuelo:</strong>
-                            <h:outputText value="#{seleccionAsientosBean.vuelo.numeroVuelo}" />
+                    <div class="flight-card">
+
+                        <div class="flight-route">
+                            <div class="route-airport">
+                                <i class="pi pi-send"></i>
+                                <span>Salida</span>
+                                <strong>
+                                    <h:outputText value="#{seleccionAsientosBean.vuelo.fechaHoraSalida}">
+                                        <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago"/>
+                                    </h:outputText>
+                                </strong>
+                            </div>
+
+                            <div class="route-arrow">
+                                <i class="pi pi-arrow-right"></i>
+                            </div>
+
+                            <div class="route-airport">
+                                <i class="pi pi-map-marker"></i>
+                                <span>Llegada</span>
+                                <strong>
+                                    <h:outputText value="#{seleccionAsientosBean.vuelo.fechaHoraLlegada}">
+                                        <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago"/>
+                                    </h:outputText>
+                                </strong>
+                            </div>
                         </div>
-                        <div>
-                            <strong>Fecha de salida:</strong>
-                            <h:outputText value="#{seleccionAsientosBean.vuelo.fechaHoraSalida}">
-                                <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago"/>
-                            </h:outputText>
-                        </div>
-                        <div>
-                            <strong>Fecha de llegada:</strong>
-                            <h:outputText value="#{seleccionAsientosBean.vuelo.fechaHoraLlegada}">
-                                <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago"/>
-                            </h:outputText>
+
+                        <div class="flight-info-grid">
+                            <div class="info-box">
+                                <div class="info-label"><i class="pi pi-hashtag"></i> Número de vuelo</div>
+                                <div class="info-value">#{seleccionAsientosBean.vuelo.numeroVuelo}</div>
+                            </div>
                         </div>
 
                     </div>
                 </h:panelGroup>
 
 
+                <!-- ======================= -->
+                <!--      CABINA DE ASIENTOS -->
+                <!-- ======================= -->
 
-                <div class="seat-container">
-                    <!-- Primera Clase -->
-                    <h:outputText value="Primera Clase" styleClass="class-label" />
-                    <h:panelGroup id="primeraClaseGroup">
-                        <h:panelGrid columns="2" styleClass="seats first-class">
-                            <ui:repeat value="#{seleccionAsientosBean.asientos}" var="asientoSeleccionado" varStatus="status">
-                                <h:panelGroup rendered="#{asientoSeleccionado.clase == 'Primera Clase'}">
-                                    <div class="seat #{asientoSeleccionado.estado}" data-seat="#{asientoSeleccionado.numeroAsiento}" onclick="selectSeat('#{asientoSeleccionado.numeroAsiento}')">
-                                        <h:commandButton styleClass="seat #{asientoSeleccionado.estado}" value="#{asientoSeleccionado.numeroAsiento}" action="#{seleccionAsientosBean.setearAsiento(asientoSeleccionado)}" update="seatForm vuelo-infoPanel"  />
-                                    </div>
+                <div class="seat-legend">
+                    <div class="legend-block"><span class="legend-square disponible"></span>Disponible</div>
+                    <div class="legend-block"><span class="legend-square ocupado"></span>Ocupado</div>
+                    <div class="legend-block"><span class="legend-square seleccionado"></span>Seleccionado</div>
+                </div>
+
+
+                <div class="cabina-premium">
+
+                    <!-- PRIMERA CLASE -->
+                    <h:panelGroup styleClass="class-section primera-clase">
+                        <div class="class-title">Primera Clase</div>
+                        <div class="seat-grid">
+                            <ui:repeat value="#{seleccionAsientosBean.asientos}" var="a">
+                                <h:panelGroup rendered="#{a.clase == 'Primera Clase'}">
+                                    <h:commandButton value="#{a.numeroAsiento}"
+                                                     title="Precio: $#{a.precio}"
+                                                     styleClass="seat-btn #{a.estado}"
+                                                     action="#{seleccionAsientosBean.setearAsiento(a)}"
+                                                     update="seatForm vuelo-infoPanel"/>
+
                                 </h:panelGroup>
                             </ui:repeat>
-                        </h:panelGrid>
+                        </div>
                     </h:panelGroup>
 
-                    <!-- Clase Ejecutiva -->
-                    <h:outputText value="Clase Ejecutiva" styleClass="class-label" />
-                    <h:panelGroup id="ejecutivaClaseGroup">
-                        <h:panelGrid columns="2" styleClass="seats business-class">
-                            <ui:repeat value="#{seleccionAsientosBean.asientos}" var="asientoSeleccionado" varStatus="status">
-                                <h:panelGroup rendered="#{asientoSeleccionado.clase == 'Ejecutiva'}">
-                                    <h:commandButton styleClass="seat #{asientoSeleccionado.estado}" value="#{asientoSeleccionado.numeroAsiento}" action="#{seleccionAsientosBean.setearAsiento(asientoSeleccionado)}" update="seatForm vuelo-infoPanel"  />
+                    <!-- EJECUTIVA -->
+                    <h:panelGroup styleClass="class-section ejecutiva-clase">
+                        <div class="class-title">Clase Ejecutiva</div>
+                        <div class="seat-grid grid-medium">
+                            <ui:repeat value="#{seleccionAsientosBean.asientos}" var="a">
+                                <h:panelGroup rendered="#{a.clase == 'Ejecutiva'}">
+                                    <h:commandButton value="#{a.numeroAsiento}"
+                                                     title="Precio: $#{a.precio}"
+                                                     styleClass="seat-btn #{a.estado}"
+                                                     action="#{seleccionAsientosBean.setearAsiento(a)}"
+                                                     update="seatForm vuelo-infoPanel"/>
+
                                 </h:panelGroup>
                             </ui:repeat>
-                        </h:panelGrid>
+                        </div>
                     </h:panelGroup>
 
-                    <!-- Clase Económica -->
-                    <h:outputText value="Clase Económica" styleClass="class-label" />
-                    <h:panelGroup id="economicaClaseGroup">
-                        <h:panelGrid columns="3" styleClass="seats economy-class">
-                            <ui:repeat value="#{seleccionAsientosBean.asientos}" var="asientoSeleccionado" varStatus="status">
-                                <h:panelGroup rendered="#{asientoSeleccionado.clase == 'Económica'}">
-                                    <h:commandButton styleClass="seat #{asientoSeleccionado.estado}"  value="#{asientoSeleccionado.numeroAsiento}" action="#{seleccionAsientosBean.setearAsiento(asientoSeleccionado)}"  update="seatForm vuelo-infoPanel" />
+                    <!-- ECONÓMICA -->
+                    <h:panelGroup styleClass="class-section economica-clase">
+                        <div class="class-title">Clase Económica</div>
+                        <div class="seat-grid grid-large">
+                            <ui:repeat value="#{seleccionAsientosBean.asientos}" var="a">
+                                <h:panelGroup rendered="#{a.clase == 'Económica'}">
+                                    <h:commandButton value="#{a.numeroAsiento}"
+                                                     title="Precio: $#{a.precio}"
+                                                     styleClass="seat-btn #{a.estado}"
+                                                     action="#{seleccionAsientosBean.setearAsiento(a)}"
+                                                     update="seatForm vuelo-infoPanel"/>
                                 </h:panelGroup>
                             </ui:repeat>
-                        </h:panelGrid>
+                        </div>
                     </h:panelGroup>
+
                 </div>
 
 
@@ -346,85 +153,233 @@
 
         </main>
 
-        <!-- CSS para mejorar la apariencia -->
+
+        <!-- ======================= -->
+        <!--   CSS COMPLETO PREMIUM  -->
+        <!-- ======================= -->
         <style>
-            /* Contenedor principal para los asientos */
-.seat-container {
+
+            /* ===========================
+               TÍTULOS PRINCIPALES
+            ============================ */
+            .page-title {
+                text-align: center;
+                font-size: 32px;
+                font-weight: 800;
+                color: #003366;
+                margin-bottom: 40px;
+            }
+
+            .page-title i { margin-right: 10px; }
+
+            .subheader-selected {
+                margin-top: 25px;
+                text-align: center;
+                color: #003366;
+                font-size: 22px;
+                font-weight: 700;
+            }
+
+            .selected-seat-list {
+                list-style: none;
+                padding: 0;
+                text-align: center;
+                font-size: 18px;
+                margin-bottom: 30px;
+            }
+
+            /* ===========================
+               INFO DEL VUELO
+            ============================ */
+
+            .vuelo-info-premium { margin-top: 40px; }
+
+            .flight-header {
+                font-size: 34px;
+                font-weight: 800;
+                color: #003366;
+                text-align: center;
+                margin-bottom: 25px;
+                display: flex;
+                justify-content: center;
+                gap: 14px;
+            }
+
+            .flight-header i { font-size: 36px; color: #0066cc; }
+
+            .flight-card {
+                background: #ffffff;
+                border-radius: 20px;
+                padding: 35px;
+                border: 1px solid #d8e1eb;
+                box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            }
+
+            .flight-route {
+                display: flex;
+                justify-content: space-around;
+                text-align: center;
+                margin-bottom: 35px;
+            }
+
+            .route-airport span {
+                font-size: 15px;
+                color: #5a6a7a;
+            }
+
+            .route-airport strong {
+                display: block;
+                font-size: 22px;
+                color: #002b5c;
+            }
+
+            .route-arrow {
+                font-size: 45px;
+                display: flex;
+                align-items: center;
+                color: #0066cc;
+            }
+
+            .flight-info-grid {
+                display: flex;
+                gap: 30px;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .info-box { min-width: 250px; }
+
+            .info-label {
+                font-size: 15px;
+                font-weight: 700;
+                color: #00509e;
+                text-transform: uppercase;
+                margin-bottom: 4px;
+            }
+
+            .info-value {
+                font-size: 22px;
+                font-weight: 700;
+                background: #f1f5fa;
+                padding: 14px;
+                border-radius: 10px;
+                border-left: 6px solid #0066cc;
+            }
+
+
+            /* ===========================
+               LEYENDA
+            ============================ */
+
+            .seat-legend {
+                display: flex;
+                justify-content: center;
+                gap: 35px;
+                margin-top: 40px;
+                margin-bottom: 30px;
+            }
+
+            .legend-block {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                font-size: 16px;
+            }
+
+            .legend-square {
+                width: 22px;
+                height: 22px;
+                border-radius: 6px;
+            }
+
+            .legend-square.disponible { background: #2ecc71; }
+            .legend-square.ocupado { background: #e74c3c; }
+            .legend-square.seleccionado { background: #f39c12; }
+
+
+            /* ===========================
+   CABINA PREMIUM COMPACTA
+============================ */
+.cabina-premium {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-top: 20px;
+    flex-direction: column;
+    gap: 15px; /* menos espacio entre clases */
+    margin-top: 10px; /* menos margen superior */
 }
 
-/* Etiquetas de clase (Primera, Ejecutiva, Económica) */
-.class-label {
-    font-weight: bold;
+.class-section {
+    background: #ffffff;
+    padding: 10px; /* padding más reducido */
+    border-radius: 10px; /* bordes más pequeños */
+    border: 1px solid #dbe3eb;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06); /* sombra más sutil */
+}
+
+.class-title {
+    font-size: 18px; /* más pequeño */
+    font-weight: 700;
+    margin-bottom: 8px; /* menos separación */
+    color: #003366;
     text-align: center;
-    color: #2c3e50;
-    width: 100%;
-    margin-top: 20px;
 }
 
-/* Estilos comunes para las filas de asientos */
-.seats {
-    text-align: center;
-    margin-top: 10px;
-    margin-bottom: 20px;
+.primera-clase { border-left: 5px solid #1abc9c; }
+.ejecutiva-clase { border-left: 5px solid #3498db; }
+.economica-clase { border-left: 5px solid #9b59b6; }
+
+/* ===========================
+   GRID DE ASIENTOS COMPACTO
+============================ */
+.seat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* primera clase: 4 columnas */
+    gap: 10px; /* menos espacio entre asientos */
+    justify-items: center;
 }
 
-/* Estilo para cada asiento */
-.seat {
-    width: 50px;
-    height: 50px;
-    margin: 5px;
-    border: 1px solid #2980b9;
-    color: white;
+.grid-medium { grid-template-columns: repeat(5, 1fr); }
+.grid-large { grid-template-columns: repeat(6, 1fr); }
+
+/* ===========================
+   ASIENTO INDIVIDUAL PEQUEÑO
+============================ */
+.seat-btn {
+    width: 65px; /* más pequeño */
+    height: 65px;
     font-weight: bold;
+    font-size: 10px; /* más pequeño */
+    border-radius: 8px;
+    border: none;
+    color: white !important;
     cursor: pointer;
-    display: inline-block;
+    transition: 0.2s;
 }
 
-/* Colores por clase */
-.first-class {
-    background-color: #f39c12;
+.seat-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.12);
 }
 
-.business-class {
-    background-color: #16a085;
+.seat-btn:hover::after {
+    content: attr(title);
+    position: absolute;
+    background: #003366;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    transform: translateY(-30px);
 }
 
-.economy-class {
-    background-color: #e74c3c;
-}
 
-/* Estilos adicionales */
-.aisle {
-    display: inline-block;
-    width: 30px;
-    height: 50px;
-    background-color: #ecf0f1;
-    border: 1px solid #bdc3c7;
-}
+.libre { background: #2ecc71 !important; }
+.ocupado { background: #e74c3c !important; cursor: not-allowed !important; opacity: 0.7; }
+.seleccionado { background: #f39c12 !important; }
 
-/* Estado de los asientos */
-.seat.libre {
-    background-color: #3498db; /* Azul para asientos libres */
-}
-
-.seat.ocupado {
-    background-color: #e74c3c; /* Rojo para asientos ocupados */
-}
-
-.seat.seleccionado {
-    background-color: #f39c12; /* Amarillo para asientos seleccionados */
-}
-
-.seat:hover {
-    background-color: #2980b9;
-}
 
         </style>
 
-
     </ui:define>
+
 </ui:composition>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Dibujo dinámico de polígonos en Leaflet</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"/>
+    <style>
+        #map { height: 500px; }
+    </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+<script>
+
+    // Crear el mapa
+    const map = L.map('map').setView([40.73, -73.93], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19
+    }).addTo(map);
+
+    // Array donde guardamos los puntos clickeados
+    let polygonPoints = [];
+
+    // Polilínea temporal para ver cómo se construye el polígono en tiempo real
+    let tempLine = L.polyline([], { color: "blue" }).addTo(map);
+
+    // Polígono final (cuando se cierra)
+    let polygonLayer = null;
+
+    // Evento de click para agregar puntos
+    map.on("click", function (e) {
+        const latlng = e.latlng;
+        polygonPoints.push(latlng);
+
+        // Actualiza la línea temporal
+        tempLine.setLatLngs(polygonPoints);
+    });
+
+    // Doble clic: cerrar polígono
+    map.on("dblclick", function () {
+        if (polygonPoints.length >= 3) {
+            // Borramos la línea
+            map.removeLayer(tempLine);
+
+            // Crear polígono final
+            polygonLayer = L.polygon(polygonPoints, {
+                color: "red",
+                fillColor: "#f03",
+                fillOpacity: 0.5
+            }).addTo(map);
+
+            console.log("Polígono creado:", polygonPoints);
+        }
+
+        // Reiniciar para dibujar uno nuevo
+        polygonPoints = [];
+        tempLine = L.polyline([], { color: "blue" }).addTo(map);
+    });
+
+</script>
+
+</body>
+</html>

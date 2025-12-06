@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Rutas Aéreas Reales</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css">
+    <style>
+        body, html { margin:0; padding:0; }
+        #map { width:100vw; height:100vh; }
+        #panel {
+            position:absolute;
+            top:10px;
+            left:10px;
+            z-index:9999;
+            background:white;
+            padding:10px;
+            border-radius:6px;
+            width:280px;
+            font-family:Arial;
+            box-shadow:0 0 8px rgba(0,0,0,0.3);
+        }
+        button { width:100%; margin-top:5px; padding:5px; }
+    </style>
+</head>
+<body>
+
+<div id="panel">
+    <h3>Rutas de Vuelo</h3>
+    <p>Click en aeropuertos para crear la ruta:</p>
+    <ul id="listaRuta"></ul>
+    <button onclick="resetRuta()">Resetear Ruta</button>
+    <div id="info"></div>
+</div>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+<script>
+    // ------------------------------
+    // Aeropuertos
+    // ------------------------------
+    const aeropuertos = [
+    // ---------- Norteamérica (20) ----------
+    { code:"JFK", name:"New York - JFK", coords:[40.6413, -73.7781] },
+    { code:"LAX", name:"Los Angeles - LAX", coords:[33.9416, -118.4085] },
+    { code:"ORD", name:"Chicago - O'Hare", coords:[41.9742, -87.9073] },
+    { code:"MIA", name:"Miami Intl", coords:[25.7959, -80.2870] },
+    { code:"DFW", name:"Dallas - Fort Worth", coords:[32.8998, -97.0403] },
+    { code:"YYZ", name:"Toronto Pearson", coords:[43.6777, -79.6248] },
+    { code:"YVR", name:"Vancouver Intl", coords:[49.1947, -123.1792] },
+    { code:"ATL", name:"Atlanta Hartsfield", coords:[33.6407, -84.4277] },
+    { code:"PHX", name:"Phoenix Sky Harbor", coords:[33.4342, -112.0116] },
+    { code:"SEA", name:"Seattle-Tacoma Intl", coords:[47.4502, -122.3088] },
+    { code:"BOS", name:"Boston Logan", coords:[42.3656, -71.0096] },
+    { code:"DEN", name:"Denver Intl", coords:[39.8561, -104.6737] },
+    { code:"IAD", name:"Washington Dulles", coords:[38.9531, -77.4565] },
+    { code:"SFO", name:"San Francisco Intl", coords:[37.6213, -122.3790] },
+    { code:"MSP", name:"Minneapolis-St. Paul", coords:[44.8848, -93.2223] },
+    { code:"CLT", name:"Charlotte Douglas", coords:[35.2140, -80.9431] },
+    { code:"MCO", name:"Orlando Intl", coords:[28.4312, -81.3081] },
+    { code:"PDX", name:"Portland Intl", coords:[45.5887, -122.5975] },
+    { code:"SAN", name:"San Diego Intl", coords:[32.7338, -117.1933] },
+    { code:"TPA", name:"Tampa Intl", coords:[27.9755, -82.5332] },
+
+    // ---------- Centroamérica (20) ----------
+    { code:"MEX", name:"Ciudad de México", coords:[19.4361, -99.0719] },
+    { code:"PTY", name:"Panamá Tocumen", coords:[9.0718, -79.3839] },
+    { code:"SJO", name:"San José Costa Rica", coords:[9.9939, -84.2088] },
+    { code:"SAL", name:"San Salvador", coords:[13.4403, -89.0550] },
+    { code:"GUA", name:"Guatemala La Aurora", coords:[14.5833, -90.5278] },
+    { code:"BZE", name:"Belize Intl", coords:[17.5390, -88.3081] },
+    { code:"SAP", name:"San Pedro Sula", coords:[15.4528, -87.9236] },
+    { code:"TIA", name:"Tegucigalpa", coords:[14.0611, -87.2178] },
+    { code:"CUR", name:"Curacao Hato", coords:[12.1880, -68.9590] },
+    { code:"LIR", name:"Liberia Costa Rica", coords:[10.5930, -85.5444] },
+    { code:"HAV", name:"La Habana", coords:[23.0731, -82.3780] },
+    { code:"PAP", name:"Puerto Príncipe Haiti", coords:[18.5797, -72.2920] },
+    { code:"BGI", name:"Bridgetown", coords:[13.0746, -59.4927] },
+    { code:"SAV", name:"Savannah Intl", coords:[32.1276, -81.2021] },
+    { code:"NAS", name:"Nassau Intl", coords:[25.0392, -77.4662] },
+    { code:"PUJ", name:"Punta Cana", coords:[18.5671, -68.3638] },
+    { code:"SDQ", name:"Santo Domingo", coords:[18.4294, -69.6686] },
+    { code:"GCM", name:"Grand Cayman", coords:[19.2922, -81.3583] },
+    { code:"SJU", name:"San Juan Luis Muñoz", coords:[18.4393, -66.0018] },
+    { code:"PAP", name:"Port-au-Prince", coords:[18.5797, -72.2920] },
+
+    // ---------- Sudamérica (20) ----------
+    { code:"GRU", name:"Sao Paulo Guarulhos", coords:[-23.4356, -46.4731] },
+    { code:"EZE", name:"Buenos Aires Ezeiza", coords:[-34.8222, -58.5358] },
+    { code:"SCL", name:"Santiago de Chile", coords:[-33.3930, -70.7858] },
+    { code:"BOG", name:"Bogotá El Dorado", coords:[4.7016, -74.1469] },
+    { code:"LIM", name:"Lima Jorge Chávez", coords:[-12.0219, -77.1143] },
+    { code:"GIG", name:"Rio de Janeiro Galeão", coords:[-22.8090, -43.2506] },
+    { code:"CUN", name:"Cancún Intl", coords:[21.0361, -86.8771] },
+    { code:"MVD", name:"Montevideo Carrasco", coords:[-34.8381, -56.0308] },
+    { code:"EYP", name:"Asunción Silvio Pettirossi", coords:[-25.2607, -57.5758] },
+    { code:"VVI", name:"Santa Cruz Viru Viru", coords:[-17.6440, -63.1350] },
+    { code:"SDU", name:"Rio de Janeiro Santos Dumont", coords:[-22.9108, -43.1631] },
+    { code:"UIO", name:"Quito Mariscal Sucre", coords:[-0.1292, -78.3571] },
+    { code:"GYE", name:"Guayaquil", coords:[-2.1574, -79.8836] },
+    { code:"BEL", name:"Belem", coords:[-1.3797, -48.4760] },
+    { code:"FOR", name:"Fortaleza", coords:[-3.7769, -38.5320] },
+    { code:"CWB", name:"Curitiba Afonso Pena", coords:[-25.5289, -49.1750] },
+    { code:"PMW", name:"Palmas", coords:[-10.2320, -48.3270] },
+    { code:"BRC", name:"San Carlos de Bariloche", coords:[-41.1516, -71.1570] },
+    { code:"CGB", name:"Cuiabá", coords:[-15.6526, -56.1169] },
+    { code:"REC", name:"Recife", coords:[-8.1269, -34.9236] },
+
+    // ---------- Europa (20) ----------
+    { code:"LHR", name:"London Heathrow", coords:[51.4700, -0.4543] },
+    { code:"CDG", name:"Paris Charles de Gaulle", coords:[49.0097, 2.5479] },
+    { code:"FRA", name:"Frankfurt", coords:[50.0379, 8.5622] },
+    { code:"AMS", name:"Amsterdam Schiphol", coords:[52.3105, 4.7683] },
+    { code:"MAD", name:"Madrid Barajas", coords:[40.4983, -3.5676] },
+    { code:"LIS", name:"Lisbon Humberto Delgado", coords:[38.7742, -9.1342] },
+    { code:"DUB", name:"Dublin", coords:[53.4213, -6.2701] },
+    { code:"ZRH", name:"Zurich", coords:[47.4581, 8.5553] },
+    { code:"ATH", name:"Athens Eleftherios Venizelos", coords:[37.9364, 23.9445] },
+    { code:"MXP", name:"Milan Malpensa", coords:[45.6300, 8.7231] },
+    { code:"BCN", name:"Barcelona El Prat", coords:[41.2974, 2.0833] },
+    { code:"OSL", name:"Oslo Gardermoen", coords:[60.1939, 11.1004] },
+    { code:"CPH", name:"Copenhagen Kastrup", coords:[55.6181, 12.6563] },
+    { code:"BRU", name:"Brussels", coords:[50.9010, 4.4844] },
+    { code:"VIE", name:"Vienna", coords:[48.1103, 16.5697] },
+    { code:"ARN", name:"Stockholm Arlanda", coords:[59.6519, 17.9186] },
+    { code:"HEL", name:"Helsinki Vantaa", coords:[60.3172, 24.9633] },
+    { code:"CPH", name:"Copenhagen", coords:[55.6181, 12.6563] },
+    { code:"STN", name:"London Stansted", coords:[51.8850, 0.2350] },
+    { code:"LGW", name:"London Gatwick", coords:[51.1537, -0.1821] },
+
+    // ---------- Asia (20) ----------
+    { code:"HND", name:"Tokyo Haneda", coords:[35.5494, 139.7798] },
+    { code:"NRT", name:"Tokyo Narita", coords:[35.773, 140.386] },
+    { code:"PEK", name:"Beijing Capital", coords:[40.0799, 116.6031] },
+    { code:"PVG", name:"Shanghai Pudong", coords:[31.1443, 121.8083] },
+    { code:"DXB", name:"Dubai Intl", coords:[25.2532, 55.3657] },
+    { code:"SIN", name:"Singapore Changi", coords:[1.3644, 103.9915] },
+    { code:"ICN", name:"Seoul Incheon", coords:[37.4602, 126.4407] },
+    { code:"BOM", name:"Mumbai Chhatrapati Shivaji", coords:[19.0896, 72.8656] },
+    { code:"DEL", name:"Delhi Indira Gandhi", coords:[28.5562, 77.1000] },
+    { code:"BKK", name:"Bangkok Suvarnabhumi", coords:[13.6899, 100.7473] },
+    { code:"KUL", name:"Kuala Lumpur Intl", coords:[2.7456, 101.7093] },
+    { code:"HKG", name:"Hong Kong Intl", coords:[22.3080, 113.9185] },
+    { code:"CGK", name:"Jakarta Soekarno-Hatta", coords:[-6.1256, 106.6559] },
+    { code:"TPE", name:"Taipei Taoyuan", coords:[25.0777, 121.2330] },
+    { code:"MNL", name:"Manila Ninoy Aquino", coords:[14.5086, 121.0196] },
+    { code:"DEL", name:"Delhi Indira Gandhi", coords:[28.5562, 77.1000] },
+    { code:"SHA", name:"Shanghai Hongqiao", coords:[31.2000, 121.3360] },
+    { code:"CAN", name:"Guangzhou Baiyun", coords:[23.3924, 113.2988] },
+    { code:"NRT", name:"Narita Intl", coords:[35.7767, 140.3188] },
+    { code:"ICN", name:"Incheon Intl", coords:[37.4602, 126.4407] },
+
+    // ---------- África (20) ----------
+    { code:"JNB", name:"Johannesburg OR Tambo", coords:[-26.1337, 28.2420] },
+    { code:"CPT", name:"Cape Town Intl", coords:[-33.9648, 18.6017] },
+    { code:"CAI", name:"Cairo Intl", coords:[30.1219, 31.4056] },
+    { code:"NBO", name:"Nairobi Jomo Kenyatta", coords:[-1.3192, 36.9275] },
+    { code:"LOS", name:"Lagos Murtala Muhammed", coords:[6.5774, 3.3212] },
+    { code:"ACC", name:"Accra Kotoka", coords:[5.6052, -0.1668] },
+    { code:"CMN", name:"Casablanca Mohammed V", coords:[33.3675, -7.5899] },
+    { code:"ADD", name:"Addis Ababa Bole", coords:[8.9778, 38.7999] },
+    { code:"DAR", name:"Dar es Salaam", coords:[-6.8781, 39.2026] },
+    { code:"KRT", name:"Khartoum", coords:[15.5906, 32.5531] },
+    { code:"ALG", name:"Algiers Houari Boumediene", coords:[36.6913, 3.2158] },
+    { code:"LBV", name:"Libreville", coords:[0.4580, 9.4125] },
+    { code:"LAD", name:"Luanda", coords:[-8.8583, 13.2318] },
+    { code:"ROB", name:"Monrovia", coords:[6.2333, -10.3622] },
+    { code:"FNA", name:"Freetown Lungi", coords:[8.6167, -13.1958] },
+    { code:"DUR", name:"Durban", coords:[-29.6140, 31.1199] },
+    { code:"MRU", name:"Mauritius Sir Seewoosagur", coords:[-20.4300, 57.6833] },
+    { code:"TUN", name:"Tunis Carthage", coords:[36.8519, 10.2272] },
+    { code:"KGL", name:"Kigali", coords:[-1.9686, 30.1395] },
+    { code:"SDV", name:"Sindhri Intl", coords:[25.0786, 67.2015] },
+
+    // ---------- Oceanía (20) ----------
+    { code:"SYD", name:"Sydney Kingsford Smith", coords:[-33.9399, 151.1753] },
+    { code:"AKL", name:"Auckland Intl", coords:[-37.0082, 174.7917] },
+    { code:"MEL", name:"Melbourne", coords:[-37.6733, 144.8433] },
+    { code:"BNE", name:"Brisbane", coords:[-27.3842, 153.1175] },
+    { code:"PER", name:"Perth", coords:[-31.9403, 115.9677] },
+    { code:"NOU", name:"Nouméa La Tontouta", coords:[-22.0142, 166.2120] },
+    { code:"WLG", name:"Wellington", coords:[-41.3272, 174.8052] },
+    { code:"HNL", name:"Honolulu", coords:[21.3187, -157.9224] },
+    { code:"PPT", name:"Papeete Tahiti", coords:[-17.5537, -149.6060] },
+    { code:"ADL", name:"Adelaide", coords:[-34.9450, 138.5310] },
+    { code:"CNS", name:"Cairns", coords:[-16.8851, 145.7550] },
+    { code:"NAN", name:"Nadi Fiji", coords:[-17.7552, 177.4430] },
+    { code:"OOL", name:"Gold Coast", coords:[-28.1642, 153.5050] },
+    { code:"BNE", name:"Brisbane", coords:[-27.3842, 153.1175] },
+    { code:"AKL", name:"Auckland Intl", coords:[-37.0082, 174.7917] },
+    { code:"HBA", name:"Hobart", coords:[-42.8378, 147.5052] },
+    { code:"MCY", name:"Sunshine Coast", coords:[-26.6020, 153.0920] },
+    { code:"DRW", name:"Darwin", coords:[-12.4140, 130.8769] },
+    { code:"MEL", name:"Melbourne", coords:[-37.6733, 144.8433] },
+    { code:"SYD", name:"Sydney", coords:[-33.9399, 151.1753] }
+];
+
+
+
+
+
+    // ------------------------------
+    // Crear mapa
+    // ------------------------------
+    const map = L.map('map').setView([20,0],2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19 }).addTo(map);
+
+    // ------------------------------
+    // Variables de ruta
+    // ------------------------------
+    let ruta = [];
+    let listaRuta = document.getElementById("listaRuta");
+    let rutaLayer = null;
+    let infoDiv = document.getElementById("info");
+
+    // ------------------------------
+    // Marcadores
+    // ------------------------------
+    aeropuertos.forEach(a=>{
+        const marker = L.marker(a.coords).addTo(map);
+        marker.bindPopup(`<b>${a.code}</b><br>${a.name}`);
+        marker.on("click", ()=> agregarPuntoRuta(a));
+    });
+
+    // ------------------------------
+    // Funciones
+    // ------------------------------
+    function agregarPuntoRuta(a){
+        ruta.push(a);
+        actualizarLista();
+        dibujarRuta();
+    }
+
+    function actualizarLista(){
+        listaRuta.innerHTML = "";
+        ruta.forEach((a,i)=> listaRuta.innerHTML += `<li>${i+1}. ${a.code} - ${a.name}</li>`);
+    }
+
+    function resetRuta(){
+        ruta = [];
+        if(rutaLayer) map.removeLayer(rutaLayer);
+        listaRuta.innerHTML = "";
+        infoDiv.innerHTML = "";
+    }
+
+    // ------------------------------
+    // Haversine distance
+    // ------------------------------
+    function dist(a,b){
+        const R=6371;
+        const dLat=(b[0]-a[0])*Math.PI/180;
+        const dLng=(b[1]-a[1])*Math.PI/180;
+        const lat1=a[0]*Math.PI/180;
+        const lat2=b[0]*Math.PI/180;
+        const h=Math.sin(dLat/2)**2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLng/2)**2;
+        return 2*R*Math.asin(Math.sqrt(h));
+    }
+
+    // ------------------------------
+    // Gran círculo / Curvas suaves
+    // ------------------------------
+    function generarCurva(a,b, pasos=100){
+        const lat1=a[0]*Math.PI/180, lon1=a[1]*Math.PI/180;
+        const lat2=b[0]*Math.PI/180, lon2=b[1]*Math.PI/180;
+        const d=2*Math.asin(Math.sqrt(Math.sin((lat1-lat2)/2)**2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin((lon1-lon2)/2)**2));
+        let ruta=[];
+        for(let i=0;i<pasos;i++){
+            const f=i/(pasos-1);
+            const A=Math.sin((1-f)*d)/Math.sin(d);
+            const B=Math.sin(f*d)/Math.sin(d);
+            const x=A*Math.cos(lat1)*Math.cos(lon1)+B*Math.cos(lat2)*Math.cos(lon2);
+            const y=A*Math.cos(lat1)*Math.sin(lon1)+B*Math.cos(lat2)*Math.sin(lon2);
+            const z=A*Math.sin(lat1)+B*Math.sin(lat2);
+            const lat=Math.atan2(z,Math.sqrt(x*x+y*y))*180/Math.PI;
+            const lon=Math.atan2(y,x)*180/Math.PI;
+            ruta.push([lat,lon]);
+        }
+        return ruta;
+    }
+
+    // ------------------------------
+    // Dibujar ruta con curvas
+    // ------------------------------
+    function dibujarRuta(){
+        if(rutaLayer) map.removeLayer(rutaLayer);
+        if(ruta.length<2) return;
+
+        let coords = [];
+        let distanciaTotal = 0;
+
+        for(let i=1;i<ruta.length;i++){
+            const curva = generarCurva(ruta[i-1].coords, ruta[i].coords, 50);
+            coords = coords.concat(curva);
+
+            // distancia total
+            distanciaTotal += dist(ruta[i-1].coords, ruta[i].coords);
+        }
+
+        rutaLayer = L.polyline(coords, {color:"red", weight:3}).addTo(map);
+        map.fitBounds(rutaLayer.getBounds());
+
+        const velocidad = 900; // km/h
+        const eta = (distanciaTotal/velocidad).toFixed(2);
+
+        infoDiv.innerHTML = `<b>Distancia Total:</b> ${distanciaTotal.toFixed(1)} km<br>
+                             <b>ETA aprox:</b> ${eta} h`;
+
+        animarAvion(coords);
+    }
+
+    // ------------------------------
+    // Avión animado
+    // ------------------------------
+    let avionMarker=null;
+    function animarAvion(coords){
+        if(!coords || coords.length<2) return;
+        if(avionMarker) map.removeLayer(avionMarker);
+
+        const planeIcon = L.divIcon({className:"", html:'✈️', iconSize:[30,30]});
+        let idx=0;
+        avionMarker=L.marker(coords[0], {icon:planeIcon}).addTo(map);
+
+        function mover(){
+            if(idx>=coords.length-1) return;
+            avionMarker.setLatLng(coords[idx]);
+
+            // rotación
+            const p1=coords[idx];
+            const p2=coords[idx+1];
+            const ang = Math.atan2(p2[1]-p1[1], p2[0]-p1[0])*180/Math.PI + 90;
+            avionMarker.getElement().style.transform = `rotate(${ang}deg)`;
+
+            idx++;
+            setTimeout(mover,50);
+        }
+        mover();
+    }
+</script>
+
+</body>
+</html>

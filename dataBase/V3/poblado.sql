@@ -868,7 +868,7 @@ where prt.id_aeropuerto is null;
 -- Insertar vuelos con los RUTs de los pilotos correctos y estados de vuelo
 INSERT INTO Vuelo (ID_VUELO, Numero_Vuelo, Fecha_Hora_Salida, Fecha_Hora_Llegada, ID_ESTADO_VUELO, ID_AVION, RUT_PILOTO, ID_AEROLINEA) VALUES
   (nextval('vuelo_seq'),'LA8117', '2025-08-01 14:30', '2025-08-01 17:45', 1, 1, '12345678-9', 1), -- Vuelo 1: SCL -> MVD (Parte del Itinerario 1)
-  (nextval('vuelo_seq'),'LA8117', '2025-08-01 18:55', '2025-08-01 21:30', 1, 1, '12345678-9', 1), -- Vuelo 2: MVD -> GRU (Parte del Itinerario 1)
+  (nextval('vuelo_seq'),'LA8118', '2025-08-01 18:55', '2025-08-01 21:30', 1, 1, '12345678-9', 1), -- Vuelo 2: MVD -> GRU (Parte del Itinerario 1)
   (nextval('vuelo_seq'),'LA8180', '2025-08-01 22:50', '2025-08-02 07:35', 1, 2, '98765432-1', 1), -- Vuelo 3: GRU -> JFK (Parte del Itinerario 1)
   (nextval('vuelo_seq'),'LA8989', '2025-08-02 09:55', '2025-08-02 12:50', 1, 3, '98765432-1', 2), -- Vuelo 4: JFK -> LAX (Parte del Itinerario 1)
   (nextval('vuelo_seq'),'LA650',  '2025-08-01 07:50', '2025-08-01 10:40', 1, 1, '12345678-9', 1), -- Vuelo 5: SCL -> LIM (Itinerarios 2, 3 y 5)
@@ -1103,32 +1103,35 @@ INSERT INTO Asignacion_Puerta (ID_SEGMENTO, ID_PUERTA) VALUES (15, 34);
 INSERT INTO Asignacion_Puerta (ID_SEGMENTO, ID_PUERTA) VALUES (16, 20);
 
 
-INSERT INTO Tarifa (ID_TARIFA, Nombre) VALUES
-(1, 'Básica'),
-(2, 'Flexible'),
-(3, 'Premium');
+INSERT INTO Tarifa (Nombre) VALUES
+('Básica'),
+('Flexible'),
+('Premium');
 
-INSERT INTO Caracteristica_Tarifa (ID_CARACTERISTICA, Nombre, Descripcion) VALUES
-(1, 'Permite Cambios', 'Permite cambiar la reserva'),
-(2, 'Horas Minimas Cambio', 'Horas mínimas antes del vuelo para cambiar'),
-(3, 'Permite Cancelacion', 'Permite cancelar la reserva');
+-- Características
+INSERT INTO Caracteristica_Tarifa (Nombre, Descripcion, Tipo_Dato) VALUES
+('Permite Cambios Asiento', 'Permite cambiar los asiento luego de la compra', 'boolean'),
+('Horas Minimas Cambio Asiento', 'Horas mínimas antes del vuelo para cambiar', 'int'),
+('Permite Cancelacion', 'Permite cancelar la reserva', 'boolean');
 
--- Básica
-INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor) VALUES
-(1, 1, 'false'),  -- Permite_Cambios
-(1, 3, 'true');  -- Permite_Cancelacion
+-- Tarifa Básica
+INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool) VALUES
+(1, 1, FALSE),
+(1, 3, TRUE);
 
--- Flexible
-INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor) VALUES
-(2, 1, 'true'),   -- Permite_Cambios
-(2, 2, '48'),     -- Horas_Minimas_Cambio
-(2, 3, 'true');   -- Permite_Cancelacion
+-- Tarifa Flexible
+INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool) VALUES
+(2, 1, TRUE),
+(2, 3, TRUE);
+INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Int) VALUES
+(2, 2, 48);
 
--- Premium
-INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor) VALUES
-(3, 1, 'true'),          -- Permite_Cambios
-(3, 2, '24'),             -- Horas_Minimas_Cambio
-(3, 3, 'true');          -- Permite_Cancelacion
+-- Tarifa Premium
+INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool) VALUES
+(3, 1, TRUE),
+(3, 3, TRUE);
+INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Int) VALUES
+(3, 2, 24);
 
 
 -- 10. Itinerarios (IDs hardcoded)
@@ -1347,3 +1350,9 @@ select * from asignacion_puerta;
 
 
 
+/*INSERT INTO aeropuertos (nombre, ciudad, codigo_iata, latitud, longitud, ubicacion)
+VALUES
+('Aeropuerto Internacional de la Ciudad de México', 'Ciudad de México', 'MMMX', 19.4361, -99.0721, ST_SetSRID(ST_MakePoint(-99.0721, 19.4361), 4326)),
+('Aeropuerto Internacional de Madrid-Barajas', 'Madrid', 'LEMD', 40.4531, -3.5772, ST_SetSRID(ST_MakePoint(-3.5772, 40.4531), 4326)),
+('Aeropuerto de Barcelona-El Prat', 'Barcelona', 'LEBL', 41.2973, 2.0833, ST_SetSRID(ST_MakePoint(2.0833, 41.2973), 4326)),
+('Aeropuerto de Los Ángeles', 'Los Ángeles', 'KLAX', 33.9416, -118.4085, ST_SetSRID(ST_MakePoint(-118.4085, 33.9416), 4326));*/

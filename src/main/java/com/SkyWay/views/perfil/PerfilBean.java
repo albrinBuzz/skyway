@@ -185,11 +185,13 @@ public class PerfilBean implements Serializable {
 			Logger.logInfo("la tarifa no permite cambios");
 
 
-			FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, "Error","La tarifa no permite cambios");
+			//FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, "Error","La tarifa no permite cambios");
 
-			PrimeFaces.current().dialog().showMessageDynamic(message);
+			//PrimeFaces.current().dialog().showMessageDynamic(message);
 
-			addMessage(FacesMessage.SEVERITY_INFO, "Error", "La tarifa no permite cambios");
+			//addMessage(FacesMessage.SEVERITY_ERROR, "Error", "La tarifa no permite cambios");
+			FacesContext.getCurrentInstance().
+					addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "La tarifa no permite cambios"));
 
 			// No redirect aquí para que el mensaje se muestre en la misma vista
 		} else {

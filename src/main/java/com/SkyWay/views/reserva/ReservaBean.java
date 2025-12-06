@@ -2,6 +2,7 @@ package com.SkyWay.views.reserva;
 
 
 
+import com.SkyWay.modules.asiento.domain.service.AsientoService;
 import com.SkyWay.modules.asiento.presentation.dto.InfoAsientoDTO;
 import com.SkyWay.modules.estadoreserva.domain.service.EstadoReservaService;
 import com.SkyWay.modules.itinerario.domain.model.Itinerario;
@@ -19,11 +20,13 @@ import com.SkyWay.modules.usuario.domain.service.UsuarioService;
 import com.SkyWay.modules.vuelo.domain.service.VueloService;
 import com.SkyWay.util.Logger;
 import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
 import jakarta.servlet.http.HttpSession;
+import org.apache.juli.logging.Log;
 import org.primefaces.PrimeFaces;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -32,10 +35,11 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Named("reservaBean")
-@ViewScoped
+@RequestScoped
 public class ReservaBean implements Serializable {
 
     //private ClienteDTO cliente;
@@ -61,6 +65,9 @@ public class ReservaBean implements Serializable {
 
     @Autowired
     private TarifaService tarifaService;
+    @Autowired
+    private AsientoService asientoService;
+
 
     @Autowired
     private ItinerarioTarifaService itinerarioTarifaService;
@@ -80,7 +87,7 @@ public class ReservaBean implements Serializable {
 
     @PostConstruct
     public void init() {
-        // En una app real podrías obtener esta info desde sesión, o un paso previo
+        // En una app real podrías obtener esta logInfo desde sesión, o un paso previo
         //this.cliente = new ClienteDTO("Juan Pérez", "juan@example.com", "123456789");
         total=0;
 
@@ -121,102 +128,136 @@ public class ReservaBean implements Serializable {
     }
 
     // Acción del botón
-    public String confirmarReserva() {
+    public void confirmarReserva() {
         // Aquí guardas la reserva en BD o llamas al servicio
         //System.out.println("Reserva confirmada para: " + cliente.getNombre());
+        boolean resultadoDisp = false;
 
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
-        var reserva=new Reserva();
-        if (usuario==null){
-            Logger.logInfo("no logeado");
-            var usuarioGuardado= usuarioService.save(pasajero
-                    .getUsuario());
+        for (Map.Entry<Integer, List<InfoAsientoDTO>> entry : asientosSeleccionados.entrySet()) {
+            Integer idVuelo = entry.getKey();
+            List<InfoAsientoDTO> asientos = entry.getValue();
 
-            pasajero.setUsuario(usuarioGuardado);
-
-            var pasajero= pasajeroService.save(this.pasajero);
-            reserva.setPasajero(pasajero);
-        }else {
-            Logger.logInfo("logeado");
-            this.pasajero= pasajeroService.findById(usuario.getRut()).get();
-            reserva.setPasajero(pasajero);
-        }
-
-
-        var estatus=estadoReservaService.findById(2).get();
-
-        //var pasajero=pasajeroService.findById("12345678-9").get();
-
-        reserva.setEstadoReservaBean(estatus);
-
-        reserva.setTotal(new BigDecimal(total));
-        reserva.setFechaReserva(new Timestamp(System.currentTimeMillis()));
-
-        var reservaGuardada= reservaService.save(reserva);
-        AtomicReference<String> mensaje = new AtomicReference<>();
-        asientosSeleccionados.forEach((idVuelo, asientos) -> {
-            asientos.forEach(asiento -> {
+            for (InfoAsientoDTO asiento : asientos) {
                 Logger.logInfo("Vuelo: " + idVuelo + ", Asiento: " + asiento.getNumeroAsiento());
 
-                Integer[]asientosIds={asiento.getIdAsiento()};
-
+                Integer[] asientosIds = { asiento.getIdAsiento() };
 
                 try {
-                    Logger.logInfo(reservaGuardada.toString());
-                    Logger.logInfo(pasajero.getRut());
                     Logger.logInfo(Arrays.toString(asientosIds));
-                    //Logger.logInfo("ID de reserva antes de llamar al procedimiento: " + reservaGuardada.getIdReserva());
-                    //String mensaje = reservaService.confirmarReserva(idVuelo, asientos, "12345678-9",reservaGuardada.getIdReserva());
-                     mensaje.set(reservaService.confirmarReserva(idVuelo, asientosIds, pasajero.getRut(), reservaGuardada.getIdReserva()));
-                    Logger.logInfo(mensaje.get());
-
-
+                    // Llamada al servicio para verificar disponibilidad
+                    var resultado = asientoService.verificarDisponibilidad(idVuelo, asientosIds);
+                    Logger.logInfo(resultado);
+                    if (resultado.isEmpty()||resultado.isBlank()) {
+                        resultadoDisp = true;  // Marcar como disponible si no hay error
+                    }
 
                 } catch (SQLException e) {
-                    Logger.logInfo("Error SQL en la reserva: " + e.getMessage());
-
-                    FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error en la reserva", e.getMessage());
-                    PrimeFaces.current().dialog().showMessageDynamic(message);
+                    Logger.logInfo("Error SQL en la reserva. verificando disponibilidad: " + e.getMessage());
+                    resultadoDisp = false;
+                    // Otros manejos de errores...
                 } catch (Exception ex) {
-                    Logger.logInfo("Error inesperado: " + ex.getMessage());
-                    //FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error inesperado", ex.getMessage());
-                    //PrimeFaces.current().dialog().showMessageDynamic(message);
-
-                    addMessage(FacesMessage.SEVERITY_ERROR, "Error En la reserva", ex.getMessage());
+                    Logger.logInfo("Error inesperado: " + ex.getClass().getName());
+                    resultadoDisp = false;
+                    // Otros manejos de excepciones...
                 }
+            }
+        }
+
+        Logger.logInfo(String.valueOf(resultadoDisp));
+        if (resultadoDisp) {
+
+            Logger.logInfo("confirma la reserva");
+
+            Usuario usuario = (Usuario) session.getAttribute("usuario");
+            var reserva = new Reserva();
+            if (usuario == null) {
+                Logger.logInfo("no logeado");
+                var usuarioGuardado = usuarioService.save(pasajero
+                        .getUsuario());
+
+                pasajero.setUsuario(usuarioGuardado);
+
+                var pasajero = pasajeroService.save(this.pasajero);
+                reserva.setPasajero(pasajero);
+            } else {
+                Logger.logInfo("logeado");
+                this.pasajero = pasajeroService.findById(usuario.getRut()).get();
+                reserva.setPasajero(pasajero);
+            }
+
+
+            var estatus = estadoReservaService.findById(2).get();
+
+            //var pasajero=pasajeroService.findById("12345678-9").get();
+
+            reserva.setEstadoReservaBean(estatus);
+
+            reserva.setTotal(new BigDecimal(total));
+            reserva.setFechaReserva(new Timestamp(System.currentTimeMillis()));
+
+            var reservaGuardada = reservaService.save(reserva);
+            AtomicReference<String> mensaje = new AtomicReference<>();
+            asientosSeleccionados.forEach((idVuelo, asientos) -> {
+                asientos.forEach(asiento -> {
+                    Logger.logInfo("Vuelo: " + idVuelo + ", Asiento: " + asiento.getNumeroAsiento());
+
+                    Integer[] asientosIds = {asiento.getIdAsiento()};
+
+
+                    try {
+                        Logger.logInfo(reservaGuardada.toString());
+                        Logger.logInfo(pasajero.getRut());
+                        Logger.logInfo(Arrays.toString(asientosIds));
+                        //Logger.logInfo("ID de reserva antes de llamar al procedimiento: " + reservaGuardada.getIdReserva());
+                        //String mensaje = reservaService.confirmarReserva(idVuelo, asientos, "12345678-9",reservaGuardada.getIdReserva());
+                        mensaje.set(reservaService.confirmarReserva(idVuelo, asientosIds, pasajero.getRut(), reservaGuardada.getIdReserva()));
+                        Logger.logInfo(mensaje.get());
+
+
+                    } catch (SQLException e) {
+                        Logger.logInfo("Error SQL en la reserva: " + e.getMessage());
+
+                        FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error en la reserva", e.getMessage());
+                        PrimeFaces.current().dialog().showMessageDynamic(message);
+                    } catch (Exception ex) {
+                        Logger.logInfo("Error inesperado: " + ex.getMessage());
+                        //FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error inesperado", ex.getMessage());
+                        //PrimeFaces.current().dialog().showMessageDynamic(message);
+
+                        addMessage(FacesMessage.SEVERITY_ERROR, "Error En la reserva", ex.getMessage());
+                    }
+                });
+
+
             });
 
+            FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, "Reserva confirmada", mensaje.get());
+            PrimeFaces.current().dialog().showMessageDynamic(message);
+
+            addMessage(FacesMessage.SEVERITY_INFO, "Reserva confirmada", mensaje.get());
+
+            Logger.logInfo("arreglar la asignacion de la tarifa, solo se setea un vaalor preestablecido");
 
 
-        });
+            tarifasItinerarios.forEach((idItinerario, idTarifa) -> {
 
-        FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, "Reserva confirmada", mensaje.get());
-        PrimeFaces.current().dialog().showMessageDynamic(message);
+                var itinerario = itinerarioService.findById(idItinerario);
+                ReservaItinerario rersv = new ReservaItinerario();
+                rersv.setReserva(reservaGuardada);
+                rersv.setItinerario(itinerario);
+                Logger.logInfo(idItinerario + "->" + idTarifa);
+                var tarifaItinerario = itinerarioTarifaService.getByTarifaAndItinerario(idItinerario, idTarifa);
+                if (tarifaItinerario == null) {
+                    Logger.logInfo("No se encontró ItinerarioTarifa para itinerario " + idItinerario + " y tarifa " + idItinerario);
+                    throw new IllegalStateException("No se encontró ItinerarioTarifa para itinerario " + idItinerario + " y tarifa " + idTarifa);
+                }
+                rersv.setItinerarioTarifa(tarifaItinerario);
 
-        addMessage(FacesMessage.SEVERITY_INFO, "Reserva confirmada", mensaje.get());
-
-        Logger.logInfo("arreglar la asignacion de la tarifa, solo se setea un vaalor preestablecido");
-
-
-        tarifasItinerarios.forEach((idItinerario, idTarifa) -> {
-
-           var  itinerario=  itinerarioService.findById(idItinerario);
-            ReservaItinerario rersv=new ReservaItinerario();
-            rersv.setReserva(reservaGuardada);
-            rersv.setItinerario(itinerario);
-            Logger.logInfo(idItinerario+"->"+idTarifa);
-            var tarifaItinerario = itinerarioTarifaService.getByTarifaAndItinerario(idItinerario,idTarifa);
-            if (tarifaItinerario == null) {
-                Logger.logInfo("No se encontró ItinerarioTarifa para itinerario " + idItinerario + " y tarifa " + idItinerario);
-                throw new IllegalStateException("No se encontró ItinerarioTarifa para itinerario " + idItinerario + " y tarifa " + idTarifa);
-            }
-            rersv.setItinerarioTarifa(tarifaItinerario);
-
-            Logger.logInfo(tarifaItinerario.toString());
+                Logger.logInfo(tarifaItinerario.toString());
 
 
-            reservaItinerarioService.save(rersv);
-        });
+                reservaItinerarioService.save(rersv);
+            });
 
         /*for (Itinerario itinerario : itinerarios) {
 
@@ -232,11 +273,13 @@ public class ReservaBean implements Serializable {
 
         }*/
 
+        }
 
 
             // Redirigir a página de éxito
-        return "reservaExitosa.xhtml?faces-redirect=true";
+        //return "reservaExitosa.xhtml?faces-redirect=true";
     }
+
 
     public void addMessage(FacesMessage.Severity severity, String summary, String detail) {
         FacesContext.getCurrentInstance().
