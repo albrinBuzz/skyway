@@ -73,6 +73,7 @@ public class ItinerarioBusquedaBean implements Serializable {
     }
 
     public void buscarVuelosSoloIda() throws ParseException {
+        
         try {
             ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
             String redirectUrl = "/home/vuelos.xhtml"
@@ -81,6 +82,7 @@ public class ItinerarioBusquedaBean implements Serializable {
                     + "&fechaIda=" + fechaIda
                     + "&adultos=" + adultos
                     + "&trip=OW";
+                    
             externalContext.redirect(redirectUrl);
         } catch (IOException e) {
             e.printStackTrace();

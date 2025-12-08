@@ -195,6 +195,11 @@ public class VueloBean implements Serializable {
                 new FacesMessage(FacesMessage.SEVERITY_INFO, "Vuelo seleccionado", vuelo.getNumeroVuelo()));
     }
 
+    public void verTurnos(Vuelo vuelo) throws IOException {
+        FacesContext.getCurrentInstance().getExternalContext()
+                .redirect("/admin/turno/turno.xhtml?vueloId=" + vuelo.getIdVuelo());
+    }
+
     public void eliminarSegmento(SegmentoVuelo segmento) {
         if (segmento != null) {
             segmentoVueloService.deleteById(segmento.getIdSegmento());  // O el método correspondiente en tu servicio

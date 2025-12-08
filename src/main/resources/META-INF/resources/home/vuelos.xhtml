@@ -9,651 +9,207 @@
     <ui:define name="head">
         <title>Vuelos</title>
         <style type="text/css">
-            /* ======== GLOBAL ======== */
-           body {
-               background: #0A1224 !important;
-               color: #EAF0F6 !important;
-               font-family: 'Inter', 'Segoe UI', sans-serif;
-           }
-
-           /* Inputs, selects y textareas */
-           input, select, textarea, .p-inputtext, .ui-inputfield {
-               background: #11263F !important;
-               border: 1px solid #1E3A5C !important;
-               color: #EAF0F6 !important;
-               border-radius: 6px;
-               transition: 0.2s all;
-           }
-           input::placeholder {
-               color: #8B9BB8 !important;
-           }
-           input:focus, .p-inputtext:focus, .ui-inputfield:focus {
-               border-color: #4AA3FF !important;
-               box-shadow: 0 0 4px #4AA3FF !important;
-           }
-
-           /* Botones corporativos */
-           .ui-button, .p-button, .p-button-primary, .btn-primary {
-               background: #3B82F6 !important;
-               color: #fff !important;
-               border-radius: 8px !important;
-               border: none !important;
-               transition: 0.2s all;
-           }
-           .ui-button:hover, .p-button:hover {
-               background: #2563EB !important;
-               box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-           }
-
-           /* Panels, tarjetas y datatable */
-           .ui-panel, .ui-card, .p-panel, .p-card, .ui-datatable {
-               background: #101B33 !important;
-               border: 1px solid #1E2A44 !important;
-               color: #EAF0F6 !important;
-               border-radius: 10px;
-           }
-           .ui-datatable th {
-               background: #1D2A38 !important;
-               color: #84B8E6 !important;
-               font-weight: 600;
-               font-size: 13px;
-               text-transform: uppercase;
-           }
-           .ui-datatable td {
-               padding: 10px;
-               border: none;
-               color: #EAF0F6 !important;
-           }
-           .ui-datatable tr:hover {
-               background: #233244 !important;
-           }
-           .ui-datatable tr.ui-state-highlight {
-               background: #2E445C !important;
-           }
-
-           /* Sidebar minimalista */
-           .sidebar-corporativo {
-               background-color: #1A2430 !important;
-               color: #EAF0F6;
-               border-left: none;
-               box-shadow: none;
-               padding: 0;
-           }
-           .header-titulo {
-               padding: 18px 22px;
-               background: #1D2A38;
-               border-bottom: 1px solid #253445;
-               font-size: 18px;
-               font-weight: 600;
-               display: flex;
-               align-items: center;
-               gap: 10px;
-           }
-           .header-titulo i {
-               opacity: 0.75;
-               font-size: 20px;
-           }
-
-           /* Timeline de paradas */
-           .timeline-item::before {
-               width: 2px;
-               background: #2C3D4F;
-           }
-           .timeline-marker i {
-               font-size: 12px;
-               color: #84B8E6;
-           }
-
-           /* DataTable botones de acción */
-           .rounded-button.ui-button-flat.ui-button-sm {
-               padding: 4px 6px;
-               border: 1px solid #35516F !important;
-               background: transparent !important;
-               color: #9EC5E3 !important;
-               border-radius: 6px !important;
-           }
-           .rounded-button.ui-button-flat.ui-button-sm:hover {
-               background: #2E455F !important;
-           }
-
-           /* Panel expandido tarifas */
-           .panel-dark {
-               background: #1D2A38 !important;
-               border-left: 2px solid #35516F !important;
-               padding: 16px;
-           }
-           .panel-tarifa-dark {
-               background: #233244 !important;
-               border: 1px solid #2E3E50 !important;
-               border-radius: 6px;
-               padding: 12px;
-           }
-           .ui-badge-info {
-               background: #4A7FB2 !important;
-               color: #fff !important;
-           }
-
-           /* Descripción y secciones */
-           .section-title {
-               color: #A7BCCE !important;
-               font-size: 13px;
-               font-weight: 600;
-               letter-spacing: 0.4px;
-           }
-           .descripcion {
-               color: #C0CCD8 !important;
-               border-left: 2px solid #34475A;
-               padding-left: 12px;
-               font-size: 13px;
-           }
-
-
-
-           /* ======== DATA TABLE CORPORATIVA ======== */
-#tablaVuelos.ui-datatable {
-    background: #101B33 !important;
-    color: #EAF0F6 !important;
-    border: none !important;
-    width: 100%;
-    font-size: 14px;
-}
-
-/* Encabezados */
-#tablaVuelos .ui-datatable-thead > tr > th {
-    background: #1D2A38 !important;
-    color: #84B8E6 !important;
-    font-weight: 600;
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    border-bottom: 1px solid #253445 !important;
-    text-align: center;
-    padding: 12px 10px;
-}
-
-/* Filas */
-#tablaVuelos .ui-datatable-data > tr {
-    background: #101B33 !important;
-    border-bottom: 1px solid #1E2A44 !important;
-    transition: background 0.2s;
-}
-
-/* Hover */
-#tablaVuelos .ui-datatable-data > tr:hover {
-    background-color: #233244 !important;
-}
-
-/* Fila seleccionada */
-#tablaVuelos .ui-datatable-data > tr.ui-state-highlight {
-    background-color: #2E445C !important;
-    color: #fff !important;
-}
-
-/* Celdas */
-#tablaVuelos .ui-datatable-data td {
-    padding: 12px 10px !important;
-    text-align: center;
-    border: none;
-    color: #EAF0F6 !important;
-}
-
-/* Columnas de texto secundario */
-.text-secondary {
-    color: #B7C4D1 !important;
-    font-style: italic;
-}
-
-/* Columnas de acento (hora, precio, destacado) */
-.text-accent {
-    color: #3B82F6 !important;
-    font-weight: 600;
-}
-
-/* Textos positivos / negativos */
-.text-success {
-    color: #7FE2A5 !important;
-    font-weight: 600;
-}
-.text-danger {
-    color: #E57373 !important;
-    font-weight: 600;
-}
-
-/* Monospace para duración o códigos */
-.text-monospace {
-    font-family: monospace !important;
-}
-
-/* Botón “ver paradas” minimalista */
-.rounded-button.ui-button-flat.ui-button-sm {
-    padding: 4px 6px;
-    background: transparent !important;
-    border: 1px solid #35516F !important;
-    color: #84B8E6 !important;
-    border-radius: 6px !important;
-    transition: 0.2s all;
-}
-.rounded-button.ui-button-flat.ui-button-sm:hover {
-    background: #2E455F !important;
-    color: #fff !important;
-}
-
-/* Panel de tarifas expandido */
-.panel-dark {
-    background: #1D2A38 !important;
-    border-left: 2px solid #35516F !important;
-    padding: 16px;
-    border-radius: 6px;
-}
-.panel-tarifa-dark {
-    background: #233244 !important;
-    border: 1px solid #2E3E50 !important;
-    color: #EAF0F6;
-    padding: 12px;
-    border-radius: 6px;
-    margin-bottom: 12px;
-}
-.ui-badge-info {
-    background: #4A7FB2 !important;
-    color: #fff !important;
-}
-
-/* Botón “Seleccionar” */
-.ui-button-info {
-    background: #3B82F6 !important;
-    border: none !important;
-    color: #fff !important;
-    border-radius: 6px !important;
-    transition: 0.2s all;
-}
-.ui-button-info:hover {
-    background: #2563EB !important;
-}
-
-/* RowToggler estilo sobrio */
-.ui-row-toggler {
-    color: #84B8E6 !important;
-}
-.ui-row-toggler:hover {
-    color: #fff !important;
-}
-
-/* ======== DATA TABLE CORPORATIVA ======== */
-#tablaVuelos.ui-datatable {
-    background: #101B33 !important;
-    color: #EAF0F6 !important;
-    border: none !important;
-    font-size: 14px;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-/* Encabezados */
-#tablaVuelos .ui-datatable-thead > tr > th {
-    background: #1D2A38 !important;
-    color: #84B8E6 !important;
-    font-weight: 600;
-    font-size: 13px;
-    text-transform: uppercase;
-    border-bottom: 1px solid #253445 !important;
-    padding: 12px 10px;
-    text-align: center;
-}
-
-/* Filas */
-#tablaVuelos .ui-datatable-data > tr {
-    background: #101B33 !important;
-    border-bottom: 1px solid #1E2A44 !important;
-}
-
-/* Hover */
-#tablaVuelos .ui-datatable-data > tr:hover {
-    background-color: #233244 !important;
-}
-
-/* Fila seleccionada */
-#tablaVuelos .ui-datatable-data > tr.ui-state-highlight {
-    background-color: #2E445C !important;
-    color: #fff !important;
-}
-
-/* Celdas */
-#tablaVuelos .ui-datatable-data td {
-    padding: 12px 10px !important;
-    text-align: center;
-    color: #EAF0F6 !important;
-}
-
-/* Columnas de texto secundario */
-.text-secondary {
-    color: #B7C4D1 !important;
-    font-style: italic;
-}
-
-/* Columnas de acento (hora, precio, destacado) */
-.text-accent {
-    color: #3B82F6 !important;
-    font-weight: 600;
-}
-
-/* Botón "ver paradas" */
-.rounded-button.ui-button-flat.ui-button-sm {
-    background: transparent !important;
-    border: 1px solid #35516F !important;
-    color: #84B8E6 !important;
-    border-radius: 6px !important;
-}
-
-.rounded-button.ui-button-flat.ui-button-sm:hover {
-    background
-/* ======== DATA TABLE CORPORATIVA ======== */
-#tablaVuelos.ui-datatable {
-    background: #101B33 !important;
-    color: #EAF0F6 !important;
-    border: none !important;
-    font-size: 14px;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-/* Encabezados */
-#tablaVuelos .ui-datatable-thead > tr > th {
-    background-color: #2C3E50 !important;
-    color: #fff !important;
-    font-weight: bold;
-    text-align: center;
-}
-
-/* Estilo para las filas de la tabla */
-#tablaVuelos .ui-datatable-tbody > tr > td {
-    background-color: #1D2A38 !important;
-    border-bottom: 1px solid #35516F;
-    color: #EAF0F6;
-    padding: 12px;
-    text-align: center;
-}
-
-/* Mejoras en los paneles de tarifas */
-.panel-tarifa-dark {
-    background: #233244 !important;
-    border: 1px solid #2E3E50 !important;
-    color: #EAF0F6;
-    padding: 16px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.panel-tarifa-dark .ui-panel-title {
-    font-size: 16px;
-    font-weight: bold;
-    color: #4A90E2;
-}
-
-.ui-button-info {
-    background: #4A7FB2 !important;
-    color: #fff !important;
-    border-radius: 6px;
-    font-weight: bold;
-}
-
-.ui-button-info:hover {
-    background: #3B82F6 !important;
-}
-
-
-/* Panel de tarifa */
-.panel-tarifa-dark {
-    background-color: #2E3E50 !important;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    padding: 16px;
-    color: #EAF0F6;
-    margin-bottom: 15px;
-}
-
-/* Encabezado de la tarifa */
-.panel-tarifa-dark .ui-panel-title {
-    font-size: 18px;
-    font-weight: bold;
-    color: #4A90E2;
-}
-
-/* Badge de precio */
-.badge-tarifa {
-    font-size: 14px;
-    font-weight: bold;
-    color: #fff;
-    background-color: #27ae60 !important;
-    padding: 5px 10px;
-    border-radius: 6px;
-}
-
-/* Características de la tarifa */
-.tarifa-caracteristicas {
-    margin-top: 10px;
-}
-
-.tarifa-caracteristica {
-    padding: 8px;
-    border-bottom: 1px solid #35516F;
-    margin-bottom: 8px;
-}
-
-.caracteristica-titulo {
-    font-weight: bold;
-    font-size: 14px;
-    color: #4A90E2;
-    margin-bottom: 4px;
-}
-
-.caracteristica-valor {
-    font-size: 14px;
-    color: #EAF0F6;
-}
-
-.caracteristica-valor .text-success {
-    color: #2ecc71 !important;
-}
-
-.caracteristica-valor .text-danger {
-    color: #e74c3c !important;
-}
-
-/* Botón de selección */
-.ui-button-info {
-    background: #4A7FB2 !important;
-    color: #fff !important;
-    border-radius: 6px;
-    font-weight: bold;
-}
-
-.ui-button-info:hover {
-    background: #3B82F6 !important;
-}
-
-
-
-
-
-
-
-
-
-
-
-                       /* === DATA TABLE MINIMALISTA === */
-           #tablaVuelos.ui-datatable {
-               background: #1A2430;
-               color: #EAF0F6;
-               border: none;
-               width: 100%;
-           }
-
-           /* Head minimalista */
-           #tablaVuelos .ui-datatable-header,
-           #tablaVuelos .ui-datatable-footer {
-               background: transparent;
-               border: none;
-           }
-
-           /* ENCABEZADOS */
-           #tablaVuelos .ui-datatable-thead > tr > th {
-               background: #1D2A38;
-               border: none;
-               padding: 12px 10px;
-               font-size: 13px;
-               font-weight: 600;
-               color: #9CB8CE;
-               text-transform: uppercase;
-               letter-spacing: 0.5px;
-           }
-
-           /* Filas */
-           #tablaVuelos .ui-datatable-data > tr {
-               background: transparent;
-               border-bottom: 1px solid #253445;
-           }
-
-           /* Hover */
-           #tablaVuelos .ui-datatable-data > tr:hover {
-               background-color: #233244 !important;
-           }
-
-           /* Fila seleccionada */
-           #tablaVuelos .ui-datatable-data > tr.ui-state-highlight {
-               background-color: #2E445C !important;
-               color: #fff !important;
-           }
-
-           /* Celdas */
-           #tablaVuelos .ui-datatable-data td {
-               padding: 12px 10px;
-               border: none;
-           }
-
-           /* Texto */
-           .text-bold { font-weight: 600; }
-           .text-secondary { color: #B7C4D1; }
-           .text-accent { color: #84B8E6; }
-           .text-danger { color: #E57373; }
-           .text-success { color: #7FE2A5; }
-           .text-uppercase { text-transform: uppercase; }
-           .text-monospace { font-family: monospace; }
-
-           /* Botón "ver paradas" minimalista */
-           .rounded-button.ui-button-flat.ui-button-sm {
-               padding: 4px 6px;
-               background: transparent !important;
-               border: 1px solid #35516F !important;
-               color: #9EC5E3 !important;
-               border-radius: 6px !important;
-               transition: 0.2s;
-           }
-
-           .rounded-button.ui-button-flat.ui-button-sm:hover {
-               background: #2E455F !important;
-           }
-
-           /* Row toggler minimalista */
-           .ui-row-toggler {
-               color: #9CB8CE;
-               border: none;
-           }
-           .ui-row-toggler:hover {
-               color: #FFFFFF;
-           }
-
-           /* === PANEL EXPANDIDO === */
-           .panel-dark {
-               background: #1D2A38;
-               border-left: 2px solid #35516F;
-               padding: 16px;
-               margin: 0;
-           }
-
-           .panel-dark h3 {
-               margin-top: 0;
-               color: #9EC5E3;
-           }
-
-           /* Tarjetas de tarifa */
-           .panel-tarifa-dark {
-               background: #233244 !important;
-               border: 1px solid #2E3E50 !important;
-               color: #EAF0F6;
-               padding: 12px;
-               border-radius: 6px;
-           }
-
-           .panel-tarifa-dark .ui-panel-titlebar {
-               background: none;
-               border: none;
-           }
-
-           /* Badge de precio */
-           .ui-badge-info {
-               background: #4A7FB2 !important;
-               color: #fff !important;
-           }
-
-           /* Botón seleccionar */
-           .ui-button-info {
-               background: #7FAED9 !important;
-               border: none !important;
-               color: #1A2430 !important;
-           }
-
-
-/* Caja para representar el precio */
-.panel-precio {
-    background-color: #2C3E50;
+            /* ===== Sidebar general ===== */
+            .sidebar-corporativo {
+                background: #f7f9fc !important;
+                padding: 0 !important;
+            }
+
+            /* ===== Título ===== */
+            .header-titulo {
+                background: #003366;
+                color: #fff;
+                padding: 22px 26px;
+                font-size: 19px;
+                font-weight: 600;
+                letter-spacing: .6px;
+                margin-bottom: 20px;
+            }
+
+            .header-titulo i { margin-right: 8px; }
+
+            /* ===== Timeline ===== */
+
+            .timeline {
+                padding: 0 28px 30px 28px;
+            }
+
+            /* Separación clara entre paradas */
+            .tramo-bloque {
+                margin-bottom: 55px !important;
+                padding-bottom: 10px;
+                position: relative;
+            }
+
+            /* Línea separadora suave entre tramos */
+            .tramo-bloque::after {
+                content: "";
+                position: absolute;
+                bottom: -28px;
+                left: 5%;
+                width: 90%;
+                height: 1px;
+                background: #d5dce3;
+            }
+
+            /* ===== Tarjetas ===== */
+            .card-parada {
+                background: #ffffff;
+            }
+
+            .card-parada-separada {
+                padding: 30px !important;
+                border-radius: 14px;
+                border: 1px solid #e4e7ea;
+                box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+                border-left: 6px solid #004a99;  /* Marca corporativa */
+                transition: 0.25s ease;
+            }
+
+            .card-parada-separada:hover {
+                box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+            }
+
+            /* Header de tarjeta */
+            .card-header {
+                font-size: 18px;
+                font-weight: 700;
+                color: #003366;
+                margin-bottom: 20px;
+                padding-bottom: 8px;
+                border-bottom: 2px solid #dde3ea;
+            }
+
+            /* ===== Datos de tramo ===== */
+
+          .timeline-leg {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 18px;
+                margin-top: 10px;
+            }
+
+            .city-block {
+                text-align: center;
+                width: 100%;
+            }
+
+            .city-code {
+                font-size: 22px;
+                font-weight: 700;
+                color: #003366;
+            }
+
+            .city-time {
+                font-size: 14px;
+                margin-top: 4px;
+                color: #555;
+            }
+
+            .timeline-arrow {
+                font-size: 22px;
+                color: #00509e;
+            }
+
+
+            /* ===== Grid de información ===== */
+
+            .info-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 22px 32px;
+                margin-top: 10px;
+            }
+
+            .label {
+                font-weight: 600;
+                font-size: 14px;
+                color: #003366;
+            }
+
+            .value {
+                font-size: 14px;
+                color: #444;
+            }
+
+            /* ===== Títulos de sección ===== */
+            .section {
+                margin-top: 28px;
+                margin-bottom: 28px;
+            }
+
+            .section-title {
+                font-size: 15px;
+                color: #00509e;
+                font-weight: 600;
+                margin-bottom: 14px;
+                display: flex;
+                align-items: center;
+            }
+
+            .section-title i {
+                margin-right: 6px;
+                color: #003366;
+            }
+
+            /* ===== Descripción ===== */
+            .descripcion-espaciada {
+                padding: 18px 20px;
+                background: #f1f3f6;
+                border-radius: 10px;
+                line-height: 1.55;
+                font-size: 14px;
+                color: #444;
+            }
+
+            /* ===== Marcadores Timeline ===== */
+
+            .timeline-marker {
+                width: 40px;
+                display: flex;
+                justify-content: center;
+            }
+
+            .marker-circle {
+                width: 14px;
+                height: 14px;
+                background: #00509e;
+                border-radius: 50%;
+                border: 3px solid #003366;
+            }
+
+
+            /* ===== Scroll Top ===== */
+            .btn-scrolltop {
+                background: #003366 !important;
+                border-radius: 50% !important;
+            }
+/* Estilo más corporativo para el contenedor de tipo de vuelo */
+.tipo-vuelo-container {
+    background: #f1f5f9; /* Fondo neutro */
+    border: 2px solid #004a99; /* Borde corporativo más sobrio */
     border-radius: 10px;
-    padding: 15px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    color: #EAF0F6;
-    margin: 10px 0;
+    padding: 18px 26px;
+    margin-bottom: 20px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 14px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Sombra más suave */
 }
 
-/* Contenedor para el texto y el icono */
-.precio-contenedor {
-    display: flex;
-    align-items: center;
+/* Ícono: Uso de un icono más elegante y sobrio */
+.icono-tipo-vuelo {
+    font-size: 1.8rem;
+    color: #004a99; /* Color corporativo */
 }
 
-/* Icono del precio (símbolo de CLP) */
-.precio-contenedor i {
-    margin-right: 10px;
-}
-
-/* Estilo del texto con el valor del precio */
-.precio-texto {
-    font-size: 20px;
+/* Texto principal: Eliminación de la sombra y simplificación */
+.tipo-vuelo-text {
+    font-size: 1.6rem;
     font-weight: bold;
-    color: #EAF0F6;
-    margin: 0;
-}
-
-/* Estilo para el valor del precio */
-.precio-valor {
-    color: #27ae60;
-    font-size: 24px;
-}
-
-/* Responsividad */
-@media (max-width: 768px) {
-    .panel-precio {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .precio-texto {
-        font-size: 18px;
-    }
-
-    .precio-valor {
-        font-size: 22px;
-    }
+    color: #003366; /* Color serio y corporativo */
+    letter-spacing: 1px;
 }
 
 
@@ -669,8 +225,16 @@
             <div class="flex-container dark-bg">
                 <!-- Sección izquierda: tabla de vuelos -->
                 <div class="flex-left">
-                    <h:outputText id="tipoVuelo" value="Tipo de vuelo: #{itinerarioDetalleBean.tipoVuelo}"
-                                  styleClass="tipo-vuelo-msg" />
+
+                    <!-- Tipo de vuelo destacado -->
+                    <!-- Tipo de vuelo destacado -->
+                    <div class="tipo-vuelo-container">
+                        <i class="pi pi-plane icono-tipo-vuelo"></i> <!-- Icono más serio -->
+                        <h:outputText id="tipoVuelo"
+                                      value="Tipo de vuelo: #{itinerarioDetalleBean.tipoVuelo}"
+                                      styleClass="tipo-vuelo-text"/>
+                    </div>
+
 
                     <p:dataTable id="tablaVuelos" widgetVar="tablaVuelosWidget"
                                  value="#{itinerarioDetalleBean.vuelosIda}"

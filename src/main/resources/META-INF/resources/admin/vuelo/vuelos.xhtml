@@ -4,118 +4,200 @@
                 xmlns:ui="http://java.sun.com/jsf/facelets"
                 xmlns:p="http://primefaces.org/ui">
 
-    <!-- Estilos para azul oscuro corporativo -->
+    <!-- Estilos mejorados para una apariencia corporativa -->
     <h:outputStylesheet>
         body {
         background-color: #001f3f; /* Azul oscuro corporativo */
-        color: #ffffff;           /* Texto blanco */
+        color: #ffffff; /* Texto blanco */
+        font-family: 'Roboto', sans-serif; /* Tipografía más moderna */
+        margin: 0;
+        padding: 0;
         }
 
-        .ui-datatable, .nested-table {
-        background-color: #002b5c !important; /* Tablas más claras que el fondo */
-        color: #ffffff !important;
+        h1 {
+        color: #ffffff;
+        text-align: center;
+        margin-bottom: 2rem;
+        }
+
+        /* Estilo de tabla para una mejor legibilidad */
+        .ui-datatable {
+        background-color: #002b5c !important; /* Azul claro para la tabla */
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
 
         .ui-datatable th, .nested-table th {
-        background-color: #003366 !important; /* Encabezados más oscuros */
+        background-color: #003366 !important; /* Encabezado más oscuro */
         color: #ffffff !important;
+        padding: 12px 16px;
+        text-align: left;
         }
 
         .ui-datatable td, .nested-table td {
         background-color: #002b5c !important;
         color: #ffffff !important;
-        }
-
-        .p-panel {
-        background-color: #002b5c !important;
-        color: #ffffff !important;
+        padding: 10px;
         }
 
         .p-button {
         background-color: #004080 !important;
         color: #ffffff !important;
-        border: none !important;
+        border-radius: 4px;
+        padding: 8px 16px;
         }
 
         .p-button:hover {
         background-color: #0059b3 !important;
         }
 
-        h1 {
-        color: #ffffff;
+        .p-panel {
+        background-color: #002b5c !important;
+        color: #ffffff !important;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
 
-        input, select {
-        background-color: #003366 !important;
-        color: #ffffff !important;
-        border: 1px solid #0059b3 !important;
+        .menu-link {
+        background-color: #0059b3;
+        color: #ffffff;
+        padding: 8px 16px;
+        border-radius: 5px;
+        text-decoration: none;
         }
+
+        .menu-link:hover {
+        background-color: #0073e6;
+        }
+
+        /* Estilo para botones en la tabla de acciones */
+        .p-button-warning {
+        background-color: #ff9800 !important;
+        border-radius: 4px;
+        }
+
+        .p-button-warning:hover {
+        background-color: #ff5722 !important;
+        }
+
+        .ui-datatable .ui-column-title {
+        font-weight: 600;
+        text-transform: uppercase;
+        }
+
+        /* Formato de las fechas */
+        .ui-datatable .ui-column-header {
+        font-size: 1rem;
+        }
+
+        .p-button {
+        transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .p-button:hover {
+        transform: translateY(-2px);  /* Efecto de elevar el botón ligeramente */
+        }
+
+        .p-button-warning:hover {
+        background-color: #e6b800 !important;  /* Cambiar el fondo para más énfasis en hover */
+        }
+
+        .p-button-info:hover {
+        background-color: #0097d2 !important;  /* Azul más intenso para el botón Ver Turnos */
+        }
+
     </h:outputStylesheet>
 
+    <!-- Título de la página -->
     <h1>Próximos Vuelos</h1>
 
+    <!-- Botón para agregar vuelo, alineado a la derecha -->
     <div style="text-align: right; margin-bottom: 1rem;">
         <h:link outcome="/admin/vuelo/vuelo.xhtml" class="menu-link">
             <i class="pi pi-plus"></i> Agregar Vuelo
         </h:link>
     </div>
 
+    <!-- Formulario de la tabla de vuelos -->
     <h:form id="vueloForm">
 
         <p:dataTable value="#{vueloBean.vuelos}" var="vuelo"
                      responsiveLayout="scroll"
-                     styleClass="table"
+                     styleClass="ui-datatable"
                      rowIndexVar="index"
                      expandableRowGroups="true"
                      rowKey="#{vuelo.idVuelo}">
 
+            <!-- Columna de detalles, con un icono para expandir la fila -->
             <p:column style="width:2rem" ariaHeaderText="Detalles">
                 <p:rowToggler />
             </p:column>
 
-            <p:column headerText="N° Vuelo">
+            <!-- Columna para el número de vuelo -->
+            <p:column headerText="N° Vuelo" sortBy="#{vuelo.numeroVuelo}">
                 #{vuelo.numeroVuelo}
             </p:column>
 
-            <p:column headerText="Fecha Salida">
-
-                <h:outputText value="#{vuelo.fechaHoraSalida}" >
+            <!-- Columna para la fecha de salida con formato -->
+            <p:column headerText="Fecha Salida" sortBy="#{vuelo.fechaHoraSalida}">
+                <h:outputText value="#{vuelo.fechaHoraSalida}">
                     <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago"/>
                 </h:outputText>
             </p:column>
 
-            <p:column headerText="Fecha Llegada">
-
-                <h:outputText value="#{vuelo.fechaHoraLlegada}" >
+            <!-- Columna para la fecha de llegada con formato -->
+            <p:column headerText="Fecha Llegada" sortBy="#{vuelo.fechaHoraLlegada}">
+                <h:outputText value="#{vuelo.fechaHoraLlegada}">
                     <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago"/>
                 </h:outputText>
             </p:column>
 
+            <!-- Columna de acciones (editar) -->
             <p:column headerText="Acciones" styleClass="text-center">
+                <!-- Botón para editar vuelo -->
                 <p:commandButton value="Editar"
                                  icon="pi pi-pencil"
-                                 styleClass="p-button-warning"
+                                 styleClass="p-button-warning p-button-rounded p-button-sm p-mr-2"
                                  action="#{vueloBean.editarVuelo(vuelo)}"
                                  update="vueloForm"
-                                 ajax="true"/>
+                                 ajax="true"
+                                 title="Editar vuelo">
+                </p:commandButton>
             </p:column>
 
+            <p:column headerText="Ver Turnos" styleClass="text-center">
+                <!-- Botón para ver turnos -->
+                <p:commandButton value="Ver Turnos"
+                                 icon="pi pi-calendar"
+                                 styleClass="p-button-info p-button-rounded p-button-sm"
+                                 action="#{vueloBean.verTurnos(vuelo)}"
+                                 update="vueloForm"
+                                 ajax="true"
+                                 title="Ver turnos asociados">
+                </p:commandButton>
+            </p:column>
+
+
+
+            <!-- Expansión de fila para mostrar los segmentos de vuelo -->
             <p:rowExpansion>
                 <p:panelGrid columns="1" style="width:100%">
                     <p:dataTable value="#{vuelo.segmentoVuelos}" var="segmento"
                                  styleClass="nested-table">
 
+                        <!-- Información sobre el segmento de vuelo -->
                         <p:column headerText="Orden">
                             #{segmento.ordenSegmento}
                         </p:column>
                         <p:column headerText="Hora Salida">
                             <h:outputText value="#{segmento.horaSalida}">
-                                <f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+                                <f:convertDateTime pattern="dd/MM/yyyy HH:mm"/>
                             </h:outputText>
                         </p:column>
                         <p:column headerText="Hora Llegada">
                             <h:outputText value="#{segmento.horaLlegada}">
-                                <f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+                                <f:convertDateTime pattern="dd/MM/yyyy HH:mm"/>
                             </h:outputText>
                         </p:column>
                         <p:column headerText="Origen">

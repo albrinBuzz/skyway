@@ -34,7 +34,9 @@ public class AuthCustom implements AuthenticationSuccessHandler {
         //Logger.logInfo(String.valueOf(principal.getClass()));
         if (principal instanceof UserDetails userDetails) {
 
-            userDetails.getAuthorities().forEach(arg0 -> System.out.println(arg0.getAuthority()));;
+            userDetails.getAuthorities().forEach(arg0 -> Logger.logInfo(arg0.getAuthority()));;
+
+
 
             Usuario usuario=usService.buscarPorCorreo(userDetails.getUsername());
 

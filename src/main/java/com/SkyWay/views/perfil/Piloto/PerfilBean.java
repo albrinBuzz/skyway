@@ -57,6 +57,7 @@ public class PerfilBean implements Serializable {
     private VueloService vueloService;
 
     private List<Vuelo> vuelos;
+    private Vuelo selectedVuelo;
     Usuario usuario;
     @PostConstruct
     public void init() {
@@ -93,5 +94,13 @@ public class PerfilBean implements Serializable {
 
     public void setVuelos(List<Vuelo> vuelos) {
         this.vuelos = vuelos;
+    }
+
+    public Vuelo getSelectedVuelo() {
+        return selectedVuelo;
+    }
+
+    public void setSelectedVuelo(Vuelo selectedVuelo) {
+        this.selectedVuelo = selectedVuelo;
     }
 }
