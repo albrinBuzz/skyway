@@ -22,7 +22,7 @@ public interface ReservaService {
 	  public List<ReservaVueloDTO>getReservasUsuario(String rut);
 	  public void cancelarReserva(Integer id);
 	  public BoletoDTO getBoleto(Integer id);
-	  public List<TicketInfo>getTicket(String rut,Integer idReserva);
+	  public List<TicketInfo>getTicket(String rut,Integer idReserva,int idItinerario);
 	  List<Reserva> obtenerReservasPorPasajero(Pasajero pasajero);
 	  List<Reserva> obtenerReservasPorRut(String rut);
 		Page<Reserva> obtenerReservasPorRut(String rut, Pageable pageable);

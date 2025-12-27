@@ -331,7 +331,10 @@ END;
 $$ LANGUAGE plpgsql STABLE;
 
 
-CREATE OR REPLACE FUNCTION fn_getTicket(p_rut_pasajero VARCHAR,  p_id_reserva integer)
+
+
+
+CREATE OR REPLACE FUNCTION fn_getTicket(p_rut_pasajero VARCHAR,  p_id_reserva integer, p_idItinerario integer)
 RETURNS TABLE (
     numero_vuelo VARCHAR,
     hora_salida TIMESTAMP,
@@ -354,6 +357,7 @@ BEGIN
         clas.descripcion
     FROM reserva_asiento rsva
     left JOIN reserva rsv ON rsv.id_reserva = rsva.id_reserva
+	left join itinerario_vuelo itv on itv.id_vuelo = rsva.id_vuelo
     left JOIN vuelo vl ON vl.id_vuelo = rsva.id_vuelo
     left JOIN segmento_vuelo sgm ON sgm.id_vuelo = rsva.id_vuelo
     left JOIN asignacion_puerta asgp ON asgp.id_segmento = sgm.id_segmento
@@ -361,6 +365,7 @@ BEGIN
     left JOIN asiento ast ON ast.id_asiento = rsva.id_asiento
     left JOIN clase_asiento clas ON clas.id_clase = ast.id_clase
     WHERE rsv.rut_pasajero = p_rut_pasajero and rsv.id_reserva=p_id_reserva
+	and itv.id_itinerario=p_idItinerario
 	order by  vl.fecha_hora_salida;
 END;
 $$ LANGUAGE plpgsql;

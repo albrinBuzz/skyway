@@ -208,13 +208,16 @@ public class PerfilBean implements Serializable {
 
 	public void getTicket(ItinerarioResumenDTO itinerario){
 		Logger.logInfo("Obteniendo el ticket para  "+itinerario.getIdReserva()+"-"+itinerario.getIdItinerario());
+		Logger.logInfo("Obteniendo el ticket para  reserva "+itinerario.getIdReserva()+" Itinerario "+itinerario.getIdItinerario()+
+				" Pasajero "+usuario.getRut());
 
-		ticketInfos= reservaService.getTicket(usuario.getRut(),itinerario.getIdReserva());
-		Logger.logInfo(ticketInfos.toString());
+		ticketInfos= reservaService.getTicket(usuario.getRut(),itinerario.getIdReserva(),itinerario.getIdItinerario());
+		//Logger.logInfo(ticketInfos.toString());
 
 		for (TicketInfo ticketInfo : ticketInfos) {
 			Logger.logInfo(ticketInfo.toString());
 		}
+		System.out.println("\n");
 	}
 
 	public String getNumeroVuelo(int idVuelo){

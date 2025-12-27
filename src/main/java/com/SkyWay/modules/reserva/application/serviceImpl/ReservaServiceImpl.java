@@ -184,14 +184,14 @@ public class ReservaServiceImpl implements ReservaService {
 	}
 
 	@Override
-	public List<TicketInfo> getTicket(String rut, Integer idReserva) {
+	public List<TicketInfo> getTicket(String rut, Integer idReserva,int idItinerario) {
 
 		Query query = em.createNativeQuery(
-				"SELECT * FROM fn_getTicket(:p_rut, :p_reserva);",
+				"SELECT * FROM fn_getTicket(:p_rut, :p_reserva, :p_idItinerario);",
 				TicketInfo.class);
 		query.setParameter("p_rut", rut);
 		query.setParameter("p_reserva", idReserva);
-
+		query.setParameter("p_idItinerario", idItinerario);
 		//asientos= query.getResultList();
 
 		return query.getResultList();

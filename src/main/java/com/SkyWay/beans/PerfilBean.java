@@ -174,10 +174,10 @@ public class PerfilBean implements Serializable {
 	public void getTicket(ItinerarioResumenDTO itinerario){
 		Logger.logInfo("Obteniendo el ticket para  "+itinerario.getIdReserva()+"-"+itinerario.getIdItinerario());
 
-		var ticket= reservaService.getTicket(usuario.getRut(),itinerario.getIdReserva());
+		/*var ticket= reservaService.getTicket(usuario.getRut(),itinerario.getIdReserva());
 		for (TicketInfo ticketInfo : ticket) {
 			Logger.logInfo(ticketInfo.toString());
-		}
+		}*/
 	}
 
 	public String getNumeroVuelo(int idVuelo){
