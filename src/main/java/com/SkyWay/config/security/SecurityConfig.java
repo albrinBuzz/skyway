@@ -50,10 +50,10 @@ public class SecurityConfig {
 	        return messageSource;
 	    }
 
-	@Bean
-	MvcRequestMatcher.Builder mvc(HandlerMappingIntrospector introspector){
-		   return new MvcRequestMatcher.Builder(introspector);
-	}
+		@Bean
+		MvcRequestMatcher.Builder mvc(HandlerMappingIntrospector introspector){
+			   return new MvcRequestMatcher.Builder(introspector);
+		}
 
 	    /*@Autowired
 	    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
