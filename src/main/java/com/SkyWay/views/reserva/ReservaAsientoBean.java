@@ -16,6 +16,7 @@ import jakarta.faces.context.ExternalContext;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
+import org.primefaces.PrimeFaces;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
@@ -37,7 +38,7 @@ public class ReservaAsientoBean implements Serializable {
     private InfoVueloDTO vueloSeleccionado;
     private int idxVuelo;
     private int cantVuelos;
-    List<Integer>idVuelos;
+    List<Vuelo>vuelos;
     private Vuelo vuelo;
     private HashMap<Integer,List<InfoAsientoDTO>>asientosSeleccionados;
     private HashMap<Integer,List<Integer>> itinerariosAsientos=new HashMap<>();
@@ -49,6 +50,8 @@ public class ReservaAsientoBean implements Serializable {
     private HashMap<Integer,Integer>tarifasItinerarios;
 
     private Integer idxAsientoSeleccion;
+    List<Pasajero> pasajeros;
+
     @PostConstruct
     public void init() {
         ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
@@ -97,18 +100,17 @@ public class ReservaAsientoBean implements Serializable {
                 itinerarios.add(itinerarioService.findById(id));
             }
 
-            idVuelos=new ArrayList<>();
+            vuelos=new ArrayList<>();
             asientosSeleccionados=new HashMap<>();
 
             for (Itinerario itinerario : itinerarios) {
                 var itinerariosVuelos=  itinerario.getItinerarioVuelos();
 
-
                 for (ItinerarioVuelo itinerarioVuelo : itinerario.getItinerarioVuelos()) {
 
 
-                    idVuelos.add(itinerarioVuelo.getVuelo().getIdVuelo());
-                    Logger.logInfo(itinerarioVuelo.getVuelo().getIdVuelo().toString());
+                    vuelos.add(itinerarioVuelo.getVuelo());
+                    Logger.logInfo(itinerarioVuelo.getVuelo().getNumeroVuelo());
 
                 }
 
@@ -120,12 +122,17 @@ public class ReservaAsientoBean implements Serializable {
 
 
 
-            this.cantVuelos=idVuelos.size();
+            this.cantVuelos=vuelos.size();
             this.idxVuelo=0;
             idxAsientoSeleccion=0;
             //this.asientos = generarAsientosMock();
-            this.vuelo = vueloService.findById(idVuelos.get(idxVuelo)).get();
+            this.vuelo = vuelos.get(idxVuelo);
             Logger.logInfo(vuelo.toString());
+            pasajeros=new ArrayList<>(cantAdultos);
+
+            for (int i = 0; i < cantAdultos; i++) {
+                pasajeros.add(new Pasajero("pasajero "+(i+1)));
+            }
 
             this.asientos = asientoService.getAsientosDisponibles(vuelo.getIdVuelo());
             //Logger.logInfo(asientos.toString());
@@ -176,22 +183,22 @@ public class ReservaAsientoBean implements Serializable {
 
         //asientosSeleccionados.computeIfAbsent(vuelo.getIdVuelo(), k -> new ArrayList<>()).add(asiento);
 
-        idxAsientoSeleccion++;
-
-
-
-
-
         Logger.logInfo(idxAsientoSeleccion+"-"+cantAdultos);
+
+        AsientoSeleccionado asientoSeleccionado=new AsientoSeleccionado(asiento.getIdAsiento(),asiento.getNumeroAsiento(),asiento.getClase(),vuelo.getNumeroVuelo(), asiento.getPrecio());
+
+        pasajeros.get(idxAsientoSeleccion).asientos.add(asientoSeleccionado);
+
+        idxAsientoSeleccion++;
 
         if (idxAsientoSeleccion>=cantAdultos){
             // Si aún hay vuelos, cargar el siguiente
             Logger.logInfo(String.valueOf(idxVuelo));
 
 
-            for (Integer idVuelo : idVuelos) {
-                Logger.logInfo(String.valueOf(idVuelo));
-            }
+            /*for (Vuelo vuelo : vuelos) {
+                Logger.logInfo(vuelo.toString());
+            }*/
 
 
 
@@ -207,6 +214,9 @@ public class ReservaAsientoBean implements Serializable {
                             .getSessionMap().put("itinerarios", idsItinerarios);
 
                     FacesContext.getCurrentInstance().getExternalContext()
+                            .getSessionMap().put("pasajeros", pasajeros);
+
+                    FacesContext.getCurrentInstance().getExternalContext()
                             .getSessionMap().put("tarifasItinerios", tarifasItinerarios);
 
                     FacesContext.getCurrentInstance().getExternalContext()
@@ -220,11 +230,13 @@ public class ReservaAsientoBean implements Serializable {
                 idxVuelo++;
                 idxAsientoSeleccion=0;
 
-                int vueloId = idVuelos.get(idxVuelo);
-                Logger.logInfo("Siguiente vuelo -> " + vueloId);
-                this.asientos = asientoService.getAsientosDisponibles(vueloId);
-                this.vuelo = vueloService.findById(vueloId).orElse(null);
+                this.vuelo = vuelos.get(idxVuelo);
+                Logger.logInfo("Siguiente vuelo -> " + vuelo.getNumeroVuelo());
+                this.asientos = asientoService.getAsientosDisponibles(vuelo.getIdVuelo());
+                //this.vuelo = vueloService.findById(vuelo.getIdVuelo()).orElse(null);
+
                 Logger.logInfo("Siguiente vuelo -> " + vuelo.toString());
+                PrimeFaces.current().ajax().update("seatForm:flightStepper");
             }
 
 
@@ -292,6 +304,14 @@ public class ReservaAsientoBean implements Serializable {
         return vuelo;
     }
 
+    public List<Vuelo> getVuelos() {
+        return vuelos;
+    }
+
+    public int getIdxVuelo() {
+        return idxVuelo;
+    }
+
     public void setVuelo(Vuelo vuelo) {
         this.vuelo = vuelo;
     }
@@ -303,4 +323,87 @@ public class ReservaAsientoBean implements Serializable {
     public List<InfoAsientoDTO> getAsientosSeleccionadosList() {
         return asientosSeleccionadosList;
     }
+
+    public List<Pasajero> getPasajeros() {
+        return pasajeros;
+    }
+
+    public Integer getIdxAsientoSeleccion() {
+        return idxAsientoSeleccion;
+    }
+
+    public static class Pasajero {
+        String nombre;
+        List<AsientoSeleccionado> asientos=new ArrayList<>();
+
+        public Pasajero() {
+        }
+
+        public Pasajero(String nombre) {
+            this.nombre = nombre;
+        }
+
+        public List<AsientoSeleccionado> getAsientos() {
+            return asientos;
+        }
+
+        public String getNombre() {
+            return nombre;
+        }
+    }
+
+    public static  class AsientoSeleccionado {
+        int idAsiento;
+        String numeroAsiento;
+        String clase;
+        String numeroVuelo;
+        int precio;
+
+
+        public AsientoSeleccionado() {
+        }
+
+        public AsientoSeleccionado(int idAsiento, String numeroAsiento, String clase, String numeroVuelo, int precio) {
+            this.idAsiento = idAsiento;
+            this.numeroAsiento = numeroAsiento;
+            this.clase = clase;
+            this.numeroVuelo = numeroVuelo;
+            this.precio = precio;
+        }
+
+        public String getNumeroAsiento() {
+            return numeroAsiento;
+        }
+
+        public void setNumeroAsiento(String numeroAsiento) {
+            this.numeroAsiento = numeroAsiento;
+        }
+
+        public String getClase() {
+            return clase;
+        }
+
+        public void setClase(String clase) {
+            this.clase = clase;
+        }
+
+        public int getPrecio() {
+            return precio;
+        }
+
+        public void setPrecio(int precio) {
+            this.precio = precio;
+        }
+
+        public String getNumeroVuelo() {
+            return numeroVuelo;
+        }
+
+        public int getIdAsiento() {
+            return idAsiento;
+        }
+    }
+
+
+
 }

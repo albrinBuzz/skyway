@@ -143,4 +143,16 @@ public class Pasajero implements Serializable {
 		return reserva;
 	}
 
+	@Override
+	public String toString() {
+		final StringBuffer sb = new StringBuffer("Pasajero{");
+		sb.append("rut='").append(rut).append('\'');
+		sb.append(", fechaNacimiento=").append(fechaNacimiento);
+		sb.append(", nacionalidad='").append(nacionalidad).append('\'');
+		sb.append(", numeroDocumento='").append(numeroDocumento).append('\'');
+		sb.append(", tipoDocumento='").append(tipoDocumento).append('\'');
+		sb.append(", usuario=").append(usuario.toString());
+		sb.append('}');
+		return sb.toString();
+	}
 }

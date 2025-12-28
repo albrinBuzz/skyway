@@ -95,6 +95,51 @@
             padding-left: 8px;
             }
 
+            .pasajero-card {
+            border: 2px solid #2c3e50;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 35px;
+            background-color: #1f1f1f;
+            }
+
+            .pasajero-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #ffffff;
+            background-color: #3498db;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            }
+
+            .pasajero-badge {
+            display: inline-block;
+            background: #e74c3c;
+            color: #fff;
+            font-weight: bold;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            text-align: center;
+            line-height: 30px;
+            }
+
+            .pasajero-subtitle {
+            font-size: 14px;
+            color: #cccccc;
+            margin-bottom: 20px;
+            }
+
+            .pasajero-section-title {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            }
+
+
         </h:outputStylesheet>
 
         <div class="reserva-container">
@@ -182,6 +227,7 @@
                                         <th style="padding:8px; text-align:left;">Clase</th>
                                         <th style="padding:8px; text-align:right;">Precio</th>
                                         <th style="padding:8px; text-align:left;">Estado</th>
+                                        <th style="padding:8px; text-align:left;">Pasajero</th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -195,6 +241,7 @@
                                                 </h:outputText>
                                             </td>
                                             <td style="padding:8px;">#{asiento.estado}</td>
+                                            <td style="padding:8px;">#{reservaBean.getAsientoPasajero(asiento.idAsiento,asiento.numeroAsiento)}</td>
                                         </tr>
                                     </ui:repeat>
                                     </tbody>
@@ -213,79 +260,96 @@
             </div>
         </div>
 
-            <!-- Sección Datos del Pasajero -->
-            <h:panelGroup rendered="#{!userBean.loggedIn}">
-                <!-- Sección Datos del Pasajero -->
+
+            <h:form id="pasajerosForm">
+
                 <div class="card">
                     <div class="seccion">
-                        <div class="titulo">Datos del Pasajero</div>
+                        <div class="titulo">Datos de los Pasajeros</div>
 
-                        <h:form id="pasajeroForm">
-                            <!-- Información Personal -->
-                            <h3 style="color: #34495e; margin-bottom: 15px;">Información Personal</h3>
+                        <ui:repeat value="#{reservaBean.pasajerosList}" var="pasajero" varStatus="st">
 
-                            <p:panelGrid columns="2"
-                                         styleClass="ui-panelgrid-blank"
-                                         columnClasses="ui-grid-col-2,ui-grid-col-10"
-                                         style="width:100%; margin-bottom: 40px;"
-                                         layout="grid">
+                            <div class="pasajero-card">
 
-                                <p:outputLabel for="rut" value="RUT:" />
-                                <p:inputText id="rut" value="#{reservaBean.pasajero.rut}" required="true" placeholder="Ej: 12.345.678-9" />
+                                <div class="pasajero-header">
+                                    <span class="pasajero-badge">#{st.index + 1}</span>
+                                    Pasajero #{st.index + 1}
+                                </div>
 
-                                <p:outputLabel for="nombre" value="Nombre:" />
-                                <p:inputText id="nombre" value="#{reservaBean.pasajero.usuario.nombre}" required="true" placeholder="Nombre del pasajero" />
+                                <h3 class="pasajero-section-title">Información Personal</h3>
 
-                                <p:outputLabel for="apellido" value="Apellido:" />
-                                <p:inputText id="apellido" value="#{reservaBean.pasajero.usuario.apellido}" required="true" placeholder="Apellido del pasajero" />
+                                <h:panelGroup rendered="#{st.index == 0 and reservaBean.usuario != null}">
+                                    <p:outputLabel
+                                            styleClass="ui-message-info"
+                                            value="Los datos del usuario autenticado se han cargado automáticamente:
+                                           #{reservaBean.usuario.nombre} #{reservaBean.usuario.apellido}
+                                           (#{reservaBean.usuario.correoElectronico})" />
+                                </h:panelGroup>
 
-                                <p:outputLabel for="correo" value="Correo Electrónico:" />
-                                <p:inputText id="correo" value="#{reservaBean.pasajero.usuario.correoElectronico}" required="true" placeholder="ejemplo@correo.com" />
 
-                                <p:outputLabel for="telefono" value="Teléfono:" />
-                                <p:inputMask id="telefono" mask="(99) 9999-9999" value="#{reservaBean.pasajero.usuario.telefono}" required="true" placeholder="Ej: (56) 91234-5678" />
+                                <p:panelGrid columns="2" layout="grid"
+                                             styleClass="ui-panelgrid-blank"
+                                             columnClasses="ui-grid-col-3,ui-grid-col-9">
 
-                                <p:outputLabel for="documentoIdentidad" value="Documento de Identidad:" />
-                                <p:inputText id="documentoIdentidad" value="#{reservaBean.pasajero.usuario.documentoIdentidad}" required="true" placeholder="N° de documento" />
+                                    <p:outputLabel value="RUT" for="@next" />
+                                    <p:inputText value="#{pasajero.rut}" required="true" disabled="#{st.index == 0 and reservaBean.usuario!=null}"/>
 
-                                <p:outputLabel for="fechaNacimiento" value="Fecha de Nacimiento:" />
-                                <p:datePicker id="fechaNacimiento"
-                                              value="#{reservaBean.pasajero.usuario.fechaNacimiento}"
-                                              yearNavigator="true" monthNavigator="true"
-                                              pattern="dd/MM/yyyy"
-                                              showIcon="true"
-                                              required="true"
-                                              placeholder="dd/mm/aaaa" />
-                            </p:panelGrid>
+                                    <p:outputLabel value="Nombre" for="@next" />
+                                    <p:inputText value="#{pasajero.usuario.nombre}" required="true" disabled="#{st.index == 0 and reservaBean.usuario!=null}"/>
 
-                            <!-- Identificación y Nacionalidad -->
-                            <h3 style="color: #34495e; margin-bottom: 15px;">Identificación y Nacionalidad</h3>
+                                    <p:outputLabel value="Apellido" for="@next" />
+                                    <p:inputText value="#{pasajero.usuario.apellido}" required="true" disabled="#{st.index == 0 and reservaBean.usuario!=null}"/>
 
-                            <p:panelGrid columns="2"
-                                         styleClass="ui-panelgrid-blank"
-                                         columnClasses="ui-grid-col-2,ui-grid-col-10"
-                                         style="width:100%;"
-                                         layout="grid">
+                                    <p:outputLabel value="Correo" for="@next" />
+                                    <p:inputText value="#{pasajero.usuario.correoElectronico}" required="true" disabled="#{st.index == 0 and reservaBean.usuario!=null}"/>
 
-                                <p:outputLabel for="tipoDocumento" value="Tipo de Documento:" />
-                                <p:selectOneMenu id="tipoDocumento" value="#{reservaBean.pasajero.tipoDocumento}" required="true" style="width: 100%">
-                                    <f:selectItem itemLabel="Seleccione" itemValue="" />
-                                    <f:selectItem itemLabel="Pasaporte" itemValue="Pasaporte" />
-                                    <f:selectItem itemLabel="Cédula de Identidad" itemValue="Cédula de Identidad" />
-                                    <f:selectItem itemLabel="Otro" itemValue="Otro" />
-                                </p:selectOneMenu>
+                                    <p:outputLabel value="Teléfono" for="@next" />
+                                    <p:inputMask mask="(99) 9999-9999"
+                                                 value="#{pasajero.usuario.telefono}"
+                                                 required="true" disabled="#{st.index == 0 and reservaBean.usuario!=null}"/>
 
-                                <p:outputLabel for="numeroDocumento" value="Número de Documento:" />
-                                <p:inputText id="numeroDocumento" value="#{reservaBean.pasajero.numeroDocumento}" required="true" placeholder="N° del documento" />
+                                    <p:outputLabel value="Fecha Nacimiento" for="@next" />
+                                    <p:datePicker value="#{pasajero.usuario.fechaNacimiento}"
+                                                  pattern="dd/MM/yyyy"
+                                                  required="true" disabled="#{st.index == 0 and reservaBean.usuario!=null}"/>
+                                </p:panelGrid>
 
-                                <p:outputLabel for="nacionalidad" value="Nacionalidad:" />
-                                <p:inputText id="nacionalidad" value="#{reservaBean.pasajero.nacionalidad}" required="true" placeholder="Ej: Chilena" />
-                            </p:panelGrid>
-                        </h:form>
+                                <h3 class="pasajero-section-title">Documento y Nacionalidad</h3>
+
+                                <p:panelGrid columns="2" layout="grid"
+                                             styleClass="ui-panelgrid-blank"
+                                             columnClasses="ui-grid-col-3,ui-grid-col-9">
+
+                                    <p:outputLabel value="Tipo Documento" for="@next"/>
+                                    <p:selectOneMenu value="#{pasajero.tipoDocumento}" required="true" disabled="#{st.index == 0 and reservaBean.usuario!=null}">
+                                        <f:selectItem itemLabel="Seleccione" itemValue=""/>
+                                        <f:selectItem itemLabel="Pasaporte" itemValue="PASAPORTE"/>
+                                        <f:selectItem itemLabel="Cédula" itemValue="CEDULA"/>
+                                    </p:selectOneMenu>
+
+                                    <p:outputLabel value="Número Documento" for="@next"/>
+                                    <p:inputText value="#{pasajero.numeroDocumento}" required="true" disabled="#{st.index == 0 and reservaBean.usuario!=null}"/>
+
+                                    <p:outputLabel value="Nacionalidad" for="@next"/>
+                                    <p:inputText value="#{pasajero.nacionalidad}" required="true" disabled="#{st.index == 0 and reservaBean.usuario!=null}"/>
+                                </p:panelGrid>
+
+                            </div>
+
+                        </ui:repeat>
+
                     </div>
                 </div>
 
-            </h:panelGroup>
+                <!-- BOTÓN DENTRO DEL MISMO FORM -->
+                <div style="text-align:center; margin-top:30px;">
+                    <p:commandButton value="Confirmar Reserva"
+                                     action="#{reservaBean.confirmarReserva}"
+                                     update="@form growl"
+                                     styleClass="btn-confirmar"/>
+                </div>
+
+            </h:form>
 
 
 
@@ -293,7 +357,7 @@
             <!-- Botón Confirmar -->
             <h:form>
                 <h:commandButton value="Confirmar Reserva"
-                                 action="#{reservaBean.confirmarReserva}"
+                                 action="#{reservaBean.mostrarPasajeros}"
                                  update="growl"
                                  styleClass="btn-confirmar" />
             </h:form>

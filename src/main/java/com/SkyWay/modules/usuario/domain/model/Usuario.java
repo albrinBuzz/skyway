@@ -183,4 +183,19 @@ public class Usuario implements Serializable {
 		this.roles = roles;
 	}
 
+	@Override
+	public String toString() {
+		final StringBuffer sb = new StringBuffer("Usuario{");
+		sb.append("rut='").append(rut).append('\'');
+		sb.append(", nombre='").append(nombre).append('\'');
+		sb.append(", apellido='").append(apellido).append('\'');
+		sb.append(", correoElectronico='").append(correoElectronico).append('\'');
+		sb.append(", telefono='").append(telefono).append('\'');
+		sb.append(", documentoIdentidad='").append(documentoIdentidad).append('\'');
+		sb.append(", fechaNacimiento=").append(fechaNacimiento);
+		sb.append(", contrasena='").append(contrasena).append('\'');
+		sb.append(", fechaRegistro=").append(fechaRegistro);
+		sb.append('}');
+		return sb.toString();
+	}
 }

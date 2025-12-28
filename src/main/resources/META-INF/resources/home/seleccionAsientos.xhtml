@@ -16,25 +16,111 @@
 
             <h:form id="seatForm">
 
-                <!-- TÍTULO GENERAL -->
+                <!-- ======================= -->
+                <!--   STEPPER DE VUELOS     -->
+                <!-- ======================= -->
+                <p:outputPanel id="flightStepper" styleClass="flight-stepper">
+
+                    <ui:repeat value="#{seleccionAsientosBean.vuelos}" var="vuelo" varStatus="st">
+
+                        <h:panelGroup
+                                styleClass="flight-step #{st.index eq seleccionAsientosBean.idxVuelo ? 'active' : ''}">
+
+                            <div class="flight-route">
+                                #{vuelo.numeroVuelo}
+                            </div>
+
+                            <div class="flight-date">
+                                (#{st.index + 1} de #{seleccionAsientosBean.vuelos.size()})
+                            </div>
+
+                            <span class="flight-indicator"></span>
+
+                        </h:panelGroup>
+
+                    </ui:repeat>
+
+                </p:outputPanel>
 
 
-                <!-- ASIENTOS SELECCIONADOS -->
-                <h:panelGroup rendered="#{not empty seleccionAsientosBean.asientosSeleccionadosList}">
-                    <h3 class="subheader-selected">Asientos Seleccionados</h3>
+                <!-- ======================= -->
+                <!--   ASIENTOS SELECCIONADOS -->
+                <!-- ======================= -->
+                <h:panelGroup rendered="#{not empty seleccionAsientosBean.asientosSeleccionadosList}"
+                              styleClass="selected-seats-panel">
 
-                    <ul class="selected-seat-list">
+                    <h3 class="selected-seats-title">Asientos seleccionados</h3>
+
+                    <div class="selected-seats-grid">
                         <ui:repeat value="#{seleccionAsientosBean.asientosSeleccionadosList}" var="asiento">
-                            <li><strong>#{asiento.numeroAsiento}</strong> – #{asiento.clase}</li>
+
+                            <div class="seat-chip">
+                                <div class="seat-number">#{asiento.numeroAsiento}</div>
+                                <div class="seat-class">#{asiento.clase}</div>
+                                <div class="seat-price">CLP #{asiento.precio}</div>
+                            </div>
+
                         </ui:repeat>
-                    </ul>
+                    </div>
+
                 </h:panelGroup>
+
+
+                <h:panelGroup rendered="#{not empty seleccionAsientosBean.pasajeros}"
+                              styleClass="passenger-seats-panel">
+
+                    <h3 class="selected-seats-title">
+                        Asientos seleccionados por pasajero
+                    </h3>
+
+                    <ui:repeat value="#{seleccionAsientosBean.pasajeros}" var="pasajero" varStatus="p">
+
+                        <div class="passenger-card #{p.index eq seleccionAsientosBean.idxAsientoSeleccion ? 'active' : ''}">
+
+                            <!-- Header -->
+                            <div class="passenger-header">
+
+                                <div class="passenger-left">
+                    <span class="passenger-badge">
+                        Pasajero #{p.index + 1}
+                    </span>
+
+                                </div>
+
+                                <!-- Vuelo actual -->
+                                <div class="passenger-flight">
+                                    Vuelo #{seleccionAsientosBean.vuelo.numeroVuelo}
+                                </div>
+
+                            </div>
+
+                            <!-- Asientos -->
+                            <div class="selected-seats-grid compact">
+                                <ui:repeat value="#{pasajero.asientos}" var="asiento">
+
+                                    <div class="seat-chip passenger-#{p.index % 3}">
+                                        <div class="seat-number">#{asiento.numeroAsiento}</div>
+                                        <div class="seat-class">#{asiento.clase}</div>
+                                        <div class="seat-class">#{asiento.numeroVuelo}</div>
+                                        <div class="seat-price">CLP #{asiento.precio}</div>
+                                    </div>
+
+                                </ui:repeat>
+                            </div>
+
+                        </div>
+
+                    </ui:repeat>
+
+                </h:panelGroup>
+
 
 
                 <!-- ======================= -->
                 <!--   INFORMACIÓN DEL VUELO  -->
                 <!-- ======================= -->
-                <h:panelGroup id="vuelo-infoPanel" styleClass="vuelo-info-premium"
+                <h:panelGroup id="vuelo-infoPanel"
+                              styleClass="vuelo-info-premium"
                               rendered="#{seleccionAsientosBean.vuelo != null}">
 
                     <div class="flight-header">
@@ -44,13 +130,15 @@
 
                     <div class="flight-card">
 
-                        <div class="flight-route">
+                        <div class="flight-route-info">
+
                             <div class="route-airport">
                                 <i class="pi pi-send"></i>
                                 <span>Salida</span>
                                 <strong>
                                     <h:outputText value="#{seleccionAsientosBean.vuelo.fechaHoraSalida}">
-                                        <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago"/>
+                                        <f:convertDateTime pattern="dd/MM/yyyy hh:mm a"
+                                                           timeZone="America/Santiago"/>
                                     </h:outputText>
                                 </strong>
                             </div>
@@ -64,33 +152,52 @@
                                 <span>Llegada</span>
                                 <strong>
                                     <h:outputText value="#{seleccionAsientosBean.vuelo.fechaHoraLlegada}">
-                                        <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago"/>
+                                        <f:convertDateTime pattern="dd/MM/yyyy hh:mm a"
+                                                           timeZone="America/Santiago"/>
                                     </h:outputText>
                                 </strong>
                             </div>
+
                         </div>
 
                         <div class="flight-info-grid">
                             <div class="info-box">
-                                <div class="info-label"><i class="pi pi-hashtag"></i> Número de vuelo</div>
-                                <div class="info-value">#{seleccionAsientosBean.vuelo.numeroVuelo}</div>
+                                <div class="info-label">
+                                    <i class="pi pi-hashtag"></i> Número de vuelo
+                                </div>
+                                <div class="info-value">
+                                    #{seleccionAsientosBean.vuelo.numeroVuelo}
+                                </div>
                             </div>
                         </div>
 
                     </div>
+
                 </h:panelGroup>
 
-                <h2 class="page-title">
-                    <i class="pi pi-th-large"></i> Distribución de Asientos
-                </h2>
-                <!-- ======================= -->
-                <!--      CABINA DE ASIENTOS -->
-                <!-- ======================= -->
 
+                <!-- ======================= -->
+                <!--   TÍTULO CABINA         -->
+                <!-- ======================= -->
+                <h2 class="page-title">
+                    <i class="pi pi-th-large"></i>
+                    Distribución de Asientos
+                </h2>
+
+
+                <!-- ======================= -->
+                <!--   LEYENDA DE ASIENTOS   -->
+                <!-- ======================= -->
                 <div class="seat-legend">
-                    <div class="legend-block"><span class="legend-square disponible"></span>Disponible</div>
-                    <div class="legend-block"><span class="legend-square ocupado"></span>Ocupado</div>
-                    <div class="legend-block"><span class="legend-square seleccionado"></span>Seleccionado</div>
+                    <div class="legend-block">
+                        <span class="legend-square disponible"></span>Disponible
+                    </div>
+                    <div class="legend-block">
+                        <span class="legend-square ocupado"></span>Ocupado
+                    </div>
+                    <div class="legend-block">
+                        <span class="legend-square seleccionado"></span>Seleccionado
+                    </div>
                 </div>
 
 
@@ -399,6 +506,333 @@ transform: translateY(-30px);
     opacity: 0.6;
 }
 .seleccionado { background: #f39c12 !important; }
+
+
+
+        /* ======================= */
+/* STEPPER DE VUELOS */
+/* ======================= */
+.flight-stepper {
+    display: flex;
+    justify-content: space-between;
+    margin: 25px 0;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #2a2f3a;
+}
+
+.flight-step {
+    flex: 1;
+    text-align: center;
+    color: #8e8e8e;
+    position: relative;
+    font-size: 13px;
+}
+
+.flight-step.active {
+    color: #ffffff;
+}
+
+.flight-route {
+    font-weight: 600;
+}
+
+.flight-date {
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+.flight-indicator {
+    position: absolute;
+    bottom: -13px;
+    left: 20%;
+    right: 20%;
+    height: 3px;
+    background: transparent;
+    border-radius: 2px;
+}
+
+.flight-step.active .flight-indicator {
+    background: #e4002b;
+}
+
+/* ======================= */
+/* ASIENTOS SELECCIONADOS */
+/* ======================= */
+.selected-seats-panel {
+    margin: 35px 0;
+    text-align: center;
+}
+
+.selected-seats-title {
+    color: #8fd3ff;
+    font-weight: 500;
+    margin-bottom: 18px;
+}
+
+.selected-seats-grid {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 14px;
+}
+
+.seat-chip {
+    background: #141a22;
+    border-radius: 10px;
+    padding: 12px 16px;
+    min-width: 90px;
+    box-shadow: inset 0 0 0 1px #2a2f3a;
+}
+
+.seat-number {
+    font-size: 18px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.seat-class {
+    font-size: 12px;
+    color: #9aa5b1;
+    margin-top: 3px;
+}
+
+.seat-price {
+    font-size: 12px;
+    color: #e4002b;
+    margin-top: 2px;
+}
+
+/* ======================= */
+/* INFORMACIÓN DEL VUELO */
+/* ======================= */
+.vuelo-info-premium {
+    margin: 45px auto;
+    max-width: 900px;
+}
+
+.flight-header {
+    font-size: 18px;
+    color: #8fd3ff;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.flight-card {
+    background: #141a22;
+    border-radius: 14px;
+    padding: 25px;
+    box-shadow: inset 0 0 0 1px #2a2f3a;
+}
+
+.flight-route-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.route-airport {
+    text-align: center;
+}
+
+.route-airport span {
+    font-size: 12px;
+    color: #9aa5b1;
+}
+
+.route-airport strong {
+    display: block;
+    margin-top: 5px;
+    color: #ffffff;
+}
+
+.route-arrow {
+    font-size: 22px;
+    color: #8fd3ff;
+}
+
+/* ======================= */
+/* INFO GRID */
+/* ======================= */
+.flight-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.info-box {
+    background: #0f141b;
+    padding: 14px;
+    border-radius: 10px;
+}
+
+.info-label {
+    font-size: 12px;
+    color: #9aa5b1;
+}
+
+.info-value {
+    font-size: 15px;
+    font-weight: 600;
+    margin-top: 5px;
+    color: #ffffff;
+}
+
+/* ======================= */
+/* TÍTULO CABINA */
+/* ======================= */
+.page-title {
+    margin: 45px 0 20px;
+    text-align: center;
+    color: #ffffff;
+}
+
+/* ======================= */
+/* LEYENDA */
+/* ======================= */
+.seat-legend {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-bottom: 25px;
+}
+
+.legend-block {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #9aa5b1;
+    font-size: 13px;
+}
+
+.legend-square {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+}
+
+.legend-square.disponible { background: #2ecc71; }
+.legend-square.ocupado { background: #7f8c8d; }
+.legend-square.seleccionado { background: #e4002b; }
+
+
+
+
+        /* ======================= */
+/* PANEL GENERAL */
+/* ======================= */
+.passenger-seats-panel {
+    margin: 50px auto;
+    max-width: 1100px;
+}
+
+/* ======================= */
+/* CARD PASAJERO */
+/* ======================= */
+.passenger-card {
+    background: linear-gradient(180deg, #0f141b, #0b0f14);
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 25px;
+    box-shadow: inset 0 0 0 1px #1f2733;
+    transition: all .3s ease;
+}
+
+/* Pasajero activo */
+.passenger-card.active {
+    box-shadow: inset 0 0 0 1px #4da3ff, 0 0 0 1px rgba(77,163,255,.3);
+}
+
+/* ======================= */
+/* HEADER */
+/* ======================= */
+.passenger-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.passenger-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.passenger-badge {
+    background: #18202c;
+    color: #8fd3ff;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+}
+
+.passenger-name {
+    font-weight: 600;
+    color: #ffffff;
+}
+
+/* Vuelo */
+.passenger-flight {
+    font-size: 12px;
+    color: #9aa5b1;
+    opacity: 0.9;
+}
+
+/* ======================= */
+/* ASIENTOS */
+/* ======================= */
+.selected-seats-grid.compact {
+    justify-content: flex-start;
+    gap: 12px;
+}
+
+/* Chip */
+.seat-chip {
+    background: #111823;
+    border-radius: 12px;
+    padding: 14px 16px;
+    min-width: 85px;
+    text-align: center;
+    transition: transform .2s ease;
+}
+
+.seat-chip:hover {
+    transform: translateY(-2px);
+}
+
+/* Número */
+.seat-number {
+    font-size: 18px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+/* Clase */
+.seat-class {
+    font-size: 12px;
+    color: #9aa5b1;
+    margin-top: 4px;
+}
+
+/* Precio */
+.seat-price {
+    font-size: 12px;
+    color: #e4002b;
+    margin-top: 2px;
+}
+
+/* ======================= */
+/* COLORES PASAJERO */
+/* ======================= */
+.seat-chip.passenger-0 { box-shadow: inset 0 0 0 1px #4da3ff; }
+.seat-chip.passenger-1 { box-shadow: inset 0 0 0 1px #ff9f43; }
+.seat-chip.passenger-2 { box-shadow: inset 0 0 0 1px #2ecc71; }
+
+
+
 
     </style>
 

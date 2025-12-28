@@ -89,6 +89,7 @@ DROP TABLE IF EXISTS Itinerario_Tarifa CASCADE;
 DROP TABLE IF EXISTS Tarifa CASCADE;
 DROP TABLE IF EXISTS Caracteristica_Tarifa CASCADE;
 DROP TABLE IF EXISTS Tarifa_Caracteristica CASCADE;
+DROP TABLE IF EXISTS pasajero_reserva CASCADE;
 
 
 
@@ -522,6 +523,24 @@ CREATE TABLE Reserva_Itinerario (
 );
 
 
+CREATE TABLE pasajero_reserva (
+    id_pasajero_reserva SERIAL PRIMARY KEY,
+    id_reserva          INTEGER NOT NULL,
+    rut                 VARCHAR(12) NOT NULL,
+
+    CONSTRAINT fk_pasajero_reserva_reserva
+        FOREIGN KEY (id_reserva)
+        REFERENCES reserva(id_reserva),
+
+    CONSTRAINT fk_pasajero_reserva_pasajero
+        FOREIGN KEY (rut)
+        REFERENCES pasajero(rut),
+
+    -- Un pasajero no puede repetirse en la misma reserva
+    CONSTRAINT uq_reserva_pasajero
+        UNIQUE (id_reserva, rut)
+);
+
 
 -- Crear la tabla Reserva_Asiento
 -- Crear la tabla Reserva_Asiento
@@ -530,7 +549,18 @@ CREATE TABLE Reserva_Asiento (
     ID_RESERVA INT REFERENCES Reserva(ID_RESERVA),
     ID_VUELO INT REFERENCES Vuelo(ID_VUELO),
     ID_ASIENTO INT REFERENCES Asiento(ID_ASIENTO),
+	--id_pasajero_reserva  INTEGER NOT NULL,
+
     CONSTRAINT unique_reserva_asiento UNIQUE(ID_VUELO, ID_ASIENTO)
+
+	/*CONSTRAINT fk_reserva_asiento_pasajero_reserva
+        FOREIGN KEY (id_pasajero_reserva)
+        REFERENCES pasajero_reserva(id_pasajero_reserva),*/
+
+	-- Un pasajero solo puede tener un asiento por vuelo
+   /*CONSTRAINT uq_pasajero_vuelo
+        UNIQUE (id_pasajero_reserva, id_vuelo)*/
+
 );
 
 

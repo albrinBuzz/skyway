@@ -29,6 +29,7 @@ import jakarta.servlet.http.HttpSession;
 import org.apache.juli.logging.Log;
 import org.primefaces.PrimeFaces;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.w3c.dom.ls.LSInput;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -74,11 +75,12 @@ public class ReservaBean implements Serializable {
 
     private Pasajero pasajero = new Pasajero();
     private HashMap<Integer,Integer>tarifasItinerarios;
-
+    List<ReservaAsientoBean.Pasajero> pasajeros;
+    List<Pasajero>pasajerosList;
 
     @Autowired
     private HttpSession session;
-
+    Usuario usuario;
 
 
     // Simulamos una inyección de un servicio (puedes usar @Inject si usas CDI)
@@ -91,6 +93,8 @@ public class ReservaBean implements Serializable {
         //this.cliente = new ClienteDTO("Juan Pérez", "juan@example.com", "123456789");
         total=0;
 
+        usuario = (Usuario) session.getAttribute("usuario");
+
         pasajero.setUsuario(new Usuario());
         FacesContext context = FacesContext.getCurrentInstance();
         Map<String, Object> sessionMap = context.getExternalContext().getSessionMap();
@@ -98,6 +102,30 @@ public class ReservaBean implements Serializable {
         var idItinerarios = (List<Integer>) sessionMap.get("itinerarios");
 
         tarifasItinerarios= (HashMap<Integer, Integer>) sessionMap.get("tarifasItinerios");
+
+        pasajeros= (List<ReservaAsientoBean.Pasajero>) sessionMap.get("pasajeros");
+
+        pasajerosList=new ArrayList<>();
+
+        if (usuario!=null){
+            for (ReservaAsientoBean.Pasajero pasajero1 : pasajeros) {
+                Pasajero p = new Pasajero();
+                p.setUsuario(new Usuario()); // OBLIGATORIO
+                pasajerosList.add(p);
+            }
+
+            this.pasajero = pasajeroService.findById(usuario.getRut()).get();
+            pasajerosList.removeFirst();
+            pasajero.setUsuario(usuario);
+            pasajerosList.add(0,pasajero);
+        }else {
+            for (ReservaAsientoBean.Pasajero pasajero1 : pasajeros) {
+                Pasajero p = new Pasajero();
+                p.setUsuario(new Usuario()); // OBLIGATORIO
+                pasajerosList.add(p);
+            }
+
+        }
 
         if (idItinerarios==null){
             return;
@@ -125,6 +153,13 @@ public class ReservaBean implements Serializable {
 
     public Map<Integer, List<InfoAsientoDTO>> getAsientosSeleccionados() {
         return asientosSeleccionados;
+    }
+
+
+    public void mostrarPasajeros(){
+        for (Pasajero pasajero1 : pasajerosList) {
+            Logger.logInfo(pasajero1.toString());
+        }
     }
 
     // Acción del botón
@@ -168,7 +203,7 @@ public class ReservaBean implements Serializable {
 
             Logger.logInfo("confirma la reserva");
 
-            Usuario usuario = (Usuario) session.getAttribute("usuario");
+
             var reserva = new Reserva();
             if (usuario == null) {
                 Logger.logInfo("no logeado");
@@ -180,6 +215,7 @@ public class ReservaBean implements Serializable {
                 var pasajero = pasajeroService.save(this.pasajero);
                 reserva.setPasajero(pasajero);
             } else {
+
                 Logger.logInfo("logeado");
                 this.pasajero = pasajeroService.findById(usuario.getRut()).get();
                 reserva.setPasajero(pasajero);
@@ -287,6 +323,19 @@ public class ReservaBean implements Serializable {
     }
 
 
+    public String getAsientoPasajero(int idAsiento,String numeroAsiento){
+        for (ReservaAsientoBean.Pasajero pasajero1 : pasajeros) {
+
+            for (ReservaAsientoBean.AsientoSeleccionado asiento : pasajero1.getAsientos()) {
+
+                if (asiento.getIdAsiento()==idAsiento&&asiento.getNumeroAsiento().equals(numeroAsiento)){
+                    return pasajero1.getNombre();
+                }
+            }
+
+        }
+        return "";
+    }
 
     public String getVuelo(Integer idVuelo){
         return vueloService.findById(idVuelo).get().getNumeroVuelo();
@@ -306,5 +355,17 @@ public class ReservaBean implements Serializable {
 
     public void setPasajero(Pasajero pasajero) {
         this.pasajero = pasajero;
+    }
+
+    public List<ReservaAsientoBean.Pasajero> getPasajeros() {
+        return pasajeros;
+    }
+
+    public List<Pasajero> getPasajerosList() {
+        return pasajerosList;
+    }
+
+    public Usuario getUsuario() {
+        return usuario;
     }
 }
