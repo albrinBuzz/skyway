@@ -40,6 +40,7 @@ DROP SEQUENCE IF EXISTS tarifa_seq CASCADE;
 DROP SEQUENCE IF EXISTS itinerario_tarifa_seq CASCADE;
 DROP SEQUENCE IF EXISTS caracteristica_tarifa_seq CASCADE;
 DROP SEQUENCE IF EXISTS tarifa_caracteristica_seq CASCADE;
+DROP SEQUENCE IF EXISTS reserva_pasajero_seq CASCADE;
 
 
 -- Eliminar Tablas con CASCADE
@@ -89,6 +90,7 @@ DROP TABLE IF EXISTS Itinerario_Tarifa CASCADE;
 DROP TABLE IF EXISTS Tarifa CASCADE;
 DROP TABLE IF EXISTS Caracteristica_Tarifa CASCADE;
 DROP TABLE IF EXISTS Tarifa_Caracteristica CASCADE;
+DROP TABLE IF EXISTS pasajero_reserva CASCADE;
 
 
 
@@ -133,6 +135,8 @@ CREATE SEQUENCE capacidad_clase_seq START 1;
 CREATE SEQUENCE rolusuario_id_seq START 1 INCREMENT 1;
 CREATE SEQUENCE caracteristica_tarifa_seq START 1 INCREMENT 1;
 CREATE SEQUENCE tarifa_caracteristica_seq START 1 INCREMENT 1;
+CREATE SEQUENCE reserva_pasajero_seq START 1 INCREMENT 1;
+
 
 CREATE SEQUENCE tarifa_seq
     START WITH 1
@@ -165,11 +169,11 @@ CREATE TABLE Usuario (
     RUT VARCHAR(12) PRIMARY KEY,
     Nombre VARCHAR(255) NOT NULL,
     Apellido VARCHAR(255) NOT NULL,
-    Correo_Electronico VARCHAR(100) NOT NULL UNIQUE,
+    Correo_Electronico VARCHAR(100) UNIQUE,
     Telefono VARCHAR(255) NOT NULL,
     Documento_Identidad VARCHAR(20) NOT NULL UNIQUE,
     Fecha_Nacimiento DATE NOT NULL,
-    Contrasena VARCHAR(100) NOT NULL,
+    Contrasena VARCHAR(100),
     Fecha_Registro TIMESTAMP DEFAULT NOW()
 );
 
@@ -522,6 +526,23 @@ CREATE TABLE Reserva_Itinerario (
 );
 
 
+CREATE TABLE pasajero_reserva (
+    id_pasajero_reserva INT PRIMARY KEY DEFAULT nextval('reserva_pasajero_seq'),
+    id_reserva          INTEGER NOT NULL,
+    rut                 VARCHAR(12) NOT NULL,
+    CONSTRAINT fk_pasajero_reserva_reserva
+        FOREIGN KEY (id_reserva)
+        REFERENCES reserva(id_reserva),
+
+    CONSTRAINT fk_pasajero_reserva_pasajero
+        FOREIGN KEY (rut)
+        REFERENCES pasajero(rut),
+
+    -- Un pasajero no puede repetirse en la misma reserva
+    CONSTRAINT uq_reserva_pasajero
+        UNIQUE (id_reserva, rut)
+);
+
 
 -- Crear la tabla Reserva_Asiento
 -- Crear la tabla Reserva_Asiento
@@ -530,7 +551,23 @@ CREATE TABLE Reserva_Asiento (
     ID_RESERVA INT REFERENCES Reserva(ID_RESERVA),
     ID_VUELO INT REFERENCES Vuelo(ID_VUELO),
     ID_ASIENTO INT REFERENCES Asiento(ID_ASIENTO),
+	rut  VARCHAR(12) NOT NULL,
+
+	CONSTRAINT fk_pasajero_reservaAsiento
+        FOREIGN KEY (rut)
+        REFERENCES pasajero(rut),
+	--id_pasajero_reserva  INTEGER NOT NULL,
+
     CONSTRAINT unique_reserva_asiento UNIQUE(ID_VUELO, ID_ASIENTO)
+
+	/*CONSTRAINT fk_reserva_asiento_pasajero_reserva
+        FOREIGN KEY (id_pasajero_reserva)
+        REFERENCES pasajero_reserva(id_pasajero_reserva),
+
+	-- Un pasajero solo puede tener un asiento por vuelo
+   CONSTRAINT uq_pasajero_vuelo
+        UNIQUE (id_pasajero_reserva, id_vuelo)*/
+
 );
 
 
@@ -585,7 +622,7 @@ CREATE TABLE Notificacion (
     Fecha TIMESTAMP DEFAULT NOW()
 );
 
-CREATE TABLE Seguimiento_Vuelo (
+/*CREATE TABLE Seguimiento_Vuelo (
     ID_SEGUIMIENTO SERIAL PRIMARY KEY,
     ID_VUELO INT REFERENCES Vuelo(ID_VUELO),
     Latitud DECIMAL(9,6),
@@ -593,7 +630,7 @@ CREATE TABLE Seguimiento_Vuelo (
     Altitud INT,
     Velocidad INT,
     Timestamp TIMESTAMP DEFAULT now()
-);
+);*/
 
 
 CREATE INDEX idx_idItinerario ON itinerario_vuelo(id_itinerario);
@@ -625,7 +662,6 @@ FOREIGN KEY (ID_VUELO) REFERENCES Vuelo(ID_VUELO) ON DELETE CASCADE;
 ALTER TABLE Reserva_Asiento
 ADD CONSTRAINT reserva_asiento_id_vuelo_fkey
 FOREIGN KEY (ID_VUELO) REFERENCES Vuelo(ID_VUELO) ON DELETE CASCADE;*/
-
 
 DO $$
 DECLARE
@@ -1111,162 +1147,6 @@ EXECUTE FUNCTION fn_notify_new_notification();
 
 
 
-
-CREATE OR REPLACE PROCEDURE spConfirmar_reserva(
-    IN p_idVuelo INT,
-	IN p_idReserva INT,
-    IN p_asientos INT[],
-    IN p_rutPasajero TEXT,
-    OUT p_resultado TEXT
-)
-LANGUAGE plpgsql
-AS $$
-DECLARE
-    reserva_id INT;
-    estado_reserva_id INT := 1;  -- Suponemos 1 = pendiente o confirmada
-    i INT;
-    id_avion INT;
-    id_asientoP INT;
-    asiento_en_reserva INT;
-    numero_asiento TEXT;
-    asientos_reservados TEXT := '';
-BEGIN
-    -- Obtener el avión asignado al vuelo
-    SELECT vl.id_avion INTO id_avion
-    FROM vuelo vl
-    WHERE id_vuelo = p_idVuelo;
-
-    -- Iniciar transacción (implícita en SP)
-    -- Crear la reserva
-    /*INSERT INTO reserva (rut_pasajero, fecha_reserva, estado_reserva, total)
-    VALUES (p_rutPasajero, CURRENT_TIMESTAMP, estado_reserva_id, 0)
-    RETURNING id_reserva INTO reserva_id;*/
-
-    FOR i IN 1..array_length(p_asientos, 1)
-    LOOP
-        id_asientoP := p_asientos[i];
-
-        -- Verificar si el asiento ya está reservado en este vuelo
-        SELECT 1 INTO asiento_en_reserva
-		FROM reserva_asiento ra
-		where ra.ID_VUELO=p_idVuelo
-		and ra.ID_ASIENTO=id_asientoP
-		FOR UPDATE;
-
-
-
-        IF asiento_en_reserva > 0 THEN
-            SELECT ast.numero_asiento INTO numero_asiento
-            FROM asiento ast
-            WHERE ast.id_asiento = id_asientoP;
-
-            asientos_reservados := asientos_reservados || numero_asiento || ', ';
-        ELSE
-            -- Insertar en reserva_asiento
-            INSERT INTO reserva_asiento (id_reserva, id_asiento,ID_VUELO)
-            VALUES (p_idReserva, id_asientoP,p_idVuelo);
-        END IF;
-    END LOOP;
-
-    IF asientos_reservados <> '' THEN
-        p_resultado := 'ERROR: Asientos ya reservados: ' || LEFT(asientos_reservados, LENGTH(asientos_reservados) - 2);
-        -- Puedes eliminar la reserva si quedó sin asientos
-        DELETE FROM reserva WHERE id_reserva = p_idReserva;
-    ELSE
-        -- Asociar la reserva con el vuelo
-        --INSERT INTO id_asientoP (id_reserva, id_vuelo)
-        --VALUES (reserva_id, p_idVuelo);
-
-        p_resultado := 'OK: Reserva realizada correctamente.';
-    END IF;
-EXCEPTION
-    WHEN OTHERS THEN
-        -- Rollback seguro en caso de error
-        RAISE NOTICE 'Ocurrió un error: %', SQLERRM;
-        DELETE FROM reserva WHERE id_reserva = p_idReserva;
-        p_resultado := 'ERROR: No se pudo completar la reserva.'||SQLERRM;
-END;
-$$;
-
-
-
-CREATE OR REPLACE PROCEDURE spVerificarDisponinibilidadAsientos(
-    IN p_idVuelo INT,
-    IN p_asientos INT[],
-    OUT p_resultado TEXT
-)
-LANGUAGE plpgsql
-AS $$
-DECLARE
-    reserva_id INT;
-    estado_reserva_id INT := 1;  -- Suponemos 1 = pendiente o confirmada
-    i INT;
-    id_avion INT;
-    id_asientoP INT;
-    asiento_en_reserva INT;
-    numero_asiento TEXT;
-    asientos_reservados TEXT := '-';
-BEGIN
-    -- Obtener el avión asignado al vuelo
-    SELECT vl.id_avion INTO id_avion
-    FROM vuelo vl
-    WHERE id_vuelo = p_idVuelo;
-
-
-    FOR i IN 1..array_length(p_asientos, 1)
-    LOOP
-        id_asientoP := p_asientos[i];
-
-        -- Verificar si el asiento ya está reservado en este vuelo
-        SELECT 1 INTO asiento_en_reserva
-		FROM reserva_asiento ra
-		where ra.ID_VUELO=p_idVuelo
-		and ra.ID_ASIENTO=id_asientoP
-		FOR UPDATE;
-
-
-
-        IF asiento_en_reserva > 0 THEN
-            asientos_reservados := asientos_reservados || numero_asiento || ', ';
-        END IF;
-    END LOOP;
-
-    IF asientos_reservados <> '-' THEN
-        p_resultado := 'ERROR: Asientos ya reservados: ' || LEFT(asientos_reservados, LENGTH(asientos_reservados) - 2);
-    END IF;
-EXCEPTION
-    WHEN OTHERS THEN
-        -- Rollback seguro en caso de error
-        RAISE NOTICE 'Ocurrió un error: %', SQLERRM;
-        p_resultado := 'ERROR: No se pudo completar la reserva.'||SQLERRM;
-END;
-$$;
-
-
-CREATE or replace PROCEDURE sp_cambiarAsiento(
-   in p_id_asiento int ,
-   in p_id_reserva int,
-   in p_id_asiento_org int
-)
-LANGUAGE plpgsql
-AS $$
-BEGIN
-
-  	update reserva_asiento
-	  set id_asiento=p_id_asiento
-	  where id_reserva=p_id_reserva
-	  and id_asiento=p_id_asiento_org;
-
-
-
-
-END;
-$$;
-
-
-
-
-
 CREATE OR REPLACE FUNCTION fnBuscarVuelo(
     p_codigo_origen VARCHAR,
     p_codigo_destino VARCHAR,
@@ -1600,7 +1480,10 @@ END;
 $$ LANGUAGE plpgsql STABLE;
 
 
-CREATE OR REPLACE FUNCTION fn_getTicket(p_rut_pasajero VARCHAR,  p_id_reserva integer)
+
+
+
+CREATE OR REPLACE FUNCTION fn_getTicket(p_rut_pasajero VARCHAR,  p_id_reserva integer, p_idItinerario integer)
 RETURNS TABLE (
     numero_vuelo VARCHAR,
     hora_salida TIMESTAMP,
@@ -1608,7 +1491,8 @@ RETURNS TABLE (
     codigo_puerta VARCHAR,
     terminal VARCHAR,
     numero_asiento VARCHAR,
-    clase_asiento VARCHAR
+    clase_asiento VARCHAR,
+	nombre text
 )
 AS $$
 BEGIN
@@ -1620,9 +1504,13 @@ BEGIN
         prta.codigo_puerta,
         prta.terminal,
         ast.numero_asiento,
-        clas.descripcion
+        clas.descripcion,
+		us.nombre || ' ' || us.apellido
     FROM reserva_asiento rsva
     left JOIN reserva rsv ON rsv.id_reserva = rsva.id_reserva
+	left join itinerario_vuelo itv on itv.id_vuelo = rsva.id_vuelo
+	join pasajero p on p.rut = rsva.rut
+	join usuario us on us.rut = p.rut
     left JOIN vuelo vl ON vl.id_vuelo = rsva.id_vuelo
     left JOIN segmento_vuelo sgm ON sgm.id_vuelo = rsva.id_vuelo
     left JOIN asignacion_puerta asgp ON asgp.id_segmento = sgm.id_segmento
@@ -1630,6 +1518,7 @@ BEGIN
     left JOIN asiento ast ON ast.id_asiento = rsva.id_asiento
     left JOIN clase_asiento clas ON clas.id_clase = ast.id_clase
     WHERE rsv.rut_pasajero = p_rut_pasajero and rsv.id_reserva=p_id_reserva
+	and itv.id_itinerario=p_idItinerario
 	order by  vl.fecha_hora_salida;
 END;
 $$ LANGUAGE plpgsql;
@@ -1688,7 +1577,7 @@ select * from fn_getVueloInfo(23);
 -- Ejemplo:
 SELECT * FROM fn_getAsientosPorItinerarioYReserva(320, 10);
 
-SELECT * FROM fn_getTicket('12345678-9',4);
+--SELECT * FROM fn_getTicket('12345678-9',4);
 
 SELECT * FROM fn_getItinerariosRut('12345678-9', 100, 0);
 
@@ -1707,6 +1596,157 @@ SELECT * FROM fn_getItinerariosPorRutYFechas('12345678-9', 10, 0, NULL, NULL);
 SELECT * FROM fn_getItinerariosPorRutYFechas('12345678-9', 10, 0, '2025-09-01', NULL);
 
 
+
+CREATE OR REPLACE PROCEDURE spConfirmar_reserva(
+    IN p_idVuelo INT,
+	IN p_idReserva INT,
+    IN p_asientos INT[],
+    IN p_rutPasajero TEXT,
+    OUT p_resultado TEXT
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    reserva_id INT;
+    estado_reserva_id INT := 1;  -- Suponemos 1 = pendiente o confirmada
+    i INT;
+    id_avion INT;
+    id_asientoP INT;
+    asiento_en_reserva INT;
+    numero_asiento TEXT;
+    asientos_reservados TEXT := '';
+BEGIN
+    -- Obtener el avión asignado al vuelo
+    SELECT vl.id_avion INTO id_avion
+    FROM vuelo vl
+    WHERE id_vuelo = p_idVuelo;
+
+    -- Iniciar transacción (implícita en SP)
+    -- Crear la reserva
+    /*INSERT INTO reserva (rut_pasajero, fecha_reserva, estado_reserva, total)
+    VALUES (p_rutPasajero, CURRENT_TIMESTAMP, estado_reserva_id, 0)
+    RETURNING id_reserva INTO reserva_id;*/
+
+    FOR i IN 1..array_length(p_asientos, 1)
+    LOOP
+        id_asientoP := p_asientos[i];
+
+        -- Verificar si el asiento ya está reservado en este vuelo
+        SELECT 1 INTO asiento_en_reserva
+		FROM reserva_asiento ra
+		where ra.ID_VUELO=p_idVuelo
+		and ra.ID_ASIENTO=id_asientoP
+		FOR UPDATE;
+
+
+
+        IF asiento_en_reserva > 0 THEN
+            SELECT ast.numero_asiento INTO numero_asiento
+            FROM asiento ast
+            WHERE ast.id_asiento = id_asientoP;
+
+            asientos_reservados := asientos_reservados || numero_asiento || ', ';
+        ELSE
+            -- Insertar en reserva_asiento
+            INSERT INTO reserva_asiento (id_reserva, id_asiento,ID_VUELO,rut)
+            VALUES (p_idReserva, id_asientoP,p_idVuelo,p_rutPasajero);
+        END IF;
+    END LOOP;
+
+    IF asientos_reservados <> '' THEN
+        p_resultado := 'ERROR: Asientos ya reservados: ' || LEFT(asientos_reservados, LENGTH(asientos_reservados) - 2);
+        -- Puedes eliminar la reserva si quedó sin asientos
+        DELETE FROM reserva WHERE id_reserva = p_idReserva;
+    ELSE
+        -- Asociar la reserva con el vuelo
+        --INSERT INTO id_asientoP (id_reserva, id_vuelo)
+        --VALUES (reserva_id, p_idVuelo);
+
+        p_resultado := 'OK: Reserva realizada correctamente.';
+    END IF;
+EXCEPTION
+    WHEN OTHERS THEN
+        -- Rollback seguro en caso de error
+        RAISE NOTICE 'Ocurrió un error: %', SQLERRM;
+        DELETE FROM reserva WHERE id_reserva = p_idReserva;
+        p_resultado := 'ERROR: No se pudo completar la reserva.'||SQLERRM;
+END;
+$$;
+
+
+
+CREATE OR REPLACE PROCEDURE spVerificarDisponinibilidadAsientos(
+    IN p_idVuelo INT,
+    IN p_asientos INT[],
+    OUT p_resultado TEXT
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    reserva_id INT;
+    estado_reserva_id INT := 1;  -- Suponemos 1 = pendiente o confirmada
+    i INT;
+    id_avion INT;
+    id_asientoP INT;
+    asiento_en_reserva INT;
+    numero_asiento TEXT;
+    asientos_reservados TEXT := '-';
+BEGIN
+    -- Obtener el avión asignado al vuelo
+    SELECT vl.id_avion INTO id_avion
+    FROM vuelo vl
+    WHERE id_vuelo = p_idVuelo;
+
+
+    FOR i IN 1..array_length(p_asientos, 1)
+    LOOP
+        id_asientoP := p_asientos[i];
+
+        -- Verificar si el asiento ya está reservado en este vuelo
+        SELECT 1 INTO asiento_en_reserva
+		FROM reserva_asiento ra
+		where ra.ID_VUELO=p_idVuelo
+		and ra.ID_ASIENTO=id_asientoP
+		FOR UPDATE;
+
+
+
+        IF asiento_en_reserva > 0 THEN
+            asientos_reservados := asientos_reservados || numero_asiento || ', ';
+        END IF;
+    END LOOP;
+
+    IF asientos_reservados <> '-' THEN
+        p_resultado := 'ERROR: Asientos ya reservados: ' || LEFT(asientos_reservados, LENGTH(asientos_reservados) - 2);
+    END IF;
+EXCEPTION
+    WHEN OTHERS THEN
+        -- Rollback seguro en caso de error
+        RAISE NOTICE 'Ocurrió un error: %', SQLERRM;
+        p_resultado := 'ERROR: No se pudo completar la reserva.'||SQLERRM;
+END;
+$$;
+
+
+CREATE or replace PROCEDURE sp_cambiarAsiento(
+   in p_id_asiento int ,
+   in p_id_reserva int,
+   in p_id_asiento_org int
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+
+  	update reserva_asiento
+	  set id_asiento=p_id_asiento
+	  where id_reserva=p_id_reserva
+	  and id_asiento=p_id_asiento_org;
+
+
+
+
+END;
+$$;
 
 
 
@@ -2992,7 +3032,7 @@ VALUES (1, 10, 1), -- Aquí 1 es el id_tarifa que corresponde a 'Básica' o el q
 
 
 
--- Ejemplo de asignación de asientos (asumiendo IDs de asiento disponibles)
+/*-- Ejemplo de asignación de asientos (asumiendo IDs de asiento disponibles)
 INSERT INTO Reserva_Asiento (ID_RESERVA, ID_VUELO, ID_ASIENTO) VALUES
 -- Lucía
 (1, 19, 2032), -- GRU -> BOG
@@ -3007,7 +3047,7 @@ INSERT INTO Reserva_Asiento (ID_RESERVA, ID_VUELO, ID_ASIENTO) VALUES
 -- Ana
 (3, 19, 2056),
 (3, 20, 2047),
-(3, 21, 1766);
+(3, 21, 1766);*/
 
 
 

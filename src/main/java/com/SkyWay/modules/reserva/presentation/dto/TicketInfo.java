@@ -10,11 +10,12 @@ public class TicketInfo {
     private String terminal;
     private String numeroAsiento;
     private String claseAsiento;
+    private String nombre;
 
     public TicketInfo() {
     }
 
-    public TicketInfo(String numeroVuelo, Timestamp horaSalida, Timestamp horaLlegada, String codigoPuerta, String terminal, String numeroAsiento, String claseAsiento) {
+    public TicketInfo(String numeroVuelo, Timestamp horaSalida, Timestamp horaLlegada, String codigoPuerta, String terminal, String numeroAsiento, String claseAsiento, String nombre) {
         this.numeroVuelo = numeroVuelo;
         this.horaSalida = horaSalida;
         this.horaLlegada = horaLlegada;
@@ -22,6 +23,7 @@ public class TicketInfo {
         this.terminal = terminal;
         this.numeroAsiento = numeroAsiento;
         this.claseAsiento = claseAsiento;
+        this.nombre = nombre;
     }
 
     public String getNumeroVuelo() {
@@ -78,6 +80,14 @@ public class TicketInfo {
 
     public void setClaseAsiento(String claseAsiento) {
         this.claseAsiento = claseAsiento;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
     }
 
     @Override

@@ -1280,7 +1280,7 @@ VALUES (1, 10, 1), -- Aquí 1 es el id_tarifa que corresponde a 'Básica' o el q
 
 
 
--- Ejemplo de asignación de asientos (asumiendo IDs de asiento disponibles)
+/*-- Ejemplo de asignación de asientos (asumiendo IDs de asiento disponibles)
 INSERT INTO Reserva_Asiento (ID_RESERVA, ID_VUELO, ID_ASIENTO) VALUES
 -- Lucía
 (1, 19, 2032), -- GRU -> BOG
@@ -1295,7 +1295,7 @@ INSERT INTO Reserva_Asiento (ID_RESERVA, ID_VUELO, ID_ASIENTO) VALUES
 -- Ana
 (3, 19, 2056),
 (3, 20, 2047),
-(3, 21, 1766);
+(3, 21, 1766);*/
 
 
 

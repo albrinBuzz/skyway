@@ -40,6 +40,7 @@ DROP SEQUENCE IF EXISTS tarifa_seq CASCADE;
 DROP SEQUENCE IF EXISTS itinerario_tarifa_seq CASCADE;
 DROP SEQUENCE IF EXISTS caracteristica_tarifa_seq CASCADE;
 DROP SEQUENCE IF EXISTS tarifa_caracteristica_seq CASCADE;
+DROP SEQUENCE IF EXISTS reserva_pasajero_seq CASCADE;
 
 
 -- Eliminar Tablas con CASCADE
@@ -134,6 +135,8 @@ CREATE SEQUENCE capacidad_clase_seq START 1;
 CREATE SEQUENCE rolusuario_id_seq START 1 INCREMENT 1;
 CREATE SEQUENCE caracteristica_tarifa_seq START 1 INCREMENT 1;
 CREATE SEQUENCE tarifa_caracteristica_seq START 1 INCREMENT 1;
+CREATE SEQUENCE reserva_pasajero_seq START 1 INCREMENT 1;
+
 
 CREATE SEQUENCE tarifa_seq
     START WITH 1
@@ -166,11 +169,11 @@ CREATE TABLE Usuario (
     RUT VARCHAR(12) PRIMARY KEY,
     Nombre VARCHAR(255) NOT NULL,
     Apellido VARCHAR(255) NOT NULL,
-    Correo_Electronico VARCHAR(100) NOT NULL UNIQUE,
+    Correo_Electronico VARCHAR(100) UNIQUE,
     Telefono VARCHAR(255) NOT NULL,
     Documento_Identidad VARCHAR(20) NOT NULL UNIQUE,
     Fecha_Nacimiento DATE NOT NULL,
-    Contrasena VARCHAR(100) NOT NULL,
+    Contrasena VARCHAR(100),
     Fecha_Registro TIMESTAMP DEFAULT NOW()
 );
 
@@ -524,10 +527,9 @@ CREATE TABLE Reserva_Itinerario (
 
 
 CREATE TABLE pasajero_reserva (
-    id_pasajero_reserva SERIAL PRIMARY KEY,
+    id_pasajero_reserva INT PRIMARY KEY DEFAULT nextval('reserva_pasajero_seq'),
     id_reserva          INTEGER NOT NULL,
     rut                 VARCHAR(12) NOT NULL,
-
     CONSTRAINT fk_pasajero_reserva_reserva
         FOREIGN KEY (id_reserva)
         REFERENCES reserva(id_reserva),
@@ -549,16 +551,21 @@ CREATE TABLE Reserva_Asiento (
     ID_RESERVA INT REFERENCES Reserva(ID_RESERVA),
     ID_VUELO INT REFERENCES Vuelo(ID_VUELO),
     ID_ASIENTO INT REFERENCES Asiento(ID_ASIENTO),
+	rut  VARCHAR(12) NOT NULL,
+
+	CONSTRAINT fk_pasajero_reservaAsiento
+        FOREIGN KEY (rut)
+        REFERENCES pasajero(rut),
 	--id_pasajero_reserva  INTEGER NOT NULL,
 
     CONSTRAINT unique_reserva_asiento UNIQUE(ID_VUELO, ID_ASIENTO)
 
 	/*CONSTRAINT fk_reserva_asiento_pasajero_reserva
         FOREIGN KEY (id_pasajero_reserva)
-        REFERENCES pasajero_reserva(id_pasajero_reserva),*/
+        REFERENCES pasajero_reserva(id_pasajero_reserva),
 
 	-- Un pasajero solo puede tener un asiento por vuelo
-   /*CONSTRAINT uq_pasajero_vuelo
+   CONSTRAINT uq_pasajero_vuelo
         UNIQUE (id_pasajero_reserva, id_vuelo)*/
 
 );
@@ -615,7 +622,7 @@ CREATE TABLE Notificacion (
     Fecha TIMESTAMP DEFAULT NOW()
 );
 
-CREATE TABLE Seguimiento_Vuelo (
+/*CREATE TABLE Seguimiento_Vuelo (
     ID_SEGUIMIENTO SERIAL PRIMARY KEY,
     ID_VUELO INT REFERENCES Vuelo(ID_VUELO),
     Latitud DECIMAL(9,6),
@@ -623,7 +630,7 @@ CREATE TABLE Seguimiento_Vuelo (
     Altitud INT,
     Velocidad INT,
     Timestamp TIMESTAMP DEFAULT now()
-);
+);*/
 
 
 CREATE INDEX idx_idItinerario ON itinerario_vuelo(id_itinerario);

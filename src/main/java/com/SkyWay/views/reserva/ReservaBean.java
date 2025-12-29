@@ -206,19 +206,61 @@ public class ReservaBean implements Serializable {
 
             var reserva = new Reserva();
             if (usuario == null) {
-                Logger.logInfo("no logeado");
-                var usuarioGuardado = usuarioService.save(pasajero
-                        .getUsuario());
+                Logger.logInfo("No autenticado");
+                for (int i = 0; i < pasajerosList.size(); i++) {
+                    Pasajero pasajero = pasajerosList.get(i);
 
-                pasajero.setUsuario(usuarioGuardado);
 
-                var pasajero = pasajeroService.save(this.pasajero);
-                reserva.setPasajero(pasajero);
+                    if (i == 0) { // pasajeros adicionales
+                        Usuario usuario = pasajero.getUsuario();
+                        // Asegurarse de que el rut esté asignado en Usuario
+                        usuario.setRut(pasajero.getRut());
+
+                        // Asignar usuario al pasajero
+                        pasajero.setUsuario(usuario);
+
+                        // Guardar el pasajero (cascade se encargará de guardar Usuario)
+                        pasajeroService.save(pasajero);
+                        reserva.setPasajero(pasajero);
+
+                    }else{
+                        Usuario usuario = pasajero.getUsuario();
+
+                        // Asegurarse de que el rut esté asignado en Usuario
+                        usuario.setRut(pasajero.getRut());
+
+                        // Asignar usuario al pasajero
+                        pasajero.setUsuario(usuario);
+
+                        // Guardar el pasajero (cascade se encargará de guardar Usuario)
+                        pasajeroService.save(pasajero);
+                    }
+                }
             } else {
 
-                Logger.logInfo("logeado");
+                Logger.logInfo("Autenticado");
                 this.pasajero = pasajeroService.findById(usuario.getRut()).get();
                 reserva.setPasajero(pasajero);
+
+
+                for (int i = 0; i < pasajerosList.size(); i++) {
+                    Pasajero pasajero = pasajerosList.get(i);
+
+                    if (i != 0) { // pasajeros adicionales
+                        Usuario usuario = pasajero.getUsuario();
+
+                        // Asegurarse de que el rut esté asignado en Usuario
+                        usuario.setRut(pasajero.getRut());
+
+                        // Asignar usuario al pasajero
+                        pasajero.setUsuario(usuario);
+
+                        // Guardar el pasajero (cascade se encargará de guardar Usuario)
+                        pasajeroService.save(pasajero);
+
+                    }
+                }
+
             }
 
 
@@ -233,28 +275,29 @@ public class ReservaBean implements Serializable {
 
             var reservaGuardada = reservaService.save(reserva);
             AtomicReference<String> mensaje = new AtomicReference<>();
+
             asientosSeleccionados.forEach((idVuelo, asientos) -> {
                 asientos.forEach(asiento -> {
-                    Logger.logInfo("Vuelo: " + idVuelo + ", Asiento: " + asiento.getNumeroAsiento());
+                    //Logger.logInfo("Vuelo: " + idVuelo + ", Asiento: " + asiento.getNumeroAsiento());
 
                     Integer[] asientosIds = {asiento.getIdAsiento()};
 
 
                     try {
-                        Logger.logInfo(reservaGuardada.toString());
-                        Logger.logInfo(pasajero.getRut());
-                        Logger.logInfo(Arrays.toString(asientosIds));
+                        //Logger.logInfo(reserva.toString());
+                        ///Logger.logInfo(pasajero.getRut());
+                        //Logger.logInfo(String.valueOf(asiento.getIdAsiento()));
+
+                        var rut=getRutPasajero(asiento.getIdAsiento(),asiento.getNumeroAsiento());
+
+                        Logger.logInfo(rut+"->"+asiento.getIdAsiento()+"->"+asiento.getNumeroAsiento());
                         //Logger.logInfo("ID de reserva antes de llamar al procedimiento: " + reservaGuardada.getIdReserva());
                         //String mensaje = reservaService.confirmarReserva(idVuelo, asientos, "12345678-9",reservaGuardada.getIdReserva());
-                        mensaje.set(reservaService.confirmarReserva(idVuelo, asientosIds, pasajero.getRut(), reservaGuardada.getIdReserva()));
-                        Logger.logInfo(mensaje.get());
+                        mensaje.set(reservaService.confirmarReserva(idVuelo, asientosIds, rut, reservaGuardada.getIdReserva()));
+
+                        //Logger.logInfo(mensaje.get());
 
 
-                    } catch (SQLException e) {
-                        Logger.logInfo("Error SQL en la reserva: " + e.getMessage());
-
-                        FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error en la reserva", e.getMessage());
-                        PrimeFaces.current().dialog().showMessageDynamic(message);
                     } catch (Exception ex) {
                         Logger.logInfo("Error inesperado: " + ex.getMessage());
                         //FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error inesperado", ex.getMessage());
@@ -279,7 +322,7 @@ public class ReservaBean implements Serializable {
 
                 var itinerario = itinerarioService.findById(idItinerario);
                 ReservaItinerario rersv = new ReservaItinerario();
-                rersv.setReserva(reservaGuardada);
+                rersv.setReserva(reserva);
                 rersv.setItinerario(itinerario);
                 Logger.logInfo(idItinerario + "->" + idTarifa);
                 var tarifaItinerario = itinerarioTarifaService.getByTarifaAndItinerario(idItinerario, idTarifa);
@@ -294,6 +337,8 @@ public class ReservaBean implements Serializable {
 
                 reservaItinerarioService.save(rersv);
             });
+
+
 
         /*for (Itinerario itinerario : itinerarios) {
 
@@ -334,6 +379,22 @@ public class ReservaBean implements Serializable {
             }
 
         }
+        return "";
+    }
+
+    public String getRutPasajero(int idAsiento,String numeroAsiento){
+
+        for (int i = 0; i < pasajeros.size(); i++) {
+
+            for (int i1 = 0; i1 < pasajeros.get(i).asientos.size(); i1++) {
+
+                if (pasajeros.get(i).asientos.get(i1).idAsiento==idAsiento&&pasajeros.get(i).asientos.get(i1).numeroAsiento.equals(numeroAsiento)){
+
+                   return pasajerosList.get(i).getRut();
+                }
+            }
+        }
+
         return "";
     }
 

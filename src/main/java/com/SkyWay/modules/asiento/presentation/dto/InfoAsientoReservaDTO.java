@@ -16,6 +16,9 @@ public class InfoAsientoReservaDTO {
         this.idReserva=idReserva;
     }
 
+    public InfoAsientoReservaDTO() {
+    }
+
     public int getIdAsiento() {
 
         return idAsiento;

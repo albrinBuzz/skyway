@@ -40,9 +40,11 @@ public class Pasajero implements Serializable {
 	private List<Equipaje> equipajes;
 
 	//bi-directional one-to-one association to Usuario
-	@OneToOne
+	@OneToOne(cascade = CascadeType.ALL)
+	@MapsId
 	@JoinColumn(name="rut")
 	private Usuario usuario;
+
 
 	//bi-directional many-to-one association to Reserva
 	@OneToMany(mappedBy="pasajero",fetch = FetchType.LAZY)

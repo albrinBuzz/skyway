@@ -123,8 +123,6 @@ public class PerfilBean implements Serializable {
 
 		Logger.logInfo("buscando Vuelos de hoy");
 
-
-
 		LocalDate hoy = LocalDate.now();
 
 		long startTime = System.currentTimeMillis();

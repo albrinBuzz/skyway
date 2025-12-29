@@ -49,8 +49,8 @@ BEGIN
             asientos_reservados := asientos_reservados || numero_asiento || ', ';
         ELSE
             -- Insertar en reserva_asiento
-            INSERT INTO reserva_asiento (id_reserva, id_asiento,ID_VUELO)
-            VALUES (p_idReserva, id_asientoP,p_idVuelo);
+            INSERT INTO reserva_asiento (id_reserva, id_asiento,ID_VUELO,rut)
+            VALUES (p_idReserva, id_asientoP,p_idVuelo,p_rutPasajero);
         END IF;
     END LOOP;
 

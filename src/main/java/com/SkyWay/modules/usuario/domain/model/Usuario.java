@@ -40,7 +40,7 @@ public class Usuario implements Serializable {
 	@Column(name = "Apellido", nullable = false, length = 255)
 	private String apellido;
 
-	@Column(name = "Correo_Electronico", nullable = false, length = 100, unique = true)
+	@Column(name = "Correo_Electronico", length = 100, unique = true)
 	private String correoElectronico;
 
 	@Column(name = "Telefono", nullable = false, length = 255)
@@ -53,10 +53,10 @@ public class Usuario implements Serializable {
 	@Temporal(TemporalType.DATE)
 	private Date fechaNacimiento;
 
-	@Column(name = "Contrasena", nullable = false, length = 100)
+	@Column(name = "Contrasena",  length = 100)
 	private String contrasena;
 
-	@Column(name = "Fecha_Registro", nullable = false)
+	@Column(name = "Fecha_Registro")
 	@Temporal(TemporalType.TIMESTAMP)
 	private Timestamp fechaRegistro;
 

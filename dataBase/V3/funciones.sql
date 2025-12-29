@@ -342,7 +342,8 @@ RETURNS TABLE (
     codigo_puerta VARCHAR,
     terminal VARCHAR,
     numero_asiento VARCHAR,
-    clase_asiento VARCHAR
+    clase_asiento VARCHAR,
+	nombre text
 )
 AS $$
 BEGIN
@@ -354,10 +355,13 @@ BEGIN
         prta.codigo_puerta,
         prta.terminal,
         ast.numero_asiento,
-        clas.descripcion
+        clas.descripcion,
+		us.nombre || ' ' || us.apellido
     FROM reserva_asiento rsva
     left JOIN reserva rsv ON rsv.id_reserva = rsva.id_reserva
 	left join itinerario_vuelo itv on itv.id_vuelo = rsva.id_vuelo
+	join pasajero p on p.rut = rsva.rut
+	join usuario us on us.rut = p.rut
     left JOIN vuelo vl ON vl.id_vuelo = rsva.id_vuelo
     left JOIN segmento_vuelo sgm ON sgm.id_vuelo = rsva.id_vuelo
     left JOIN asignacion_puerta asgp ON asgp.id_segmento = sgm.id_segmento
@@ -424,7 +428,7 @@ select * from fn_getVueloInfo(23);
 -- Ejemplo:
 SELECT * FROM fn_getAsientosPorItinerarioYReserva(320, 10);
 
-SELECT * FROM fn_getTicket('12345678-9',4);
+--SELECT * FROM fn_getTicket('12345678-9',4);
 
 SELECT * FROM fn_getItinerariosRut('12345678-9', 100, 0);
 
