@@ -24,5 +24,5 @@ public interface RolService {
     void deleteRole(Integer id);
 
     // Puedes agregar otros métodos si es necesario, como buscar por nombre o descripción
-    // Rol findByNombre(String nombre);
+     Role findByNombre(String nombre);
 }

@@ -5,11 +5,16 @@ import java.util.List;
 import java.util.Optional;
 
 
+import com.SkyWay.modules.pasajero.domain.model.Pasajero;
+import com.SkyWay.modules.pasajero.domain.repository.PasajeroRepository;
 import com.SkyWay.modules.rolusuario.domain.model.Role;
+import com.SkyWay.modules.rolusuario.domain.model.Rolusuario;
+import com.SkyWay.modules.rolusuario.domain.repository.RolusuarioRepository;
 import com.SkyWay.modules.usuario.domain.model.Usuario;
 import com.SkyWay.modules.pasajero.domain.service.PasajeroService;
 import com.SkyWay.modules.piloto.domain.service.PiloService;
 import com.SkyWay.modules.rolusuario.domain.service.RolService;
+import com.SkyWay.util.Logger;
 import jakarta.persistence.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,14 +27,11 @@ import org.springframework.stereotype.Service;
 import com.SkyWay.modules.usuario.domain.repository.UsuarioRepository;
 import com.SkyWay.modules.usuario.domain.service.UsuarioService;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UsuarioServiceImpl implements UsuarioService{
-
-	private static final Logger LOGGER = LoggerFactory.getLogger(UsuarioServiceImpl.class);
 
 
 	@Autowired
@@ -59,7 +61,11 @@ public class UsuarioServiceImpl implements UsuarioService{
 	//private BCryptPasswordEncoder bCrypt;
 	
     private PasswordEncoder passwordEncoder=new BCryptPasswordEncoder() ;
-	
+	@Autowired
+	private PasajeroRepository pasajeroRepository;
+	@Autowired
+	private RolusuarioRepository rolusuarioRepository;
+
 	@Override
 	public Usuario save(Usuario us) {
 		return usuarioRepository.save(us);
@@ -88,8 +94,10 @@ public class UsuarioServiceImpl implements UsuarioService{
 	public void create(Usuario us) {
 	    
 		us.setContrasena(passwordEncoder.encode(us.getContrasena()));
+
 		StoredProcedureQuery procedureQuery = em
 	              .createStoredProcedureQuery("sp_insertUsuario");
+
 	      procedureQuery.registerStoredProcedureParameter(1, String.class, ParameterMode.IN);
 	      procedureQuery.registerStoredProcedureParameter(2, String.class, ParameterMode.IN);
 	      procedureQuery.registerStoredProcedureParameter(3, String.class, ParameterMode.IN);
@@ -185,6 +193,33 @@ public class UsuarioServiceImpl implements UsuarioService{
 		//return usuarioFactory(correo);
 	}
 
+	@Override
+	public void crearPasajero(Usuario usuario) {
+		usuario.setContrasena(passwordEncoder.encode(usuario.getContrasena()));
+		StoredProcedureQuery procedureQuery = em.createStoredProcedureQuery("sp_upsertPasajero");
+
+		procedureQuery.registerStoredProcedureParameter(1, String.class, ParameterMode.IN);
+		procedureQuery.registerStoredProcedureParameter(2, String.class, ParameterMode.IN);
+		procedureQuery.registerStoredProcedureParameter(3, String.class, ParameterMode.IN);
+		procedureQuery.registerStoredProcedureParameter(4, String.class, ParameterMode.IN);
+		procedureQuery.registerStoredProcedureParameter(5, String.class, ParameterMode.IN);
+		procedureQuery.registerStoredProcedureParameter(6, String.class, ParameterMode.IN);
+		procedureQuery.registerStoredProcedureParameter(7, Date.class, ParameterMode.IN);
+		procedureQuery.registerStoredProcedureParameter(8, String.class, ParameterMode.IN);
+
+		procedureQuery.setParameter(1, usuario.getRut());
+		procedureQuery.setParameter(2, usuario.getNombre());
+		procedureQuery.setParameter(3, usuario.getApellido());
+		procedureQuery.setParameter(4, usuario.getCorreoElectronico());
+		procedureQuery.setParameter(5, usuario.getTelefono());
+		procedureQuery.setParameter(6, usuario.getDocumentoIdentidad());
+		procedureQuery.setParameter(7, usuario.getFechaNacimiento());
+		procedureQuery.setParameter(8, usuario.getContrasena());
+
+		procedureQuery.execute();
+
+	}
+
 
 	public Usuario usuarioFactory(String correo) {
 		// Preparar la consulta para el procedimiento almacenado
@@ -249,8 +284,8 @@ public class UsuarioServiceImpl implements UsuarioService{
 
 
 
-	public Usuario usuarioFactory(String correo, Role rol) {
-		LOGGER.info("Iniciando búsqueda de usuario por correo: {} y rol: {}", correo, rol.getNombre());
+	/*public Usuario usuarioFactory(String correo, Role rol) {
+		Logger.info("Iniciando búsqueda de usuario por correo: {} y rol: {}", correo, rol.getNombre());
 
 		// Validación previa del rol
 		if (correo == null || correo.isEmpty()) {

@@ -4,215 +4,130 @@
                 xmlns:ui="http://java.sun.com/jsf/facelets"
                 xmlns:p="http://primefaces.org/ui">
 
-    <!-- Estilos mejorados para una apariencia corporativa -->
-    <h:outputStylesheet>
-        body {
-        background-color: #001f3f; /* Azul oscuro corporativo */
-        color: #ffffff; /* Texto blanco */
-        font-family: 'Roboto', sans-serif; /* Tipografía más moderna */
-        margin: 0;
-        padding: 0;
+    <style type="text/css">
+        /* Estilos de Insignias (Badges) para estados */
+        .status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            text-transform: uppercase;
         }
+        .status-ontime { background: #DCFCE7; color: #166534; }
+        .status-delayed { background: #FEE2E2; color: #991B1B; }
 
-        h1 {
-        color: #ffffff;
-        text-align: center;
-        margin-bottom: 2rem;
+        /* Ajustes de la tabla anidada */
+        .nested-table { margin: 15px 0; border: 1px solid #e2e8f0; }
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
         }
-
-        /* Estilo de tabla para una mejor legibilidad */
-        .ui-datatable {
-        background-color: #002b5c !important; /* Azul claro para la tabla */
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        .ui-datatable-header {
+            background: white !important;
+            border: none !important;
+            text-align: left !important;
         }
+    </style>
 
-        .ui-datatable th, .nested-table th {
-        background-color: #003366 !important; /* Encabezado más oscuro */
-        color: #ffffff !important;
-        padding: 12px 16px;
-        text-align: left;
-        }
-
-        .ui-datatable td, .nested-table td {
-        background-color: #002b5c !important;
-        color: #ffffff !important;
-        padding: 10px;
-        }
-
-        .p-button {
-        background-color: #004080 !important;
-        color: #ffffff !important;
-        border-radius: 4px;
-        padding: 8px 16px;
-        }
-
-        .p-button:hover {
-        background-color: #0059b3 !important;
-        }
-
-        .p-panel {
-        background-color: #002b5c !important;
-        color: #ffffff !important;
-        border-radius: 8px;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .menu-link {
-        background-color: #0059b3;
-        color: #ffffff;
-        padding: 8px 16px;
-        border-radius: 5px;
-        text-decoration: none;
-        }
-
-        .menu-link:hover {
-        background-color: #0073e6;
-        }
-
-        /* Estilo para botones en la tabla de acciones */
-        .p-button-warning {
-        background-color: #ff9800 !important;
-        border-radius: 4px;
-        }
-
-        .p-button-warning:hover {
-        background-color: #ff5722 !important;
-        }
-
-        .ui-datatable .ui-column-title {
-        font-weight: 600;
-        text-transform: uppercase;
-        }
-
-        /* Formato de las fechas */
-        .ui-datatable .ui-column-header {
-        font-size: 1rem;
-        }
-
-        .p-button {
-        transition: background-color 0.3s ease, transform 0.2s ease;
-        }
-
-        .p-button:hover {
-        transform: translateY(-2px);  /* Efecto de elevar el botón ligeramente */
-        }
-
-        .p-button-warning:hover {
-        background-color: #e6b800 !important;  /* Cambiar el fondo para más énfasis en hover */
-        }
-
-        .p-button-info:hover {
-        background-color: #0097d2 !important;  /* Azul más intenso para el botón Ver Turnos */
-        }
-
-    </h:outputStylesheet>
-
-    <!-- Título de la página -->
-    <h1>Próximos Vuelos</h1>
-
-    <!-- Botón para agregar vuelo, alineado a la derecha -->
-    <div style="text-align: right; margin-bottom: 1rem;">
-        <h:link outcome="/admin/vuelo/vuelo.xhtml" class="menu-link">
-            <i class="pi pi-plus"></i> Agregar Vuelo
-        </h:link>
+    <div class="header-container">
+        <h2 style="margin:0; color: #1e293b;">Panel de Operaciones de Vuelo</h2>
+        <p:button outcome="/admin/vuelo/vuelo.xhtml"
+                  value="Nuevo Vuelo"
+                  icon="pi pi-plus"
+                  styleClass="ui-button-primary" />
     </div>
 
-    <!-- Formulario de la tabla de vuelos -->
     <h:form id="vueloForm">
+        <p:growl id="msgs" showDetail="true"/>
 
-        <p:dataTable value="#{vueloBean.vuelos}" var="vuelo"
-                     responsiveLayout="scroll"
-                     styleClass="ui-datatable"
-                     rowIndexVar="index"
-                     expandableRowGroups="true"
-                     rowKey="#{vuelo.idVuelo}">
+        <p:dataTable id="dt-vuelos" value="#{vueloBean.vuelos}" var="vuelo"
+                     widgetVar="wvVuelos"
+                     responsiveLayout="stack"
+                     styleClass="ui-datatable-striped"
+                     paginator="true" rows="10"
+                     paginatorPosition="bottom"
+                     rowKey="#{vuelo.idVuelo}"
+                     emptyMessage="No se encontraron vuelos programados">
 
-            <!-- Columna de detalles, con un icono para expandir la fila -->
-            <p:column style="width:2rem" ariaHeaderText="Detalles">
+            <f:facet name="header">
+                <div class="flex justify-content-end">
+                    <span class="ui-input-icon-left">
+                        <i class="pi pi-search" />
+                        <p:inputText id="globalFilter" onkeyup="PF('wvVuelos').filter()" placeholder="Buscar vuelo..." />
+                    </span>
+                </div>
+            </f:facet>
+
+            <p:column style="width:3rem">
                 <p:rowToggler />
             </p:column>
 
-            <!-- Columna para el número de vuelo -->
-            <p:column headerText="N° Vuelo" sortBy="#{vuelo.numeroVuelo}">
-                #{vuelo.numeroVuelo}
+            <p:column headerText="N° Vuelo" sortBy="#{vuelo.numeroVuelo}" filterBy="#{vuelo.numeroVuelo}">
+                <h:outputText value="#{vuelo.numeroVuelo}" style="font-weight: bold; color: #003580;"/>
             </p:column>
 
-            <!-- Columna para la fecha de salida con formato -->
-            <p:column headerText="Fecha Salida" sortBy="#{vuelo.fechaHoraSalida}">
-                <h:outputText value="#{vuelo.fechaHoraSalida}">
-                    <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago"/>
-                </h:outputText>
+            <p:column headerText="Salida" sortBy="#{vuelo.fechaHoraSalida}">
+                <div class="flex flex-column">
+                    <h:outputText value="#{vuelo.fechaHoraSalida}" style="font-weight: 500;">
+                        <f:convertDateTime pattern="dd MMM, yyyy" />
+                    </h:outputText>
+                    <small class="text-secondary">
+                        <h:outputText value="#{vuelo.fechaHoraSalida}">
+                            <f:convertDateTime pattern="hh:mm a" />
+                        </h:outputText>
+                    </small>
+                </div>
             </p:column>
 
-            <!-- Columna para la fecha de llegada con formato -->
-            <p:column headerText="Fecha Llegada" sortBy="#{vuelo.fechaHoraLlegada}">
+            <p:column headerText="Llegada" sortBy="#{vuelo.fechaHoraLlegada}">
                 <h:outputText value="#{vuelo.fechaHoraLlegada}">
-                    <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago"/>
+                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
                 </h:outputText>
             </p:column>
 
-            <!-- Columna de acciones (editar) -->
-            <p:column headerText="Acciones" styleClass="text-center">
-                <!-- Botón para editar vuelo -->
-                <p:commandButton value="Editar"
-                                 icon="pi pi-pencil"
-                                 styleClass="p-button-warning p-button-rounded p-button-sm p-mr-2"
+            <p:column headerText="Estado" style="text-align: center">
+                <span class="status-badge status-ontime">Confirmado</span>
+            </p:column>
+
+            <p:column headerText="Gestión" exportable="false" style="width: 12rem; text-align: center">
+                <p:commandButton icon="pi pi-pencil"
                                  action="#{vueloBean.editarVuelo(vuelo)}"
-                                 update="vueloForm"
-                                 ajax="true"
-                                 title="Editar vuelo">
-                </p:commandButton>
-            </p:column>
+                                 styleClass="ui-button-warning ui-button-flat p-mr-2"
+                                 title="Editar" />
 
-            <p:column headerText="Ver Turnos" styleClass="text-center">
-                <!-- Botón para ver turnos -->
-                <p:commandButton value="Ver Turnos"
-                                 icon="pi pi-calendar"
-                                 styleClass="p-button-info p-button-rounded p-button-sm"
+                <p:commandButton icon="pi pi-calendar"
+                                 value="Turnos"
                                  action="#{vueloBean.verTurnos(vuelo)}"
-                                 update="vueloForm"
-                                 ajax="true"
-                                 title="Ver turnos asociados">
-                </p:commandButton>
+                                 styleClass="ui-button-info ui-button-outlined ui-button-sm" />
             </p:column>
 
-
-
-            <!-- Expansión de fila para mostrar los segmentos de vuelo -->
             <p:rowExpansion>
-                <p:panelGrid columns="1" style="width:100%">
-                    <p:dataTable value="#{vuelo.segmentoVuelos}" var="segmento"
-                                 styleClass="nested-table">
+                <div class="p-3 shadow-1" style="background: #f8fafc; border-radius: 8px;">
+                    <h4 style="margin-top:0"><i class="pi pi-directions p-mr-2"></i>Itinerario de Escalas</h4>
+                    <p:dataTable value="#{vuelo.segmentoVuelos}" var="segmento" styleClass="nested-table ui-datatable-sm">
+                        <p:column headerText="Orden" style="width: 50px">#{segmento.ordenSegmento}</p:column>
 
-                        <!-- Información sobre el segmento de vuelo -->
-                        <p:column headerText="Orden">
-                            #{segmento.ordenSegmento}
-                        </p:column>
-                        <p:column headerText="Hora Salida">
-                            <h:outputText value="#{segmento.horaSalida}">
-                                <f:convertDateTime pattern="dd/MM/yyyy HH:mm"/>
-                            </h:outputText>
-                        </p:column>
-                        <p:column headerText="Hora Llegada">
-                            <h:outputText value="#{segmento.horaLlegada}">
-                                <f:convertDateTime pattern="dd/MM/yyyy HH:mm"/>
-                            </h:outputText>
-                        </p:column>
                         <p:column headerText="Origen">
-                            #{segmento.aeropuertoOrigen.codigoIata}
+                            <i class="pi pi-upload p-mr-1" style="font-size: 0.8rem; color: #3b82f6;"></i>
+                            <strong>#{segmento.aeropuertoOrigen.codigoIata}</strong>
                         </p:column>
+
                         <p:column headerText="Destino">
-                            #{segmento.aeropuertoDestino.codigoIata}
+                            <i class="pi pi-download p-mr-1" style="font-size: 0.8rem; color: #10b981;"></i>
+                            <strong>#{segmento.aeropuertoDestino.codigoIata}</strong>
                         </p:column>
 
+                        <p:column headerText="Horarios">
+                            <h:outputText value="#{segmento.horaSalida}"><f:convertDateTime pattern="HH:mm"/></h:outputText>
+                            -
+                            <h:outputText value="#{segmento.horaLlegada}"><f:convertDateTime pattern="HH:mm"/></h:outputText>
+                        </p:column>
                     </p:dataTable>
-                </p:panelGrid>
+                </div>
             </p:rowExpansion>
-
         </p:dataTable>
-
     </h:form>
 
 </ui:composition>

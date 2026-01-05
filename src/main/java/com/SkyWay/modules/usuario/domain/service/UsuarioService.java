@@ -5,7 +5,7 @@ import java.util.Optional;
 
 import com.SkyWay.modules.usuario.domain.model.Usuario;
 import org.springframework.security.core.userdetails.UserDetailsService;
-
+import org.springframework.transaction.annotation.Transactional;
 
 
 public interface UsuarioService extends UserDetailsService{
@@ -27,6 +27,8 @@ public interface UsuarioService extends UserDetailsService{
 	public Usuario findByNombre(String nombre);
 	
 	public Usuario buscarPorCorreo(String correo);
-	
-	
+
+
+	public void crearPasajero(Usuario usuario);
+
 }

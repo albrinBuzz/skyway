@@ -101,4 +101,13 @@ public class Role implements Serializable {
 		this.usuarios = usuarios;
 	}
 
+	@Override
+	public String toString() {
+		final StringBuffer sb = new StringBuffer("Role{");
+		sb.append("idRol=").append(idRol);
+		sb.append(", descripcion='").append(descripcion).append('\'');
+		sb.append(", nombre='").append(nombre).append('\'');
+		sb.append('}');
+		return sb.toString();
+	}
 }

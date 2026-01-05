@@ -43,8 +43,8 @@ public class RolServiceImpl implements RolService {
     }
 
     // Puedes agregar otros métodos si es necesario
-    // @Override
-    // public Rol findByNombre(String nombre) {
-    //     return rolRepository.findByNombre(nombre);
-    // }
+     @Override
+     public Role findByNombre(String nombre) {
+         return rolRepository.findByNombre(nombre);
+     }
 }

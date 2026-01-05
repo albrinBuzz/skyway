@@ -148,3 +148,58 @@ BEGIN
 
 END;
 $$;
+
+
+
+
+
+
+CREATE OR REPLACE PROCEDURE sp_upsertPasajero(
+    p_rut VARCHAR,
+    p_nombre VARCHAR,
+    p_apellido VARCHAR,
+    p_correo VARCHAR,
+    p_telefono VARCHAR,
+    p_documento VARCHAR,
+    p_fecha_nacimiento DATE,
+    p_contrasena VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_id_rol INT;
+BEGIN
+    -- 1. Insertar o actualizar usuario
+    INSERT INTO Usuario(RUT, Nombre, Apellido, Correo_Electronico, Telefono, Documento_Identidad, Fecha_Nacimiento, Contrasena, Fecha_Registro)
+    VALUES (p_rut, p_nombre, p_apellido, p_correo, p_telefono, p_documento, p_fecha_nacimiento, p_contrasena, NOW())
+    ON CONFLICT (RUT)
+    DO UPDATE SET
+        Nombre = EXCLUDED.Nombre,
+        Apellido = EXCLUDED.Apellido,
+        Correo_Electronico = EXCLUDED.Correo_Electronico,
+        Telefono = EXCLUDED.Telefono,
+        Documento_Identidad = EXCLUDED.Documento_Identidad,
+        Fecha_Nacimiento = EXCLUDED.Fecha_Nacimiento,
+        Contrasena = EXCLUDED.Contrasena,
+        Fecha_Registro = NOW();
+
+    -- 2. Insertar o actualizar Pasajero
+    INSERT INTO Pasajero(RUT, Tipo_Documento, Numero_Documento, Fecha_Nacimiento, Nacionalidad)
+    VALUES (p_rut, 'DNI', p_documento, p_fecha_nacimiento, 'Desconocida')
+    ON CONFLICT (RUT)
+    DO UPDATE SET
+        Tipo_Documento = EXCLUDED.Tipo_Documento,
+        Numero_Documento = EXCLUDED.Numero_Documento,
+        Fecha_Nacimiento = EXCLUDED.Fecha_Nacimiento,
+        Nacionalidad = EXCLUDED.Nacionalidad;
+
+    -- 3. Obtener id del rol "Pasajero"
+    SELECT id_rol INTO v_id_rol FROM Roles WHERE nombre = 'Pasajero';
+
+    -- 4. Insertar rol si no existe
+    INSERT INTO RolUsuario(id_rol, rut_usuario)
+    VALUES (v_id_rol, p_rut)
+    ON CONFLICT (id_rol, rut_usuario) DO NOTHING;
+
+END;
+$$;

@@ -50,7 +50,7 @@ public class UserBean implements Serializable {
             try {
             	this.usuario = (Usuario) session.getAttribute("usuario");
             	this.name = usuario.getNombre();
-                //Logger.logInfo(usuario.toString());
+                Logger.logInfo(usuario.toString());
             } catch (Exception e) {
                 Logger.logInfo(e.getMessage());
             }
