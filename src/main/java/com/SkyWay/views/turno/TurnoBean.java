@@ -49,6 +49,9 @@ public class TurnoBean {
         vueloId= externalContext.getRequestParameterMap().get("vueloId");
 
         //turnosTripulacion=new ArrayList<>();
+        for (Turno turno1 : turnoService.findByVueloId(Integer.valueOf(vueloId))) {
+            Logger.logInfo(turno1.toString());
+        }
         turno=turnoService.findByVueloId(Integer.valueOf(vueloId)).get(0);
         turnosTripulacion= turno.getTurnoTripulacions1();
         tripulantes=tripulacionService.findAll();

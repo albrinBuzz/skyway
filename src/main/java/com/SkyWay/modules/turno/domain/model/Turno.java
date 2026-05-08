@@ -124,7 +124,16 @@ public class Turno implements Serializable {
 	}
 
 
-
-
-
+	@Override
+	public String toString() {
+		return "Turno{" +
+				"idTurno=" + idTurno +
+				", fecha=" + fecha +
+				", horaFin=" + horaFin +
+				", horaInicio=" + horaInicio +
+				", tipoTurno=" + tipoTurno +
+				", vuelo=" + vuelo +
+				", turnoTripulacions1=" + turnoTripulacions1 +
+				'}';
+	}
 }

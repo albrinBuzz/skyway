@@ -24,6 +24,9 @@ import com.SkyWay.modules.puertaembarque.domain.model.PuertaEmbarque;
 import com.SkyWay.modules.puertaembarque.domain.service.PuertaEmbarqueService;
 import com.SkyWay.modules.segmentovuelo.domain.model.SegmentoVuelo;
 import com.SkyWay.modules.segmentovuelo.domain.service.SegmentoVueloService;
+import com.SkyWay.modules.tipoturno.domain.service.TipoTurnoService;
+import com.SkyWay.modules.turno.domain.model.Turno;
+import com.SkyWay.modules.turno.domain.service.TurnoService;
 import com.SkyWay.modules.vuelo.domain.model.Vuelo;
 import com.SkyWay.modules.vuelo.domain.service.VueloService;
 import com.SkyWay.util.Logger;
@@ -95,7 +98,11 @@ public class VueloBean implements Serializable {
 
     @Autowired
     private PuertaEmbarqueService puertaService;
+    @Autowired
+    private TurnoService turnoService;
 
+    @Autowired
+    private TipoTurnoService tipoTurnoService;
 
     private List<Aeropuerto> listaAeropuertos;
     private List<Avion> listaAviones;
@@ -120,6 +127,7 @@ public class VueloBean implements Serializable {
     private String puertaEmbarqueSeleccion;
     private boolean vueloCreado = false;
     private SegmentoVuelo nuevoSegmento;
+    private Turno turno;
     private List<ClaseAsientoPrecioDto>preciosAsientos;
 
     @PostConstruct
@@ -147,7 +155,7 @@ public class VueloBean implements Serializable {
         preciosPorClase=new HashMap<>();
         preciosAsientos=new ArrayList<>();
         nuevoSegmento=new SegmentoVuelo();
-
+        turno=new Turno();
         if (idVuelo!=null){
             segmentos=segmentoVueloService.findByIdVuelo(Integer.valueOf(idVuelo));
 
@@ -162,6 +170,7 @@ public class VueloBean implements Serializable {
 
 
             vuelo=vueloService.findById(Integer.valueOf(idVuelo)).get();
+            turno=turnoService.findByVueloId(Integer.valueOf(idVuelo)).get(0);
 
             pilotoId=vuelo.getPiloto().getRut();
             aerolineaId=vuelo.getAerolinea().getNombre();
@@ -272,6 +281,19 @@ public class VueloBean implements Serializable {
             return;
         }
         vuelo= vueloService.save(vuelo);
+        if (turno.getVuelo()==null){
+            turno.setVuelo(vuelo);
+            //turno.setFecha(vuelo.getFechaHoraSalida());
+            //turno.setHoraInicio(vuelo.getFechaHoraSalida());
+            //turno.setHoraFin(vuelo.getFechaHoraSalida());
+            var tipoTurno=tipoTurnoService.findById(1);
+            turno.setTipoTurno(tipoTurno.get());
+            turnoService.save(turno);
+        }
+
+
+
+
 
         // Continuar con el guardado del segmento
         Logger.logInfo("Guardando un nuevo segmento...");
