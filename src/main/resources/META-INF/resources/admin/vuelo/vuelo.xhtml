@@ -7,189 +7,408 @@
 
     <ui:define name="contenido-admin">
         <style type="text/css">
-            .card-pricing {
-                border: 1px solid #e2e8f0;
-                background: #f8fafc;
-                padding: 15px;
-                border-radius: 10px;
-                text-align: center;
-                transition: all 0.3s;
+            /* --- ESTÉTICA SKYWAY CONFIG --- */
+            :root {
+                --accent-blue: #38bdf8;
+                --bg-glass: rgba(15, 23, 42, 0.8);
+                --card-bg: rgba(30, 41, 59, 0.5);
+                --border-color: rgba(255, 255, 255, 0.08);
+                --text-main: #f8fafc;
+                --text-dim: #94a3b8;
+                --success-green: #10b981;
             }
-            .card-pricing:hover { border-color: #3b82f6; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-            .segment-divider {
-                border-left: 2px dashed #cbd5e1;
-                margin-left: 20px;
-                padding-left: 30px;
+
+            body, .ui-widget-content, .p-grid {
+                background-color: #080e1a !important;
+                background-image: radial-gradient(circle at top right, #0f172a, #080e1a);
+                color: var(--text-main) !important;
+                margin: 0; padding: 0;
+            }
+
+            .main-config-container, .contenido-admin {
+                background-color: transparent !important;
+                min-height: 100vh;
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 2rem;
+            }
+
+            .view-title {
+                background: linear-gradient(to right, #fff, var(--accent-blue));
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                font-weight: 800; font-size: 1.75rem;
+            }
+
+            /* --- UI PATTERN: STEPPER VERTICAL --- */
+            .step-wrapper {
+                display: flex;
+                gap: 1.5rem;
+                margin-bottom: 2rem;
                 position: relative;
             }
-            .segment-icon {
-                position: absolute;
-                left: -16px;
-                top: 0;
-                background: white;
-                padding: 5px;
-                border-radius: 50%;
-                color: #3b82f6;
+
+            /* Línea conectora entre pasos */
+            .step-wrapper:not(:last-child)::after {
+                content: ''; position: absolute;
+                left: 19px; top: 50px; bottom: -2rem;
+                width: 2px; background: rgba(255,255,255,0.1);
             }
+
+            .step-number {
+                width: 40px; height: 40px;
+                border-radius: 50%;
+                background: var(--accent-blue);
+                color: #000;
+                display: flex; align-items: center; justify-content: center;
+                font-weight: 900; font-size: 1.2rem;
+                flex-shrink: 0;
+                box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+                z-index: 2;
+            }
+
+            .step-number.locked {
+                background: #1e293b;
+                color: var(--text-dim);
+                box-shadow: none;
+                border: 2px solid #334155;
+            }
+
+            .step-content { flex-grow: 1; }
+
+            .glass-card {
+                background: rgba(15, 23, 42, 0.7) !important;
+                backdrop-filter: blur(12px);
+                border: 1px solid rgba(255, 255, 255, 0.05) !important;
+                border-radius: 16px !important;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+                padding: 1.5rem;
+            }
+
+            .card-header-label {
+                color: var(--accent-blue); text-transform: uppercase;
+                letter-spacing: 0.1em; font-size: 0.9rem; font-weight: 700;
+                margin-bottom: 1.5rem; display: flex; align-items: center; gap: 8px;
+            }
+
+            /* Inputs y Selects */
+            .ui-inputfield, .ui-selectonemenu, .ui-datepicker {
+                background: #0f172a !important;
+                border: 1px solid var(--border-color) !important;
+                color: #fff !important; border-radius: 8px !important; padding: 0.75rem !important;
+                width: 100%;
+            }
+            .ui-selectonemenu-label { color: #fff !important; padding: 0 !important; }
+            .ui-inputfield.ui-state-focus, .ui-selectonemenu.ui-state-focus { border-color: #4c7cf3 !important; }
+            .ui-outputlabel { color: var(--text-dim) !important; font-size: 0.85rem; margin-bottom: 0.5rem; display: block; font-weight: 600;}
+
+            /* Panel de Precios */
+            .pricing-container { display: flex; gap: 15px; overflow-x: auto; padding: 0.5rem 0; }
+            .pricing-badge {
+                background: rgba(56, 189, 248, 0.05); border: 1px solid rgba(56, 189, 248, 0.2);
+                border-radius: 12px; padding: 1.2rem; flex: 1; min-width: 200px;
+            }
+
+            /* Segmentos de vuelo */
+            .segment-card {
+                background: rgba(255,255,255,0.02); border-radius: 12px; padding: 1.5rem;
+                border: 1px solid var(--border-color); margin-bottom: 1rem;
+                border-left: 4px solid var(--accent-blue);
+            }
+
+            /* Botones */
+            .btn-primary-custom {
+                background: #4c7cf3 !important; border: none !important; color: #fff !important;
+                font-weight: 700 !important; border-radius: 8px !important; padding: 0.8rem 2rem !important;
+            }
+            .btn-secondary-custom {
+                background: transparent !important; border: 1px solid var(--border-color) !important;
+                color: var(--text-dim) !important; border-radius: 8px !important;
+            }
+
+            /* Diálogos y Selects fix (Omitido por brevedad, mantén los que ya tenías para los dropdowns y dialog) */
+            .custom-dialog .ui-dialog-content { background-color: #0f172a !important; color: #f8fafc !important; }
+            .custom-dialog .ui-dialog-footer { background: #1e293b !important; border-top: 1px solid #334155 !important; }
         </style>
 
-        <div class="p-grid">
-            <div class="p-col-12">
-                <h:form id="formVuelo">
-                    <p:growl id="msgs" showDetail="true" />
+        <div class="main-config-container">
+            <div class="flex justify-content-between align-items-center mb-6">
+                <div>
+                    <h2 class="view-title m-0">
+                        <i class="pi #{vueloBean.vueloCreado ? 'pi-sliders-h' : 'pi-plus-circle'} mr-2"></i>
+                        #{vueloBean.vueloCreado ? 'Ajustes de Vuelo: '.concat(vueloBean.vuelo.numeroVuelo) : 'Configuración de Nueva Ruta'}
+                    </h2>
+                    <p style="color: var(--text-dim); margin: 4px 0 0 0;">Siga los pasos para programar y habilitar el itinerario de vuelo.</p>
+                </div>
+                <p:button outcome="/admin/index.xhtml" value="Cancelar" icon="pi pi-times" styleClass="btn-secondary-custom" />
+            </div>
 
-                    <div class="flex justify-content-between align-items-center mb-4">
-                        <h2 class="m-0">
-                            <i class="pi #{vueloBean.vueloCreado ? 'pi-pencil' : 'pi-plus-circle'} mr-2"></i>
-                            #{vueloBean.vueloCreado ? 'Gestionar Vuelo: '.concat(vueloBean.vuelo.numeroVuelo) : 'Configurar Nuevo Vuelo'}
-                        </h2>
-                        <p:button outcome="/admin/index.xhtml" value="Volver" icon="pi pi-chevron-left" styleClass="ui-button-flat" />
-                    </div>
+            <p:growl id="msgs" showDetail="true" />
 
-                    <p:card styleClass="mb-4 shadow-1">
-                        <f:facet name="title">Información de Aeronave</f:facet>
-                        <div class="ui-fluid p-formgrid p-grid">
-                            <div class="p-field p-col-12 p-md-4">
-                                <p:outputLabel for="piloto" value="Piloto Responsable" />
-                                <p:selectOneMenu id="piloto" value="#{vueloBean.pilotoId}" required="true">
-                                    <f:selectItem itemLabel="Seleccione Piloto" itemValue="" />
-                                    <f:selectItems value="#{vueloBean.listaPilotos}" var="pl" itemLabel="#{pl.usuario.nombre} (#{pl.rut})" itemValue="#{pl.rut}" />
-                                </p:selectOneMenu>
-                            </div>
-                            <div class="p-field p-col-12 p-md-4">
-                                <p:outputLabel for="aerolinea" value="Operado por" />
-                                <p:selectOneMenu id="aerolinea" value="#{vueloBean.aerolineaId}" required="true">
-                                    <f:selectItems value="#{vueloBean.aerolineas}" var="a" itemLabel="#{a.nombre}" itemValue="#{a.idAerolinea}" />
-                                </p:selectOneMenu>
-                            </div>
-                            <div class="p-field p-col-12 p-md-4">
-                                <p:outputLabel for="avion" value="Equipo (Avión)" />
-                                <p:selectOneMenu id="avion" value="#{vueloBean.avionId}" required="true">
-                                    <f:selectItem itemLabel="Seleccione Avión" itemValue="" />
-                                    <f:selectItems value="#{vueloBean.avions}" var="av" itemLabel="#{av.modeloAvion.nombre} [#{av.numeroDeRegistro}]" itemValue="#{av.idAvion}" />
-                                    <p:ajax listener="#{vueloBean.ajaxListener}" update="infoCapacidad" />
-                                </p:selectOneMenu>
+            <h:form id="formVuelo">
+
+                <!-- PASO 1: ESPECIFICACIONES -->
+                <div class="step-wrapper">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <div class="glass-card">
+                            <div class="card-header-label"><i class="pi pi-compass"></i> Especificaciones Operativas</div>
+                            <div class="ui-fluid p-formgrid p-grid">
+                                <div class="p-field p-col-12 p-md-4">
+                                    <p:outputLabel for="aerolinea" value="Línea Aérea Operadora" />
+                                    <p:selectOneMenu id="aerolinea" value="#{vueloBean.aerolineaId}" required="true">
+                                        <f:selectItems value="#{vueloBean.aerolineas}" var="a" itemLabel="#{a.nombre}" itemValue="#{a.idAerolinea}" />
+                                    </p:selectOneMenu>
+                                </div>
+                                <div class="p-field p-col-12 p-md-4">
+                                    <p:outputLabel for="avion" value="Aeronave Asignada" />
+                                    <p:selectOneMenu id="avion" value="#{vueloBean.avionId}" required="true">
+                                        <f:selectItem itemLabel="Seleccione Avión" itemValue="" />
+                                        <f:selectItems value="#{vueloBean.avions}" var="av" itemLabel="#{av.modeloAvion.nombre} [#{av.numeroDeRegistro}]" itemValue="#{av.idAvion}" />
+                                        <p:ajax listener="#{vueloBean.ajaxListener}" update="infoCapacidad" />
+                                    </p:selectOneMenu>
+                                </div>
+                                <div class="p-field p-col-12 p-md-4">
+                                    <p:outputLabel for="piloto" value="Comandante a Cargo" />
+                                    <p:selectOneMenu id="piloto" value="#{vueloBean.pilotoId}" required="true" filter="true" filterMatchMode="contains">
+                                        <f:selectItem itemLabel="Seleccione Piloto" itemValue="" />
+                                        <f:selectItems value="#{vueloBean.listaPilotos}" var="pl" itemLabel="#{pl.usuario.nombre}" itemValue="#{pl.rut}" />
+                                    </p:selectOneMenu>
+                                </div>
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        <h:panelGroup id="infoCapacidad" layout="block" style="margin-top: 15px;">
-                            <div class="flex flex-row flex-nowrap align-items-center gap-2 p-2"
-                                 style="background-color: #1e1e26; border-radius: 8px; border: 1px solid #333; overflow-x: auto;">
+                <!-- PASO 2: TARIFARIO -->
+                <div class="step-wrapper">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <div class="glass-card">
+                            <div class="card-header-label"><i class="pi pi-ticket"></i> Tarifario Base y Capacidad</div>
 
-                                <ui:repeat var="cap" value="#{vueloBean.preciosAsientos}">
-                                    <div class="flex align-items-center px-3"
-                                         style="border-right: 1px solid #444; min-width: max-content;">
+                            <h:panelGroup id="infoCapacidad" layout="block">
+                                <h:outputText value="Seleccione una aeronave en el paso 1 para cargar las cabinas."
+                                              rendered="#{empty vueloBean.preciosAsientos}"
+                                              style="color: var(--text-dim); font-style: italic;"/>
 
-                                        <i class="pi pi-ticket mr-2" style="color: #4c7cf3; font-size: 1.1rem;"></i>
-
-                                        <div class="flex flex-column mr-3">
-                                            <span style="font-size: 0.75rem; font-weight: bold; color: #aaa; text-transform: uppercase;">
-                                                #{cap.clase}
-                                            </span>
-                                            <span style="font-size: 0.7rem; color: #777;">Cap: #{cap.cantidad}</span>
+                                <div class="pricing-container">
+                                    <ui:repeat var="cap" value="#{vueloBean.preciosAsientos}">
+                                        <div class="pricing-badge">
+                                            <div class="flex justify-content-between align-items-center mb-3">
+                                                <span style="font-weight: 800; color: #fff; text-transform: uppercase;">#{cap.clase}</span>
+                                                <span style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; color: var(--text-dim);">
+                                                    #{cap.cantidad} Asientos
+                                                </span>
+                                            </div>
+                                            <p:outputLabel value="Tarifa Base (CLP)" />
+                                            <p:inputNumber value="#{cap.precio}" mode="currency" currencySymbol="$ " locale="es_CL" decimalPlaces="0"
+                                                           inputStyle="width: 100%; background: #0f172a; border: 1px solid var(--border-color); color: var(--success-green); font-weight: bold; font-size: 1.1rem; text-align: right;" />
                                         </div>
+                                    </ui:repeat>
+                                </div>
+                            </h:panelGroup>
 
-                                        <p:inputNumber id="precio" value="#{cap.precio}"
-                                                       mode="currency" currencySymbol="$" locale="es_CL"
-                                                       decimalPlaces="0"
-                                                       inputStyle="width: 80px; background: transparent; border: none; border-bottom: 1px solid #4c7cf3; color: white; text-align: right; padding: 2px;" />
-                                    </div>
+                            <div class="flex justify-content-end mt-4 pt-4 border-top-1 border-white-alpha-10">
+                                <p:commandButton value="#{vueloBean.vueloCreado ? 'Actualizar Cabecera' : 'Guardar y Habilitar Escalas'}"
+                                                 action="#{vueloBean.guardarVuelo}"
+                                                 icon="#{vueloBean.vueloCreado ? 'pi pi-save' : 'pi pi-unlock'}"
+                                                 update="@form :segmentosWrapper"
+                                                 styleClass="btn-primary-custom" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </h:form>
+
+            <!-- PASO 3: SEGMENTOS DE VUELO -->
+            <h:panelGroup id="segmentosWrapper">
+                <div class="step-wrapper">
+                    <!-- Cambio visual si está bloqueado -->
+                    <div class="step-number #{not vueloBean.vueloCreado ? 'locked' : ''}">3</div>
+
+                    <div class="step-content">
+                        <div class="glass-card" style="#{not vueloBean.vueloCreado ? 'opacity: 0.6; pointer-events: none;' : ''}">
+
+                            <div class="flex justify-content-between align-items-center mb-4">
+                                <div class="card-header-label m-0"><i class="pi pi-map"></i> Hoja de Ruta y Segmentos</div>
+                                <p:commandButton value="Añadir Nueva Escala" icon="pi pi-plus"
+                                                 rendered="#{vueloBean.vueloCreado}"
+                                                 oncomplete="PF('dlgNuevoSegmento').show()"
+                                                 styleClass="btn-secondary-custom"
+                                                 actionListener="#{vueloBean.openNewSegmento}"
+                                                 update=":formSegmentoCrear:manage-segmento-content" />
+                            </div>
+
+                            <!-- MENSAJE DE ESTADO BLOQUEADO -->
+                            <h:panelGroup rendered="#{not vueloBean.vueloCreado}">
+                                <div class="text-center py-5">
+                                    <i class="pi pi-lock mb-3" style="font-size: 2rem; color: var(--text-dim);"></i>
+                                    <h3 style="color: var(--text-dim); margin: 0;">Sección Bloqueada</h3>
+                                    <p style="color: #64748b;">Complete y guarde los Pasos 1 y 2 para planificar la ruta.</p>
+                                </div>
+                            </h:panelGroup>
+
+                            <!-- LISTA DE SEGMENTOS -->
+                            <p:outputPanel rendered="#{vueloBean.vueloCreado}">
+                                <ui:repeat var="seg" value="#{vueloBean.segmentos}" varStatus="status">
+                                    <h:form id="formSegmento_#{status.index}">
+                                        <div class="segment-card">
+                                            <div class="flex justify-content-between align-items-center mb-3">
+                                                <div class="flex align-items-center gap-3">
+                                                    <span style="background: var(--accent-blue); color: #000; font-weight: bold; border-radius: 4px; padding: 2px 8px; font-size: 0.8rem;">Tramo #{seg.ordenSegmento}</span>
+                                                    <span style="font-size: 1.2rem; font-weight: 700; color: #fff;">
+                                                        #{seg.aeropuertoOrigen.codigoIata} <i class="pi pi-arrow-right mx-2 text-sm text-gray-500"></i> #{seg.aeropuertoDestino.codigoIata}
+                                                    </span>
+                                                </div>
+                                                <p:commandLink actionListener="#{vueloBean.eliminarSegmento(seg)}" update=":segmentosWrapper" style="color: #ef4444;">
+                                                    <i class="pi pi-trash"></i> Quitar
+                                                </p:commandLink>
+                                            </div>
+
+                                            <div class="ui-fluid p-formgrid p-grid mt-3">
+                                                <div class="p-field p-col-12 p-md-3">
+                                                    <p:outputLabel value="Origen" />
+                                                    <p:selectOneMenu value="#{seg.aeropuertoOrigen}" converter="aeropuertoConverter">
+                                                        <f:selectItems value="#{vueloBean.listaAeropuertos}" var="ao" itemLabel="#{ao.codigoIata}" itemValue="#{ao}" />
+                                                    </p:selectOneMenu>
+                                                </div>
+                                                <div class="p-field p-col-12 p-md-3">
+                                                    <p:outputLabel value="Destino" />
+                                                    <p:selectOneMenu value="#{seg.aeropuertoDestino}" converter="aeropuertoConverter">
+                                                        <f:selectItems value="#{vueloBean.listaAeropuertos}" var="ad" itemLabel="#{ad.codigoIata}" itemValue="#{ad}" />
+                                                    </p:selectOneMenu>
+                                                </div>
+                                                <div class="p-field p-col-12 p-md-3">
+                                                    <p:outputLabel value="Salida (Local)" />
+                                                    <p:datePicker value="#{seg.horaSalidaDate}" showTime="true" pattern="dd/MM/yy HH:mm" />
+                                                </div>
+                                                <div class="p-field p-col-12 p-md-3">
+                                                    <p:outputLabel value="Llegada (Local)" />
+                                                    <p:datePicker value="#{seg.horaLlegadaDate}" showTime="true" pattern="dd/MM/yy HH:mm" />
+                                                </div>
+                                            </div>
+
+                                            <div class="flex justify-content-end mt-2">
+                                                <p:commandButton value="Guardar Tramo" icon="pi pi-check"
+                                                                 actionListener="#{vueloBean.editarSegmento(seg)}"
+                                                                 styleClass="ui-button-text" style="color: var(--accent-blue)"/>
+                                            </div>
+                                        </div>
+                                    </h:form>
                                 </ui:repeat>
 
-                            </div>
-                        </h:panelGroup>
+                                <h:panelGroup rendered="#{empty vueloBean.segmentos}">
+                                    <div class="text-center py-4" style="border: 2px dashed rgba(255,255,255,0.1); border-radius: 8px;">
+                                        <p style="color: var(--text-dim);">No hay escalas programadas. Haga clic en "Añadir Nueva Escala".</p>
+                                    </div>
+                                </h:panelGroup>
+                            </p:outputPanel>
 
-                        <f:facet name="footer">
-                            <p:commandButton value="#{vueloBean.vueloCreado ? 'Actualizar Datos Técnicos' : 'Crear Cabecera de Vuelo'}"
-                                             action="#{vueloBean.guardarVuelo}"
-                                             icon="pi pi-check"
-                                             update="@form :segmentosPanel"
-                                             styleClass="w-full md:w-auto" />
-                        </f:facet>
-                    </p:card>
-                </h:form>
-
-                <h:panelGroup id="segmentosPanel">
-                    <p:panel header="Itinerario de Vuelo (Escalas)" rendered="#{vueloBean.vueloCreado}" styleClass="shadow-1">
-
-                        <div class="mb-3">
-                            <p:commandButton value="Añadir Escala / Segmento" icon="pi pi-plus"
-                                             oncomplete="PF('dlgNuevoSegmento').show()"
-                                             styleClass="ui-button-success ui-button-sm"
-                                             actionListener="#{vueloBean.openNewSegmento}"
-                                             update=":formSegmentoCrear:manage-segmento-content" />
                         </div>
-
-                        <ui:repeat var="seg" value="#{vueloBean.segmentos}" varStatus="status">
-                            <h:form id="formSegmento_#{status.index}">
-                                <div class="segment-divider mb-4">
-                                    <i class="pi pi-map-marker segment-icon"></i>
-                                    <p:panel header="Segmento #{seg.ordenSegmento}: #{seg.aeropuertoOrigen.codigoIata} ➔ #{seg.aeropuertoDestino.codigoIata}">
-                                        <f:facet name="actions">
-                                            <p:commandButton icon="pi pi-trash" styleClass="ui-button-danger ui-button-flat"
-                                                             actionListener="#{vueloBean.eliminarSegmento(seg)}"
-                                                             update=":segmentosPanel"
-                                                             oncomplete="confirm('¿Eliminar escala?')"/>
-                                        </f:facet>
-
-                                        <div class="ui-fluid p-formgrid p-grid">
-                                            <div class="p-field p-col-12 p-md-3">
-                                                <p:outputLabel value="Origen" />
-                                                <p:selectOneMenu value="#{seg.aeropuertoOrigen}" converter="aeropuertoConverter">
-                                                    <f:selectItems value="#{vueloBean.listaAeropuertos}" var="ao" itemLabel="#{ao.codigoIata}" itemValue="#{ao}" />
-                                                </p:selectOneMenu>
-                                            </div>
-                                            <div class="p-field p-col-12 p-md-3">
-                                                <p:outputLabel value="Destino" />
-                                                <p:selectOneMenu value="#{seg.aeropuertoDestino}" converter="aeropuertoConverter">
-                                                    <f:selectItems value="#{vueloBean.listaAeropuertos}" var="ad" itemLabel="#{ad.codigoIata}" itemValue="#{ad}" />
-                                                </p:selectOneMenu>
-                                            </div>
-                                            <div class="p-field p-col-12 p-md-3">
-                                                <p:outputLabel value="Salida" />
-                                                <p:datePicker value="#{seg.horaSalidaDate}" showTime="true" pattern="dd/MM HH:mm" />
-                                            </div>
-                                            <div class="p-field p-col-12 p-md-3">
-                                                <p:outputLabel value="Llegada" />
-                                                <p:datePicker value="#{seg.horaLlegadaDate}" showTime="true" pattern="dd/MM HH:mm" />
-                                            </div>
-                                        </div>
-                                        <p:commandButton value="Guardar Cambios Segmento" icon="pi pi-save"
-                                                         actionListener="#{vueloBean.editarSegmento(seg)}"
-                                                         styleClass="ui-button-text ui-button-sm mt-2" />
-                                    </p:panel>
-                                </div>
-                            </h:form>
-                        </ui:repeat>
-                    </p:panel>
-                </h:panelGroup>
-            </div>
+                    </div>
+                </div>
+            </h:panelGroup>
         </div>
 
-        <p:dialog widgetVar="dlgNuevoSegmento" header="Agregar Nueva Escala" modal="true" width="500" showEffect="fade">
+        <!-- DIALOG NUEVO SEGMENTO (Sin cambios drásticos, solo se mantiene fuera del flujo principal) -->
+        <p:dialog widgetVar="dlgNuevoSegmento"
+                  header="Programar Nueva Escala"
+                  modal="true"
+                  width="650"
+                  responsive="true"
+                  fitViewport="true"
+                  showEffect="fade"
+                  styleClass="custom-dialog">
             <h:form id="formSegmentoCrear">
                 <p:outputPanel id="manage-segmento-content" class="ui-fluid">
-                    <div class="p-field">
-                        <p:outputLabel for="aeropuertoOrigen">Aeropuerto Origen</p:outputLabel>
-                        <p:selectOneMenu id="aeropuertoOrigen" value="#{vueloBean.aeropuertoOrigen}">
-                            <f:selectItem itemLabel="Seleccione" itemValue="" />
-                            <f:selectItems value="#{vueloBean.listaAeropuertos}" var="a" itemLabel="#{a.codigoIata} - #{a.nombreAeropuerto}" itemValue="#{a.codigoIata}" />
-                            <p:ajax listener="#{vueloBean.ajaxPuerta}" update="puertaEmbarque" />
-                        </p:selectOneMenu>
+
+                    <div class="p-formgrid p-grid">
+                        <div class="p-field p-col-12 p-md-6 mb-3">
+                            <p:outputLabel for="aeropuertoOrigen" value="Aeropuerto Origen" />
+                            <div class="ui-inputgroup">
+                                <span class="ui-inputgroup-addon"><i class="pi pi-upload"></i></span>
+                                <p:selectOneMenu id="aeropuertoOrigen" value="#{vueloBean.aeropuertoOrigen}" required="true">
+                                    <f:selectItem itemLabel="Seleccione" itemValue="" />
+                                    <f:selectItems value="#{vueloBean.listaAeropuertos}" var="a"
+                                                   itemLabel="#{a.codigoIata} - #{a.nombreAeropuerto}"
+                                                   itemValue="#{a.codigoIata}" />
+                                    <p:ajax listener="#{vueloBean.ajaxPuerta}" update="puertaEmbarque" />
+                                </p:selectOneMenu>
+                            </div>
+                        </div>
+
+                        <div class="p-field p-col-12 p-md-6 mb-3">
+                            <p:outputLabel for="puertaEmbarque" value="Puerta de Embarque (Gate)" />
+                            <p:selectOneMenu id="puertaEmbarque" value="#{vueloBean.puertaEmbarqueSeleccion}" required="true">
+                                <f:selectItem itemLabel="Seleccione Puerta" itemValue="" />
+                                <f:selectItems value="#{vueloBean.puertaEmbarques}" var="p"
+                                               itemLabel="GATE #{p.codigoPuerta}"
+                                               itemValue="#{p.idPuerta}" />
+                            </p:selectOneMenu>
+                        </div>
                     </div>
-                    <div class="p-field">
-                        <p:outputLabel for="puertaEmbarque">Puerta de Embarque</p:outputLabel>
-                        <p:selectOneMenu id="puertaEmbarque" value="#{vueloBean.puertaEmbarqueSeleccion}">
-                            <f:selectItem itemLabel="Seleccione" itemValue="" />
-                            <f:selectItems value="#{vueloBean.puertaEmbarques}" var="p" itemLabel="Puerta #{p.codigoPuerta}" itemValue="#{p.idPuerta}" />
-                        </p:selectOneMenu>
+
+                    <div class="p-formgrid p-grid">
+                        <div class="p-field p-col-12 mb-3">
+                            <p:outputLabel for="aeropuertoDestino" value="Aeropuerto Destino" />
+                            <div class="ui-inputgroup">
+                                <span class="ui-inputgroup-addon"><i class="pi pi-download"></i></span>
+                                <p:selectOneMenu id="aeropuertoDestino" value="#{vueloBean.aeropuertoDestino}" required="true">
+                                    <f:selectItem itemLabel="Seleccione Destino" itemValue="" />
+                                    <f:selectItems value="#{vueloBean.listaAeropuertos}" var="a"
+                                                   itemLabel="#{a.codigoIata} - #{a.nombreAeropuerto}"
+                                                   itemValue="#{a.codigoIata}" />
+                                </p:selectOneMenu>
+                            </div>
+                        </div>
                     </div>
+
+                    <div class="p-formgrid p-grid">
+                        <div class="p-field p-col-12 p-md-6 mb-3">
+                            <p:outputLabel for="fechaSalida" value="Fecha/Hora Salida" />
+                            <p:datePicker id="fechaSalida" value="#{vueloBean.fechaSalida}"
+                                          showTime="true" hourFormat="24"
+                                          pattern="dd/MM/yyyy HH:mm"
+                                          placeholder="Seleccione salida"
+                                          required="true" />
+                        </div>
+                        <div class="p-field p-col-12 p-md-6 mb-3">
+                            <p:outputLabel for="fechaLlegada" value="Fecha/Hora Llegada" />
+                            <p:datePicker id="fechaLlegada" value="#{vueloBean.fechaLlegada}"
+                                          showTime="true" hourFormat="24"
+                                          pattern="dd/MM/yyyy HH:mm"
+                                          placeholder="Seleccione llegada"
+                                          required="true" />
+                        </div>
+                    </div>
+
+                    <div class="p-2 mt-2" style="background: rgba(56, 189, 248, 0.1); border-radius: 6px; border-left: 3px solid var(--accent-blue);">
+                        <small style="color: var(--accent-blue);">
+                            <i class="pi pi-info-circle mr-1"></i> Asegúrese de que los tiempos coincidan con la zona horaria local del aeropuerto.
+                        </small>
+                    </div>
+
+                    <div class="flex justify-content-end gap-2 mt-4 pt-3 border-top-1 border-white-alpha-10">
+                        <p:commandButton value="Cancelar"
+                                         icon="pi pi-times"
+                                         onclick="PF('dlgNuevoSegmento').hide()"
+                                         type="button"
+                                         styleClass="ui-button-flat btn-secondary-custom" />
+
+                        <p:commandButton value="Añadir al Plan"
+                                         icon="pi pi-check"
+                                         actionListener="#{vueloBean.guardarSegmentoNuevo}"
+                                         update=":segmentosWrapper"
+                                         oncomplete="if (!args.validationFailed) PF('dlgNuevoSegmento').hide()"
+                                         styleClass="btn-primary-custom" />
+                    </div>
+
                 </p:outputPanel>
-                <f:facet name="footer">
-                    <p:commandButton value="Confirmar Escala" icon="pi pi-check" actionListener="#{vueloBean.guardarSegmentoNuevo}"
-                                     update=":segmentosPanel" oncomplete="PF('dlgNuevoSegmento').hide()" />
-                </f:facet>
+
+
             </h:form>
         </p:dialog>
+
     </ui:define>
 </ui:composition>

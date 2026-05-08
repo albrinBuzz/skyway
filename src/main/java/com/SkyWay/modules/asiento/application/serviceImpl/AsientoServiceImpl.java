@@ -180,6 +180,10 @@ public class AsientoServiceImpl implements AsientoService {
 
 	
 	   	asientos= query.getResultList();
+
+		/*for (InfoAsientoDTO asiento : asientos) {
+			System.out.println(asiento.toString());
+		}*/
  		
 		return asientos;
 	}
@@ -199,7 +203,7 @@ public class AsientoServiceImpl implements AsientoService {
 	}
 
 	@Override
-	@Transactional
+	//@Transactional(readOnly = true)
 	public String verificarDisponibilidad(int idVuelo, Integer[] asientos) throws SQLException {
 		StoredProcedureQuery query = em.createStoredProcedureQuery("spVerificarDisponinibilidadAsientos");
 
@@ -217,17 +221,25 @@ public class AsientoServiceImpl implements AsientoService {
 			query.execute();
 
 			String res = (String) query.getOutputParameterValue("p_resultado");
-			LOGGER.info(res);
+
+			com.SkyWay.util.Logger.logInfo(res);
 			Optional<String> resultado = Optional.ofNullable(res);
 
 
 
+			if (res == null || res.trim().isEmpty()) {
+				// Si el SP devuelve null, algo salió mal en la lógica del SP
+				throw new RuntimeException("El sistema de verificación no retornó un estado válido.");
+			}
 
 			if (resultado.isPresent()&&resultado.get().startsWith("ERROR:")) {
 				// Forzar rollback lanzando excepción
 				com.SkyWay.util.Logger.logInfo(resultado.get());
 				throw new RuntimeException(resultado.get().substring(6).trim());
 			}
+
+			if ("OK".equalsIgnoreCase(res)) return "";
+			return res;
 
 		} catch (Exception ex) {
 			Throwable causa = ex.getCause();
@@ -241,7 +253,6 @@ public class AsientoServiceImpl implements AsientoService {
 			// Si no fue SQLException, relanzar la original
 			throw ex;
 		}
-		return "";
 	}
 
 

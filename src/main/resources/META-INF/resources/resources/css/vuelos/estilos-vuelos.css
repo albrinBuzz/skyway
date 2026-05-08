@@ -1,0 +1,475 @@
+
+                          /* ===== VARIABLES RAÍZ (LATAM DARK PALETTE) ===== */
+                      :root {
+                          --bg-page: #0d0d0d;        /* Fondo base profundo */
+                          --bg-card: #1a1a1a;        /* Fondo de tarjetas y filas */
+                          --text-main: #ffffff;
+                          --text-dim: #999999;
+                          --border-soft: #262626;
+                          --success-latam: #00d1ff;
+                          --benefit-green: #4ade80; /* Verde para lo incluido */
+                          --benefit-red: #ff4d4d;   /* Rojo para lo NO incluido */
+                          --sky-blue: #00d1ff;
+                      }
+
+/* ===== RESET GENERAL ===== */
+body {
+    background-color: #0d0d0d !important;
+    color: var(--text-main);
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* ===== HEADER: TIPO DE VUELO (Ajustado al Dark Mode) ===== */
+.tipo-vuelo-container {
+    background: transparent;
+    border-bottom: 1px solid var(--border-soft);
+    margin-bottom: 35px;
+    padding: 0 0 25px 0;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.icono-tipo-vuelo {
+    font-size: 1.6rem !important;
+    color: var(--sky-blue);
+    background: rgba(0, 209, 255, 0.1);
+    padding: 15px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tipo-vuelo-info { display: flex; flex-direction: column; }
+
+.tipo-vuelo-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    letter-spacing: 1.5px;
+}
+
+.tipo-vuelo-text {
+    font-size: 2.2rem;
+    font-weight: 300; /* Estilo LATAM: Tipografía ligera y grande */
+    color: #fff;
+    margin: 0;
+}
+
+/* ===== DATATABLE: ESTILO FILAS FLOTANTES ===== */
+.vuelo-tabla-custom { background: transparent !important; border: none !important; }
+
+/* Encabezados */
+.vuelo-tabla-custom thead th {
+    background: transparent !important;
+    color: var(--text-dim) !important;
+    border-bottom: 1px solid var(--border-soft) !important;
+    padding: 15px !important;
+    font-size: 11px !important;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+}
+
+/* Filas (Tarjetas) */
+.vuelo-tabla-custom tr.ui-widget-content {
+    background: var(--bg-card) !important;
+    border-bottom: 8px solid var(--bg-page) !important; /* Espacio entre filas */
+    transition: background 0.3s ease;
+}
+
+.vuelo-tabla-custom tr.ui-widget-content:hover {
+    background: #252525 !important;
+}
+
+.vuelo-tabla-custom td {
+    padding: 30px 20px !important;
+    border: none !important;
+    color: var(--text-main) !important;
+}
+
+.vuelo-tabla-custom .ui-paginator {
+    background: #0d0d0d !important;
+    border: none !important;
+    padding: 20px !important;
+}
+/* Estilo de los números del paginador para que se vean en el fondo negro */
+.vuelo-tabla-custom .ui-paginator-page,
+.vuelo-tabla-custom .ui-paginator-next,
+.vuelo-tabla-custom .ui-paginator-last,
+.vuelo-tabla-custom .ui-paginator-first,
+.vuelo-tabla-custom .ui-paginator-prev {
+    background: #1a1a1a !important;
+    color: #fff !important;
+    border: 1px solid #333 !important;
+}
+
+.vuelo-tabla-custom .ui-paginator-page.ui-state-active {
+    background: #00d1ff !important; /* Azul Skyway para la página activa */
+    color: #000 !important;
+}
+
+/* 3. Quitar bordes y fondos de la estructura interna del DataTable */
+.vuelo-tabla-custom.ui-datatable {
+    background: #0d0d0d !important;
+}
+
+.vuelo-tabla-custom .ui-datatable-header,
+.vuelo-tabla-custom .ui-datatable-footer {
+    background: #0d0d0d !important;
+    border: none !important;
+    color: #fff !important;
+}
+
+/* 4. Forzar que las celdas vacías o el mensaje 'No hay resultados' sean negros */
+.vuelo-tabla-custom .ui-datatable-data tr.ui-widget-content {
+    background: #1a1a1a !important; /* Color de la fila */
+    border-bottom: 8px solid #0d0d0d !important; /* Espacio entre filas negro */
+}
+
+.vuelo-tabla-custom .ui-datatable-emptymessage td {
+    background: #0d0d0d !important;
+    color: #999 !important;
+}
+
+/* 5. Estilo de los encabezados (Th) */
+.vuelo-tabla-custom thead th {
+    background: #0d0d0d !important; /* Negro puro para el header */
+    border-bottom: 1px solid #262626 !important;
+    color: #999 !important;
+}
+
+/* Asegurar que el contenedor de expansión sea negro puro */
+.expansion-container {
+    background: #000000 !important;
+    border-top: 1px solid #00d1ff !important;
+}
+
+/* Bloques de Texto de Vuelo */
+.flight-time { font-size: 1.5rem; font-weight: 700; color: #fff; }
+.flight-iata { font-size: 1.1rem; color: #fff; margin-left: 8px; opacity: 0.8; font-weight: 400;}
+.flight-city { font-size: 0.85rem; color: var(--text-dim); display: block; margin-top: 5px;}
+
+/* Línea de Duración (Timeline Central) */
+.duration-line-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: var(--text-dim);
+}
+
+.line-visual {
+    width: 100%;
+    height: 1px;
+    background: #444;
+    position: relative;
+    margin: 12px 0;
+}
+
+.line-visual::after {
+    content: "✈";
+    position: absolute;
+    right: 0;
+    top: -10px;
+    color: var(--sky-blue);
+    font-size: 14px;
+}
+
+/* Badges */
+.direct-badge {
+    color: #00d1ff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.stop-badge {
+    background: #262626;
+    color: #ccc;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+}
+
+/* Precio */
+.price-display {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #fff;
+}
+
+/* ===== EXPANSION: TARIFAS VERTICALES ===== */
+.expansion-container {
+    background: #111111 !important; /* Negro mate */
+
+    padding: 40px 20px;
+    border-top: 1px solid #1e293b;
+}
+
+.tarifas-grid {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+/* Mantener el fondo azul oscuro de las tarjetas que pediste */
+.card-latam {
+    background: #161d2b !important;
+    border: 1px solid #2d3748 !important;
+    border-radius: 12px !important;
+    transition: transform 0.3s ease;
+}
+/* Efecto al pasar el mouse para dar dinamismo */
+.card-latam:hover {
+    background: #1c2536 !important; /* Aclara un poco */
+    border-color: var(--sky-blue) !important;
+    box-shadow: 0 10px 25px rgba(0, 209, 255, 0.1);
+    transform: translateY(-5px);
+}
+
+.tarifa-badge-line { height: 6px; width: 100%; border-radius: 8px 8px 0 0; }
+
+.tarifa-top-section { padding: 25px; flex-grow: 1; }
+
+.tarifa-name {
+    color: #ffffff !important;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+/* Ajuste de iconos en la lista de beneficios */
+.beneficio-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 14px;
+    font-size: 0.9rem;
+}
+
+
+.beneficio-item span {
+    color: #cbd5e0 !important; /* Gris claro */
+}
+
+/* Estilo para lo INCLUIDO */
+.icon-yes {
+    color: var(--benefit-green) !important;
+    font-size: 1.1rem;
+    filter: drop-shadow(0 0 5px rgba(74, 222, 128, 0.2));
+}
+
+.text-yes {
+    color: #ffffff;
+    font-weight: 500;
+}
+
+/* Estilo para lo NO INCLUIDO (Rojo) */
+.icon-no {
+    color: var(--benefit-red) !important;
+    font-size: 1.1rem;
+    filter: drop-shadow(0 0 5px rgba(255, 77, 77, 0.3));
+}
+
+.text-no {
+    color: #71717a !important; /* Texto opaco para lo que no incluye */
+    text-decoration: none; /* Podrías usar line-through si quieres ser más agresivo */
+}
+
+.tarifa-bottom-section {
+    padding: 25px;
+    background: rgba(0, 0, 0, 0.2) !important; /* Sombra interna */
+    border-top: 1px solid #2d3748;
+}
+
+.price-value { font-size: 1.6rem; font-weight: 800; color: #fff; margin: 10px 0; display: block; }
+
+.btn-elegir {
+    background: transparent !important;
+    border: 1px solid #fff !important;
+    color: #fff !important;
+    width: 100%;
+    border-radius: 4px !important;
+    font-weight: 600 !important;
+}
+
+.btn-elegir:hover { background: #fff !important; color: #000 !important; }
+
+
+
+
+.sidebar-corporativo {
+    background: #f7f9fc !important;
+    padding: 0 !important;
+}
+
+/* ===== Título ===== */
+.header-titulo {
+    background: #003366;
+    color: #fff;
+    padding: 22px 26px;
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: .6px;
+    margin-bottom: 20px;
+}
+
+.header-titulo i { margin-right: 8px; }
+
+/* ===== Timeline ===== */
+
+.timeline {
+    padding: 0 28px 30px 28px;
+}
+
+/* Separación clara entre paradas */
+.tramo-bloque {
+    margin-bottom: 55px !important;
+    padding-bottom: 10px;
+    position: relative;
+}
+
+/* Línea separadora suave entre tramos */
+.tramo-bloque::after {
+    content: "";
+    position: absolute;
+    bottom: -28px;
+    left: 5%;
+    width: 90%;
+    height: 1px;
+    background: #d5dce3;
+}
+
+/* ===== Tarjetas ===== */
+.card-parada {
+    background: #ffffff;
+}
+
+.card-parada-separada {
+    padding: 30px !important;
+    border-radius: 14px;
+    border: 1px solid #e4e7ea;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+    border-left: 6px solid #004a99;  /* Marca corporativa */
+    transition: 0.25s ease;
+}
+
+.card-parada-separada:hover {
+    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+}
+
+/* Header de tarjeta */
+.card-header {
+    font-size: 18px;
+    font-weight: 700;
+    color: #003366;
+    margin-bottom: 20px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #dde3ea;
+}
+
+/* ===== Datos de tramo ===== */
+
+.timeline-leg {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    margin-top: 10px;
+}
+
+.city-block {
+    text-align: center;
+    width: 100%;
+}
+
+.city-code {
+    font-size: 22px;
+    font-weight: 700;
+    color: #003366;
+}
+
+.city-time {
+    font-size: 14px;
+    margin-top: 4px;
+    color: #555;
+}
+
+.timeline-arrow {
+    font-size: 22px;
+    color: #00509e;
+}
+
+
+/* ===== Grid de información ===== */
+
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px 32px;
+    margin-top: 10px;
+}
+
+.label {
+    font-weight: 600;
+    font-size: 14px;
+    color: #003366;
+}
+
+.value {
+    font-size: 14px;
+    color: #444;
+}
+
+/* ===== Títulos de sección ===== */
+.section {
+    margin-top: 28px;
+    margin-bottom: 28px;
+}
+
+.section-title {
+    font-size: 15px;
+    color: #00509e;
+    font-weight: 600;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+}
+
+.section-title i {
+    margin-right: 6px;
+    color: #003366;
+}
+
+/* ===== Descripción ===== */
+.descripcion-espaciada {
+    padding: 18px 20px;
+    background: #f1f3f6;
+    border-radius: 10px;
+    line-height: 1.55;
+    font-size: 14px;
+    color: #444;
+}
+
+/* ===== Marcadores Timeline ===== */
+
+.timeline-marker {
+    width: 40px;
+    display: flex;
+    justify-content: center;
+}
+
+.marker-circle {
+    width: 14px;
+    height: 14px;
+    background: #00509e;
+    border-radius: 50%;
+    border: 3px solid #003366;
+}
+
+
+/* ===== Scroll Top ===== */
+.btn-scrolltop {
+    background: #003366 !important;
+    border-radius: 50% !important;
+}

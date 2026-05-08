@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>SkyWay - Unified Flight Command Center</title>
+    <link rel="stylesheet" href="https://unpkg.com/primeicons/primeicons.css">
+    <style>
+        :root {
+            --bg-body: #050b16;
+            --bg-card: #0a192f;
+            --bg-sidebar: #071224;
+            --accent-blue: #00a3ff;
+            --text-main: #e6edf3;
+            --text-dim: #8b949e;
+            --status-green: #23d160;
+            --status-orange: #ff9f43;
+            --status-red: #ff4d4d;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        body { margin: 0; font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+        /* --- SIDEBAR --- */
+        .sidebar { width: 300px; background-color: var(--bg-sidebar); border-right: 1px solid var(--border); padding: 30px 25px; overflow-y: auto; }
+        .membership-badge { background: linear-gradient(135deg, #b8860b 0%, #f1c40f 100%); color: #000; font-size: 10px; font-weight: 800; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-bottom: 25px; }
+        .section-label { color: var(--text-dim); font-size: 11px; font-weight: 700; text-transform: uppercase; margin-top: 25px; margin-bottom: 12px; display: block; }
+        .data-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px; }
+
+        /* --- MAIN VIEW --- */
+        .main-view { flex: 1; padding: 30px 50px; overflow-y: auto; }
+
+        /* ALERTAS */
+        .alert-banner {
+            background: rgba(255, 77, 77, 0.1); border: 1px solid var(--status-red);
+            color: var(--status-red); padding: 12px 20px; border-radius: 8px;
+            font-size: 13px; margin-bottom: 20px; display: flex; align-items: center; gap: 15px;
+        }
+
+        /* TABS */
+        .tabs-container { display: flex; gap: 35px; border-bottom: 1px solid var(--border); margin-bottom: 30px; }
+        .tab-item { padding-bottom: 15px; cursor: pointer; color: var(--text-dim); font-size: 15px; font-weight: 600; position: relative; }
+        .tab-item.active { color: var(--text-main); }
+        .tab-item.active::after { content: ''; position: absolute; bottom: -1px; left: 0; width: 100%; height: 3px; background: var(--accent-blue); }
+
+        /* FLIGHT CARD UNIFICADA */
+        .flight-card { background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border); margin-bottom: 30px; display: none; }
+        .flight-card.visible { display: block; }
+
+        .card-header { padding: 20px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+
+        .card-body { padding: 25px; }
+
+        /* Itinerario Visual */
+        .itinerary-summary { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .airport-block .code { font-size: 36px; font-weight: 900; display: block; }
+        .airport-block .city { font-size: 14px; color: var(--text-dim); }
+
+        .route-path { flex: 1; padding: 0 40px; text-align: center; position: relative; }
+        .path-line { height: 2px; background: var(--border); position: relative; margin: 10px 0; }
+        .plane-icon { position: absolute; top: -10px; left: 50%; transform: rotate(90deg); color: var(--accent-blue); font-size: 20px; }
+
+        /* Detalle de Itinerario Vertical */
+        .itinerary-details {
+            background: rgba(255,255,255,0.02); border-radius: 12px; padding: 20px;
+            margin: 20px 0; border: 1px dashed var(--border);
+        }
+        .step { position: relative; padding-left: 30px; margin-bottom: 20px; border-left: 2px solid var(--accent-blue); }
+        .step:last-child { margin-bottom: 0; }
+        .step-title { font-weight: 700; font-size: 14px; display: block; }
+        .step-info { font-size: 12px; color: var(--text-dim); }
+        .layover { color: var(--status-orange); font-weight: 700; font-size: 12px; margin: 10px 0; }
+
+        /* BOTONES DE ACCIÓN */
+        .action-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px; border-top: 1px solid var(--border); padding-top: 25px;
+        }
+        .btn {
+            padding: 12px; border-radius: 8px; font-size: 12px; font-weight: 700;
+            cursor: pointer; border: 1px solid var(--border); background: rgba(255,255,255,0.05);
+            color: white; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s;
+        }
+        .btn:hover { background: rgba(255,255,255,0.1); border-color: var(--accent-blue); }
+        .btn-primary { background: var(--accent-blue); border: none; grid-column: span 2; }
+
+    </style>
+</head>
+<body>
+
+<aside class="sidebar">
+    <h2 style="margin: 0;">Jordan Parker</h2>
+    <span class="membership-badge">Gold Medallion</span>
+
+    <span class="section-label">Estado de Cuenta</span>
+    <div class="data-row"><span>Millas Totales</span><span style="color:var(--accent-blue); font-weight: bold;">128,430</span></div>
+    <div class="data-row"><span>Créditos</span><span>$450.00</span></div>
+
+    <span class="section-label">Preferencias</span>
+    <div class="data-row"><span>Asiento</span><span>Pasillo</span></div>
+    <div class="data-row"><span>Comida</span><span>Gluten Free</span></div>
+
+    <span class="section-label">Compañeros</span>
+    <div class="data-row"><span>Alex Parker</span><span style="color:var(--status-green)">En este viaje</span></div>
+</aside>
+
+<main class="main-view">
+    <div class="alert-banner">
+        <i class="pi pi-bell" style="font-size: 18px;"></i>
+        <span><strong>Alerta de Vuelo:</strong> El tramo SK-2240 presenta un retraso de 45 min. Nueva puerta de salida: <strong>D24</strong>.</span>
+    </div>
+
+    <div class="tabs-container">
+        <div class="tab-item active" onclick="showTab('today', this)">HOY (1)</div>
+        <div class="tab-item" onclick="showTab('upcoming', this)">PRÓXIMOS (2)</div>
+        <div class="tab-item" onclick="showTab('past', this)">PASADOS (100)</div>
+    </div>
+
+    <div id="flight-manager">
+
+        <div class="flight-card today visible">
+            <div class="card-header">
+                <div>
+                    <span style="font-weight: 800; font-size: 18px; color: var(--accent-blue);">SK-2240</span>
+                    <span style="margin-left: 15px; font-size: 12px; color: var(--text-dim);">Conf: #GLP4P18</span>
+                </div>
+                <span style="color: var(--status-orange); font-size: 12px; font-weight: 700;">DEMORADO</span>
+            </div>
+
+            <div class="card-body">
+                <div class="itinerary-summary">
+                    <div class="airport-block">
+                        <span class="code">SCL</span>
+                        <span class="city">Santiago, CL</span>
+                    </div>
+                    <div class="route-path">
+                        <span style="font-size: 11px; color: var(--text-dim);">10h 45m total</span>
+                        <div class="path-line"><i class="pi pi-send plane-icon"></i></div>
+                        <span style="font-size: 11px; color: var(--status-orange);">Escala en PTY</span>
+                    </div>
+                    <div class="airport-block" style="text-align: right;">
+                        <span class="code">LAX</span>
+                        <span class="city">Los Angeles, US</span>
+                    </div>
+                </div>
+
+                <div class="itinerary-details">
+                    <div class="step">
+                        <span class="step-title">Salida: Santiago (SCL) - 08:30 PM</span>
+                        <span class="step-info">Vuelo SK-2240 • Airbus A350 • Terminal 2, Puerta B12</span>
+                    </div>
+                    <div class="layover"><i class="pi pi-clock"></i> Escala: 2h 15m en Ciudad de Panamá (PTY)</div>
+                    <div class="step">
+                        <span class="step-title">Conexión: Ciudad de Panamá (PTY) - 01:15 AM</span>
+                        <span class="step-info">Vuelo SK-112 • Boeing 737 MAX • Puerta D24</span>
+                    </div>
+                </div>
+
+                <div class="action-grid">
+                    <button class="btn btn-primary" onclick="window.print()">
+                        <i class="pi pi-ticket"></i> BOARDING PASS (PDF)
+                    </button>
+                    <button class="btn" onclick="alert('Abriendo mapa de asientos...')">
+                        <i class="pi pi-th-large"></i> Cambiar Asiento (12F)
+                    </button>
+                    <button class="btn">
+                        <i class="pi pi-briefcase"></i> Rastrear Equipaje
+                    </button>
+                    <button class="btn">
+                        <i class="pi pi-star"></i> Solicitar Upgrade
+                    </button>
+                    <button class="btn" style="color:var(--status-red); border-color: var(--status-red);">
+                        <i class="pi pi-times-circle"></i> Cancelar Vuelo
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="flight-card upcoming">
+            <div class="card-header">
+                <span style="font-weight: 800;">SK-502</span>
+                <span class="status-pill" style="color:var(--status-green)">CONFIRMADO</span>
+            </div>
+            <div class="card-body">
+                <p><strong>Destino:</strong> Miami (MIA) • 14 de Febrero</p>
+                <button class="btn">Gestionar Reserva</button>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+
+
+<script>
+    function showTab(category, element) {
+        // Estética de las tabs
+        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+        element.classList.add('active');
+
+        // Lógica de filtrado
+        document.querySelectorAll('.flight-card').forEach(card => {
+            card.classList.remove('visible');
+            if (card.classList.contains(category)) {
+                card.classList.add('visible');
+            }
+        });
+    }
+</script>
+</body>
+</html>

@@ -49,6 +49,7 @@ public class ReservaServiceImpl implements ReservaService {
 	}
 
 	@Override
+	@Transactional
 	public Reserva save(Reserva reserva) {
 		// TODO Auto-generated method stub
 		return reservaRepository.save(reserva);

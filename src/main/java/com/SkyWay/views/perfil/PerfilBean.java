@@ -171,9 +171,9 @@ public class PerfilBean implements Serializable {
 
 		//itinerarioTarifaService.getTarifasItinerario(itinerario.getIdItinerario());
 
-		/*for (InfoAsientoReservaDTO asientoReservaDTO : listaAsientosReservados) {
+		for (InfoAsientoReservaDTO asientoReservaDTO : listaAsientosReservados) {
 			Logger.logInfo(asientoReservaDTO.toString());
-		}*/
+		}
 
 		//this.itinerarioDetalle = itinerarioService.findById(itinerario.getIdItinerario());;
 		PrimeFaces.current().executeScript("PF('dialogAsientos').show();");

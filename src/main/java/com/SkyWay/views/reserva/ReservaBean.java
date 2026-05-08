@@ -108,22 +108,29 @@ public class ReservaBean implements Serializable {
         pasajerosList=new ArrayList<>();
 
         if (usuario!=null){
-            for (ReservaAsientoBean.Pasajero pasajero1 : pasajeros) {
-                Pasajero p = new Pasajero();
-                p.setUsuario(new Usuario()); // OBLIGATORIO
-                pasajerosList.add(p);
+            this.pasajero = pasajeroService.findById(usuario.getRut()).get();
+
+            pasajerosList = new ArrayList<>();
+            for (int i = 0; i < pasajeros.size(); i++) {
+                if (i == 0) {
+                    // El primer pasajero de la lista ES el autenticado
+                    pasajerosList.add(this.pasajero);
+                } else {
+                    // Pasajeros adicionales: Solo inicializar si son nuevos
+                    Pasajero p = new Pasajero();
+                    p.setUsuario(new Usuario());
+                    pasajerosList.add(p);
+                }
+            }
+        }else {
+            if (pasajeros!=null){
+                for (ReservaAsientoBean.Pasajero pasajero1 : pasajeros) {
+                    Pasajero p = new Pasajero();
+                    p.setUsuario(new Usuario()); // OBLIGATORIO
+                    pasajerosList.add(p);
+                }
             }
 
-            this.pasajero = pasajeroService.findById(usuario.getRut()).get();
-            pasajerosList.removeFirst();
-            pasajero.setUsuario(usuario);
-            pasajerosList.add(0,pasajero);
-        }else {
-            for (ReservaAsientoBean.Pasajero pasajero1 : pasajeros) {
-                Pasajero p = new Pasajero();
-                p.setUsuario(new Usuario()); // OBLIGATORIO
-                pasajerosList.add(p);
-            }
 
         }
 
@@ -167,6 +174,7 @@ public class ReservaBean implements Serializable {
         // Aquí guardas la reserva en BD o llamas al servicio
         //System.out.println("Reserva confirmada para: " + cliente.getNombre());
         boolean resultadoDisp = false;
+        List<String> erroresDisponibilidad = new ArrayList<>();
 
         for (Map.Entry<Integer, List<InfoAsientoDTO>> entry : asientosSeleccionados.entrySet()) {
             Integer idVuelo = entry.getKey();
@@ -184,18 +192,32 @@ public class ReservaBean implements Serializable {
                     Logger.logInfo(resultado);
                     if (resultado.isEmpty()||resultado.isBlank()) {
                         resultadoDisp = true;  // Marcar como disponible si no hay error
+                        break;
                     }
 
                 } catch (SQLException e) {
                     Logger.logInfo("Error SQL en la reserva. verificando disponibilidad: " + e.getMessage());
                     resultadoDisp = false;
+                    break;
                     // Otros manejos de errores...
                 } catch (Exception ex) {
                     Logger.logInfo("Error inesperado: " + ex.getClass().getName());
+                    Logger.logInfo("Error inesperado: " + ex.getMessage());
+                    erroresDisponibilidad.add("Asiento " + asiento.getNumeroAsiento() + ": " + ex.getMessage());
                     resultadoDisp = false;
+                    break;
                     // Otros manejos de excepciones...
                 }
             }
+            if (resultadoDisp) break;
+        }
+        if (!erroresDisponibilidad.isEmpty()) {
+            // Mostramos todos los errores acumulados en la interfaz
+            for (String error : erroresDisponibilidad) {
+                FacesContext.getCurrentInstance().addMessage(null,
+                        new FacesMessage(FacesMessage.SEVERITY_WARN, "Disponibilidad", error));
+            }
+            return; // Detenemos la reserva
         }
 
         Logger.logInfo(String.valueOf(resultadoDisp));
@@ -239,25 +261,32 @@ public class ReservaBean implements Serializable {
             } else {
 
                 Logger.logInfo("Autenticado");
-                this.pasajero = pasajeroService.findById(usuario.getRut()).get();
-                reserva.setPasajero(pasajero);
+                /*this.pasajero = pasajeroService.findById(usuario.getRut())
+                        .orElseThrow(() -> new RuntimeException("Pasajero no encontrado"));*/
+
+                // 2. Asignamos la instancia oficial a la reserva
+                reserva.setPasajero(this.pasajero);
+
 
 
                 for (int i = 0; i < pasajerosList.size(); i++) {
-                    Pasajero pasajero = pasajerosList.get(i);
+                    Pasajero pLista = pasajerosList.get(i);
 
-                    if (i != 0) { // pasajeros adicionales
-                        Usuario usuario = pasajero.getUsuario();
+                    // Si es el pasajero autenticado, no hacemos nada, ya está en la DB
+                    if (i == 0 || pLista.getRut().equals(this.pasajero.getRut())) {
+                        continue;
+                    } else {
+                        // Para pasajeros adicionales, verifica si ya existen antes de salvar
+                        // para evitar el error de Duplicate ID
+                        Usuario userAdicional = pLista.getUsuario();
+                        userAdicional.setRut(pLista.getRut());
+                        pLista.setUsuario(userAdicional);
 
-                        // Asegurarse de que el rut esté asignado en Usuario
-                        usuario.setRut(pasajero.getRut());
-
-                        // Asignar usuario al pasajero
-                        pasajero.setUsuario(usuario);
-
-                        // Guardar el pasajero (cascade se encargará de guardar Usuario)
-                        pasajeroService.save(pasajero);
-
+                        // IMPORTANTE: Solo guarda si estás seguro de que es nuevo
+                        // o usa un método que haga merge en el service
+                        if (!pasajeroService.findById(pLista.getRut()).isPresent()) {
+                            pasajeroService.save(pLista);
+                        }
                     }
                 }
 
@@ -354,6 +383,9 @@ public class ReservaBean implements Serializable {
 
         }*/
 
+        }else {
+            Logger.logInfo("asientos no disponibles");
+            addMessage(FacesMessage.SEVERITY_WARN, "Aviso", "Uno o más asientos ya no están disponibles.");
         }
 
 

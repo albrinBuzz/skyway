@@ -81,50 +81,44 @@ CREATE OR REPLACE PROCEDURE spVerificarDisponinibilidadAsientos(
     IN p_asientos INT[],
     OUT p_resultado TEXT
 )
-LANGUAGE plpgsql
+    LANGUAGE plpgsql
 AS $$
 DECLARE
-    reserva_id INT;
-    estado_reserva_id INT := 1;  -- Suponemos 1 = pendiente o confirmada
-    i INT;
-    id_avion INT;
-    id_asientoP INT;
+id_asientoP INT;
     asiento_en_reserva INT;
-    numero_asiento TEXT;
-    asientos_reservados TEXT := '-';
+    v_numero_asiento TEXT; -- Variable para el nombre del asiento
+    v_asientos_erroneos TEXT := ''; -- Inicializar vacío
 BEGIN
-    -- Obtener el avión asignado al vuelo
-    SELECT vl.id_avion INTO id_avion
-    FROM vuelo vl
-    WHERE id_vuelo = p_idVuelo;
+    -- Inicializar el resultado como exitoso por defecto
+    p_resultado := 'OK';
 
-
-    FOR i IN 1..array_length(p_asientos, 1)
+FOR i IN 1..array_length(p_asientos, 1)
     LOOP
         id_asientoP := p_asientos[i];
+        asiento_en_reserva := 0;
 
-        -- Verificar si el asiento ya está reservado en este vuelo
-        SELECT 1 INTO asiento_en_reserva
-		FROM reserva_asiento ra
-		where ra.ID_VUELO=p_idVuelo
-		and ra.ID_ASIENTO=id_asientoP
-		FOR UPDATE;
+        -- 1. Buscar el nombre del asiento y verificar si existe en reserva
+        -- Usamos un LEFT JOIN o similar para obtener el nombre aunque no esté reservado
+SELECT a.numero_asiento, (SELECT 1 FROM reserva_asiento ra
+                          WHERE ra.id_vuelo = p_idVuelo
+                            AND ra.id_asiento = id_asientoP LIMIT 1)
+INTO v_numero_asiento, asiento_en_reserva
+FROM asiento a
+WHERE a.id_asiento = id_asientoP;
 
+IF asiento_en_reserva IS NOT NULL THEN
+            -- COALESCE evita que el NULL destruya el string
+            v_asientos_erroneos := v_asientos_erroneos || v_numero_asiento || ', ';
+END IF;
+END LOOP;
 
+    IF v_asientos_erroneos <> '' THEN
+        p_resultado := 'ERROR: Asientos ya reservados: ' || LEFT(v_asientos_erroneos, LENGTH(v_asientos_erroneos) - 2);
+END IF;
 
-        IF asiento_en_reserva > 0 THEN
-            asientos_reservados := asientos_reservados || numero_asiento || ', ';
-        END IF;
-    END LOOP;
-
-    IF asientos_reservados <> '-' THEN
-        p_resultado := 'ERROR: Asientos ya reservados: ' || LEFT(asientos_reservados, LENGTH(asientos_reservados) - 2);
-    END IF;
 EXCEPTION
     WHEN OTHERS THEN
-        -- Rollback seguro en caso de error
-        RAISE NOTICE 'Ocurrió un error: %', SQLERRM;
-        p_resultado := 'ERROR: No se pudo completar la reserva.'||SQLERRM;
+        p_resultado := 'ERROR: Error interno: ' || SQLERRM;
 END;
 $$;
 

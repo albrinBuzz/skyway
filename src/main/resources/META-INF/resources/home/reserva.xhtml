@@ -6,364 +6,281 @@
                 xmlns:ui="http://java.sun.com/jsf/facelets"
                 template="/template/main.xhtml">
 
+    <ui:define name="head">
+        <title>Reserva | LATAM Style</title>
+        <h:outputStylesheet library="css" name="reserva/style.css" />
+    </ui:define>
+
     <ui:define name="contenido">
-        <h:outputStylesheet>
-            .reserva-container {
-            max-width: 1000px;
-            margin: auto;
-            padding: 30px;
-            background-color: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
-            }
+        <p:growl id="growl" showDetail="true" />
 
-            .seccion {
-            margin-bottom: 40px;
-            }
-
-            .titulo {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 20px;
-            color: #2c3e50;
-            border-bottom: 2px solid #ccc;
-            padding-bottom: 10px;
-            }
-
-            .info {
-            font-size: 16px;
-            margin: 8px 0;
-            }
-
-            .vuelo-box, .itinerario-box {
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-            background-color: #f9f9f9;
-            }
-
-            .asiento-box {
-            display: inline-block;
-            background-color: #3498db;
-            color: white;
-            font-weight: bold;
-            padding: 8px 12px;
-            border-radius: 6px;
-            margin-left: 10px;
-            }
-
-            .btn-confirmar {
-            background-color: #27ae60;
-            color: white;
-            font-size: 16px;
-            font-weight: bold;
-            padding: 12px 30px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            display: block;
-            margin: 30px auto 0;
-            }
-
-            .btn-confirmar:hover {
-            background-color: #219150;
-            }
-
-
-
-            .ui-inputfield {
-            width: 100%;
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
-            }
-
-            .ui-datepicker {
-            z-index: 10000 !important;
-            }
-
-
-            .ui-panelgrid-blank .ui-inputfield,
-            .ui-selectonemenu {
-            width: 100%;
-            box-sizing: border-box;
-            }
-
-            .ui-selectonemenu-label {
-            padding-left: 8px;
-            }
-
-            .pasajero-card {
-            border: 2px solid #2c3e50;
-            border-radius: 10px;
-            padding: 25px;
-            margin-bottom: 35px;
-            background-color: #1f1f1f;
-            }
-
-            .pasajero-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 20px;
-            font-weight: bold;
-            color: #ffffff;
-            background-color: #3498db;
-            padding: 10px 15px;
-            border-radius: 6px;
-            margin-bottom: 10px;
-            }
-
-            .pasajero-badge {
-            display: inline-block;
-            background: #e74c3c;
-            color: #fff;
-            font-weight: bold;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            text-align: center;
-            line-height: 30px;
-            }
-
-            .pasajero-subtitle {
-            font-size: 14px;
-            color: #cccccc;
-            margin-bottom: 20px;
-            }
-
-            .pasajero-section-title {
-            color: #2c3e50;
-            margin-bottom: 15px;
-            }
-
-
-        </h:outputStylesheet>
-
-        <div class="reserva-container">
-
-            <!-- Sección de Itinerarios -->
-            <!-- Total de la reserva -->
-            <div class="seccion">
-
-                <p:growl id="growl" showDetail="true" sticky="true"  />
-
-
-
-                <div class="titulo">Total de la Reserva</div>
-                <h:outputText value="#{reservaBean.total}">
-                    <f:convertNumber type="currency" currencySymbol="$" groupingUsed="true" maxFractionDigits="0" />
-                </h:outputText>
+        <div class="container mt-4">
+            <div class="booking-stepper">
+                <span class="step">1. Vuelos</span>
+                <span class="step">2. Asientos</span>
+                <span class="step active">3. Pasajeros y Pago</span>
+                <span class="step">4. Confirmación</span>
             </div>
 
+            <div class="latam-layout">
+                <div class="main-content">
+                    <h:form id="pasajerosForm">
+                        <div class="card-latam">
+                            <div class="titulo mb-4" style="font-size: 1.5rem; font-weight: 800;">Información de pasajeros</div>
 
-            <div class="card">
-            <div class="seccion">
-                <p:accordionPanel multiple="true" widgetVar="itinerariosAccordion" scrollIntoView="center">
-                <p:tab title="Vuelos">
+                            <ui:repeat value="#{reservaBean.pasajerosList}" var="pasajero" varStatus="st">
+                                <div class="pasajero-card mb-5">
+                                    <div class="d-flex align-items-center mb-4">
+                                        <div style="background:var(--latam-red); width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold;">
+                                            #{st.index + 1}
+                                        </div>
+                                        <h4 class="ml-3 mb-0" style="font-weight: 700;">Pasajero #{st.index + 1} (Adulto)</h4>
+                                    </div>
 
+                                    <h:panelGroup rendered="#{st.index == 0 and reservaBean.usuario != null}">
+                                        <div class="p-3 rounded mb-4 d-flex align-items-center" style="background: rgba(0, 123, 255, 0.1); border: 1px solid var(--latam-blue);">
+                                            <i class="pi pi-user-check mr-3" style="color:var(--latam-blue); font-size:1.2rem;"></i>
+                                            <span style="font-size:0.9rem;">Autocompletado con tu cuenta: <strong>#{reservaBean.usuario.nombre} #{reservaBean.usuario.apellido}</strong></span>
+                                        </div>
+                                    </h:panelGroup>
 
-                <ui:repeat value="#{reservaBean.itinerarios}" var="itinerario">
-                    <div class="itinerario-box">
-                        <div class="info">
-                            <strong>Origen:</strong> #{itinerario.aeropuertoOrigen.codigoIata}
-                        </div>
-                        <div class="info">
-                            <strong>Destino:</strong> #{itinerario.aeropuertoDestino.codigoIata}
-                        </div>
-                        <div class="info">
-                            <strong>Hora de salida:</strong>
-                            <h:outputText value="#{itinerario.horaSalida}">
-                                <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago"/>
+                                    <h3 class="pasajero-section-title mb-4">
+                                        <i class="pi pi-user mr-2"></i> Información Personal
+                                    </h3>
 
-                            </h:outputText>
-                        </div>
-                        <div class="info">
-                            <strong>Hora de llegada:</strong>
-                            <h:outputText value="#{itinerario.horaLlegada}">
-                                <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago"/>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <p:outputLabel value="RUT" styleClass="small text-muted mb-1 d-block" />
+                                            <p:inputText value="#{pasajero.rut}" required="true"
+                                                         disabled="#{st.index == 0 and reservaBean.usuario != null}" styleClass="w-100" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <p:outputLabel value="Nombre" styleClass="small text-muted mb-1 d-block" />
+                                            <p:inputText value="#{pasajero.usuario.nombre}" required="true"
+                                                         disabled="#{st.index == 0 and reservaBean.usuario != null}" styleClass="w-100" />
+                                        </div>
 
-                            </h:outputText>
-                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <p:outputLabel value="Apellido" styleClass="small text-muted mb-1 d-block" />
+                                            <p:inputText value="#{pasajero.usuario.apellido}" required="true"
+                                                         disabled="#{st.index == 0 and reservaBean.usuario != null}" styleClass="w-100" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <p:outputLabel value="Fecha Nacimiento" styleClass="small text-muted mb-1 d-block" />
+                                            <p:datePicker value="#{pasajero.usuario.fechaNacimiento}" pattern="dd/MM/yyyy"
+                                                          monthNavigator="true" yearNavigator="true" required="true"
+                                                          disabled="#{st.index == 0 and reservaBean.usuario != null}" styleClass="w-100" />
+                                        </div>
 
-                        <div class="info">
-                            <strong>Escalas:</strong> #{itinerario.numeroEscalas}
-                        </div>
-                        <div class="info">
-                            <strong>Precio Base:</strong>
-                            <h:outputText value="#{itinerario.precioBase}">
-                                <f:convertNumber type="currency" currencySymbol="$" groupingUsed="true" maxFractionDigits="0" />
-                            </h:outputText>
-                        </div>
-                    </div>
-                </ui:repeat>
-                </p:tab>
-                </p:accordionPanel>
-            </div>
-        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <p:outputLabel value="Correo" styleClass="small text-muted mb-1 d-block" />
+                                            <p:inputText value="#{pasajero.usuario.correoElectronico}" required="true"
+                                                         disabled="#{st.index == 0 and reservaBean.usuario != null}" styleClass="w-100" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <p:outputLabel value="Teléfono" styleClass="small text-muted mb-1 d-block" />
+                                            <p:inputMask mask="(99) 9999-9999" value="#{pasajero.usuario.telefono}" required="true"
+                                                         disabled="#{st.index == 0 and reservaBean.usuario != null}" styleClass="w-100" />
+                                        </div>
+                                    </div>
 
-            <!-- Sección de Asientos Seleccionados -->
-        <div class="card">
-            <div class="seccion">
-                <div class="titulo">Asientos Seleccionados</div>
-                <p:accordionPanel multiple="true" widgetVar="asientosAccordion" scrollIntoView="center">
-                <p:tab title="Asientos">
+                                    <hr class="my-4" style="border-top: 1px solid var(--latam-border);" />
 
-                    <ui:repeat value="#{reservaBean.asientosSeleccionados.entrySet()}" var="entry">
-                        <div class="vuelo-box" style="border:1px solid #ccc; padding:15px; margin-bottom:20px; border-radius:8px; background:#f9f9f9;">
-                            <div class="info" style="margin-bottom:10px;">
-                                <h3 style="margin:0; color:#2c3e50;">
-                                    Vuelo: <span style="font-weight:normal;">#{reservaBean.getVuelo(entry.key)}</span>
-                                </h3>
-                            </div>
+                                    <h3 class="pasajero-section-title mb-4">
+                                        <i class="pi pi-id-card mr-2"></i> Documento y Nacionalidad
+                                    </h3>
 
-                            <h:panelGroup rendered="#{not empty entry.value}">
-                                <table style="width:100%; border-collapse: collapse;">
-                                    <thead>
-                                    <tr style="background:#2c3e50; color:#fff;">
-                                        <th style="padding:8px; text-align:left;">Asiento</th>
-                                        <th style="padding:8px; text-align:left;">Clase</th>
-                                        <th style="padding:8px; text-align:right;">Precio</th>
-                                        <th style="padding:8px; text-align:left;">Estado</th>
-                                        <th style="padding:8px; text-align:left;">Pasajero</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    <ui:repeat value="#{entry.value}" var="asiento">
-                                        <tr style="border-bottom:1px solid #ddd;">
-                                            <td style="padding:8px;">#{asiento.numeroAsiento}</td>
-                                            <td style="padding:8px;">#{asiento.clase}</td>
-                                            <td style="padding:8px; text-align:right;">
-                                                <h:outputText value="#{asiento.precio}">
-                                                    <f:convertNumber type="currency" currencySymbol="$" groupingUsed="true" maxFractionDigits="0" />
-                                                </h:outputText>
-                                            </td>
-                                            <td style="padding:8px;">#{asiento.estado}</td>
-                                            <td style="padding:8px;">#{reservaBean.getAsientoPasajero(asiento.idAsiento,asiento.numeroAsiento)}</td>
-                                        </tr>
-                                    </ui:repeat>
-                                    </tbody>
-                                </table>
-                            </h:panelGroup>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <p:outputLabel value="Tipo Documento" styleClass="small text-muted mb-1 d-block" />
+                                            <p:selectOneMenu value="#{pasajero.tipoDocumento}" required="true"
+                                                             disabled="#{st.index == 0 and reservaBean.usuario != null}" styleClass="w-100">
+                                                <f:selectItem itemLabel="Seleccione" itemValue=""/>
+                                                <f:selectItem itemLabel="Pasaporte" itemValue="PASAPORTE"/>
+                                                <f:selectItem itemLabel="Cédula" itemValue="CEDULA"/>
+                                            </p:selectOneMenu>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <p:outputLabel value="Número Documento" styleClass="small text-muted mb-1 d-block" />
+                                            <p:inputText value="#{pasajero.numeroDocumento}" required="true"
+                                                         disabled="#{st.index == 0 and reservaBean.usuario != null}" styleClass="w-100" />
+                                        </div>
 
-                            <h:panelGroup rendered="#{empty entry.value}">
-                                <p>No hay asientos seleccionados para este vuelo.</p>
-                            </h:panelGroup>
-                        </div>
-                    </ui:repeat>
-
-
-                </p:tab>
-                </p:accordionPanel>
-            </div>
-        </div>
-
-
-            <h:form id="pasajerosForm">
-
-                <div class="card">
-                    <div class="seccion">
-                        <div class="titulo">Datos de los Pasajeros</div>
-
-                        <ui:repeat value="#{reservaBean.pasajerosList}" var="pasajero" varStatus="st">
-
-                            <div class="pasajero-card">
-
-                                <div class="pasajero-header">
-                                    <span class="pasajero-badge">#{st.index + 1}</span>
-                                    Pasajero #{st.index + 1}
+                                        <div class="col-md-6 mb-3">
+                                            <p:outputLabel value="Documento Identidad (ID)" styleClass="small text-muted mb-1 d-block" />
+                                            <p:inputText value="#{pasajero.usuario.documentoIdentidad}" required="true"
+                                                         disabled="#{st.index == 0 and reservaBean.usuario != null}" styleClass="w-100" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <p:outputLabel value="Nacionalidad" styleClass="small text-muted mb-1 d-block" />
+                                            <p:inputText value="#{pasajero.nacionalidad}" required="true"
+                                                         disabled="#{st.index == 0 and reservaBean.usuario != null}" styleClass="w-100" />
+                                        </div>
+                                    </div>
+                                    <hr style="border-top: 1px solid var(--latam-border); margin-top: 40px;" />
                                 </div>
+                            </ui:repeat>
+                        </div>
+                    </h:form>
+                </div>
 
-                                <h3 class="pasajero-section-title">Información Personal</h3>
+                <div class="sidebar-resumen shadow-lg">
+                    <h4 class="mb-4" style="font-weight: 800; letter-spacing: -0.5px;">Detalle de tu reserva</h4>
 
-                                <h:panelGroup rendered="#{st.index == 0 and reservaBean.usuario != null}">
-                                    <p:outputLabel
-                                            styleClass="ui-message-info"
-                                            value="Los datos del usuario autenticado se han cargado automáticamente:
-                                           #{reservaBean.usuario.nombre} #{reservaBean.usuario.apellido}
-                                           (#{reservaBean.usuario.correoElectronico})" />
-                                </h:panelGroup>
+                    <p:accordionPanel multiple="true" widgetVar="itinerariosAccordion" styleClass="latam-accordion mb-4">
 
+                        <p:tab title="Itinerario de Vuelo">
+                            <ui:repeat value="#{reservaBean.itinerarios}" var="itinerario">
+                                <div class="vuelo-segmento mb-3">
+                                    <div class="vuelo-row pb-4">
+                                        <div class="dot-vuelo" style="background: var(--latam-red); box-shadow: 0 0 8px var(--latam-red);"></div>
 
-                                <p:panelGrid columns="2" layout="grid"
-                                             styleClass="ui-panelgrid-blank"
-                                             columnClasses="ui-grid-col-3,ui-grid-col-9">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <div class="d-flex align-items-center">
+                                                    <span class="iata-bold">#{itinerario.aeropuertoOrigen.codigoIata}</span>
+                                                    <span class="ml-2 city-name">#{itinerario.aeropuertoOrigen.ciudad.nombre}</span>
+                                                </div>
+                                                <div class="sub-info">
+                                                    #{itinerario.aeropuertoOrigen.nombreAeropuerto}
+                                                    <h:panelGroup rendered="#{not empty itinerario.aeropuertoOrigen.ciudad.pai}">
+                                                        <span class="text-muted"> | #{itinerario.aeropuertoOrigen.ciudad.pai.nombre}</span>
+                                                    </h:panelGroup>
+                                                </div>
+                                            </div>
+                                            <div class="text-right">
+                                                <h:outputText value="#{itinerario.horaSalida}" styleClass="time-bold">
+                                                    <f:convertDateTime pattern="HH:mm" timeZone="America/Santiago" />
+                                                </h:outputText>
+                                                <div class="sub-info">Salida</div>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                                    <p:outputLabel value="RUT" for="@next" />
-                                    <p:inputText value="#{pasajero.rut}" required="true" disabled="#{st.index == 0 and reservaBean.usuario!=null}"/>
+                                    <div class="d-flex align-items-center my-1" style="margin-left: -5px;">
+                                        <i class="pi pi-plane mx-2" style="color: var(--latam-border); font-size: 0.8rem; transform: rotate(90deg);"></i>
+                                        <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.05);"></div>
+                                        <div class="duracion-badge mx-2">
+                                            <i class="pi pi-clock"></i>
+                                            <span>#{itinerario.numeroEscalas == 0 ? 'Vuelo Directo' : itinerario.numeroEscalas += ' Escalas'}</span>
+                                        </div>
+                                        <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.05);"></div>
+                                    </div>
 
-                                    <p:outputLabel value="Nombre" for="@next" />
-                                    <p:inputText value="#{pasajero.usuario.nombre}" required="true" disabled="#{st.index == 0 and reservaBean.usuario!=null}"/>
+                                    <div class="vuelo-row pt-4">
+                                        <div class="dot-vuelo" style="background: #1e1f24; border: 2px solid var(--latam-red);"></div>
 
-                                    <p:outputLabel value="Apellido" for="@next" />
-                                    <p:inputText value="#{pasajero.usuario.apellido}" required="true" disabled="#{st.index == 0 and reservaBean.usuario!=null}"/>
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <div class="d-flex align-items-center">
+                                                    <span class="iata-bold">#{itinerario.aeropuertoDestino.codigoIata}</span>
+                                                    <span class="ml-2 city-name">#{itinerario.aeropuertoDestino.ciudad.nombre}</span>
+                                                </div>
+                                                <div class="sub-info">
+                                                    #{itinerario.aeropuertoDestino.nombreAeropuerto}
+                                                    <h:panelGroup rendered="#{not empty itinerario.aeropuertoDestino.ciudad.pai}">
+                                                        <span class="text-muted"> | #{itinerario.aeropuertoDestino.ciudad.pai.nombre}</span>
+                                                    </h:panelGroup>
+                                                </div>
+                                            </div>
+                                            <div class="text-right">
+                                                <h:outputText value="#{itinerario.horaLlegada}" styleClass="time-bold">
+                                                    <f:convertDateTime pattern="HH:mm" timeZone="America/Santiago" />
+                                                </h:outputText>
+                                                <div class="sub-info">Llegada</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </ui:repeat>
+                        </p:tab>
 
-                                    <p:outputLabel value="Correo" for="@next" />
-                                    <p:inputText value="#{pasajero.usuario.correoElectronico}" required="true" disabled="#{st.index == 0 and reservaBean.usuario!=null}"/>
+                        <p:tab title="Asientos (#{reservaBean.asientosSeleccionados.size()})">
+                            <ui:repeat value="#{reservaBean.asientosSeleccionados.entrySet().toArray()}" var="entry">
+                                <div class="mb-4">
+                                    <div class="vuelo-header-asiento">
+                                        <i class="pi pi-ticket"></i>
+                                        <span>Vuelo: #{reservaBean.getVuelo(entry.key)}</span>
+                                    </div>
 
-                                    <p:outputLabel value="Teléfono" for="@next" />
-                                    <p:inputMask mask="(99) 9999-9999"
-                                                 value="#{pasajero.usuario.telefono}"
-                                                 required="true" disabled="#{st.index == 0 and reservaBean.usuario!=null}"/>
+                                    <ui:repeat value="#{entry.value}" var="asiento">
+                                        <div class="asiento-ticket #{asiento.clase.equalsIgnoreCase('Ejecutiva') ? 'asiento-EJECUTIVA' :
+                                            asiento.clase.equalsIgnoreCase('Primera Clase') ? 'asiento-PRIMERA' : 'asiento-ECONOMY'}">
 
-                                    <p:outputLabel value="Fecha Nacimiento" for="@next" />
-                                    <p:datePicker value="#{pasajero.usuario.fechaNacimiento}"
-                                                  pattern="dd/MM/yyyy"
-                                                  required="true" disabled="#{st.index == 0 and reservaBean.usuario!=null}"/>
-                                </p:panelGrid>
+                                            <div class="d-flex align-items-center">
+                                                <div class="mr-3 text-center" style="width: 45px;">
+                                                    <h:panelGroup rendered="#{asiento.clase.equalsIgnoreCase('Ejecutiva')}">
+                                                        <i class="pi pi-star-fill icon-EJECUTIVA" style="font-size: 1.4rem;"></i>
+                                                    </h:panelGroup>
+                                                    <h:panelGroup rendered="#{asiento.clase.equalsIgnoreCase('Economy')}">
+                                                        <i class="pi pi-user icon-ECONOMY" style="font-size: 1.4rem;"></i>
+                                                    </h:panelGroup>
+                                                    <h:panelGroup rendered="#{asiento.clase.equalsIgnoreCase('Primera Clase')}">
+                                                        <i class="pi pi-crown icon-PRIMERA" style="font-size: 1.4rem;"></i>
+                                                    </h:panelGroup>
+                                                    <span class="d-block asiento-numero mt-1">#{asiento.numeroAsiento}</span>
+                                                </div>
 
-                                <h3 class="pasajero-section-title">Documento y Nacionalidad</h3>
+                                                <div>
+                            <span class="clase-caracteristica #{asiento.clase.equalsIgnoreCase('Ejecutiva') ? 'badge-EJECUTIVA' :
+                                                              asiento.clase.equalsIgnoreCase('Primera Clase') ? 'badge-PRIMERA' : 'badge-ECONOMY'}">
+                                #{asiento.clase}
+                            </span>
 
-                                <p:panelGrid columns="2" layout="grid"
-                                             styleClass="ui-panelgrid-blank"
-                                             columnClasses="ui-grid-col-3,ui-grid-col-9">
+                                                    <div class="small mt-1" style="font-size: 0.7rem; color: rgba(255,255,255,0.6);">
+                                                        <ui:fragment rendered="#{asiento.clase.equalsIgnoreCase('Ejecutiva')}">
+                                                            <i class="pi pi-briefcase mr-1"></i> Asiento Cama + Lounge
+                                                        </ui:fragment>
+                                                        <ui:fragment rendered="#{asiento.clase.equalsIgnoreCase('Economy')}">
+                                                            <i class="pi pi-check-circle mr-1"></i> Selección Estándar
+                                                        </ui:fragment>
+                                                        <ui:fragment rendered="#{asiento.clase.equalsIgnoreCase('Primera Clase')}">
+                                                            <i class="pi pi-shield mr-1"></i> Máxima Privacidad
+                                                        </ui:fragment>
+                                                    </div>
+                                                </div>
+                                            </div>
 
-                                    <p:outputLabel value="Tipo Documento" for="@next"/>
-                                    <p:selectOneMenu value="#{pasajero.tipoDocumento}" required="true" disabled="#{st.index == 0 and reservaBean.usuario!=null}">
-                                        <f:selectItem itemLabel="Seleccione" itemValue=""/>
-                                        <f:selectItem itemLabel="Pasaporte" itemValue="PASAPORTE"/>
-                                        <f:selectItem itemLabel="Cédula" itemValue="CEDULA"/>
-                                    </p:selectOneMenu>
+                                            <div class="text-right">
+                                                <div class="small text-muted" style="font-size: 0.6rem; letter-spacing: 1px;">PRECIO</div>
+                                                <div class="font-weight-bold" style="color: white; font-size: 1.1rem;">$#{asiento.precio}</div>
+                                            </div>
+                                        </div>
+                                    </ui:repeat>
+                                </div>
+                            </ui:repeat>
+                        </p:tab>
+                    </p:accordionPanel>
 
-                                    <p:outputLabel value="Número Documento" for="@next"/>
-                                    <p:inputText value="#{pasajero.numeroDocumento}" required="true" disabled="#{st.index == 0 and reservaBean.usuario!=null}"/>
+                    <div class="price-breakdown pt-3">
+                        <div class="d-flex justify-content-between mb-2" style="font-size: 0.9rem;">
+                            <span class="text-muted">Valor de la tarifa</span>
+                            <span>$#{reservaBean.total}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-4">
+                            <span class="text-muted" style="font-size: 0.9rem;">Tasas e impuestos</span>
+                            <span class="text-success" style="font-size: 0.8rem; font-weight: 700;">INCLUIDOS</span>
+                        </div>
 
-                                    <p:outputLabel value="Documento Identidad" for="@next"/>
-                                    <p:inputText value="#{pasajero.usuario.documentoIdentidad}" required="true" disabled="#{st.index == 0 and reservaBean.usuario!=null}"/>
+                        <div class="total-box p-3 text-center" style="background: white; border-radius: 12px;">
+                            <div class="small font-weight-bold mb-1" style="color: #0b0c0e;">PRECIO FINAL</div>
+                            <h:outputText value="#{reservaBean.total}" style="font-size: 2.2rem; font-weight: 900; color: #0b0c0e;">
+                                <f:convertNumber type="currency" currencySymbol="$" maxFractionDigits="0" />
+                            </h:outputText>
+                        </div>
+                    </div>
 
-                                    <p:outputLabel value="Nacionalidad" for="@next"/>
-                                    <p:inputText value="#{pasajero.nacionalidad}" required="true" disabled="#{st.index == 0 and reservaBean.usuario!=null}"/>
-                                </p:panelGrid>
+                    <p:commandButton value="Confirmar y Pagar"
+                                     action="#{reservaBean.confirmarReserva}"
+                                     update="pasajerosForm growl"
+                                     styleClass="btn-latam-confirm mt-4 w-100"
+                                     icon="pi pi-credit-card" />
 
-                            </div>
-
-                        </ui:repeat>
-
+                    <div class="text-center mt-3">
+                        <span class="small text-muted"><i class="pi pi-lock mr-1"></i> Transacción encriptada</span>
                     </div>
                 </div>
-
-                <!-- BOTÓN DENTRO DEL MISMO FORM -->
-                <div style="text-align:center; margin-top:30px;">
-                    <p:commandButton value="Confirmar Reserva"
-                                     action="#{reservaBean.confirmarReserva}"
-                                     update="@form growl"
-                                     styleClass="btn-confirmar"/>
-                </div>
-
-            </h:form>
-
-
-
-
-            <!-- Botón Confirmar -->
-            <h:form>
-                <h:commandButton value="Confirmar Reserva"
-                                 action="#{reservaBean.mostrarPasajeros}"
-                                 update="growl"
-                                 styleClass="btn-confirmar" />
-            </h:form>
+            </div>
         </div>
     </ui:define>
 </ui:composition>

@@ -42,7 +42,7 @@ public class InfoAsientoDTO {
 	}
 
 	public String getEstado() {
-		return estado;
+		return estado.toLowerCase();
 	}
 
 	public void setEstado(String estado) {

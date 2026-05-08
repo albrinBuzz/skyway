@@ -6,170 +6,342 @@
                 xmlns:ui="http://java.sun.com/jsf/facelets"
                 template="/template/main.xhtml">
 
-    <h:head>
+
+
+    <ui:define name="head">
         <title>Perfil de Usuario - SkyWay</title>
         <style>
-            body {
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                background-color: #0a1a33;
-                color: #fff;
+            /* Paleta de colores */
+            :root {
+                --primary-ticket: #1a2a6c;
+                --accent-ticket: #f2a900;
+                --text-light: #777;
             }
 
-            .container {
-                max-width: 1200px;
-                margin: auto;
-                padding: 20px;
+            .ticket-container {
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+                padding: 10px;
+                align-items: center;
             }
 
-            header {
-                background-color: #142850;
+            .boarding-pass {
+                display: flex;
+                width: 100%;
+                max-width: 650px;
+                height: 220px;
+                background: white;
+                border-radius: 15px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+                overflow: hidden;
+                position: relative;
+                border: 1px solid #eee;
+                margin-bottom: 10px;
+            }
+
+            .main-section {
+                flex: 2;
                 padding: 20px;
-                border-radius: 8px;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+            }
+
+            .pass-header {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                margin-bottom: 30px;
+                border-bottom: 1px solid #f0f0f0;
+                padding-bottom: 8px;
             }
 
-            header h1 {
-                font-size: 2rem;
-                margin: 0;
-            }
-
-            .profile {
-                background: #1b2a47;
-                padding: 20px;
-                border-radius: 10px;
-                margin-bottom: 30px;
-            }
-
-            .profile-item {
-                margin-bottom: 10px;
-                font-size: 1.1rem;
-            }
-
-            .filter-btn {
-                background-color: #e63946;
-                color: white;
-                border: none;
-                border-radius: 6px;
-                padding: 10px 18px;
-                font-weight: bold;
-                cursor: pointer;
-                margin-bottom: 15px;
-                transition: background-color 0.3s ease;
-                user-select: none;
-            }
-
-            .filter-btn:hover {
-                background-color: #d62839;
-            }
-
-            .ui-datatable {
-                background: #1b2a47 !important;
-                border-radius: 10px;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            }
-
-            .ui-datatable th, .ui-datatable td {
-                color: #e0f2f1;
-                font-size: 0.95rem;
-                text-align: center;
-            }
-
-            .ui-datatable-header {
-                font-size: 1.3rem;
-                font-weight: bold;
-                color: #f1faee;
-            }
-
-            .btn-detail {
-                background-color: #219ebc !important;
-                border: none !important;
-                color: white !important;
-                font-weight: bold;
-                border-radius: 5px;
-            }
-
-            .btn-detail:hover {
-                background-color: #1282a2 !important;
-            }
-
-            .dialog-content p {
-                margin: 10px 0;
+            .airline-brand {
+                font-weight: 800;
+                color: var(--primary-ticket);
                 font-size: 1rem;
             }
 
-            .profile-header {
-    background: linear-gradient(135deg, #4a90e2, #1c3c72);
-    color: #fff;
-    padding: 30px 20px;
-    border-radius: 12px;
-    box-shadow: 0 8px 20px rgba(26, 72, 121, 0.3);
-    margin-bottom: 30px;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
+            .pass-type {
+                font-size: 0.65rem;
+                font-weight: bold;
+                color: var(--text-light);
+                letter-spacing: 1px;
+            }
 
-.profile-header h1 {
-    font-size: 2.2rem;
-    margin: 0;
-}
+            .pass-row {
+                display: flex;
+                justify-content: space-between;
+                margin-top: 10px;
+            }
 
-.user-name {
-    font-weight: 700;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.3);
-}
+            .label {
+                font-size: 0.6rem;
+                color: var(--text-light);
+                display: block;
+                text-transform: uppercase;
+            }
 
-.profile-card {
-    background-color: #1f2f4a;
-    padding: 25px 30px;
-    border-radius: 12px;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
-    color: #dbe9ff;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
+            .value {
+                font-size: 0.95rem;
+                font-weight: 700;
+                color: #333;
+            }
 
-.profile-card h2 {
-    margin-top: 0;
-    font-weight: 600;
-    margin-bottom: 20px;
-    border-bottom: 2px solid #4a90e2;
-    padding-bottom: 6px;
-    color: #a9c1ff;
-}
+            .value.highlight {
+                color: var(--primary-ticket);
+                font-size: 1.2rem;
+            }
 
-.profile-item {
-    font-size: 1.1rem;
-    margin-bottom: 12px;
-}
+            .value-time {
+                font-size: 0.85rem;
+                font-weight: 700;
+            }
 
-.profile-item strong {
-    color: #7abaff;
-}
+            .divider-dashed {
+                border-top: 1px dashed #ddd;
+                margin: 10px 0;
+            }
+
+            .seat-badge {
+                background-color: var(--primary-ticket);
+                padding: 5px 15px;
+                border-radius: 8px;
+                text-align: center;
+            }
+
+            .stub {
+                flex: 0.8;
+                background: var(--primary-ticket);
+                color: white;
+                padding: 20px;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                border-left: 2px dashed rgba(255,255,255,0.3);
+                position: relative;
+            }
+
+            .stub::before, .stub::after {
+                content: '';
+                position: absolute;
+                width: 20px;
+                height: 20px;
+                background-color: white;
+                border-radius: 50%;
+                left: -10px;
+            }
+            .stub::before { top: -10px; }
+            .stub::after { bottom: -10px; }
+
+            .stub-title {
+                font-size: 0.7rem;
+                text-align: center;
+                border-bottom: 1px solid rgba(255,255,255,0.2);
+                padding-bottom: 5px;
+            }
+
+            .barcode-container {
+                background: white;
+                height: 35px;
+                width: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 1px;
+                padding: 4px;
+                border-radius: 3px;
+            }
+
+            .bar { background: black; height: 100%; width: 2px; }
+
+            .boarding-notice {
+                font-size: 0.65rem;
+                color: #e74c3c;
+                font-weight: bold;
+                margin-top: 5px;
+            }
+
+            /* --- LÓGICA DE IMPRESIÓN --- */
             @media print {
-    body * {
-        visibility: hidden;
-    }
+                body * {
+                    visibility: hidden;
+                }
+                .printable-area, .printable-area * {
+                    visibility: visible;
+                }
+                .printable-area {
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                }
+                .boarding-pass {
+                    box-shadow: none !important;
+                    border: 1px solid #000 !important;
+                    page-break-inside: avoid;
+                }
+                .stub {
+                    -webkit-print-color-adjust: exact;
+                    background-color: #1a2a6c !important;
+                }
+            }
 
-    .printable, .printable * {
-        visibility: visible;
-    }
-
-    .printable {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        padding: 10px;
-    }
-
-    .ui-dialog, .ui-widget-overlay {
-        display: none !important; /* Oculta el fondo gris y otros diálogos */
-    }
+            /* ============================================================
+   ESTILO NEGRO PARA LA TABLA DE VUELOS
+============================================================ */
+.custom-datatable.ui-datatable {
+    background-color: #0b0f14 !important; /* Fondo del contenedor */
+    border: 1px solid #2a2f3a !important;
+    border-radius: 8px;
+    overflow: hidden;
 }
+
+/* Fondo de las celdas del encabezado */
+.custom-datatable.ui-datatable thead th {
+    background-color: #141a22 !important;
+    color: #8fd3ff !important; /* Azul claro para los títulos */
+    border: 1px solid #2a2f3a !important;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 12px;
+}
+
+/* Fondo de las filas del cuerpo */
+.custom-datatable.ui-datatable tbody tr {
+    background-color: #0b0f14 !important;
+    color: #ffffff !important;
+}
+
+/* Bordes de las celdas */
+.custom-datatable.ui-datatable tbody td {
+    border: 1px solid #1f2733 !important;
+    padding: 12px !important;
+}
+
+/* Efecto Hover al pasar el mouse por la fila */
+.custom-datatable.ui-datatable tbody tr:hover {
+    background-color: #1c242e !important;
+}
+
+/* Estilo para el paginador */
+.custom-datatable.ui-datatable .ui-paginator {
+    background-color: #141a22 !important;
+    border: 1px solid #2a2f3a !important;
+    color: white !important;
+}
+
+.custom-datatable.ui-datatable .ui-paginator span,
+.custom-datatable.ui-datatable .ui-paginator a {
+    color: #8fd3ff !important;
+}
+
+/* Estilo para el mensaje de "No se encontraron vuelos" */
+.custom-datatable.ui-datatable .ui-datatable-empty-message td {
+    background-color: #0b0f14 !important;
+    color: #9aa5b1 !important;
+    font-style: italic;
+}
+
+
+/* ============================================================
+   TICKETS EN MODO OSCURO (SKYWAY STYLE)
+============================================================ */
+
+/* Contenedor del modal */
+.dialog-boarding .ui-dialog-content {
+    background-color: #0b1016 !important; /* Fondo negro azulado */
+}
+
+/* La tarjeta de embarque principal */
+.boarding-pass {
+    display: flex;
+    width: 100%;
+    max-width: 650px;
+    height: 220px;
+    background: #141a22 !important; /* Fondo gris oscuro */
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    overflow: hidden;
+    position: relative;
+    border: 1px solid #2a2f3a !important; /* Borde sutil */
+    margin-bottom: 20px;
+}
+
+/* Sección izquierda (Principal) */
+.main-section {
+    flex: 2;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: #141a22;
+}
+
+.pass-header {
+    border-bottom: 1px solid #2a2f3a !important;
+}
+
+.airline-brand {
+    color: #00d1ff !important; /* Azul neón SkyWay */
+}
+
+.pass-type {
+    color: #9aa5b1 !important;
+}
+
+/* Etiquetas y Valores */
+.label {
+    color: #6272a4 !important; /* Color tipo comentario/suave */
+}
+
+.value {
+    color: #ffffff !important;
+}
+
+.value.highlight {
+    color: #00d1ff !important;
+}
+
+.divider-dashed {
+    border-top: 1px dashed #2a2f3a !important;
+}
+
+/* Badge del asiento */
+.seat-badge {
+    background-color: #00d1ff !important;
+    padding: 5px 15px;
+    border-radius: 8px;
+}
+
+.seat-badge .value {
+    color: #0b0f14 !important; /* Texto oscuro sobre fondo celeste */
+}
+
+/* Sección derecha (Stub / Talón) */
+.stub {
+    flex: 0.8;
+    background: #1c242e !important; /* Un tono un poco más claro para contrastar */
+    color: white;
+    padding: 20px;
+    border-left: 2px dashed #2a2f3a !important;
+}
+
+/* Los círculos de recorte del ticket */
+.stub::before, .stub::after {
+    background-color: #0b1016 !important; /* Debe ser igual al fondo del modal */
+}
+
+/* Código de barras (Invertido para modo oscuro) */
+.barcode-container {
+    background: #ffffff !important; /* Mantenemos blanco para que las barras negras se lean bien */
+    padding: 6px;
+    opacity: 0.9;
+}
+
 
         </style>
-    </h:head>
+    </ui:define>
 
 
     <ui:define name="contenido">
@@ -349,53 +521,136 @@
 
 
             <h:form id="formDetalleTicket">
-                <p:dialog header="Detalle del Itinerario"
+                <p:dialog header="Tarjetas de Embarque"
                           widgetVar="dlgDetalleTicket"
                           modal="true"
                           resizable="false"
                           id="dlgDetalleTicket"
-                          closable="true"
                           width="700"
                           height="600"
                           showEffect="fade"
                           hideEffect="fade"
-                          style="overflow: hidden;">
+                          styleClass="dialog-boarding">
 
-                    <!-- Contenedor con scroll -->
-                    <h:panelGroup rendered="#{not empty perfilPasajeroView.ticketInfos}" layout="block"
-                                  style="printable">
+                    <div class="printable-area">
+                        <h:panelGroup rendered="#{not empty perfilPasajeroView.ticketInfos}" layout="block" styleClass="ticket-container">
+                            <ui:repeat value="#{perfilPasajeroView.ticketInfos}" var="ticket">
 
-                        <ui:repeat value="#{perfilPasajeroView.ticketInfos}" var="ticket">
-                            <div style="border: 2px solid #333; padding: 20px; margin: 20px 0; font-family: Arial, sans-serif; background-color: #fdfdfd; border-radius: 8px;">
-                                <h2 style="margin-top: 0; color: #0077cc;">✈️ Boarding Pass</h2>
+                                <div class="boarding-pass">
+                                    <div class="main-section">
+                                        <div class="pass-header">
+                                            <div class="airline-brand">
+                                                <i class="pi pi-send"></i> <span>SKYWAY AIRLINES</span>
+                                            </div>
+                                            <div class="pass-type">BOARDING PASS</div>
+                                        </div>
 
-                                <p><strong>Pasajero:</strong> #{ticket.nombre}</p>
-                                <p><strong>Vuelo:</strong> #{ticket.numeroVuelo}</p>
+                                        <div class="pass-content">
+                                            <div class="pass-row">
+                                                <div class="pass-col">
+                                                    <span class="label">PASAJERO</span>
+                                                    <span class="value">#{ticket.nombre}</span>
+                                                </div>
+                                                <div class="pass-col text-right">
+                                                    <span class="label">VUELO</span>
+                                                    <span class="value highlight">#{ticket.numeroVuelo}</span>
+                                                </div>
+                                            </div>
 
-                                <hr style="border-top: 1px solid #ccc;" />
+                                            <div class="pass-row" style="margin-top: 10px;">
+                                                <div class="pass-col">
+                                                    <span class="label">FECHA Y HORA SALIDA</span>
+                                                    <h:outputText value="#{ticket.horaSalida}">
+                                                        <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago"/>
+                                                    </h:outputText>
 
-                                <p><strong>Salida:</strong> #{ticket.horaSalida}</p>
-                                <p><strong>Llegada:</strong> #{ticket.horaLlegada}</p>
+                                                </div>
+                                                <div class="pass-col text-right">
+                                                    <span class="label">FECHA Y HORA LLEGADA</span>
+                                                    <h:outputText value="#{ticket.horaLlegada}">
+                                                        <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago"/>
+                                                    </h:outputText>
+                                                </div>
+                                            </div>
 
-                                <p><strong>Puerta:</strong> #{ticket.codigoPuerta}  <strong>Terminal:</strong> #{ticket.terminal}</p>
-                                <p><strong>Asiento:</strong> #{ticket.numeroAsiento}  <strong>Clase:</strong> #{ticket.claseAsiento}</p>
+                                            <div class="divider-dashed"></div>
 
-                                <hr style="border-top: 1px dashed #ccc;" />
+                                            <div class="pass-row">
+                                                <div class="pass-col">
+                                                    <span class="label">PUERTA / TERMINAL</span>
+                                                    <span class="value">#{ticket.codigoPuerta} / #{ticket.terminal}</span>
+                                                </div>
+                                                <div class="pass-col">
+                                                    <div class="seat-badge">
+                                                        <span class="label" style="color: rgba(255,255,255,0.6) !important;">ASIENTO</span>
+                                                        <span class="value" style="color: white !important;">#{ticket.numeroAsiento}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="pass-col text-right">
+                                                    <span class="label">CLASE</span>
+                                                    <span class="value">#{ticket.claseAsiento}</span>
+                                                </div>
+                                            </div>
+                                        </div>
 
-                                <p style="font-size: small; color: gray;">📌 Presentarse con al menos <strong>2 horas</strong> de anticipación al embarque.</p>
-                                <f:facet name="footer">
-                                    <p:commandButton value="Imprimir Ticket"
-                                                     icon="pi pi-print"
-                                                     type="button"
-                                                     onclick="window.print()"
-                                                     styleClass="p-button-success" />
-                                </f:facet>
-                            </div>
+                                        <div class="boarding-notice">
+                                            <i class="pi pi-clock"></i> PRESENTARSE 2 HORAS ANTES
+                                        </div>
+                                    </div>
 
-                        </ui:repeat>
-                    </h:panelGroup>
+                                    <div class="stub">
+                                        <div class="stub-title">TALÓN PASAJERO</div>
+
+                                        <div class="pass-col">
+                                            <span class="label" style="color: rgba(255,255,255,0.6)">PASAJERO</span>
+                                            <span class="value" style="color: white; font-size: 0.8rem;">#{ticket.nombre}</span>
+                                        </div>
+
+                                        <div class="pass-row">
+                                            <div class="pass-col">
+                                                <span class="label" style="color: rgba(255,255,255,0.6)">VUELO</span>
+                                                <span class="value" style="color: white">#{ticket.numeroVuelo}</span>
+                                            </div>
+                                            <div class="pass-col text-right">
+                                                <span class="label" style="color: rgba(255,255,255,0.6)">ASIENTO</span>
+                                                <span class="value" style="color: white">#{ticket.numeroAsiento}</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="barcode-container">
+                                            <div class="bar" style="width: 3px"></div>
+                                            <div class="bar" style="width: 1px"></div>
+                                            <div class="bar" style="width: 4px"></div>
+                                            <div class="bar" style="width: 2px"></div>
+                                            <div class="bar" style="width: 1px"></div>
+                                            <div class="bar" style="width: 3px"></div>
+                                            <div class="bar" style="width: 2px"></div>
+                                            <div class="bar" style="width: 4px"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </ui:repeat>
+                        </h:panelGroup>
+                    </div>
+
+                    <f:facet name="footer">
+                        <p:commandButton value="Imprimir"
+                                         icon="pi pi-print"
+                                         type="button"
+                                         onclick="window.print()"
+                                         styleClass="ui-button-raised"
+                                         style="margin-right: 10px; background-color: var(--primary-ticket); border-color: var(--primary-ticket);"/>
+
+                        <p:commandButton value="Cerrar"
+                                         onclick="PF('dlgDetalleTicket').hide()"
+                                         type="button"
+                                         styleClass="ui-button-flat"
+                                         style="color: var(--text-light);"/>
+                    </f:facet>
                 </p:dialog>
             </h:form>
+
 
 
 
@@ -569,6 +824,10 @@
             </p:sidebar>
 
         </div>
+
+
+
+
     </ui:define>
 
 </ui:composition>

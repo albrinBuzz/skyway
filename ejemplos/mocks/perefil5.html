@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>SkyWay - Centro de Comando de Vuelos</title>
+    <link rel="stylesheet" href="https://unpkg.com/primeicons/primeicons.css">
+    <style>
+        :root {
+            --bg-body: #050b16;
+            --bg-card: #0a192f;
+            --bg-sidebar: #071224;
+            --accent-blue: #00a3ff;
+            --text-main: #e6edf3;
+            --text-dim: #8b949e;
+            --status-green: #23d160;
+            --status-orange: #ff9f43;
+            --status-red: #ff4d4d;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        body { margin: 0; font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+        /* --- SIDEBAR --- */
+        .sidebar { width: 300px; background-color: var(--bg-sidebar); border-right: 1px solid var(--border); padding: 40px 25px; overflow-y: auto; }
+        .membership-badge { background: linear-gradient(135deg, #b8860b 0%, #f1c40f 100%); color: #000; font-size: 10px; font-weight: 800; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-bottom: 30px; }
+        .section-label { color: var(--text-dim); font-size: 11px; font-weight: 700; text-transform: uppercase; margin-top: 30px; margin-bottom: 15px; display: block; }
+        .data-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 13px; }
+
+        /* --- MAIN VIEW --- */
+        .main-view { flex: 1; padding: 30px 50px; overflow-y: auto; }
+
+        /* ALERTAS CRÍTICAS */
+        .notification-stack { margin-bottom: 25px; }
+        .alert-banner {
+            background: rgba(255, 77, 77, 0.1); border: 1px solid var(--status-red);
+            color: var(--status-red); padding: 12px 20px; border-radius: 8px;
+            font-size: 13px; margin-bottom: 10px; display: flex; align-items: center; gap: 15px;
+            animation: slideIn 0.5s ease;
+        }
+        @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* STATS */
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
+        .stat-card { background: var(--bg-card); padding: 15px; border-radius: 10px; border: 1px solid var(--border); border-top: 3px solid var(--accent-blue); }
+        .stat-val { display: block; font-size: 22px; font-weight: 700; }
+        .stat-lbl { font-size: 11px; color: var(--text-dim); text-transform: uppercase; }
+
+        /* TABS */
+        .tabs-container { display: flex; gap: 30px; border-bottom: 1px solid var(--border); margin-bottom: 25px; }
+        .tab-item { padding-bottom: 12px; cursor: pointer; color: var(--text-dim); font-size: 14px; font-weight: 600; position: relative; }
+        .tab-item.active { color: var(--text-main); }
+        .tab-item.active::after { content: ''; position: absolute; bottom: -1px; left: 0; width: 100%; height: 2px; background: var(--accent-blue); }
+
+        /* FLIGHT CARD */
+        .flight-card { background: var(--bg-card); border-radius: 12px; padding: 25px; margin-bottom: 20px; border: 1px solid var(--border); }
+        .flight-card.hidden { display: none; }
+
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .flight-main { display: flex; justify-content: space-between; align-items: center; }
+        .airport-code { font-size: 32px; font-weight: 800; }
+
+        /* ACCIONES Y GESTIÓN */
+        .management-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px; margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--border);
+        }
+        .btn-manage {
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+            color: var(--text-main); padding: 10px; border-radius: 8px;
+            font-size: 11px; text-align: center; cursor: pointer; transition: 0.2s;
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+        }
+        .btn-manage:hover { background: rgba(0, 163, 255, 0.1); border-color: var(--accent-blue); }
+        .btn-manage i { font-size: 18px; color: var(--accent-blue); }
+
+        .btn-main { background: var(--accent-blue); color: white; border: none; font-weight: bold; grid-column: span 2; flex-direction: row; justify-content: center; }
+
+        /* MODALES */
+        .modal-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: var(--bg-sidebar); padding: 30px; border-radius: 15px; border: 1px solid var(--accent-blue); width: 400px; text-align: center; }
+    </style>
+</head>
+<body>
+
+<aside class="sidebar">
+    <h2 class="profile-name">Jordan Parker</h2>
+    <span class="membership-badge">Gold Medallion</span>
+
+    <span class="section-label">Fidelidad</span>
+    <div class="data-row"><span>SkyMiles #</span><span>845561220</span></div>
+    <div class="data-row"><span>Millas 2026</span><span>12,400 MQMs</span></div>
+
+    <span class="section-label">Servicios Activos</span>
+    <div class="data-row"><span>Wi-Fi a bordo</span><span style="color:var(--status-green)">Incluido</span></div>
+    <div class="data-row"><span>Maletas (2)</span><span style="color:var(--status-green)">OK</span></div>
+
+    <span class="section-label">Seguridad</span>
+    <div class="data-row"><span style="color:var(--status-orange)"><i class="pi pi-shield"></i> Seguro de Viaje</span><span>Activo</span></div>
+</aside>
+
+<main class="main-view">
+    <div class="notification-stack">
+        <div class="alert-banner">
+            <i class="pi pi-exclamation-triangle" style="font-size: 20px;"></i>
+            <div>
+                <strong>¡Atención! Cambio de Puerta:</strong> Su vuelo SK-2240 ahora saldrá de la <strong>Puerta E2</strong> (Terminal 4).
+            </div>
+        </div>
+        <div class="alert-banner" style="border-color: var(--status-orange); color: var(--status-orange); background: rgba(255, 159, 67, 0.05);">
+            <i class="pi pi-clock"></i>
+            <div>Check-in disponible para su vuelo de regreso a Santiago (SK-2241).</div>
+        </div>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-card"><span class="stat-lbl">Millas</span><span class="stat-val">128,430</span></div>
+        <div class="stat-card"><span class="stat-lbl">Vuelos</span><span class="stat-val">14</span></div>
+        <div class="stat-card"><span class="stat-lbl">Estatus</span><span class="stat-val">Gold</span></div>
+        <div class="stat-card"><span class="stat-lbl">Cupones</span><span class="stat-val">4</span></div>
+    </div>
+
+    <div class="tabs-container">
+        <div class="tab-item active" onclick="showTab('today', this)">HOY (1)</div>
+        <div class="tab-item" onclick="showTab('upcoming', this)">PRÓXIMOS (2)</div>
+        <div class="tab-item" onclick="showTab('past', this)">HISTORIAL</div>
+    </div>
+
+    <div id="trip-list">
+        <div class="flight-card today">
+            <div class="card-header">
+                <div>
+                    <span style="color:var(--accent-blue); font-weight: bold; font-size: 18px;">SK-2240</span>
+                    <span style="margin-left: 10px; font-size: 12px; color: var(--text-dim);">Conf: GLP4P18</span>
+                </div>
+                <div style="text-align: right;">
+                    <span style="color: var(--status-orange); font-size: 12px; font-weight: bold;">ESTADO: DEMORADO (45m)</span>
+                </div>
+            </div>
+
+            <div class="flight-main">
+                <div><span class="airport-code">JFK</span><br><span style="font-size:12px; color:var(--text-dim)">New York</span></div>
+                <div style="flex:1; padding: 0 40px; text-align: center;">
+                    <div style="height: 1px; background: var(--border); position: relative;">
+                        <i class="pi pi-send" style="position: absolute; left: 40%; top: -8px; transform: rotate(90deg); color: var(--accent-blue);"></i>
+                    </div>
+                </div>
+                <div><span class="airport-code">LAX</span><br><span style="font-size:12px; color:var(--text-dim)">Los Angeles</span></div>
+            </div>
+
+            <div class="management-grid">
+                <button class="btn-manage btn-main" onclick="window.print()">
+                    <i class="pi pi-ticket" style="color:white"></i> VER BOARDING PASS
+                </button>
+                <button class="btn-manage" onclick="openModal('seatModal')">
+                    <i class="pi pi-map"></i> Cambiar Asiento
+                </button>
+                <button class="btn-manage" onclick="openModal('mealModal')">
+                    <i class="pi pi-palette"></i> Elegir Menú
+                </button>
+                <button class="btn-manage" onclick="alert('Buscando Upgrades...')">
+                    <i class="pi pi-star"></i> Upgrade (Millas)
+                </button>
+                <button class="btn-manage" onclick="alert('Solicitando asistencia...')">
+                    <i class="pi pi-info-circle"></i> Asistencia
+            </div>
+        </div>
+    </div>
+    </div>
+</main>
+
+<div id="seatModal" class="modal-bg" onclick="closeModal('seatModal')">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <h3>Mapa de Asientos</h3>
+        <p style="font-size: 12px; color: var(--text-dim)">Airbus A321 Neo - Cabina Principal</p>
+
+        <button class="btn-manage btn-main" style="width:100%" onclick="closeModal('seatModal')">Confirmar Asiento</button>
+    </div>
+</div>
+
+<div id="mealModal" class="modal-bg" onclick="closeModal('mealModal')">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <h3>Selección de Menú</h3>
+        <div style="text-align: left; margin: 20px 0;">
+            <div class="data-row"><input type="radio" name="meal"><span> Pasta Boloñesa</span></div>
+            <div class="data-row"><input type="radio" name="meal"><span> Ensalada de Quinoa (Vegano)</span></div>
+            <div class="data-row"><input type="radio" name="meal"><span> Pollo al Curry (Gluten Free)</span></div>
+        </div>
+        <button class="btn-manage btn-main" style="width:100%" onclick="closeModal('mealModal')">Guardar Preferencia</button>
+    </div>
+</div>
+
+<script>
+    function showTab(category, element) {
+        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+        element.classList.add('active');
+        // Aquí iría la lógica de filtrado de vuelos
+    }
+
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+</script>
+</body>
+</html>

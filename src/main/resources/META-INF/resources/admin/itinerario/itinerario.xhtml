@@ -1,280 +1,332 @@
-<ui:composition lang="es"
-                xmlns:f="jakarta.faces.core"
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
                 xmlns:h="jakarta.faces.html"
-                xmlns:p="http://primefaces.org/ui"
-                xmlns:fs="http://xmlns.jcp.org/jsf/core"
+                xmlns:f="jakarta.faces.core"
                 xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
                 template="/admin/template.xhtml">
 
-    <h:head>
-        <title>Crear Itinerario</title>
-    </h:head>
-
     <ui:define name="contenido-admin">
+        <style type="text/css">
+            /* --- SKYWAY CORPORATE OS - WIZARD THEME --- */
+            :root {
+                --bg-dark: #0f172a;
+                --bg-panel: #1e293b;
+                --border-color: #334155;
+                --sky-blue: #3b82f6;
+                --text-primary: #f8fafc;
+                --text-secondary: #94a3b8;
+                --status-green: #10b981;
+            }
+
+            body, .ui-widget-content {
+                background-color: #080e1a !important;
+                background-image: radial-gradient(circle at top right, #0f172a, #080e1a);
+                color: var(--text-primary) !important;
+                margin: 0; padding: 0;
+            }
+
+            .main-content {
+                max-width: 1300px;
+                margin: 0 auto;
+                padding: 2.5rem;
+                font-family: 'Inter', sans-serif;
+            }
+
+            /* --- WIZARD TIMELINE PATTERN --- */
+            .step-wrapper { display: flex; gap: 1.5rem; margin-bottom: 2.5rem; position: relative; }
+            .step-wrapper:not(:last-child)::after {
+                content: ''; position: absolute;
+                left: 19px; top: 50px; bottom: -2.5rem;
+                width: 2px; background: rgba(59, 130, 246, 0.2);
+            }
+
+            .step-number {
+                width: 40px; height: 40px; border-radius: 50%;
+                background: var(--sky-blue); color: #fff;
+                display: flex; align-items: center; justify-content: center;
+                font-weight: 900; font-size: 1.2rem; flex-shrink: 0;
+                box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); z-index: 2;
+            }
+
+            .step-content { flex-grow: 1; width: 100%; }
 
 
-        <!-- Formulario para Crear el Itinerario -->
-        <h:form id="formCrearItinerario">
-            <p:panel header="Crear nuevo itinerario" styleClass="panel-itinerario">
-                <h:panelGrid columns="2" cellpadding="5">
+            .glass-panel {
+                background: rgba(30, 41, 59, 0.7) !important;
+                backdrop-filter: blur(10px);
+                border: 1px solid var(--border-color) !important;
+                border-radius: 12px !important;
+                overflow: hidden;
+            }
 
-                    <h:outputLabel value="Aeropuerto Origen:" />
-                    <p:selectOneMenu value="#{itinerarioBean.aeropuertoOrigen}">
-                        <f:selectItems value="#{itinerarioBean.aeropuertos}" var="a"
-                                       itemValue="#{a.codigoIata}" itemLabel="#{a.nombreAeropuerto}" />
-                    </p:selectOneMenu>
+            .panel-header-custom {
+                padding: 1.25rem 1.5rem;
+                background: rgba(15, 23, 42, 0.6);
+                border-bottom: 1px solid var(--border-color);
+                display: flex; align-items: center; gap: 12px;
+            }
 
-                    <h:outputLabel value="Aeropuerto Destino:" />
-                    <p:selectOneMenu value="#{itinerarioBean.aeropuertoDestino}">
-                        <f:selectItems value="#{itinerarioBean.aeropuertos}" var="a"
-                                       itemValue="#{a.codigoIata}" itemLabel="#{a.nombreAeropuerto}" />
-                    </p:selectOneMenu>
+            .section-title {
+                font-size: 0.95rem; font-weight: 800; text-transform: uppercase;
+                letter-spacing: 0.05em; color: var(--text-primary); margin: 0;
+            }
 
-                    <h:outputLabel value="Precio base:" />
-                    <p:inputText value="#{itinerarioBean.itinerario.precioBase}" />
+            /* INPUTS */
+            .ui-inputfield, .ui-selectonemenu, .ui-inputnumber input {
+                background: var(--bg-dark) !important;
+                border: 1px solid var(--border-color) !important;
+                color: var(--text-primary) !important;
+                padding: 10px !important; border-radius: 8px !important; width: 100%;
+            }
 
-                </h:panelGrid>
+            .ui-selectonemenu-panel { background: var(--bg-dark) !important; border: 1px solid var(--border-color) !important; }
+            .ui-selectonemenu-item { color: var(--text-primary) !important; }
+            .ui-selectonemenu-item.ui-state-highlight { background: var(--sky-blue) !important; color: #fff !important; }
 
-                <p:commandButton value="Confirmar Itinerario" action="#{itinerarioBean.saveItinerario}" update="@form formBusquedaVuelos" />
-            </p:panel>
-        </h:form>
+            /* BUTTONS */
+            .btn-corp {
+                background: var(--sky-blue) !important; border: none !important;
+                font-weight: 700 !important; border-radius: 8px !important; padding: 10px 20px !important; color: white !important;
+            }
 
+            /* DATATABLE OVERRIDE (DARK MODE) */
+            .ui-datatable { background-color: transparent !important; border: 1px solid var(--border-color) !important; border-radius: 8px !important; overflow: hidden; }
+            .ui-datatable thead th { background-color: var(--bg-dark) !important; color: var(--text-secondary) !important; font-size: 0.75rem !important; text-transform: uppercase !important; padding: 12px !important; border-bottom: 2px solid var(--border-color) !important; }
+            .ui-datatable tbody td { background-color: var(--bg-panel) !important; color: var(--text-primary) !important; padding: 14px !important; border-bottom: 1px solid var(--border-color) !important; }
+            .ui-paginator { background-color: var(--bg-dark) !important; border-top: 1px solid var(--border-color) !important; }
 
+            /* TARIFAS CARDS */
+            .ui-datagrid-content { background: transparent !important; border: none !important; }
+            .tarifa-card { background-color: var(--bg-panel) !important; border: 1px solid var(--border-color) !important; border-radius: 12px !important; padding: 1rem !important; }
+            .tarifa-card .ui-card-title { color: #fff !important; font-size: 1rem !important; font-weight: 800 !important; text-transform: uppercase; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px !important; }
+            .feature-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+            .feature-label { color: var(--text-secondary) !important; font-size: 0.8rem; font-weight: 500; }
+            .feature-value { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 700; }
+            .value-yes { color: var(--status-green) !important; } .value-no { color: #ef4444 !important; }
+            .pricing-input-box { background-color: var(--bg-dark) !important; border: 1px solid var(--sky-blue) !important; border-radius: 8px; margin-top: 15px; padding: 5px 10px; display: flex; align-items: center; }
+            .pricing-input-box .ui-inputnumber input { background: transparent !important; border: none !important; color: var(--status-green) !important; font-family: 'JetBrains Mono', monospace; font-size: 1.2rem !important; font-weight: 800 !important; text-align: right; }
 
+            /* PIPELINE STYLES */
+            .pipeline-container { border-left: 2px dashed rgba(59, 130, 246, 0.4); margin-left: 20px; padding-left: 20px; position: relative; }
+            .vuelo-item { background: var(--bg-dark) !important; border: 1px solid var(--border-color) !important; border-left: 4px solid var(--sky-blue) !important; margin-bottom: 15px; padding: 16px !important; border-radius: 8px; position: relative; }
+            .vuelo-item::before { content: ''; position: absolute; left: -26px; top: 50%; transform: translateY(-50%); width: 12px; height: 12px; border-radius: 50%; background: var(--sky-blue); border: 3px solid var(--bg-panel); }
+        </style>
 
+        <div class="main-content">
+            <header class="flex justify-content-between align-items-center mb-6">
+                <div>
+                    <h1 class="m-0" style="font-weight: 800; font-size: 1.8rem; letter-spacing: -0.02em;">
+                        Itinerary <span style="color: var(--sky-blue);">Builder</span>
+                    </h1>
+                    <p class="m-0 text-sm" style="color: var(--text-secondary);">Sistema de Ensamblaje de Rutas y Tarifas</p>
+                </div>
+                <p:tag severity="info" value="MODO DESPACHADOR" icon="pi pi-shield" style="padding: 8px 12px; font-weight: bold;"/>
+            </header>
 
+            <p:growl id="msgs" showDetail="true" />
 
+            <!-- PASO 1: PARÁMETROS MAESTROS -->
+            <div class="step-wrapper">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h:form id="formCrearItinerario">
+                        <p:panel styleClass="glass-panel shadow-4">
+                            <div class="panel-header-custom">
+                                <i class="pi pi-sliders-h" style="color: var(--sky-blue); font-size: 1.2rem;"></i>
+                                <h3 class="section-title">Parámetros Maestros de la Ruta</h3>
+                            </div>
 
-        <p:dataGrid value="#{itinerarioBean.tarifas}"
-                    var="tarifa" columns="2" layout="grid"
-                    styleClass="p-grid p-nogutter" style="margin-top: 10px;">
+                            <div class="ui-fluid p-formgrid p-grid p-4">
+                                <div class="p-field p-col-12 p-md-4">
+                                    <p:outputLabel for="org" value="Puerto de Salida (Origen)" styleClass="text-xs font-bold uppercase opacity-60 mb-2 block" />
+                                    <div class="ui-inputgroup">
+                                        <span class="ui-inputgroup-addon" style="background: var(--bg-dark); border-color: var(--border-color);"><i class="pi pi-upload"></i></span>
+                                        <p:selectOneMenu id="org" value="#{itinerarioBean.aeropuertoOrigen}" filter="true">
+                                            <f:selectItem itemLabel="Seleccione origen..." itemValue="" />
+                                            <f:selectItems value="#{itinerarioBean.aeropuertos}" var="a" itemValue="#{a.codigoIata}" itemLabel="#{a.codigoIata} - #{a.nombreAeropuerto}" />
+                                        </p:selectOneMenu>
+                                    </div>
+                                </div>
+                                <div class="p-field p-col-12 p-md-4">
+                                    <p:outputLabel for="dest" value="Puerto de Llegada (Destino)" styleClass="text-xs font-bold uppercase opacity-60 mb-2 block" />
+                                    <div class="ui-inputgroup">
+                                        <span class="ui-inputgroup-addon" style="background: var(--bg-dark); border-color: var(--border-color);"><i class="pi pi-download"></i></span>
+                                        <p:selectOneMenu id="dest" value="#{itinerarioBean.aeropuertoDestino}" filter="true">
+                                            <f:selectItem itemLabel="Seleccione destino..." itemValue="" />
+                                            <f:selectItems value="#{itinerarioBean.aeropuertos}" var="a" itemValue="#{a.codigoIata}" itemLabel="#{a.codigoIata} - #{a.nombreAeropuerto}" />
+                                        </p:selectOneMenu>
+                                    </div>
+                                </div>
+                                <div class="p-field p-col-12 p-md-4">
+                                    <p:outputLabel for="price" value="Tarifa Base Global (CLP)" styleClass="text-xs font-bold uppercase opacity-60 mb-2 block" />
+                                    <p:inputNumber id="price" value="#{itinerarioBean.itinerario.precioBase}" symbol="$ " decimalPlaces="0" inputStyle="font-weight: 800; color: var(--status-green); font-size: 1.2rem;" />
+                                </div>
+                            </div>
 
-                <p:accordionPanel id="accordionTarifas"
-                                  multiple="true"
-                                  activeIndex="-1"
-                                  style="margin:10px; border-radius:10px;">
-
-
-                <p:tab title="#{tarifa.nombre}">
-
-                    <!-- Renderizar características dinámicas -->
-                    <h:panelGrid columns="2" columnClasses="label,value"
-                                 style="width: 100%; margin-top: 15px; font-size: 0.95rem;">
-                        <ui:repeat value="#{tarifa.tarifaCaracteristicas}" var="carac">
-                            <h:panelGroup layout="block" style="padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
-                                <h:outputText value="#{carac.caracteristica.nombre}:" style="font-weight: 600;" />
-                            </h:panelGroup>
-
-                            <h:panelGroup layout="block" style="padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
-                                <h:outputText rendered="#{carac.caracteristica.tipoDato eq 'boolean'}"
-                                              value="#{carac.valorBool ? '✔️ Sí' : '❌ No'}"
-                                              style="font-weight: bold; color: #{carac.valorBool ? 'green' : 'red'};" />
-
-                                <h:outputText rendered="#{carac.caracteristica.tipoDato eq 'int'}"
-                                              value="#{carac.valorInt}"
-                                              style="font-weight: bold;" />
-
-                                <h:outputText rendered="#{carac.caracteristica.tipoDato eq 'text'}"
-                                              value="#{carac.valorTexto}"
-                                              style="font-weight: bold;" />
-                            </h:panelGroup>
-                        </ui:repeat>
-                    </h:panelGrid>
-
-                    <p:separator />
-
-                    <!-- Formulario de precio -->
-                    <h:form id="formPrecioTarifa">
-                        <h:panelGrid columns="3" cellpadding="5" style="margin-top:10px;">
-                            <h:outputLabel value="Precio Tarifa:" style="font-weight:bold;" />
-
-                            <p:inputNumber id="precioTarifa"
-                                           value="#{itinerarioBean.precioTarifa}"
-                                           minValue="0" maxValue="999999"
-                                           symbol="$" decimalPlaces="0"
-                                           style="width:120px;" />
-
-                            <p:commandButton value="Guardar Precio"
-                                             action="#{itinerarioBean.actualizarPrecioTarifa(tarifa)}"
-                                             update="@this"
-                                             process="@form"
-                                             icon="pi pi-save"
-                                             styleClass="ui-button-info" />
-                        </h:panelGrid>
-                    </h:form>
-
-                </p:tab>
-            </p:accordionPanel>
-
-        </p:dataGrid>
-
-        <h:form id="formBuscarVuelo">
-            <p:panel header="Buscar Vuelo" styleClass="panel-vuelo">
-                <h:panelGrid columns="2" columnClasses="label,value" cellpadding="5">
-
-
-                    <h:outputLabel value="Aeropuerto Origen:" />
-
-                    <p:selectOneMenu value="#{itinerarioBean.aeropuertoOrigenBusqueda}" style="width:300px">
-                        <f:selectItem itemLabel="-- Seleccione Origen --" itemValue="#{null}" />
-                        <f:selectItems value="#{itinerarioBean.aeropuertos}" var="a"
-                                       itemValue="#{a.codigoIata}" itemLabel="#{a.nombreAeropuerto}" />
-                    </p:selectOneMenu>
-
-                    <p:outputLabel value="Aeropuerto Destino:" />
-                    <p:selectOneMenu value="#{itinerarioBean.aeropuertoDestinoBusqueda}" style="width:300px">
-                        <f:selectItem itemLabel="-- Seleccione Destino --" itemValue="#{null}" />
-                        <f:selectItems value="#{itinerarioBean.aeropuertos}" var="a"
-                                       itemValue="#{a.codigoIata}" itemLabel="#{a.nombreAeropuerto}" />
-                    </p:selectOneMenu>
-
-
-                    <p:outputLabel value="Fecha de Salida:" />
-                    <p:datePicker id="basic" value="#{itinerarioBean.fechaBusqueda}" />
-
-                </h:panelGrid>
-
-
-                <p:commandButton value="Buscar Vuelos" action="#{itinerarioBean.buscarVuelos}"  update="formBusquedaVuelos:tablaVuelos" />
-
-
-
-            </p:panel>
-        </h:form>
-
-        <!-- FORMULARIO DE BÚSQUEDA Y RESULTADOS DE VUELOS -->
-        <h:form id="formBusquedaVuelos">
-            <p:panel header="Resultados de Vuelos Disponibles">
-                <p:dataTable id="tablaVuelos"
-                             value="#{itinerarioBean.vuelos}"
-                             var="vuelo"
-                             paginator="true"
-                             rows="10"
-                             rowKey="#{vuelo.idVuelo}"
-                             expandableRowGroups="true"
-                             emptyMessage="No se encontraron vuelos disponibles.">
-
-                    <!-- Expandir detalles -->
-                    <p:column style="width:2rem" ariaHeaderText="Detalles">
-                        <p:rowToggler />
-                    </p:column>
-
-                    <!-- Número de Vuelo -->
-                    <p:column headerText="N° Vuelo" sortBy="#{vuelo.numeroVuelo}">
-                        <h:outputText value="#{vuelo.numeroVuelo}" />
-                    </p:column>
-
-                    <!-- Fecha de Salida -->
-                    <p:column headerText="Salida" sortBy="#{vuelo.fechaHoraSalida}">
-                        <h:outputText value="#{vuelo.fechaHoraSalida}">
-                            <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago"/>
-                        </h:outputText>
-                    </p:column>
-
-                    <!-- Fecha de Llegada -->
-                    <p:column headerText="Llegada" sortBy="#{vuelo.fechaHoraLlegada}">
-                        <h:outputText value="#{vuelo.fechaHoraLlegada}">
-                            <f:convertDateTime pattern="dd/MM/yyyy hh:mm " timeZone="America/Santiago"/>
-                        </h:outputText>
-                    </p:column>
-
-                    <!-- Seleccionar vuelo -->
-                    <p:column headerText="Acción">
-                        <p:commandButton icon="pi pi-plus"
-                                         title="Asignar vuelo al itinerario"
-                                         action="#{itinerarioBean.agregarVuelo(vuelo)}"
-                                         update="formVuelosAsignados:tablaVuelos formVueloSeleccionado"
-                                         process="@this"
-                                         styleClass="ui-button-success" />
-                    </p:column>
-
-                    <!-- DETALLES DE SEGMENTOS (expansión de fila) -->
-                    <p:rowExpansion>
-                        <p:panel header="Segmentos del Vuelo #{vuelo.numeroVuelo}" styleClass="ui-panel ui-widget-content">
-                            <p:dataTable value="#{vuelo.segmentoVuelos}" var="segmento"
-                                         style="margin:0; font-size:0.9em;"
-                                         rendered="#{not empty vuelo.segmentoVuelos}"
-                                         rowIndexVar="idx">
-
-                                <p:column headerText="#" style="width:2rem">
-                                    <h:outputText value="#{idx + 1}" />
-                                </p:column>
-
-                                <p:column headerText="Origen">
-                                    <h:outputText value="#{segmento.aeropuertoOrigen.codigoIata} - #{segmento.aeropuertoOrigen.nombreAeropuerto} (#{segmento.aeropuertoOrigen.ciudad.nombre})" />
-                                </p:column>
-
-                                <p:column headerText="Destino">
-                                    <h:outputText value="#{segmento.aeropuertoDestino.codigoIata} - #{segmento.aeropuertoDestino.nombreAeropuerto} (#{segmento.aeropuertoDestino.ciudad.nombre})" />
-                                </p:column>
-
-                                <p:column headerText="Salida">
-                                    <h:outputText value="#{segmento.horaSalida}" >
-                                    <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago"/>
-                                </h:outputText>
-                                </p:column>
-
-
-
-                                <p:column headerText="Llegada">
-                                    <h:outputText value="#{segmento.horaLlegada}" >
-                                        <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago"/>
-                                    </h:outputText>
-                                </p:column>
-                            </p:dataTable>
+                            <div class="px-4 pb-4 flex justify-content-end border-top-1 border-white-alpha-10 pt-3">
+                                <p:commandButton value="Fijar Parámetros Base" action="#{itinerarioBean.saveItinerario}"
+                                                 icon="pi pi-check" update="msgs @form formBuscarVuelo"
+                                                 styleClass="btn-corp shadow-2" />
+                            </div>
                         </p:panel>
-                    </p:rowExpansion>
-                </p:dataTable>
-            </p:panel>
-        </h:form>
+                    </h:form>
+                </div>
+            </div>
 
+            <!-- PASO 2: PRICING -->
+            <div class="step-wrapper">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <p:panel styleClass="glass-panel shadow-4">
+                        <div class="panel-header-custom">
+                            <i class="pi pi-tags" style="color: var(--sky-blue); font-size: 1.2rem;"></i>
+                            <h3 class="section-title">Pricing Engine - Atributos por Categoría</h3>
+                        </div>
 
+                        <div class="p-4">
+                            <p:dataGrid value="#{itinerarioBean.tarifas}" var="tarifa" columns="3" layout="grid">
+                                <p:card styleClass="tarifa-card">
+                                    <f:facet name="title">
+                                        <i class="pi pi-ticket mr-2" style="color: var(--sky-blue)"></i> #{tarifa.nombre}
+                                    </f:facet>
 
+                                    <div class="py-2">
+                                        <ui:repeat value="#{tarifa.tarifaCaracteristicas}" var="carac">
+                                            <div class="feature-row">
+                                                <span class="feature-label">#{carac.caracteristica.nombre}</span>
+                                                <h:panelGroup rendered="#{carac.caracteristica.tipoDato eq 'boolean'}">
+                                                    <span class="feature-value #{carac.valorBool ? 'value-yes' : 'value-no'}">#{carac.valorBool ? 'SÍ' : 'NO'}</span>
+                                                </h:panelGroup>
+                                                <h:panelGroup rendered="#{carac.caracteristica.tipoDato ne 'boolean'}">
+                                                    <span class="feature-value" style="color: var(--sky-blue)">#{carac.valor} #{carac.valorInt gt 0 ? carac.valorInt : ''}</span>
+                                                </h:panelGroup>
+                                            </div>
+                                        </ui:repeat>
+                                    </div>
 
+                                    <f:facet name="footer">
+                                        <h:form>
+                                            <div class="pricing-input-box">
+                                                <p:inputNumber value="#{itinerarioBean.precioTarifa}" symbol="$ " decimalPlaces="0" />
+                                                <p:commandButton icon="pi pi-save" action="#{itinerarioBean.actualizarPrecioTarifa(tarifa)}" styleClass="ui-button-flat ui-button-plain text-white" />
+                                            </div>
+                                        </h:form>
+                                    </f:facet>
+                                </p:card>
+                            </p:dataGrid>
+                        </div>
+                    </p:panel>
+                </div>
+            </div>
 
-        <!-- FORMULARIO DE VUELOS ASIGNADOS -->
-        <h:form id="formVuelosAsignados">
+            <!-- PASO 3: WORKSPACE DE CONSTRUCCIÓN (Búsqueda + Pipeline) -->
+            <div class="step-wrapper">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <div class="glass-panel shadow-4">
+                        <div class="panel-header-custom">
+                            <i class="pi pi-share-alt" style="color: var(--sky-blue); font-size: 1.2rem;"></i>
+                            <h3 class="section-title">Composición de la Ruta y Tramos</h3>
+                        </div>
 
-            <p:growl id="growl" showDetail="true" />
+                        <!-- El contenido interno de este paso se divide en 2 columnas para facilidad de trabajo -->
+                        <div class="p-grid m-0">
 
-            <p:panel header="Vuelos Asignados al Itinerario" styleClass="panel-vuelos">
-                <p:dataTable id="tablaVuelos"
-                             value="#{itinerarioBean.itinerariosAsignados}"
-                             var="iv"
-                             emptyMessage="No hay vuelos asignados aún.">
+                            <!-- COLUMNA IZQUIERDA: BÚSQUEDA -->
+                            <div class="p-col-12 p-lg-7 p-4 border-right-1 border-white-alpha-10">
+                                <h:form id="formBuscarVuelo">
+                                    <h4 class="mt-0 mb-3" style="color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase;">1. Buscar Tramos Disponibles</h4>
 
-                    <p:column headerText="N° Vuelo">
-                        <h:outputText value="#{iv.vuelo.numeroVuelo}" />
-                    </p:column>
+                                    <div class="ui-fluid p-formgrid p-grid mb-4">
+                                        <div class="p-field p-col-12 p-md-5">
+                                            <p:selectOneMenu value="#{itinerarioBean.aeropuertoOrigenBusqueda}" filter="true">
+                                                <f:selectItem itemLabel="Origen Escala..." itemValue="#{null}" />
+                                                <f:selectItems value="#{itinerarioBean.aeropuertos}" var="a" itemValue="#{a.codigoIata}" itemLabel="#{a.codigoIata}" />
+                                            </p:selectOneMenu>
+                                        </div>
+                                        <div class="p-field p-col-12 p-md-5">
+                                            <p:selectOneMenu value="#{itinerarioBean.aeropuertoDestinoBusqueda}" filter="true">
+                                                <f:selectItem itemLabel="Destino Escala..." itemValue="#{null}" />
+                                                <f:selectItems value="#{itinerarioBean.aeropuertos}" var="a" itemValue="#{a.codigoIata}" itemLabel="#{a.codigoIata}" />
+                                            </p:selectOneMenu>
+                                        </div>
+                                        <div class="p-field p-col-12 p-md-2">
+                                            <p:commandButton action="#{itinerarioBean.buscarVuelos}" icon="pi pi-search" update="tablaVuelos" styleClass="btn-corp w-full" style="padding: 10px !important;"/>
+                                        </div>
+                                    </div>
 
-                    <p:column headerText="Salida">
-                        <h:outputText value="#{iv.vuelo.fechaHoraSalida}">
-                            <f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
-                        </h:outputText>
-                    </p:column>
+                                    <p:dataTable id="tablaVuelos" value="#{itinerarioBean.vuelos}" var="vuelo" rowKey="#{vuelo.idVuelo}"
+                                                 rows="5" paginator="true" paginatorPosition="bottom" styleClass="shadow-2">
 
-                    <p:column headerText="Orden">
-                        <h:outputText value="#{iv.orden}" />
-                    </p:column>
+                                        <p:column style="width:2.5rem; text-align: center"><p:rowToggler /></p:column>
+                                        <p:column headerText="ID Vuelo">
+                                            <span style="color: var(--sky-blue); font-family: 'JetBrains Mono', monospace; font-weight: 700;">#{vuelo.numeroVuelo}</span>
+                                        </p:column>
+                                        <p:column headerText="Salida Estimada">
+                                            <h:outputText value="#{vuelo.fechaHoraSalida}" styleClass="font-bold">
+                                                <f:convertDateTime pattern="dd MMM, HH:mm"/>
+                                            </h:outputText>
+                                        </p:column>
+                                        <p:column style="width:5rem; text-align:center">
+                                            <p:commandButton value="Añadir" icon="pi pi-plus" action="#{itinerarioBean.agregarVuelo(vuelo)}"
+                                                             update="formVuelosAsignados:panelTimeline msgs"
+                                                             styleClass="ui-button-outlined ui-button-info ui-button-sm" />
+                                        </p:column>
 
-                    <p:column headerText="Tipo de Conexión">
-                        <h:outputText value="#{iv.tipoConexion}" />
-                    </p:column>
-                </p:dataTable>
+                                        <p:rowExpansion>
+                                            <div class="p-3 border-round" style="background: rgba(0,0,0,0.2);">
+                                                <ui:repeat value="#{vuelo.segmentoVuelos}" var="s">
+                                                    <div class="flex align-items-center gap-3 py-2 text-sm border-bottom-1 border-white-alpha-10">
+                                                        <i class="pi pi-send text-gray-500"></i>
+                                                        <span><strong class="text-white">#{s.aeropuertoOrigen.codigoIata}</strong> a <strong class="text-white">#{s.aeropuertoDestino.codigoIata}</strong></span>
+                                                        <span class="opacity-50 ml-auto">#{s.horaSalida}</span>
+                                                    </div>
+                                                </ui:repeat>
+                                            </div>
+                                        </p:rowExpansion>
+                                    </p:dataTable>
+                                </h:form>
+                            </div>
 
-                <p:separator />
+                            <!-- COLUMNA DERECHA: PIPELINE -->
+                            <div class="p-col-12 p-lg-5 p-4" style="background: rgba(0,0,0,0.1);">
+                                <h:form id="formVuelosAsignados">
+                                    <h4 class="mt-0 mb-4" style="color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase;">2. Pipeline de Vuelos Asignados</h4>
 
-                <p:commandButton value="Guardar Itinerario Completo"
-                                 action="#{itinerarioBean.guardarItinerario}"
-                                 update="@form"
-                                 process="@form"
-                                 icon="pi pi-save"
-                                 styleClass="ui-button-success" />
-            </p:panel>
-        </h:form>
+                                    <h:panelGroup id="panelTimeline">
+                                        <h:panelGroup rendered="#{empty itinerarioBean.itinerariosAsignados}">
+                                            <div class="text-center py-6 opacity-40 border-round" style="border: 2px dashed var(--border-color);">
+                                                <i class="pi pi-map-marker mb-3" style="font-size: 2.5rem"></i>
+                                                <p class="m-0">No hay tramos en el itinerario.<br/>Busque y añada vuelos desde el panel izquierdo.</p>
+                                            </div>
+                                        </h:panelGroup>
 
+                                        <div class="pipeline-container">
+                                            <ui:repeat value="#{itinerarioBean.itinerariosAsignados}" var="iv">
+                                                <div class="vuelo-item flex justify-content-between align-items-center shadow-3">
+                                                    <div class="flex flex-column gap-1">
+                                                        <span class="text-xs text-gray-400 uppercase">Vuelo Operativo</span>
+                                                        <span class="text-lg font-bold" style="color: var(--text-primary); font-family: 'JetBrains Mono', monospace;">#{iv.vuelo.numeroVuelo}</span>
+                                                    </div>
+                                                    <p:tag value="#{iv.tipoConexion}" severity="#{iv.tipoConexion eq 'Directo' ? 'success' : 'warning'}" />
+                                                </div>
+                                            </ui:repeat>
+                                        </div>
 
+                                        <div class="mt-5 pt-4 border-top-1 border-white-alpha-10">
+                                            <p:commandButton value="Finalizar y Publicar Itinerario" action="#{itinerarioBean.guardarItinerario}"
+                                                             icon="pi pi-send" styleClass="w-full btn-corp p-3 shadow-4 text-lg"
+                                                             disabled="#{empty itinerarioBean.itinerariosAsignados}" />
+                                        </div>
+                                    </h:panelGroup>
+                                </h:form>
+                            </div>
 
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
     </ui:define>
-
 </ui:composition>

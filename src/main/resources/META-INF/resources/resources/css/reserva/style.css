@@ -1,0 +1,224 @@
+/* =========================================
+   1. VARIABLES Y CONFIGURACIÓN GLOBAL (PALETA AZUL)
+   ========================================= */
+:root {
+    /* Neutros - Basados en SkyWay */
+    --latam-bg: #080e1a;            /* Deep Space */
+    --latam-card: #0b1426;          /* Midnight Blue */
+    --latam-border: #1e293b;        /* Slate Glass */
+
+    /* Identidad y Acentos */
+    --latam-main-blue: #4c7cf3;     /* Aviation Blue */
+    --latam-accent: #00d1ff;        /* Cyber Cyan */
+    --latam-blue-hover: #6a95ff;
+
+    /* Clases de Asiento */
+    --latam-economy: #00d1ff;       /* Cyber Cyan */
+    --latam-business: #70a1ff;      /* Azul Claro */
+    --latam-first: #f8fafc;         /* Glow White */
+
+    /* Texto y Sombras */
+    --latam-text: #f8fafc;
+    --latam-gray: #94a3b8;          /* Text Dim */
+    --latam-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    --latam-glow: 0 0 15px rgba(0, 209, 255, 0.3);
+}
+
+body {
+    background-color: var(--latam-bg);
+    color: var(--latam-text);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    margin: 0;
+}
+
+.latam-layout {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 32px;
+    max-width: 1300px;
+    margin: 20px auto;
+    padding: 0 20px;
+}
+
+/* =========================================
+   2. COMPONENTES DE ESTRUCTURA (SKYWAY STYLE)
+   ========================================= */
+.card-latam {
+    background: var(--latam-card);
+    border: 1px solid var(--latam-border);
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: var(--latam-shadow);
+}
+
+.ui-inputfield {
+    background: var(--latam-bg) !important;
+    border: 1px solid var(--latam-border) !important;
+    color: white !important;
+    padding: 12px 16px !important;
+    border-radius: 10px !important;
+    transition: all 0.2s ease;
+}
+
+.ui-inputfield:focus {
+    border-color: var(--latam-accent) !important;
+    box-shadow: 0 0 0 2px rgba(0, 209, 255, 0.2) !important;
+}
+
+/* =========================================
+   3. STEPPER (PROGRESO AZUL)
+   ========================================= */
+.booking-stepper {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 40px;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--latam-border);
+}
+
+.step {
+    color: var(--latam-gray);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.step.active {
+    color: var(--latam-accent);
+    text-shadow: var(--latam-glow);
+}
+
+/* =========================================
+   4. SIDEBAR Y RESUMEN DE COMPRA
+   ========================================= */
+.sidebar-resumen {
+    position: sticky;
+    top: 24px;
+    background: var(--latam-card);
+    border-radius: 20px;
+    padding: 28px;
+    border: 1px solid var(--latam-border);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+}
+
+.total-box {
+    background: rgba(0, 209, 255, 0.05);
+    padding: 20px;
+    border-radius: 12px;
+    margin-top: 20px;
+    border: 1px solid rgba(0, 209, 255, 0.1);
+    text-align: center;
+}
+
+.total-amount {
+    color: var(--latam-text);
+    font-size: 2.2rem;
+    font-weight: 800;
+}
+
+.btn-latam-confirm {
+    background: var(--latam-main-blue) !important;
+    color: white !important;
+    border-radius: 12px !important;
+    padding: 18px !important;
+    font-weight: 700 !important;
+    font-size: 1rem !important;
+    text-transform: uppercase;
+    width: 100%;
+    border: none !important;
+    box-shadow: 0 8px 20px rgba(76, 124, 243, 0.3) !important;
+    transition: all 0.3s ease !important;
+}
+
+.btn-latam-confirm:hover {
+    background: var(--latam-blue-hover) !important;
+    transform: translateY(-2px);
+}
+
+/* =========================================
+   5. DISEÑO DE ITINERARIO (CYBER LINE)
+   ========================================= */
+.vuelo-segmento {
+    background: rgba(255, 255, 255, 0.01);
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid var(--latam-border);
+    margin-bottom: 15px;
+}
+
+.vuelo-row::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 15px;
+    bottom: -15px;
+    width: 1px;
+    border-left: 1.5px dashed var(--latam-main-blue); /* De rojo a azul de aviación */
+}
+
+.dot-vuelo {
+    position: absolute;
+    left: 0;
+    top: 4px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--latam-accent);
+    box-shadow: var(--latam-glow);
+}
+
+.iata-bold { font-size: 1.2rem; font-weight: 900; }
+.time-bold { font-size: 1rem; font-weight: 700; color: var(--latam-accent); }
+
+/* =========================================
+   6. DISEÑO DE ASIENTOS (ESCALA DE AZULES)
+   ========================================= */
+.vuelo-header-asiento {
+    color: var(--latam-accent);
+    border-bottom: 1px solid var(--latam-border);
+}
+
+.asiento-ticket {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--latam-border);
+}
+
+/* Primera Clase: Ahora es Blanca (Glow White) */
+.asiento-PRIMERA {
+    border-left: 5px solid var(--latam-first) !important;
+    background: linear-gradient(90deg, rgba(248, 250, 252, 0.1) 0%, transparent 100%) !important;
+}
+.badge-PRIMERA { background: var(--latam-first); color: #000; }
+.icon-PRIMERA { color: var(--latam-first); }
+
+/* Ejecutiva: Azul Aviación */
+.asiento-EJECUTIVA {
+    border-left: 5px solid var(--latam-main-blue) !important;
+    background: linear-gradient(90deg, rgba(76, 124, 243, 0.1) 0%, transparent 100%) !important;
+}
+.badge-EJECUTIVA { background: var(--latam-main-blue); color: #fff; }
+.icon-EJECUTIVA { color: var(--latam-main-blue); }
+
+/* Economy: Cyan */
+.asiento-ECONOMY {
+    border-left: 5px solid var(--latam-economy) !important;
+    background: linear-gradient(90deg, rgba(0, 209, 255, 0.1) 0%, transparent 100%) !important;
+}
+.badge-ECONOMY { background: var(--latam-economy); color: #000; }
+.icon-ECONOMY { color: var(--latam-economy); }
+
+/* =========================================
+   7. SECCIONES Y ACORDEÓN
+   ========================================= */
+.pasajero-section-title {
+    color: var(--latam-text);
+    border-left: 4px solid var(--latam-accent); /* De rojo a Cyan */
+    padding-left: 12px;
+}
+
+.latam-accordion.ui-accordion .ui-accordion-header.ui-state-active {
+    background: rgba(0, 209, 255, 0.1) !important;
+    border-color: var(--latam-accent) !important;
+    color: var(--latam-accent) !important;
+}

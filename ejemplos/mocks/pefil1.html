@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>SkyWay - Dashboard Mockup</title>
+    <link rel="stylesheet" href="https://unpkg.com/primeicons/primeicons.css">
+    <style>
+        :root {
+            --bg-dark: #001a33;
+            --card-dark: #00264d;
+            --accent-blue: #007bff;
+            --text-gray: #a0aec0;
+            --success: #28a745;
+            --warning: #ff9900;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-dark);
+            color: white;
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Barra Lateral Izquierda (Perfil) */
+        .sidebar {
+            width: 300px;
+            background-color: #001226;
+            padding: 30px 20px;
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .user-header h1 { font-size: 24px; margin: 0; }
+        .badge-status {
+            display: inline-block;
+            background: linear-gradient(90deg, #d4af37, #f2a900);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .sidebar-section { margin-top: 40px; }
+        .section-title { color: var(--text-gray); font-size: 11px; text-transform: uppercase; margin-bottom: 15px; display: block; }
+        .info-row { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 14px; }
+        .info-row span:first-child { color: var(--text-gray); }
+
+        /* Contenedor Principal */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        /* Estadísticas Superiores */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--card-dark);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid var(--accent-blue);
+        }
+
+        .stat-value { font-size: 28px; font-weight: bold; display: block; }
+        .stat-label { font-size: 12px; color: var(--text-gray); }
+
+        /* Lista de Viajes (Trips) */
+        .trips-section { margin-top: 20px; }
+        .trip-card {
+            background: var(--card-dark);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .trip-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 15px;
+        }
+
+        .flight-info {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .airport-code { font-size: 22px; font-weight: bold; }
+        .flight-path { display: flex; align-items: center; gap: 10px; color: var(--text-gray); }
+
+        .status-pill {
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-delayed { background: rgba(255, 153, 0, 0.2); color: var(--warning); }
+        .status-ontime { background: rgba(40, 167, 69, 0.2); color: var(--success); }
+
+        .time-box { text-align: right; }
+        .time-box .time { font-size: 18px; font-weight: bold; display: block; }
+        .time-box .label { font-size: 11px; color: var(--text-gray); }
+
+        /* Estilo para los botones */
+        .btn-manage {
+            background: transparent;
+            border: 1px solid white;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="user-header">
+        <h1>Jordan Parker</h1>
+        <div class="badge-status">GOLD MEDALLION</div>
+    </div>
+
+    <div class="sidebar-section">
+        <span class="section-title">Información Básica</span>
+        <div class="info-row"><span>Género</span><span>Femenino</span></div>
+        <div class="info-row"><span>Nacimiento</span><span>Mar 23, 1984</span></div>
+    </div>
+
+    <div class="sidebar-section">
+        <span class="section-title">Contacto</span>
+        <div class="info-row"><span>Email</span><span style="color:var(--accent-blue)">j.parker@skyway.com</span></div>
+        <div class="info-row"><span>Teléfono</span><span>+1 564-4563-997</span></div>
+    </div>
+</aside>
+
+<main class="main-content">
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span class="stat-label">Millas Disponibles</span>
+            <span class="stat-value">136,520</span>
+        </div>
+        <div class="stat-card" style="border-left-color: var(--warning);">
+            <span class="stat-label">Vuelos Cancelados</span>
+            <span class="stat-value">5 <small style="font-size: 14px; font-weight: normal;">(5%)</small></span>
+        </div>
+        <div class="stat-card" style="border-left-color: var(--success);">
+            <span class="stat-label">Miembro Desde</span>
+            <span class="stat-value">2004</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Compañeros</span>
+            <span class="stat-value">2</span>
+        </div>
+    </div>
+
+    <div class="trips-section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="margin: 0;">Próximos Viajes</h2>
+            <div style="font-size: 14px; color: var(--text-gray);">Hoy (1) | Futuros (2) | Pasados (100)</div>
+        </div>
+
+        <div class="trip-card">
+            <div class="trip-header">
+                <span style="font-weight: bold; color: var(--accent-blue);">GLP4P18 <i class="pi pi-copy"></i></span>
+                <button class="btn-manage">Gestionar Viaje</button>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="flight-info">
+                    <div style="text-align: center;">
+                        <span style="display: block; font-size: 12px; color: var(--text-gray);">Mar</span>
+                        <span class="airport-code">22</span>
+                    </div>
+                    <div>
+                        <span class="airport-code">JFK</span>
+                        <div class="flight-path">
+                            <span>SLC</span> <i class="pi pi-angle-right"></i> <span>LAX</span>
+                            <span class="status-pill status-delayed">Retrasado</span>
+                        </div>
+                        <span style="color: var(--text-gray); font-size: 14px;">Los Angeles, CA</span>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 40px;">
+                    <div class="time-box">
+                        <span class="label">Salida JFK</span>
+                        <span class="time">4:29 PM</span>
+                    </div>
+                    <div class="time-box">
+                        <span class="label">Llegada LAX</span>
+                        <span class="time" style="color: var(--accent-blue);">10:10 PM</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="trip-card">
+            <div class="trip-header">
+                <span style="font-weight: bold; color: var(--accent-blue);">KHR4H9 <i class="pi pi-copy"></i></span>
+                <button class="btn-manage">Gestionar Viaje</button>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="flight-info">
+                    <div style="text-align: center;">
+                        <span style="display: block; font-size: 12px; color: var(--text-gray);">Ago</span>
+                        <span class="airport-code">12</span>
+                    </div>
+                    <div>
+                        <span class="airport-code">JFK</span>
+                        <div class="flight-path">
+                            <span>ATL</span>
+                            <span class="status-pill status-ontime">A tiempo</span>
+                        </div>
+                        <span style="color: var(--text-gray); font-size: 14px;">Atlanta, GA</span>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 40px;">
+                    <div class="time-box">
+                        <span class="label">Salida JFK</span>
+                        <span class="time">8:14 AM</span>
+                    </div>
+                    <div class="time-box">
+                        <span class="label">Llegada ATL</span>
+                        <span class="time">10:55 AM</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<script>
+    // JS para interacción simple (ej: copiar código de reserva)
+    document.querySelectorAll('.pi-copy').forEach(icon => {
+        icon.addEventListener('click', () => {
+            const code = icon.parentElement.innerText;
+            alert('Código copiado: ' + code);
+        });
+    });
+</script>
+</body>
+</html>

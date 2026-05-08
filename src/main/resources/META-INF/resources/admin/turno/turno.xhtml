@@ -7,28 +7,76 @@
 
     <ui:define name="contenido-admin">
         <style type="text/css">
-            /* Badges para cargos de tripulación */
+            /* 1. Fondo de la cabecera */
+            .header-container h2 { color: #00d1ff !important; }
+            .header-container p { color: #94a3b8 !important; }
+
+            /* 2. Badges para cargos de tripulación (Ajustados para contraste oscuro) */
             .badge-cargo {
                 padding: 4px 8px;
                 border-radius: 4px;
                 font-size: 0.75rem;
                 font-weight: bold;
                 color: white;
+                text-transform: uppercase;
+                border: 1px solid rgba(255,255,255,0.1);
             }
-            .cargo-piloto { background-color: #1e293b; } /* Azul oscuro */
-            .cargo-copiloto { background-color: #475569; } /* Gris azulado */
-            .cargo-tripulante { background-color: #3b82f6; } /* Azul brillante */
+            /* Colores inspirados en rangos aeronáuticos */
+            .cargo-piloto { background-color: #1e293b; border-color: #00d1ff; color: #00d1ff; }
+            .cargo-copiloto { background-color: #334155; color: #e2e8f0; }
+            .cargo-tripulante { background-color: #0369a1; color: #bae6fd; }
 
+            /* 3. Barra de Asignación (Ahora integrada al azul oscuro) */
             .assignment-bar {
-                background: white;
+                background: #0b1426 !important;
+                border: 1px solid #1e293b !important;
                 border-radius: 12px;
                 padding: 20px;
-                box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
                 margin-bottom: 25px;
             }
 
-            /* Ajuste para que el select ocupe el espacio necesario */
-            .select-tripulante { width: 100% !important; min-width: 300px; }
+            .assignment-bar .p-outputlabel {
+                color: #00d1ff !important;
+            }
+
+            /* 4. Tabla y Card de Personal Asignado */
+            .ui-card {
+                background-color: #0b1426 !important;
+                border: 1px solid #1e293b !important;
+            }
+
+            .ui-datatable thead th {
+                background-color: #141e33 !important;
+                color: #00d1ff !important;
+                border-color: #1e293b !important;
+            }
+
+            .ui-datatable tbody td {
+                background-color: #0b1426 !important;
+                color: #f8fafc !important;
+                border-color: #1e293b !important;
+            }
+
+            /* Estilos de texto secundario y avatares */
+            .text-500 { color: #64748b !important; }
+            .ui-avatar { background: #1e293b !important; color: #00d1ff !important; border: 1px solid #00d1ff; }
+
+            /* 5. Inputs y Selects */
+            .ui-selectonemenu, .ui-selectonemenu-panel {
+                background-color: #0f172a !important;
+                color: white !important;
+                border: 1px solid #334155 !important;
+            }
+
+            .ui-selectonemenu-label { color: white !important; }
+
+            /* 6. Diálogos de Confirmación */
+            .ui-confirm-dialog, .ui-dialog-titlebar, .ui-dialog-content {
+                background-color: #0b1426 !important;
+                color: white !important;
+                border: 1px solid #1e293b !important;
+            }
         </style>
 
         <div class="header-container mb-4">

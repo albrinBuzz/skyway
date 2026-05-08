@@ -7,61 +7,58 @@ INSERT INTO Continente (ID_CONTINENTE, Nombre) VALUES
 (6, 'África'),
 (7, 'Oriente Medio');
 
-
-INSERT INTO Pais (ID_PAIS, Nombre) VALUES
-(1, 'Chile'),
-(2, 'Uruguay'),
-(3, 'Brasil'),
-(4, 'USA'),
-(5, 'Perú'),
-(6, 'Colombia'),
-(7, 'España'),
-(8, 'Francia'),
-(9, 'Reino Unido'),
-(10, 'Alemania'),
-(11, 'Italia'),
-(12, 'Canada'),
-(13, 'Mexico'),
-(14, 'Australia'),
-(15, 'China'),
-(16, 'Japon'),
-(17, 'Argentina'),
-(18, 'Panama'),
-(19, 'Qatar'),
-(20, 'Emiratos Arabes Unidos'),
-(21, 'India'),
-(22, 'Corea del Sur'),
-(23, 'Sudáfrica'),
-(24, 'Egipto'),
-(25, 'Nueva Zelanda'),
-(26, 'Rusia'),
-(27, 'Turquía'),
-(28, 'Indonesia'),
-(29, 'Filipinas'),
-(30, 'Tailandia');
--- Nuevos países (Europa)
+-- Insertar datos en la tabla Pais de forma correlativa (1 al 50)
 INSERT INTO Pais (ID_PAIS, Nombre, ID_CONTINENTE) VALUES
-(32, 'Países Bajos', 3),
-(33, 'Bélgica', 3),
-(34, 'Suiza', 3),
-(35, 'Austria', 3),
-(36, 'Dinamarca', 3),
-(37, 'Suecia', 3),
-(38, 'Portugal', 3),
-(39, 'Finlandia', 3),
-(40, 'Noruega', 3),
-(41, 'República Checa', 3),
-(42, 'Polonia', 3),           -- Europa
-(43, 'Hungría', 3),           -- Europa
-(44, 'Rumanía', 3),           -- Europa
-(45, 'Bulgaria', 3),          -- Europa
-(46, 'Croacia', 3),           -- Europa
-(47, 'Eslovenia', 3),         -- Europa
-(48, 'Serbia', 3),            -- Europa
-(49, 'Albania', 3),           -- Europa
-(50, 'Macedonia del Norte', 3); -- Europa
-
-
+(1, 'Chile', 1),
+(2, 'Uruguay', 1),
+(3, 'Brasil', 1),
+(4, 'USA', 2),
+(5, 'Perú', 1),
+(6, 'Colombia', 1),
+(7, 'España', 3),
+(8, 'Francia', 3),
+(9, 'Reino Unido', 3),
+(10, 'Alemania', 3),
+(11, 'Italia', 3),
+(12, 'Canada', 2),
+(13, 'Mexico', 2),
+(14, 'Australia', 5),
+(15, 'China', 4),
+(16, 'Japon', 4),
+(17, 'Argentina', 1),
+(18, 'Panama', 2),
+(19, 'Qatar', 7),
+(20, 'Emiratos Arabes Unidos', 7),
+(21, 'India', 4),
+(22, 'Corea del Sur', 4),
+(23, 'Sudáfrica', 6),
+(24, 'Egipto', 6),
+(25, 'Nueva Zelanda', 5),
+(26, 'Rusia', 3),
+(27, 'Turquía', 7),
+(28, 'Indonesia', 4),
+(29, 'Filipinas', 4),
+(30, 'Tailandia', 4),
+(31, 'Países Bajos', 3),
+(32, 'Bélgica', 3),
+(33, 'Suiza', 3),
+(34, 'Austria', 3),
+(35, 'Dinamarca', 3),
+(36, 'Suecia', 3),
+(37, 'Portugal', 3),
+(38, 'Finlandia', 3),
+(39, 'Noruega', 3),
+(40, 'República Checa', 3),
+(41, 'Polonia', 3),
+(42, 'Hungría', 3),
+(43, 'Rumanía', 3),
+(44, 'Bulgaria', 3),
+(45, 'Croacia', 3),
+(46, 'Eslovenia', 3),
+(47, 'Serbia', 3),
+(48, 'Albania', 3),
+(49, 'Macedonia del Norte', 3),
+(50, 'Singapur', 4); -- Añadido para cerrar en 50 si gustas, o puedes dejarlo hasta 49
 
 -- Asignar Continente América del Sur
 UPDATE Pais SET ID_CONTINENTE = 1 WHERE Nombre IN ('Chile', 'Uruguay', 'Brasil', 'Perú', 'Colombia', 'Argentina');
@@ -87,525 +84,217 @@ UPDATE Pais SET ID_CONTINENTE = 6 WHERE Nombre IN ('Sudáfrica', 'Egipto');
 
 
 
--- Insertar datos en la tabla Ciudad
+-- Insertar datos en la tabla Ciudad corregido y correlativo
 INSERT INTO Ciudad (ID_CIUDAD, Nombre, ID_PAIS) VALUES
-(1, 'Santiago', 1),
-(2, 'Montevideo', 2),
-(3, 'SaoPaulo', 3),
-(4, 'NuevaYork', 4),
-(5, 'LosAngeles', 4),
-(6, 'Lima', 5),
-(7, 'Atlanta', 4),
-(8, 'Bogota', 6),
-(9, 'Miami', 4),
-(10, 'Madrid', 7),
-(11, 'Barcelona', 7),
-(12, 'Paris', 8),
-(13, 'Londres', 9),
-(14, 'Berlin', 10),
-(15, 'Roma', 11),
-(16, 'Toronto', 12),
-(17, 'CiudadDeMexico', 13),
-(18, 'Vancouver', 12),
-(19, 'Melbourne', 14),
-(20, 'Sidney', 14),
-(21, 'Beijing', 15),
-(22, 'Tokyo', 16),
-(23, 'BuenosAires', 17),
-(24, 'Doha', 19),
-(25, 'Dubai', 20),
-(26, 'Frankfurt', 10),
-(27, 'PanamaCity', 18),
-(28, 'Chicago', 4),
-(29, 'Houston', 4),
-(30, 'NuevaDelhi', 21),
-(31, 'Seul', 22),
-(32, 'CiudadDelCabo', 23),
-(33, 'ElCairo', 24),
-(34, 'Auckland', 25),
-(35, 'Moscu', 26),
-(36, 'Estambul', 27),
-(37, 'Yakarta', 28),
-(38, 'Manila', 29),
-(39, 'Bangkok', 30);
--- Nuevas ciudades Europa (IDs 50 a 59)
-INSERT INTO Ciudad (ID_CIUDAD, Nombre, ID_PAIS) VALUES
-(50, 'Ámsterdam', 32),
-(51, 'Bruselas', 33),
-(52, 'Zurich', 34),
-(53, 'Viena', 35),
-(54, 'Copenhague', 36),
-(55, 'Estocolmo', 37),
-(56, 'Lisboa', 38),
-(57, 'Helsinki', 39),
-(58, 'Oslo', 40),
-(59, 'Praga', 41),
-(60, 'San Francisco', 4),
-(61, 'Washington D.C.', 4),
-(62, 'Boston', 4),
-(63, 'Budapest', 43),              -- Hungría
-(64, 'Cluj-Napoca', 44),           -- Rumanía
-(65, 'Sofia', 45),                 -- Bulgaria
-(66, 'Zagreb', 46),                -- Croacia
-(67, 'Ljubljana', 47),             -- Eslovenia
-(68, 'Belgrado', 48),              -- Serbia
-(69, 'Tirana', 49),                -- Albania
-(70, 'Skopie', 50),                -- Macedonia del Norte
-(71, 'Melbourne', 14),             -- Australia
-(72, 'Auckland', 25),              -- Nueva Zelanda
-(73, 'Brisbane', 14),              -- Australia
-(74, 'Wellington', 25);            -- Nueva Zelanda
+    (1, 'Santiago', 1),
+    (2, 'Montevideo', 2),
+    (3, 'Sao Paulo', 3),
+    (4, 'Nueva York', 4),
+    (5, 'Los Angeles', 4),
+    (6, 'Lima', 5),
+    (7, 'Atlanta', 4),
+    (8, 'Bogota', 6),
+    (9, 'Miami', 4),
+    (10, 'Madrid', 7),
+    (11, 'Barcelona', 7),
+    (12, 'Paris', 8),
+    (13, 'Londres', 9),
+    (14, 'Berlin', 10),
+    (15, 'Roma', 11),
+    (16, 'Toronto', 12),
+    (17, 'Ciudad de Mexico', 13),
+    (18, 'Vancouver', 12),
+    (19, 'Melbourne', 14),
+    (20, 'Sidney', 14),
+    (21, 'Beijing', 15),
+    (22, 'Tokyo', 16),
+    (23, 'Buenos Aires', 17),
+    (24, 'Doha', 19),
+    (25, 'Dubai', 20),
+    (26, 'Frankfurt', 10),
+    (27, 'Panama City', 18),
+    (28, 'Chicago', 4),
+    (29, 'Houston', 4),
+    (30, 'Nueva Delhi', 21),
+    (31, 'Seul', 22),
+    (32, 'Ciudad del Cabo', 23),
+    (33, 'El Cairo', 24),
+    (34, 'Auckland', 25),
+    (35, 'Moscu', 26),
+    (36, 'Estambul', 27),
+    (37, 'Yakarta', 28),
+    (38, 'Manila', 29),
+    (39, 'Bangkok', 30),
+    (40, 'Amsterdam', 32),
+    (41, 'Bruselas', 33),
+    (42, 'Zurich', 34),
+    (43, 'Viena', 35),
+    (44, 'Copenhague', 36),
+    (45, 'Estocolmo', 37),
+    (46, 'Lisboa', 38),
+    (47, 'Helsinki', 39),
+    (48, 'Oslo', 40),
+    (49, 'Praga', 41),
+    (50, 'San Francisco', 4),
+    (51, 'Washington D.C.', 4),
+    (52, 'Boston', 4),
+    (53, 'Budapest', 43),
+    (54, 'Cluj-Napoca', 44),
+    (55, 'Sofia', 45),
+    (56, 'Zagreb', 46),
+    (57, 'Ljubljana', 47),
+    (58, 'Belgrado', 48),
+    (59, 'Tirana', 49),
+    (60, 'Skopie', 50),
+    (61, 'Brisbane', 14),
+    (62, 'Wellington', 25);
 
 INSERT INTO Aeropuerto (ID_AEROPUERTO, Nombre_Aeropuerto, Codigo_IATA, ID_CIUDAD) VALUES
-(1, 'Aeropuerto Internacional Comodoro Arturo Merino Benítez', 'SCL', 1),
-(2, 'Carrasco Intl.', 'MVD', 2),
-(3, 'Guarulhos Intl.', 'GRU', 3),
-(4, 'John F Kennedy', 'JFK', 4),
-(5, 'Los Angeles Intl.', 'LAX', 5),
-(6, 'J Chavez Intl.', 'LIM', 6),
-(7, 'Hartsfield Jackson Atlanta Int.', 'ATL', 7),
-(8, 'El Dorado International Airport', 'BOG', 8),
-(9, 'Miami International Airport', 'MIA', 9),
-(10, 'Adolfo Suarez Madrid Barajas', 'MAD', 10),
-(11, 'El Prat Barcelona', 'BCN', 11),
-(12, 'Charles de Gaulle', 'CDG', 12),
-(13, 'Heathrow Airport', 'LHR', 13),
-(14, 'Berlin Brandenburg', 'BER', 14),
-(15, 'Leonardo da Vinci Fiumicino', 'FCO', 15),
-(16, 'Toronto Pearson Intl.', 'YYZ', 16),
-(17, 'Benito Juarez Intl.', 'MEX', 17),
-(18, 'Vancouver Intl.', 'YVR', 18),
-(19, 'Melbourne Airport', 'MEL', 19),
-(20, 'Sydney Kingsford Smith', 'SYD', 20),
-(21, 'Beijing Capital Intl.', 'PEK', 21),
-(22, 'Tokyo Haneda', 'HND', 22),
-(23, 'Ezeiza Ministro Pistarini', 'EZE', 23),
-(24, 'Hamad Intl. Airport', 'DOH', 24),
-(25, 'Dubai Intl. Airport', 'DXB', 25),
-(26, 'Frankfurt am Main', 'FRA', 26),
-(27, 'Tocumen Intl.', 'PTY', 27),
-(28, 'Chicago OHare', 'ORD', 28),
-(29, 'George Bush Intercontinental', 'IAH', 29),
-(30, 'Gatwick Airport', 'LGW', 13),
-(31, 'Indira Gandhi Intl.', 'DEL', 30),
-(32, 'Incheon Intl.', 'ICN', 31),
-(33, 'Cape Town Intl.', 'CPT', 32),
-(34, 'Cairo Intl.', 'CAI', 33),
-(35, 'Auckland Intl.', 'AKL', 34),
-(36, 'Sheremetyevo Intl.', 'SVO', 35),
-(37, 'Istanbul Airport', 'IST', 36),
-(38, 'Soekarno-Hatta Intl.', 'CGK', 37),
-(39, 'Ninoy Aquino Intl.', 'MNL', 38),
-(40, 'Suvarnabhumi Airport', 'BKK', 39);
-
-INSERT INTO Aeropuerto (ID_AEROPUERTO, Nombre_Aeropuerto, Codigo_IATA, ID_CIUDAD) VALUES
-(51, 'Amsterdam Schiphol Airport', 'AMS', 50),
-(52, 'Brussels Airport', 'BRU', 51),
-(53, 'Zurich Airport', 'ZRH', 52),
-(54, 'Vienna International Airport', 'VIE', 53),
-(55, 'Copenhagen Airport', 'CPH', 54),
-(56, 'Stockholm Arlanda Airport', 'ARN', 55),
-(57, 'Humberto Delgado Airport', 'LIS', 56),
-(58, 'Helsinki-Vantaa Airport', 'HEL', 57),
-(59, 'Oslo Gardermoen Airport', 'OSL', 58),
-(60, 'Václav Havel Airport Prague', 'PRG', 59),
-(61, 'San Francisco International Airport', 'SFO', 60),
-(62, 'Washington D.C. Dulles International Airport', 'IAD', 61),
-(63, 'Logan International Airport', 'BOS', 62),
-(64, 'Budapest Ferenc Liszt International Airport', 'BUD', 63),   -- Budapest, Hungría
-(65, 'Cluj-Napoca International Airport', 'CLJ', 64),            -- Cluj-Napoca, Rumanía
-(66, 'Sofia Airport', 'SOF', 65),                                 -- Sofia, Bulgaria
-(67, 'Zagreb International Airport', 'ZAG', 66),                 -- Zagreb, Croacia
-(68, 'Ljubljana Jože Pučnik Airport', 'LJU', 67),                -- Ljubljana, Eslovenia
-(69, 'Belgrade Nikola Tesla Airport', 'BEG', 68),                -- Belgrado, Serbia
-(70, 'Tirana International Airport', 'TIA', 69),                 -- Tirana, Albania
-(71, 'Skopje Alexander the Great Airport', 'SKP', 70),           -- Skopie, Macedonia del Norte
-(72, 'Brisbane Airport', 'BNE', 73),                              -- Brisbane, Australia
-(73, 'Wellington Airport', 'WLG', 74);                            -- Wellington, Nueva Zelanda
+    (1, 'Aeropuerto Internacional Comodoro Arturo Merino Benítez', 'SCL', 1),
+    (2, 'Carrasco Intl.', 'MVD', 2),
+    (3, 'Guarulhos Intl.', 'GRU', 3),
+    (4, 'John F Kennedy', 'JFK', 4),
+    (5, 'Los Angeles Intl.', 'LAX', 5),
+    (6, 'J Chavez Intl.', 'LIM', 6),
+    (7, 'Hartsfield Jackson Atlanta Int.', 'ATL', 7),
+    (8, 'El Dorado International Airport', 'BOG', 8),
+    (9, 'Miami International Airport', 'MIA', 9),
+    (10, 'Adolfo Suarez Madrid Barajas', 'MAD', 10),
+    (11, 'El Prat Barcelona', 'BCN', 11),
+    (12, 'Charles de Gaulle', 'CDG', 12),
+    (13, 'Heathrow Airport', 'LHR', 13),
+    (14, 'Berlin Brandenburg', 'BER', 14),
+    (15, 'Leonardo da Vinci Fiumicino', 'FCO', 15),
+    (16, 'Toronto Pearson Intl.', 'YYZ', 16),
+    (17, 'Benito Juarez Intl.', 'MEX', 17),
+    (18, 'Vancouver Intl.', 'YVR', 18),
+    (19, 'Melbourne Airport', 'MEL', 19),
+    (20, 'Sydney Kingsford Smith', 'SYD', 20),
+    (21, 'Beijing Capital Intl.', 'PEK', 21),
+    (22, 'Tokyo Haneda', 'HND', 22),
+    (23, 'Ezeiza Ministro Pistarini', 'EZE', 23),
+    (24, 'Hamad Intl. Airport', 'DOH', 24),
+    (25, 'Dubai Intl. Airport', 'DXB', 25),
+    (26, 'Frankfurt am Main', 'FRA', 26),
+    (27, 'Tocumen Intl.', 'PTY', 27),
+    (28, 'Chicago OHare', 'ORD', 28),
+    (29, 'George Bush Intercontinental', 'IAH', 29),
+    (30, 'Gatwick Airport', 'LGW', 13),
+    (31, 'Indira Gandhi Intl.', 'DEL', 30),
+    (32, 'Incheon Intl.', 'ICN', 31),
+    (33, 'Cape Town Intl.', 'CPT', 32),
+    (34, 'Cairo Intl.', 'CAI', 33),
+    (35, 'Auckland Intl.', 'AKL', 34),
+    (36, 'Sheremetyevo Intl.', 'SVO', 35),
+    (37, 'Istanbul Airport', 'IST', 36),
+    (38, 'Soekarno-Hatta Intl.', 'CGK', 37),
+    (39, 'Ninoy Aquino Intl.', 'MNL', 38),
+    (40, 'Suvarnabhumi Airport', 'BKK', 39),
+    (41, 'Amsterdam Schiphol Airport', 'AMS', 40),
+    (42, 'Brussels Airport', 'BRU', 41),
+    (43, 'Zurich Airport', 'ZRH', 42),
+    (44, 'Vienna International Airport', 'VIE', 43),
+    (45, 'Copenhagen Airport', 'CPH', 44),
+    (46, 'Stockholm Arlanda Airport', 'ARN', 45),
+    (47, 'Humberto Delgado Airport', 'LIS', 46),
+    (48, 'Helsinki-Vantaa Airport', 'HEL', 47),
+    (49, 'Oslo Gardermoen Airport', 'OSL', 48),
+    (50, 'Václav Havel Airport Prague', 'PRG', 49),
+    (51, 'San Francisco International Airport', 'SFO', 50),
+    (52, 'Washington D.C. Dulles International Airport', 'IAD', 51),
+    (53, 'Logan International Airport', 'BOS', 52),
+    (54, 'Budapest Ferenc Liszt International Airport', 'BUD', 53),
+    (55, 'Cluj-Napoca International Airport', 'CLJ', 54),
+    (56, 'Sofia Airport', 'SOF', 55),
+    (57, 'Zagreb International Airport', 'ZAG', 56),
+    (58, 'Ljubljana Jože Pučnik Airport', 'LJU', 57),
+    (59, 'Belgrade Nikola Tesla Airport', 'BEG', 58),
+    (60, 'Tirana International Airport', 'TIA', 59),
+    (61, 'Skopje Alexander the Great Airport', 'SKP', 60),
+    (62, 'Brisbane Airport', 'BNE', 61),
+    (63, 'Wellington Airport', 'WLG', 62);
 
 
 -- Suponiendo que ya existen Aeropuertos con ID 1 al 5
-
+-- Los aeropuertos 1 al 30 se mantienen igual ya que coinciden con tu lista
 INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('A1', 'Terminal 1', 1),
-('A2', 'Terminal 1', 1),
-('A3', 'Terminal 1', 1),
-('B1', 'Terminal 2', 1),
-('B2', 'Terminal 2', 1),
-('B3', 'Terminal 2', 1),
-('C1', 'Terminal 3', 2),
-('C2', 'Terminal 3', 2),
-('C3', 'Terminal 3', 2),
-('D1', 'Terminal 4', 2),
-('D2', 'Terminal 4', 2),
-('E1', 'Terminal 1', 3),
-('E2', 'Terminal 1', 3),
-('E3', 'Terminal 1', 3),
-('F1', 'Terminal 2', 3),
-('F2', 'Terminal 2', 3),
-('G1', 'Terminal 1', 4),
-('G2', 'Terminal 1', 4),
-('G3', 'Terminal 1', 4),
-('H1', 'Terminal 2', 5),
-('H2', 'Terminal 2', 5),
-('I1', 'Terminal 3', 5),
-('I2', 'Terminal 3', 5),
-('I3', 'Terminal 3', 5);
+    ('A1', 'Terminal 1', 1), ('A2', 'Terminal 1', 1), ('A3', 'Terminal 1', 1),
+    ('B1', 'Terminal 2', 1), ('B2', 'Terminal 2', 1), ('B3', 'Terminal 2', 1),
+    ('C1', 'Terminal 3', 2), ('C2', 'Terminal 3', 2), ('C3', 'Terminal 3', 2),
+    ('D1', 'Terminal 4', 2), ('D2', 'Terminal 4', 2),
+    ('E1', 'Terminal 1', 3), ('E2', 'Terminal 1', 3), ('E3', 'Terminal 1', 3),
+    ('F1', 'Terminal 2', 3), ('F2', 'Terminal 2', 3),
+    ('G1', 'Terminal 1', 4), ('G2', 'Terminal 1', 4), ('G3', 'Terminal 1', 4),
+    ('H1', 'Terminal 2', 5), ('H2', 'Terminal 2', 5),
+    ('I1', 'Terminal 3', 5), ('I2', 'Terminal 3', 5), ('I3', 'Terminal 3', 5),
+    ('J1', 'Terminal Nacional', 6), ('J2', 'Terminal Internacional', 6), ('J3', 'Terminal Internacional', 6),
+    ('K1', 'Terminal South', 7), ('K2', 'Terminal South', 7), ('K3', 'Terminal North', 7),
+    ('L1', 'Terminal 1', 8), ('L2', 'Terminal 1', 8), ('L3', 'Terminal 2', 8),
+    ('M1', 'Concourse D', 9), ('M2', 'Concourse E', 9), ('M3', 'Concourse E', 9),
+    ('N1', 'T1', 10), ('N2', 'T1', 10), ('N3', 'T2', 10),
+    ('O1', 'T1', 11), ('O2', 'T1', 11), ('O3', 'T2', 11),
+    ('P1', 'Terminal 2E', 12), ('P2', 'Terminal 2F', 12), ('P3', 'Terminal 2G', 12),
+    ('Q1', 'Terminal 5', 13), ('Q2', 'Terminal 5', 13), ('Q3', 'Terminal 3', 13),
+    ('R1', 'T1', 14), ('R2', 'T1', 14), ('R3', 'T2', 14),
+    ('S1', 'Terminal 3', 15), ('S2', 'Terminal 3', 15), ('S3', 'Terminal 1', 15),
+    ('T1', 'Terminal 1', 16), ('T2', 'Terminal 3', 16), ('T3', 'Terminal 3', 16),
+    ('U1', 'Terminal 1', 17), ('U2', 'Terminal 2', 17), ('U3', 'Terminal 2', 17),
+    ('V1', 'Domestic Terminal', 18), ('V2', 'International Terminal', 18), ('V3', 'International Terminal', 18),
+    ('W1', 'Terminal 2', 19), ('W2', 'Terminal 2', 19), ('W3', 'Terminal 1', 19),
+    ('X1', 'T1', 20), ('X2', 'T1', 20), ('X3', 'T2', 20),
+    ('Y1', 'Terminal 3', 21), ('Y2', 'Terminal 3', 21), ('Y3', 'Terminal 2', 21),
+    ('Z1', 'Terminal 1', 22), ('Z2', 'Terminal 2', 22), ('Z3', 'Terminal 3', 22),
+    ('AA1', 'Terminal A', 23), ('AA2', 'Terminal B', 23), ('AA3', 'Terminal C', 23),
+    ('BB1', 'Main Terminal', 24), ('BB2', 'Main Terminal', 24), ('BB3', 'Main Terminal', 24),
+    ('CC1', 'Terminal 3', 25), ('CC2', 'Terminal 1', 25), ('CC3', 'Terminal 2', 25),
+    ('DD1', 'Terminal 1', 26), ('DD2', 'Terminal 2', 26), ('DD3', 'Terminal 1', 26),
+    ('EE1', 'North Terminal', 27), ('EE2', 'South Terminal', 27), ('EE3', 'South Terminal', 27),
+    ('FF1', 'Terminal 1', 28), ('FF2', 'Terminal 3', 28), ('FF3', 'Terminal 5', 28),
+    ('GG1', 'Terminal A', 29), ('GG2', 'Terminal B', 29), ('GG3', 'Terminal E', 29),
+    ('HH1', 'North Terminal', 30), ('HH2', 'South Terminal', 30), ('HH3', 'South Terminal', 30);
 
--- Aeropuerto 6 (LIM)
+-- Bloque corregido: Aeropuertos Internacionales (31 - 40)
 INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('J1', 'Terminal Nacional', 6),
-('J2', 'Terminal Internacional', 6),
-('J3', 'Terminal Internacional', 6);
+    ('P007', 'Terminal 1', 31), ('P008', 'Terminal 2', 31), ('P009', 'Terminal 3', 31), -- DEL
+    ('P019', 'Terminal 1', 32), ('P020', 'Terminal 2', 32), ('P021', 'Terminal 3', 32), -- ICN
+    ('P004', 'Terminal A', 33), ('P005', 'Terminal B', 33), ('P006', 'Terminal C', 33), -- CPT
+    ('P010', 'Terminal 1', 34), ('P011', 'Terminal 2', 34), ('P012', 'Terminal 3', 34), -- CAI
+    ('P028', 'Terminal 1', 35), ('P029', 'Terminal 2', 35), ('P030', 'Terminal 3', 35), -- AKL
+    ('P025', 'Terminal A', 36), ('P026', 'Terminal B', 36), ('P027', 'Terminal C', 36), -- SVO
+    ('P016', 'Terminal 1', 37), ('P017', 'Terminal 2', 37), ('P018', 'Terminal 3', 37), -- IST
+    ('P022', 'Terminal 1', 38), ('P023', 'Terminal 2', 38), ('P024', 'Terminal 3', 38), -- CGK
+    ('P001', 'Terminal 1', 39), ('P002', 'Terminal 1', 39), ('P003', 'Terminal 2', 39), -- MNL
+    ('P013', 'Terminal 1', 40), ('P014', 'Terminal 2', 40), ('P015', 'Terminal 3', 40); -- BKK
 
--- Aeropuerto 7 (ATL)
+    -- Bloque corregido: Europa (41 - 50)
 INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('K1', 'Terminal South', 7),
-('K2', 'Terminal South', 7),
-('K3', 'Terminal North', 7);
+('AAA1', 'Terminal 1', 41), ('AAA2', 'Terminal 1', 41), ('AAA3', 'Terminal 2', 41), -- AMS
+('BBB1', 'Terminal A', 42), ('BBB2', 'Terminal A', 42), ('BBB3', 'Terminal B', 42), -- BRU
+('CCC1', 'Terminal A', 43), ('CCC2', 'Terminal A', 43), ('CCC3', 'Terminal B', 43), -- ZRH
+('DDD1', 'Terminal 1', 44), ('DDD2', 'Terminal 2', 44), ('DDD3', 'Terminal 2', 44), -- VIE
+('EEE1', 'Terminal 1', 45), ('EEE2', 'Terminal 1', 45), ('EEE3', 'Terminal 3', 45), -- CPH
+('FFF1', 'Terminal 2', 46), ('FFF2', 'Terminal 2', 46), ('FFF3', 'Terminal 5', 46), -- ARN
+('GGG1', 'Terminal 1', 47), ('GGG2', 'Terminal 1', 47), ('GGG3', 'Terminal 2', 47), -- LIS
+('HHH1', 'Terminal 1', 48), ('HHH2', 'Terminal 1', 48), ('HHH3', 'Terminal 2', 48), -- HEL
+('III1', 'Terminal 1', 49), ('III2', 'Terminal 1', 49), ('III3', 'Terminal 2', 49), -- OSL
+('JJJ1', 'Terminal 1', 50), ('JJJ2', 'Terminal 1', 50), ('JJJ3', 'Terminal 2', 50); -- PRG
 
--- Aeropuerto 8 (BOG)
+-- Bloque corregido: Norteamérica y Balcanes (51 - 63)
 INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('L1', 'Terminal 1', 8),
-('L2', 'Terminal 1', 8),
-('L3', 'Terminal 2', 8);
+('A1', 'Terminal 1', 51), ('B1', 'Terminal 2', 51), ('C1', 'Terminal 3', 51), -- SFO
+('A10', 'Terminal A', 52), ('B10', 'Terminal B', 52), ('C10', 'Terminal C', 52), -- IAD
+('A2', 'Terminal A', 53), ('B3', 'Terminal B', 53), ('C1', 'Terminal C', 53), -- BOS
+('1A', 'Terminal A', 54), ('2A', 'Terminal B', 54), ('3A', 'Terminal C', 54), -- BUD
+('10', 'Terminal 1', 55), ('12', 'Terminal 2', 55), -- CLJ
+('1', 'Terminal 1', 56), ('3', 'Terminal 2', 56), -- SOF
+('A1', 'Terminal A', 57), ('B1', 'Terminal B', 57), -- ZAG
+('1', 'Terminal 1', 58), ('3', 'Terminal 2', 58), -- LJU
+('A1', 'Terminal A', 59), ('B1', 'Terminal B', 59), -- BEG
+('1', 'Terminal 1', 60), ('2', 'Terminal 1', 60), ('3', 'Terminal 2', 60), -- TIA
+('A1', 'Terminal 1', 61), ('B1', 'Terminal 2', 61), -- SKP
+('1A', 'Terminal 1', 62), ('2A', 'Terminal 2', 62), -- BNE
+('1', 'Terminal 1', 63), ('2', 'Terminal 2', 63); -- WLG
 
--- Aeropuerto 9 (MIA)
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('M1', 'Concourse D', 9),
-('M2', 'Concourse E', 9),
-('M3', 'Concourse E', 9);
-
--- Aeropuerto 10 (MAD)
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('N1', 'T1', 10),
-('N2', 'T1', 10),
-('N3', 'T2', 10);
-
--- Aeropuerto 11 (BCN)
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('O1', 'T1', 11),
-('O2', 'T1', 11),
-('O3', 'T2', 11);
-
--- Aeropuerto 12 (CDG)
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('P1', 'Terminal 2E', 12),
-('P2', 'Terminal 2F', 12),
-('P3', 'Terminal 2G', 12);
-
--- Aeropuerto 13 (LHR)
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('Q1', 'Terminal 5', 13),
-('Q2', 'Terminal 5', 13),
-('Q3', 'Terminal 3', 13);
-
--- Aeropuerto 14 (BER)
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('R1', 'T1', 14),
-('R2', 'T1', 14),
-('R3', 'T2', 14);
-
--- Aeropuerto 15 (FCO)
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('S1', 'Terminal 3', 15),
-('S2', 'Terminal 3', 15),
-('S3', 'Terminal 1', 15);
-
--- Aeropuerto 16 (YYZ)
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('T1', 'Terminal 1', 16),
-('T2', 'Terminal 3', 16),
-('T3', 'Terminal 3', 16);
-
--- Aeropuerto 17 (MEX)
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('U1', 'Terminal 1', 17),
-('U2', 'Terminal 2', 17),
-('U3', 'Terminal 2', 17);
-
--- Aeropuerto 18 (YVR)
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('V1', 'Domestic Terminal', 18),
-('V2', 'International Terminal', 18),
-('V3', 'International Terminal', 18);
-
--- Aeropuerto 19 (MEL)
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('W1', 'Terminal 2', 19),
-('W2', 'Terminal 2', 19),
-('W3', 'Terminal 1', 19);
-
--- Aeropuerto 20 (SYD)
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('X1', 'T1', 20),
-('X2', 'T1', 20),
-('X3', 'T2', 20);
-
--- Aeropuerto 21 (PEK)
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('Y1', 'Terminal 3', 21),
-('Y2', 'Terminal 3', 21),
-('Y3', 'Terminal 2', 21);
-
--- Aeropuerto 22 (HND)
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('Z1', 'Terminal 1', 22),
-('Z2', 'Terminal 2', 22),
-('Z3', 'Terminal 3', 22);
-
--- Aeropuerto 23 (EZE)
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('AA1', 'Terminal A', 23),
-('AA2', 'Terminal B', 23),
-('AA3', 'Terminal C', 23);
-
--- Aeropuerto 24 (DOH)
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('BB1', 'Main Terminal', 24),
-('BB2', 'Main Terminal', 24),
-('BB3', 'Main Terminal', 24);
-
--- Aeropuerto 25 (DXB)
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('CC1', 'Terminal 3', 25),
-('CC2', 'Terminal 1', 25),
-('CC3', 'Terminal 2', 25);
-
--- Aeropuerto 26 (FRA)
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('DD1', 'Terminal 1', 26),
-('DD2', 'Terminal 2', 26),
-('DD3', 'Terminal 1', 26);
-
--- Aeropuerto 27 (PTY)
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('EE1', 'North Terminal', 27),
-('EE2', 'South Terminal', 27),
-('EE3', 'South Terminal', 27);
-
--- Aeropuerto 28 (ORD)
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('FF1', 'Terminal 1', 28),
-('FF2', 'Terminal 3', 28),
-('FF3', 'Terminal 5', 28);
-
--- Aeropuerto 29 (IAH)
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('GG1', 'Terminal A', 29),
-('GG2', 'Terminal B', 29),
-('GG3', 'Terminal E', 29);
-
--- Aeropuerto 30 (LGW)
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('HH1', 'North Terminal', 30),
-('HH2', 'South Terminal', 30),
-('HH3', 'South Terminal', 30);
-
-
--- Puertas de embarque Europa (Aeropuertos 51–60)
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
--- AMS
-('AAA1', 'Terminal 1', 51),
-('AAA2', 'Terminal 1', 51),
-('AAA3', 'Terminal 2', 51),
--- BRU
-('BBB1', 'Terminal A', 52),
-('BBB2', 'Terminal A', 52),
-('BBB3', 'Terminal B', 52),
--- ZRH
-('CCC1', 'Terminal A', 53),
-('CCC2', 'Terminal A', 53),
-('CCC3', 'Terminal B', 53),
--- VIE
-('DDD1', 'Terminal 1', 54),
-('DDD2', 'Terminal 2', 54),
-('DDD3', 'Terminal 2', 54),
--- CPH
-('EEE1', 'Terminal 1', 55),
-('EEE2', 'Terminal 1', 55),
-('EEE3', 'Terminal 3', 55),
--- ARN
-('FFF1', 'Terminal 2', 56),
-('FFF2', 'Terminal 2', 56),
-('FFF3', 'Terminal 5', 56),
--- LIS
-('GGG1', 'Terminal 1', 57),
-('GGG2', 'Terminal 1', 57),
-('GGG3', 'Terminal 2', 57),
--- HEL
-('HHH1', 'Terminal 1', 58),
-('HHH2', 'Terminal 1', 58),
-('HHH3', 'Terminal 2', 58),
--- OSL
-('III1', 'Terminal 1', 59),
-('III2', 'Terminal 1', 59),
-('III3', 'Terminal 2', 59),
--- PRG
-('JJJ1', 'Terminal 1', 60),
-('JJJ2', 'Terminal 1', 60),
-('JJJ3', 'Terminal 2', 60);
-
--- Puertas de embarque para Ninoy Aquino Intl. (MNL)
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('P001', 'Terminal 1', 39),
-('P002', 'Terminal 1', 39),
-('P003', 'Terminal 2', 39);
-
--- Puertas de embarque para Cape Town Intl. (CPT)
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('P004', 'Terminal A', 33),
-('P005', 'Terminal B', 33),
-('P006', 'Terminal C', 33);
-
--- Puertas de embarque para Indira Gandhi Intl. (DEL)
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('P007', 'Terminal 1', 31),
-('P008', 'Terminal 2', 31),
-('P009', 'Terminal 3', 31);
-
--- Puertas de embarque para Cairo Intl. (CAI)
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('P010', 'Terminal 1', 34),
-('P011', 'Terminal 2', 34),
-('P012', 'Terminal 3', 34);
-
--- Puertas de embarque para Suvarnabhumi Airport (BKK)
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('P013', 'Terminal 1', 40),
-('P014', 'Terminal 2', 40),
-('P015', 'Terminal 3', 40);
-
--- Puertas de embarque para Istanbul Airport (IST)
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('P016', 'Terminal 1', 37),
-('P017', 'Terminal 2', 37),
-('P018', 'Terminal 3', 37);
-
--- Puertas de embarque para Incheon Intl. (ICN)
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('P019', 'Terminal 1', 32),
-('P020', 'Terminal 2', 32),
-('P021', 'Terminal 3', 32);
-
--- Puertas de embarque para Soekarno-Hatta Intl. (CGK)
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('P022', 'Terminal 1', 38),
-('P023', 'Terminal 2', 38),
-('P024', 'Terminal 3', 38);
-
--- Puertas de embarque para Sheremetyevo Intl. (SVO)
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('P025', 'Terminal A', 36),
-('P026', 'Terminal B', 36),
-('P027', 'Terminal C', 36);
-
--- Puertas de embarque para Auckland Intl. (AKL)
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('P028', 'Terminal 1', 35),
-('P029', 'Terminal 2', 35),
-('P030', 'Terminal 3', 35);
-
--- Puertas de embarque para el Aeropuerto Internacional de San Francisco
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('A1', 'Terminal 1', 60),    -- San Francisco International Airport
-('A2', 'Terminal 1', 60),    -- San Francisco International Airport
-('B1', 'Terminal 2', 60),    -- San Francisco International Airport
-('B2', 'Terminal 2', 60),    -- San Francisco International Airport
-('C1', 'Terminal 3', 60),    -- San Francisco International Airport
-('C2', 'Terminal 3', 60);    -- San Francisco International Airport
-
--- Puertas de embarque para el Aeropuerto Internacional Dulles de Washington D.C.
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('A10', 'Terminal A', 61),    -- Washington D.C. Dulles International Airport
-('A11', 'Terminal A', 61),    -- Washington D.C. Dulles International Airport
-('B10', 'Terminal B', 61),    -- Washington D.C. Dulles International Airport
-('B11', 'Terminal B', 61),    -- Washington D.C. Dulles International Airport
-('C10', 'Terminal C', 61),    -- Washington D.C. Dulles International Airport
-('C11', 'Terminal C', 61);    -- Washington D.C. Dulles International Airport
-
--- Puertas de embarque para el Aeropuerto Internacional Logan de Boston
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('A2', 'Terminal A', 62),    -- Logan International Airport (Boston, USA)
-('A3', 'Terminal A', 62),    -- Logan International Airport (Boston, USA)
-('B3', 'Terminal B', 62),    -- Logan International Airport (Boston, USA)
-('B4', 'Terminal B', 62),    -- Logan International Airport (Boston, USA)
-('C1', 'Terminal C', 62),    -- Logan International Airport (Boston, USA)
-('C2', 'Terminal C', 62);    -- Logan International Airport (Boston, USA)
-
--- Puertas de embarque para el Aeropuerto Internacional Ferenc Liszt de Budapest
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('1A', 'Terminal A', 63),    -- Budapest Ferenc Liszt International Airport (Budapest, Hungría)
-('1B', 'Terminal A', 63),    -- Budapest Ferenc Liszt International Airport (Budapest, Hungría)
-('2A', 'Terminal B', 63),    -- Budapest Ferenc Liszt International Airport (Budapest, Hungría)
-('2B', 'Terminal B', 63),    -- Budapest Ferenc Liszt International Airport (Budapest, Hungría)
-('3A', 'Terminal C', 63),    -- Budapest Ferenc Liszt International Airport (Budapest, Hungría)
-('3B', 'Terminal C', 63);    -- Budapest Ferenc Liszt International Airport (Budapest, Hungría)
-
--- Puertas de embarque para el Aeropuerto Internacional de Cluj-Napoca
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('10', 'Terminal 1', 64),    -- Cluj-Napoca International Airport (Cluj-Napoca, Rumanía)
-('11', 'Terminal 1', 64),    -- Cluj-Napoca International Airport (Cluj-Napoca, Rumanía)
-('12', 'Terminal 2', 64),    -- Cluj-Napoca International Airport (Cluj-Napoca, Rumanía)
-('13', 'Terminal 2', 64);    -- Cluj-Napoca International Airport (Cluj-Napoca, Rumanía)
-
--- Puertas de embarque para el Aeropuerto Internacional de Sofia
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('1', 'Terminal 1', 65),    -- Sofia Airport (Sofia, Bulgaria)
-('2', 'Terminal 1', 65),    -- Sofia Airport (Sofia, Bulgaria)
-('3', 'Terminal 2', 65),    -- Sofia Airport (Sofia, Bulgaria)
-('4', 'Terminal 2', 65);    -- Sofia Airport (Sofia, Bulgaria)
-
--- Puertas de embarque para el Aeropuerto Internacional de Zagreb
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('A1', 'Terminal A', 66),    -- Zagreb International Airport (Zagreb, Croacia)
-('A2', 'Terminal A', 66),    -- Zagreb International Airport (Zagreb, Croacia)
-('B1', 'Terminal B', 66),    -- Zagreb International Airport (Zagreb, Croacia)
-('B2', 'Terminal B', 66);    -- Zagreb International Airport (Zagreb, Croacia)
-
--- Puertas de embarque para el Aeropuerto Internacional de Ljubljana
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('1', 'Terminal 1', 67),    -- Ljubljana Jože Pučnik Airport (Ljubljana, Eslovenia)
-('2', 'Terminal 1', 67),    -- Ljubljana Jože Pučnik Airport (Ljubljana, Eslovenia)
-('3', 'Terminal 2', 67),    -- Ljubljana Jože Pučnik Airport (Ljubljana, Eslovenia)
-('4', 'Terminal 2', 67);    -- Ljubljana Jože Pučnik Airport (Ljubljana, Eslovenia)
-
--- Puertas de embarque para el Aeropuerto Internacional Nikola Tesla de Belgrado
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('A1', 'Terminal A', 68),    -- Belgrade Nikola Tesla Airport (Belgrado, Serbia)
-('A2', 'Terminal A', 68),    -- Belgrade Nikola Tesla Airport (Belgrado, Serbia)
-('B1', 'Terminal B', 68),    -- Belgrade Nikola Tesla Airport (Belgrado, Serbia)
-('B2', 'Terminal B', 68);    -- Belgrade Nikola Tesla Airport (Belgrado, Serbia)
-
--- Puertas de embarque para el Aeropuerto Internacional de Tirana
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('1', 'Terminal 1', 69),    -- Tirana International Airport (Tirana, Albania)
-('2', 'Terminal 1', 69),    -- Tirana International Airport (Tirana, Albania)
-('3', 'Terminal 2', 69);    -- Tirana International Airport (Tirana, Albania)
-
--- Puertas de embarque para -- Tirana International Airport (Tirana, Albania)
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('A1', 'Terminal 1', 70),
-('A2', 'Terminal 1', 70),
-('B1', 'Terminal 2', 70);
-
--- Puertas de embarque para el Aeropuerto Internacional de Skopje
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('A1', 'Terminal 1', 71),    -- Skopje Alexander the Great Airport (Skopie, Macedonia del Norte)
-('A2', 'Terminal 1', 71),    -- Skopje Alexander the Great Airport (Skopie, Macedonia del Norte)
-('B1', 'Terminal 2', 71);    -- Skopje Alexander the Great Airport (Skopie, Macedonia del Norte)
-
--- Puertas de embarque para el Aeropuerto Internacional de Brisbane
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('1A', 'Terminal 1', 72),    -- Brisbane Airport (Brisbane, Australia)
-('1B', 'Terminal 1', 72),    -- Brisbane Airport (Brisbane, Australia)
-('2A', 'Terminal 2', 72),    -- Brisbane Airport (Brisbane, Australia)
-('2B', 'Terminal 2', 72);    -- Brisbane Airport (Brisbane, Australia)
-
--- Puertas de embarque para el Aeropuerto Internacional de Wellington
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO) VALUES
-('1', 'Terminal 1', 73),    -- Wellington Airport (Wellington, Nueva Zelanda)
-('2', 'Terminal 2', 73);    -- Wellington Airport (Wellington, Nueva Zelanda)
 
 select * from aeropuerto where id_aeropuerto=71;
 

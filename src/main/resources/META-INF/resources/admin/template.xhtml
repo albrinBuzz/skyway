@@ -8,11 +8,12 @@
     <ui:define name="contenido">
         <style type="text/css">
             :root {
-                --primary-color: #003580; /* Azul Aerolínea */
-                --accent-color: #4c7cf3;
-                --sidebar-bg: #1e293b;
+                --primary-color: #0b1426;
+                --accent-color: #4c7cf3; /* Mantengo tu azul de acento original */
+                --sidebar-bg: #1e293b;   /* Mantengo tu color de sidebar original */
                 --text-light: #f8fafc;
-                --body-bg: #f1f5f9;
+                --body-bg: #080e1a;      /* Fondo oscuro para el contenido */
+                --border-dark: #334155;  /* Color para bordes oscuros */
             }
 
             .admin-wrapper {
@@ -21,7 +22,7 @@
                 background-color: var(--body-bg);
             }
 
-            /* Sidebar Modernizado */
+            /* Sidebar - Mantenemos tus estilos de items */
             .sidebar {
                 width: 260px;
                 background-color: var(--sidebar-bg);
@@ -29,36 +30,26 @@
                 transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                 display: flex;
                 flex-direction: column;
-                box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+                border-right: 1px solid var(--border-dark); /* Borde oscuro */
                 z-index: 100;
             }
-
-            .sidebar.collapsed { width: 70px; }
 
             .sidebar-header {
                 padding: 20px;
                 text-align: center;
                 background: rgba(0,0,0,0.2);
+                border-bottom: 1px solid var(--border-dark); /* Borde oscuro */
             }
 
-            .logo-text {
-                font-size: 1.5rem;
-                font-weight: 800;
-                color: var(--accent-color);
-                text-decoration: none;
-                display: block;
-            }
-
-            /* Menú de Navegación */
+            /* Menú de Navegación - Mantenemos tus estilos originales */
             .menu-list { list-style: none; padding: 15px 10px; margin: 0; }
-
             .menu-item { margin-bottom: 8px; }
 
             .menu-link {
                 display: flex;
                 align-items: center;
                 padding: 12px 15px;
-                color: #94a3b8 !important;
+                color: #94a3b8 !important; /* Tu color de texto original */
                 text-decoration: none;
                 border-radius: 8px;
                 transition: all 0.2s;
@@ -66,6 +57,7 @@
 
             .menu-link i { font-size: 1.2rem; margin-right: 15px; width: 25px; text-align: center; }
 
+            /* Hover y Activo con tus estilos originales */
             .menu-link:hover, .menu-item.active .menu-link {
                 background: rgba(255,255,255,0.1);
                 color: white !important;
@@ -81,39 +73,31 @@
                 flex-grow: 1;
                 display: flex;
                 flex-direction: column;
-                overflow-x: hidden;
+                background-color: var(--body-bg);
             }
 
             .top-bar {
                 height: 60px;
-                background: white;
+                background: #0b1426; /* Barra superior oscura */
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
                 padding: 0 25px;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            }
-
-            .view-container {
-                padding: 30px;
-                animation: fadeIn 0.4s ease-out;
+                border-bottom: 1px solid var(--border-dark); /* Borde oscuro */
             }
 
             .card-custom {
-                background: white;
+                background: #0b1426; /* Fondo oscuro para la tarjeta de contenido */
                 border-radius: 12px;
                 padding: 20px;
-                border: none;
-                box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+                border: 1px solid var(--border-dark); /* Borde oscuro */
+                box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             }
 
-            @keyframes fadeIn {
-                from { opacity: 0; transform: translateY(5px); }
-                to { opacity: 1; transform: translateY(0); }
+            /* Ajuste para el texto de perfil en la top-bar */
+            .user-profile span {
+                color: #94a3b8 !important;
             }
-
-            /* Ocultar texto cuando colapsa */
-            .sidebar.collapsed span, .sidebar.collapsed .logo-text { display: none; }
         </style>
 
         <div class="admin-wrapper">

@@ -1,0 +1,175 @@
+/* Paleta de colores */
+:root {
+    --primary-ticket: #1a2a6c;
+    --accent-ticket: #f2a900;
+    --text-light: #777;
+}
+
+.ticket-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 10px;
+    align-items: center;
+}
+
+.boarding-pass {
+    display: flex;
+    width: 100%;
+    max-width: 650px;
+    height: 220px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    overflow: hidden;
+    position: relative;
+    border: 1px solid #eee;
+    margin-bottom: 10px;
+}
+
+.main-section {
+    flex: 2;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.pass-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 8px;
+}
+
+.airline-brand {
+    font-weight: 800;
+    color: var(--primary-ticket);
+    font-size: 1rem;
+}
+
+.pass-type {
+    font-size: 0.65rem;
+    font-weight: bold;
+    color: var(--text-light);
+    letter-spacing: 1px;
+}
+
+.pass-row {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+
+.label {
+    font-size: 0.6rem;
+    color: var(--text-light);
+    display: block;
+    text-transform: uppercase;
+}
+
+.value {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #333;
+}
+
+.value.highlight {
+    color: var(--primary-ticket);
+    font-size: 1.2rem;
+}
+
+.value-time {
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.divider-dashed {
+    border-top: 1px dashed #ddd;
+    margin: 10px 0;
+}
+
+.seat-badge {
+    background-color: var(--primary-ticket);
+    padding: 5px 15px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.stub {
+    flex: 0.8;
+    background: var(--primary-ticket);
+    color: white;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border-left: 2px dashed rgba(255,255,255,0.3);
+    position: relative;
+}
+
+.stub::before, .stub::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background-color: white;
+    border-radius: 50%;
+    left: -10px;
+}
+.stub::before { top: -10px; }
+.stub::after { bottom: -10px; }
+
+.stub-title {
+    font-size: 0.7rem;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    padding-bottom: 5px;
+}
+
+.barcode-container {
+    background: white;
+    height: 35px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    padding: 4px;
+    border-radius: 3px;
+}
+
+.bar { background: black; height: 100%; width: 2px; }
+
+.boarding-notice {
+    font-size: 0.65rem;
+    color: #e74c3c;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+/* --- LÓGICA DE IMPRESIÓN --- */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    .printable-area, .printable-area * {
+        visibility: visible;
+    }
+    .printable-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+    }
+    .boarding-pass {
+        box-shadow: none !important;
+        border: 1px solid #000 !important;
+        page-break-inside: avoid;
+    }
+    .stub {
+        -webkit-print-color-adjust: exact;
+        background-color: #1a2a6c !important;
+    }
+}
