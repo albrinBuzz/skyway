@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+
+<html lang="es"
+	xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="jakarta.faces.html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:sec="https://joinfaces.org/security"
+	xmlns:ui="http://java.sun.com/jsf/facelets">
+
+<h:head>
+    <meta charset="UTF-8"></meta>
+    <title>Blog de Aerolínea</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* Barra de búsqueda */
+        .search-bar {
+            width: 100%;
+            background-color: #34495e;
+            padding: 10px;
+            color: white;
+            display: flex;
+            justify-content: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 10;
+        }
+
+        .search-bar input[type="text"] {
+            width: 60%;
+            padding: 8px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+
+        .search-bar button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #2980b9;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .search-bar button:hover {
+            background-color: #3498db;
+        }
+
+        /* Carrusel */
+        .carousel {
+            width: 100%;
+            height: 300px;
+            background-color: #2c3e50;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 24px;
+            text-align: center;
+            margin-top: 60px; /* Espacio para la barra de búsqueda */
+        }
+
+        .carousel img {
+            width: 100%;
+            height: auto;
+        }
+
+        /* Lado izquierdo - Categorías */
+        .sidebar {
+            width: 25%;
+            background-color: #2c3e50;
+            padding: 20px;
+            color: white;
+            height: 100vh;
+            position: fixed;
+            top: 60px; /* Después del buscador */
+            left: 0;
+            box-sizing: border-box;
+            z-index: 5;
+            overflow-y: auto;
+        }
+
+        .sidebar h2 {
+            color: #ecf0f1;
+            font-size: 24px;
+        }
+
+        .sidebar ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .sidebar ul li {
+            margin: 10px 0;
+        }
+
+        .sidebar ul li a {
+            color: #ecf0f1;
+            text-decoration: none;
+            font-size: 18px;
+        }
+
+        .sidebar ul li a:hover {
+            text-decoration: underline;
+        }
+
+        /* Lado derecho - Posts */
+        .main-content {
+            width: 75%;
+            padding: 20px;
+            margin-left: 25%;
+            background-color: #ffffff;
+            box-sizing: border-box;
+            height: calc(100vh - 120px); /* Restar espacio para barra de búsqueda y el header */
+            overflow-y: auto;
+            padding-top: 20px;
+        }
+
+        .post {
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+
+        .post h3 {
+            font-size: 24px;
+            color: #34495e;
+        }
+
+        .post p {
+            font-size: 16px;
+            color: #7f8c8d;
+        }
+
+        .read-more {
+            color: #2980b9;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .read-more:hover {
+            text-decoration: underline;
+        }
+
+        /* Suscripción al boletín */
+        .subscribe {
+            background-color: #ecf0f1;
+            padding: 20px;
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .subscribe input[type="email"] {
+            padding: 8px;
+            font-size: 16px;
+            border-radius: 4px;
+            margin-right: 10px;
+            width: 50%;
+        }
+
+        .subscribe button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #2980b9;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+
+        /* Footer */
+        footer {
+            background-color: #34495e;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+
+        /* Iconos sociales */
+        .social-icons {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .social-icons a {
+            text-decoration: none;
+            margin: 0 15px;
+            color: white;
+        }
+    </style>
+
+
+</h:head>
+
+<body>
+
+    <!-- Barra de búsqueda -->
+    <div class="search-bar">
+        <h:form>
+            <h:inputText value="#{postBean.query}" placeholder="Buscar en los posts..." />
+            <h:commandButton value="Buscar" action="#{postBean.buscarPost}" />
+        </h:form>
+    </div>
+
+    <!-- Carrusel de imágenes -->
+    <div class="carousel">
+        <p>¡Descubre nuestras nuevas rutas!</p>
+        <img src="images/cancun_vuelo.jpg" alt="Vuelo a Cancún"></img>
+    </div>
+
+    <!-- Contenido principal -->
+    <div style="display: flex; width: 100%;">
+
+        <!-- Sidebar - Categorías -->
+        <div class="sidebar">
+            <h2>Categorías</h2>
+            <h:panelGroup>
+                <ul>
+                    <li><h:commandLink value="Vuelos" action="#"></h:commandLink></li>
+                    <li><h:commandLink value="Destinos" action="#"></h:commandLink></li>
+                    <li><h:commandLink value="Consejos para Viajeros" action="#"></h:commandLink></li>
+                </ul>
+            </h:panelGroup>
+            
+        	<div class="card">
+
+			    
+			    <p:linkButton outcome="/home/index.xhtml" value="Volver A Skyway" style="margin-right:20px;">
+			    </p:linkButton>
+			</div>	
+            
+        </div>
+
+        <!-- Main Content - Posts -->
+        <div class="main-content">
+        
+        	
+        	      <ui:repeat value="#{postBean.posts}" var="post">
+        	      
+        	   
+        	      	  <div class="post">
+		                <h3><h:outputText value="#{post.titulo}"/></h3>
+		                <p><h:outputText value="Estamos emocionados de anunciar nuestro nuevo vuelo directo a Cancún. ¡Reserva tu asiento ahora y prepárate para unas vacaciones inolvidables!" /></p>
+		              
+		              	
+		  				<div class="card">
+						    <p:link outcome="/blog/post-detail.xhtml" value="Leer Mas">
+						        <f:param name="idPost" value="#{post.idPost}"/>
+						    </p:link>
+						</div>	
+								                     
+		            </div>
+        	      
+          		 </ui:repeat>
+          		 
+          	<!--   
+            <div class="post">
+                <h3><h:outputText value="¡Nuevo vuelo a Cancún! Descubre el paraíso" /></h3>
+                <p><h:outputText value="Estamos emocionados de anunciar nuestro nuevo vuelo directo a Cancún. ¡Reserva tu asiento ahora y prepárate para unas vacaciones inolvidables!" /></p>
+                <h:commandLink value="Leer más" action="#" styleClass="read-more" />
+            </div>
+
+            <div class="post">
+                <h3><h:outputText value="Los mejores consejos para tu primer vuelo internacional" /></h3>
+                <p><h:outputText value="Si es tu primer vuelo internacional, aquí te damos algunos consejos útiles para hacer que tu experiencia sea más cómoda y sin estrés." /></p>
+                <h:commandLink value="Leer más" action="#" styleClass="read-more" />
+            </div>
+
+            <div class="post">
+                <h3><h:outputText value="¿Por qué elegir nuestra aerolínea para tu próximo viaje?" /></h3>
+                <p><h:outputText value="Con una flota moderna, un servicio excepcional y vuelos directos a más de 50 destinos, estamos listos para hacer de tu viaje una experiencia única." /></p>
+                <h:commandLink value="Leer más" action="#" styleClass="read-more" />
+            </div>
+
+   
+            <div class="post">
+                <h3><h:outputText value="Destinos ideales para tu luna de miel" /></h3>
+                <p><h:outputText value="Te sugerimos algunos destinos increíbles para que disfrutes de tu luna de miel de una manera romántica y especial." /></p>
+                <h:commandLink value="Leer más" action="#" styleClass="read-more" />
+            </div>
+
+            <div class="post">
+                <h3><h:outputText value="La importancia de contratar un seguro de viaje" /></h3>
+                <p><h:outputText value="En este artículo te explicamos por qué es crucial contar con un seguro de viaje antes de abordar cualquier vuelo." /></p>
+                <h:commandLink value="Leer más" action="#" styleClass="read-more" />
+            </div>
+
+            <div class="post">
+                <h3><h:outputText value="Cómo encontrar las mejores ofertas de vuelos" /></h3>
+                <p><h:outputText value="Aquí te damos algunos consejos para conseguir las mejores ofertas en tus boletos de avión y viajar al mejor precio." /></p>
+                <h:commandLink value="Leer más" action="#" styleClass="read-more" />
+            </div>
+            -->	
+        </div>
+    </div>
+
+    <!-- Suscripción al boletín -->
+    <div class="subscribe">
+        <h2>¡Suscríbete a nuestro boletín!</h2>
+        <h:form>
+            <h:inputText value="#{subscriptionBean.email}" placeholder="Ingresa tu email" required="true" />
+            <h:commandButton value="Suscribirse" action="#{subscriptionBean.subscribe}" />
+        </h:form>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="social-icons">
+            <a href="#">Facebook</a>
+            <a href="#">Twitter</a>
+            <a href="#">Instagram</a>
+        </div>
+    </footer>
+
+</body>
+</html>

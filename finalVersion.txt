@@ -1,0 +1,446 @@
+
+============================================================
+ FUNCIONES Y REGLAS DE NEGOCIO DETALLADAS PARA UNA AEROLÍNEA
+============================================================
+
+1. Gestión de Usuarios y Roles
+--------------------------------
+  - Registro de usuarios:
+	  [ ] Validar unicidad de RUT, correo y documento.
+	  [ ] Asignar rol al usuario (admin, piloto, tripulación, pasajero).
+	  [ ] Almacenar fecha de registro y estado (activo/inactivo).
+  - Autenticación y seguridad:
+	  [ ] Encriptar contraseñas.
+	  [ ] Bloquear usuario tras X intentos fallidos.
+	  [ ] Auditoría de accesos y cambios de datos.
+  - Edición y eliminación:
+	  [ ] Solo admin puede eliminar usuarios.
+	  [ ] Cambios en datos personales requieren validación.
+
+2. Gestión de Vuelos
+---------------------
+  - Creación y edición de vuelos:
+	  [ ] Validar que origen ≠ destino.
+	  [ ] Fechas de salida/llegada deben ser futuras y coherentes.
+	  [ ] Estado del vuelo: programado, en vuelo, finalizado, cancelado.
+  - Asignación de avión:
+	  [ ] Validar que el avión esté operativo y disponible.
+	  [ ] No permitir solapamiento de horarios para el mismo avión.
+  - Asignación de tripulación:
+	  [ ] Debe haber mínimo un piloto y un auxiliar por vuelo.
+	  [ ] Validar disponibilidad y certificaciones de tripulantes.
+  - Cancelación y reprogramación:
+	  [ ] Notificar a pasajeros y tripulación.
+	  [ ] Registrar motivo de cancelación.
+
+3. Gestión de Tripulación
+--------------------------
+  - Registro y edición:
+	  [ ] Validar licencia, cargo y estado (activo/inactivo).
+	  [ ] Almacenar historial de vuelos y turnos.
+  - Asignación a vuelos y turnos:
+	  [ ] No permitir asignación si hay solapamiento de horarios.
+	  [ ] Validar horas de vuelo y descanso según normativa.
+  - Confirmación/rechazo de turnos:
+	  [ ] Si se rechaza, debe reasignarse antes de la fecha del vuelo.
+	  [ ] Registrar fecha y motivo de rechazo.
+
+4. Gestión de Turnos
+---------------------
+  - Creación y asignación:
+	  [ ] Definir tipo de turno (diurno/nocturno, vuelo/descanso).
+	  [ ] Validar que el turno no exceda horas legales.
+  - Visualización y confirmación:
+	  [ ] Tripulante puede ver, confirmar o rechazar turnos.
+	  [ ] Cambios en turnos requieren aprobación del admin.
+
+5. Gestión de Pasajeros y Reservas
+-----------------------------------
+  - Registro de pasajeros:
+	  [ ] Validar datos personales y documento.
+	  [ ] Almacenar historial de reservas y vuelos.
+  - Reserva de asientos:
+	  [ ] Validar disponibilidad y clase seleccionada.
+	  [ ] No permitir doble reserva en el mismo vuelo.
+	  [ ] Cancelaciones solo hasta X horas antes del vuelo.
+  - Modificación y cancelación:
+	  [ ] Registrar fecha y motivo de cancelación.
+	  [ ] Reembolsos según política.
+
+6. Gestión de Asientos
+----------------------
+  - Visualización de disponibilidad:
+	  [ ] Mostrar asientos libres, ocupados y bloqueados.
+	  [ ] Prioridad para pasajeros frecuentes o con necesidades especiales.
+  - Asignación automática/manual:
+	  [ ] Permitir selección por parte del pasajero.
+	  [ ] Asignación automática en caso de overbooking.
+
+7. Panel de Administración
+--------------------------
+  - Gestión de entidades:
+	  [ ] CRUD de usuarios, vuelos, tripulación, aviones, reservas.
+  - Reportes y KPIs:
+	  [ ] Ocupación de vuelos, puntualidad, incidencias, ingresos.
+  - Monitoreo en tiempo real:
+	  [ ] Estado de vuelos, turnos y reservas.
+
+8. Gestión de Aviones
+---------------------
+  - Registro y edición:
+	  [ ] Validar modelo, capacidad, estado (operativo/mantenimiento).
+  - Mantenimiento:
+	  [ ] Registrar fechas y tipo de mantenimiento.
+	  [ ] No permitir asignación a vuelos si está en mantenimiento.
+
+9. Check-in y Embarque
+----------------------
+  - Check-in online/presencial:
+	  [ ] Disponible desde X horas antes del vuelo.
+	  [ ] Generar tarjeta de embarque digital.
+  - Control de acceso:
+	  [ ] Validar identidad y reserva antes de embarcar.
+
+10. Gestión de Equipaje
+-----------------------
+  - Registro y seguimiento:
+	  [ ] Límite de peso y cantidad por pasajero y clase.
+	  [ ] Registrar equipaje especial y reclamaciones.
+  - Integración con rastreo:
+	  [ ] Permitir seguimiento en tiempo real.
+
+11. Comunicación y Notificaciones
+---------------------------------
+  - Notificaciones automáticas:
+	  [ ] Confirmaciones, recordatorios, cambios de vuelo.
+  - Soporte y atención:
+	  [ ] Chat, email y teléfono para consultas y reclamos.
+
+12. Seguridad y Cumplimiento
+----------------------------
+  - Protección de datos:
+	  [ ] Encriptar información sensible.
+	  [ ] Cumplir con normativas locales e internacionales.
+  - Auditoría:
+	  [ ] Registrar todas las acciones críticas en logs.
+
+13. Integraciones
+------------------
+  - API para terceros:
+	  [ ] Permitir consulta y reserva desde agencias externas.
+  - Pagos y facturación:
+	  [ ] Integrar con sistemas de pago y contabilidad.
+
+14. Experiencia de Usuario
+--------------------------
+  - Interfaz responsiva y accesible:
+	  [ ] Multilenguaje, accesibilidad para discapacitados.
+  - Personalización:
+	  [ ] Mostrar información relevante según el rol.
+
+15. Gestión de Programas de Fidelización
+----------------------------------------
+  - Registro y administración de pasajeros frecuentes:
+	  [ ] Acumulación de millas o puntos por vuelo realizado.
+	  [ ] Canje de puntos por vuelos, upgrades o servicios adicionales.
+	  [ ] Niveles de membresía con beneficios diferenciados (prioridad, descuentos, acceso a salas VIP).
+  - Reglas de expiración y transferencia de puntos:
+	  [ ] Expiración automática de puntos tras X meses sin actividad.
+	  [ ] Permitir transferencia de puntos entre familiares bajo ciertas condiciones.
+
+16. Gestión de Incidencias y Reclamaciones
+------------------------------------------
+  - Registro de incidencias (equipaje perdido, retrasos, cancelaciones):
+	  [ ] Generar ticket de seguimiento para cada incidencia.
+	  [ ] Notificar al usuario sobre el estado de la reclamación.
+	  [ ] Registrar compensaciones otorgadas (reembolsos, vouchers, upgrades).
+
+17. Auditoría y Cumplimiento Avanzado
+-------------------------------------
+  - Auditoría avanzada:
+	  [ ] Registro de todas las acciones administrativas y cambios críticos.
+	  [ ] Alertas automáticas ante intentos de acceso no autorizados o cambios sospechosos.
+  - Cumplimiento normativo:
+	  [ ] Validar listas de pasajeros contra listas de restricción internacional (no-fly list).
+	  [ ] Generar reportes automáticos para autoridades regulatorias.
+
+18. Políticas para Menores y Pasajeros Especiales
+------------------------------------------------
+  - Reserva y embarque de menores:
+	  [ ] Requiere autorización y acompañante adulto.
+	  [ ] Validar documentación adicional.
+  - Pasajeros con necesidades especiales:
+	  [ ] Asignación prioritaria de asientos y servicios.
+	  [ ] Registro de requerimientos médicos y asistencia.
+
+19. Políticas de Upgrades y Cambios de Clase
+--------------------------------------------
+  - Solicitud de upgrade:
+	  [ ] Permitir upgrades automáticos por disponibilidad o puntos.
+	  [ ] Registrar pagos o canje de puntos para upgrades.
+  - Cambios de clase:
+	  [ ] Validar disponibilidad y aplicar diferencia tarifaria.
+
+20. Validaciones Adicionales y Automatizaciones
+-----------------------------------------------
+  - Validaciones extra:
+	  [ ] Validar que el pasajero no tenga deudas o bloqueos antes de permitir nuevas reservas.
+	  [ ] Comprobación automática de documentos vencidos.
+  - Automatizaciones:
+	  [ ] Envío automático de encuestas de satisfacción tras cada vuelo.
+	  [ ] Generación de alertas para mantenimiento preventivo de aviones.
+
+------------------------------------------------------------
+ REGLAS DE NEGOCIO ADICIONALES
+------------------------------------------------------------
+
+1. Menores de edad:
+	[ ] No pueden viajar solos sin autorización y acompañante adulto.
+	[ ] Requiere validación de documentos y registro de responsable.
+
+2. Pasajeros con necesidades especiales:
+	[ ] Tienen prioridad en asignación de asientos y embarque.
+	[ ] Deben registrar requerimientos médicos antes del vuelo.
+
+3. Upgrades y cambios de clase:
+	[ ] Solo permitidos si hay disponibilidad y tras pago/canje de puntos.
+	[ ] Registrar diferencia tarifaria y actualizar reserva.
+
+4. Fidelización:
+	[ ] Los puntos expiran tras X meses sin actividad.
+	[ ] Transferencias solo entre familiares registrados.
+
+5. Incidencias y compensaciones:
+	[ ] Cada incidencia genera ticket y seguimiento.
+	[ ] Compensaciones deben ser registradas y notificadas.
+
+6. Validaciones automáticas:
+	[ ] Documentos vencidos bloquean el check-in.
+	[ ] Deudas bloquean nuevas reservas.
+
+7. Auditoría avanzada:
+	[ ] Todas las acciones administrativas quedan registradas.
+	[ ] Alertas automáticas ante accesos sospechosos.
+
+============================================================
+ FUNCIONES Y REGLAS DE NEGOCIO DETALLADAS PARA UNA AEROLÍNEA
+============================================================
+
+1. Gestión de Usuarios y Roles
+--------------------------------
+  - Registro de usuarios:
+	  * Validar unicidad de RUT, correo y documento.
+	  * Asignar rol al usuario (admin, piloto, tripulación, pasajero).
+	  * Almacenar fecha de registro y estado (activo/inactivo).
+  - Autenticación y seguridad:
+	  * Encriptar contraseñas.
+	  * Bloquear usuario tras X intentos fallidos.
+	  * Auditoría de accesos y cambios de datos.
+  - Edición y eliminación:
+	  * Solo admin puede eliminar usuarios.
+	  * Cambios en datos personales requieren validación.
+
+2. Gestión de Vuelos
+---------------------
+  - Creación y edición de vuelos:
+	  * Validar que origen ≠ destino.
+	  * Fechas de salida/llegada deben ser futuras y coherentes.
+	  * Estado del vuelo: programado, en vuelo, finalizado, cancelado.
+  - Asignación de avión:
+	  * Validar que el avión esté operativo y disponible.
+	  * No permitir solapamiento de horarios para el mismo avión.
+  - Asignación de tripulación:
+	  * Debe haber mínimo un piloto y un auxiliar por vuelo.
+	  * Validar disponibilidad y certificaciones de tripulantes.
+  - Cancelación y reprogramación:
+	  * Notificar a pasajeros y tripulación.
+	  * Registrar motivo de cancelación.
+
+3. Gestión de Tripulación
+--------------------------
+  - Registro y edición:
+	  * Validar licencia, cargo y estado (activo/inactivo).
+	  * Almacenar historial de vuelos y turnos.
+  - Asignación a vuelos y turnos:
+	  * No permitir asignación si hay solapamiento de horarios.
+	  * Validar horas de vuelo y descanso según normativa.
+  - Confirmación/rechazo de turnos:
+	  * Si se rechaza, debe reasignarse antes de la fecha del vuelo.
+	  * Registrar fecha y motivo de rechazo.
+
+4. Gestión de Turnos
+---------------------
+  - Creación y asignación:
+	  * Definir tipo de turno (diurno/nocturno, vuelo/descanso).
+	  * Validar que el turno no exceda horas legales.
+  - Visualización y confirmación:
+	  * Tripulante puede ver, confirmar o rechazar turnos.
+	  * Cambios en turnos requieren aprobación del admin.
+
+5. Gestión de Pasajeros y Reservas
+-----------------------------------
+  - Registro de pasajeros:
+	  * Validar datos personales y documento.
+	  * Almacenar historial de reservas y vuelos.
+  - Reserva de asientos:
+	  * Validar disponibilidad y clase seleccionada.
+	  * No permitir doble reserva en el mismo vuelo.
+	  * Cancelaciones solo hasta X horas antes del vuelo.
+  - Modificación y cancelación:
+	  * Registrar fecha y motivo de cancelación.
+	  * Reembolsos según política.
+
+6. Gestión de Asientos
+----------------------
+  - Visualización de disponibilidad:
+	  * Mostrar asientos libres, ocupados y bloqueados.
+	  * Prioridad para pasajeros frecuentes o con necesidades especiales.
+  - Asignación automática/manual:
+	  * Permitir selección por parte del pasajero.
+	  * Asignación automática en caso de overbooking.
+
+7. Panel de Administración
+--------------------------
+  - Gestión de entidades:
+	  * CRUD de usuarios, vuelos, tripulación, aviones, reservas.
+  - Reportes y KPIs:
+	  * Ocupación de vuelos, puntualidad, incidencias, ingresos.
+  - Monitoreo en tiempo real:
+	  * Estado de vuelos, turnos y reservas.
+
+8. Gestión de Aviones
+---------------------
+  - Registro y edición:
+	  * Validar modelo, capacidad, estado (operativo/mantenimiento).
+  - Mantenimiento:
+	  * Registrar fechas y tipo de mantenimiento.
+	  * No permitir asignación a vuelos si está en mantenimiento.
+
+9. Check-in y Embarque
+----------------------
+  - Check-in online/presencial:
+	  * Disponible desde X horas antes del vuelo.
+	  * Generar tarjeta de embarque digital.
+  - Control de acceso:
+	  * Validar identidad y reserva antes de embarcar.
+
+10. Gestión de Equipaje
+-----------------------
+  - Registro y seguimiento:
+	  * Límite de peso y cantidad por pasajero y clase.
+	  * Registrar equipaje especial y reclamaciones.
+  - Integración con rastreo:
+	  * Permitir seguimiento en tiempo real.
+
+11. Comunicación y Notificaciones
+---------------------------------
+  - Notificaciones automáticas:
+	  * Confirmaciones, recordatorios, cambios de vuelo.
+  - Soporte y atención:
+	  * Chat, email y teléfono para consultas y reclamos.
+
+12. Seguridad y Cumplimiento
+----------------------------
+  - Protección de datos:
+	  * Encriptar información sensible.
+	  * Cumplir con normativas locales e internacionales.
+  - Auditoría:
+	  * Registrar todas las acciones críticas en logs.
+
+13. Integraciones
+------------------
+  - API para terceros:
+	  * Permitir consulta y reserva desde agencias externas.
+  - Pagos y facturación:
+	  * Integrar con sistemas de pago y contabilidad.
+
+14. Experiencia de Usuario
+--------------------------
+  - Interfaz responsiva y accesible:
+	  * Multilenguaje, accesibilidad para discapacitados.
+  - Personalización:
+	  * Mostrar información relevante según el rol.
+
+------------------------------------------------------------
+ REGLAS DE NEGOCIO PARA TARIFAS
+------------------------------------------------------------
+
+1. Tarifa Básica
+----------------
+  - No permite cambios de asiento después de la compra.
+	  [ ] Si el usuario intenta cambiar el asiento, mostrar mensaje: “La tarifa básica no permite cambios de asiento.”
+  - Permite cancelación de reserva.
+	  [ ] El usuario puede cancelar la reserva según la política general (ejemplo: hasta X horas antes del vuelo).
+
+2. Tarifa Flexible
+------------------
+  - Permite cambios de asiento.
+	  [ ] El usuario puede cambiar el asiento hasta 48 horas antes del vuelo.
+	  [ ] Si intenta cambiar el asiento después de ese plazo, mostrar mensaje: “Solo puedes cambiar el asiento hasta 48 horas antes del vuelo con tarifa flexible.”
+  - Permite cancelación de reserva.
+	  [ ] El usuario puede cancelar la reserva según la política general.
+
+3. Tarifa Premium
+-----------------
+  - Permite cambios de asiento.
+	  [ ] El usuario puede cambiar el asiento hasta 24 horas antes del vuelo.
+	  [ ] Si intenta cambiar el asiento después de ese plazo, mostrar mensaje: “Solo puedes cambiar el asiento hasta 24 horas antes del vuelo con tarifa premium.”
+  - Permite cancelación de reserva.
+	  [ ] El usuario puede cancelar la reserva según la política general.
+
+------------------------------------------------------------
+ DETALLE EN EL PROCESO DE RESERVA
+------------------------------------------------------------
+
+  - Al reservar un vuelo, el usuario debe seleccionar una tarifa (Básica, Flexible, Premium).
+	  [ ] Al guardar la reserva, se asocia la tarifa seleccionada y sus características.
+  - Al intentar cambiar el asiento:
+	  [ ] Verificar la tarifa de la reserva.
+	  [ ] Si la tarifa lo permite, comprobar el límite de horas antes del vuelo.
+	  [ ] Si no lo permite, bloquear la acción y mostrar el mensaje correspondiente.
+  - Al intentar cancelar la reserva:
+	  [ ] Verificar si la tarifa lo permite.
+	  [ ] Si lo permite, aplicar la política de cancelación (puede incluir penalización o reembolso según la tarifa).
+  - En la interfaz de usuario, mostrar claramente las restricciones y beneficios de cada tarifa al momento de reservar y en el detalle de la reserva.
+
+------------------------------------------------------------
+ REGLAS DE NEGOCIO PARA TARIFAS
+------------------------------------------------------------
+
+1. Tarifa Básica
+----------------
+  - No permite cambios de asiento después de la compra.
+	  * Si el usuario intenta cambiar el asiento, mostrar mensaje: “La tarifa básica no permite cambios de asiento.”
+  - Permite cancelación de reserva.
+	  * El usuario puede cancelar la reserva según la política general (ejemplo: hasta X horas antes del vuelo).
+
+2. Tarifa Flexible
+------------------
+  - Permite cambios de asiento.
+	  * El usuario puede cambiar el asiento hasta 48 horas antes del vuelo.
+	  * Si intenta cambiar el asiento después de ese plazo, mostrar mensaje: “Solo puedes cambiar el asiento hasta 48 horas antes del vuelo con tarifa flexible.”
+  - Permite cancelación de reserva.
+	  * El usuario puede cancelar la reserva según la política general.
+
+3. Tarifa Premium
+-----------------
+  - Permite cambios de asiento.
+	  * El usuario puede cambiar el asiento hasta 24 horas antes del vuelo.
+	  * Si intenta cambiar el asiento después de ese plazo, mostrar mensaje: “Solo puedes cambiar el asiento hasta 24 horas antes del vuelo con tarifa premium.”
+  - Permite cancelación de reserva.
+	  * El usuario puede cancelar la reserva según la política general.
+
+------------------------------------------------------------
+ DETALLE EN EL PROCESO DE RESERVA
+------------------------------------------------------------
+
+  - Al reservar un vuelo, el usuario debe seleccionar una tarifa (Básica, Flexible, Premium).
+  - Al guardar la reserva, se asocia la tarifa seleccionada y sus características.
+  - Al intentar cambiar el asiento:
+	  * Verificar la tarifa de la reserva.
+	  * Si la tarifa lo permite, comprobar el límite de horas antes del vuelo.
+	  * Si no lo permite, bloquear la acción y mostrar el mensaje correspondiente.
+  - Al intentar cancelar la reserva:
+	  * Verificar si la tarifa lo permite.
+	  * Si lo permite, aplicar la política de cancelación (puede incluir penalización o reembolso según la tarifa).
+  - En la interfaz de usuario, mostrar claramente las restricciones y beneficios de cada tarifa al momento de reservar y en el detalle de la reserva.

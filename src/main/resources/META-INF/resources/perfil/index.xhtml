@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition lang="es"
+                xmlns:f="jakarta.faces.core"
+                xmlns:h="jakarta.faces.html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:fs="http://xmlns.jcp.org/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                template="/template/main.xhtml">
+
+    <h:head>
+        <title>Perfil de Usuario</title>
+    </h:head>
+
+    <ui:define name="contenido">
+        <!-- Título de la página -->
+        <h1>Mi Perfil</h1>
+
+        <!-- Formulario que usa el Bean de Usuario para mostrar los datos -->
+        <h:form id="formPerfil">
+
+            <p:panel header="Información del Usuario" styleClass="p-4">
+                <h:panelGrid columns="2" styleClass="p-4">
+                    <!-- Mostrar Nombre y Apellido -->
+                    <p:outputLabel for="nombre" value="Nombre:" />
+                    <h:outputText id="nombre" value="#{usuarioBean.usuario.nombre}" />
+
+                    <p:outputLabel for="apellido" value="Apellido:" />
+                    <h:outputText id="apellido" value="#{userBean.usuario.apellido}" />
+
+                    <p:outputLabel for="correo" value="Correo Electrónico:" />
+                    <h:outputText id="correo" value="#{userBean.usuario.correoElectronico}" />
+
+                    <p:outputLabel for="telefono" value="Teléfono:" />
+                    <h:outputText id="telefono" value="#{userBean.usuario.telefono}" />
+
+                    <p:outputLabel for="documento" value="Documento de Identidad:" />
+                    <h:outputText id="documento" value="#{userBean.usuario.documentoIdentidad}" />
+
+                    <p:outputLabel for="fechaNacimiento" value="Fecha de Nacimiento:" />
+                    <h:outputText id="fechaNacimiento" value="#{userBean.usuario.fechaNacimiento}">
+                        <f:convertDateTime pattern="dd/MM/yyyy"/>
+                    </h:outputText>
+
+                    <p:outputLabel for="fechaRegistro" value="Fecha de Registro:" />
+                    <h:outputText id="fechaRegistro" value="#{userBean.usuario.fechaRegistro}">
+                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm"/>
+                    </h:outputText>
+
+                    <p:outputLabel value="Roles:" />
+                    <h:panelGrid columns="1">
+                        <ui:repeat value="#{userBean.usuario.roles}" var="role">
+                            <h:outputText value="#{role.nombre}" />
+                        </ui:repeat>
+                    </h:panelGrid>
+
+
+
+                </h:panelGrid>
+            </p:panel>
+
+            <!-- Botón para actualizar información (si se permite) -->
+            <p:commandButton value="Actualizar Datos"
+                             icon="pi pi-pencil"
+                             styleClass="p-button-info"
+                             action="#{userBean.actualizarUsuario}"
+                             process="@form"
+                             update="formPerfil"
+                             ajax="true" />
+
+            <!-- Botón para cambiar contraseña -->
+            <p:commandButton value="Cambiar Contraseña"
+                             icon="pi pi-lock"
+                             styleClass="p-button-warning"
+                             action="#{userBean.cambiarContrasena}"
+                             update="formPerfil"
+                             ajax="true" />
+
+        </h:form>
+
+    </ui:define>
+
+</ui:composition>

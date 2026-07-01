@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition lang="es"
+                xmlns:f="jakarta.faces.core"
+                xmlns:h="jakarta.faces.html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                template="/template/main.xhtml">
+
+    <ui:define name="head">
+        <title>Selección de Asientos</title>
+        <h:outputStylesheet library="css" name="seleccionAsientos/style.css" />
+    </ui:define>
+
+    <ui:define name="contenido">
+
+        <main class="container py-5">
+
+            <h:form id="seatForm">
+
+                <!-- ======================= -->
+                <!--   STEPPER DE VUELOS     -->
+                <!-- ======================= -->
+                <p:outputPanel id="flightStepper" styleClass="flight-stepper">
+
+                    <ui:repeat value="#{seleccionAsientosBean.vuelos}" var="vuelo" varStatus="st">
+
+                        <h:panelGroup
+                                styleClass="flight-step #{st.index eq seleccionAsientosBean.idxVuelo ? 'active' : ''}">
+
+                            <div class="flight-route">
+                                #{vuelo.numeroVuelo}
+                            </div>
+
+                            <div class="flight-date">
+                                (#{st.index + 1} de #{seleccionAsientosBean.vuelos.size()})
+                            </div>
+
+                            <span class="flight-indicator"></span>
+
+                        </h:panelGroup>
+
+                    </ui:repeat>
+
+                </p:outputPanel>
+
+
+                <!-- ======================= -->
+                <!--   ASIENTOS SELECCIONADOS -->
+                <!-- ======================= -->
+                <h:panelGroup rendered="#{not empty seleccionAsientosBean.asientosSeleccionadosList}"
+                              styleClass="selected-seats-panel">
+
+                    <h3 class="selected-seats-title">Asientos seleccionados</h3>
+
+                    <div class="selected-seats-grid">
+                        <ui:repeat value="#{seleccionAsientosBean.asientosSeleccionadosList}" var="asiento">
+
+                            <div class="seat-chip">
+                                <div class="seat-number">#{asiento.numeroAsiento}</div>
+                                <div class="seat-class">#{asiento.clase}</div>
+                                <div class="seat-price">CLP #{asiento.precio}</div>
+                            </div>
+
+                        </ui:repeat>
+                    </div>
+
+                </h:panelGroup>
+
+
+                <h:panelGroup rendered="#{not empty seleccionAsientosBean.pasajeros}"
+                              styleClass="passenger-seats-panel">
+
+                    <h3 class="selected-seats-title">
+                        Asientos seleccionados por pasajero
+                    </h3>
+
+                    <ui:repeat value="#{seleccionAsientosBean.pasajeros}" var="pasajero" varStatus="p">
+
+                        <div class="passenger-card #{p.index eq seleccionAsientosBean.idxAsientoSeleccion ? 'active' : ''}">
+
+                            <!-- Header -->
+                            <div class="passenger-header">
+
+                                <div class="passenger-left">
+                    <span class="passenger-badge">
+                        Pasajero #{p.index + 1}
+                    </span>
+
+                                </div>
+
+                                <!-- Vuelo actual -->
+                                <div class="passenger-flight">
+                                    Vuelo #{seleccionAsientosBean.vuelo.numeroVuelo}
+                                </div>
+
+                            </div>
+
+                            <!-- Asientos -->
+                            <div class="selected-seats-grid compact">
+                                <ui:repeat value="#{pasajero.asientos}" var="asiento">
+
+                                    <div class="seat-chip passenger-#{p.index % 3}">
+                                        <div class="seat-number">#{asiento.numeroAsiento}</div>
+                                        <div class="seat-class">#{asiento.clase}</div>
+                                        <div class="seat-class">#{asiento.numeroVuelo}</div>
+                                        <div class="seat-price">CLP #{asiento.precio}</div>
+                                    </div>
+
+                                </ui:repeat>
+                            </div>
+
+                        </div>
+
+                    </ui:repeat>
+
+                </h:panelGroup>
+
+
+
+                <!-- ======================= -->
+                <!--   INFORMACIÓN DEL VUELO  -->
+                <!-- ======================= -->
+                <h:panelGroup id="vuelo-infoPanel"
+                              styleClass="vuelo-info-premium"
+                              rendered="#{seleccionAsientosBean.vuelo != null}">
+
+                    <div class="flight-header">
+                        <i class="pi pi-plane"></i>
+                        Información del Vuelo
+                    </div>
+
+                    <div class="flight-card">
+
+                        <div class="flight-route-info">
+
+                            <div class="route-airport">
+                                <i class="pi pi-send"></i>
+                                <span>Salida</span>
+                                <strong>
+                                    <h:outputText value="#{seleccionAsientosBean.vuelo.fechaHoraSalida}">
+                                        <f:convertDateTime pattern="dd/MM/yyyy hh:mm a"
+                                                           timeZone="America/Santiago"/>
+                                    </h:outputText>
+                                </strong>
+                            </div>
+
+                            <div class="route-arrow">
+                                <i class="pi pi-arrow-right"></i>
+                            </div>
+
+                            <div class="route-airport">
+                                <i class="pi pi-map-marker"></i>
+                                <span>Llegada</span>
+                                <strong>
+                                    <h:outputText value="#{seleccionAsientosBean.vuelo.fechaHoraLlegada}">
+                                        <f:convertDateTime pattern="dd/MM/yyyy hh:mm a"
+                                                           timeZone="America/Santiago"/>
+                                    </h:outputText>
+                                </strong>
+                            </div>
+
+                        </div>
+
+                        <div class="flight-info-grid">
+                            <div class="info-box">
+                                <div class="info-label">
+                                    <i class="pi pi-hashtag"></i> Número de vuelo
+                                </div>
+                                <div class="info-value">
+                                    #{seleccionAsientosBean.vuelo.numeroVuelo}
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </h:panelGroup>
+
+
+                <!-- ======================= -->
+                <!--   TÍTULO CABINA         -->
+                <!-- ======================= -->
+                <h2 class="page-title">
+                    <i class="pi pi-th-large"></i>
+                    Distribución de Asientos
+                </h2>
+
+
+                <!-- ======================= -->
+                <!--   LEYENDA DE ASIENTOS   -->
+                <!-- ======================= -->
+                <div class="seat-legend">
+                    <div class="legend-block">
+                        <span class="legend-square disponible"></span>Disponible
+                    </div>
+                    <div class="legend-block">
+                        <span class="legend-square ocupado"></span>Ocupado
+                    </div>
+                    <div class="legend-block">
+                        <span class="legend-square seleccionado"></span>Seleccionado
+                    </div>
+                </div>
+
+
+                <div class="cabina-premium">
+
+                    <!-- PRIMERA CLASE -->
+                    <h:panelGroup styleClass="class-section primera-clase">
+                        <div class="class-title">Primera Clase</div>
+                        <div class="seat-grid">
+                            <ui:repeat value="#{seleccionAsientosBean.asientos}" var="a">
+                                <h:panelGroup rendered="#{a.clase == 'Primera Clase'}" layout="block">
+
+                                <h:commandButton value="#{a.numeroAsiento}"
+                                                     title="Precio: $#{a.precio}"
+                                                     styleClass="seat-btn #{a.estado}"
+                                                     action="#{seleccionAsientosBean.setearAsiento(a)}"
+                                                     update="seatForm vuelo-infoPanel"/>
+
+                                </h:panelGroup>
+                            </ui:repeat>
+                        </div>
+                    </h:panelGroup>
+
+                    <!-- EJECUTIVA -->
+                    <h:panelGroup styleClass="class-section ejecutiva-clase">
+                        <div class="class-title">Clase Ejecutiva</div>
+                        <div class="seat-grid grid-medium">
+                            <ui:repeat value="#{seleccionAsientosBean.asientos}" var="a">
+                                <h:panelGroup rendered="#{a.clase == 'Ejecutiva'}" layout="block">
+                                    <h:commandButton value="#{a.numeroAsiento}"
+                                                     title="Precio: $#{a.precio}"
+                                                     styleClass="seat-btn #{a.estado}"
+                                                     action="#{seleccionAsientosBean.setearAsiento(a)}"
+                                                     update="seatForm vuelo-infoPanel"/>
+
+                                </h:panelGroup>
+                            </ui:repeat>
+                        </div>
+                    </h:panelGroup>
+
+                    <!-- ECONÓMICA -->
+                    <h:panelGroup styleClass="class-section economica-clase">
+                        <div class="class-title">Clase Económica</div>
+                        <div class="seat-grid grid-large">
+                            <ui:repeat value="#{seleccionAsientosBean.asientos}" var="a">
+                                <h:panelGroup rendered="#{a.clase == 'Económica'}" >
+                                    <h:commandButton value="#{a.numeroAsiento}"
+                                                     title="Precio: $#{a.precio}"
+                                                     styleClass="seat-btn #{a.estado}"
+                                                     action="#{seleccionAsientosBean.setearAsiento(a)}"
+                                                     update="seatForm vuelo-infoPanel"/>
+                                </h:panelGroup>
+                            </ui:repeat>
+                        </div>
+                    </h:panelGroup>
+
+                </div>
+
+
+            </h:form>
+
+        </main>
+
+    <!-- ======================= -->
+    <!--   CSS COMPLETO PREMIUM  -->
+    <!-- ======================= -->
+
+
+    </ui:define>
+
+</ui:composition>

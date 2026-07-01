@@ -1,0 +1,298 @@
+<ui:composition lang="es"
+                xmlns:f="jakarta.faces.core"
+                xmlns:h="jakarta.faces.html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:fs="http://xmlns.jcp.org/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                template="/template/main.xhtml">
+
+    <ui:define name="head">
+        <title>Vuelos</title>
+        <h:outputStylesheet library="css" name="vuelos/estilos-vuelos.css" />
+    </ui:define>
+
+    <ui:define name="contenido">
+        <h:messages globalOnly="true" />
+        <p:growl id="growl"/>
+        <p:messages id="messages" showSummary="true" showDetail="true" closable="true" autoUpdate="true" />
+
+        <h:form id="vueloForm">
+            <div class="flex-container" style="background-color: #0d0d0d; padding: 20px;">
+                <div class="flex-left">
+
+                    <div class="tipo-vuelo-container">
+                        <div class="icono-tipo-vuelo">
+                            <i class="pi pi-send"></i>
+                        </div>
+                        <div class="tipo-vuelo-info">
+                            <span class="tipo-vuelo-label">Estás viendo vuelos de</span>
+                            <h:outputText id="tipoVuelo"
+                                          value="#{itinerarioDetalleBean.tipoVuelo}"
+                                          styleClass="tipo-vuelo-text"/>
+                        </div>
+                    </div>
+
+                    <p:dataTable id="tablaVuelos" widgetVar="tablaVuelosWidget"
+                                 value="#{itinerarioDetalleBean.vuelosIda}"
+                                 var="vuelo" paginator="true" rows="5"
+                                 rowKey="#{vuelo.itinerario}"
+                                 selectionMode="single"
+                                 selection="#{itinerarioDetalleBean.selectedVuelo}"
+                                 styleClass="vuelo-tabla-custom">
+
+                        <p:ajax event="rowSelect" oncomplete="rowExpansion(PF('tablaVuelosWidget'));" />
+
+                        <p:column style="width: 3rem;" styleClass="text-center">
+                            <p:rowToggler />
+                        </p:column>
+
+                        <p:column headerText="Salida" style="width: 25%;">
+                            <div class="flex align-items-baseline">
+                                <h:outputText value="#{vuelo.horaSalida24h}" styleClass="flight-time" />
+                                <h:outputText value="#{vuelo.origen}" styleClass="flight-iata" />
+                            </div>
+                            <h:outputText value="#{vuelo.ciudadSalida}" styleClass="flight-city" />
+                        </p:column>
+
+                        <p:column headerText="Duración" styleClass="text-center" style="width: 20%;">
+                            <div class="duration-line-container">
+                                <h:outputText value="#{vuelo.duracion}" style="font-size: 0.75rem; color: var(--text-dim);"/>
+                                <div class="line-visual"></div>
+
+                                <h:panelGroup rendered="#{vuelo.cantParadas ne 'sin paradas'}">
+                            <span class="stop-badge">
+                                #{vuelo.cantParadas}
+                                <p:commandLink action="#{itinerarioDetalleBean.showParadas(vuelo.itinerario)}"
+                                               update=":vueloForm:sidebarParadas"
+                                               oncomplete="PF('sidebarParadas').show();"
+                                               style="color: var(--sky-blue); margin-left:5px;">
+                                    <i class="pi pi-info-circle"/>
+                                </p:commandLink>
+                            </span>
+                                </h:panelGroup>
+
+                                <h:outputText value="Directo"
+                                              rendered="#{vuelo.cantParadas eq 'sin paradas'}"
+                                              styleClass="direct-badge" />
+                            </div>
+                        </p:column>
+
+                        <p:column headerText="Llegada" style="width: 25%;">
+                            <div class="flex align-items-baseline">
+                                <h:outputText value="#{vuelo.horaLlegada24h}" styleClass="flight-time" />
+                                <h:outputText value="#{vuelo.destino}" styleClass="flight-iata" />
+                            </div>
+                            <h:outputText value="#{vuelo.ciudadLlegada}" styleClass="flight-city" />
+                        </p:column>
+
+                        <p:column headerText="Desde" styleClass="text-right" style="width: 20%;">
+                            <h:outputText value="#{vuelo.precio}" styleClass="price-display">
+                                <f:convertNumber type="currency" currencySymbol="CLP " maxFractionDigits="0" />
+                            </h:outputText>
+                            <span style="display: block; font-size: 10px; color: var(--text-dim); margin-top:5px;">Precio por adulto</span>
+                        </p:column>
+
+                        <p:rowExpansion>
+                            <div class="expansion-container">
+                                <div style="margin-bottom: 30px; text-align: center;">
+                                    <h2 style="color: #fff; font-weight: 300; font-size: 1.5rem;">
+                                        Selecciona tu experiencia para el viaje a <b style="color: var(--sky-blue);">#{vuelo.destino}</b>
+                                    </h2>
+                                </div>
+
+                                <div class="tarifas-grid">
+                                    <ui:repeat value="#{itinerarioDetalleBean.getTarifasItinerario(vuelo.itinerario)}" var="tarifa">
+
+                                        <div class="card-latam">
+                                            <div class="tarifa-badge-line"
+                                                 style="background-color: #{tarifa.nombre.contains('Básica') ? '#ffcc00' : (tarifa.nombre.contains('Flexible') ? '#00d1ff' : '#a259ff')};">
+                                            </div>
+
+                                            <div class="tarifa-top-section">
+                                                <span class="tarifa-name">#{tarifa.nombre}</span>
+
+                                                <div class="beneficio-list">
+                                                    <ui:repeat value="#{tarifa.caracteristicas}" var="carac">
+                                                        <div class="beneficio-item">
+                                                            <i class="#{carac.valorBool ? 'pi pi-check-circle icon-yes' : 'pi pi-times-circle icon-no'}"></i>
+
+                                                            <span class="#{carac.valorBool ? 'text-yes' : 'text-no'}">
+                                                                <h:outputText value="#{carac.nombre}" />
+
+                                                                <h:panelGroup rendered="#{carac.tipoDato ne 'boolean'}">
+                                                                    : <h:outputText value="#{carac.valor}#{carac.valorInt}"
+                                                                                    style="font-weight:bold; color:#fff;"/>
+                                                                </h:panelGroup>
+                                                            </span>
+                                                        </div>
+                                                    </ui:repeat>
+                                                </div>
+                                            </div>
+
+                                            <div class="tarifa-bottom-section">
+                                                <span class="price-label" style="color: #a0aec0; font-size: 0.8rem;">Total por pasajero</span>
+                                                <h:outputText value="#{tarifa.precio}" styleClass="price-value">
+                                                    <f:convertNumber type="currency" currencySymbol="CLP " maxFractionDigits="0" />
+                                                </h:outputText>
+
+                                                <p:commandButton value="Seleccionar"
+                                                                 action="#{itinerarioDetalleBean.selectVuelo(vuelo, tarifa)}"
+                                                                 update="vueloForm"
+                                                                 styleClass="btn-elegir" />
+                                            </div>
+                                        </div>
+
+                                    </ui:repeat>
+                                </div>
+                            </div>
+                        </p:rowExpansion>
+                    </p:dataTable>
+                </div>
+            </div>
+
+
+            <!-- Sidebar de Detalles de Paradas -->
+            <!-- Sidebar de Detalles de Paradas -->
+            <!-- ============================ -->
+            <!--  SIDEBAR ITINERARIO (COMPLETO) -->
+            <!-- ============================ -->
+            <p:sidebar widgetVar="sidebarParadas" position="right" id="sidebarParadas"
+                       width="520" showEffect="slideIn" hideEffect="slideOut"
+                       styleClass="sidebar-corporativo">
+
+                <!-- Título -->
+                <div class="header-titulo">
+                    <i class="pi pi-route"></i> Detalle del Itinerario
+                </div>
+
+                <p:scrollPanel style="width:100%; height:100%;" mode="native">
+                    <div class="timeline">
+
+                        <ui:repeat value="#{itinerarioDetalleBean.paradasVuelo}" var="p" varStatus="st">
+
+                            <!-- BLOQUE DE PARADA -->
+                            <div class="timeline-item tramo-bloque">
+
+
+
+
+                                <!-- TARJETA DEL TRAMO -->
+                                <div class="timeline-content card-parada card-parada-separada">
+
+                                    <div class="card-header">
+                                        Parada #{st.index + 1}
+                                    </div>
+
+                                    <!-- TRAMO ORIGEN / DESTINO -->
+                                    <div class="section">
+                                        <div class="section-title">
+                                            <i class="pi pi-map-marker"></i> Tramo del Vuelo
+                                        </div>
+
+                                        <div class="timeline-leg">
+                                            <div class="city-block">
+                                                <div class="city-code">#{p.aeropuertoSalida}</div>
+                                                <div class="city-time">
+                                                    <i class="pi pi-calendar"></i> #{p.salida}
+                                                </div>
+                                            </div>
+
+                                            <div class="timeline-arrow">
+                                                <i class="pi pi-arrow-down"></i>
+                                            </div>
+
+                                            <div class="city-block">
+                                                <div class="city-code">#{p.aeropuertoLlegada}</div>
+                                                <div class="city-time">
+                                                    <i class="pi pi-clock"></i> #{p.llegada}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- INFORMACIÓN DEL VUELO -->
+                                    <div class="section">
+                                        <div class="section-title">
+                                            <i class="pi pi-info-circle"></i> Información del Vuelo
+                                        </div>
+
+                                        <div class="info-grid">
+                                            <div class="info-item">
+                                                <span class="label">Vuelo:</span>
+                                                <span class="value"><i class="pi pi-plane"></i> #{p.vuelo}</span>
+                                            </div>
+
+                                            <div class="info-item">
+                                                <span class="label">Duración:</span>
+                                                <span class="value"><i class="pi pi-clock"></i> #{p.duracion}</span>
+                                            </div>
+
+
+                                            <div class="info-item">
+                                                <span class="label">Espera:</span>
+                                                <span class="value"><i class="pi pi-hourglass"></i> #{p.tiempoEspera}</span>
+                                            </div>
+
+                                            <div class="info-item">
+                                                <span class="label">Aerolínea:</span>
+                                                <span class="value"><i class="pi pi-building"></i> #{p.aerolinea}</span>
+                                            </div>
+
+                                            <div class="info-item">
+                                                <span class="label">Aeronave:</span>
+                                                <span class="value"><i class="pi pi-cog"></i> #{p.modeloAvion}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- DESCRIPCIÓN -->
+                                    <div class="section">
+                                        <div class="section-title">
+                                            <i class="pi pi-align-left"></i> Descripción
+                                        </div>
+                                        <div class="descripcion descripcion-espaciada">
+                                            #{p.descripcionVuelo}
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <!-- FIN BLOQUE PARADA -->
+
+                        </ui:repeat>
+                    </div>
+
+                    <!-- Botón scroll top -->
+                    <p:scrollTop target="parent" threshold="100" icon="pi pi-arrow-up"
+                                 styleClass="btn-scrolltop" />
+                </p:scrollPanel>
+            </p:sidebar>
+
+
+            <!-- Modal confirmar vuelo -->
+            <p:dialog id="compraDialog" header="Confirmar Selección" widgetVar="compraDialog" modal="true" width="400">
+                <h:outputText value="¿Está seguro de que desea proceder con la compra del vuelo #{itinerarioDetalleBean.selectedVuelo.itinerario}?" />
+                <p:commandButton value="Sí" action="#{itinerarioDetalleBean.procederCompra}" update=":vueloForm:compraDialog" />
+                <p:commandButton value="No" onclick="PF('compraDialog').hide()" />
+            </p:dialog>
+        </h:form>
+
+        <script type="text/javascript">
+            $(document).ready(function() {
+                rowExpansion(PF('tablaVuelosWidget'));
+            });
+
+            function rowExpansion(dataTable) {
+                var $this = dataTable;
+                $this.tbody.children('tr').css('cursor', 'pointer')
+                $this.tbody.off('click.datatable-expansion', '> tr')
+                    .on('click.datatable-expansion', '> tr', null, function() {
+                        $this.collapseAllRows();
+                        $this.toggleExpansion($(this).find('div.ui-row-toggler'));
+                    });
+            }
+        </script>
+    </ui:define>
+
+
+</ui:composition>

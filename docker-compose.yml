@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  # =====================================================================
+  # CONTENEDOR 1: BASE DE DATOS POSTGRESQL (NATIVA SKYWAY)
+  # =====================================================================
+  skyway_postgres:
+    image: postgres:15-alpine
+    container_name: skyway_db_container
+    restart: always
+    environment:
+      POSTGRES_DB: aerolinea_db
+      POSTGRES_USER: aerolinea_user
+      POSTGRES_PASSWORD: aerolinea_user
+    ports:
+      - "5432:5432"
+    volumes:
+      # Persistencia para que no pierdas tus datos locales al apagar el contenedor
+      - pg_skyway_data:/var/lib/postgresql/data
+      
+      # Carga e inicialización secuencial de tus scripts SQL de la V3
+      - ./dataBase/V3/tablas.sql:/docker-entrypoint-initdb.d/01-tablas.sql
+      - ./dataBase/V3/funciones.sql:/docker-entrypoint-initdb.d/02-funciones.sql
+      - ./dataBase/V3/triggers.sql:/docker-entrypoint-initdb.d/03-triggers.sql
+      - ./dataBase/V3/procedimientosSp.sql:/docker-entrypoint-initdb.d/04-procedimientosSp.sql
+      - ./dataBase/V3/poblado.sql:/docker-entrypoint-initdb.d/05-poblado.sql
+    networks:
+      - skyway_net
+
+  # =====================================================================
+  # CONTENEDOR 2: APLICACIÓN JAVA (SPRING BOOT + JSF MULTI-MODULE)
+  # =====================================================================
+  skyway_backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: skyway_app_container
+    restart: on-failure
+    ports:
+      - "8080:8080" # Cambia a "8080:8080" si tu server.port interno es 8080
+    environment:
+      # Sobreescritura de propiedades de Spring para conectar directo al contenedor Postgres
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://skyway_postgres:5432/aerolinea_db?currentSchema=public
+      - SPRING_DATASOURCE_USERNAME=aerolinea_user
+      - SPRING_DATASOURCE_PASSWORD=aerolinea_user
+    depends_on:
+      - skyway_postgres
+    networks:
+      - skyway_net
+
+volumes:
+  pg_skyway_data:
+
+networks:
+  skyway_net:
+    driver: bridge

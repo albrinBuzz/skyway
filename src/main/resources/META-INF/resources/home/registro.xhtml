@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition lang="es"
+                xmlns:f="jakarta.faces.core"
+                xmlns:h="jakarta.faces.html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                template="/template/main.xhtml">
+
+    <h:head>
+        <title>Registro de Usuario</title>
+    </h:head>
+
+    <ui:define name="contenido">
+
+
+        <h:form id="registroForm">
+            <p:growl id="growl" showDetail="true" />
+            <p:panel header="Registro de Usuario" styleClass="panel-custom">
+
+                <!-- Primera fila: RUT -->
+                <div class="field-row">
+                    <p:outputLabel for="rutUsuario" value="RUT:"/>
+                    <p:inputText id="rutUsuario" value="#{usuarioBean.usuario.rut}" required="true"
+                                 placeholder="Introduce tu RUT">
+
+                    </p:inputText>
+                    <p:message for="rutUsuario" display="icon"/>
+                </div>
+
+                <!-- Segunda fila: Nombre y Apellido -->
+                <div class="field-row-two">
+                    <div class="field-col">
+                        <p:outputLabel for="nombre" value="Nombre:"/>
+                        <p:inputText id="nombre" value="#{usuarioBean.usuario.nombre}" required="true"
+                                     placeholder="Introduce tu nombre">
+                            <f:validateLength minimum="3"/>
+                        </p:inputText>
+                        <p:message for="nombre" display="icon"/>
+                    </div>
+
+                    <div class="field-col">
+                        <p:outputLabel for="apellido" value="Apellido:"/>
+                        <p:inputText id="apellido" value="#{usuarioBean.usuario.apellido}" required="true"
+                                     placeholder="Introduce tu apellido">
+
+                        </p:inputText>
+                        <p:message for="apellido" display="icon"/>
+                    </div>
+                </div>
+
+                <!-- Tercera fila: Correo y Teléfono -->
+                <div class="field-row-two">
+                    <div class="field-col">
+                        <p:outputLabel for="correoElectronico" value="Correo Electrónico:"/>
+                        <p:inputText id="correoElectronico" value="#{usuarioBean.usuario.correoElectronico}" required="true"
+                                     placeholder="Introduce tu correo electrónico">
+
+                        </p:inputText>
+                        <p:message for="correoElectronico" display="icon"/>
+                    </div>
+                    <div class="field-col">
+                        <p:outputLabel for="telefono" value="Teléfono:"/>
+                        <p:inputText id="telefono" value="#{usuarioBean.usuario.telefono}" required="true"
+                                     placeholder="Introduce tu teléfono">
+
+                        </p:inputText>
+                        <p:message for="telefono" display="icon"/>
+                    </div>
+                </div>
+
+                <!-- Cuarta fila: Contraseña y Confirmación -->
+                <div class="field-row-two">
+                    <div class="field-col">
+                        <p:outputLabel for="contrasena" value="Contraseña:"/>
+                        <p:password id="contrasena" value="#{usuarioBean.usuario.contrasena}" required="true"
+                                    placeholder="Introduce tu contraseña" toggleMask="true">
+
+                        </p:password>
+                        <p:message for="contrasena" display="icon"/>
+                    </div>
+                    <div class="field-col">
+                        <p:outputLabel for="confirmarContrasena" value="Confirmar Contraseña:"/>
+                        <p:password id="confirmarContrasena" value="#{usuarioBean.confirmarContrasena}" required="true"
+                                    placeholder="Confirma tu contraseña" toggleMask="true">
+
+                        </p:password>
+                        <p:message for="confirmarContrasena" display="icon"/>
+                    </div>
+                </div>
+
+                <!-- Quinta fila: Documento y Fecha Nacimiento -->
+                <div class="field-row-two">
+                    <div class="field-col">
+                        <p:outputLabel for="documentoIdentidad" value="Documento de Identidad:"/>
+                        <p:inputText id="documentoIdentidad" value="#{usuarioBean.usuario.documentoIdentidad}" required="true"
+                                     placeholder="Introduce tu documento de identidad">
+
+                        </p:inputText>
+                        <p:message for="documentoIdentidad" display="icon"/>
+                    </div>
+                    <div class="field-col">
+                        <p:outputLabel for="fechaNacimiento" value="Fecha de Nacimiento:"/>
+                        <p:calendar id="fechaNacimiento" value="#{usuarioBean.usuario.fechaNacimiento}" required="true" pattern="dd/MM/yyyy"/>
+                        <p:message for="fechaNacimiento" display="icon"/>
+                    </div>
+                </div>
+
+                <!-- Botón -->
+                <div class="field-row text-center">
+                    <p:commandButton value="Registrarse" action="#{usuarioBean.registrar}" styleClass="btn-custom"/>
+                </div>
+
+            </p:panel>
+
+        </h:form>
+
+        <style>
+            .panel-custom {
+                max-width: 700px;
+                margin: auto;
+                padding: 30px;
+                border-radius: 12px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+                background-color: #ffffff;
+            }
+
+            .field-row {
+                margin-bottom: 20px;
+            }
+
+            .field-row-two {
+                display: flex;
+                justify-content: space-between;
+                gap: 20px;
+                margin-bottom: 20px;
+            }
+
+            .field-col {
+                flex: 1;
+            }
+
+            .btn-custom {
+                width: 100%;
+                padding: 15px;
+                background-color: #007bff;
+                color: white;
+                font-size: 1.1rem;
+                border-radius: 8px;
+                font-weight: bold;
+            }
+
+            .btn-custom:hover {
+                background-color: #0056b3;
+            }
+        </style>
+
+    </ui:define>
+
+</ui:composition>

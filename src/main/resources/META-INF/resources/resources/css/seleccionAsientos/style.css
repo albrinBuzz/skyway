@@ -1,0 +1,308 @@
+/* ============================================================
+   ESTILOS GENERALES Y TÍTULOS
+============================================================ */
+.page-title {
+    margin: 45px 0 20px;
+    text-align: center;
+    color: #ffffff;
+    font-size: 32px;
+    font-weight: 800;
+}
+
+.page-title i { margin-right: 10px; color: #8fd3ff; }
+
+/* ============================================================
+   STEPPER DE VUELOS (PROGRESO)
+============================================================ */
+.flight-stepper {
+    display: flex;
+    justify-content: space-between;
+    margin: 25px 0;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #2a2f3a;
+}
+
+.flight-step {
+    flex: 1;
+    text-align: center;
+    color: #8e8e8e;
+    position: relative;
+    font-size: 13px;
+}
+
+.flight-step.active { color: #ffffff; font-weight: bold; }
+
+.flight-indicator {
+    position: absolute;
+    bottom: -13px;
+    left: 20%;
+    right: 20%;
+    height: 3px;
+    background: transparent;
+    border-radius: 2px;
+}
+
+.flight-step.active .flight-indicator { background: #00d1ff; }
+
+/* ============================================================
+   INFO DEL VUELO (TARJETA SUPERIOR)
+============================================================ */
+.vuelo-info-premium {
+    margin: 45px auto;
+    max-width: 900px;
+}
+
+.flight-header {
+    font-size: 18px;
+    color: #8fd3ff;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.flight-card {
+    background: #141a22;
+    border-radius: 14px;
+    padding: 25px;
+    box-shadow: inset 0 0 0 1px #2a2f3a;
+}
+
+.flight-route-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.route-airport strong {
+    display: block;
+    margin-top: 5px;
+    color: #ffffff;
+    font-size: 20px;
+}
+
+.route-arrow { font-size: 22px; color: #8fd3ff; }
+
+.flight-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.info-box {
+    background: #0f141b;
+    padding: 14px;
+    border-radius: 10px;
+    border-left: 4px solid #00d1ff;
+}
+
+.info-label { font-size: 12px; color: #9aa5b1; text-transform: uppercase; }
+.info-value { font-size: 15px; font-weight: 600; margin-top: 5px; color: #ffffff; }
+
+/* ============================================================
+   LEYENDA DE ASIENTOS (Sincronizada con BD)
+============================================================ */
+.seat-legend {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin: 30px 0;
+}
+
+.legend-block {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #9aa5b1;
+    font-size: 13px;
+}
+.legend-square { width: 16px; height: 16px; border-radius: 4px; }
+.legend-square.libre { background: #2ecc71; }        /* Verde */
+.legend-square.ocupado { background: #e74c3c; }      /* Rojo */
+.legend-square.seleccionado { background: #f1c40f; } /* Amarillo */
+
+/* ============================================================
+   CABINA DE AVIÓN (EL FUSELAJE)
+============================================================ */
+.cabina-premium {
+    background: #0b0f14;
+    padding: 60px 30px;
+    border-radius: 100px 100px 40px 40px;
+    border: 2px solid #1f2733;
+    max-width: 580px;
+    margin: 0 auto;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+}
+
+.class-section {
+    margin-bottom: 45px;
+    position: relative;
+}
+
+.class-title {
+    color: #00d1ff;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    text-align: center;
+    margin-bottom: 25px;
+    font-weight: 800;
+    opacity: 0.7;
+}
+
+/* ============================================================
+   GRID DE ASIENTOS Y PASILLOS
+============================================================ */
+.seat-grid {
+    display: grid;
+    justify-content: center;
+    gap: 12px 8px;
+}
+
+.primera-clase .seat-grid {
+    grid-template-columns: 60px 60px 30px 60px 60px;
+}
+
+.grid-medium, .grid-large {
+    grid-template-columns: 50px 50px 50px 30px 50px 50px 50px;
+}
+
+.aisle {
+    width: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #1f2733;
+    font-size: 10px;
+}
+
+/* ============================================================
+   DISEÑO DEL ASIENTO (CORRECCIÓN DE COLOR BLANCO)
+============================================================ */
+.seat-btn {
+    width: 100%;
+    height: 55px;
+    border-radius: 8px 8px 16px 16px;
+    border: none;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    color: white !important; /* Fuerza el número a ser blanco */
+    box-shadow: inset 0 -4px 0 rgba(0,0,0,0.3);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Detalle de brillo en el respaldo para realismo */
+/* Brillo superior para que no parezcan planos */
+.seat-btn::after {
+    content: "";
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    right: 4px;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    pointer-events: none;
+}
+
+/* ============================================================
+   ESTADOS DE ASIENTOS - UNIFICADOS (CORRECCIÓN VERDE)
+============================================================ */
+
+/* 1. LIBRE (Verde Esmeralda)
+   Añadimos 'input' y la clase de la sección para asegurar prioridad máxima
+*/
+
+/* Soporte para minúsculas y mayúsculas por si acaso */
+.seat-btn.libre, .seat-btn.Libre, .seat-btn.disponible {
+    background: linear-gradient(145deg, #2ecc71, #27ae60) !important;
+    color: white !important;
+}
+
+.cabina-premium .seat-grid .seat-btn.libre,
+.cabina-premium input.seat-btn.libre,
+.seat-btn.libre {
+    background: #2ecc71 !important;
+    background: linear-gradient(145deg, #2ecc71, #27ae60) !important;
+    border-bottom: 3px solid #1e8449 !important;
+    color: white !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* 2. OCUPADO (Rojo Intenso) */
+.cabina-premium .seat-grid .seat-btn.ocupado,
+.cabina-premium input.seat-btn.ocupado,
+.seat-btn.ocupado {
+    background: #e74c3c !important;
+    background: linear-gradient(145deg, #e74c3c, #c0392b) !important;
+    border-bottom: 3px solid #a93226 !important;
+    cursor: not-allowed;
+    color: rgba(255, 255, 255, 0.6) !important;
+    opacity: 1 !important;
+}
+
+/* 3. SELECCIONADO (Amarillo Neón) */
+.cabina-premium .seat-grid .seat-btn.seleccionado,
+.cabina-premium input.seat-btn.seleccionado,
+.seat-btn.seleccionado {
+    background: #f1c40f !important;
+    background: linear-gradient(145deg, #f1c40f, #f39c12) !important;
+    color: #2c3e50 !important; /* Texto oscuro para que se lea bien */
+    border-bottom: 3px solid #d4ac0d !important;
+    animation: pulse 1.5s infinite;
+    transform: translateY(2px);
+}
+
+
+.seat-btn:hover:not(.ocupado) {
+    transform: translateY(-3px) scale(1.05);
+    filter: brightness(1.2);
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0px rgba(243, 156, 18, 0.5); }
+    70% { box-shadow: 0 0 0 12px rgba(243, 156, 18, 0); }
+    100% { box-shadow: 0 0 0 0px rgba(243, 156, 18, 0); }
+}
+
+/* ============================================================
+   PANEL DE PASAJEROS (INFERIOR)
+============================================================ */
+.passenger-seats-panel {
+    margin: 50px auto;
+    max-width: 900px;
+}
+
+.passenger-card {
+    background: #141a22;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid #2a2f3a;
+}
+
+.passenger-card.active {
+    border-color: #00d1ff;
+    box-shadow: 0 0 15px rgba(0, 209, 255, 0.1);
+}
+
+.seat-chip {
+    background: #0f141b;
+    border-radius: 12px;
+    padding: 12px;
+    min-width: 100px;
+    text-align: center;
+    border: 1px solid #2a2f3a;
+    display: inline-block;
+}
+
+.seat-chip.passenger-0 { border-left: 4px solid #4da3ff; }
+.seat-chip.passenger-1 { border-left: 4px solid #ff9f43; }
+.seat-chip.passenger-2 { border-left: 4px solid #2ecc71; }

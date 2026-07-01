@@ -1,0 +1,804 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ui:composition lang="es"
+	  xmlns:f="jakarta.faces.core"
+      xmlns:h="jakarta.faces.html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:fs="http://xmlns.jcp.org/jsf/core"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      template="/template/main.xhtml">
+
+    <ui:define name="head">
+        <title>Próximos Vuelos</title>
+        <!-- Leaflet CSS y JS -->
+        <!-- Leaflet CSS -->
+        <!-- Leaflet JS -->
+        <script
+                src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+                integrity="sha512‑gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
+                crossorigin="">
+        </script>
+
+
+        <!-- Script para inicializar el mapa -->
+        <script type="text/javascript">
+            <![CDATA[
+              document.addEventListener("DOMContentLoaded", function () {
+                var map = L.map("leafletMap").setView([20, 0], 2);
+
+                L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                  attribution: "© <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors"
+                }).addTo(map);
+
+                var locations = [
+                  { name: "Nueva York, EE.UU.", lat: 40.7128, lng: -74.0060 },
+                  { name: "Madrid, España", lat: 40.4168, lng: -3.7038 },
+                  { name: "Río de Janeiro, Brasil", lat: -22.9068, lng: -43.1729 }
+                ];
+
+                locations.forEach(function (loc) {
+                  L.marker([loc.lat, loc.lng])
+                   .addTo(map)
+                   .bindPopup(loc.name);
+                });
+
+                // Forzar recalculo del tamaño después de renderizar
+                setTimeout(function () {
+                  map.invalidateSize();
+                }, 200);
+              });
+            ]]>
+        </script>
+
+
+
+        <style type="text/css">
+            /* ==========================================================================
+               航空 CAPA GLOBAL Y CONTENEDORES
+               ========================================================================== */
+            .skyway-card {
+                background: #101b33 !important;
+                border: 1px solid #1e3a5c !important;
+                border-radius: 12px !important;
+            }
+
+            .skyway-title {
+                color: #4aa3ff !important;
+                font-weight: 700 !important;
+            }
+
+            .skyway-label {
+                color: #94a3b8 !important;
+                font-weight: 500 !important;
+                margin-bottom: 8px !important;
+            }
+
+            /* Tabs Superiores */
+            .skyway-tabs.nav-tabs { border-bottom: 1px solid #1e3a5c !important; }
+            .skyway-tabs .nav-link {
+                background: #0a1224 !important;
+                color: #94a3b8 !important;
+                border: 1px solid #1e3a5c !important;
+                border-bottom: none !important;
+            }
+            .skyway-tabs .nav-link.active {
+                background: #101b33 !important;
+                color: #ffffff !important;
+                border-bottom: 2px solid #3b82f6 !important;
+            }
+
+            /* ==========================================================================
+               🛠 ARREGLO DE ESTRUCTURA: COMPONENTES DE UNA SOLA LÍNEA (EVITAR CAÍDAS)
+               ========================================================================== */
+            .skyway-custom-input.ui-autocomplete,
+            .skyway-custom-input.ui-datepicker,
+            .skyway-custom-input.ui-spinner,
+            .skyway-custom-input.ui-selectonemenu {
+                display: inline-flex !important;
+                width: 100% !important;
+                height: 46px !important; /* Altura normalizada */
+                background: #11263f !important;
+                border: 1px solid #1e3a5c !important;
+                border-radius: 6px !important;
+                overflow: hidden !important;
+                box-sizing: border-box !important;
+            }
+
+            /* Inputs de texto internos de todos los componentes */
+            .skyway-custom-input .ui-inputfield,
+            .skyway-custom-input .ui-spinner-input,
+            .skyway-custom-input .ui-autocomplete-input {
+                background: #11263f !important;
+                color: #e6eef7 !important;
+                border: none !important; /* El borde ahora lo lleva el contenedor */
+                height: 100% !important;
+                padding: 10px 14px !important;
+                font-size: 14px !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+                align-self: center !important;
+            }
+
+            /* Corrección del marcador de posición (Placeholder) */
+            .skyway-custom-input .ui-inputfield::placeholder {
+                color: #64748b !important;
+            }
+
+            /* ==========================================================================
+               🎯 CORRECCIÓN ESPECÍFICA: BOTONES LATERALES (TRIGGERS)
+               ========================================================================== */
+            /* Botón Dropdown de Autocomplete e Icono de Calendarios */
+            .skyway-custom-input .ui-autocomplete-dropdown,
+            .skyway-custom-input .ui-datepicker-trigger.ui-button {
+                background: #1e3a5c !important;
+                border: none !important;
+                color: #4aa3ff !important;
+                width: 40px !important;
+                height: 100% !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+
+            /* Botones del Spinner (Adultos) - Apilados perfectamente */
+            .skyway-custom-input .ui-spinner-button {
+                background: #1e3a5c !important;
+                border: none !important;
+                border-left: 1px solid #11263f !important;
+                width: 38px !important;
+                height: 50% !important;
+            }
+            .skyway-custom-input .ui-spinner-button .ui-icon {
+                color: #4aa3ff !important;
+            }
+
+            /* Ajuste del SelectOneMenu */
+            .skyway-select-fix .ui-selectonemenu-label {
+                background: transparent !important;
+                color: #e6eef7 !important;
+                line-height: 26px !important;
+                text-align: left !important;
+            }
+            .skyway-select-fix .ui-selectonemenu-trigger {
+                background: #1e3a5c !important;
+                width: 40px !important;
+                height: 100% !important;
+                border: none !important;
+            }
+
+            /* ==========================================================================
+               🎨 PANELES FLOTANTES DESPLEGABLES Y CALENDARIO
+               ========================================================================== */
+            .ui-autocomplete-panel, .ui-selectonemenu-panel, .ui-datepicker {
+                background: #101b33 !important;
+                border: 1px solid #1e3a5c !important;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+            }
+            .ui-autocomplete-item, .ui-selectonemenu-item {
+                color: #e6eef7 !important;
+                padding: 10px 14px !important;
+            }
+            .ui-state-highlight, .ui-autocomplete-item:hover, .ui-selectonemenu-item:hover {
+                background: #3b82f6 !important;
+                color: white !important;
+            }
+
+            /* Calendario oscuro */
+            .ui-datepicker .ui-datepicker-header { background: #11263f !important; border-bottom: 1px solid #1e3a5c !important; color: white !important; }
+            .ui-datepicker-calendar td a { color: #e6eef7 !important; }
+            .ui-datepicker-calendar td.ui-datepicker-current-day a { background: #3b82f6 !important; border-radius: 4px; }
+
+            /* Focus */
+            .skyway-custom-input:focus-within {
+                border-color: #4aa3ff !important;
+                box-shadow: 0 0 6px rgba(74, 163, 255, 0.4) !important;
+            }
+
+            /* ==========================================================================
+               🚨 ARREGLO DE LA SEGUNDA CAPTURA: EL PAGINADOR BLANCO (ui-datatable)
+               ========================================================================== */
+            .ui-datatable .ui-paginator {
+                background: #101b33 !important; /* Cambia el blanco por el marino oscuro */
+                border: 1px solid #1e3a5c !important;
+                color: #e6eef7 !important;
+            }
+            .ui-paginator .ui-paginator-page,
+            .ui-paginator .ui-paginator-next,
+            .ui-paginator .ui-paginator-prev,
+            .ui-paginator .ui-paginator-first,
+            .ui-paginator .ui-paginator-last {
+                background: #11263f !important;
+                color: #e6eef7 !important;
+                border: 1px solid #1e3a5c !important;
+            }
+            .ui-paginator .ui-paginator-page.ui-state-active {
+                background: #3b82f6 !important;
+                color: white !important;
+            }
+
+            /* Botón de búsqueda inferior */
+            .skyway-btn.ui-button {
+                background: #3b82f6 !important;
+                border: none !important;
+                color: white !important;
+                padding: 12px 40px !important;
+                font-weight: 600 !important;
+            }
+        </style>
+
+
+
+    </ui:define>
+
+
+	  <ui:define name="contenido">
+
+          <div class="container py-5">
+              <div class="card skyway-card shadow-lg p-4 rounded-3">
+
+                  <h2 class="text-center mb-4 skyway-title">Buscar Vuelos</h2>
+
+                  <ul class="nav nav-tabs skyway-tabs" id="searchTabs" role="tablist">
+                      <li class="nav-item" role="presentation">
+                          <a class="nav-link active" id="one-way-tab" data-bs-toggle="tab" href="#one-way" role="tab" aria-controls="one-way" aria-selected="true">
+                              <i class="pi pi-arrow-right me-1"></i> Solo Ida
+                          </a>
+                      </li>
+                      <li class="nav-item" role="presentation">
+                          <a class="nav-link" id="round-trip-tab" data-bs-toggle="tab" href="#round-trip" role="tab" aria-controls="round-trip" aria-selected="false">
+                              <i class="pi pi-sync me-1"></i> Ida y Vuelta
+                          </a>
+                      </li>
+                  </ul>
+
+                  <div class="tab-content mt-4" id="searchTabsContent">
+
+                      <div class="tab-pane fade show active" id="one-way" role="tabpanel" aria-labelledby="one-way-tab">
+                          <h:form id="formOneWay">
+
+                              <div class="row mb-4">
+                                  <div class="col-md-6 mb-3 d-flex flex-column">
+                                      <h:outputLabel for="aeropuertoSalida" styleClass="skyway-label" value="Aeropuerto de salida" />
+                                      <p:autoComplete id="aeropuertoSalida"
+                                                      value="#{itinerarioBusquedaBean.codigoIataOrigen}"
+                                                      completeMethod="#{itinerarioBusquedaBean.buscarAeropuertos}"
+                                                      var="a"
+                                                      itemLabel="#{itinerarioBusquedaBean.getItemLabel(a)}"
+                                                      itemValue="#{a.codigoIata}"
+                                                      dropdown="true"
+                                                      forceSelection="true"
+                                                      placeholder="Buscar ciudad o código IATA..."
+                                                      styleClass="skyway-custom-input"
+                                                      required="true"
+                                                      requiredMessage="Debe seleccionar un aeropuerto de salida" />
+                                  </div>
+
+                                  <div class="col-md-6 mb-3 d-flex flex-column">
+                                      <h:outputLabel for="aeropuertoLlegada" styleClass="skyway-label" value="Aeropuerto de llegada" />
+                                      <p:autoComplete id="aeropuertoLlegada"
+                                                      value="#{itinerarioBusquedaBean.codigoIataDestino}"
+                                                      completeMethod="#{itinerarioBusquedaBean.buscarAeropuertos}"
+                                                      var="a"
+                                                      itemLabel="#{itinerarioBusquedaBean.getItemLabel(a)}"
+                                                      itemValue="#{a.codigoIata}"
+                                                      dropdown="true"
+                                                      forceSelection="true"
+                                                      placeholder="Buscar aeropuerto de destino..."
+                                                      styleClass="skyway-custom-input"
+                                                      required="true"
+                                                      requiredMessage="Debe seleccionar un aeropuerto de llegada" />
+                                  </div>
+                              </div>
+
+                              <div class="row mb-4">
+                                  <div class="col-md-6 mb-3 d-flex flex-column">
+                                      <h:outputLabel for="fechaSalida" styleClass="skyway-label" value="Fecha de salida" />
+                                      <p:datePicker id="fechaSalida"
+                                                    value="#{itinerarioBusquedaBean.fechaIda}"
+                                                    showIcon="true"
+                                                    iconDisplay="input"
+                                                    mindate="#{java.time.LocalDate.now()}"
+                                                    pattern="dd/MM/yyyy"
+                                                    styleClass="skyway-custom-input"
+                                                    placeholder="Seleccione fecha de salida..."
+                                                    required="true"
+                                                    requiredMessage="Debe seleccionar la fecha de salida"/>
+                                  </div>
+
+                                  <div class="col-md-6 mb-3 d-flex flex-column">
+                                      <h:outputLabel for="adultos" styleClass="skyway-label" value="Pasajeros (Adultos)" />
+                                      <p:selectOneMenu id="adultos"
+                                                       value="#{itinerarioBusquedaBean.adultos}"
+                                                       required="true"
+                                                       requiredMessage="Debe seleccionar al menos un adulto"
+                                                       styleClass="skyway-custom-input skyway-select-fix w-100">
+                                          <f:selectItem itemLabel="1 Pasajero" itemValue="1" />
+                                          <f:selectItem itemLabel="2 Pasajeros" itemValue="2" />
+                                          <f:selectItem itemLabel="3 Pasajeros" itemValue="3" />
+                                          <f:selectItem itemLabel="4 Pasajeros" itemValue="4" />
+                                          <f:selectItem itemLabel="5 Pasajeros" itemValue="5" />
+                                          <f:selectItem itemLabel="6 Pasajeros" itemValue="6" />
+                                          <f:selectItem itemLabel="7 Pasajeros" itemValue="7" />
+                                          <f:selectItem itemLabel="8 Pasajeros" itemValue="8" />
+                                          <f:selectItem itemLabel="9 Pasajeros" itemValue="9" />
+                                      </p:selectOneMenu>
+                                      <h:message for="adultos" styleClass="text-danger mt-1 d-block" />
+                                  </div>
+                              </div>
+
+                              <div class="text-center mt-4">
+                                  <p:commandButton value="Buscar Vuelos"
+                                                   icon="pi pi-search"
+                                                   styleClass="skyway-btn"
+                                                   update="@form"
+                                                   action="#{itinerarioBusquedaBean.buscarVuelosSoloIda}" />
+                              </div>
+                          </h:form>
+                      </div>
+
+                      <div class="tab-pane fade" id="round-trip" role="tabpanel" aria-labelledby="round-trip-tab">
+                          <h:form id="formRoundTrip">
+
+                              <div class="row mb-4">
+                                  <div class="col-md-6 mb-3 d-flex flex-column">
+                                      <h:outputLabel for="origenRT" styleClass="skyway-label" value="Aeropuerto de salida" />
+                                      <p:selectOneMenu id="origenRT"
+                                                       value="#{itinerarioBusquedaBean.codigoIataOrigen}"
+                                                       required="true"
+                                                       styleClass="skyway-custom-input skyway-select-fix">
+                                          <f:selectItem itemLabel="Seleccione un aeropuerto de origen..." itemValue="" />
+                                          <f:selectItems value="#{itinerarioBusquedaBean.aeropuertos}"
+                                                         var="a"
+                                                         itemLabel="#{a.ciudad.nombre} - #{a.nombreAeropuerto} (#{a.codigoIata})"
+                                                         itemValue="#{a.codigoIata}" />
+                                      </p:selectOneMenu>
+                                  </div>
+
+                                  <div class="col-md-6 mb-3 d-flex flex-column">
+                                      <h:outputLabel for="destinoRT" styleClass="skyway-label" value="Aeropuerto de llegada" />
+                                      <p:selectOneMenu id="destinoRT"
+                                                       value="#{itinerarioBusquedaBean.codigoIataDestino}"
+                                                       required="true"
+                                                       styleClass="skyway-custom-input skyway-select-fix">
+                                          <f:selectItem itemLabel="Seleccione un aeropuerto de destino..." itemValue="" />
+                                          <f:selectItems value="#{itinerarioBusquedaBean.aeropuertos}"
+                                                         var="a"
+                                                         itemLabel="#{a.ciudad.nombre} - #{a.nombreAeropuerto} (#{a.codigoIata})"
+                                                         itemValue="#{a.codigoIata}" />
+                                      </p:selectOneMenu>
+                                  </div>
+                              </div>
+
+                              <div class="row mb-4">
+                                  <div class="col-md-6 mb-3 d-flex flex-column">
+                                      <h:outputLabel for="fechaIda" styleClass="skyway-label" value="Fecha de salida" />
+                                      <p:datePicker id="fechaIda"
+                                                    value="#{itinerarioBusquedaBean.fechaIda}"
+                                                    showIcon="true"
+                                                    iconDisplay="input"
+                                                    pattern="dd/MM/yyyy"
+                                                    styleClass="skyway-custom-input"
+                                                    required="true" />
+                                  </div>
+
+                                  <div class="col-md-6 mb-3 d-flex flex-column">
+                                      <h:outputLabel for="fechaRetorno" styleClass="skyway-label" value="Fecha de regreso" />
+                                      <p:datePicker id="fechaRetorno"
+                                                    value="#{itinerarioBusquedaBean.fechaRetorno}"
+                                                    showIcon="true"
+                                                    iconDisplay="input"
+                                                    pattern="dd/MM/yyyy"
+                                                    styleClass="skyway-custom-input"
+                                                    required="true" />
+                                  </div>
+                                  <div class="col-md-6 mb-3 d-flex flex-column">
+                                      <h:outputLabel for="adultos" styleClass="skyway-label" value="Pasajeros (Adultos)" />
+                                      <p:selectOneMenu id="adultos"
+                                                       value="#{itinerarioBusquedaBean.adultos}"
+                                                       required="true"
+                                                       requiredMessage="Debe seleccionar al menos un adulto"
+                                                       styleClass="skyway-custom-input skyway-select-fix w-100">
+                                          <f:selectItem itemLabel="1 Pasajero" itemValue="1" />
+                                          <f:selectItem itemLabel="2 Pasajeros" itemValue="2" />
+                                          <f:selectItem itemLabel="3 Pasajeros" itemValue="3" />
+                                          <f:selectItem itemLabel="4 Pasajeros" itemValue="4" />
+                                          <f:selectItem itemLabel="5 Pasajeros" itemValue="5" />
+                                          <f:selectItem itemLabel="6 Pasajeros" itemValue="6" />
+                                          <f:selectItem itemLabel="7 Pasajeros" itemValue="7" />
+                                          <f:selectItem itemLabel="8 Pasajeros" itemValue="8" />
+                                          <f:selectItem itemLabel="9 Pasajeros" itemValue="9" />
+                                      </p:selectOneMenu>
+                                      <h:message for="adultos" styleClass="text-danger mt-1 d-block" />
+                                  </div>
+                              </div>
+
+                              <div class="text-center mt-4">
+                                  <p:commandButton value="Buscar Vuelos"
+                                                   icon="pi pi-search"
+                                                   styleClass="skyway-btn"
+                                                   update="@form"
+                                                   action="#{itinerarioBusquedaBean.buscarVuelosIdaYVuelta}" />
+                              </div>
+                          </h:form>
+                      </div>
+
+                  </div>
+              </div>
+          </div>
+
+
+
+          <!-- ========================================================= -->
+          <!-- ⭐ SECCIÓN: Beneficios -->
+          <!-- ========================================================= -->
+          <!-- Beneficios adaptados a aerolínea chilena -->
+          <div class="container mt-5">
+              <h3 class="text-center mb-5" style="color:#3b82f6; font-size:2.2rem; font-weight:bold;">
+                  ¿Por qué volar con nosotros?
+              </h3>
+
+              <div class="row text-center g-4">
+                  <!-- Seguridad y confianza -->
+                  <div class="col-md-3">
+                      <div class="p-4 rounded shadow-lg benefit-card">
+                          <i class="pi pi-shield" style="font-size:3rem; color:#3b82f6;"></i>
+                          <h5 class="mt-3" style="font-weight:bold; color:#ffffff;">Compra Segura</h5>
+                          <p style="color:#94a3b8; font-size:1rem;">
+                              Pago protegido — datos cifrados y respaldo bancario.
+                          </p>
+                      </div>
+                  </div>
+
+                  <!-- Precios competitivos / descuentos locales -->
+                  <div class="col-md-3">
+                      <div class="p-4 rounded shadow-lg benefit-card">
+                          <i class="pi pi-percentage" style="font-size:3rem; color:#3b82f6;"></i>
+                          <h5 class="mt-3" style="font-weight:bold; color:#ffffff;">Precios en CLP  Ofertas</h5>
+                          <p style="color:#94a3b8; font-size:1rem;">
+                              Tarifas en pesos, sin sorpresas en el cambio.
+                          </p>
+                      </div>
+                  </div>
+
+                  <!-- Programa de fidelidad/chilenización -->
+                  <div class="col-md-3">
+                      <div class="p-4 rounded shadow-lg benefit-card">
+                          <i class="pi pi-star" style="font-size:3rem; color:#3b82f6;"></i>
+                          <h5 class="mt-3" style="font-weight:bold; color:#ffffff;">Programa de Millas</h5>
+                          <p style="color:#94a3b8; font-size:1rem;">
+                              Acumula kilómetros exclusivos — descuentos y upgrades.
+                          </p>
+                      </div>
+                  </div>
+
+                  <!-- Soporte y conveniencia local -->
+                  <div class="col-md-3">
+                      <div class="p-4 rounded shadow-lg benefit-card">
+                          <i class="pi pi-headphones" style="font-size:3rem; color:#3b82f6;"></i>
+                          <h5 class="mt-3" style="font-weight:bold; color:#ffffff;">Soporte 24/7 CL</h5>
+                          <p style="color:#94a3b8; font-size:1rem;">
+                              Atención en español, todos los días — antes, durante y después del vuelo.
+                          </p>
+                      </div>
+                  </div>
+
+              </div>
+          </div>
+
+          <!-- Métodos de pago adaptados a Chile -->
+          <div class="container mt-5">
+              <h3 class="text-center mb-5" style="color:#3b82f6; font-size:2.2rem; font-weight:bold;">
+                  Métodos de Pago Aceptados
+              </h3>
+
+              <div class="row justify-content-center text-center g-4">
+
+                  <!-- Tarjeta crédito/débito -->
+                  <div class="col-6 col-md-2">
+                      <div class="p-3 rounded shadow-lg payment-card">
+                          <i class="pi pi-credit-card" style="font-size:2.5rem; color:#3b82f6;"></i>
+                          <p class="mt-2" style="color:#ffffff; font-weight:bold;">Visa / Mastercard</p>
+                      </div>
+                  </div>
+
+                  <!-- Transferencia / pago en línea / Webpay u otro gateway -->
+                  <div class="col-6 col-md-2">
+                      <div class="p-3 rounded shadow-lg payment-card">
+                          <i class="pi pi-wallet" style="font-size:2.5rem; color:#3b82f6;"></i>
+                          <p class="mt-2" style="color:#ffffff; font-weight:bold;">Transferencia / E‑wallet</p>
+                      </div>
+                  </div>
+
+                  <!-- Pago local efectivo / Servipag / opciones Chilenas -->
+                  <div class="col-6 col-md-2">
+                      <div class="p-3 rounded shadow-lg payment-card">
+                          <i class="pi pi-money-bill" style="font-size:2.5rem; color:#3b82f6;"></i>
+                          <p class="mt-2" style="color:#ffffff; font-weight:bold;">Pago en efectivo o depósito</p>
+                      </div>
+                  </div>
+
+                  <!-- Pago con tarjetas bancarias locales / débito nacional -->
+                  <div class="col-6 col-md-2">
+                      <div class="p-3 rounded shadow-lg payment-card">
+                          <i class="pi pi-wallet" style="font-size:2.5rem; color:#3b82f6;"></i>
+                          <p class="mt-2" style="color:#ffffff; font-weight:bold;">Débito Nacional / RedCompra</p>
+                      </div>
+                  </div>
+
+              </div>
+          </div>
+
+          <style>
+              .benefit-card {
+                background: #101b33;
+                border: 1px solid #1e2a44;
+                transition: transform 0.3s, box-shadow 0.3s;
+              }
+              .benefit-card:hover {
+                transform: translateY(-8px);
+                box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+              }
+
+              .payment-card {
+                background: #101b33;
+                border: 1px solid #1e2a44;
+                transition: transform 0.3s, box-shadow 0.3s;
+              }
+              .payment-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+              }
+          </style>
+
+
+
+          <!-- ========================================================= -->
+          <!-- ⭐ SECCIÓN EXTRA: Destinos Recomendados -->
+          <!-- ========================================================= -->
+          <div class="container mt-5 mb-5">
+              <h3 class="text-center mb-4" style="color:#3b82f6;">Destinos Recomendados</h3>
+
+              <div class="row">
+
+                  <!-- Nueva York -->
+                  <div class="col-md-6 mb-4">
+                      <div class="card shadow" style="background:#101b33; border:1px solid #1e2a44; border-radius: 15px; overflow: hidden; transition: transform 0.3s;">
+                          <h:graphicImage
+                                  value="#{resource['assets/icons/premium_photo-1661954654458-c673671d4a08.jpeg']}"
+                                  alt="Nueva York"
+                                  style="width:100%; height:300px; object-fit:cover;" />
+                          <div class="card-body" style="padding: 1.5rem;">
+                              <h5 class="card-title text-white" style="font-size:1.8rem; font-weight:bold; margin-bottom:0.5rem;">Nueva York</h5>
+                              <p class="card-text" style="color:#94a3b8; font-size:1.1rem; margin-bottom:1rem;">
+                                  La ciudad que nunca duerme.
+                              </p>
+                              <p:commandButton value="Ver vuelos"
+                                               styleClass="p-button-success p-button-lg"
+                                               icon="pi pi-search"
+                                               style="width:100%;" />
+                          </div>
+                      </div>
+                  </div>
+
+                  <!-- Madrid -->
+                  <div class="col-md-6 mb-4">
+                      <div class="card shadow" style="background:#101b33; border:1px solid #1e2a44; border-radius: 15px; overflow: hidden; transition: transform 0.3s;">
+                          <h:graphicImage
+                                  value="#{resource['assets/icons/pexels-abhishek-verma-209130-670261.jpg']}"
+                                  alt="Madrid"
+                                  style="width:100%; height:300px; object-fit:cover;" />
+                          <div class="card-body" style="padding: 1.5rem;">
+                              <h5 class="card-title text-white" style="font-size:1.8rem; font-weight:bold; margin-bottom:0.5rem;">Madrid</h5>
+                              <p class="card-text" style="color:#94a3b8; font-size:1.1rem; margin-bottom:1rem;">
+                                  Historia, cultura y gastronomía.
+                              </p>
+                              <p:commandButton value="Ver vuelos"
+                                               styleClass="p-button-success p-button-lg"
+                                               icon="pi pi-search"
+                                               style="width:100%;" />
+                          </div>
+                      </div>
+                  </div>
+
+                  <!-- Río de Janeiro -->
+                  <div class="col-md-6 mb-4">
+                      <div class="card shadow" style="background:#101b33; border:1px solid #1e2a44; border-radius: 15px; overflow: hidden; transition: transform 0.3s;">
+                          <h:graphicImage
+                                  value="#{resource['assets/icons/rio-de-janeiro-1963744_640.jpg']}"
+                                  alt="Río de Janeiro"
+                                  style="width:100%; height:300px; object-fit:cover;" />
+                          <div class="card-body" style="padding: 1.5rem;">
+                              <h5 class="card-title text-white" style="font-size:1.8rem; font-weight:bold; margin-bottom:0.5rem;">Río de Janeiro</h5>
+                              <p class="card-text" style="color:#94a3b8; font-size:1.1rem; margin-bottom:1rem;">
+                                  Playas, samba y alegría.
+                              </p>
+                              <p:commandButton value="Ver vuelos"
+                                               styleClass="p-button-success p-button-lg"
+                                               icon="pi pi-search"
+                                               style="width:100%;" />
+                          </div>
+                      </div>
+                  </div>
+
+                  <!-- Tokio -->
+                  <div class="col-md-6 mb-4">
+                      <div class="card shadow" style="background:#101b33; border:1px solid #1e2a44; border-radius: 15px; overflow: hidden; transition: transform 0.3s;">
+                          <h:graphicImage
+                                  value="#{resource['assets/icons/pexels-apasaric-2506923.jpg']}"
+                                  alt="Tokio"
+                                  style="width:100%; height:300px; object-fit:cover;" />
+                          <div class="card-body" style="padding: 1.5rem;">
+                              <h5 class="card-title text-white" style="font-size:1.8rem; font-weight:bold; margin-bottom:0.5rem;">Tokio</h5>
+                              <p class="card-text" style="color:#94a3b8; font-size:1.1rem; margin-bottom:1rem;">
+                                  Tradición y tecnología en perfecta armonía.
+                              </p>
+                              <p:commandButton value="Ver vuelos"
+                                               styleClass="p-button-success p-button-lg"
+                                               icon="pi pi-search"
+                                               style="width:100%;" />
+                          </div>
+                      </div>
+                  </div>
+
+              </div>
+
+              <!-- Estilos hover -->
+              <style>
+                  .card.shadow:hover {
+                      transform: translateY(-5px);
+                      box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+                  }
+              </style>
+
+
+          </div>
+
+
+          <!-- ========================================================= -->
+          <!-- SECCIÓN: Mapa Interactivo -->
+          <!-- ========================================================= -->
+          <!-- SECCIÓN LEAFLET MAP INTERACTIVO -->
+          <div class="container mt-5">
+              <h3 class="text-center mb-4" style="color:#3b82f6;">Nuestros Destinos en el Mapa</h3>
+              <div id="leafletMap" style="border:1px solid #1e2a44; border-radius:8px;"></div>
+          </div>
+
+
+
+
+          <!-- ========================================================= -->
+          <!-- SECCIÓN: Blog / Artículos de Viaje -->
+          <!-- ========================================================= -->
+          <div class="container mt-5">
+              <h3 class="text-center mb-4" style="color:#3b82f6;">Blog de Viajes</h3>
+              <div class="row">
+
+                  <div class="col-md-4 mb-4">
+                      <div class="card" style="background:#101b33; border:1px solid #1e2a44;">
+                          <div class="card-body">
+                              <h5 class="card-title text-white">Cómo viajar barato en 2025</h5>
+                              <p class="card-text" style="color:#94a3b8;">
+                                  Consejos prácticos para conseguir vuelos, hospedaje y más sin gastar de más.
+                              </p>
+                              <p:commandButton value="Leer más" styleClass="p-button-sm" icon="pi pi-book" />
+                          </div>
+                      </div>
+                  </div>
+
+                  <div class="col-md-4 mb-4">
+                      <div class="card" style="background:#101b33; border:1px solid #1e2a44;">
+                          <div class="card-body">
+                              <h5 class="card-title text-white">Destinos sostenibles para visitar</h5>
+                              <p class="card-text" style="color:#94a3b8;">
+                                  Lugares eco-friendly que puedes conocer sin dañar el medioambiente.
+                              </p>
+                              <p:commandButton value="Leer más" styleClass="p-button-sm" icon="pi pi-book" />
+                          </div>
+                      </div>
+                  </div>
+
+                  <div class="col-md-4 mb-4">
+                      <div class="card" style="background:#101b33; border:1px solid #1e2a44;">
+                          <div class="card-body">
+                              <h5 class="card-title text-white">¿Cuándo es la mejor temporada para viajar?</h5>
+                              <p class="card-text" style="color:#94a3b8;">
+                                  Guía para elegir las mejores fechas según clima, festividades y precios.
+                              </p>
+                              <p:commandButton value="Leer más" styleClass="p-button-sm" icon="pi pi-book" />
+                          </div>
+                      </div>
+                  </div>
+
+              </div>
+          </div>
+
+
+          <!-- ========================================================= -->
+          <!-- SECCIÓN: FAQ (Preguntas frecuentes) -->
+          <!-- ========================================================= -->
+          <div class="container mt-5 mb-5">
+              <h3 class="text-center mb-4" style="color:#3b82f6;">Preguntas Frecuentes</h3>
+              <div class="accordion" id="faqAccordion">
+
+                  <div class="accordion-item" style="background:#101b33; border:1px solid #1e2a44;">
+                      <h2 class="accordion-header" id="faqHeadingOne">
+                          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                  data-bs-target="#faqCollapseOne" aria-expanded="false" aria-controls="faqCollapseOne"
+                                  style="background:#101b33; color:#e2e8f0;">
+                              ¿Cómo puedo cambiar o cancelar mi vuelo?
+                          </button>
+                      </h2>
+                      <div id="faqCollapseOne" class="accordion-collapse collapse" aria-labelledby="faqHeadingOne"
+                           data-bs-parent="#faqAccordion">
+                          <div class="accordion-body" style="color:#94a3b8; background:#0a1224;">
+                              Puedes cambiar o cancelar tu vuelo hasta 24 horas antes, dependiendo de la tarifa. Consulta nuestra política de cambios
+                              en la sección de Términos y Condiciones o contáctanos para asistencia personalizada.
+                          </div>
+                      </div>
+                  </div>
+
+                  <div class="accordion-item" style="background:#101b33; border:1px solid #1e2a44;">
+                      <h2 class="accordion-header" id="faqHeadingTwo">
+                          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                  data-bs-target="#faqCollapseTwo" aria-expanded="false" aria-controls="faqCollapseTwo"
+                                  style="background:#101b33; color:#e2e8f0;">
+                              ¿Qué métodos de pago aceptan?
+                          </button>
+                      </h2>
+                      <div id="faqCollapseTwo" class="accordion-collapse collapse" aria-labelledby="faqHeadingTwo"
+                           data-bs-parent="#faqAccordion">
+                          <div class="accordion-body" style="color:#94a3b8; background:#0a1224;">
+                              Aceptamos tarjetas Visa, Mastercard, PayPal, transferencia bancaria y criptomonedas. Todos los pagos son seguros y están protegidos.
+                          </div>
+                      </div>
+                  </div>
+
+                  <div class="accordion-item" style="background:#101b33; border:1px solid #1e2a44;">
+                      <h2 class="accordion-header" id="faqHeadingThree">
+                          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                  data-bs-target="#faqCollapseThree" aria-expanded="false" aria-controls="faqCollapseThree"
+                                  style="background:#101b33; color:#e2e8f0;">
+                              ¿Puedo reservar solo ida o ida y vuelta?
+                          </button>
+                      </h2>
+                      <div id="faqCollapseThree" class="accordion-collapse collapse" aria-labelledby="faqHeadingThree"
+                           data-bs-parent="#faqAccordion">
+                          <div class="accordion-body" style="color:#94a3b8; background:#0a1224;">
+                              Sí, ofrecemos ambas opciones. Puedes seleccionar “Solo Ida” o “Ida y Vuelta” en el buscador según tus necesidades.
+                          </div>
+                      </div>
+                  </div>
+
+                  <div class="accordion-item" style="background:#101b33; border:1px solid #1e2a44;">
+                      <h2 class="accordion-header" id="faqHeadingFour">
+                          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                  data-bs-target="#faqCollapseFour" aria-expanded="false" aria-controls="faqCollapseFour"
+                                  style="background:#101b33; color:#e2e8f0;">
+                              ¿Cómo se asegura la privacidad de mis datos personales?
+                          </button>
+                      </h2>
+                      <div id="faqCollapseFour" class="accordion-collapse collapse" aria-labelledby="faqHeadingFour"
+                           data-bs-parent="#faqAccordion">
+                          <div class="accordion-body" style="color:#94a3b8; background:#0a1224;">
+                              Usamos encriptación SSL para todas las transacciones y almacenamos tus datos con los más altos estándares de seguridad. No compartimos tu información con terceros.
+                          </div>
+                      </div>
+                  </div>
+
+              </div>
+          </div>
+
+
+
+
+
+
+
+
+
+
+
+
+      </ui:define>
+
+</ui:composition>

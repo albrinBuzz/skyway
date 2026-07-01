@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition lang="es"
+                xmlns:f="jakarta.faces.core"
+                xmlns:h="jakarta.faces.html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                template="/template/main.xhtml">
+
+    <ui:define name="head">
+        <title>Reserva | LATAM Style</title>
+        <h:outputStylesheet library="css" name="reserva/style.css" />
+    </ui:define>
+
+    <ui:define name="contenido">
+        <div class="latam-container">
+            <p:growl id="message" showDetail="true"/>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="info-section">
+                        <h4>Detalles de tu viaje</h4>
+                        <div class="flight-row">
+                            <div>
+                                <span class="airport-code">#{bookingBean.vueloSeleccionado.ciudadSalida.substring(0,3).toUpperCase()}</span>
+                                <span class="time-detail">#{bookingBean.vueloSeleccionado.formattedFechaHoraSalida}</span>
+                            </div>
+                            <div class="text-center" style="flex: 1;">
+                                <div style="border-bottom: 2px solid #3d4655; position: relative; margin: 0 40px;">
+                                    <i class="pi pi-plane" style="position: absolute; top: -10px; left: 45%; background: #27282c; padding: 0 10px; color: var(--latam-gray);"></i>
+                                </div>
+                                <small class="text-muted">#{bookingBean.vueloSeleccionado.duracion}</small>
+                            </div>
+                            <div class="text-right">
+                                <span class="airport-code">#{bookingBean.vueloSeleccionado.ciudadLlegada.substring(0,3).toUpperCase()}</span>
+                                <span class="time-detail">#{bookingBean.vueloSeleccionado.formattedFechaHoraLlegada}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-section">
+                        <h4>Selección de pasajeros</h4>
+                        <h:form id="form">
+                            <p:dataTable id="dt-asientos" value="#{bookingBean.asientosSeleccionados}" var="asiento" styleClass="latam-table">
+                                <p:column headerText="Asiento">
+                                    <span style="color: #e4002b; font-weight: 800;">#{asiento.numeroAsiento}</span>
+                                </p:column>
+                                <p:column headerText="Categoría">
+                                    <h:outputText value="#{asiento.clase}" />
+                                </p:column>
+                                <p:column headerText="Precio">
+                                    <h:outputText value="$ #{asiento.precio}" />
+                                </p:column>
+                            </p:dataTable>
+                        </h:form>
+
+                        <p:commandButton value="Cambiar o añadir asientos"
+                                         icon="pi pi-th-large"
+                                         onclick="PF('modalAsientos').show();"
+                                         styleClass="ui-button-flat mt-3"
+                                         style="color: #8fd3ff;" />
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="checkout-sidebar">
+                        <h5 class="font-weight-bold mb-4">Resumen de tu tarifa</h5>
+
+                        <div class="price-breakdown">
+                            <div class="price-row">
+                                <span>Vuelo (x#{bookingBean.asientosSeleccionados.size()})</span>
+                                <span>$ #{bookingBean.totalReserva}</span>
+                            </div>
+                            <div class="price-row">
+                                <span>Tasas e impuestos</span>
+                                <span class="text-success">Incluidos</span>
+                            </div>
+
+                            <div class="price-row total">
+                                <span>Total final</span>
+                                <span>$<h:outputText value="#{bookingBean.totalReserva}" id="totalAmount" /></span>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <h:panelGroup rendered="#{userBean.loggedIn}">
+                                <p:commandButton value="Continuar"
+                                                 actionListener="#{bookingBean.comfirmarAsientos()}"
+                                                 styleClass="btn-latam"
+                                                 update="message" />
+                            </h:panelGroup>
+
+                            <h:panelGroup rendered="#{!userBean.loggedIn}">
+                                <div class="alert alert-dark text-center" style="font-size: 0.8rem; border-color: #e4002b;">
+                                    Inicia sesión para finalizar tu compra
+                                </div>
+                            </h:panelGroup>
+                        </div>
+
+                        <div class="text-center mt-3">
+                            <small class="text-muted">Al continuar aceptas los términos y condiciones.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <p:dialog widgetVar="modalAsientos" header="Mapa de Cabina" modal="true" width="600" responsive="true" styleClass="latam-modal">
+                <h:form id="seatForm">
+                    <div class="cabina-premium">
+                        <ui:repeat value="Primera Clase,Ejecutiva,Económica" var="clase">
+                            <div class="class-title">#{clase}</div>
+                            <div class="seat-grid #{clase == 'Primera Clase' ? 'grid-first' : 'grid-standard'}">
+                                <ui:repeat value="#{bookingBean.asientos}" var="a">
+                                    <h:panelGroup rendered="#{a.clase == clase}">
+                                        <h:commandButton value="#{a.numeroAsiento}"
+                                                         styleClass="seat-btn #{a.estado}"
+                                                         action="#{bookingBean.setearAsiento(a)}">
+                                            <p:ajax update=":form:dt-asientos :totalAmount" oncomplete="PF('modalAsientos').hide()" />
+                                        </h:commandButton>
+                                        <h:panelGroup rendered="#{a.numeroAsiento.endsWith('C')}"><div class="aisle"></div></h:panelGroup>
+                                    </h:panelGroup>
+                                </ui:repeat>
+                            </div>
+                        </ui:repeat>
+                    </div>
+                </h:form>
+            </p:dialog>
+        </div>
+    </ui:define>
+</ui:composition>

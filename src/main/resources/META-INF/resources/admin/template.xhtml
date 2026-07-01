@@ -1,0 +1,295 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                template="/template/main.xhtml">
+
+    <ui:define name="head">
+        <style type="text/css">
+            /* --- VARIABLES CORPORATIVAS SKYWAY --- */
+            :root {
+                --primary-deep: #080e1a;
+                --topbar-bg: rgba(11, 20, 38, 0.85);
+                --sidebar-bg: #0f172a;
+                --accent-blue: #38bdf8;
+                --accent-hover: rgba(56, 189, 248, 0.08);
+                --text-main: #f8fafc;
+                --text-muted: #64748b;
+                --border-glow: rgba(255, 255, 255, 0.05);
+            }
+
+            /* Contenedor Base de la App */
+            .admin-wrapper {
+                display: flex;
+                min-height: 100vh;
+                background-color: var(--primary-deep);
+                font-family: var(--font-family, 'Segoe UI', Roboto, sans-serif);
+                overflow-x: hidden;
+            }
+
+            /* --- SIDEBAR OPERATIVO --- */
+            .sidebar {
+                width: 260px;
+                background-color: var(--sidebar-bg);
+                border-right: 1px solid var(--border-glow);
+                display: flex;
+                flex-direction: column;
+                transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                z-index: 110;
+                overflow: hidden;
+                flex-shrink: 0;
+            }
+
+            /* Estado colapsado: Mantiene un mini-riel funcional con iconos legibles */
+            .sidebar.collapsed {
+                width: 68px;
+            }
+
+            .sidebar-header {
+                height: 65px;
+                display: flex;
+                align-items: center;
+                padding: 0 20px;
+                background: rgba(0, 0, 0, 0.15);
+                border-bottom: 1px solid var(--border-glow);
+                overflow: hidden;
+                white-space: nowrap;
+            }
+
+            .logo-text {
+                color: var(--text-main) !important;
+                text-decoration: none;
+                font-weight: 800;
+                font-size: 1.15rem;
+                letter-spacing: 1px;
+                display: flex;
+                align-items: center;
+                gap: 14px;
+            }
+
+            .logo-text i {
+                font-size: 1.4rem;
+                color: var(--accent-blue);
+            }
+
+            /* Lista de Navegación */
+            .menu-list {
+                list-style: none;
+                padding: 20px 10px;
+                margin: 0;
+                flex-grow: 1;
+            }
+
+            .menu-item {
+                margin-bottom: 6px;
+                position: relative;
+            }
+
+            .menu-link {
+                display: flex;
+                align-items: center;
+                padding: 12px 14px;
+                color: #94a3b8 !important;
+                text-decoration: none;
+                border-radius: 8px;
+                transition: all 0.2s ease;
+                white-space: nowrap;
+            }
+
+            .menu-link i {
+                font-size: 1.25rem;
+                margin-right: 16px;
+                width: 24px;
+                text-align: center;
+                transition: color 0.2s ease;
+            }
+
+            /* Efecto hover refinado */
+            .menu-link:hover {
+                background: var(--accent-hover);
+                color: var(--text-main) !important;
+            }
+
+            .menu-link:hover i {
+                color: var(--accent-blue);
+            }
+
+            /* Item Activo */
+            .menu-item.active .menu-link {
+                background: rgba(56, 189, 248, 0.1) !important;
+                color: var(--text-main) !important;
+                font-weight: 600;
+            }
+
+            .menu-item.active .menu-link i {
+                color: var(--accent-blue);
+            }
+
+            /* Indicador visual izquierdo para el item activo */
+            .menu-item.active::before {
+                content: '';
+                position: absolute;
+                left: -10px;
+                top: 15%;
+                height: 70%;
+                width: 4px;
+                background: var(--accent-blue);
+                border-radius: 0 4px 4px 0;
+                box-shadow: 0 0 10px var(--accent-blue);
+            }
+
+            /* --- CONTENEDOR PRINCIPAL DE CONTENIDO --- */
+            .main-content {
+                flex-grow: 1;
+                display: flex;
+                flex-direction: column;
+                min-width: 0;
+            }
+
+            /* Topbar estilo Glassmorphism */
+            .top-bar {
+                height: 65px;
+                background: var(--topbar-bg);
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0 1.5rem;
+                border-bottom: 1px solid var(--border-glow);
+                position: sticky;
+                top: 0;
+                z-index: 100;
+            }
+
+            .toggle-btn {
+                background: transparent;
+                border: none;
+                cursor: pointer;
+                padding: 8px;
+                border-radius: 6px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: background 0.2s;
+            }
+
+            .toggle-btn:hover {
+                background: rgba(255, 255, 255, 0.05);
+            }
+
+            .toggle-btn i {
+                font-size: 1.25rem;
+                color: #94a3b8;
+                transition: color 0.2s;
+            }
+
+            .toggle-btn:hover i {
+                color: var(--text-main);
+            }
+
+            .user-profile {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 6px 12px;
+                border-radius: 20px;
+                background: rgba(255, 255, 255, 0.02);
+                border: 1px solid rgba(255, 255, 255, 0.03);
+            }
+
+            .user-profile span {
+                color: #94a3b8 !important;
+                font-weight: 500;
+                font-size: 0.9rem;
+            }
+
+            /* Área del Lienzo de la Vista Activa */
+            .view-container {
+                flex-grow: 1;
+                padding: 1.5rem 2rem 2rem 2rem;
+                display: flex;
+                flex-direction: column;
+                animation: fadeIn 0.4s ease-out;
+            }
+
+            .card-custom {
+                width: 100%;
+                flex-grow: 1;
+                display: flex;
+                flex-direction: column;
+                background: transparent;
+            }
+
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(4px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+        </style>
+    </ui:define>
+
+    <ui:define name="contenido">
+        <div class="admin-wrapper">
+            <aside id="sidebar" class="sidebar">
+                <div class="sidebar-header">
+                    <h:link outcome="/admin/index.xhtml" styleClass="logo-text">
+                        <i class="pi pi-send"></i>
+                        <span>SKY-ADMIN</span>
+                    </h:link>
+                </div>
+
+                <ul class="menu-list">
+                    <li class="menu-item #{view.viewId.contains('index') ? 'active' : ''}">
+                        <h:link outcome="/admin/index.xhtml" styleClass="menu-link">
+                            <i class="pi pi-map"></i>
+                            <span>Gestión de Vuelos</span>
+                        </h:link>
+                    </li>
+                    <li class="menu-item #{view.viewId.contains('itinerario') ? 'active' : ''}">
+                        <h:link outcome="/admin/itinerario/itinerarios.xhtml" styleClass="menu-link">
+                            <i class="pi pi-calendar-plus"></i>
+                            <span>Itinerarios</span>
+                        </h:link>
+                    </li>
+                    <li class="menu-item #{view.viewId.contains('usuarios') ? 'active' : ''}">
+                        <h:link outcome="/admin/usuarios.xhtml" styleClass="menu-link">
+                            <i class="pi pi-users"></i>
+                            <span>Pasajeros</span>
+                        </h:link>
+                    </li>
+                </ul>
+            </aside>
+
+            <div class="main-content">
+                <header class="top-bar">
+                    <p:commandLink onclick="toggleSidebar()" styleClass="toggle-btn" process="@this" global="false">
+                        <i class="pi pi-bars"></i>
+                    </p:commandLink>
+
+                    <div class="user-profile">
+                        <span>Admin Aerolínea</span>
+                        <p:avatar icon="pi pi-user" shape="circle" style="background-color:#1e293b; color:#fff;" />
+                    </div>
+                </header>
+
+                <main class="view-container">
+                    <div class="card-custom">
+                        <ui:insert name="contenido-admin"/>
+                    </div>
+                </main>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            //<![CDATA[
+            function toggleSidebar() {
+                var sidebar = document.getElementById("sidebar");
+                if (sidebar) {
+                    sidebar.classList.toggle("collapsed");
+                }
+            }
+            //]]>
+        </script>
+    </ui:define>
+</ui:composition>

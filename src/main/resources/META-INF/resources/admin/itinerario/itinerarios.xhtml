@@ -1,0 +1,309 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                template="/admin/template.xhtml">
+
+    <ui:define name="contenido-admin">
+
+        <style type="text/css">
+            /* --- SKYWAY PREMIUM DARK PALETTE --- */
+            :root {
+                --sky-blue: #3b82f6;          /* Azul corporativo principal */
+                --sky-light: #60a5fa;         /* Destellos y enlaces hover */
+                --bg-body: #050b18;           /* Azul espacio / Abismo profundo */
+                --bg-panel: #0b1329;          /* Azul marino aeronáutico para contenedores */
+                --bg-header: #0e1a3a;         /* Encabezados de tablas */
+                --border-soft: rgba(59, 130, 246, 0.2); /* Bordes de luz azul sin tonos plomos */
+                --text-main: #f1f5f9;         /* Blanco puro suave */
+                --text-dim: #789dc9;          /* Azul cian tenue para textos secundarios */
+            }
+
+            .header-container {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 2rem;
+                padding: 1rem 0;
+            }
+
+            .header-container h2 {
+                color: var(--text-main) !important;
+                font-weight: 800 !important;
+                letter-spacing: -0.025em;
+            }
+
+            /* --- DATA TABLE PREMIUM --- */
+            .ui-datatable {
+                border-radius: 12px;
+                overflow: hidden;
+                border: 1px solid var(--border-soft) !important;
+                box-shadow: 0 20px 25px -5px rgba(5, 11, 24, 0.8);
+            }
+
+            .ui-datatable-header {
+                background: var(--bg-panel) !important;
+                padding: 1.25rem !important;
+                border-bottom: 1px solid var(--border-soft) !important;
+            }
+
+            .ui-datatable thead th {
+                background: var(--bg-header) !important;
+                color: var(--text-dim) !important;
+                text-transform: uppercase;
+                font-size: 0.75rem;
+                letter-spacing: 0.075em;
+                padding: 1.1rem 1rem !important;
+                border: none !important;
+                border-bottom: 2px solid var(--border-soft) !important;
+            }
+
+            .ui-datatable tbody td {
+                background: var(--bg-panel) !important;
+                color: var(--text-main) !important;
+                padding: 1.25rem 1rem !important;
+                border: none !important;
+                border-bottom: 1px solid rgba(59, 130, 246, 0.08) !important;
+            }
+
+            .ui-datatable-striped .ui-datatable-data > tr.ui-datatable-odd {
+                background: rgba(14, 26, 58, 0.4) !important;
+            }
+
+            .ui-datatable tbody tr:hover {
+                background: rgba(59, 130, 246, 0.12) !important;
+                transition: background 0.25s ease;
+            }
+
+            /* --- DETALLES DE FILA EXPANDIDA Y TARJETAS --- */
+            .p-rowExpansion > td {
+                background: var(--bg-body) !important;
+                padding: 1.75rem !important;
+            }
+
+            .itinerary-card {
+                background: var(--bg-panel);
+                border: 1px solid var(--border-soft);
+                border-radius: 12px;
+                padding: 1.5rem;
+                box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+            }
+
+            .nested-table.ui-datatable {
+                border: none !important;
+                box-shadow: none !important;
+            }
+
+            .nested-table.ui-datatable thead th {
+                background: rgba(59, 130, 246, 0.05) !important;
+                border-bottom: 1px solid var(--border-soft) !important;
+            }
+
+
+            .badge-iata {
+                background: rgba(59, 130, 246, 0.15);
+                color: var(--sky-light);
+                padding: 4px 10px;
+                border-radius: 6px;
+                font-weight: 700;
+                letter-spacing: 0.025em;
+                border: 1px solid rgba(59, 130, 246, 0.3);
+                display: inline-block;
+            }
+
+            .status-badge {
+                display: inline-flex;
+                align-items: center;
+                padding: 0.4rem 0.8rem;
+                border-radius: 20px;
+                font-size: 0.75rem;
+                font-weight: 600;
+            }
+
+            .status-active {
+                background: rgba(16, 185, 129, 0.12);
+                color: #34d399;
+                border: 1px solid rgba(16, 185, 129, 0.25);
+            }
+
+
+            .ui-inputfield {
+                background: var(--bg-body) !important;
+                border: 1px solid var(--border-soft) !important;
+                color: white !important;
+                border-radius: 8px !important;
+                padding: 0.6rem 1rem !important;
+            }
+
+            .ui-inputfield:focus {
+                border-color: var(--sky-blue) !important;
+                box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+            }
+
+            .btn-new {
+                background: var(--sky-blue) !important;
+                border: none !important;
+                border-radius: 8px !important;
+                font-weight: 600 !important;
+                box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            }
+
+            .btn-new:hover {
+                background: var(--sky-light) !important;
+            }
+
+            /* Icono del expansor */
+            .ui-row-toggler {
+                color: var(--text-dim) !important;
+            }
+            .ui-row-toggler:hover {
+                color: var(--sky-blue) !important;
+            }
+        </style>
+
+        <div class="header-container">
+            <h2 style="margin:0;">Matriz de Itinerarios</h2>
+            <p:button outcome="itinerario.xhtml"
+                      value="Crear Itinerario"
+                      icon="pi pi-plus"
+                      styleClass="btn-new" />
+        </div>
+
+        <h:form id="formItinerarios">
+            <p:growl id="msgs" showDetail="true"/>
+
+            <p:dataTable id="dt-itinerarios" value="#{itinerarioBean.listaItinerarios}" var="itin"
+                         widgetVar="wvItinerarios"
+                         responsiveLayout="stack"
+                         styleClass="ui-datatable-striped"
+                         paginator="true" rows="10"
+                         paginatorPosition="bottom"
+                         rowKey="#{itin.idItinerario}"
+                         emptyMessage="No se registran itinerarios comerciales en el sistema.">
+
+                <f:facet name="header">
+                    <div class="flex justify-content-end align-items-center">
+                        <span class="ui-input-icon-left">
+                            <i class="pi pi-search" style="color: var(--text-dim);" />
+                            <p:inputText id="globalFilter" onkeyup="PF('wvItinerarios').filter()"
+                                         placeholder="Buscar por aeropuerto u origen..." />
+                        </span>
+                    </div>
+                </f:facet>
+
+                <p:column style="width:3rem; text-align: center">
+                    <p:rowToggler />
+                </p:column>
+
+                <p:column headerText="ID Itinerario" sortBy="#{itin.idItinerario}" style="width: 12rem;">
+                    <h:outputText value="SKW-ITI-#{itin.idItinerario}" style="font-weight: 700; color: var(--sky-blue); font-size: 1.05rem;"/>
+                </p:column>
+
+                <p:column headerText="Origen Componente" sortBy="#{itin.aeropuertoOrigen.codigoIata}">
+                    <div class="flex align-items-center gap-2">
+                        <span class="badge-iata">#{itin.aeropuertoOrigen.codigoIata}</span>
+                        <h:outputText value="#{itin.aeropuertoOrigen.nombreAeropuerto}" style="font-weight: 600; margin-left: 8px;"/>
+                    </div>
+                </p:column>
+
+                <p:column headerText="Destino Final" sortBy="#{itin.aeropuertoDestino.codigoIata}">
+                    <div class="flex align-items-center gap-2">
+                        <span class="badge-iata">#{itin.aeropuertoDestino.codigoIata}</span>
+                        <h:outputText value="#{itin.aeropuertoDestino.nombreAeropuerto}" style="font-weight: 500; margin-left: 8px;"/>
+                    </div>
+                </p:column>
+
+                <p:column headerText="Escalas" style="text-align: center;" sortBy="#{itin.numeroEscalas}">
+                    <h:outputText value="#{itin.numeroEscalas == 0 ? 'Vuelo Directo' : itin.numeroEscalas += ' Escala(s)'}"
+                                  style="font-weight: 600; color: var(--text-main);" />
+                </p:column>
+
+                <p:column headerText="Precio Base" sortBy="#{itin.precioBase}">
+                    <h:outputText value="#{itin.precioBase}" style="font-weight: 700; color: #34d399;">
+                        <f:convertNumber type="currency" currencySymbol="$" maxFractionDigits="0"/>
+                    </h:outputText>
+                </p:column>
+
+                <p:column headerText="Acciones" style="width: 12rem; text-align: center">
+                    <div class="flex gap-2 justify-content-center">
+
+                        <p:button icon="pi pi-pencil"
+                                  outcome="itinerario.xhtml"
+                                  styleClass="ui-button-flat ui-button-plain"
+                                  style="color: var(--text-dim);"
+                                  title="Editar Itinerario">
+                            <f:param name="id" value="#{itin.idItinerario}" />
+                        </p:button>
+
+                        <p:commandButton icon="pi pi-trash"
+                                         action="#{itinerarioBean.eliminarItinerario(itin)}"
+                                         styleClass="ui-button-flat ui-button-danger"
+                                         title="Eliminar Itinerario"
+                                         update="dt-itinerarios formItinerarios:msgs"
+                                         process="@this">
+                            <p:confirm header="Confirmar Eliminación"
+                                       message="¿Está seguro de que desea eliminar este itinerario y todas sus asignaciones logísticas?"
+                                       icon="pi pi-exclamation-triangle" />
+                        </p:commandButton>
+                    </div>
+                </p:column>
+
+                <p:rowExpansion>
+                    <div class="itinerary-card">
+                        <h4 style="margin:0 0 1rem 0; display: flex; align-items: center; gap: 8px; color: var(--text-main); font-weight: 700;">
+                            <i class="pi pi-map" style="color: var(--sky-blue)"></i>
+                            Tramos Operativos del Plan de Vuelo (ItinerarioVuelo)
+                        </h4>
+
+                        <p:dataTable value="#{itin.itinerarioVuelos}" var="itinVuelo"
+                                     styleClass="nested-table ui-datatable-sm"
+                                     emptyMessage="Este itinerario no tiene tramos físicos de vuelo vinculados aún.">
+
+                            <p:column headerText="Orden" style="width: 60px; text-align: center; color: var(--text-dim)">
+                                #{itinVuelo.orden}°
+                            </p:column>
+
+                            <p:column headerText="Código Vuelo">
+                                <span style="font-weight: 700; color: var(--sky-blue)">#{itinVuelo.vuelo.numeroVuelo}</span>
+                            </p:column>
+
+                            <p:column headerText="Segmento de Conexión">
+                                <ui:repeat value="#{itinVuelo.vuelo.segmentoVuelos}" var="seg" varStatus="status">
+                                    <div class="#{status.index > 0 ? 'mt-1' : ''}">
+                                        <h:outputText value="#{seg.aeropuertoOrigen.codigoIata} ➔ #{seg.aeropuertoDestino.codigoIata}"
+                                                      style="font-weight: 700; color: var(--text-main);"/>
+                                    </div>
+                                </ui:repeat>
+                            </p:column>
+
+                            <p:column headerText="Salida del Tramo">
+                                <h:outputText value="#{itinVuelo.vuelo.fechaHoraSalida}">
+                                    <f:convertDateTime pattern="dd/MM/yyyy - HH:mm 'hrs'" type="both" timeZone="America/Santiago"/>
+                                </h:outputText>
+                            </p:column>
+
+                            <p:column headerText="Llegada del Tramo">
+                                <h:outputText value="#{itinVuelo.vuelo.fechaHoraLlegada}">
+                                    <f:convertDateTime pattern="dd/MM/yyyy - HH:mm 'hrs'" type="both" timeZone="America/Santiago"/>
+                                </h:outputText>
+                            </p:column>
+
+                            <p:column headerText="Tipo">
+                                <span class="status-badge status-active">
+                                    <h:outputText value="#{itinVuelo.tipoConexion == null ? 'Conexión Regular' : itinVuelo.tipoConexion}"/>
+                                </span>
+                            </p:column>
+                        </p:dataTable>
+                    </div>
+                </p:rowExpansion>
+            </p:dataTable>
+        </h:form>
+
+        <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" width="350">
+            <p:commandButton value="Cancelar" type="button" styleClass="ui-confirmdialog-no ui-button-flat text-muted" style="color: var(--text-dim) !important;" />
+            <p:commandButton value="Eliminar" type="button" styleClass="ui-confirmdialog-yes ui-button-danger bg-danger text-white" />
+        </p:confirmDialog>
+
+    </ui:define>
+</ui:composition>

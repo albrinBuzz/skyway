@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>SkyWay - Flight Command Center</title>
+    <link rel="stylesheet" href="https://unpkg.com/primeicons/primeicons.css">
+    <style>
+        :root {
+            --bg-body: #050b16;
+            --bg-card: #0a192f;
+            --bg-sidebar: #071224;
+            --accent-blue: #00a3ff;
+            --text-main: #e6edf3;
+            --text-dim: #8b949e;
+            --status-green: #23d160;
+            --status-orange: #ff9f43;
+            --status-red: #ff4d4d;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        body { margin: 0; font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+        /* --- SIDEBAR --- */
+        .sidebar { width: 300px; background-color: var(--bg-sidebar); border-right: 1px solid var(--border); padding: 40px 25px; overflow-y: auto; }
+        .membership-badge { background: linear-gradient(135deg, #b8860b 0%, #f1c40f 100%); color: #000; font-size: 10px; font-weight: 800; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-bottom: 30px; }
+        .data-row { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 8px; }
+
+        /* --- MAIN VIEW --- */
+        .main-view { flex: 1; padding: 30px 50px; overflow-y: auto; }
+
+        /* STATS */
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
+        .stat-card { background: var(--bg-card); padding: 15px; border-radius: 10px; border: 1px solid var(--border); border-top: 3px solid var(--accent-blue); }
+        .stat-val { display: block; font-size: 22px; font-weight: 700; }
+        .stat-lbl { font-size: 11px; color: var(--text-dim); text-transform: uppercase; }
+
+        /* TABS */
+        .tabs-container { display: flex; gap: 30px; border-bottom: 1px solid var(--border); margin-bottom: 25px; }
+        .tab-item { padding-bottom: 12px; cursor: pointer; color: var(--text-dim); font-size: 14px; font-weight: 600; position: relative; }
+        .tab-item.active { color: var(--text-main); }
+        .tab-item.active::after { content: ''; position: absolute; bottom: -1px; left: 0; width: 100%; height: 2px; background: var(--accent-blue); }
+
+        /* FLIGHT CARD */
+        .flight-card { background: var(--bg-card); border-radius: 12px; padding: 25px; margin-bottom: 20px; border: 1px solid var(--border); position: relative; display: none; }
+        .flight-card.visible { display: block; }
+
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .badge-live { background: var(--status-red); color: white; font-size: 10px; padding: 2px 8px; border-radius: 4px; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        .flight-main { display: flex; justify-content: space-between; align-items: center; }
+        .city-name { font-size: 14px; color: var(--text-dim); }
+        .airport-code { font-size: 32px; font-weight: 800; }
+
+        .flight-actions { margin-top: 25px; display: flex; gap: 10px; border-top: 1px solid var(--border); padding-top: 20px; }
+        .btn { padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; border: 1px solid var(--border); background: rgba(255,255,255,0.05); color: white; transition: 0.2s; }
+        .btn:hover { background: rgba(255,255,255,0.1); }
+        .btn-blue { background: var(--accent-blue); border: none; }
+
+        /* SEAT MAP MODAL */
+        #seat-map { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 100; }
+        .map-container { background: var(--bg-sidebar); padding: 30px; border-radius: 20px; text-align: center; max-width: 400px; }
+        .seats-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin: 20px 0; }
+        .seat { width: 30px; height: 35px; background: #1a2a6c; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 9px; }
+        .seat.taken { background: #333; cursor: not-allowed; opacity: 0.3; }
+        .seat.selected { background: var(--status-green); box-shadow: 0 0 10px var(--status-green); }
+    </style>
+</head>
+<body>
+
+<aside class="sidebar">
+    <h2 class="profile-name">Jordan Parker</h2>
+    <span class="membership-badge">Gold Medallion Member</span>
+
+    <span class="section-label">MI CUENTA</span>
+    <div class="data-row"><span>ID de Usuario</span><span>#SKY-99281</span></div>
+    <div class="data-row"><span>Nivel de Medallón</span><span>Oro</span></div>
+    <div class="data-row"><span>Millas de Calificación</span><span>45,200</span></div>
+
+    <span class="section-label" style="margin-top: 30px;">COMPAÑEROS</span>
+    <div class="data-row"><span>Alex Parker</span><span style="color:var(--status-green)">En este viaje</span></div>
+    <div class="data-row"><span>Sam Parker</span><span style="color:var(--text-dim)">Sin viajes</span></div>
+</aside>
+
+<main class="main-view">
+    <div class="stats-row">
+        <div class="stat-card"><span class="stat-lbl">Millas Disponibles</span><span class="stat-val">128.4K</span></div>
+        <div class="stat-card"><span class="stat-lbl">Vuelos este año</span><span class="stat-val">14</span></div>
+        <div class="stat-card"><span class="stat-lbl">Créditos SkyWay</span><span class="stat-val">$240.50</span></div>
+        <div class="stat-card"><span class="stat-lbl">Certificados</span><span class="stat-val">2</span></div>
+    </div>
+
+    <div class="tabs-container">
+        <div class="tab-item active" onclick="showTab('today', this)">HOY (1)</div>
+        <div class="tab-item" onclick="showTab('upcoming', this)">PRÓXIMOS (2)</div>
+        <div class="tab-item" onclick="showTab('past', this)">HISTORIAL</div>
+    </div>
+
+    <div id="trip-list">
+        <div class="flight-card today visible">
+            <div class="card-header">
+                <div>
+                    <span style="color:var(--accent-blue); font-weight: bold;">SK-2240</span>
+                    <span style="margin-left: 10px; font-size: 12px; color: var(--text-dim);">Confirmación: GLP4P1</span>
+                </div>
+                <span class="badge-live">EN ABORDAJE</span>
+            </div>
+
+            <div class="flight-main">
+                <div style="text-align: left;">
+                    <span class="airport-code">SCL</span>
+                    <span class="city-name" style="display:block;">Santiago, Chile</span>
+                </div>
+                <div style="flex:1; text-align: center; position: relative;">
+                    <i class="pi pi-send" style="transform: rotate(90deg); color: var(--accent-blue);"></i>
+                    <div style="height: 2px; background: var(--border); width: 60%; margin: 10px auto;"></div>
+                    <span style="font-size: 10px; color: var(--status-orange);">Puerta B12</span>
+                </div>
+                <div style="text-align: right;">
+                    <span class="airport-code">JFK</span>
+                    <span class="city-name" style="display:block;">New York, USA</span>
+                </div>
+            </div>
+
+            <div class="flight-actions">
+                <button class="btn btn-blue" onclick="alert('Abriendo Boarding Pass...')">BOARDING PASS</button>
+                <button class="btn" onclick="openSeatMap()">CAMBIAR ASIENTO (12F)</button>
+                <button class="btn" onclick="alert('Rastreando equipaje...')"><i class="pi pi-briefcase"></i> EQUIPAJE</button>
+                <button class="btn" style="border-color: var(--status-red); color: var(--status-red);">CANCELAR</button>
+            </div>
+        </div>
+
+        <div class="flight-card upcoming">
+            <div class="card-header">
+                <span style="color:var(--text-dim); font-weight: bold;">SK-108</span>
+                <span class="status-pill pill-ontime" style="background: rgba(35,209,96,0.1); color: var(--status-green); padding: 2px 8px; font-size: 10px; border-radius: 4px;">CONFIRMADO</span>
+            </div>
+            <div class="flight-main">
+                <div><span class="airport-code">JFK</span><span class="city-name" style="display:block;">New York</span></div>
+                <div><i class="pi pi-arrow-right"></i></div>
+                <div><span class="airport-code">MAD</span><span class="city-name" style="display:block;">Madrid, España</span></div>
+            </div>
+            <div style="margin-top: 15px; font-size: 13px; color: var(--text-dim);">
+                <i class="pi pi-calendar"></i> 14 de Febrero, 2026 • Boeing 787-9 Dreamliner
+            </div>
+            <div class="flight-actions">
+                <button class="btn">GESTIONAR VIAJE</button>
+                <button class="btn">AGREGAR A CALENDARIO</button>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div id="seat-map" onclick="closeSeatMap()">
+    <div class="map-container" onclick="event.stopPropagation()">
+        <h3>Selecciona tu asiento</h3>
+        <p style="font-size: 12px; color: var(--text-dim);">Airbus A321 Neo - Clase Económica</p>
+
+
+
+        <div class="seats-grid">
+            <div class="seat taken">1A</div><div class="seat taken">1B</div><div class="seat"></div><div class="seat">1C</div><div class="seat taken">1D</div><div class="seat">1E</div>
+            <div class="seat">2A</div><div class="seat taken">2B</div><div class="seat"></div><div class="seat selected">2C</div><div class="seat">2D</div><div class="seat">2E</div>
+            <div class="seat">3A</div><div class="seat">3B</div><div class="seat"></div><div class="seat">3C</div><div class="seat">3D</div><div class="seat">3E</div>
+        </div>
+        <button class="btn btn-blue" style="width: 100%;" onclick="closeSeatMap()">CONFIRMAR CAMBIO</button>
+    </div>
+</div>
+
+<script>
+    function showTab(category, element) {
+        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+        element.classList.add('active');
+        document.querySelectorAll('.flight-card').forEach(card => {
+            card.classList.remove('visible');
+            if (card.classList.contains(category)) card.classList.add('visible');
+        });
+    }
+
+    function openSeatMap() { document.getElementById('seat-map').style.display = 'flex'; }
+    function closeSeatMap() { document.getElementById('seat-map').style.display = 'none'; }
+</script>
+</body>
+</html>

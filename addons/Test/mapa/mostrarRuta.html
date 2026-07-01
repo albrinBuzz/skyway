@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Rutas aéreas + Aeropuertos + Polígono dinámico</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"/>
+    <style>
+        #map { height: 500px; }
+    </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+<script>
+
+    /* ======================================================
+     * Crear mapa
+     ====================================================== */
+    const map = L.map('map').setView([40.73, -73.93], 4);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    /* ======================================================
+     * 1. POLÍGONOS DINÁMICOS
+     ====================================================== */
+    let polygonPoints = [];
+    let tempLine = L.polyline([], { color: "blue" }).addTo(map);
+
+    map.on("click", e => {
+        polygonPoints.push(e.latlng);
+        tempLine.setLatLngs(polygonPoints);
+    });
+
+    map.on("dblclick", () => {
+        if (polygonPoints.length >= 3) {
+            L.polygon(polygonPoints, {
+                color: "red",
+                fillColor: "#ff6666",
+                fillOpacity: 0.5
+            }).addTo(map);
+        }
+        polygonPoints = [];
+        tempLine = L.polyline([], { color: "blue" }).addTo(map);
+    });
+
+    /* ======================================================
+     * 2. AEROPUERTOS (marcadores con popup)
+     ====================================================== */
+    const airports = [
+        {
+            name: "JFK International Airport",
+            coords: [40.6413, -73.7781]
+        },
+        {
+            name: "Miami International Airport",
+            coords: [25.7959, -80.2871]
+        },
+        {
+            name: "Los Angeles International Airport",
+            coords: [33.9416, -118.4085]
+        }
+    ];
+
+    airports.forEach(a => {
+        L.marker(a.coords)
+            .bindPopup(`<b>${a.name}</b>`)
+            .addTo(map);
+    });
+
+    /* ======================================================
+     * 3. RUTA AÉREA ENTRE AEROPUERTOS
+     ====================================================== */
+    let flightRoute = airports.map(a => a.coords);
+
+    const flightLine = L.polyline(flightRoute, {
+        color: "orange",
+        weight: 4,
+        dashArray: "10,10",
+        opacity: 0.8
+    }).addTo(map);
+
+    /* ======================================================
+     * 4. ANIMACIÓN DEL AVIÓN HACIENDO ESCALAS
+     ====================================================== */
+
+    const airplaneIcon = L.divIcon({
+        html: "✈️",
+        iconSize: [30, 30],
+        className: ""
+    });
+
+    let airplaneMarker = L.marker(flightRoute[0], { icon: airplaneIcon }).addTo(map);
+
+    let currentLeg = 0;   // Tramo entre aeropuertos
+    let t = 0;            // Progreso en ese tramo
+    const speed = 0.002; // Ajusta la velocidad
+
+    function animatePlane() {
+        if (currentLeg >= flightRoute.length - 1) {
+            requestAnimationFrame(animatePlane);
+            return;
+        }
+
+        const start = flightRoute[currentLeg];
+        const end   = flightRoute[currentLeg + 1];
+
+        // Interpolación
+        const lat = start[0] + (end[0] - start[0]) * t;
+        const lng = start[1] + (end[1] - start[1]) * t;
+
+        airplaneMarker.setLatLng([lat, lng]);
+
+        t += speed;
+
+        if (t >= 1) {
+            // Llegó a un aeropuerto
+            t = 0;
+            currentLeg++;
+
+            // Popup de "Escala aquí"
+            L.popup()
+                .setLatLng(end)
+                .setContent(`<b>Escala en:</b><br>${airports[currentLeg].name}`)
+                .openOn(map);
+        }
+
+        requestAnimationFrame(animatePlane);
+    }
+
+    animatePlane();
+
+</script>
+
+</body>
+</html>

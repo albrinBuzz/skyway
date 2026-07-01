@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Pase de Abordar - Skyway</title>
+    <link rel="stylesheet" href="https://unpkg.com/primeicons/primeicons.css">
+    <style>
+        :root {
+            --primary: #1a2a6c;
+            --accent: #f2a900;
+            --bg: #e0e5ec;
+            --text-dark: #333;
+            --text-light: #777;
+        }
+
+        body {
+            background-color: var(--bg);
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .boarding-pass {
+            display: flex;
+            width: 850px;
+            height: 280px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 15px 15px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .main-section {
+            flex: 2.5;
+            padding: 25px 35px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .airline-brand {
+            font-weight: 900;
+            font-size: 1.2rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pass-type {
+            background: #f0f0f0;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: var(--text-light);
+        }
+
+        .pass-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pass-col {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .text-right { text-align: right; }
+        .mt-20 { margin-top: 15px; }
+
+        .label {
+            font-size: 0.7rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        .value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .value.highlight {
+            color: var(--primary);
+            font-size: 1.6rem;
+        }
+
+        .divider-dashed {
+            border-top: 2px dashed #eee;
+            margin: 10px 0;
+        }
+
+        .seat-badge {
+            background-color: var(--primary);
+            padding: 8px 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stub {
+            flex: 1;
+            background: var(--primary);
+            color: white;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border-left: 2px dashed rgba(255,255,255,0.3);
+            position: relative;
+        }
+
+        .stub::before, .stub::after {
+            content: '';
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            background-color: var(--bg);
+            border-radius: 50%;
+            left: -13px;
+        }
+        .stub::before { top: -13px; }
+        .stub::after { bottom: -13px; }
+
+        .barcode-container {
+            background: white;
+            height: 45px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            padding: 5px;
+            box-sizing: border-box;
+            border-radius: 4px;
+        }
+
+        .bar { background: black; height: 100%; width: 2px; }
+    </style>
+</head>
+<body>
+
+<div class="boarding-pass">
+    <div class="main-section">
+        <div class="pass-row">
+            <div class="airline-brand">
+                <i class="pi pi-send"></i> <span>SKYWAY AIRLINES</span>
+            </div>
+            <div class="pass-type">CLASE EJECUTIVA</div>
+        </div>
+
+        <div class="pass-content">
+            <div class="pass-row">
+                <div class="pass-col">
+                    <span class="label">PASAJERO</span>
+                    <span class="value">CARLOS ANDRÉS MENDOZA</span>
+                </div>
+                <div class="pass-col text-right">
+                    <span class="label">VUELO</span>
+                    <span class="value highlight">SK-4402</span>
+                </div>
+            </div>
+
+            <div class="pass-row mt-20">
+                <div class="pass-col">
+                    <span class="label">SALIDA</span>
+                    <span class="value">05 ENE 2026 - 18:45</span>
+                </div>
+                <div class="pass-col text-right">
+                    <span class="label">LLEGADA</span>
+                    <span class="value">06 ENE 2026 - 09:20</span>
+                </div>
+            </div>
+
+            <div class="divider-dashed"></div>
+
+            <div class="pass-row">
+                <div class="pass-col">
+                    <span class="label">PUERTA / TERMINAL</span>
+                    <span class="value">C-24 / T2</span>
+                </div>
+                <div class="pass-col">
+                    <div class="seat-badge">
+                        <span class="label" style="color: #aaa !important;">ASIENTO</span>
+                        <span class="value" style="color: white !important;">08F</span>
+                    </div>
+                </div>
+                <div class="pass-col text-right">
+                    <span class="label">CLASE</span>
+                    <span class="value">BUSINESS</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="stub">
+        <div style="text-align: center; font-weight: bold; font-size: 0.8rem; letter-spacing: 2px;">TALÓN</div>
+
+        <div class="pass-col">
+            <span class="label" style="color: #aaa">PASAJERO</span>
+            <span class="value" style="color: white; font-size: 0.9rem;">CARLOS A. MENDOZA</span>
+        </div>
+
+        <div class="pass-row">
+            <div class="pass-col">
+                <span class="label" style="color: #aaa">VUELO</span>
+                <span class="value" style="color: white">SK-4402</span>
+            </div>
+            <div class="pass-col text-right">
+                <span class="label" style="color: #aaa">ASIENTO</span>
+                <span class="value" style="color: white">08F</span>
+            </div>
+        </div>
+
+        <div class="barcode-container">
+            <div class="bar" style="width: 3px"></div>
+            <div class="bar" style="width: 1px"></div>
+            <div class="bar" style="width: 2px"></div>
+            <div class="bar" style="width: 4px"></div>
+            <div class="bar" style="width: 1px"></div>
+            <div class="bar" style="width: 3px"></div>
+            <div class="bar" style="width: 2px"></div>
+            <div class="bar" style="width: 1px"></div>
+            <div class="bar" style="width: 4px"></div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

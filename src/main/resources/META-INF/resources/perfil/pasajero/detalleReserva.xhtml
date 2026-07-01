@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ui:composition lang="es"
+                xmlns:f="jakarta.faces.core"
+                xmlns:h="jakarta.faces.html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:fs="http://xmlns.jcp.org/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                template="/template/main.xhtml">
+
+    <h:head>
+        <title>Próximos Vuelos</title>
+
+    </h:head>
+
+
+    <ui:define name="contenido">
+
+	<!-- Header Start -->
+<div class="container-fluid bg-breadcrumb">
+    <div class="container text-center py-5" style="max-width: 900px;">
+        <h3 class="text-white display-3 mb-4">Detalles del Vuelo</h3>
+
+            <h:outputLink value="/"><h:outputText value="Home" /></h:outputLink>
+            <h:outputLink value="/perfil"><h:outputText value="Perfil" /></h:outputLink>
+            <h:outputText value="Detalles del Vuelo" styleClass="text-white" />
+
+    </div>
+</div>
+<!-- Header End -->
+
+<!-- Flight Details Start -->
+<div class="container py-5">
+    <h2 class="mb-4">Información del Vuelo</h2>
+    <table class="table table-bordered">
+        <tr>
+            <th>Número de Vuelo:</th>
+            <td><h:outputText value="#{viajePsView.reserva.vuelo.numeroVuelo}" /></td>
+        </tr>
+        <tr>
+            <th>Origen:</th>
+            <td><h:outputText value="#{viajePsView.reserva.vuelo.aeropuerto2.nombreAeropuerto}" /></td>
+        </tr>
+        <tr>
+            <th>Destino:</th>
+            <td><h:outputText value="#{viajePsView.reserva.vuelo.aeropuerto1.nombreAeropuerto}" /></td>
+        </tr>
+        <tr>
+            <th>Fecha y Hora de Salida:</th>
+            <td><h:outputText value="#{viajePsView.reserva.vuelo.fechaHoraSalida}" /></td>
+        </tr>
+        <tr>
+            <th>Fecha y Hora de Llegada:</th>
+            <td><h:outputText value="#{viajePsView.reserva.vuelo.fechaHoraLlegada}" /></td>
+        </tr>
+        <tr>
+            <th>Estado:</th>
+            <td><h:outputText value="#{viajePsView.reserva.vuelo.estadoVuelo.descripcion}" /></td>
+        </tr>
+    </table>
+
+    <h2 class="mb-4">Asientos</h2>
+    <h:dataTable value="#{viajePsView.reserva.reservaAsientos}" var="asiento" class="table table-bordered">
+        <h:column>
+            <f:facet name="header">
+                <h:outputText value="Número" />
+            </f:facet>
+            <h:outputText value="#{asiento.asiento.numeroAsiento}" />
+        </h:column>
+    </h:dataTable>
+
+    <h2 class="mb-4">Equipaje Asociado</h2>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>ID de Equipaje</th>
+                <th>Peso</th>
+                <th>Dimensiones</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>EQ123</td>
+                <td>23 kg</td>
+                <td>55x40x20 cm</td>
+                <td>Registrado</td>
+            </tr>
+            <tr>
+                <td>EQ124</td>
+                <td>10 kg</td>
+                <td>50x30x20 cm</td>
+                <td>Registrado</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2 class="mb-4">Acciones</h2>
+	     <p:commandButton  value="Cambiar Asiento" styleClass="btn btn-primary btn-lg" 
+                 actionListener="#{viajePsView.cambiarAsiento(viajePsView.reserva.vuelo.idVuelo,viajePsView.reserva.idReserva)}" >
+         </p:commandButton>    	
+
+
+    <h:commandLink value="Boleto" action="#{reservaBean.verBoleto(reserva.idReserva)}" 
+                   styleClass="btn btn-danger" />
+         <p:commandButton  value="Cancelar Vuelo" styleClass="btn btn-primary btn-lg" 
+                                                     actionListener="#{viajePsView.cancelarReserva(viajePsView.reserva.idReserva)}" >
+         </p:commandButton>    
+</div>
+<!-- Flight Details End -->
+	
+
+
+    </ui:define>
+
+</ui:composition>
