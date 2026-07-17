@@ -3,9 +3,7 @@ package com.SkyWay.modules.itinerario.domain.service;
 
 
 import com.SkyWay.modules.itinerario.domain.model.Itinerario;
-import com.SkyWay.modules.itinerario.presentation.dto.ItinerarioDTO;
-import com.SkyWay.modules.itinerario.presentation.dto.ItinerarioDetalleDTO;
-import com.SkyWay.modules.itinerario.presentation.dto.ItinerarioResumenDTO;
+import com.SkyWay.modules.itinerario.presentation.dto.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.Param;
@@ -44,6 +42,7 @@ public interface ItinerarioService {
             @Param("offset") int offset
     );
 
+    List<PuntoMapaDTO> obtenerRutaMapa(Integer idItinerario);
 
     List<ItinerarioResumenDTO> buscarConFiltroFechas(String rut, LocalDate fechaInicio, LocalDate fechaFin, int limit, int offset);
 }

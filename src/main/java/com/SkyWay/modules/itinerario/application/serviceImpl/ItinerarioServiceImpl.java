@@ -6,9 +6,9 @@ import com.SkyWay.modules.itinerario.domain.model.Itinerario;
 
 import com.SkyWay.modules.itinerario.domain.repository.ItinerarioRepository;
 import com.SkyWay.modules.itinerario.domain.service.ItinerarioService;
-import com.SkyWay.modules.itinerario.presentation.dto.ItinerarioDTO;
-import com.SkyWay.modules.itinerario.presentation.dto.ItinerarioDetalleDTO;
-import com.SkyWay.modules.itinerario.presentation.dto.ItinerarioResumenDTO;
+import com.SkyWay.modules.itinerario.presentation.dto.*;
+import com.SkyWay.modules.segmentovuelo.domain.repository.SegmentoVueloRepository;
+import com.SkyWay.modules.segmentovuelo.presentation.dto.PuntoRutaProjection;
 import com.SkyWay.util.Logger;
 import jakarta.persistence.Query;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +25,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import jakarta.persistence.EntityManager;
@@ -45,6 +46,9 @@ public class ItinerarioServiceImpl implements ItinerarioService {
 
     @Autowired
     private DataSource dataSource;
+
+    @Autowired
+    private SegmentoVueloRepository segmentoVueloRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -175,4 +179,35 @@ public class ItinerarioServiceImpl implements ItinerarioService {
         // Ejecutar la consulta y obtener los resultados
         return (List<ItinerarioResumenDTO>) query.getResultList();
     }
+
+
+
+
+    public List<PuntoMapaDTO> obtenerRutaMapa(Integer idItinerario) {
+        List<PuntoRutaProjection> filas = segmentoVueloRepository.obtenerRutaPorItinerario(idItinerario);
+
+        // Colapsar duplicados consecutivos: el DESTINO de un segmento suele
+        // coincidir con el ORIGEN del siguiente (misma escala física)
+        List<PuntoRutaProjection> puntos = new ArrayList<>();
+        for (PuntoRutaProjection fila : filas) {
+            if (!puntos.isEmpty() &&
+                    puntos.get(puntos.size() - 1).getIdAeropuerto().equals(fila.getIdAeropuerto())) {
+                continue;
+            }
+            puntos.add(fila);
+        }
+
+        List<PuntoMapaDTO> resultado = new ArrayList<>();
+        for (int i = 0; i < puntos.size(); i++) {
+            PuntoRutaProjection p = puntos.get(i);
+            String tipo = (i == 0) ? "ORIGEN" : (i == puntos.size() - 1) ? "DESTINO" : "ESCALA";
+            resultado.add(new PuntoMapaDTO(
+                    p.getCodigoIata(), p.getNombreAeropuerto(), p.getCiudad(),
+                    p.getLatitud(), p.getLongitud(), tipo));
+        }
+        return resultado;
+    }
+
+
+
 }

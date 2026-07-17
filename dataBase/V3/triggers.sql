@@ -77,35 +77,6 @@ ALTER TABLE Itinerario_Vuelo DISABLE TRIGGER trg_set_orden_itinerario_vuelo;*/
 
 
 
--- Crear la función del trigger
-CREATE OR REPLACE FUNCTION fn_insertarAsientos()
-RETURNS TRIGGER AS $$
-DECLARE
-indice INTEGER;
-    letra CHAR;
-    asiento VARCHAR;
-BEGIN
-FOR indice IN 0 .. NEW.cantidad - 1 LOOP
-        letra := chr(65 + (indice % 6));  -- A-F
-        asiento := (indice + 1) || letra;
-
-INSERT INTO Asiento (Numero_Asiento, ID_CLASE, ID_AVION)
-VALUES (asiento, NEW.ID_CLASE, NEW.ID_AVION);
-END LOOP;
-
-RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-
-
-
--- Crear el trigger que llama a la función cuando se inserta un avión
-CREATE TRIGGER trigger_insertar_asientos
-    AFTER INSERT ON Capacidad_Clase
-    FOR EACH ROW
-    EXECUTE FUNCTION fn_insertarAsientos();
-
 
 
 CREATE OR REPLACE FUNCTION fn_set_orden_itinerario_vuelo()

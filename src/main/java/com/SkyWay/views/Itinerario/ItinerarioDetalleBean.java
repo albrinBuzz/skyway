@@ -3,21 +3,22 @@ package com.SkyWay.views.Itinerario;
 
 
 import com.SkyWay.dto.VueloDTO;
-import com.SkyWay.modules.itinerario.domain.model.Itinerario;
 import com.SkyWay.modules.itinerario.domain.service.ItinerarioService;
 import com.SkyWay.modules.itinerario.presentation.dto.ItinerarioDTO;
 import com.SkyWay.modules.itinerario.presentation.dto.ItinerarioDetalleDTO;
+import com.SkyWay.modules.itinerario.presentation.dto.PuntoMapaDTO;
 import com.SkyWay.modules.tarifa.presentation.dto.TarifaDTO;
 import com.SkyWay.modules.tarifaItinerario.domain.model.ItinerarioTarifa;
 import com.SkyWay.modules.tarifaItinerario.domain.service.ItinerarioTarifaService;
-import com.SkyWay.modules.vuelo.domain.model.Vuelo;
 import com.SkyWay.util.Logger;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.ExternalContext;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
+import org.primefaces.PrimeFaces;
 import org.primefaces.event.SelectEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -45,6 +46,10 @@ public class ItinerarioDetalleBean implements Serializable {
     private String tipoVuelo;
     private List<ItinerarioDetalleDTO> paradasVuelo;
     private Integer total;
+
+    // 👇 NUEVO: datos geográficos del itinerario seleccionado
+    private String mapaVueloJson = "[]";
+
     @Autowired
     private ItinerarioService itinerarioService;
     private Integer cantAdultos;
@@ -130,16 +135,40 @@ public class ItinerarioDetalleBean implements Serializable {
         }
     }
 
+    // Se mantiene igual, solo carga el timeline (como estaba al principio)
     public void showParadas(Integer idItinerario) {
-
-        //this.selectedVueloParadas = "Detalles de paradas: " + vuelo.getCantParadas(); // Aquí puedes colocar más detalles.
-
         paradasVuelo = itinerarioService.obtenerDetalleItinerario(idItinerario);
-        Logger.logInfo(selectedVueloParadas);
-        //Logger.logInfo("itinerario. "+vuelo.getItinerario());
-
     }
 
+    // Acción independiente, solo para el mapa
+    public void showMapa(Integer idItinerario) {
+        cargarRutaMapa(idItinerario);
+    }
+
+
+
+    private String rutaMapaJson; // string JSON que consume el JS
+
+    public void cargarRutaMapa(Integer idItinerario) {
+        try {
+            List<PuntoMapaDTO> puntos = itinerarioService.obtenerRutaMapa(idItinerario);
+            ObjectMapper mapper = new ObjectMapper();
+            this.rutaMapaJson = mapper.writeValueAsString(puntos);
+
+            // Dispara el render en el cliente vía PrimeFaces (requiere ejecutar tras el update)
+            PrimeFaces.current().executeScript("renderRutaVuelo(" + rutaMapaJson + ")");
+        } catch (Exception e) {
+            Logger.logInfo("Error generando ruta de mapa: " + e.getMessage());
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "No se pudo cargar el mapa de la ruta."));
+        }
+    }
+
+    public String getRutaMapaJson() { return rutaMapaJson; }
+
+    public String getMapaVueloJson() {
+        return mapaVueloJson;
+    }
 
 
     public void setSelectedVuelo(ItinerarioDTO selectedVuelo) {

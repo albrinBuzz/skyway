@@ -9,6 +9,10 @@
     <ui:define name="head">
         <title>Vuelos</title>
         <h:outputStylesheet library="css" name="vuelos/estilos-vuelos.css" />
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+        <!-- 2. Importar JS de Leaflet -->
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     </ui:define>
 
     <ui:define name="contenido">
@@ -59,16 +63,28 @@
                                 <h:outputText value="#{vuelo.duracion}" style="font-size: 0.75rem; color: var(--text-dim);"/>
                                 <div class="line-visual"></div>
 
+
                                 <h:panelGroup rendered="#{vuelo.cantParadas ne 'sin paradas'}">
-                            <span class="stop-badge">
-                                #{vuelo.cantParadas}
-                                <p:commandLink action="#{itinerarioDetalleBean.showParadas(vuelo.itinerario)}"
-                                               update=":vueloForm:sidebarParadas"
-                                               oncomplete="PF('sidebarParadas').show();"
-                                               style="color: var(--sky-blue); margin-left:5px;">
-                                    <i class="pi pi-info-circle"/>
-                                </p:commandLink>
-                            </span>
+                                    <span class="stop-badge">
+                                        #{vuelo.cantParadas}
+
+                                        <p:commandLink action="#{itinerarioDetalleBean.showParadas(vuelo.itinerario)}"
+                                                       update=":vueloForm:sidebarParadas"
+                                                       oncomplete="PF('sidebarParadas').show();"
+                                                       style="color: var(--sky-blue); margin-left:5px;"
+                                                       title="Ver detalle del itinerario">
+                                            <i class="pi pi-info-circle"/>
+                                        </p:commandLink>
+
+                                        <p:commandLink action="#{itinerarioDetalleBean.showMapa(vuelo.itinerario)}"
+                                                       update="@none"
+                                                       process="@this"
+                                                       oncomplete="PF('sidebarMapa').show();"
+                                                       style="color: var(--sky-blue); margin-left:8px;"
+                                                       title="Ver mapa de la ruta">
+                                            <i class="pi pi-map"/>
+                                        </p:commandLink>
+                                    </span>
                                 </h:panelGroup>
 
                                 <h:outputText value="Directo"
@@ -150,126 +166,79 @@
                 </div>
             </div>
 
+            <!-- Sidebar de Detalles de Paradas -->
 
-            <!-- Sidebar de Detalles de Paradas -->
-            <!-- Sidebar de Detalles de Paradas -->
-            <!-- ============================ -->
-            <!--  SIDEBAR ITINERARIO (COMPLETO) -->
-            <!-- ============================ -->
+            <!-- Sidebar 1: Solo Detalle del Itinerario (timeline, como estaba originalmente) -->
             <p:sidebar widgetVar="sidebarParadas" position="right" id="sidebarParadas"
                        width="520" showEffect="slideIn" hideEffect="slideOut"
                        styleClass="sidebar-corporativo">
 
-                <!-- Título -->
                 <div class="header-titulo">
                     <i class="pi pi-route"></i> Detalle del Itinerario
                 </div>
 
                 <p:scrollPanel style="width:100%; height:100%;" mode="native">
                     <div class="timeline">
-
                         <ui:repeat value="#{itinerarioDetalleBean.paradasVuelo}" var="p" varStatus="st">
-
-                            <!-- BLOQUE DE PARADA -->
                             <div class="timeline-item tramo-bloque">
-
-
-
-
-                                <!-- TARJETA DEL TRAMO -->
                                 <div class="timeline-content card-parada card-parada-separada">
+                                    <div class="card-header">Parada #{st.index + 1}</div>
 
-                                    <div class="card-header">
-                                        Parada #{st.index + 1}
-                                    </div>
-
-                                    <!-- TRAMO ORIGEN / DESTINO -->
                                     <div class="section">
-                                        <div class="section-title">
-                                            <i class="pi pi-map-marker"></i> Tramo del Vuelo
-                                        </div>
-
+                                        <div class="section-title"><i class="pi pi-map-marker"></i> Tramo del Vuelo</div>
                                         <div class="timeline-leg">
                                             <div class="city-block">
                                                 <div class="city-code">#{p.aeropuertoSalida}</div>
-                                                <div class="city-time">
-                                                    <i class="pi pi-calendar"></i> #{p.salida}
-                                                </div>
+                                                <div class="city-time"><i class="pi pi-calendar"></i> #{p.salida}</div>
                                             </div>
-
-                                            <div class="timeline-arrow">
-                                                <i class="pi pi-arrow-down"></i>
-                                            </div>
-
+                                            <div class="timeline-arrow"><i class="pi pi-arrow-down"></i></div>
                                             <div class="city-block">
                                                 <div class="city-code">#{p.aeropuertoLlegada}</div>
-                                                <div class="city-time">
-                                                    <i class="pi pi-clock"></i> #{p.llegada}
-                                                </div>
+                                                <div class="city-time"><i class="pi pi-clock"></i> #{p.llegada}</div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <!-- INFORMACIÓN DEL VUELO -->
                                     <div class="section">
-                                        <div class="section-title">
-                                            <i class="pi pi-info-circle"></i> Información del Vuelo
-                                        </div>
-
+                                        <div class="section-title"><i class="pi pi-info-circle"></i> Información del Vuelo</div>
                                         <div class="info-grid">
-                                            <div class="info-item">
-                                                <span class="label">Vuelo:</span>
-                                                <span class="value"><i class="pi pi-plane"></i> #{p.vuelo}</span>
-                                            </div>
-
-                                            <div class="info-item">
-                                                <span class="label">Duración:</span>
-                                                <span class="value"><i class="pi pi-clock"></i> #{p.duracion}</span>
-                                            </div>
-
-
-                                            <div class="info-item">
-                                                <span class="label">Espera:</span>
-                                                <span class="value"><i class="pi pi-hourglass"></i> #{p.tiempoEspera}</span>
-                                            </div>
-
-                                            <div class="info-item">
-                                                <span class="label">Aerolínea:</span>
-                                                <span class="value"><i class="pi pi-building"></i> #{p.aerolinea}</span>
-                                            </div>
-
-                                            <div class="info-item">
-                                                <span class="label">Aeronave:</span>
-                                                <span class="value"><i class="pi pi-cog"></i> #{p.modeloAvion}</span>
-                                            </div>
+                                            <div class="info-item"><span class="label">Vuelo:</span>
+                                                <span class="value"><i class="pi pi-plane"></i> #{p.vuelo}</span></div>
+                                            <div class="info-item"><span class="label">Duración:</span>
+                                                <span class="value"><i class="pi pi-clock"></i> #{p.duracion}</span></div>
+                                            <div class="info-item"><span class="label">Espera:</span>
+                                                <span class="value"><i class="pi pi-hourglass"></i> #{p.tiempoEspera}</span></div>
+                                            <div class="info-item"><span class="label">Aerolínea:</span>
+                                                <span class="value"><i class="pi pi-building"></i> #{p.aerolinea}</span></div>
+                                            <div class="info-item"><span class="label">Aeronave:</span>
+                                                <span class="value"><i class="pi pi-cog"></i> #{p.modeloAvion}</span></div>
                                         </div>
                                     </div>
 
-                                    <!-- DESCRIPCIÓN -->
                                     <div class="section">
-                                        <div class="section-title">
-                                            <i class="pi pi-align-left"></i> Descripción
-                                        </div>
-                                        <div class="descripcion descripcion-espaciada">
-                                            #{p.descripcionVuelo}
-                                        </div>
+                                        <div class="section-title"><i class="pi pi-align-left"></i> Descripción</div>
+                                        <div class="descripcion descripcion-espaciada">#{p.descripcionVuelo}</div>
                                     </div>
-
                                 </div>
                             </div>
-                            <!-- FIN BLOQUE PARADA -->
-
                         </ui:repeat>
                     </div>
-
-                    <!-- Botón scroll top -->
-                    <p:scrollTop target="parent" threshold="100" icon="pi pi-arrow-up"
-                                 styleClass="btn-scrolltop" />
+                    <p:scrollTop target="parent" threshold="100" icon="pi pi-arrow-up" styleClass="btn-scrolltop" />
                 </p:scrollPanel>
             </p:sidebar>
 
+            <!-- Sidebar 2: Solo el Mapa de la Ruta -->
+            <p:sidebar widgetVar="sidebarMapa" position="right" id="sidebarMapa"
+                       width="520" showEffect="slideIn" hideEffect="slideOut"
+                       styleClass="sidebar-corporativo">
 
-            <!-- Modal confirmar vuelo -->
+                <div class="header-titulo">
+                    <i class="pi pi-map"></i> Ruta del Vuelo
+                </div>
+
+                <div id="mapaRuta" style="width:100%; height:480px; border-radius:8px;"></div>
+            </p:sidebar>
+
             <p:dialog id="compraDialog" header="Confirmar Selección" widgetVar="compraDialog" modal="true" width="400">
                 <h:outputText value="¿Está seguro de que desea proceder con la compra del vuelo #{itinerarioDetalleBean.selectedVuelo.itinerario}?" />
                 <p:commandButton value="Sí" action="#{itinerarioDetalleBean.procederCompra}" update=":vueloForm:compraDialog" />
@@ -278,21 +247,59 @@
         </h:form>
 
         <script type="text/javascript">
-            $(document).ready(function() {
-                rowExpansion(PF('tablaVuelosWidget'));
-            });
+            var mapaRutaVuelo = null;
+
+            function renderRutaVuelo(puntos) {
+                if (mapaRutaVuelo) {
+                    mapaRutaVuelo.remove();
+                    mapaRutaVuelo = null;
+                }
+                if (!puntos || puntos.length === 0) return;
+
+                mapaRutaVuelo = L.map('mapaRuta', { zoomControl: true, attributionControl: false });
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 10
+                }).addTo(mapaRutaVuelo);
+
+                var latlngs = [];
+                var iconos = {
+                    ORIGEN:  L.divIcon({ className: 'marker-origen',  html: '<i class="pi pi-circle-fill" style="color:#00d1ff;"></i>' }),
+                    ESCALA:  L.divIcon({ className: 'marker-escala',  html: '<i class="pi pi-map-marker" style="color:#ffcc00;"></i>' }),
+                    DESTINO: L.divIcon({ className: 'marker-destino', html: '<i class="pi pi-flag-fill" style="color:#a259ff;"></i>' })
+                };
+
+                puntos.forEach(function (p) {
+                    var ll = [p.lat, p.lng];
+                    latlngs.push(ll);
+                    L.marker(ll, { icon: iconos[p.tipo] })
+                        .addTo(mapaRutaVuelo)
+                        .bindPopup('<b>' + p.codigoIata + '</b> - ' + p.nombreAeropuerto +
+                            '<br/>' + p.ciudad + '<br/><i>' + p.tipo + '</i>');
+                });
+
+                L.polyline(latlngs, { color: '#00d1ff', weight: 3, dashArray: '6, 8', opacity: 0.8 })
+                    .addTo(mapaRutaVuelo);
+
+                // Espera a que termine el slideIn del sidebar antes de recalcular tamaño y encuadre
+                setTimeout(function () {
+                    mapaRutaVuelo.invalidateSize();
+                    mapaRutaVuelo.fitBounds(L.latLngBounds(latlngs), { padding: [30, 30] });
+                }, 350);
+            }
 
             function rowExpansion(dataTable) {
                 var $this = dataTable;
                 $this.tbody.children('tr').css('cursor', 'pointer')
                 $this.tbody.off('click.datatable-expansion', '> tr')
                     .on('click.datatable-expansion', '> tr', null, function() {
-                        $this.collapseAllRows();
+                        if (typeof $this.collapseAllRows === 'function') {
+                            $this.collapseAllRows();
+                        }
                         $this.toggleExpansion($(this).find('div.ui-row-toggler'));
                     });
             }
         </script>
     </ui:define>
-
 
 </ui:composition>
