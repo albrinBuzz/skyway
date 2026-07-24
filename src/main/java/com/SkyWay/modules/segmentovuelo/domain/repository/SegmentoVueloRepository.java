@@ -5,6 +5,7 @@ package com.SkyWay.modules.segmentovuelo.domain.repository;
 
 import com.SkyWay.modules.segmentovuelo.domain.model.SegmentoVuelo;
 import com.SkyWay.modules.segmentovuelo.presentation.dto.PuntoRutaProjection;
+import com.SkyWay.modules.segmentovuelo.presentation.dto.SegmentoMapaProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -55,6 +56,30 @@ public interface SegmentoVueloRepository extends JpaRepository<SegmentoVuelo, In
         ORDER BY sub.orden_global
         """, nativeQuery = true)
     List<PuntoRutaProjection> obtenerRutaPorItinerario(@Param("idItinerario") Integer idItinerario);
+
+
+
+
+    @Query(value = """
+        SELECT
+            sv.id_segmento          AS idSegmento,
+            sv.id_vuelo             AS idVuelo,
+            sv.orden_segmento       AS ordenSegmento,
+            ao.codigo_iata          AS iataOrigen,
+            ao.nombre_aeropuerto    AS nombreOrigen,
+            ST_Y(ao.posicion::geometry) AS latOrigen,
+            ST_X(ao.posicion::geometry) AS lngOrigen,
+            ad.codigo_iata          AS iataDestino,
+            ad.nombre_aeropuerto    AS nombreDestino,
+            ST_Y(ad.posicion::geometry) AS latDestino,
+            ST_X(ad.posicion::geometry) AS lngDestino
+        FROM segmento_vuelo sv
+        JOIN aeropuerto ao ON ao.id_aeropuerto = sv.id_aeropuerto_origen
+        JOIN aeropuerto ad ON ad.id_aeropuerto = sv.id_aeropuerto_destino
+        WHERE sv.id_vuelo = :idVuelo
+        ORDER BY sv.orden_segmento
+        """, nativeQuery = true)
+    List<SegmentoMapaProjection> findGeometriaPorVuelo(@Param("idVuelo") Integer idVuelo);
 
 
 }

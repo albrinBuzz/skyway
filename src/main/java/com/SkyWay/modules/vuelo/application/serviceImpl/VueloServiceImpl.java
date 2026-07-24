@@ -1,13 +1,19 @@
 package com.SkyWay.modules.vuelo.application.serviceImpl;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import com.SkyWay.modules.aeropuerto.domain.repository.AeropuertoRepository;
+import com.SkyWay.modules.aeropuerto.presentation.dto.AeropuertoMapaDTO;
 import com.SkyWay.modules.piloto.domain.model.Piloto;
+import com.SkyWay.modules.segmentovuelo.domain.repository.SegmentoVueloRepository;
+import com.SkyWay.modules.segmentovuelo.presentation.dto.SegmentoMapaProjection;
 import com.SkyWay.modules.vuelo.domain.model.Vuelo;
 import com.SkyWay.modules.vuelo.domain.repository.VueloRepository;
 import com.SkyWay.modules.vuelo.domain.service.VueloService;
+import com.SkyWay.modules.vuelo.presentation.dto.VueloMapaDTO;
 import jakarta.persistence.PersistenceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +39,10 @@ public class VueloServiceImpl implements VueloService {
     
     @PersistenceContext
     private EntityManager em;
-    
+	@Autowired
+	private AeropuertoRepository aeropuertoRepository;
+	@Autowired
+	private SegmentoVueloRepository segmentoVueloRepository;
 
     @Override
     public List<Vuelo> findAll() {
@@ -120,5 +129,49 @@ public class VueloServiceImpl implements VueloService {
 		return vueloRepository.save(vuelo);
 	}
 
+	public List<AeropuertoMapaDTO> findAllParaMapa() {
+		return aeropuertoRepository.findAllConCoordenadas().stream()
+				.map(p -> new AeropuertoMapaDTO(
+						p.getCodigoIata(), p.getNombreAeropuerto(), p.getCiudad(),
+						p.getLatitud(), p.getLongitud()))
+				.toList();
+	}
+
+	public VueloMapaDTO construirGeometriaVuelo(Vuelo vuelo) {
+		List<SegmentoMapaProjection> filas = segmentoVueloRepository.findGeometriaPorVuelo(vuelo.getIdVuelo());
+		if (filas.isEmpty()) return null;
+
+		List<VueloMapaDTO.PuntoSegmentoDTO> puntos = new ArrayList<>();
+
+		for (int i = 0; i < filas.size(); i++) {
+			SegmentoMapaProjection seg = filas.get(i);
+
+			// Origen del segmento: solo lo agregamos si es el primero,
+			// o si no coincide con el destino del segmento anterior (evita duplicados en escalas)
+			if (i == 0) {
+				puntos.add(new VueloMapaDTO.PuntoSegmentoDTO(
+						seg.getIataOrigen(), seg.getNombreOrigen(),
+						seg.getLatOrigen(), seg.getLngOrigen(), "ORIGEN"));
+			}
+
+			boolean esUltimo = (i == filas.size() - 1);
+			puntos.add(new VueloMapaDTO.PuntoSegmentoDTO(
+					seg.getIataDestino(), seg.getNombreDestino(),
+					seg.getLatDestino(), seg.getLngDestino(),
+					esUltimo ? "DESTINO" : "ESCALA"));
+		}
+
+		return new VueloMapaDTO(vuelo.getIdVuelo(), vuelo.getNumeroVuelo(), puntos);
+	}
+
+
+	public List<VueloMapaDTO> construirGeometriaVuelos(List<Vuelo> vuelos) {
+		List<VueloMapaDTO> resultado = new ArrayList<>();
+		for (Vuelo v : vuelos) {
+			VueloMapaDTO dto = construirGeometriaVuelo(v);
+			if (dto != null) resultado.add(dto);
+		}
+		return resultado;
+	}
 
 }

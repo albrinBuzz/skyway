@@ -6,6 +6,225 @@
                 template="/admin/template.xhtml">
 
     <ui:define name="contenido-admin">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+        <script type="text/javascript">
+            //<![CDATA[
+
+            // ---------- MAPA 1: RUTA MAESTRA (Paso 1) ----------
+            var mapaRutaMaestra = null;
+            var markerOrigenRuta = null;
+            var markerDestinoRuta = null;
+            var lineaRutaMaestra = null;
+            var coordsAeropuertos = {};
+            var nombresAeropuertos = {};
+            var modoRutaActual = 'ORIGEN';
+
+            function cambiarModoRuta(modo) {
+                console.log('[RutaMaestra] Cambiando modo de selección a:', modo);
+                modoRutaActual = modo;
+                document.getElementById('btnModoOrigenRuta').classList.toggle('activo', modo === 'ORIGEN');
+                document.getElementById('btnModoDestinoRuta').classList.toggle('activo', modo === 'DESTINO');
+                var t = document.getElementById('ayudaModoRutaTexto');
+                t.textContent = modo === 'ORIGEN' ? 'Origen' : 'Destino';
+                t.style.color = modo === 'ORIGEN' ? '#38bdf8' : '#10b981';
+            }
+
+            function initMapaRutaMaestra(aeropuertosJson) {
+                console.group('🗺️ [RutaMaestra] Inicializando Mapa de Ruta Maestra');
+
+                if (mapaRutaMaestra) {
+                    console.log('[RutaMaestra] Destruyendo instancia previa del mapa...');
+                    mapaRutaMaestra.remove();
+                    mapaRutaMaestra = null;
+                }
+                markerOrigenRuta = null; markerDestinoRuta = null; lineaRutaMaestra = null;
+                cambiarModoRuta('ORIGEN');
+
+                var aeropuertos = typeof aeropuertosJson === 'string' ? JSON.parse(aeropuertosJson) : aeropuertosJson;
+                console.log('[RutaMaestra] Datos de aeropuertos recibidos:', aeropuertos);
+
+                if (!aeropuertos || aeropuertos.length === 0) {
+                    console.warn('[RutaMaestra] ⚠️ No hay aeropuertos disponibles para renderizar.');
+                    console.groupEnd();
+                    return;
+                }
+
+                mapaRutaMaestra = L.map('mapaRutaMaestra', { zoomControl: true, attributionControl: false })
+                    .setView([-20, -60], 3);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 12 }).addTo(mapaRutaMaestra);
+
+                var contador = 0;
+                aeropuertos.forEach(function (a) {
+                    coordsAeropuertos[a.codigoIata] = [a.lat, a.lng];
+                    nombresAeropuertos[a.codigoIata] = a.nombreAeropuerto + ' (' + a.ciudad + ')';
+
+                    var marker = L.marker([a.lat, a.lng], { title: a.codigoIata })
+                        .addTo(mapaRutaMaestra)
+                        .bindTooltip(a.codigoIata + ' - ' + a.nombreAeropuerto, { direction: 'top' });
+
+                    marker.on('click', function () {
+                        console.log('📍 [RutaMaestra] Clic en aeropuerto:', a.codigoIata, a.nombreAeropuerto, 'Modo activo:', modoRutaActual);
+                        if (modoRutaActual === 'ORIGEN') {
+                            console.log('  └─ Invocando rcOrigenMapa() con IATA:', a.codigoIata);
+                            rcOrigenMapa([{ name: 'iata', value: a.codigoIata }]);
+                            pintarMarcadorRuta(a.codigoIata, 'ORIGEN');
+                            cambiarModoRuta('DESTINO');
+                        } else {
+                            console.log('  └─ Invocando rcDestinoMapa() con IATA:', a.codigoIata);
+                            rcDestinoMapa([{ name: 'iata', value: a.codigoIata }]);
+
+                            pintarMarcadorRuta(a.codigoIata, 'DESTINO');
+                        }
+                    });
+                    contador++;
+                });
+
+                console.info('[RutaMaestra] ✅ Se cargaron ' + contador + ' marcadores de aeropuertos.');
+                console.groupEnd();
+            }
+
+            function pintarMarcadorRuta(iata, tipo) {
+                console.log('[RutaMaestra] Pintando marcador de tipo [' + tipo + '] para IATA:', iata);
+                var coords = coordsAeropuertos[iata];
+                if (!coords) {
+                    console.error('[RutaMaestra] ❌ No se encontraron coordenadas para IATA:', iata);
+                    return;
+                }
+
+                var icono = L.divIcon({
+                    className: 'marker-seleccionado',
+                    html: tipo === 'ORIGEN'
+                        ? '<i class="pi pi-circle-fill" style="color:#38bdf8; font-size:1.4rem; filter: drop-shadow(0 0 4px #38bdf8);"></i>'
+                        : '<i class="pi pi-flag-fill" style="color:#10b981; font-size:1.4rem; filter: drop-shadow(0 0 4px #10b981);"></i>'
+                });
+
+                if (tipo === 'ORIGEN') {
+                    if (markerOrigenRuta) mapaRutaMaestra.removeLayer(markerOrigenRuta);
+                    markerOrigenRuta = L.marker(coords, { icon: icono, zIndexOffset: 1000 }).addTo(mapaRutaMaestra)
+                        .bindTooltip('Origen: ' + nombresAeropuertos[iata]);
+                } else {
+                    if (markerDestinoRuta) mapaRutaMaestra.removeLayer(markerDestinoRuta);
+                    markerDestinoRuta = L.marker(coords, { icon: icono, zIndexOffset: 1000 }).addTo(mapaRutaMaestra)
+                        .bindTooltip('Destino: ' + nombresAeropuertos[iata]);
+                }
+                actualizarLineaRuta();
+            }
+
+            function actualizarLineaRuta() {
+                if (lineaRutaMaestra) {
+                    mapaRutaMaestra.removeLayer(lineaRutaMaestra);
+                    lineaRutaMaestra = null;
+                }
+
+                if (markerOrigenRuta && markerDestinoRuta) {
+                    console.log('[RutaMaestra] ✏️ Trazando línea de ruta entre Origen y Destino...');
+                    var latlngs = [markerOrigenRuta.getLatLng(), markerDestinoRuta.getLatLng()];
+                    lineaRutaMaestra = L.polyline(latlngs, { color: '#38bdf8', weight: 3, dashArray: '6,8', opacity: 0.85 })
+                        .addTo(mapaRutaMaestra);
+                    mapaRutaMaestra.fitBounds(L.latLngBounds(latlngs), { padding: [40, 40] });
+                } else if (markerOrigenRuta) {
+                    console.log('[RutaMaestra] Centrando mapa en Origen seleccionado...');
+                    mapaRutaMaestra.setView(markerOrigenRuta.getLatLng(), 4);
+                }
+            }
+
+            function resetearMapaRutaVisual() {
+                console.warn('[RutaMaestra] 🔄 Reseteando estado visual del mapa de ruta...');
+                if (markerOrigenRuta) { mapaRutaMaestra.removeLayer(markerOrigenRuta); markerOrigenRuta = null; }
+                if (markerDestinoRuta) { mapaRutaMaestra.removeLayer(markerDestinoRuta); markerDestinoRuta = null; }
+                if (lineaRutaMaestra) { mapaRutaMaestra.removeLayer(lineaRutaMaestra); lineaRutaMaestra = null; }
+                cambiarModoRuta('ORIGEN');
+            }
+
+            // Inicializa el mapa de ruta maestra en cuanto el DOM esté listo (esta sección no vive en un diálogo)
+            document.addEventListener('DOMContentLoaded', function () {
+                console.log('🚀 [DOM] Evento DOMContentLoaded detectado. Inicializando mapa principal...');
+                initMapaRutaMaestra('#{itinerarioBean.aeropuertosMapaJson}');
+            });
+
+            // ---------- MAPA 2: VUELOS FÍSICOS Y ESCALAS (Paso 3) ----------
+
+            // ---------- MAPA 2: ITINERARIO ARMADO EN VIVO (Paso 3, columna derecha) ----------
+            var mapaItinerarioArmado = null;
+            var capasItinerarioArmado = [];
+
+            function initMapaItinerarioArmado() {
+                if (mapaItinerarioArmado) return;
+                mapaItinerarioArmado = L.map('mapaItinerarioArmado', { zoomControl: true, attributionControl: false })
+                    .setView([-20, -60], 3);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 12 }).addTo(mapaItinerarioArmado);
+            }
+
+            // Se llama automáticamente desde el servidor (PrimeFaces.current().executeScript)
+            // cada vez que se vincula o se quita un tramo.
+            function renderItinerarioArmado(vuelosJson) {
+                initMapaItinerarioArmado();
+
+                capasItinerarioArmado.forEach(function (capa) { mapaItinerarioArmado.removeLayer(capa); });
+                capasItinerarioArmado = [];
+
+                var vuelos = typeof vuelosJson === 'string' ? JSON.parse(vuelosJson) : vuelosJson;
+                if (!vuelos || vuelos.length === 0) return;
+
+                var todosLosPuntos = [];
+                var numeroGlobal = 1;
+
+                vuelos.forEach(function (vuelo, idxVuelo) {
+                    var latlngs = vuelo.puntos.map(function (p) { return [p.lat, p.lng]; });
+                    todosLosPuntos = todosLosPuntos.concat(latlngs);
+
+                    // Línea sólida azul para cada tramo de vuelo ya vinculado
+                    var linea = L.polyline(latlngs, { color: '#38bdf8', weight: 4, opacity: 0.9 }).addTo(mapaItinerarioArmado);
+                    linea.bindTooltip('Vuelo ' + vuelo.numeroVuelo, { sticky: true });
+                    capasItinerarioArmado.push(linea);
+
+                    vuelo.puntos.forEach(function (p, idxPunto) {
+                        var color = '#f59e0b'; // escala por defecto
+                        var html = '<div class="marker-num-badge">' + numeroGlobal + '</div>';
+
+                        if (idxVuelo === 0 && idxPunto === 0) {
+                            color = '#38bdf8'; // origen absoluto
+                            html = '<i class="pi pi-circle-fill" style="color:#38bdf8; font-size:1rem; filter: drop-shadow(0 0 4px #38bdf8);"></i>';
+                        } else if (idxVuelo === vuelos.length - 1 && idxPunto === vuelo.puntos.length - 1) {
+                            color = '#10b981'; // destino absoluto
+                            html = '<i class="pi pi-flag-fill" style="color:#10b981; font-size:1rem; filter: drop-shadow(0 0 4px #10b981);"></i>';
+                        } else if (p.tipo !== 'ESCALA') {
+                            // origen/destino intermedio entre tramos consecutivos: se omite duplicado visual,
+                            // se muestra como punto de conexión numerado
+                            html = '<div class="marker-num-badge">' + numeroGlobal + '</div>';
+                        }
+
+                        var icono = L.divIcon({ className: 'marker-itinerario-armado', html: html, iconSize: [22, 22] });
+                        var marker = L.marker([p.lat, p.lng], { icon: icono })
+                            .addTo(mapaItinerarioArmado)
+                            .bindTooltip(p.iata + ' — ' + p.nombre);
+                        capasItinerarioArmado.push(marker);
+
+                        numeroGlobal++;
+                    });
+
+                    // Conector punteado entre el fin de este vuelo y el inicio del siguiente (si no coinciden exactamente)
+                    if (idxVuelo < vuelos.length - 1) {
+                        var finActual = latlngs[latlngs.length - 1];
+                        var inicioSiguiente = vuelos[idxVuelo + 1].puntos[0];
+                        var conector = L.polyline([finActual, [inicioSiguiente.lat, inicioSiguiente.lng]], {
+                            color: '#64748b', weight: 2, dashArray: '4,6', opacity: 0.6
+                        }).addTo(mapaItinerarioArmado);
+                        capasItinerarioArmado.push(conector);
+                    }
+                });
+
+                if (todosLosPuntos.length > 0) {
+                    mapaItinerarioArmado.fitBounds(L.latLngBounds(todosLosPuntos), { padding: [30, 30] });
+                }
+            }
+
+            //]]>
+        </script>
+
         <style type="text/css">
             /* --- CONFIGURACIÓN VISUAL CORPORATIVA (FLUIDA) --- */
             :root {
@@ -290,6 +509,245 @@
             }
             .btn-corp:hover { background: var(--sky-blue-hover) !important; }
             .btn-corp:disabled { opacity: 0.2 !important; background: #1e293b !important; color: var(--text-secondary) !important;}
+            .modo-selector-container {
+                display: flex; align-items: center; gap: 12px;
+                margin-bottom: 12px;
+            }
+            .modo-btn {
+                flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+                background: #0f172a; border: 2px solid var(--border-color);
+                color: var(--text-secondary); padding: 0.9rem; border-radius: 10px;
+                font-weight: 700; cursor: pointer; transition: all 0.2s ease;
+            }
+            .modo-btn .modo-numero {
+                width: 22px; height: 22px; border-radius: 50%;
+                background: #1e293b; display: flex; align-items: center; justify-content: center;
+                font-size: 0.75rem;
+            }
+            .modo-btn.modo-origen.activo {
+                border-color: var(--sky-blue); color: var(--sky-blue);
+                background: rgba(59, 130, 246, 0.08);
+                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+            }
+            .modo-btn.modo-origen.activo .modo-numero { background: var(--sky-blue); color: #000; }
+            .modo-btn.modo-destino.activo {
+                border-color: var(--status-green); color: var(--status-green);
+                background: rgba(16, 185, 129, 0.08);
+                box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+            }
+            .modo-btn.modo-destino.activo .modo-numero { background: var(--status-green); color: #000; }
+
+            .estado-seleccion-container {
+                display: flex; align-items: center; gap: 16px;
+                background: #0f172a; border: 1px solid var(--border-color);
+                border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 8px;
+            }
+            .estado-item { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--text-secondary); }
+            .estado-item.estado-origen i { color: var(--sky-blue); }
+            .estado-item.estado-destino i { color: var(--status-green); }
+            .estado-valor { color: #fff; margin-left: 2px; }
+            .estado-valor .vacio { color: #64748b; font-weight: normal; }
+            .btn-reiniciar-mapa {
+                background: transparent; border: 1px solid var(--border-color);
+                color: var(--text-secondary); border-radius: 6px; padding: 8px 12px; cursor: pointer;
+            }
+            .btn-reiniciar-mapa:hover { color: #fff; border-color: var(--sky-blue); }
+            .ayuda-mapa { color: #64748b; display: block; font-size: 0.8rem; }
+
+            .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #0f172a !important; color: #fff !important; }
+            .ruta-display-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+                margin-bottom: 8px;
+            }
+
+            .ruta-display-card {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                background: #0f172a;
+                border: 1px solid var(--border-color);
+                border-radius: 10px;
+                padding: 14px 16px;
+                transition: border-color 0.2s ease;
+            }
+
+            .ruta-origen-card { border-left: 3px solid var(--sky-blue); }
+            .ruta-destino-card { border-left: 3px solid var(--status-green); }
+
+            .ruta-display-icon {
+                width: 36px; height: 36px; border-radius: 8px;
+                display: flex; align-items: center; justify-content: center;
+                font-size: 1rem; flex-shrink: 0;
+            }
+            .ruta-origen-card .ruta-display-icon { background: rgba(59, 130, 246, 0.12); color: var(--sky-blue); }
+            .ruta-destino-card .ruta-display-icon { background: rgba(16, 185, 129, 0.12); color: var(--status-green); }
+
+            .ruta-display-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+            .ruta-display-label {
+                font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.05em;
+                color: var(--text-secondary); font-weight: 700;
+            }
+            .ruta-display-valor {
+                font-size: 0.9rem; font-weight: 700; color: #fff;
+                white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            }
+            .ruta-display-valor .vacio {
+                font-weight: 400; color: #64748b; font-size: 0.8rem;
+            }
+
+            @media (max-width: 640px) {
+                .ruta-display-grid { grid-template-columns: 1fr; }
+            }
+            .paso-badge {
+                width: 22px; height: 22px; border-radius: 50%;
+                background: var(--sky-blue); color: #000; font-weight: 900; font-size: 0.75rem;
+                display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+            }
+            .paso-badge-verde { background: var(--status-green); }
+
+            .mapa-leyenda {
+                display: flex; flex-wrap: wrap; gap: 16px; align-items: center;
+                font-size: 0.72rem; color: var(--text-secondary);
+                background: #0f172a; border: 1px solid var(--border-color);
+                border-radius: 8px; padding: 8px 14px;
+            }
+            .leyenda-item { display: flex; align-items: center; gap: 6px; }
+            .leyenda-dot {
+                width: 10px; height: 10px; border-radius: 50%; display: inline-block;
+            }
+            .leyenda-vinculado {
+                background: var(--status-green);
+                box-shadow: 0 0 0 2px rgba(16,185,129,0.25);
+            }
+
+            .badge-ya-vinculado {
+                display: inline-flex; align-items: center; gap: 6px;
+                background: rgba(16, 185, 129, 0.12); color: var(--status-green);
+                border: 1px solid rgba(16, 185, 129, 0.3);
+                font-size: 0.72rem; font-weight: 700;
+                padding: 6px 12px; border-radius: 20px;
+            }
+
+            .resumen-secuencia {
+                display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+                background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color);
+                border-radius: 10px; padding: 12px 16px;
+            }
+            .resumen-item { display: flex; flex-direction: column; align-items: center; min-width: 60px; }
+            .resumen-numero { font-size: 1.4rem; font-weight: 900; color: #fff; font-family: 'JetBrains Mono', monospace; }
+            .resumen-label { font-size: 0.65rem; text-transform: uppercase; color: var(--text-secondary); }
+
+            .resumen-validacion {
+                display: flex; align-items: center; gap: 8px;
+                font-size: 0.75rem; flex: 1; min-width: 180px;
+                padding: 6px 10px; border-radius: 6px;
+            }
+            .resumen-validacion.valido { color: var(--status-green); background: rgba(16,185,129,0.08); }
+            .resumen-validacion.invalido { color: var(--status-amber); background: rgba(245,158,11,0.08); }
+
+            .conexion-indicador {
+                display: flex; align-items: center; gap: 6px;
+                font-size: 0.68rem; color: var(--text-secondary);
+                justify-content: center; padding: 4px 0;
+                border-top: 1px dashed rgba(255,255,255,0.08);
+                margin-top: 4px;
+            }
+
+            .btn-quitar-tramo {
+                width: 24px !important; height: 24px !important;
+                padding: 0 !important; min-width: 24px !important;
+            }
+            .filtro-card {
+                background: #0f172a;
+                border: 1px solid var(--border-color);
+                border-radius: 12px;
+                padding: 1.2rem;
+            }
+            .filtro-label {
+                font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+                color: var(--text-secondary); margin-bottom: 6px; display: block;
+            }
+
+            .resultado-busqueda-info {
+                font-size: 0.75rem; color: var(--text-secondary); padding: 4px 2px;
+            }
+            .resultado-busqueda-info .sin-resultados { color: var(--status-amber); }
+
+            .escalas-tag {
+                display: inline-block; margin-left: 6px;
+                font-size: 0.6rem; font-weight: 700; text-transform: uppercase;
+                background: rgba(245,158,11,0.12); color: var(--status-amber);
+                padding: 2px 6px; border-radius: 10px;
+            }
+            .directo-tag {
+                display: inline-block; margin-left: 6px;
+                font-size: 0.6rem; font-weight: 700; text-transform: uppercase;
+                background: rgba(16,185,129,0.12); color: var(--status-green);
+                padding: 2px 6px; border-radius: 10px;
+            }
+
+            .badge-ya-vinculado {
+                display: inline-flex; align-items: center; gap: 6px;
+                background: rgba(16, 185, 129, 0.12); color: var(--status-green);
+                border: 1px solid rgba(16, 185, 129, 0.3);
+                font-size: 0.72rem; font-weight: 700;
+                padding: 6px 12px; border-radius: 20px;
+            }
+
+            .mapa-leyenda {
+                display: flex; flex-wrap: wrap; gap: 14px; align-items: center;
+                font-size: 0.7rem; color: var(--text-secondary);
+                background: #0f172a; border: 1px solid var(--border-color);
+                border-radius: 8px; padding: 6px 12px;
+            }
+            .leyenda-item { display: flex; align-items: center; gap: 6px; }
+            .leyenda-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+            .marker-num-badge {
+                width: 20px; height: 20px; border-radius: 50%;
+                background: #f59e0b; color: #000; font-weight: 800; font-size: 0.65rem;
+                display: flex; align-items: center; justify-content: center;
+                box-shadow: 0 0 0 2px rgba(0,0,0,0.4);
+            }
+
+            .resumen-secuencia {
+                display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+                background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color);
+                border-radius: 10px; padding: 12px 16px;
+            }
+            .resumen-item { display: flex; flex-direction: column; align-items: center; min-width: 60px; }
+            .resumen-numero { font-size: 1.4rem; font-weight: 900; color: #fff; font-family: 'JetBrains Mono', monospace; }
+            .resumen-label { font-size: 0.65rem; text-transform: uppercase; color: var(--text-secondary); }
+
+            .resumen-validacion {
+                display: flex; align-items: center; gap: 8px;
+                font-size: 0.75rem; flex: 1; min-width: 180px;
+                padding: 6px 10px; border-radius: 6px;
+            }
+            .resumen-validacion.valido { color: var(--status-green); background: rgba(16,185,129,0.08); }
+            .resumen-validacion.invalido { color: var(--status-amber); background: rgba(245,158,11,0.08); }
+
+            .conexion-indicador {
+                display: flex; align-items: center; gap: 6px;
+                font-size: 0.68rem; color: var(--text-secondary);
+                justify-content: center; padding: 4px 0;
+                border-top: 1px dashed rgba(255,255,255,0.08);
+                margin-top: 4px;
+            }
+
+            .btn-quitar-tramo {
+                width: 24px !important; height: 24px !important;
+                padding: 0 !important; min-width: 24px !important;
+            }
+
+            .paso-badge {
+                width: 22px; height: 22px; border-radius: 50%;
+                background: var(--sky-blue); color: #000; font-weight: 900; font-size: 0.75rem;
+                display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+            }
+            .paso-badge-verde { background: var(--status-green); }
         </style>
 
         <div class="main-content">
@@ -321,31 +779,91 @@
                                     Definición de la Ruta Comercial Maestra
                                 </h3>
                                 <span class="step-tag #{itinerarioBean.itinerario.aeropuertoOrigen ne null ? 'completed-tag' : ''}">
-                                    #{itinerarioBean.itinerario.aeropuertoOrigen ne null ? 'Ruta Fijada con Éxito' : 'Paso 1: Destinos y Precio Base'}
-                                </span>
+                #{itinerarioBean.itinerario.aeropuertoOrigen ne null ? 'Ruta Fijada con Éxito' : 'Paso 1: Destinos y Precio Base'}
+            </span>
                             </div>
 
+                            <!-- Remote Commands: puente JS -> Bean para el mapa de ruta maestra -->
+                            <p:remoteCommand name="rcOrigenMapa"
+                                             actionListener="#{itinerarioBean.seleccionarOrigenMapa}"
+                                             process="@this"
+                                             update="formCrearItinerario:panelEstadoRuta :msgs" />
+
+                            <p:remoteCommand name="rcDestinoMapa"
+                                             actionListener="#{itinerarioBean.seleccionarDestinoMapa}"
+                                             process="@this"
+                                             update="formCrearItinerario:panelEstadoRuta :msgs" />
+
+                            <p:remoteCommand name="rcReiniciarRuta"
+                                             actionListener="#{itinerarioBean.reiniciarSeleccionRutaMaestra}"
+                                             process="@this"
+                                             update="formCrearItinerario:panelEstadoRuta"
+                                             oncomplete="resetearMapaRutaVisual();" />
+
                             <div class="ui-fluid p-formgrid p-grid p-4">
-                                <div class="p-field p-col-12 p-md-4">
-                                    <p:outputLabel for="org" value="Terminal Aéreo de Origen" styleClass="text-xs font-bold uppercase opacity-60 mb-2 block" />
-                                    <div class="ui-inputgroup">
-                                        <span class="ui-inputgroup-addon" style="background: #090e1a; border-color: var(--border-color);"><i class="pi pi-upload text-blue-400"></i></span>
-                                        <p:selectOneMenu id="org" value="#{itinerarioBean.aeropuertoOrigen}" filter="true" required="true">
-                                            <f:selectItem itemLabel="Seleccione aeropuerto de salida..." itemValue="" />
-                                            <f:selectItems value="#{itinerarioBean.aeropuertos}" var="a" itemValue="#{a.codigoIata}" itemLabel="#{a.codigoIata} - #{a.nombreAeropuerto}" />
-                                        </p:selectOneMenu>
+
+                                <!-- Estado + modo de selección del mapa (única fuente de verdad) -->
+                                <p:outputPanel id="panelEstadoRuta" layout="block" class="p-field p-col-12 mb-2">
+                                    <div class="modo-selector-container">
+                                        <button type="button" id="btnModoOrigenRuta" class="modo-btn modo-origen activo"
+                                                onclick="cambiarModoRuta('ORIGEN')">
+                                            <span class="modo-numero">1</span>
+                                            <i class="pi pi-upload"></i> Origen de la Ruta
+                                        </button>
+                                        <i class="pi pi-arrow-right" style="color:#64748b;"></i>
+                                        <button type="button" id="btnModoDestinoRuta" class="modo-btn modo-destino"
+                                                onclick="cambiarModoRuta('DESTINO')">
+                                            <span class="modo-numero">2</span>
+                                            <i class="pi pi-download"></i> Destino de la Ruta
+                                        </button>
+                                        <button type="button" class="btn-reiniciar-mapa" onclick="rcReiniciarRuta();" title="Reiniciar selección">
+                                            <i class="pi pi-refresh"></i>
+                                        </button>
                                     </div>
-                                </div>
-                                <div class="p-field p-col-12 p-md-4">
-                                    <p:outputLabel for="dest" value="Terminal Aéreo de Destino" styleClass="text-xs font-bold uppercase opacity-60 mb-2 block" />
-                                    <div class="ui-inputgroup">
-                                        <span class="ui-inputgroup-addon" style="background: #090e1a; border-color: var(--border-color);"><i class="pi pi-download text-emerald-400"></i></span>
-                                        <p:selectOneMenu id="dest" value="#{itinerarioBean.aeropuertoDestino}" filter="true" required="true">
-                                            <f:selectItem itemLabel="Seleccione aeropuerto de destino..." itemValue="" />
-                                            <f:selectItems value="#{itinerarioBean.aeropuertos}" var="a" itemValue="#{a.codigoIata}" itemLabel="#{a.codigoIata} - #{a.nombreAeropuerto}" />
-                                        </p:selectOneMenu>
+
+                                    <!-- Displays de solo lectura, alimentados exclusivamente por el mapa -->
+                                    <div class="ruta-display-grid">
+                                        <div class="ruta-display-card ruta-origen-card">
+                                            <div class="ruta-display-icon"><i class="pi pi-upload"></i></div>
+                                            <div class="ruta-display-info">
+                                                <span class="ruta-display-label">Terminal de Origen</span>
+                                                <span class="ruta-display-valor">
+                                <h:outputText value="#{itinerarioBean.aeropuertoOrigen} - #{itinerarioBean.aeropuertosMap[itinerarioBean.aeropuertoOrigen].nombreAeropuerto}"
+                                              rendered="#{not empty itinerarioBean.aeropuertoOrigen}"/>
+                                <span class="vacio" rendered="#{empty itinerarioBean.aeropuertoOrigen}">
+                                    <h:outputText value="Sin seleccionar — haz clic en el mapa"/>
+                                </span>
+                            </span>
+                                            </div>
+                                        </div>
+
+                                        <div class="ruta-display-card ruta-destino-card">
+                                            <div class="ruta-display-icon"><i class="pi pi-download"></i></div>
+                                            <div class="ruta-display-info">
+                                                <span class="ruta-display-label">Terminal de Destino</span>
+                                                <span class="ruta-display-valor">
+                                <h:outputText value="#{itinerarioBean.aeropuertoDestino} - #{itinerarioBean.aeropuertosMap[itinerarioBean.aeropuertoDestino].nombreAeropuerto}"
+                                              rendered="#{not empty itinerarioBean.aeropuertoDestino}"/>
+                                <span class="vacio" rendered="#{empty itinerarioBean.aeropuertoDestino}">
+                                    <h:outputText value="Sin seleccionar — haz clic en el mapa"/>
+                                </span>
+                            </span>
+                                            </div>
+                                        </div>
                                     </div>
+
+                                    <small class="ayuda-mapa">
+                                        <i class="pi pi-info-circle"></i>
+                                        Haz clic en un aeropuerto del mapa para fijarlo como
+                                        <b id="ayudaModoRutaTexto" style="color:#38bdf8;">Origen</b>.
+                                    </small>
+                                </p:outputPanel>
+
+                                <!-- Mapa: única forma de fijar origen/destino -->
+                                <div class="p-field p-col-12 mb-3">
+                                    <div id="mapaRutaMaestra" style="width:100%; height:420px; border-radius:10px; border:1px solid var(--border-color);"></div>
                                 </div>
+
                                 <div class="p-field p-col-12 p-md-4">
                                     <p:outputLabel for="price" value="Precio de Salida Base Referencial (CLP)" styleClass="text-xs font-bold uppercase opacity-60 mb-2 block" />
                                     <p:inputNumber id="price" value="#{itinerarioBean.itinerario.precioBase}" symbol="$ " decimalPlaces="0" required="true"/>
@@ -362,6 +880,7 @@
                             </div>
                         </p:panel>
                     </h:form>
+
                 </div>
 
                 <h:panelGroup id="stepTarifas" layout="block" styleClass="step-block #{itinerarioBean.itinerario.aeropuertoOrigen eq null ? 'step-disabled' : ''}">
@@ -428,8 +947,8 @@
                                 Consolidación Logística de Conexiones y Escalas
                             </h3>
                             <span class="step-tag" style="color: var(--status-amber); background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.2);">
-                                Paso 3: Plan de Vuelo Físico
-                            </span>
+                Paso 3: Plan de Vuelo Físico
+            </span>
                         </div>
 
                         <div class="m-4 p-3 border-round-xl flex align-items-center gap-3" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color);">
@@ -439,52 +958,77 @@
                             <div class="text-xs">
                                 <span class="opacity-50 block uppercase font-bold tracking-wide mb-1" style="font-size: 0.65rem;">Objetivo de Servicio Comercial Seleccionado</span>
                                 <span class="text-white text-sm font-medium">
-                                    Establecer tramos desde
-                                    <span class="text-blue-400 font-bold font-mono">#{itinerarioBean.itinerario.aeropuertoOrigen.codigoIata}</span>
-                                    hacia
-                                    <span class="text-blue-400 font-bold font-mono">#{itinerarioBean.itinerario.aeropuertoDestino.codigoIata}</span>
-                                </span>
+                    Establecer tramos desde
+                    <span class="text-blue-400 font-bold font-mono">#{itinerarioBean.itinerario.aeropuertoOrigen.codigoIata}</span>
+                    hacia
+                    <span class="text-blue-400 font-bold font-mono">#{itinerarioBean.itinerario.aeropuertoDestino.codigoIata}</span>
+                </span>
                             </div>
                         </div>
 
                         <div class="p-grid m-0">
                             <div class="p-col-12 p-lg-7 p-4 border-right-1 border-white-alpha-10">
                                 <h:form id="formBuscarVuelo">
-                                    <div class="flex align-items-center gap-2 mb-4">
-                                        <i class="pi pi-search text-blue-400 text-sm"></i>
-                                        <h4 class="m-0 text-white font-semibold" style="font-size: 0.85rem; letter-spacing: 0.02em;">A. MÓDULO DE SELECCIÓN DE VUELOS FÍSICOS</h4>
+
+                                    <div class="flex align-items-center gap-2 mb-1">
+                                        <span class="paso-badge">A</span>
+                                        <h4 class="m-0 text-white font-semibold" style="font-size: 0.85rem; letter-spacing: 0.02em;">BUSCAR VUELOS DISPONIBLES</h4>
+                                    </div>
+                                    <p class="text-xs opacity-50 mb-4" style="margin-left: 30px;">
+                                        Filtra por origen, destino y fecha. Los resultados que vincules aparecerán trazados en el mapa de la derecha.
+                                    </p>
+
+                                    <div class="filtro-card mb-4">
+                                        <div class="ui-fluid p-formgrid p-grid">
+                                            <div class="p-field p-col-12 p-md-4">
+                                                <p:outputLabel value="Origen" styleClass="filtro-label" />
+                                                <div class="ui-inputgroup">
+                                                    <span class="ui-inputgroup-addon" style="background: #090e1a; border-color: var(--border-color);"><i class="pi pi-upload text-xs opacity-60"></i></span>
+                                                    <p:selectOneMenu value="#{itinerarioBean.aeropuertoOrigenBusqueda}" filter="true">
+                                                        <f:selectItem itemLabel="Cualquier origen" itemValue="#{null}" />
+                                                        <f:selectItems value="#{itinerarioBean.aeropuertos}" var="a" itemValue="#{a.codigoIata}" itemLabel="#{a.codigoIata} - #{a.nombreAeropuerto}" />
+                                                    </p:selectOneMenu>
+                                                </div>
+                                            </div>
+                                            <div class="p-field p-col-12 p-md-4">
+                                                <p:outputLabel value="Destino" styleClass="filtro-label" />
+                                                <div class="ui-inputgroup">
+                                                    <span class="ui-inputgroup-addon" style="background: #090e1a; border-color: var(--border-color);"><i class="pi pi-download text-xs opacity-60"></i></span>
+                                                    <p:selectOneMenu value="#{itinerarioBean.aeropuertoDestinoBusqueda}" filter="true">
+                                                        <f:selectItem itemLabel="Cualquier destino" itemValue="#{null}" />
+                                                        <f:selectItems value="#{itinerarioBean.aeropuertos}" var="a" itemValue="#{a.codigoIata}" itemLabel="#{a.codigoIata} - #{a.nombreAeropuerto}" />
+                                                    </p:selectOneMenu>
+                                                </div>
+                                            </div>
+                                            <div class="p-field p-col-12 p-md-4">
+                                                <p:outputLabel value="Fecha" styleClass="filtro-label" />
+                                                <p:datePicker value="#{itinerarioBean.fechaBusqueda}" placeholder="Cualquier fecha" pattern="dd/MM/yyyy" showIcon="true"/>
+                                            </div>
+                                        </div>
+
+                                        <div class="flex justify-content-between align-items-center mt-3 pt-3 border-top-1 border-white-alpha-10">
+                                            <p:commandButton value="Limpiar filtros" action="#{itinerarioBean.limpiarFiltros}"
+                                                             update="tablaVuelos" type="button" onclick="this.form.submit()"
+                                                             styleClass="ui-button-flat btn-secondary-custom" icon="pi pi-times" />
+                                            <p:commandButton value="Buscar Vuelos" action="#{itinerarioBean.buscarVuelos}" icon="pi pi-search"
+                                                             update="tablaVuelos resultadoBusquedaInfo"
+                                                             styleClass="btn-corp" />
+                                        </div>
                                     </div>
 
-                                    <div class="ui-fluid p-formgrid p-grid mb-4">
-                                        <div class="p-field p-col-12 p-md-4">
-                                            <div class="ui-inputgroup">
-                                                <span class="ui-inputgroup-addon" style="background: #090e1a; border-color: var(--border-color);"><i class="pi pi-upload text-xs opacity-60"></i></span>
-                                                <p:selectOneMenu value="#{itinerarioBean.aeropuertoOrigenBusqueda}" filter="true">
-                                                    <f:selectItem itemLabel="Origen (IATA)..." itemValue="#{null}" />
-                                                    <f:selectItems value="#{itinerarioBean.aeropuertos}" var="a" itemValue="#{a.codigoIata}" itemLabel="#{a.codigoIata} - #{a.nombreAeropuerto}" />
-                                                </p:selectOneMenu>
-                                            </div>
-                                        </div>
-                                        <div class="p-field p-col-12 p-md-4">
-                                            <div class="ui-inputgroup">
-                                                <span class="ui-inputgroup-addon" style="background: #090e1a; border-color: var(--border-color);"><i class="pi pi-download text-xs opacity-60"></i></span>
-                                                <p:selectOneMenu value="#{itinerarioBean.aeropuertoDestinoBusqueda}" filter="true">
-                                                    <f:selectItem itemLabel="Destino (IATA)..." itemValue="#{null}" />
-                                                    <f:selectItems value="#{itinerarioBean.aeropuertos}" var="a" itemValue="#{a.codigoIata}" itemLabel="#{a.codigoIata} - #{a.nombreAeropuerto}" />
-                                                </p:selectOneMenu>
-                                            </div>
-                                        </div>
-                                        <div class="p-field p-col-12 p-md-3">
-                                            <p:datePicker value="#{itinerarioBean.fechaBusqueda}" placeholder="Fecha Vuelo" pattern="dd/MM/yyyy" showIcon="true"/>
-                                        </div>
-                                        <div class="p-field p-col-12 p-md-1">
-                                            <p:commandButton action="#{itinerarioBean.buscarVuelos}" icon="pi pi-search" update="tablaVuelos" styleClass="btn-corp w-full" style="padding: 11px !important;"/>
-                                        </div>
-                                    </div>
+                                    <!-- Contador de resultados, claro y visible -->
+                                    <p:outputPanel id="resultadoBusquedaInfo" layout="block" styleClass="resultado-busqueda-info mb-2">
+                                        <h:outputText value="#{itinerarioBean.vuelos.size()} vuelo(s) encontrado(s)"
+                                                      rendered="#{not empty itinerarioBean.vuelos}" />
+                                        <h:outputText value="No se encontraron vuelos con estos filtros. Intenta ampliar el rango de búsqueda."
+                                                      styleClass="sin-resultados"
+                                                      rendered="#{empty itinerarioBean.vuelos}" />
+                                    </p:outputPanel>
 
                                     <p:dataTable id="tablaVuelos" value="#{itinerarioBean.vuelos}" var="vuelo" rowKey="#{vuelo.idVuelo}"
-                                                 rows="5" paginator="true" paginatorPosition="bottom" size="small"
-                                                 paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}">
+                                                 rows="6" paginator="true" paginatorPosition="bottom" size="small"
+                                                 paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}"
+                                                 emptyMessage="No hay vuelos que coincidan con la búsqueda.">
 
                                         <p:column style="width:2.5rem; text-align: center"><p:rowToggler /></p:column>
 
@@ -492,21 +1036,39 @@
                                             <span style="color: var(--sky-blue); font-family: 'JetBrains Mono', monospace; font-weight: 700;">#{vuelo.numeroVuelo}</span>
                                         </p:column>
 
-                                        <p:column headerText="Salida Programada">
-                                            <h:outputText value="#{vuelo.fechaHoraSalida}" styleClass="font-semibold text-white">
-                                                <f:convertDateTime pattern="dd/MM/yyyy HH:mm"/>
+                                        <p:column headerText="Ruta">
+                                            <span class="font-mono text-white text-sm">
+                                                #{vuelo.segmentoVuelos[0].aeropuertoOrigen.codigoIata}
+                                                <i class="pi pi-arrow-right mx-1" style="font-size:0.65rem; color:var(--text-secondary);"></i>
+                                                #{vuelo.segmentoVuelos[vuelo.segmentoVuelos.size() - 1].aeropuertoDestino.codigoIata}
+                                            </span>
+                                                                        <span class="escalas-tag" rendered="#{vuelo.segmentoVuelos.size() gt 1}">
+                                                #{vuelo.segmentoVuelos.size() - 1} esc.
+                                            </span>
+                                            <span class="directo-tag" rendered="#{vuelo.segmentoVuelos.size() eq 1}">directo</span>
+                                        </p:column>
+
+                                        <p:column headerText="Salida">
+                                            <h:outputText value="#{vuelo.fechaHoraSalida}" styleClass="font-semibold text-white text-sm">
+                                                <f:convertDateTime pattern="dd/MM HH:mm"/>
                                             </h:outputText>
                                         </p:column>
 
-                                        <p:column headerText="Arribo Estimado">
-                                            <h:outputText value="#{vuelo.fechaHoraLlegada}" styleClass="text-gray-400">
-                                                <f:convertDateTime pattern="dd/MM/yyyy HH:mm"/>
+                                        <p:column headerText="Llegada">
+                                            <h:outputText value="#{vuelo.fechaHoraLlegada}" styleClass="text-gray-400 text-sm">
+                                                <f:convertDateTime pattern="dd/MM HH:mm"/>
                                             </h:outputText>
                                         </p:column>
 
-                                        <p:column style="width:7rem; text-align:center">
+                                        <p:column style="width:8.5rem; text-align:center">
+                                            <h:panelGroup rendered="#{itinerarioBean.estaVinculado(vuelo)}">
+                                    <span class="badge-ya-vinculado">
+                                        <i class="pi pi-check-circle"></i> Vinculado
+                                    </span>
+                                            </h:panelGroup>
                                             <p:commandButton value="Vincular" icon="pi pi-plus-circle" action="#{itinerarioBean.agregarVuelo(vuelo)}"
-                                                             update="formVuelosAsignados:panelTimeline :msgs"
+                                                             rendered="#{not itinerarioBean.estaVinculado(vuelo)}"
+                                                             update="formVuelosAsignados:panelTimeline tablaVuelos :msgs"
                                                              styleClass="ui-button-sm btn-corp" style="padding: 6px !important; font-size: 0.8rem !important;" />
                                         </p:column>
 
@@ -528,16 +1090,48 @@
 
                             <div class="p-col-12 p-lg-5 p-4" style="background: rgba(15, 23, 42, 0.25);">
                                 <h:form id="formVuelosAsignados">
-                                    <div class="flex align-items-center gap-2 mb-4">
-                                        <i class="pi pi-sliders-h text-emerald-400 text-sm"></i>
-                                        <h4 class="m-0 text-white font-semibold" style="font-size: 0.85rem; letter-spacing: 0.02em;">B. ESTRUCTURA OPERATIVA DE ESCALAS</h4>
+                                    <div class="flex align-items-center gap-2 mb-1">
+                                        <span class="paso-badge paso-badge-verde">B</span>
+                                        <h4 class="m-0 text-white font-semibold" style="font-size: 0.85rem; letter-spacing: 0.02em;">TU ITINERARIO ARMADO</h4>
+                                    </div>
+                                    <p class="text-xs opacity-50 mb-3" style="margin-left: 30px;">
+                                        Así va quedando la ruta a medida que vinculas vuelos.
+                                    </p>
+
+                                    <!-- Mapa en vivo: se redibuja automáticamente al vincular/quitar tramos -->
+                                    <div id="mapaItinerarioArmado" style="width:100%; height:280px; border-radius:10px; border:1px solid var(--border-color); margin-bottom: 8px;"></div>
+
+                                    <div class="mapa-leyenda mb-4">
+                                        <span class="leyenda-item"><span class="leyenda-dot" style="background:#38bdf8;"></span> Origen</span>
+                                        <span class="leyenda-item"><i class="pi pi-map-marker" style="color:#f59e0b; font-size:0.8rem;"></i> Escala</span>
+                                        <span class="leyenda-item"><span class="leyenda-dot" style="background:#10b981;"></span> Destino</span>
                                     </div>
 
                                     <h:panelGroup id="panelTimeline">
+
+                                        <!-- Resumen / contador -->
+                                        <h:panelGroup rendered="#{not empty itinerarioBean.itinerariosAsignados}" layout="block" styleClass="resumen-secuencia mb-4">
+                                            <div class="resumen-item">
+                                                <span class="resumen-numero">#{itinerarioBean.itinerariosAsignados.size()}</span>
+                                                <span class="resumen-label">Vuelo#{itinerarioBean.itinerariosAsignados.size() > 1 ? 's' : ''}</span>
+                                            </div>
+                                            <div class="resumen-item">
+                                                <span class="resumen-numero">#{itinerarioBean.numeroEscalasCalculado}</span>
+                                                <span class="resumen-label">Escala#{itinerarioBean.numeroEscalasCalculado != 1 ? 's' : ''}</span>
+                                            </div>
+                                            <div class="resumen-validacion #{itinerarioBean.resumenSecuencia eq 'OK' ? 'valido' : 'invalido'}">
+                                                <i class="pi #{itinerarioBean.resumenSecuencia eq 'OK' ? 'pi-check-circle' : 'pi-exclamation-triangle'}"></i>
+                                                <span>
+                        <h:outputText value="Secuencia coherente con la ruta maestra" rendered="#{itinerarioBean.resumenSecuencia eq 'OK'}"/>
+                        <h:outputText value="#{itinerarioBean.resumenSecuencia}" rendered="#{itinerarioBean.resumenSecuencia ne 'OK'}"/>
+                    </span>
+                                            </div>
+                                        </h:panelGroup>
+
                                         <h:panelGroup rendered="#{empty itinerarioBean.itinerariosAsignados}">
                                             <div class="text-center py-6 opacity-40 border-round-xl" style="border: 2px dashed var(--border-color); background: rgba(0,0,0,0.15);">
                                                 <i class="pi pi-map-marker mb-3 text-xl" style="color: var(--text-secondary);"></i>
-                                                <p class="text-xs m-0">No hay tramos operativos enlazados todavía.<br/>Utilice el buscador para añadir escalas secuenciales.</p>
+                                                <p class="text-xs m-0">No hay tramos operativos enlazados todavía.<br/>Vincula un vuelo desde la búsqueda para verlo aparecer aquí.</p>
                                             </div>
                                         </h:panelGroup>
 
@@ -547,14 +1141,20 @@
 
                                                     <div class="vuelo-item-header">
                                                         <div class="flex align-items-center gap-2">
-                                                            <span class="text-xs font-bold px-2 py-1 border-round-md" style="background: rgba(59,130,246,0.15); color: #60a5fa;">
-                                                                CONEXIÓN ##{status.index + 1}
-                                                            </span>
+                                <span class="text-xs font-bold px-2 py-1 border-round-md" style="background: rgba(59,130,246,0.15); color: #60a5fa;">
+                                    CONEXIÓN ##{status.index + 1}
+                                </span>
                                                             <span class="text-white font-mono font-bold text-sm">#{iv.vuelo.numeroVuelo}</span>
                                                         </div>
-                                                        <span class="text-xs text-emerald-400 font-semibold flex align-items-center gap-1">
-                                                            <i class="pi pi-check-circle"></i> Validado
-                                                        </span>
+                                                        <div class="flex align-items-center gap-3">
+                                <span class="text-xs text-emerald-400 font-semibold flex align-items-center gap-1">
+                                    <i class="pi pi-check-circle"></i> Validado
+                                </span>
+                                                            <p:commandButton icon="pi pi-times" actionListener="#{itinerarioBean.removerVuelo(iv)}"
+                                                                             update=":formVuelosAsignados:panelTimeline :formBuscarVuelo:tablaVuelos"
+                                                                             styleClass="ui-button-flat ui-button-danger ui-button-sm btn-quitar-tramo"
+                                                                             title="Quitar este tramo" />
+                                                        </div>
                                                     </div>
 
                                                     <div class="vuelo-item-body">
@@ -564,7 +1164,10 @@
                                                         </div>
 
                                                         <div class="flex flex-column align-items-center flex-grow-1 px-3">
-                                                            <span class="text-400 font-mono" style="font-size: 0.7rem; letter-spacing: 1px;">DIRECTO</span>
+                                <span class="text-400 font-mono" style="font-size: 0.7rem; letter-spacing: 1px;">
+                                    <h:outputText value="#{iv.vuelo.segmentoVuelos.size() - 1} ESC." rendered="#{iv.vuelo.segmentoVuelos.size() gt 1}"/>
+                                    <h:outputText value="DIRECTO" rendered="#{iv.vuelo.segmentoVuelos.size() eq 1}"/>
+                                </span>
                                                             <div class="w-full h-1px bg-white-alpha-10 my-1 position-relative flex align-items-center justify-content-center">
                                                                 <i class="pi pi-send text-xs text-blue-400" style="transform: rotate(90deg); background: #0b1329; padding: 0 4px;"></i>
                                                             </div>
@@ -576,6 +1179,11 @@
                                                             <span class="text-500 font-medium" style="font-size: 0.65rem;">Arribo previsto</span>
                                                         </div>
                                                     </div>
+
+                                                    <h:panelGroup rendered="#{not status.last}" layout="block" styleClass="conexion-indicador">
+                                                        <i class="pi pi-arrow-down"></i>
+                                                        <span>Conecta con el siguiente tramo</span>
+                                                    </h:panelGroup>
 
                                                     <div class="flex justify-content-between text-xs opacity-60 px-1">
                                                         <span><i class="pi pi-calendar mr-1"></i>Itinerario de Red Física</span>
@@ -594,6 +1202,7 @@
                                     </h:panelGroup>
                                 </h:form>
                             </div>
+
                         </div>
                     </div>
                 </h:panelGroup>

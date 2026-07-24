@@ -5,8 +5,10 @@ import java.util.Optional;
 
 import com.SkyWay.dto.InfoVueloDTO;
 
+import com.SkyWay.modules.aeropuerto.presentation.dto.AeropuertoMapaDTO;
 import com.SkyWay.modules.piloto.domain.model.Piloto;
 import com.SkyWay.modules.vuelo.domain.model.Vuelo;
+import com.SkyWay.modules.vuelo.presentation.dto.VueloMapaDTO;
 
 
 public interface VueloService {
@@ -38,5 +40,7 @@ public interface VueloService {
 	  public InfoVueloDTO getInfoVuelo(int idVuelo);
 	  List<Vuelo> findByPiloto(Piloto piloto);
 	  public Vuelo updateVuelo(Vuelo vuelo);
-
+	public List<AeropuertoMapaDTO> findAllParaMapa();
+	public VueloMapaDTO construirGeometriaVuelo(Vuelo vuelo);
+	public List<VueloMapaDTO> construirGeometriaVuelos(List<Vuelo> vuelos);
 }
