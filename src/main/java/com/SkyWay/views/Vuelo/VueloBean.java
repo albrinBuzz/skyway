@@ -30,6 +30,7 @@ import com.SkyWay.modules.turno.domain.service.TurnoService;
 import com.SkyWay.modules.vuelo.domain.model.Vuelo;
 import com.SkyWay.modules.vuelo.domain.service.VueloService;
 import com.SkyWay.util.Logger;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.ExternalContext;
@@ -127,7 +128,7 @@ public class VueloBean implements Serializable {
     private boolean vueloCreado = false;
     private Turno turno;
     private List<ClaseAsientoPrecioDto>preciosAsientos;
-
+    private String aeropuertosMapaJson;
     @PostConstruct
     public void init() {
         // Inicializaciones si se requieren
@@ -218,6 +219,13 @@ public class VueloBean implements Serializable {
             //segmentos=simularSegmentos();
 
         }
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            this.aeropuertosMapaJson = mapper.writeValueAsString(aeropuertoService.findAllParaMapa());
+        } catch (Exception e) {
+            Logger.logError("Error serializando aeropuertos para mapa: " + e.getMessage());
+            this.aeropuertosMapaJson = "[]";
+        }
 
 
     }
@@ -307,9 +315,17 @@ public class VueloBean implements Serializable {
 
 
     public void guardarSegmento() {
+        Logger.logInfo(">>> guardarSegmento() INICIADO. origen=" + aeropuertoOrigen + " destino=" + aeropuertoDestino);
         try {
-            // 1. Validaciones Geográficas y Temporales
-            if (aeropuertoOrigen == null || aeropuertoDestino == null) return;
+            if (aeropuertoOrigen == null || aeropuertoOrigen.isEmpty()) {
+                addMessage(FacesMessage.SEVERITY_WARN, "Falta información", "Debes seleccionar el aeropuerto de origen en el mapa.");
+                return;
+            }
+            if (aeropuertoDestino == null || aeropuertoDestino.isEmpty()) {
+                addMessage(FacesMessage.SEVERITY_WARN, "Falta información", "Debes seleccionar el aeropuerto de destino en el mapa.");
+                return;
+            }
+
             confirmarGuardadoVuelo();
             segmentoActual.setAeropuertoOrigen(aeropuertos.get(this.aeropuertoOrigen));
             segmentoActual.setAeropuertoDestino(aeropuertos.get(this.aeropuertoDestino));
@@ -317,35 +333,24 @@ public class VueloBean implements Serializable {
             segmentoActual.setHoraLlegada(getFechaLlegadaAsTimestamp());
             segmentoActual.setVuelo(this.vuelo);
 
-            // Calcular Orden si es nuevo
             if (segmentoActual.getIdSegmento() == null) {
                 segmentoActual.setOrdenSegmento(segmentos.size() + 1);
             }
 
-            // 2. Guardar Segmento
             SegmentoVuelo guardado = segmentoVueloService.save(segmentoActual);
 
-            // 3. Gestionar Puerta de Embarque (AsignacionPuerta)
             if (puertaEmbarqueSeleccion != null && !puertaEmbarqueSeleccion.isEmpty()) {
                 PuertaEmbarque pe = puertaService.findById(Integer.valueOf(puertaEmbarqueSeleccion)).get();
-
-                // Buscar si ya existe asignación para este tramo (Edición)
                 AsignacionPuerta ap = asignacionPuertaService.findBySegmentoVuelo(guardado)
                         .stream().findFirst().orElse(new AsignacionPuerta());
-
                 ap.setSegmentoVuelo(guardado);
                 ap.setPuertaEmbarque(pe);
                 asignacionPuertaService.save(ap);
             }
 
-            // 4. Sincronizar Turno (Si es el primer tramo)
-            /*if (guardado.getOrdenSegmento() == 1) {
-                actualizarTurnoOperativo(guardado);
-            }*/
-
-            // 5. Refrescar lista de la vista
             segmentos = segmentoVueloService.findByIdVuelo(vuelo.getIdVuelo());
-            openNewSegmento(); // Reset para el siguiente
+            openNewSegmento();
+            reiniciarSeleccionMapa(); // limpia también el mapa para el próximo tramo
 
             addMessage(FacesMessage.SEVERITY_INFO, "Tramo Confirmado", "Ruta actualizada correctamente.");
         } catch (Exception e) {
@@ -490,6 +495,51 @@ public class VueloBean implements Serializable {
         }
         return null;
     }
+
+    public void seleccionarOrigenDesdeMapa() {
+        Logger.logInfo("seleccion de aeropuerto desde origen");
+        String iata = FacesContext.getCurrentInstance().getExternalContext()
+                .getRequestParameterMap().get("iata");
+        this.aeropuertoOrigen = iata;
+
+        Aeropuerto aero = aeropuertos.get(iata);
+        if (aero != null) {
+            this.puertaEmbarques = puertaService.findByAeropuerto(aero.getIdAeropuerto());
+            Logger.logInfo("Origen seleccionado: " + iata + " - Puertas encontradas: " + this.puertaEmbarques.size());
+        } else {
+            this.puertaEmbarques = new ArrayList<>();
+            Logger.logInfo("Origen seleccionado pero aeropuerto no encontrado en el mapa: " + iata);
+        }
+
+        // Si cambia el origen, la puerta previamente elegida ya no es válida
+        this.puertaEmbarqueSeleccion = null;
+    }
+
+    public void seleccionarDestinoDesdeMapa() {
+        String iata = FacesContext.getCurrentInstance().getExternalContext()
+                .getRequestParameterMap().get("iata");
+
+        if (iata != null && iata.equals(this.aeropuertoOrigen)) {
+            addMessage(FacesMessage.SEVERITY_WARN, "Selección inválida", "El destino no puede ser igual al origen.");
+            return; // no lo asignamos
+        }
+
+        this.aeropuertoDestino = iata;
+        Logger.logInfo("Destino seleccionado: " + iata);
+    }
+
+    public void reiniciarSeleccionMapa() {
+        this.aeropuertoOrigen = null;
+        this.aeropuertoDestino = null;
+        this.puertaEmbarques = new ArrayList<>();
+        this.puertaEmbarqueSeleccion = null;
+    }
+
+    public String getAeropuertosMapaJson() {
+        return aeropuertosMapaJson;
+    }
+
+
 
     public Vuelo getVueloSeleccionado() {
         return vueloSeleccionado;

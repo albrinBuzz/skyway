@@ -2,6 +2,8 @@ package com.SkyWay.modules.aeropuerto.domain.service;
 
 
 import com.SkyWay.modules.aeropuerto.domain.model.Aeropuerto;
+import com.SkyWay.modules.aeropuerto.presentation.dto.AeropuertoMapaDTO;
+import com.SkyWay.modules.aeropuerto.presentation.dto.AeropuertoMapaProjection;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,4 +26,8 @@ public interface AeropuertoService {
 
     // Actualizar un aeropuerto existente
     Aeropuerto update(Aeropuerto aeropuerto);
+
+    public List<AeropuertoMapaDTO> findAllParaMapa();
+
+    List<AeropuertoMapaProjection> findAllConCoordenadas();
 }

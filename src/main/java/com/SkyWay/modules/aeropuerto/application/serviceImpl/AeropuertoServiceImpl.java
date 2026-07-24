@@ -5,6 +5,8 @@ import java.util.Optional;
 import com.SkyWay.modules.aeropuerto.domain.model.Aeropuerto;
 import com.SkyWay.modules.aeropuerto.domain.repository.AeropuertoRepository;
 import com.SkyWay.modules.aeropuerto.domain.service.AeropuertoService;
+import com.SkyWay.modules.aeropuerto.presentation.dto.AeropuertoMapaDTO;
+import com.SkyWay.modules.aeropuerto.presentation.dto.AeropuertoMapaProjection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -40,4 +42,18 @@ public class AeropuertoServiceImpl implements AeropuertoService {
     public Aeropuerto update(Aeropuerto aeropuerto) {
         return aeropuertoRepository.save(aeropuerto);
     }
+
+    @Override
+    public List<AeropuertoMapaProjection> findAllConCoordenadas() {
+        return aeropuertoRepository.findAllConCoordenadas();
+    }
+
+    public List<AeropuertoMapaDTO> findAllParaMapa() {
+        return aeropuertoRepository.findAllConCoordenadas().stream()
+                .map(p -> new AeropuertoMapaDTO(
+                        p.getCodigoIata(), p.getNombreAeropuerto(), p.getCiudad(),
+                        p.getLatitud(), p.getLongitud()))
+                .toList();
+    }
+
 }
