@@ -141,8 +141,18 @@
 
             // Inicializa el mapa de ruta maestra en cuanto el DOM esté listo (esta sección no vive en un diálogo)
             document.addEventListener('DOMContentLoaded', function () {
-                console.log('🚀 [DOM] Evento DOMContentLoaded detectado. Inicializando mapa principal...');
+                console.log('🚀 [DOM] Evento DOMContentLoaded detectado. Inicializando mapas...');
+
+                // 1. Carga Mapa Ruta Maestra
                 initMapaRutaMaestra('#{itinerarioBean.aeropuertosMapaJson}');
+
+                // 2. Carga Mapa Itinerario Armado (con la propiedad del Bean)
+                var jsonInicial = '#{itinerarioBean.itinerarioArmadoMapaJson}';
+                console.log('📦 JSON de itinerario armado al cargar vista:', jsonInicial);
+
+                if (jsonInicial && jsonInicial !== '[]' && jsonInicial !== '') {
+                    renderItinerarioArmado(jsonInicial);
+                }
             });
 
             // ---------- MAPA 2: VUELOS FÍSICOS Y ESCALAS (Paso 3) ----------
@@ -152,7 +162,18 @@
             var capasItinerarioArmado = [];
 
             function initMapaItinerarioArmado() {
-                if (mapaItinerarioArmado) return;
+                var container = L.DomUtil.get('mapaItinerarioArmado');
+                if (container !== null) {
+                    // Si el contenedor fue reemplazado por AJAX, limpiamos el puntero interno de Leaflet
+                    container._leaflet_id = null;
+                }
+
+                if (mapaItinerarioArmado) {
+                    console.log('[ItinerarioArmado] Destruyendo instancia previa del mapa...');
+                    mapaItinerarioArmado.remove();
+                    mapaItinerarioArmado = null;
+                }
+
                 mapaItinerarioArmado = L.map('mapaItinerarioArmado', { zoomControl: true, attributionControl: false })
                     .setView([-20, -60], 3);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 12 }).addTo(mapaItinerarioArmado);
@@ -160,14 +181,23 @@
 
             // Se llama automáticamente desde el servidor (PrimeFaces.current().executeScript)
             // cada vez que se vincula o se quita un tramo.
+
             function renderItinerarioArmado(vuelosJson) {
+                console.log('🧩 [ItinerarioArmado] Renderizando Itinerario Completo en Mapa');
                 initMapaItinerarioArmado();
 
+                console.log('[ItinerarioArmado] Limpiando ' + capasItinerarioArmado.length + ' capas previas del mapa...');
                 capasItinerarioArmado.forEach(function (capa) { mapaItinerarioArmado.removeLayer(capa); });
                 capasItinerarioArmado = [];
 
                 var vuelos = typeof vuelosJson === 'string' ? JSON.parse(vuelosJson) : vuelosJson;
-                if (!vuelos || vuelos.length === 0) return;
+                console.log('[ItinerarioArmado] Vuelos vinculados recibidos:', vuelos);
+
+                if (!vuelos || vuelos.length === 0) {
+                    console.warn('[ItinerarioArmado] ⚠️ No hay vuelos vinculados para reconstruir la ruta.');
+                    console.groupEnd();
+                    return;
+                }
 
                 var todosLosPuntos = [];
                 var numeroGlobal = 1;
@@ -175,6 +205,8 @@
                 vuelos.forEach(function (vuelo, idxVuelo) {
                     var latlngs = vuelo.puntos.map(function (p) { return [p.lat, p.lng]; });
                     todosLosPuntos = todosLosPuntos.concat(latlngs);
+
+                    console.log('  ├─ [Tramo ' + (idxVuelo + 1) + '/' + vuelos.length + '] Vuelo ' + vuelo.numeroVuelo + ' (' + vuelo.puntos.length + ' puntos)');
 
                     // Línea sólida azul para cada tramo de vuelo ya vinculado
                     var linea = L.polyline(latlngs, { color: '#38bdf8', weight: 4, opacity: 0.9 }).addTo(mapaItinerarioArmado);
@@ -184,18 +216,23 @@
                     vuelo.puntos.forEach(function (p, idxPunto) {
                         var color = '#f59e0b'; // escala por defecto
                         var html = '<div class="marker-num-badge">' + numeroGlobal + '</div>';
+                        var tipoPuntoDesc = 'Conexión/Escala (# ' + numeroGlobal + ')';
 
                         if (idxVuelo === 0 && idxPunto === 0) {
                             color = '#38bdf8'; // origen absoluto
                             html = '<i class="pi pi-circle-fill" style="color:#38bdf8; font-size:1rem; filter: drop-shadow(0 0 4px #38bdf8);"></i>';
+                            tipoPuntoDesc = '📍 Origen Absoluto del Itinerario';
                         } else if (idxVuelo === vuelos.length - 1 && idxPunto === vuelo.puntos.length - 1) {
                             color = '#10b981'; // destino absoluto
                             html = '<i class="pi pi-flag-fill" style="color:#10b981; font-size:1rem; filter: drop-shadow(0 0 4px #10b981);"></i>';
+                            tipoPuntoDesc = '🏁 Destino Absoluto del Itinerario';
                         } else if (p.tipo !== 'ESCALA') {
                             // origen/destino intermedio entre tramos consecutivos: se omite duplicado visual,
                             // se muestra como punto de conexión numerado
                             html = '<div class="marker-num-badge">' + numeroGlobal + '</div>';
                         }
+
+                        console.log('  │  ├─ Punto: ' + p.iata + ' (' + p.nombre + ') ── [' + tipoPuntoDesc + ']');
 
                         var icono = L.divIcon({ className: 'marker-itinerario-armado', html: html, iconSize: [22, 22] });
                         var marker = L.marker([p.lat, p.lng], { icon: icono })
@@ -210,6 +247,9 @@
                     if (idxVuelo < vuelos.length - 1) {
                         var finActual = latlngs[latlngs.length - 1];
                         var inicioSiguiente = vuelos[idxVuelo + 1].puntos[0];
+
+                        console.log('  │  └─ 🔗 Trazando conexión inter-tramo entre Vuelo ' + vuelo.numeroVuelo + ' y Vuelo ' + vuelos[idxVuelo + 1].numeroVuelo);
+
                         var conector = L.polyline([finActual, [inicioSiguiente.lat, inicioSiguiente.lng]], {
                             color: '#64748b', weight: 2, dashArray: '4,6', opacity: 0.6
                         }).addTo(mapaItinerarioArmado);
@@ -218,8 +258,61 @@
                 });
 
                 if (todosLosPuntos.length > 0) {
+                    console.log('[ItinerarioArmado] Encuadrando cámara para ' + todosLosPuntos.length + ' puntos geográficos...');
                     mapaItinerarioArmado.fitBounds(L.latLngBounds(todosLosPuntos), { padding: [30, 30] });
                 }
+
+                console.info('[ItinerarioArmado] ✅ Renderizado completado con éxito.');
+                console.groupEnd();
+            }
+
+
+
+            var mapaVistaPrevia = null;
+            var capasVistaPrevia = [];
+
+            function verMapaRutaVuelo(xhr, status, vueloJson) {
+                if (!vueloJson) return;
+
+                var vuelo = typeof vueloJson === 'string' ? JSON.parse(vueloJson) : vueloJson;
+
+                // Fix por si el contenedor fue recreado
+                var container = L.DomUtil.get('mapaVistaPreviaVuelo');
+                if (container !== null) container._leaflet_id = null;
+
+                if (mapaVistaPrevia) {
+                    mapaVistaPrevia.remove();
+                    mapaVistaPrevia = null;
+                }
+
+                // Espera breve a que el diálogo modal se despliegue para tomar dimensiones correctas
+                setTimeout(function () {
+                    mapaVistaPrevia = L.map('mapaVistaPreviaVuelo', { zoomControl: true, attributionControl: false }).setView([-20, -60], 3);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 12 }).addTo(mapaVistaPrevia);
+
+                    var latlngs = vuelo.puntos.map(function (p) { return [p.lat, p.lng]; });
+
+                    // Trazar línea de trayectoria
+                    var linea = L.polyline(latlngs, { color: '#38bdf8', weight: 4, opacity: 0.9 }).addTo(mapaVistaPrevia);
+
+                    // Trazar marcadores de origen, escalas y destino
+                    vuelo.puntos.forEach(function (p, idx) {
+                        var iconHtml = '<i class="pi pi-circle-fill" style="color:#f59e0b; font-size:1rem;"></i>';
+                        if (idx === 0) iconHtml = '<i class="pi pi-circle-fill" style="color:#38bdf8; font-size:1.1rem;"></i>';
+                        else if (idx === vuelo.puntos.length - 1) iconHtml = '<i class="pi pi-flag-fill" style="color:#10b981; font-size:1.1rem;"></i>';
+
+                        var icono = L.divIcon({ className: 'marker-preview', html: iconHtml, iconSize: [20, 20] });
+                        L.marker([p.lat, p.lng], { icon: icono })
+                            .addTo(mapaVistaPrevia)
+                            .bindTooltip(p.iata + ' — ' + p.nombre);
+                    });
+
+                    if (latlngs.length > 0) {
+                        mapaVistaPrevia.fitBounds(L.latLngBounds(latlngs), { padding: [40, 40] });
+                    }
+
+                    mapaVistaPrevia.invalidateSize(); // Invalida tamaño para asegurar rendering correcto en modal
+                }, 200);
             }
 
             //]]>
@@ -1060,11 +1153,20 @@
                                             </h:outputText>
                                         </p:column>
 
+                                        <p:column headerText="Mapa" style="width:3.5rem; text-align:center">
+                                            <p:commandButton icon="pi pi-map-marker"
+                                                             title="Ver Trayectoria en Mapa"
+                                                             action="#{itinerarioBean.prepararMapaVuelo(vuelo)}"
+                                                             oncomplete="PF('dlgMapaVuelo').show(); verMapaRutaVuelo(xhr, status, args.vueloJson);"
+                                                             styleClass="ui-button-rounded ui-button-flat ui-button-info"
+                                                             style="padding: 0 !important; width: 2.2rem; height: 2.2rem;" />
+                                        </p:column>
+
                                         <p:column style="width:8.5rem; text-align:center">
                                             <h:panelGroup rendered="#{itinerarioBean.estaVinculado(vuelo)}">
-                                    <span class="badge-ya-vinculado">
-                                        <i class="pi pi-check-circle"></i> Vinculado
-                                    </span>
+                                            <span class="badge-ya-vinculado">
+                                                <i class="pi pi-check-circle"></i> Vinculado
+                                            </span>
                                             </h:panelGroup>
                                             <p:commandButton value="Vincular" icon="pi pi-plus-circle" action="#{itinerarioBean.agregarVuelo(vuelo)}"
                                                              rendered="#{not itinerarioBean.estaVinculado(vuelo)}"
@@ -1122,9 +1224,9 @@
                                             <div class="resumen-validacion #{itinerarioBean.resumenSecuencia eq 'OK' ? 'valido' : 'invalido'}">
                                                 <i class="pi #{itinerarioBean.resumenSecuencia eq 'OK' ? 'pi-check-circle' : 'pi-exclamation-triangle'}"></i>
                                                 <span>
-                        <h:outputText value="Secuencia coherente con la ruta maestra" rendered="#{itinerarioBean.resumenSecuencia eq 'OK'}"/>
-                        <h:outputText value="#{itinerarioBean.resumenSecuencia}" rendered="#{itinerarioBean.resumenSecuencia ne 'OK'}"/>
-                    </span>
+                                            <h:outputText value="Secuencia coherente con la ruta maestra" rendered="#{itinerarioBean.resumenSecuencia eq 'OK'}"/>
+                                            <h:outputText value="#{itinerarioBean.resumenSecuencia}" rendered="#{itinerarioBean.resumenSecuencia ne 'OK'}"/>
+                                                </span>
                                             </div>
                                         </h:panelGroup>
 
@@ -1164,10 +1266,10 @@
                                                         </div>
 
                                                         <div class="flex flex-column align-items-center flex-grow-1 px-3">
-                                <span class="text-400 font-mono" style="font-size: 0.7rem; letter-spacing: 1px;">
-                                    <h:outputText value="#{iv.vuelo.segmentoVuelos.size() - 1} ESC." rendered="#{iv.vuelo.segmentoVuelos.size() gt 1}"/>
-                                    <h:outputText value="DIRECTO" rendered="#{iv.vuelo.segmentoVuelos.size() eq 1}"/>
-                                </span>
+                                        <span class="text-400 font-mono" style="font-size: 0.7rem; letter-spacing: 1px;">
+                                            <h:outputText value="#{iv.vuelo.segmentoVuelos.size() - 1} ESC." rendered="#{iv.vuelo.segmentoVuelos.size() gt 1}"/>
+                                            <h:outputText value="DIRECTO" rendered="#{iv.vuelo.segmentoVuelos.size() eq 1}"/>
+                                        </span>
                                                             <div class="w-full h-1px bg-white-alpha-10 my-1 position-relative flex align-items-center justify-content-center">
                                                                 <i class="pi pi-send text-xs text-blue-400" style="transform: rotate(90deg); background: #0b1329; padding: 0 4px;"></i>
                                                             </div>
@@ -1209,5 +1311,10 @@
 
             </div>
         </div>
+
+        <p:dialog header="Trayectoria del Vuelo" widgetVar="dlgMapaVuelo" modal="true"
+                  resizable="false" width="650" height="420" styleClass="dialog-dark">
+            <div id="mapaVistaPreviaVuelo" style="width: 100%; height: 380px; border-radius: 8px; border: 1px solid var(--border-color);"></div>
+        </p:dialog>
     </ui:define>
 </ui:composition>
