@@ -1,4 +1,8 @@
 
+ALTER USER aerolinea_user SET search_path TO public, directus;
+
+SET search_path TO public, directus;
+
 
 -- Eliminar Secuencias con CASCADE
 DROP SEQUENCE IF EXISTS rol_seq CASCADE;

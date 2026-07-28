@@ -1,308 +1,614 @@
-/* ============================================================
-   ESTILOS GENERALES Y TÍTULOS
-============================================================ */
-.page-title {
-    margin: 45px 0 20px;
-    text-align: center;
-    color: #ffffff;
-    font-size: 32px;
-    font-weight: 800;
+/* =========================================================
+   SKYWAY — SELECCIÓN DE ASIENTOS (v2 — diseño premium)
+   ========================================================= */
+
+* { box-sizing: border-box; }
+
+body {
+    background:
+            radial-gradient(circle at 15% 0%, rgba(56, 189, 248, 0.10), transparent 45%),
+            radial-gradient(circle at 85% 15%, rgba(59, 130, 246, 0.08), transparent 50%),
+            #0a0f1c;
 }
 
-.page-title i { margin-right: 10px; color: #8fd3ff; }
-
-/* ============================================================
-   STEPPER DE VUELOS (PROGRESO)
-============================================================ */
-.flight-stepper {
-    display: flex;
-    justify-content: space-between;
-    margin: 25px 0;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #2a2f3a;
-}
-
-.flight-step {
-    flex: 1;
-    text-align: center;
-    color: #8e8e8e;
-    position: relative;
-    font-size: 13px;
-}
-
-.flight-step.active { color: #ffffff; font-weight: bold; }
-
-.flight-indicator {
-    position: absolute;
-    bottom: -13px;
-    left: 20%;
-    right: 20%;
-    height: 3px;
-    background: transparent;
-    border-radius: 2px;
-}
-
-.flight-step.active .flight-indicator { background: #00d1ff; }
-
-/* ============================================================
-   INFO DEL VUELO (TARJETA SUPERIOR)
-============================================================ */
-.vuelo-info-premium {
-    margin: 45px auto;
-    max-width: 900px;
-}
-
-.flight-header {
-    font-size: 18px;
-    color: #8fd3ff;
-    margin-bottom: 15px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.flight-card {
-    background: #141a22;
-    border-radius: 14px;
-    padding: 25px;
-    box-shadow: inset 0 0 0 1px #2a2f3a;
-}
-
-.flight-route-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 25px;
-}
-
-.route-airport strong {
-    display: block;
-    margin-top: 5px;
-    color: #ffffff;
-    font-size: 20px;
-}
-
-.route-arrow { font-size: 22px; color: #8fd3ff; }
-
-.flight-info-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-}
-
-.info-box {
-    background: #0f141b;
-    padding: 14px;
-    border-radius: 10px;
-    border-left: 4px solid #00d1ff;
-}
-
-.info-label { font-size: 12px; color: #9aa5b1; text-transform: uppercase; }
-.info-value { font-size: 15px; font-weight: 600; margin-top: 5px; color: #ffffff; }
-
-/* ============================================================
-   LEYENDA DE ASIENTOS (Sincronizada con BD)
-============================================================ */
-.seat-legend {
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    margin: 30px 0;
-}
-
-.legend-block {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: #9aa5b1;
-    font-size: 13px;
-}
-.legend-square { width: 16px; height: 16px; border-radius: 4px; }
-.legend-square.libre { background: #2ecc71; }        /* Verde */
-.legend-square.ocupado { background: #e74c3c; }      /* Rojo */
-.legend-square.seleccionado { background: #f1c40f; } /* Amarillo */
-
-/* ============================================================
-   CABINA DE AVIÓN (EL FUSELAJE)
-============================================================ */
-.cabina-premium {
-    background: #0b0f14;
-    padding: 60px 30px;
-    border-radius: 100px 100px 40px 40px;
-    border: 2px solid #1f2733;
-    max-width: 580px;
+.seat-selection-container {
+    max-width: 1440px;
     margin: 0 auto;
-    box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+    padding: 2rem 1.5rem 3rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #f1f5f9;
 }
 
-.class-section {
-    margin-bottom: 45px;
+/* =========================================================
+   HERO DE VUELO ACTIVO
+   ========================================================= */
+.flight-hero-card {
     position: relative;
+    background: linear-gradient(135deg, #1e3a8a 0%, #172554 55%, #0f172a 100%);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    border-radius: 20px;
+    padding: 1.75rem 2rem;
+    margin-bottom: 1.5rem;
+    box-shadow:
+            0 20px 40px -12px rgba(0, 0, 0, 0.5),
+            0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+    overflow: hidden;
 }
 
-.class-title {
-    color: #00d1ff;
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    letter-spacing: 3px;
-    text-align: center;
-    margin-bottom: 25px;
-    font-weight: 800;
-    opacity: 0.7;
-}
-
-/* ============================================================
-   GRID DE ASIENTOS Y PASILLOS
-============================================================ */
-.seat-grid {
-    display: grid;
-    justify-content: center;
-    gap: 12px 8px;
-}
-
-.primera-clase .seat-grid {
-    grid-template-columns: 60px 60px 30px 60px 60px;
-}
-
-.grid-medium, .grid-large {
-    grid-template-columns: 50px 50px 50px 30px 50px 50px 50px;
-}
-
-.aisle {
-    width: 30px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: #1f2733;
-    font-size: 10px;
-}
-
-/* ============================================================
-   DISEÑO DEL ASIENTO (CORRECCIÓN DE COLOR BLANCO)
-============================================================ */
-.seat-btn {
-    width: 100%;
-    height: 55px;
-    border-radius: 8px 8px 16px 16px;
-    border: none;
-    font-size: 12px;
-    font-weight: 800;
-    cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    color: white !important; /* Fuerza el número a ser blanco */
-    box-shadow: inset 0 -4px 0 rgba(0,0,0,0.3);
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Detalle de brillo en el respaldo para realismo */
-/* Brillo superior para que no parezcan planos */
-.seat-btn::after {
-    content: "";
+.flight-hero-card::before {
+    content: '';
     position: absolute;
-    top: 4px;
-    left: 4px;
-    right: 4px;
-    height: 10px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 3px;
+    top: -60%;
+    right: -10%;
+    width: 420px;
+    height: 420px;
+    background: radial-gradient(circle, rgba(56, 189, 248, 0.18), transparent 70%);
     pointer-events: none;
 }
 
-/* ============================================================
-   ESTADOS DE ASIENTOS - UNIFICADOS (CORRECCIÓN VERDE)
-============================================================ */
-
-/* 1. LIBRE (Verde Esmeralda)
-   Añadimos 'input' y la clase de la sección para asegurar prioridad máxima
-*/
-
-/* Soporte para minúsculas y mayúsculas por si acaso */
-.seat-btn.libre, .seat-btn.Libre, .seat-btn.disponible {
-    background: linear-gradient(145deg, #2ecc71, #27ae60) !important;
-    color: white !important;
+.hero-flash {
+    animation: heroFlash 0.9s ease-out;
+}
+@keyframes heroFlash {
+    0%   { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.7), 0 20px 40px -12px rgba(0,0,0,0.5); }
+    40%  { box-shadow: 0 0 0 10px rgba(56, 189, 248, 0.28), 0 20px 40px -12px rgba(0,0,0,0.5); }
+    100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0), 0 20px 40px -12px rgba(0,0,0,0.5); }
 }
 
-.cabina-premium .seat-grid .seat-btn.libre,
-.cabina-premium input.seat-btn.libre,
-.seat-btn.libre {
-    background: #2ecc71 !important;
-    background: linear-gradient(145deg, #2ecc71, #27ae60) !important;
-    border-bottom: 3px solid #1e8449 !important;
-    color: white !important;
-    opacity: 1 !important;
-    visibility: visible !important;
+.hero-top-row {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
 }
 
-/* 2. OCUPADO (Rojo Intenso) */
-.cabina-premium .seat-grid .seat-btn.ocupado,
-.cabina-premium input.seat-btn.ocupado,
-.seat-btn.ocupado {
-    background: #e74c3c !important;
-    background: linear-gradient(145deg, #e74c3c, #c0392b) !important;
-    border-bottom: 3px solid #a93226 !important;
-    cursor: not-allowed;
-    color: rgba(255, 255, 255, 0.6) !important;
-    opacity: 1 !important;
+.hero-tramo-badge {
+    background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+    color: #04121e;
+    font-weight: 900;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    padding: 8px 18px;
+    border-radius: 24px;
+    box-shadow: 0 4px 14px rgba(56, 189, 248, 0.35);
 }
 
-/* 3. SELECCIONADO (Amarillo Neón) */
-.cabina-premium .seat-grid .seat-btn.seleccionado,
-.cabina-premium input.seat-btn.seleccionado,
-.seat-btn.seleccionado {
-    background: #f1c40f !important;
-    background: linear-gradient(145deg, #f1c40f, #f39c12) !important;
-    color: #2c3e50 !important; /* Texto oscuro para que se lea bien */
-    border-bottom: 3px solid #d4ac0d !important;
-    animation: pulse 1.5s infinite;
-    transform: translateY(2px);
-}
-
-
-.seat-btn:hover:not(.ocupado) {
-    transform: translateY(-3px) scale(1.05);
-    filter: brightness(1.2);
-}
-
-@keyframes pulse {
-    0% { box-shadow: 0 0 0 0px rgba(243, 156, 18, 0.5); }
-    70% { box-shadow: 0 0 0 12px rgba(243, 156, 18, 0); }
-    100% { box-shadow: 0 0 0 0px rgba(243, 156, 18, 0); }
-}
-
-/* ============================================================
-   PANEL DE PASAJEROS (INFERIOR)
-============================================================ */
-.passenger-seats-panel {
-    margin: 50px auto;
-    max-width: 900px;
-}
-
-.passenger-card {
-    background: #141a22;
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 20px;
-    border: 1px solid #2a2f3a;
-}
-
-.passenger-card.active {
-    border-color: #00d1ff;
-    box-shadow: 0 0 15px rgba(0, 209, 255, 0.1);
-}
-
-.seat-chip {
-    background: #0f141b;
-    border-radius: 12px;
-    padding: 12px;
-    min-width: 100px;
+.hero-main-info {
+    position: relative;
+    z-index: 1;
     text-align: center;
-    border: 1px solid #2a2f3a;
-    display: inline-block;
+    margin-bottom: 1.5rem;
 }
 
-.seat-chip.passenger-0 { border-left: 4px solid #4da3ff; }
-.seat-chip.passenger-1 { border-left: 4px solid #ff9f43; }
-.seat-chip.passenger-2 { border-left: 4px solid #2ecc71; }
+.hero-route {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    margin-bottom: 8px;
+}
+
+.hero-route-code {
+    font-size: 2.6rem;
+    font-weight: 900;
+    color: #ffffff;
+    font-family: 'JetBrains Mono', 'SFMono-Regular', monospace;
+    letter-spacing: 0.03em;
+    text-shadow: 0 2px 20px rgba(56, 189, 248, 0.3);
+}
+
+.hero-route-arrow {
+    color: #38bdf8;
+    font-size: 1.5rem;
+    animation: driftArrow 2.4s ease-in-out infinite;
+}
+@keyframes driftArrow {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(5px); }
+}
+
+.hero-flight-meta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    font-size: 0.88rem;
+    color: #bfdbfe;
+}
+
+.hero-flight-num,
+.hero-flight-time {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: rgba(255, 255, 255, 0.06);
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Mini-stepper de tramos */
+.flight-stepper {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    margin-bottom: 1.25rem;
+    padding-bottom: 2px;
+}
+
+.flight-step-mini {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.7rem 1rem;
+    background: rgba(15, 23, 42, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    flex: 1;
+    min-width: 150px;
+    transition: all 0.25s ease;
+}
+
+.flight-step-mini.active {
+    background: linear-gradient(135deg, #0284c7, #0369a1);
+    border-color: #38bdf8;
+    box-shadow: 0 6px 18px rgba(56, 189, 248, 0.3);
+    transform: translateY(-2px);
+}
+
+.flight-step-mini.completado {
+    border-color: rgba(16, 185, 129, 0.5);
+    background: rgba(16, 185, 129, 0.06);
+}
+
+.step-mini-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #334155;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    flex-shrink: 0;
+    transition: all 0.25s ease;
+}
+.flight-step-mini.active .step-mini-icon { background: #38bdf8; color: #04121e; box-shadow: 0 0 12px rgba(56,189,248,0.5); }
+.flight-step-mini.completado .step-mini-icon { background: #10b981; color: #04140f; }
+
+.step-mini-info { display: flex; flex-direction: column; min-width: 0; }
+.step-mini-ruta { font-size: 0.82rem; font-weight: 800; color: #ffffff; font-family: 'JetBrains Mono', monospace; }
+.step-mini-num { font-size: 0.66rem; color: #94a3b8; }
+
+/* =========================================================
+   PROGRESO DE PASAJEROS
+   ========================================================= */
+.passenger-progress-bar {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(2, 6, 23, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 0.9rem 1.35rem;
+    backdrop-filter: blur(6px);
+}
+
+.progress-label {
+    font-size: 0.88rem;
+    color: #cbd5e1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.progress-label b { color: #38bdf8; font-weight: 800; }
+
+.progress-dots { display: flex; gap: 7px; }
+.progress-dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: #334155;
+    transition: all 0.3s ease;
+}
+.progress-dot.done { background: #10b981; box-shadow: 0 0 8px rgba(16,185,129,0.5); }
+.progress-dot.active {
+    background: #f59e0b;
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.7);
+    transform: scale(1.25);
+}
+
+/* =========================================================
+   REJILLA PRINCIPAL
+   ========================================================= */
+.booking-grid {
+    display: grid;
+    grid-template-columns: 300px 1fr 340px;
+    gap: 1.5rem;
+    align-items: start;
+    margin-top: 1.5rem;
+}
+/* Si solo hay 2 columnas hijas (sin checkout), usa este modificador en el XHTML */
+.booking-grid.booking-grid-2col {
+    grid-template-columns: 320px 1fr;
+}
+
+/* TARJETAS GENÉRICAS */
+.sidebar-card {
+    background: linear-gradient(180deg, rgba(30, 41, 59, 0.85), rgba(22, 30, 46, 0.85));
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 18px;
+    padding: 1.4rem;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(8px);
+}
+
+.card-subtitle {
+    font-size: 0.98rem;
+    margin: 0 0 1rem 0;
+    color: #f1f5f9;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+}
+.card-subtitle i { color: #38bdf8; }
+
+/* =========================================================
+   REGISTRO POR PASAJERO
+   ========================================================= */
+.registry-hint {
+    font-size: 0.74rem;
+    color: #94a3b8;
+    margin: -0.5rem 0 1.1rem 0;
+    line-height: 1.4;
+}
+
+.registry-table-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.registry-pasajero-block {
+    background: rgba(2, 6, 23, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 0.95rem;
+    transition: all 0.25s ease;
+}
+
+.registry-pasajero-block.pasajero-actual {
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.3), 0 8px 20px rgba(245, 158, 11, 0.1);
+}
+
+.registry-pasajero-header {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 0.7rem;
+}
+
+.registry-pasajero-badge {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+    color: #04121e;
+    font-weight: 900;
+    font-size: 0.72rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.registry-pasajero-nombre { font-size: 0.88rem; font-weight: 800; color: #ffffff; }
+
+.registry-tramo-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.3rem;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.06);
+    font-size: 0.76rem;
+    gap: 8px;
+}
+.registry-tramo-row:last-child { border-bottom: none; }
+.registry-tramo-row.tramo-activo {
+    background: rgba(56, 189, 248, 0.06);
+    border-radius: 8px;
+    padding-left: 0.5rem;
+}
+
+.registry-tramo-ruta { color: #94a3b8; font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
+
+.registry-asiento-chip {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(16, 185, 129, 0.14);
+    color: #34d399;
+    font-weight: 700;
+    font-size: 0.76rem;
+    padding: 4px 11px;
+    border-radius: 12px;
+    white-space: nowrap;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+}
+.registry-asiento-chip small { color: #6ee7b7; font-weight: 400; margin-left: 4px; }
+
+.registry-pendiente-chip {
+    font-size: 0.72rem;
+    color: #64748b;
+    background: rgba(100, 116, 139, 0.14);
+    padding: 4px 11px;
+    border-radius: 12px;
+    white-space: nowrap;
+}
+.registry-pendiente-chip.seleccionando {
+    color: #fbbf24;
+    background: rgba(245, 158, 11, 0.14);
+    animation: pulseSeleccionando 1.4s ease-in-out infinite;
+}
+@keyframes pulseSeleccionando {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.45; }
+}
+
+/* =========================================================
+   LEYENDA
+   ========================================================= */
+.seat-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+}
+.legend-block {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.78rem;
+    color: #cbd5e1;
+}
+.legend-square { width: 16px; height: 16px; border-radius: 5px; box-shadow: 0 0 8px currentColor; }
+.legend-square.disponible { background: #10b981; color: rgba(16,185,129,0.4); }
+.legend-square.ocupado { background: #ef4444; color: rgba(239,68,68,0.4); }
+.legend-square.seleccionado { background: #f59e0b; color: rgba(245,158,11,0.4); }
+.legend-square.en_proceso { background: #64748b; color: transparent; }
+
+/* =========================================================
+   CABINA DEL AVIÓN
+   ========================================================= */
+.airplane-container {
+    display: flex;
+    justify-content: center;
+}
+
+.airplane-fuselage {
+    position: relative;
+    background: linear-gradient(180deg, #0f172a, #0a0f1c);
+    border-radius: 110px 110px 28px 28px;
+    border: 2px solid rgba(51, 65, 85, 0.8);
+    padding: 2.25rem 1.5rem 2rem;
+    width: 100%;
+    max-width: 480px;
+    box-shadow:
+            0 25px 50px -12px rgba(0, 0, 0, 0.6),
+            0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+    text-align: center;
+}
+
+.airplane-nose {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 1.75rem;
+}
+
+.cockpit-glass {
+    width: 100px;
+    height: 18px;
+    background: linear-gradient(135deg, #38bdf8, #0284c7);
+    border-radius: 18px 18px 4px 4px;
+    margin-bottom: 0.6rem;
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+}
+
+.nose-title {
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 2.5px;
+    color: #64748b;
+}
+
+.class-section {
+    margin-bottom: 1.75rem;
+    padding: 1.15rem 0.75rem;
+    background: rgba(30, 41, 59, 0.4);
+    border-radius: 16px;
+    border: 1px dashed rgba(255, 255, 255, 0.08);
+}
+
+.class-title {
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: #38bdf8;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-bottom: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.seat-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.55rem;
+}
+
+/* BOTONES DE ASIENTO */
+.seat-btn.ui-button {
+    width: 44px !important;
+    height: 44px !important;
+    padding: 0 !important;
+    border-radius: 10px !important;
+    font-weight: 800 !important;
+    font-size: 0.86rem !important;
+    transition: transform 0.18s ease, box-shadow 0.18s ease !important;
+}
+.seat-btn.ui-button:not(:disabled):hover {
+    transform: translateY(-3px) scale(1.05);
+}
+
+.seat-btn.disponible {
+    background: linear-gradient(145deg, #10b981, #059669) !important;
+    color: #ffffff !important;
+    border: none !important;
+    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.35) !important;
+}
+.seat-btn.disponible:hover {
+    box-shadow: 0 8px 18px rgba(16, 185, 129, 0.5) !important;
+}
+
+.seat-btn.ocupado {
+    background: linear-gradient(145deg, #ef4444, #b91c1c) !important;
+    color: #ffffff !important;
+    border: none !important;
+    opacity: 0.55;
+    box-shadow: none !important;
+}
+
+.seat-btn.seleccionado {
+    background: linear-gradient(145deg, #fbbf24, #d97706) !important;
+    color: #1a1200 !important;
+    border: none !important;
+    box-shadow: 0 0 16px rgba(245, 158, 11, 0.65) !important;
+}
+
+.seat-btn.en_proceso {
+    background: #475569 !important;
+    color: #94a3b8 !important;
+    border: none !important;
+    cursor: not-allowed !important;
+    opacity: 0.55;
+    box-shadow: none !important;
+}
+
+.airplane-tail {
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: #475569;
+    letter-spacing: 2.5px;
+    margin-top: 1.25rem;
+}
+
+/* Barra inferior de navegación */
+.quick-nav-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.5rem;
+    gap: 0.75rem;
+}
+.nav-btn { white-space: nowrap; }
+
+.ui-button.nav-btn.ui-button-primary,
+.ui-button.nav-btn.ui-button-outlined {
+    border-radius: 12px !important;
+    font-weight: 700 !important;
+    padding: 0.65rem 1.4rem !important;
+    transition: transform 0.18s ease, box-shadow 0.18s ease !important;
+}
+.ui-button.nav-btn.ui-button-primary {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+    border: none !important;
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4) !important;
+}
+.ui-button.nav-btn.ui-button-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px rgba(37, 99, 235, 0.55) !important;
+}
+.ui-button.nav-btn.ui-button-outlined {
+    background: transparent !important;
+    border: 1px solid rgba(255,255,255,0.2) !important;
+    color: #cbd5e1 !important;
+}
+.ui-button.nav-btn.ui-button-outlined:hover {
+    border-color: #38bdf8 !important;
+    color: #38bdf8 !important;
+}
+
+/* =========================================================
+   CHECKOUT (si se usa en otra vista/versión con 3 columnas)
+   ========================================================= */
+.checkout-sidebar { position: sticky; top: 1.5rem; }
+.checkout-card {
+    background: linear-gradient(180deg, rgba(30, 41, 59, 0.9), rgba(22, 30, 46, 0.9));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    padding: 1.5rem;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(8px);
+}
+.checkout-title { margin: 0 0 1.25rem 0; font-size: 1.1rem; color: #fff; display: flex; align-items: center; gap: 0.5rem; }
+.checkout-section-title { font-size: 0.8rem; font-weight: 800; color: #38bdf8; text-transform: uppercase; margin-bottom: 0.75rem; }
+.progreso-general-box {
+    display: flex; flex-direction: column; align-items: center;
+    background: rgba(2,6,23,0.5); border-radius: 12px; padding: 1rem; margin-bottom: 0.5rem;
+}
+.progreso-numero { font-size: 1.5rem; font-weight: 900; color: #38bdf8; }
+.progreso-label { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; }
+.checkout-seats-list { display: flex; flex-direction: column; gap: 0.75rem; max-height: 280px; overflow-y: auto; }
+.empty-seats-msg { font-size: 0.8rem; color: #94a3b8; font-style: italic; }
+.checkout-seat-item {
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(2,6,23,0.5); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 0.65rem 0.9rem;
+}
+.seat-flight-info { display: flex; flex-direction: column; }
+.vuelo-tag { font-size: 0.76rem; font-weight: 800; color: #38bdf8; }
+.seat-sub { font-size: 0.66rem; color: #64748b; }
+.seat-price-box { font-size: 0.86rem; font-weight: 800; color: #fbbf24; }
+.checkout-divider { height: 1px; background: rgba(255,255,255,0.07); margin: 1.25rem 0; }
+.checkout-totals { display: flex; flex-direction: column; gap: 0.55rem; margin-bottom: 1.25rem; }
+.total-row { display: flex; justify-content: space-between; font-size: 0.82rem; color: #94a3b8; }
+.total-row.final {
+    margin-top: 0.55rem; padding-top: 0.55rem;
+    border-top: 1px dashed rgba(255,255,255,0.1); font-size: 0.92rem; color: #fff; font-weight: 800;
+}
+.total-amount { font-size: 1.4rem; color: #38bdf8; }
+.btn-checkout-submit {
+    width: 100% !important; padding: 0.85rem !important;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+    border: none !important; border-radius: 12px !important;
+    font-weight: 800 !important; letter-spacing: 0.5px !important;
+    margin-top: 0.5rem;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4) !important;
+}
+.checkout-hint { font-size: 0.72rem; color: #94a3b8; text-align: center; margin-top: 0.5rem; }
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+@media (max-width: 1200px) {
+    .booking-grid, .booking-grid.booking-grid-2col { grid-template-columns: 1fr; }
+    .checkout-sidebar { position: static; }
+}
+@media (max-width: 640px) {
+    .hero-route-code { font-size: 1.8rem; }
+    .hero-flight-meta { flex-direction: column; gap: 8px; }
+    .flight-stepper { flex-direction: column; }
+    .passenger-progress-bar { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+}

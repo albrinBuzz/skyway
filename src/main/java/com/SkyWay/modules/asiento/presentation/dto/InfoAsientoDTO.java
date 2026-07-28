@@ -9,7 +9,9 @@ public class InfoAsientoDTO {
     private String estado;
 	private int precio;
 	private String clase;
-    // Constructor
+	private String reservadoPor;  // sessionId que tiene el lock temporal (null si libre/ocupado)
+
+	// Constructor
 
 
     public InfoAsientoDTO() {
@@ -23,7 +25,20 @@ public class InfoAsientoDTO {
 		this.precio = precio;
 		this.clase = clase;
 	}
-
+	/**
+	 * Estado VISUAL relativo a quién está mirando: el mismo dato crudo
+	 * "SELECCIONADO" se interpreta distinto si el sessionId coincide o no.
+	 */
+	public String getEstadoVisual(String miSessionId) {
+		if ("OCUPADO".equalsIgnoreCase(estado)) return "OCUPADO";
+		if ("SELECCIONADO".equalsIgnoreCase(estado)) {
+			if (reservadoPor != null && reservadoPor.equals(miSessionId)) {
+				return "SELECCIONADO"; // lo elegí yo
+			}
+			return "EN_PROCESO"; // lo eligió otro usuario, temporalmente
+		}
+		return "DISPONIBLE";
+	}
 
 	public int getIdAsiento() {
 		return idAsiento;
@@ -64,6 +79,9 @@ public class InfoAsientoDTO {
 	public void setClase(String clase) {
 		this.clase = clase;
 	}
+	public String getReservadoPor() { return reservadoPor; }
+	public void setReservadoPor(String reservadoPor) { this.reservadoPor = reservadoPor; }
+
 
 	@Override
 	public boolean equals(Object obj) {
