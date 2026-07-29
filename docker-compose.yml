@@ -5,7 +5,6 @@ services:
   # CONTENEDOR 1: BASE DE DATOS POSTGRESQL (NATIVA SKYWAY)
   # =====================================================================
   skyway_postgres:
-    # Cambia postgres:15-alpine por postgis/postgis:15-3.4-alpine
     image: postgis/postgis:15-3.4-alpine
     container_name: skyway_db_container
     restart: always
@@ -46,13 +45,20 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://skyway_postgres:5432/aerolinea_db?currentSchema=public
       - SPRING_DATASOURCE_USERNAME=aerolinea_user
       - SPRING_DATASOURCE_PASSWORD=aerolinea_user
-    # CAMBIAR CONDICIÓN DE DEPENDS_ON
+
+      # --- SOLUCIÓN DE MEMORIA DE PAKETO ---
+      - BPL_JVM_THREAD_COUNT=100
+      - JAVA_TOOL_OPTIONS=-XX:ReservedCodeCacheSize=128M -Xss512k -XX:MaxMetaspaceSize=128M
+    deploy:
+      resources:
+        limits:
+          memory: 2048M  # Aumentado a 2GB para dar margen a la JVM y JSF
     depends_on:
       skyway_postgres:
         condition: service_healthy
     networks:
       - skyway_net
-
+s
 volumes:
   pg_skyway_data:
 
