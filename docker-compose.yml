@@ -5,7 +5,8 @@ services:
   # CONTENEDOR 1: BASE DE DATOS POSTGRESQL (NATIVA SKYWAY)
   # =====================================================================
   skyway_postgres:
-    image: postgres:15-alpine
+    # Cambia postgres:15-alpine por postgis/postgis:15-3.4-alpine
+    image: postgis/postgis:15-3.4-alpine
     container_name: skyway_db_container
     restart: always
     environment:
@@ -15,15 +16,18 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      # Persistencia para que no pierdas tus datos locales al apagar el contenedor
       - pg_skyway_data:/var/lib/postgresql/data
-      
-      # Carga e inicialización secuencial de tus scripts SQL de la V3
       - ./dataBase/V3/tablas.sql:/docker-entrypoint-initdb.d/01-tablas.sql
-      - ./dataBase/V3/funciones.sql:/docker-entrypoint-initdb.d/02-funciones.sql
-      - ./dataBase/V3/triggers.sql:/docker-entrypoint-initdb.d/03-triggers.sql
+      - ./dataBase/V3/triggers.sql:/docker-entrypoint-initdb.d/02-triggers.sql
+      - ./dataBase/V3/funciones.sql:/docker-entrypoint-initdb.d/03-funciones.sql
       - ./dataBase/V3/procedimientosSp.sql:/docker-entrypoint-initdb.d/04-procedimientosSp.sql
       - ./dataBase/V3/poblado.sql:/docker-entrypoint-initdb.d/05-poblado.sql
+      - ./dataBase/V3/dump.sql:/docker-entrypoint-initdb.d/1-dump.sql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U aerolinea_user -d aerolinea_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - skyway_net
 
@@ -37,14 +41,15 @@ services:
     container_name: skyway_app_container
     restart: on-failure
     ports:
-      - "8080:8080" # Cambia a "8080:8080" si tu server.port interno es 8080
+      - "8080:8080"
     environment:
-      # Sobreescritura de propiedades de Spring para conectar directo al contenedor Postgres
       - SPRING_DATASOURCE_URL=jdbc:postgresql://skyway_postgres:5432/aerolinea_db?currentSchema=public
       - SPRING_DATASOURCE_USERNAME=aerolinea_user
       - SPRING_DATASOURCE_PASSWORD=aerolinea_user
+    # CAMBIAR CONDICIÓN DE DEPENDS_ON
     depends_on:
-      - skyway_postgres
+      skyway_postgres:
+        condition: service_healthy
     networks:
       - skyway_net
 

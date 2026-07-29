@@ -20,4 +20,4 @@ COPY --from=builder /app/target/*.jar app.jar
 EXPOSE 8080
 
 # Ejecución optimizando los límites de memoria de la JVM
-ENTRYPOINT ["java", "-Xmx512m", "-Xms512m", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-Xms256m", "-Xmx1024m", "-jar", "/app/app.jar"]

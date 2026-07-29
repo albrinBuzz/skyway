@@ -277,7 +277,7 @@ CREATE TABLE Ciudad (
                         ID_PAIS INT REFERENCES Pais(ID_PAIS)
 );
 
---CREATE EXTENSION IF NOT EXISTS postgis;
+CREATE EXTENSION IF NOT EXISTS postgis;
 CREATE TABLE Aeropuerto (
                             ID_AEROPUERTO     INT PRIMARY KEY DEFAULT nextval('aeropuerto_seq'),
                             Nombre_Aeropuerto VARCHAR(100) NOT NULL,
