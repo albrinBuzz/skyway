@@ -1,30 +1,23 @@
-# Usar una imagen base con JDK (Java 17 o el que estés usando)
+# Etapa de construcción usando JDK 23
 FROM eclipse-temurin:23-jdk AS builder
-
-# Establecer el directorio de trabajo dentro del contenedor
 WORKDIR /app
 
 # Copiar el proyecto completo al contenedor
 COPY . .
 
-# Dar permisos de ejecución a mvnw
+# Dar permisos de ejecución a mvnw y empaquetar omitiendo tests
 RUN chmod +x mvnw
-
-# Ejecutar mvn para construir el proyecto
 RUN ./mvnw clean package -DskipTests
 
-# Usar una imagen base con JRE para la etapa final
+# Etapa de ejecución usando JRE 23 ligero
 FROM eclipse-temurin:23-jre
-
-# Establecer el directorio de trabajo para la ejecución
 WORKDIR /app
 
-# Copiar el archivo .jar generado en la etapa de construcción
+# Copiar el .jar generado desde la etapa builder
 COPY --from=builder /app/target/*.jar app.jar
 
-# Exponer el puerto en el que la aplicación Spring Boot está escuchando (por defecto es 8080)
+# Puerto donde escucha tu App (Ajusta a 8080 si corresponde)
 EXPOSE 8080
 
-# Comando por defecto para ejecutar el .jar con Java
-#ENTRYPOINT ["java", "-jar", "/app/app.jar"]
-ENTRYPOINT ["java", "-Xmx1024m", "-Xms512m", "-jar", "/app/app.jar"]
+# Ejecución optimizando los límites de memoria de la JVM
+ENTRYPOINT ["java", "-Xms256m", "-Xmx1024m", "-jar", "/app/app.jar"]

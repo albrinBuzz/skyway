@@ -1,0 +1,42 @@
+// Modelo Relacional Aerolínea
+digraph {
+	fontsize=10 rankdir=LR
+	Usuario [label=<<b>Usuario</b><br/>RUT (PK)<br/>Nombre<br/>Correo_Electronico<br/>Telefono> shape=plaintext]
+	Roles [label=<<b>Roles</b><br/>id_rol (PK)<br/>nombre> shape=plaintext]
+	RolUsuario [label=<<b>RolUsuario</b><br/>id_rol_usuario (PK)<br/>id_rol (FK)<br/>rut_usuario (FK)> shape=plaintext]
+	Pasajero [label=<<b>Pasajero</b><br/>RUT (PK/FK)<br/>Tipo_Documento<br/>Nacionalidad> shape=plaintext]
+	Piloto [label=<<b>Piloto</b><br/>RUT (PK/FK)<br/>Licencia<br/>Experiencia_anos> shape=plaintext]
+	Tripulacion [label=<<b>Tripulacion</b><br/>RUT (PK/FK)<br/>Cargo> shape=plaintext]
+	Vuelo [label=<<b>Vuelo</b><br/>ID_VUELO (PK)<br/>Numero_Vuelo<br/>ID_ESTADO_VUELO (FK)<br/>ID_AVION (FK)<br/>RUT_PILOTO (FK)> shape=plaintext]
+	Avion [label=<<b>Avion</b><br/>ID_AVION (PK)<br/>Numero_de_Registro> shape=plaintext]
+	Clase_asiento [label=<<b>Clase_asiento</b><br/>ID_CLASE (PK)<br/>Descripcion> shape=plaintext]
+	Asiento [label=<<b>Asiento</b><br/>ID_ASIENTO (PK)<br/>Numero_Asiento<br/>ID_CLASE (FK)<br/>ID_AVION (FK)> shape=plaintext]
+	Reserva [label=<<b>Reserva</b><br/>ID_RESERVA (PK)<br/>Fecha_Reserva<br/>RUT_PASAJERO (FK)<br/>Estado_Reserva> shape=plaintext]
+	Reserva_Asiento [label=<<b>Reserva_Asiento</b><br/>ID_RESERVA_ASIENTO (PK)<br/>ID_RESERVA (FK)<br/>ID_VUELO (FK)<br/>ID_ASIENTO (FK)> shape=plaintext]
+	Notificacion [label=<<b>Notificacion</b><br/>ID_NOTIFICACION (PK)<br/>RUT_DESTINATARIO (FK)<br/>Titulo<br/>Leido> shape=plaintext]
+	Reembolso [label=<<b>Reembolso</b><br/>ID_REEMBOLSO (PK)<br/>ID_RESERVA (FK)<br/>MONTO<br/>ESTADO> shape=plaintext]
+	Segmento_Vuelo [label=<<b>Segmento_Vuelo</b><br/>ID_SEGMENTO (PK)<br/>ID_VUELO (FK)<br/>ORDEN_SEGMENTO> shape=plaintext]
+	Itinerario [label=<<b>Itinerario</b><br/>ID_ITINERARIO (PK)<br/>ORIGEN_AEROPUERTO (FK)<br/>DESTINO_AEROPUERTO (FK)> shape=plaintext]
+	Itinerario_Vuelo [label=<<b>Itinerario_Vuelo</b><br/>ID_ITINERARIO_VUELO (PK)<br/>ID_ITINERARIO (FK)<br/>ID_VUELO (FK)> shape=plaintext]
+	Reserva_Itinerario [label=<<b>Reserva_Itinerario</b><br/>ID_RESERVA_ITINERARIO (PK)<br/>ID_RESERVA (FK)<br/>ID_ITINERARIO (FK)> shape=plaintext]
+	RolUsuario -> Usuario
+	RolUsuario -> Roles
+	Pasajero -> Usuario
+	Piloto -> Usuario
+	Tripulacion -> Usuario
+	Vuelo -> Avion
+	Vuelo -> Piloto
+	Asiento -> Avion
+	Asiento -> Clase_asiento
+	Reserva -> Pasajero
+	Reserva_Asiento -> Reserva
+	Reserva_Asiento -> Asiento
+	Reserva_Asiento -> Vuelo
+	Notificacion -> Usuario
+	Reembolso -> Reserva
+	Segmento_Vuelo -> Vuelo
+	Itinerario_Vuelo -> Itinerario
+	Itinerario_Vuelo -> Vuelo
+	Reserva_Itinerario -> Reserva
+	Reserva_Itinerario -> Itinerario
+}

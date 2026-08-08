@@ -1,11 +1,12 @@
 package com.SkyWay.views;
 
 
-import com.SkyWay.model.Rol;
-import com.SkyWay.model.Usuario;
 
-import com.SkyWay.service.RolService;
-import com.SkyWay.service.UsuarioService;
+
+import com.SkyWay.modules.usuario.domain.model.Usuario;
+import com.SkyWay.modules.rolusuario.domain.service.RolService;
+import com.SkyWay.modules.usuario.domain.service.UsuarioService;
+import com.SkyWay.util.Logger;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
@@ -17,7 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.Serializable;
 import java.util.Date;
-import java.util.Optional;
 
 @Named
 @RequestScoped
@@ -58,30 +58,45 @@ public class UsuarioBean implements Serializable {
     }
 
     @Transactional
-    public String registrar() {
+    public void registrar() {
+        Logger.logInfo("registrando");
         // Validación de las contraseñas
         if (!usuario.getContrasena().equals(confirmarContrasena)) {
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Las contraseñas no coinciden."));
-            return null;
+            return;
         }
 
         try {
-            // Validar que el correo electrónico sea único
+            var usuarioBuscar=usuarioService.findByRut(usuario.getRut());
+
+            if (usuarioBuscar.isPresent()){
+                Logger.logInfo("usuario presente");
+                usuarioService.crearPasajero(usuario);
+                // Mensaje de éxito con detalles
+                FacesContext.getCurrentInstance().addMessage(null,
+                        new FacesMessage("Usuario registrado correctamente"));
+
+                // Limpiar los campos del formulario
+                usuario = new Usuario();
+                return ;
+            }
+
             if (isCorreoExistente(usuario.getCorreoElectronico())) {
+                Logger.logInfo("correo existente");
                 FacesContext.getCurrentInstance().addMessage(null,
                         new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "El correo electrónico ya está registrado."));
-                return null;
+                return;
             }
 
             // Asignar un rol al usuario (puede ser un valor por defecto)
-            Optional<Rol> rol = rolService.getRoleById(1); // Ejemplo: rol de usuario regular
-            usuario.setRol(rol.get());
+            Logger.logInfo("corregir, setear el rol al usuario");
+            //Optional<Rol> rol = rolService.getRoleById(1); // Ejemplo: rol de usuario regular
+            //usuario.setRol(rol.get());
 
             // Guardar el usuario en la base de datos
             //entityManager.persist(usuario);
-            usuarioService.save(usuario);
-
+            usuarioService.crearPasajero(usuario);
             // Mensaje de éxito con detalles
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_INFO, "¡Registro exitoso!", "Tu cuenta ha sido creada correctamente."));
@@ -90,13 +105,14 @@ public class UsuarioBean implements Serializable {
             usuario = new Usuario();
 
             // Redirigir a la página de inicio de sesión
-            return "login?faces-redirect=true";
+            return;
 
         } catch (Exception e) {
+            Logger.logInfo(e.getMessage());
             // Manejo de excepciones
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Hubo un problema al registrar el usuario."));
-            return null;
+            return;
         }
     }
 
@@ -113,6 +129,9 @@ public class UsuarioBean implements Serializable {
 
     public boolean isValidRut(String rut) {
         return rut != null && !rut.isEmpty();
+    }
+    public void prueba() {
+        System.out.println("Funciona!");
     }
 
     public boolean isEdadValida(Date fechaNacimiento) {

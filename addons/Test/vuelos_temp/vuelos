@@ -1,0 +1,170 @@
+<p:sidebar widgetVar="sidebarParadas" position="right" id="sidebarParadas"
+           width="420" showEffect="slideIn" hideEffect="slideOut"
+           styleClass="sidebar-detalles-vuelo">
+
+    <h3 class="titulo-paradas">
+        ✈️ Detalles del Vuelo y Paradas
+    </h3>
+
+    <p:scrollPanel style="width:100%; height:100%;" mode="native" class="sidebar-content">
+        <div class="scrollable-content">
+
+            <ui:repeat value="#{itinerarioDetalleBean.paradasVuelo}" var="p" varStatus="st">
+
+                <p:panel styleClass="parada-card">
+
+                    <f:facet name="header">
+                        <div class="header-parada">
+                            🛑 Parada #{st.index + 1}
+                        </div>
+                    </f:facet>
+
+                    <!-- Aeropuertos -->
+                    <p:fieldset legend="🛬 Tramo" toggleable="true" collapsed="false" styleClass="fieldset-info">
+
+                        <div class="campo">
+                            <i class="pi pi-send icon"></i>
+                            <b>Origen:</b> <span>#{p.aeropuertoSalida}</span>
+                        </div>
+
+                        <div class="campo">
+                            <i class="pi pi-clock icon"></i>
+                            <b>Salida:</b> <span>#{p.salida}</span>
+                        </div>
+
+                        <div class="campo">
+                            <i class="pi pi-flag icon"></i>
+                            <b>Destino:</b> <span>#{p.aeropuertoLlegada}</span>
+                        </div>
+
+                        <div class="campo">
+                            <i class="pi pi-calendar icon"></i>
+                            <b>Llegada:</b> <span>#{p.llegada}</span>
+                        </div>
+
+                    </p:fieldset>
+
+                    <!-- Información del vuelo -->
+                    <p:fieldset legend="🛩️ Información del Vuelo" toggleable="true" collapsed="true" styleClass="fieldset-info">
+
+                        <div class="info-grid">
+                            <div class="info-box">
+                                <i class="pi pi-plane icon"></i>
+                                <b>Vuelo:</b> <span>#{p.vuelo}</span>
+                            </div>
+
+                            <div class="info-box">
+                                <i class="pi pi-clock icon"></i>
+                                <b>Duración:</b> <span>#{p.duracion}</span>
+                            </div>
+
+                            <div class="info-box">
+                                <i class="pi pi-history icon"></i>
+                                <b>Duración Total:</b> <span>#{p.duracionTotal}</span>
+                            </div>
+
+                            <div class="info-box">
+                                <i class="pi pi-hourglass icon"></i>
+                                <b>Tiempo Espera:</b> <span>#{p.tiempoEspera}</span>
+                            </div>
+
+                            <div class="info-box">
+                                <i class="pi pi-tag icon"></i>
+                                <b>Aerolínea:</b> <span>#{p.aerolinea}</span>
+                            </div>
+
+                            <div class="info-box">
+                                <i class="pi pi-cog icon"></i>
+                                <b>Avión:</b> <span>#{p.modeloAvion}</span>
+                            </div>
+                        </div>
+
+                    </p:fieldset>
+
+                    <!-- Descripción -->
+                    <p:fieldset legend="📄 Descripción" toggleable="true" collapsed="true" styleClass="fieldset-info">
+                        <div class="descripcion">
+                            #{p.descripcionVuelo}
+                        </div>
+                    </p:fieldset>
+
+                </p:panel>
+
+                <p:divider />
+            </ui:repeat>
+
+        </div>
+
+        <p:scrollTop target="parent" threshold="100" styleClass="custom-scrolltop" icon="pi pi-arrow-up" />
+    </p:scrollPanel>
+
+</p:sidebar>
+
+
+
+
+
+
+.sidebar-detalles-vuelo {
+    padding: 20px;
+}
+
+.titulo-paradas {
+    text-align: center;
+    color: #0077cc;
+    margin-bottom: 25px;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.parada-card {
+    margin-bottom: 25px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12) !important;
+}
+
+.header-parada {
+    font-size: 18px;
+    font-weight: bold;
+    color: #1565c0;
+}
+
+.fieldset-info .ui-fieldset-legend {
+    font-size: 15px !important;
+    font-weight: bold;
+}
+
+.campo {
+    margin-bottom: 10px;
+}
+
+.campo .icon {
+    margin-right: 8px;
+    color: #0077cc;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.info-box {
+    background: #f9f9f9;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    font-size: 14px;
+}
+
+.info-box .icon {
+    margin-right: 6px;
+    color: #4CAF50;
+}
+
+.descripcion {
+    padding: 10px;
+    background: #fafafa;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+}

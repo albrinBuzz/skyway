@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Mapa de Aeropuertos Dinámico</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        #map { height: 80vh; width: 100%; }
+        #form { padding: 10px; }
+    </style>
+</head>
+<body>
+
+<div id="form">
+    <h3>Agregar aeropuerto</h3>
+    <input type="text" id="code" placeholder="Código IATA" />
+    <input type="text" id="name" placeholder="Nombre" />
+    <input type="text" id="country" placeholder="País" />
+    <input type="text" id="continent" placeholder="Continente" />
+    <input type="number" id="lat" placeholder="Latitud" />
+    <input type="number" id="lng" placeholder="Longitud" />
+    <button onclick="agregarAeropuerto()">Agregar</button>
+</div>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+    const map = L.map('map').setView([20, 0], 2);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    let markers = [];
+    let selectedAirports = [];
+    let routeLine;
+
+    // Cargar aeropuertos desde API
+    async function cargarAeropuertos() {
+        const res = await fetch('http://localhost:3000/api/aeropuertos');
+        const aeropuertos = await res.json();
+
+        // Limpiar markers anteriores
+        markers.forEach(m => map.removeLayer(m));
+        markers = [];
+
+        aeropuertos.forEach(a => {
+            const marker = L.marker(a.coords).addTo(map);
+            marker.bindPopup(`<b>${a.name}</b><br>${a.code}<br>${a.country}`);
+            marker.on('click', () => seleccionarAeropuerto(a, marker));
+            markers.push(marker);
+        });
+    }
+
+    // Seleccionar aeropuertos para crear rutas
+    function seleccionarAeropuerto(aeropuerto, marker) {
+        if (selectedAirports.includes(aeropuerto)) {
+            selectedAirports = selectedAirports.filter(a => a !== aeropuerto);
+            marker.setIcon(new L.Icon.Default());
+        } else {
+            selectedAirports.push(aeropuerto);
+            marker.setIcon(new L.Icon({iconUrl:'https://cdn-icons-png.flaticon.com/512/64/64113.png', iconSize:[25,25]}));
+        }
+        dibujarRuta();
+    }
+
+    // Dibujar ruta entre aeropuertos seleccionados
+    function dibujarRuta() {
+        if (routeLine) map.removeLayer(routeLine);
+        if (selectedAirports.length < 2) return;
+
+        const latlngs = selectedAirports.map(a => a.coords);
+        routeLine = L.polyline(latlngs, {color:'red'}).addTo(map);
+    }
+
+    // Agregar aeropuerto desde el formulario
+    async function agregarAeropuerto() {
+        const nuevo = {
+            code: document.getElementById('code').value,
+            name: document.getElementById('name').value,
+            country: document.getElementById('country').value,
+            continent: document.getElementById('continent').value,
+            coords: [
+                parseFloat(document.getElementById('lat').value),
+                parseFloat(document.getElementById('lng').value)
+            ]
+        };
+
+        const res = await fetch('http://localhost:3000/api/aeropuertos', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify(nuevo)
+        });
+
+        if (res.ok) {
+            alert('Aeropuerto agregado!');
+            cargarAeropuertos();
+        } else {
+            const err = await res.json();
+            alert('Error: ' + err.error);
+        }
+    }
+
+    // Inicializar
+    cargarAeropuertos();
+</script>
+</body>
+</html>

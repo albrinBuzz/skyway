@@ -1,0 +1,177 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                template="/admin/template.xhtml">
+
+    <ui:define name="contenido-admin">
+        <style type="text/css">
+            /* 1. Fondo de la cabecera */
+            .header-container h2 { color: #00d1ff !important; }
+            .header-container p { color: #94a3b8 !important; }
+
+            /* 2. Badges para cargos de tripulación (Ajustados para contraste oscuro) */
+            .badge-cargo {
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 0.75rem;
+                font-weight: bold;
+                color: white;
+                text-transform: uppercase;
+                border: 1px solid rgba(255,255,255,0.1);
+            }
+            /* Colores inspirados en rangos aeronáuticos */
+            .cargo-piloto { background-color: #1e293b; border-color: #00d1ff; color: #00d1ff; }
+            .cargo-copiloto { background-color: #334155; color: #e2e8f0; }
+            .cargo-tripulante { background-color: #0369a1; color: #bae6fd; }
+
+            /* 3. Barra de Asignación (Ahora integrada al azul oscuro) */
+            .assignment-bar {
+                background: #0b1426 !important;
+                border: 1px solid #1e293b !important;
+                border-radius: 12px;
+                padding: 20px;
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+                margin-bottom: 25px;
+            }
+
+            .assignment-bar .p-outputlabel {
+                color: #00d1ff !important;
+            }
+
+            /* 4. Tabla y Card de Personal Asignado */
+            .ui-card {
+                background-color: #0b1426 !important;
+                border: 1px solid #1e293b !important;
+            }
+
+            .ui-datatable thead th {
+                background-color: #141e33 !important;
+                color: #00d1ff !important;
+                border-color: #1e293b !important;
+            }
+
+            .ui-datatable tbody td {
+                background-color: #0b1426 !important;
+                color: #f8fafc !important;
+                border-color: #1e293b !important;
+            }
+
+            /* Estilos de texto secundario y avatares */
+            .text-500 { color: #64748b !important; }
+            .ui-avatar { background: #1e293b !important; color: #00d1ff !important; border: 1px solid #00d1ff; }
+
+            /* 5. Inputs y Selects */
+            .ui-selectonemenu, .ui-selectonemenu-panel {
+                background-color: #0f172a !important;
+                color: white !important;
+                border: 1px solid #334155 !important;
+            }
+
+            .ui-selectonemenu-label { color: white !important; }
+
+            /* 6. Diálogos de Confirmación */
+            .ui-confirm-dialog, .ui-dialog-titlebar, .ui-dialog-content {
+                background-color: #0b1426 !important;
+                color: white !important;
+                border: 1px solid #1e293b !important;
+            }
+        </style>
+
+        <div class="header-container mb-4">
+            <h2 class="m-0"><i class="pi pi-users mr-2 text-primary"></i>Gestión de Tripulación por Vuelo</h2>
+            <p class="text-secondary">Asigne personal y gestione turnos para el vuelo actual.</p>
+        </div>
+
+        <h:form id="tripulanteForm">
+            <p:growl id="growl" showDetail="true" />
+
+            <div class="assignment-bar flex align-items-center flex-wrap gap-3">
+                <div class="flex-grow-1">
+                    <p:outputLabel for="tripulante" value="Tripulante Disponible" styleClass="block mb-2 font-bold text-700" />
+                    <p:selectOneMenu id="tripulante" value="#{turnoBean.selectedTripulante}"
+                                     filter="true" filterMatchMode="contains"
+                                     styleClass="select-tripulante" required="true">
+                        <f:selectItem itemLabel="Seleccione un tripulante para asignar..." itemValue="" noSelectionOption="true" />
+                        <f:selectItems value="#{turnoBean.tripulantes}" var="tp"
+                                       itemLabel="#{tp.usuario.nombre} #{tp.usuario.apellido} [#{tp.cargo}]"
+                                       itemValue="#{tp.usuario.rut}" />
+                    </p:selectOneMenu>
+                </div>
+
+                <div class="flex align-items-end h-full pt-4">
+                    <p:commandButton value="Añadir a Tripulación"
+                                     icon="pi pi-user-plus"
+                                     action="#{turnoBean.asignarTripulanteAlTurno}"
+                                     update=":turnoForm tripulanteForm"
+                                     process="@form"
+                                     styleClass="ui-button-primary shadow-2" />
+                </div>
+            </div>
+        </h:form>
+
+        <h:form id="turnoForm">
+            <p:card styleClass="shadow-1">
+                <p:dataTable value="#{turnoBean.turnosTripulacion}" var="turnoTrip"
+                             id="dt-tripulacion"
+                             responsiveLayout="stack"
+                             paginator="true" rows="8"
+                             paginatorPosition="bottom"
+                             styleClass="ui-datatable-sm">
+
+                    <f:facet name="header">
+                        <div class="flex justify-content-between align-items-center">
+                            <span>Personal Asignado</span>
+                            <p:commandButton icon="pi pi-refresh" update="dt-tripulacion" styleClass="ui-button-flat ui-button-plain" />
+                        </div>
+                    </f:facet>
+
+                    <p:column headerText="Tripulante" sortBy="#{turnoTrip.tripulacion1.usuario.nombre}">
+                        <div class="flex align-items-center">
+                            <p:avatar label="#{turnoTrip.tripulacion1.usuario.nombre.substring(0,1)}" shape="circle" styleClass="mr-2" />
+                            <div class="flex flex-column">
+                                <h:outputText value="#{turnoTrip.tripulacion1.usuario.nombre} #{turnoTrip.tripulacion1.usuario.apellido}" styleClass="font-bold" />
+                                <small class="text-500">#{turnoTrip.tripulacion1.usuario.rut}</small>
+                            </div>
+                        </div>
+                    </p:column>
+
+                    <p:column headerText="Cargo" style="width: 150px; text-align: center;">
+                        <span class="badge-cargo #{turnoTrip.tripulacion1.cargo.toLowerCase().contains('piloto') ? 'cargo-piloto' : 'cargo-tripulante'}">
+                            #{turnoTrip.tripulacion1.cargo}
+                        </span>
+                    </p:column>
+
+                    <p:column headerText="Turno Operativo">
+                        <div class="flex align-items-center text-sm">
+                            <i class="pi pi-clock mr-2 text-primary"></i>
+                            <h:outputText value="#{turnoTrip.turno1.horaInicio}">
+                                <f:convertDateTime pattern="HH:mm"/>
+                            </h:outputText>
+                            <span class="mx-2">→</span>
+                            <h:outputText value="#{turnoTrip.turno1.horaFin}">
+                                <f:convertDateTime pattern="HH:mm"/>
+                            </h:outputText>
+                        </div>
+                    </p:column>
+
+                    <p:column headerText="Acciones" style="width: 100px; text-align: center;">
+                        <p:commandButton icon="pi pi-trash"
+                                         title="Eliminar del vuelo"
+                                         styleClass="ui-button-danger ui-button-flat p-button-rounded"
+                                         action="#{turnoBean.eliminarTripulante(turnoTrip)}"
+                                         update=":turnoForm">
+                            <p:confirm header="Confirmación" message="¿Retirar a este tripulante del vuelo?" icon="pi pi-exclamation-triangle" />
+                        </p:commandButton>
+                    </p:column>
+                </p:dataTable>
+            </p:card>
+
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" width="350">
+                <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-flat"/>
+                <p:commandButton value="Sí, Retirar" type="button" styleClass="ui-confirmdialog-yes ui-button-danger" />
+            </p:confirmDialog>
+        </h:form>
+    </ui:define>
+</ui:composition>

@@ -1,107 +1,172 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <ui:composition lang="es"
                 xmlns:f="jakarta.faces.core"
                 xmlns:h="jakarta.faces.html"
                 xmlns:p="http://primefaces.org/ui"
-                xmlns:fs="http://xmlns.jcp.org/jsf/core"
                 xmlns:ui="http://java.sun.com/jsf/facelets"
-                template="/home/template/main.xhtml">
+                template="/template/main.xhtml">
 
-    <h:head>
-        <title>Próximos Vuelos</title>
 
-    </h:head>
+    <ui:define name="head">
+        <style type="text/css">
+            /* Colores corporativos */
+:root {
+    --primary-color: #003366;  /* Azul oscuro */
+    --secondary-color: #006699; /* Azul intermedio */
+    --button-color: #007acc; /* Azul para botones */
+    --button-hover: #005f99;  /* Hover de los botones */
+}
+
+/* Paneles de perfil */
+.perfil-panel {
+    background-color: #f8f8f8;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* Cabecera de la tabla */
+h:column .ui-column-title {
+    background-color: var(--primary-color);
+    color: white;
+    text-align: center;
+}
+
+/* Estilo para las filas de la tabla */
+.table-striped tbody tr:nth-child(odd) {
+    background-color: #f2f2f2;
+}
+
+/* Botones */
+.p-button-info {
+    background-color: var(--button-color);
+    border-color: var(--button-color);
+}
+
+.p-button-info:hover {
+    background-color: var(--button-hover);
+    border-color: var(--button-hover);
+}
+
+/* Estilo para el modal */
+.ui-dialog {
+    border-radius: 8px;
+}
+
+/* Títulos */
+h2, h3 {
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+/* Enlaces */
+.ui-link {
+    color: var(--secondary-color);
+}
+
+        </style>
+    </ui:define>
 
 
     <ui:define name="contenido">
 
+        <!-- Navbar End -->
+        <!-- Header Start -->
+        <div class="container-fluid bg-breadcrumb">
+            <div class="container text-center py-5" style="max-width: 900px;">
+                <h3 class="text-white display-3 mb-4">Perfil del Piloto</h3>
+                <ol class="breadcrumb justify-content-center mb-0">
+                    <li class="breadcrumb-item"><h:link value="Home" outcome="/" /></li>
+                    <li class="breadcrumb-item active text-white">Perfil del Piloto</li>
+                </ol>
+            </div>
+        </div>
+        <!-- Header End -->
 
-	<!-- Navbar End -->
-<!-- Header Start -->
-<div class="container-fluid bg-breadcrumb">
-    <div class="container text-center py-5" style="max-width: 900px;">
-        <h3 class="text-white display-3 mb-4">Perfil del Piloto</h3>
-        <ol class="breadcrumb justify-content-center mb-0">
-            <li class="breadcrumb-item"><h:link value="Home" outcome="/" /></li>
-            <li class="breadcrumb-item active text-white">Perfil del Piloto</li>
-        </ol>
-    </div>
-</div>
-<!-- Header End -->
+        <!-- User Profile Start -->
+        <div class="container py-5">
 
-<!-- User Profile Start -->
-<div class="container py-5">
-    <h2 class="mb-4">Información Personal</h2>
-    <h:dataTable value="#{userBean.usuario}" var="usuario" border="1" styleClass="table table-bordered">
-        <h:column>
-            <f:facet name="header">RUT:</f:facet>
-            #{usuario.rutUsuario}
-        </h:column>
-        <h:column>
-            <f:facet name="header">Nombre</f:facet>
-            #{usuario.nombre}
-        </h:column>
-        <h:column>
-            <f:facet name="header">Correo Electrónico:</f:facet>
-            #{usuario.correoElectronico}
-        </h:column>
-        <h:column>
-            <f:facet name="header">Teléfono:</f:facet>
-            #{usuario.telefono}
-        </h:column>
-        <h:column>
-            <f:facet name="header">Fecha de Nacimiento:</f:facet>
-            #{usuario.fechaNacimiento}
-        </h:column>
-    </h:dataTable>
+            <!-- Información Personal -->
+            <h2 class="mb-4">Información Personal</h2>
+            <p:panel header="Datos del Piloto" styleClass="perfil-panel">
+                <h:panelGrid columns="2" styleClass="p-4">
+                    <!-- Mostrar Nombre y Apellido -->
+                    <p:outputLabel for="nombre" value="Nombre Completo:" styleClass="label" />
+                    <h:outputText id="nombre" value="#{userBean.usuario.nombre} #{userBean.usuario.apellido}" styleClass="data-text" />
 
-    
-    <h2 class="mb-4"> Vuelos</h2>
-    <h:dataTable value="#{perfilView.vuelos}" var="vuelo" border="1" styleClass="table table-bordered">
-        <h:column>
-            <f:facet name="header">Número de Vuelo</f:facet>
-            #{vuelo.numeroVuelo}
-        </h:column>
-        <h:column>
-            <f:facet name="header">Fecha de Salida</f:facet>
-            #{vuelo.fechaHoraLlegada}
-        </h:column>
-        <h:column>
-            <f:facet name="header">Salida</f:facet>
-            #{vuelo.aeropuerto1.nombreAeropuerto} (#{vuelo.aeropuerto1.codigoIata})
-        </h:column>
-        <h:column>
-            <f:facet name="header">Estado</f:facet>
-            #{vuelo.estadoVuelo.descripcion}
-        </h:column>
-        <h:column>
-            <f:facet name="header">Cantidad Pasajeros</f:facet>
-            #{vuelo.reservas.size()}
-        </h:column>
-        <h:column>
-            <f:facet name="header">Acciones</f:facet>
-            <h:link value="Ver Detalles" outcome="detalle_vuelo" />
-        </h:column>
-    </h:dataTable>
+                    <p:outputLabel for="correo" value="Correo Electrónico:" styleClass="label" />
+                    <h:outputText id="correo" value="#{userBean.usuario.correoElectronico}" styleClass="data-text" />
 
+                    <p:outputLabel for="telefono" value="Teléfono:" styleClass="label" />
+                    <h:outputText id="telefono" value="#{userBean.usuario.telefono}" styleClass="data-text" />
 
+                    <p:outputLabel for="documento" value="Documento de Identidad:" styleClass="label" />
+                    <h:outputText id="documento" value="#{userBean.usuario.documentoIdentidad}" styleClass="data-text" />
 
+                    <p:outputLabel for="fechaNacimiento" value="Fecha de Nacimiento:" styleClass="label" />
+                    <h:outputText id="fechaNacimiento" value="#{userBean.usuario.fechaNacimiento}">
+                        <f:convertDateTime pattern="dd/MM/yyyy"/>
+                    </h:outputText>
 
+                    <p:outputLabel for="fechaRegistro" value="Fecha de Registro:" styleClass="label" />
+                    <h:outputText id="fechaRegistro" value="#{userBean.usuario.fechaRegistro}">
+                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm"/>
+                    </h:outputText>
+                </h:panelGrid>
+            </p:panel>
 
+            <!-- Vuelos del Piloto -->
+            <h2 class="mb-4">Mis Próximos Vuelos</h2>
+            <p:panel header="Vuelos Asignados" styleClass="perfil-panel">
+                <h:dataTable value="#{perfilPilotoBean.vuelos}" var="vuelo" border="1" styleClass="table table-striped table-bordered">
+                    <h:column>
+                        <f:facet name="header">Número de Vuelo</f:facet>
+                        #{vuelo.numeroVuelo}
+                    </h:column>
 
+                    <h:column>
+                        <f:facet name="header">Fecha de Salida</f:facet>
+                        <h:outputText value="#{vuelo.fechaHoraSalida}">
+                            <f:convertDateTime pattern="dd/MM/yyyy HH:mm"/>
+                        </h:outputText>
+                    </h:column>
 
+                    <h:column>
+                        <f:facet name="header">Estado</f:facet>
+                        #{vuelo.estadoVuelo.descripcion}
+                    </h:column>
 
+                    <h:column>
+                        <f:facet name="header">Acciones</f:facet>
+                        <p:commandButton value="Ver Detalles"
+                                         icon="pi pi-search"
+                                         styleClass="p-button-info"
+                                         action="#{perfilPilotoBean.verDetallesVuelo(vuelo)}"
 
+                                         ajax="true" />
+                    </h:column>
+                </h:dataTable>
+            </p:panel>
 
+            <!-- Modal para detalles del vuelo -->
+            <p:dialog header="Detalles del Vuelo" widgetVar="vueloDetailsDialog" modal="true" closable="true" showEffect="fade" hideEffect="fade" width="600">
+                <h:panelGrid columns="2">
+                    <p:outputLabel value="Número de Vuelo:" />
+                    <h:outputText value="#{perfilPilotoBean.selectedVuelo.numeroVuelo}" />
 
+                    <p:outputLabel value="Fecha de Salida:" />
+                    <h:outputText value="#{perfilPilotoBean.selectedVuelo.fechaHoraSalida}">
+                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm"/>
+                    </h:outputText>
 
+                    <p:outputLabel value="Estado del Vuelo:" />
+                    <h:outputText value="#{perfilPilotoBean.selectedVuelo.estadoVuelo.descripcion}" />
+                </h:panelGrid>
+            </p:dialog>
 
-</div>
-<!-- User Profile End -->
-	
-	
-
+        </div>
+        <!-- User Profile End -->
 
     </ui:define>
 

@@ -1,0 +1,136 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                template="/template/main.xhtml">
+
+    <ui:define name="head">
+        <style type="text/css">
+            .offer-card {
+                background: rgba(30, 41, 59, 0.5);
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                border-radius: 16px;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                overflow: hidden;
+            }
+            .offer-card:hover {
+                transform: translateY(-5px);
+                border-color: rgba(56, 189, 248, 0.3);
+                box-shadow: 0 10px 30px rgba(56, 189, 248, 0.1);
+            }
+            .dest-image-placeholder {
+                height: 160px;
+                background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            }
+            .price-tag {
+                font-size: 1.8rem;
+                font-weight: 800;
+                color: #38bdf8;
+            }
+            .promo-badge {
+                position: absolute;
+                top: 15px;
+                right: 15px;
+                background: #ef4444;
+                color: white;
+                font-size: 0.75rem;
+                font-weight: bold;
+                padding: 4px 10px;
+                border-radius: 20px;
+                box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+            }
+        </style>
+    </ui:define>
+
+    <ui:define name="contenido">
+        <div class="container py-5">
+            <div class="text-center mb-5">
+                <h1 class="fw-bold text-white mb-2"><i class="fas fa-tags me-3 text-warning"></i>Ofertas Exclusivas</h1>
+                <p class="text-secondary">Explora tarifas de tarifa baja con la tecnología de vuelo y confort de SkyWay</p>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="card offer-card h-100 position-relative">
+                        <span class="promo-badge">-30% Diarios</span>
+                        <div class="dest-image-placeholder">
+                            <i class="fas fa-palm-tree fa-3x text-secondary" style="opacity: 0.3;"></i>
+                        </div>
+                        <div class="card-body p-4 d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted small fw-bold">SOLO IDA</span>
+                                <span class="text-success small fw-bold"><i class="fas fa-bolt me-1"></i>Últimos asientos</span>
+                            </div>
+                            <h4 class="fw-bold text-white mb-1">Santiago → Los Ángeles</h4>
+                            <p class="text-secondary small mb-4">Código de ruta: SCL - LAX</p>
+
+                            <div class="mt-auto d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="small text-muted text-uppercase">Desde</div>
+                                    <div class="price-tag">$420.000 <span class="small" style="font-size:0.9rem; font-weight:400;">CLP</span></div>
+                                </div>
+                                <p:commandButton value="Reservar" type="button" styleClass="sky-btn px-4" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="card offer-card h-100 position-relative">
+                        <div class="dest-image-placeholder">
+                            <i class="fas fa-landmark fa-3x text-secondary" style="opacity: 0.3;"></i>
+                        </div>
+                        <div class="card-body p-4 d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted small fw-bold">IDA Y VUELTA</span>
+                                <span class="text-info small fw-bold"><i class="fas fa-star me-1"></i>Popular</span>
+                            </div>
+                            <h4 class="fw-bold text-white mb-1">Santiago → Lima</h4>
+                            <p class="text-secondary small mb-4">Código de ruta: SCL - LIM</p>
+
+                            <div class="mt-auto d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="small text-muted text-uppercase">Desde</div>
+                                    <div class="price-tag">$145.000 <span class="small" style="font-size:0.9rem; font-weight:400;">CLP</span></div>
+                                </div>
+                                <p:commandButton value="Reservar" type="button" styleClass="sky-btn px-4" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="card offer-card h-100 position-relative">
+                        <span class="promo-badge">Especial Flash</span>
+                        <div class="dest-image-placeholder">
+                            <i class="fas fa-cloud-sun fa-3x text-secondary" style="opacity: 0.3;"></i>
+                        </div>
+                        <div class="card-body p-4 d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted small fw-bold">SOLO IDA</span>
+                                <span class="text-warning small fw-bold"><i class="fas fa-clock me-1"></i>Expira pronto</span>
+                            </div>
+                            <h4 class="fw-bold text-white mb-1">Santiago → Bogotá</h4>
+                            <p class="text-secondary small mb-4">Código de ruta: SCL - BOG</p>
+
+                            <div class="mt-auto d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="small text-muted text-uppercase">Desde</div>
+                                    <div class="price-tag">$190.000 <span class="small" style="font-size:0.9rem; font-weight:400;">CLP</span></div>
+                                </div>
+                                <p:commandButton value="Reservar" type="button" styleClass="sky-btn px-4" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </ui:define>
+</ui:composition>

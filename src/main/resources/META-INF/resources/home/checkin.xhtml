@@ -1,0 +1,123 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                template="/template/main.xhtml">
+
+    <ui:define name="head">
+        <style type="text/css">
+            .glass-card {
+                background: rgba(30, 41, 59, 0.7);
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                border-radius: 16px;
+                color: #e2e8f0;
+            }
+            .ticket-badge {
+                background: rgba(56, 189, 248, 0.1);
+                color: #38bdf8;
+                border: 1px solid rgba(56, 189, 248, 0.2);
+                padding: 4px 12px;
+                border-radius: 20px;
+                font-size: 0.85rem;
+            }
+        </style>
+    </ui:define>
+
+    <ui:define name="contenido">
+        <div class="container py-5">
+            <div class="text-center mb-5">
+                <h1 class="fw-bold text-white mb-2"><i class="fas fa-luggage-cart me-3 text-info"></i>Check-In Digital</h1>
+                <p class="text-secondary">Gestiona tu equipaje, selecciona tu asiento y obtén tu tarjeta de embarque de forma inmediata</p>
+            </div>
+
+            <div class="row g-4 justify-content-center">
+                <div class="col-lg-5">
+                    <div class="card glass-card p-4 h-100 shadow-lg">
+                        <h4 class="fw-bold text-white mb-4"><i class="fas fa-search me-2 text-primary"></i>Buscar Reserva</h4>
+                        <h:form id="checkinForm">
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-light">Código de Reserva (PNR)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-ticket-alt"></i></span>
+                                    <p:inputText styleClass="form-control" placeholder="Ej: SKW98A" maxlength="6" style="text-transform: uppercase;"/>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label small fw-bold text-light">Apellido del Pasajero</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                    <p:inputText styleClass="form-control" placeholder="Ej: Román"/>
+                                </div>
+                            </div>
+
+                            <p:commandButton value="Buscar Vuelo" type="button" styleClass="w-100 sky-btn"
+                                             icon="pi pi-search" onclick="PF('mockGrowl').renderMessage({severity: 'info', summary: 'Búsqueda Simulada', detail: 'Cargando datos del itinerario activo.'})"/>
+                        </h:form>
+                    </div>
+                </div>
+
+                <div class="col-lg-7">
+                    <div class="card glass-card p-4 shadow-lg">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h4 class="fw-bold text-white m-0"><i class="fas fa-plane-arrival me-2 text-success"></i>Próximo Vuelo Activo</h4>
+                            <span class="ticket-badge">Check-in Disponible</span>
+                        </div>
+
+                        <div class="p-3 rounded-3 mb-4" style="background: rgba(15, 23, 42, 0.6); border: 1px dashed rgba(255,255,255,0.15);">
+                            <div class="row align-items-center text-center text-md-start">
+                                <div class="col-md-4">
+                                    <h2 class="fw-bold text-info m-0">SCL</h2>
+                                    <small class="text-secondary">Santiago, Chile</small>
+                                </div>
+                                <div class="col-md-4 text-center my-3 my-md-0">
+                                    <i class="fas fa-long-arrow-alt-right fa-2x text-secondary"></i>
+                                    <div class="small text-muted mt-1">Vuelo SKY-402</div>
+                                </div>
+                                <div class="col-md-4 text-md-end">
+                                    <h2 class="fw-bold text-info m-0">LAX</h2>
+                                    <small class="text-secondary">Los Ángeles, USA</small>
+                                </div>
+                            </div>
+
+                            <hr class="border-secondary my-3" />
+
+                            <div class="row text-center text-md-start g-3">
+                                <div class="col-6 col-md-3">
+                                    <div class="small text-secondary">Fecha</div>
+                                    <div class="fw-bold text-white">25 Mayo, 2026</div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="small text-secondary">Embarque</div>
+                                    <div class="fw-bold text-white">21:15 Hrs</div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="small text-secondary">Asiento</div>
+                                    <div class="fw-bold text-warning">12A (Ventana)</div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="small text-secondary">Pasajero</div>
+                                    <div class="fw-bold text-white">Cristóbal Román</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <p:commandButton value="Cambiar / Elegir Asiento" type="button" icon="pi pi-user" styleClass="w-100 btn btn-cancel-custom py-2" />
+                            </div>
+                            <div class="col-md-6">
+                                <p:commandButton value="Emitir Tarjeta de Embarque" type="button" icon="pi pi-id-card" styleClass="w-100 sky-btn py-2" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <p:growl id="mockGrowl" widgetVar="mockGrowl" showDetail="true"/>
+    </ui:define>
+</ui:composition>

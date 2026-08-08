@@ -4,6 +4,9 @@ import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.SkyWay.modules.pasajero.domain.model.Pasajero;
+import com.SkyWay.modules.usuario.domain.model.Usuario;
+import com.SkyWay.modules.vuelo.domain.model.Vuelo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,27 +21,20 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import com.SkyWay.dto.BoletoDTO;
-import com.SkyWay.dto.InfoAsientoDTO;
+import com.SkyWay.modules.asiento.presentation.dto.InfoAsientoDTO;
 import com.SkyWay.dto.InfoVueloDTO;
 import com.SkyWay.dto.ReservaVueloDTO;
-import com.SkyWay.model.Pasajero;
-import com.SkyWay.model.Piloto;
-import com.SkyWay.model.PrecioAsiento;
-import com.SkyWay.model.Reserva;
-import com.SkyWay.model.RolEnum;
-import com.SkyWay.model.Usuario;
-import com.SkyWay.model.Vuelo;
-import com.SkyWay.service.AeropuertoService;
-import com.SkyWay.service.AsientoService;
-import com.SkyWay.service.AvionService;
-import com.SkyWay.service.ClaseAsientoService;
-import com.SkyWay.service.EstadoVueloService;
-import com.SkyWay.service.PiloService;
-import com.SkyWay.service.PrecioAsientoService;
-import com.SkyWay.service.ReservaAsientoService;
-import com.SkyWay.service.ReservaService;
-import com.SkyWay.service.VueloService;
+
+import com.SkyWay.modules.aeropuerto.domain.service.AeropuertoService;
+import com.SkyWay.modules.asiento.domain.service.AsientoService;
+import com.SkyWay.modules.avion.domain.service.AvionService;
+import com.SkyWay.modules.claseasiento.domain.service.ClaseAsientoService;
+import com.SkyWay.modules.estadovuelo.domain.service.EstadoVueloService;
+import com.SkyWay.modules.piloto.domain.service.PiloService;
+import com.SkyWay.modules.precioasiento.domain.service.PrecioAsientoService;
+import com.SkyWay.modules.reservaasiento.domain.service.ReservaAsientoService;
+import com.SkyWay.modules.reserva.domain.service.ReservaService;
+import com.SkyWay.modules.vuelo.domain.service.VueloService;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -87,16 +83,17 @@ public class PerfilController {
 
 		Usuario usuario=(Usuario) session.getAttribute("usuario");
 	
-		if(usuario.getRol().getNombre().equals(RolEnum.PASAJERO.getDescripcion())) {
+		/*if(usuario.getRol().getNombre().equals(RolEnum.PASAJERO.getDescripcion())) {
 
-			 return new RedirectView("perfil/pasajero/index.xhtml");
+			 return new RedirectView("perfil/pasajero/template.xhtml");
 		}else if (usuario.getRol().getNombre().equals(RolEnum.PILOTO.getDescripcion())) {
 			
-			 return new RedirectView("perfil/piloto/index.xhtml");
+			 return new RedirectView("perfil/piloto/template.xhtml");
 		}
 		else {
-			 return new RedirectView("perfil/pasajero/index.xhtml");
-		}
+			 return new RedirectView("perfil/pasajero/template.xhtml");
+		}*/
+		return new RedirectView("/");
         
 		//return "protegido/index";
 	}
@@ -133,7 +130,7 @@ public class PerfilController {
 		
 		System.out.println(precioPrimera+" "+precioEjecutiva+" "+precioEconomica);
 
-		var vueloGuardado=vueloService.save(vuelo);
+		/*var vueloGuardado=vueloService.save(vuelo);
 		
 		
 		PrecioAsiento precioEco=new PrecioAsiento();
@@ -154,7 +151,7 @@ public class PerfilController {
 		
 		precioAsientoService.guardarPrecioAsiento(precioEje);
 		precioAsientoService.guardarPrecioAsiento(precioEco);
-		precioAsientoService.guardarPrecioAsiento(precioPrim);
+		precioAsientoService.guardarPrecioAsiento(precioPrim);*/
 		
 		return "perfil/piloto/agregarVuelo";
 	}
@@ -169,11 +166,11 @@ public class PerfilController {
 
 		//model.addAttribute("usuario", session.getAttribute("usuario"));
 	
-		Reserva reserva=reservaService.findById(id).get();
+		/*Reserva reserva=reservaService.findById(id).get();
 		BoletoDTO boleto=reservaService.getBoleto(id);
 		
 		model.addAttribute("reserva", reserva);
-		model.addAttribute("boleto", boleto);
+		model.addAttribute("boleto", boleto);*/
 		
 		
 		
@@ -188,10 +185,10 @@ public class PerfilController {
 
 		//model.addAttribute("usuario", session.getAttribute("usuario"));
 	
-		Reserva reserva=reservaService.findById(id).get();
+		/*Reserva reserva=reservaService.findById(id).get();
 		BoletoDTO boleto=reservaService.getBoleto(id);
 		model.addAttribute("reserva", reserva);
-		model.addAttribute("boleto", boleto);
+		model.addAttribute("boleto", boleto);*/
 		
 		return "perfil/boleto";
 		//return "protegido/index";
@@ -243,7 +240,7 @@ public class PerfilController {
 		
 		reservaService.cancelarReserva(id);
 		
-		Usuario usuario=(Usuario) session.getAttribute("usuario");
+		/*Usuario usuario=(Usuario) session.getAttribute("usuario");
 		model.addAttribute("usuario", session.getAttribute("usuario"));
 		
 		if(usuario instanceof Pasajero) {
@@ -255,7 +252,8 @@ public class PerfilController {
 			model.addAttribute("piloto", piloto);
 			
 			return "perfil/perfilPiloto";
-		}
+		}*/
+		return "perfil/perfilPiloto";
 
 	}
 	

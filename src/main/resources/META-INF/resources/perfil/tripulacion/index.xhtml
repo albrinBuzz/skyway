@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition lang="es"
+                xmlns:f="jakarta.faces.core"
+                xmlns:h="jakarta.faces.html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:fs="http://xmlns.jcp.org/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                template="/template/main.xhtml">
+
+    <h:head>
+        <title>Mis Próximos Vuelos</title>
+    </h:head>
+
+    <ui:define name="contenido">
+        <h1>Mis Turnos Asignados</h1>
+
+        <!-- Formulario para mostrar los turnos del tripulante -->
+        <h:form id="misTurnosForm">
+            <!-- Tabla con los turnos asignados -->
+            <p:dataTable value="#{misTurnosBean.turnosTripulante}" var="turnoTripulacion"
+                         responsiveLayout="scroll"
+                         styleClass="table"
+                         rowIndexVar="index"
+                         rowKey="#{turnoTripulacion.idTurnoTripulacion}"
+                         paginator="true" rows="10">
+
+                <!-- Columna con el ID del turno -->
+                <p:column headerText="ID Turno">
+                    #{turnoTripulacion.idTurnoTripulacion}
+                </p:column>
+
+                <!-- Columna con el nombre del tripulante -->
+                <p:column headerText="Tripulante">
+                    #{turnoTripulacion.tripulacion1.usuario.nombre} #{turnoTripulacion.tripulacion1.usuario.apellido}
+                </p:column>
+
+                <!-- Columna con el cargo del tripulante -->
+                <p:column headerText="Cargo">
+                    #{turnoTripulacion.tripulacion1.cargo}
+                </p:column>
+
+                <!-- Columna con el tipo de turno -->
+                <p:column headerText="Tipo de Turno">
+                    #{turnoTripulacion.turno1.tipoTurno.nombre}
+                </p:column>
+
+                <!-- Columna con la hora de inicio -->
+                <p:column headerText="Hora Inicio">
+                    <h:outputText value="#{turnoTripulacion.turno1.horaInicio}">
+                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm"/>
+                    </h:outputText>
+                </p:column>
+
+                <!-- Columna con la hora de fin -->
+                <p:column headerText="Hora Fin">
+                    <h:outputText value="#{turnoTripulacion.turno1.horaFin}">
+                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm"/>
+                    </h:outputText>
+                </p:column>
+
+                <!-- Acción para ver los detalles del turno -->
+                <p:column headerText="Acciones" styleClass="text-center">
+                    <p:commandButton value="Ver Detalles"
+                                     icon="pi pi-search"
+                                     styleClass="p-button-info"
+                                     action="#{misTurnosBean.verDetallesTurno(turnoTripulacion)}"
+                                     process="@this"
+                                     ajax="true"/>
+                </p:column>
+
+                <!-- Acción para confirmar asistencia al turno -->
+                <p:column headerText="Confirmar Asistencia" styleClass="text-center">
+                    <p:commandButton value="Confirmar"
+                                     icon="pi pi-check"
+                                     styleClass="p-button-success"
+                                     action="#{misTurnosBean.confirmarAsistencia(turnoTripulacion)}"
+                                     update="misTurnosForm"
+                                     process="@this"
+                                     ajax="true"/>
+                </p:column>
+
+                <!-- Acción para rechazar el turno -->
+                <p:column headerText="Rechazar Turno" styleClass="text-center">
+                    <p:commandButton value="Rechazar"
+                                     icon="pi pi-times"
+                                     styleClass="p-button-danger"
+                                     action="#{misTurnosBean.rechazarTurno(turnoTripulacion)}"
+                                     update="misTurnosForm"
+                                     process="@this"
+                                     ajax="true"/>
+                </p:column>
+            </p:dataTable>
+        </h:form>
+
+        <!-- Modal para mostrar detalles del turno -->
+        <p:dialog header="Detalles del Turno"
+                  widgetVar="detalleDialog"
+                  modal="true"
+                  closable="true"
+                  showEffect="fade"
+                  hideEffect="fade"
+                  width="500">
+            <h:panelGrid columns="2">
+                <p:outputLabel value="ID Turno:" />
+                <h:outputText value="#{misTurnosBean.selectedTurno.idTurnoTripulacion}" />
+
+                <p:outputLabel value="Tripulante:" />
+                <h:outputText value="#{misTurnosBean.selectedTurno.tripulacion1.usuario.nombre} #{misTurnosBean.selectedTurno.tripulacion1.usuario.apellido}" />
+
+                <p:outputLabel value="Cargo:" />
+                <h:outputText value="#{misTurnosBean.selectedTurno.tripulacion1.cargo}" />
+
+                <p:outputLabel value="Tipo de Turno:" />
+                <h:outputText value="#{misTurnosBean.selectedTurno.turno1.tipoTurno.nombre}" />
+
+                <p:outputLabel value="Hora de Inicio:" />
+                <h:outputText value="#{misTurnosBean.selectedTurno.turno1.horaInicio}">
+                    <f:convertDateTime pattern="HH:mm"/>
+                </h:outputText>
+
+                <p:outputLabel value="Hora de Fin:" />
+                <h:outputText value="#{misTurnosBean.selectedTurno.turno1.horaFin}">
+                    <f:convertDateTime pattern="HH:mm"/>
+                </h:outputText>
+            </h:panelGrid>
+        </p:dialog>
+
+    </ui:define>
+
+</ui:composition>

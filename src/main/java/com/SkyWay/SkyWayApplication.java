@@ -1,19 +1,15 @@
 package com.SkyWay;
 
 
-import com.SkyWay.service.AsientoService;
-import com.SkyWay.service.ReservaService;
+import com.SkyWay.modules.asiento.domain.service.AsientoService;
+import com.SkyWay.modules.reserva.domain.service.ReservaService;
 import com.SkyWay.util.Logger;
-import jakarta.faces.application.FacesMessage;
-import org.primefaces.PrimeFaces;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 @SpringBootApplication
 @ComponentScan(basePackages = "com.SkyWay;")
@@ -42,14 +38,11 @@ public class SkyWayApplication {
 		// Llamar al método confirmarReserva
 		//reservaService.confirmarReserva(6, asientos, "12345678-0");
 		try {
-			String mensaje =
-			reservaService.confirmarReserva(6, asientos, "12345678-0");
+			//String mensaje =
+			//reservaService.confirmarReserva(6, asientos, "12345678-0",1);
 
 			Logger.logInfo("exito");
 
-
-		} catch (SQLException e) {
-			Logger.logInfo("Error SQL en la reserva: " + e.getMessage());
 
 		} catch (Exception ex) {
 			Logger.logError("Error inesperado: " + ex.getMessage());

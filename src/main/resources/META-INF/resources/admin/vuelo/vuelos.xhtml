@@ -1,0 +1,294 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui">
+
+    <style type="text/css">
+        /* --- SKYWAY PREMIUM DARK PALETTE --- */
+        :root {
+            --sky-blue: #3b82f6;          /* Azul corporativo principal */
+            --sky-light: #60a5fa;         /* Destellos y enlaces hover */
+            --bg-body: #050b18;           /* Azul espacio / Abismo profundo */
+            --bg-panel: #0b1329;          /* Azul marino aeronáutico para contenedores */
+            --bg-header: #0e1a3a;         /* Encabezados de tablas */
+            --border-soft: rgba(59, 130, 246, 0.2); /* Bordes de luz azul sin tonos plomos */
+            --text-main: #f1f5f9;         /* Blanco puro suave */
+            --text-dim: #789dc9;          /* Azul cian tenue para textos secundarios */
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1rem 0;
+        }
+
+        .header-container h2 {
+            color: var(--text-main) !important;
+            font-weight: 800 !important;
+            letter-spacing: -0.025em;
+        }
+
+        /* --- DATA TABLE PREMIUM --- */
+        .ui-datatable {
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-soft) !important;
+            box-shadow: 0 20px 25px -5px rgba(5, 11, 24, 0.8);
+        }
+
+        /* Header de la tabla (Buscador) */
+        .ui-datatable-header {
+            background: var(--bg-panel) !important;
+            padding: 1.25rem !important;
+            border-bottom: 1px solid var(--border-soft) !important;
+        }
+
+        /* Cabeceras de columnas */
+        .ui-datatable thead th {
+            background: var(--bg-header) !important;
+            color: var(--text-dim) !important;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.075em;
+            padding: 1.1rem 1rem !important;
+            border: none !important;
+            border-bottom: 2px solid var(--border-soft) !important;
+        }
+
+        /* Celdas y Filas */
+        .ui-datatable tbody td {
+            background: var(--bg-panel) !important;
+            color: var(--text-main) !important;
+            padding: 1.25rem 1rem !important;
+            border: none !important;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.08) !important;
+        }
+
+        .ui-datatable-striped .ui-datatable-data > tr.ui-datatable-odd {
+            background: rgba(14, 26, 58, 0.4) !important;
+        }
+
+        /* Hover Effect */
+        .ui-datatable tbody tr:hover {
+            background: rgba(59, 130, 246, 0.12) !important;
+            transition: background 0.25s ease;
+        }
+
+        /* --- BADGES Y CHIPS --- */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .status-ontime {
+            background: rgba(16, 185, 129, 0.12);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+
+        /* --- INPUTS --- */
+        .ui-inputfield {
+            background: var(--bg-body) !important;
+            border: 1px solid var(--border-soft) !important;
+            color: white !important;
+            border-radius: 8px !important;
+            padding: 0.6rem 1rem !important;
+        }
+
+        .ui-inputfield:focus {
+            border-color: var(--sky-blue) !important;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+        }
+
+        /* --- FILA EXPANDIDA Y SUBCARDS --- */
+        .p-rowExpansion > td {
+            background: var(--bg-body) !important;
+            padding: 1.75rem !important;
+        }
+
+        .itinerary-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-soft);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .nested-table.ui-datatable {
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        .nested-table.ui-datatable thead th {
+            background: rgba(59, 130, 246, 0.05) !important;
+            border-bottom: 1px solid var(--border-soft) !important;
+        }
+
+        /* Botón primario personalizado */
+        .btn-new {
+            background: var(--sky-blue) !important;
+            border: none !important;
+            border-radius: 8px !important;
+            font-weight: 600 !important;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-new:hover {
+            background: var(--sky-light) !important;
+        }
+
+        /* Botón de turnos secundario operativo */
+        .btn-turns {
+            border-color: var(--border-soft) !important;
+            background: transparent !important;
+            color: var(--text-main) !important;
+            border-radius: 6px;
+        }
+
+        .btn-turns:hover {
+            background: rgba(59, 130, 246, 0.1) !important;
+            border-color: var(--sky-blue) !important;
+            color: var(--sky-light) !important;
+        }
+
+        /* Icono del expansor */
+        .ui-row-toggler {
+            color: var(--text-dim) !important;
+        }
+        .ui-row-toggler:hover {
+            color: var(--sky-blue) !important;
+        }
+    </style>
+
+    <div class="header-container">
+        <h2 style="margin:0;">Operaciones de Vuelo</h2>
+        <p:button outcome="/admin/vuelo/vuelo.xhtml"
+                  value="Nuevo Vuelo"
+                  icon="pi pi-plus"
+                  styleClass="btn-new" />
+    </div>
+
+    <h:form id="vueloForm">
+        <p:growl id="msgs" showDetail="true"/>
+
+        <p:dataTable id="dt-vuelos" value="#{vueloBean.vuelos}" var="vuelo"
+                     widgetVar="wvVuelos"
+                     responsiveLayout="stack"
+                     styleClass="ui-datatable-striped"
+                     paginator="true" rows="10"
+                     paginatorPosition="bottom"
+                     rowKey="#{vuelo.idVuelo}"
+                     emptyMessage="No se encontraron vuelos programados">
+
+            <f:facet name="header">
+                <div class="flex justify-content-end align-items-center">
+                    <span class="ui-input-icon-left">
+                        <i class="pi pi-search" style="color: var(--text-dim);" />
+                        <p:inputText id="globalFilter" onkeyup="PF('wvVuelos').filter()"
+                                     placeholder="Buscar por vuelo, ruta..." />
+                    </span>
+                </div>
+            </f:facet>
+
+            <p:column style="width:3rem; text-align: center">
+                <p:rowToggler />
+            </p:column>
+
+            <p:column headerText="Vuelo" sortBy="#{vuelo.numeroVuelo}" filterBy="#{vuelo.numeroVuelo}">
+                <h:outputText value="#{vuelo.numeroVuelo}" style="font-weight: 700; color: var(--sky-blue); font-size: 1.1rem;"/>
+            </p:column>
+
+            <p:column headerText="Salida" sortBy="#{vuelo.fechaHoraSalida}">
+                <div class="flex flex-column">
+                    <h:outputText value="#{vuelo.fechaHoraSalida}" style="font-weight: 600;">
+                        <f:convertDateTime pattern="dd 'de' MMMM, yyyy - HH:mm 'hrs'"
+                                           type="both"
+                                           timeZone="America/Santiago" />
+                    </h:outputText>
+                </div>
+            </p:column>
+
+            <p:column headerText="Llegada" sortBy="#{vuelo.fechaHoraLlegada}">
+                <div class="flex flex-column">
+                    <h:outputText value="#{vuelo.fechaHoraLlegada}" style="font-weight: 500;">
+                        <f:convertDateTime pattern="dd 'de' MMMM, yyyy - HH:mm 'hrs'"
+                                           type="both"
+                                           timeZone="America/Santiago" />
+                    </h:outputText>
+                </div>
+            </p:column>
+
+            <p:column headerText="Estado" style="text-align: center">
+                <span class="status-badge status-ontime">
+                    <i class="pi pi-check-circle mr-1" style="font-size: 0.8rem"></i> Confirmado
+                </span>
+            </p:column>
+
+            <p:column headerText="Gestión" style="width: 12rem; text-align: center">
+                <div class="flex gap-2 justify-content-center">
+                    <p:commandButton icon="pi pi-pencil"
+                                     action="#{vueloBean.editarVuelo(vuelo)}"
+                                     styleClass="ui-button-flat ui-button-plain"
+                                     style="color: var(--text-dim);"
+                                     title="Editar" />
+
+                    <p:commandButton value="Turnos"
+                                     icon="pi pi-calendar"
+                                     action="#{vueloBean.verTurnos(vuelo)}"
+                                     styleClass="btn-turns ui-button-sm" />
+                </div>
+            </p:column>
+
+            <p:rowExpansion>
+                <div class="itinerary-card">
+                    <h4 style="margin:0 0 1rem 0; display: flex; align-items: center; gap: 8px; color: var(--text-main); font-weight: 700;">
+                        <i class="pi pi-map-marker" style="color: var(--sky-blue)"></i>
+                        Itinerario y Escalas Logísticas
+                    </h4>
+
+                    <p:dataTable value="#{vuelo.segmentoVuelos}" var="segmento" styleClass="nested-table ui-datatable-sm">
+                        <p:column headerText="#" style="width: 50px; text-align: center; color: var(--text-dim)">
+                            #{segmento.ordenSegmento}°
+                        </p:column>
+
+                        <p:column headerText="Origen">
+                            <span style="font-weight: 800; color: var(--sky-blue)">#{segmento.aeropuertoOrigen.codigoIata}</span>
+                            <h:outputText value=" - #{segmento.aeropuertoOrigen.nombreAeropuerto}" style="font-size: 0.9rem; color: var(--text-dim); margin-left: 4px;"/>
+                        </p:column>
+
+                        <p:column style="width: 40px; text-align: center;">
+                            <i class="pi pi-arrow-right" style="color: var(--sky-light); font-size: 0.8rem;"></i>
+                        </p:column>
+
+                        <p:column headerText="Destino">
+                            <span style="font-weight: 800; color: var(--sky-blue)">#{segmento.aeropuertoDestino.codigoIata}</span>
+                            <h:outputText value=" - #{segmento.aeropuertoDestino.nombreAeropuerto}" style="font-size: 0.9rem; color: var(--text-dim); margin-left: 4px;"/>
+                        </p:column>
+
+                        <p:column headerText="Horario de Operación">
+                            <div style="font-size: 0.95rem; font-weight: 600;">
+                                <h:outputText value="#{segmento.horaSalida}">
+                                    <f:convertDateTime pattern="HH:mm" type="both"
+                                                       timeZone="America/Santiago"/>
+                                </h:outputText>
+                                <span style="margin: 0 6px; color: var(--sky-light)">➔</span>
+                                <h:outputText value="#{segmento.horaLlegada}">
+                                    <f:convertDateTime pattern="HH:mm" type="both"
+                                                       timeZone="America/Santiago"/>
+                                </h:outputText>
+                                <span style="font-size: 0.8rem; color: var(--text-dim); font-weight: 400; margin-left: 4px;">hrs</span>
+                            </div>
+                        </p:column>
+                    </p:dataTable>
+                </div>
+            </p:rowExpansion>
+        </p:dataTable>
+    </h:form>
+
+</ui:composition>

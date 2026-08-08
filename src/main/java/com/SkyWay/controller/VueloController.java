@@ -1,31 +1,34 @@
 package com.SkyWay.controller;
 
-import java.util.List;
-import java.util.Optional;
-
+import com.SkyWay.dto.ReservaVueloDTO;
+import com.SkyWay.modules.piloto.domain.model.Piloto;
+import com.SkyWay.modules.vuelo.domain.model.Vuelo;
 import com.SkyWay.util.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.SkyWay.dto.ReservaVueloDTO;
-import com.SkyWay.model.Aeropuerto;
-import com.SkyWay.model.Avion;
-import com.SkyWay.model.Piloto;
-import com.SkyWay.model.Vuelo;
-import com.SkyWay.service.AeropuertoService;
-import com.SkyWay.service.AvionService;
-import com.SkyWay.service.EstadoVueloService;
-import com.SkyWay.service.PiloService;
-import com.SkyWay.service.ReservaService;
-import com.SkyWay.service.VueloService;
+import com.SkyWay.modules.aeropuerto.domain.service.AeropuertoService;
+import com.SkyWay.modules.avion.domain.service.AvionService;
+import com.SkyWay.modules.estadovuelo.domain.service.EstadoVueloService;
+import com.SkyWay.modules.piloto.domain.service.PiloService;
+import com.SkyWay.modules.reserva.domain.service.ReservaService;
+import com.SkyWay.modules.vuelo.domain.service.VueloService;
+
+import java.util.List;
+import java.util.Optional;
+/*curl -X GET http://localhost:8080/api2/vuelos
+curl -X GET http://localhost:8080/api2/vuelos/123
+curl -X GET http://localhost:8080/api2/vuelos/piloto/12345678-9
+curl -X GET http://localhost:8080/api2/vuelos/reservas/12345678-9
+
+*/
+
+
 
 /*
 curl -X GET http://localhost:8080/api2/vuelos
@@ -112,7 +115,7 @@ public class VueloController {
 
         Vuelo savedVuelo = vueloService.save(vuelo);
         return new ResponseEntity<>(savedVuelo, HttpStatus.CREATED);
-    }*/
+    }
 
     // Actualizar un vuelo existente
     @PutMapping("/{id}")
@@ -155,5 +158,5 @@ public class VueloController {
     @GetMapping("/pilotos")
     public List<Piloto> getAllPilotos() {
         return piloService.findAll();
-    }
+    }*/
 }

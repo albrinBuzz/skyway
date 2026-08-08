@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.SkyWay.dto.InfoVueloDTO;
-import com.SkyWay.service.VueloService;
+import com.SkyWay.modules.vuelo.domain.service.VueloService;
 
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Named;
@@ -28,7 +28,7 @@ public class FlightBean {
     public FlightBean(VueloService vueloService) {
     	//vueloService=new VueloServiceImpl();
     	this.vueloService=vueloService;
-    	vuelosProx=vueloService.vuelosProximos();
+    	//vuelosProx=vueloService.vuelosProximos();
     }
 
     // Métodos para manejar la reserva y ver detalles de los vuelos

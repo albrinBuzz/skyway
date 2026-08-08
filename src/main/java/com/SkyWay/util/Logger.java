@@ -1,162 +1,103 @@
 package com.SkyWay.util;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class Logger {
-    // Configuración de colores por defecto
-    private static final String CLASS_COLOR = "\u001B[34m"; // Azul
-    private static final String METHOD_COLOR = "\u001B[32m"; // Verde
-    private static final String LINE_NUMBER_COLOR = "\u001B[33m"; // Amarillo
-    private static final String MESSAGE_COLOR = "\u001B[35m"; // Magenta
-    private static final String RESET_COLOR = "\u001B[0m"; // Restablecer el color
-
-    // Niveles de log
-    public enum LogLevel {
-        DEBUG, INFO, WARN, ERROR;
-
-        // Mapa de colores para cada nivel de log
-        private static final String DEBUG_COLOR = "\u001B[36m"; // Cyan
-        private static final String INFO_COLOR = "\u001B[32m"; // Verde
-        private static final String WARN_COLOR = "\u001B[33m"; // Amarillo
-        private static final String ERROR_COLOR = "\u001B[31m"; // Rojo
-
-        public String getColor() {
-            switch (this) {
-                case DEBUG:
-                    return DEBUG_COLOR;
-                case INFO:
-                    return INFO_COLOR;
-                case WARN:
-                    return WARN_COLOR;
-                case ERROR:
-                    return ERROR_COLOR;
-                default:
-                    return RESET_COLOR;
-            }
-        }
-    }
-
-    // Control de si los colores deben ser habilitados
+    private static final String LOG_FILE = "bitBridge.log";
+    private static final long MAX_FILE_SIZE = 500 * 1024 * 1024;
     private static boolean enableColors = true;
 
-    // Formato para la fecha y hora
-    private static final SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    // --- COLORES ANSI INTENSOS Y NEGRITAS ---
+    private static final String RESET = "\u001B[0m";
+    private static final String BOLD = "\u001B[1m";
 
-    // Configura si los colores están habilitados o no
-    public static void setEnableColors(boolean enable) {
-        enableColors = enable;
+    private static final String TIME_COLOR = "\u001B[90m";     // Gris oscuro
+    private static final String CLASS_COLOR = "\u001B[38;5;39m"; // Azul brillante (Steel Blue)
+    private static final String METHOD_COLOR = "\u001B[38;5;76m"; // Verde lima
+    private static final String LINE_COLOR = "\u001B[38;5;214m";  // Naranja suave
+    private static final String MSG_COLOR = "\u001B[97m";      // Blanco intenso
+
+    public enum LogLevel {
+        // [Fondo;Texto m
+        DEBUG("\u001B[1;34m", "[DEBUG]"), // Azul Negrita
+        INFO("\u001B[1;32m",  "[INFO ]"), // Verde Negrita
+        WARN("\u001B[1;33m",  "[WARN ]"), // Amarillo Negrita
+        ERROR("\u001B[1;31m", "[ERROR]"); // Rojo Negrita
+
+        final String color;
+        final String label;
+        LogLevel(String color, String label) {
+            this.color = color;
+            this.label = label;
+        }
     }
 
-    // Método para registrar información con color
-    public static void logInfo(String message) {
+    //private static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
+    // Formato robusto: 2026-06-06 21:50:34.411
+    private static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
-        StackTraceElement element = Thread.currentThread().getStackTrace()[2];
-        String className = element.getClassName();
-        String methodName = element.getMethodName();
-        int lineNumber = element.getLineNumber();
+    public static synchronized void log(LogLevel level, String message) {
+        StackTraceElement ste = Thread.currentThread().getStackTrace()[3];
+        String time = dtf.format(LocalDateTime.now());
 
-        // Formatear la fecha y hora actual
-        String dateTime = dateFormatter.format(new Date());
+        // CAMBIO: Ahora obtenemos el nombre completo del paquete + clase
+        String fullClassName = ste.getClassName();
 
-        // Usar StringBuilder para mejorar la eficiencia al concatenar cadenas
-        StringBuilder logMessage = new StringBuilder();
-
-        // Formato del log
-        logMessage.append(String.format("[%s] ", dateTime));
-
-        // Si los colores están habilitados, mostrar con el color adecuado para el nivel
-        /*if (enableColors) {
-            logMessage.append(level.getColor()).append("[").append(level).append("]").append(RESET_COLOR).append(" ");
-        } else {
-            logMessage.append("[").append(level).append("] ").append(" ");
-        }*/
-
-        // Agregar la información sobre la clase, el método y la línea
-        logMessage.append(CLASS_COLOR).append(className).append(RESET_COLOR)
-                .append("::").append(METHOD_COLOR).append(methodName).append(RESET_COLOR)
-                .append(" (Línea: ").append(LINE_NUMBER_COLOR).append(lineNumber).append(RESET_COLOR).append(") - ");
-
-        // Agregar el mensaje del log
-        logMessage.append(MESSAGE_COLOR).append(message).append(RESET_COLOR);
-
-        // Imprimir el mensaje de log en consola
-        System.out.println(logMessage.toString());
-
-
-        // Obtener la información de la pila de ejecución (StackTrace)
-
-
-        // Usar String.format() para mejorar la legibilidad del log
-        /*String logMessage = String.format("Clase: %s, Método: %s, Línea: %d, Log: %s",
-                className, methodName, lineNumber, message);*/
-
-        // Códigos ANSI para colores diferentes para cada parte
-        /*String classColor = "\u001B[34m"; // Azul
-        String methodColor = "\u001B[32m"; // Verde
-        String lineNumberColor = "\u001B[33m"; // Amarillo
-        String messageColor = "\u001B[35m"; // Magenta
-        String resetColor = "\u001B[0m"; // Restablecer el color
-
-        // Imprimir cada parte del log con un color diferente
-        System.out.println(classColor + "Clase: " + className + resetColor + ", " +
-                methodColor + "Método: " + methodName + resetColor + ", " +
-                lineNumberColor + "Línea: " + lineNumber + resetColor + ", " +
-                messageColor + "Log: " + message + resetColor);*/
+        System.out.println(formatForConsole(level, time, fullClassName, ste, message));
+        //saveToFile(formatForFile(level, time, fullClassName, ste, message));
     }
 
-    // Método para registrar información con colores y formato claro
-    public static void log(LogLevel level, String message) {
-        // Obtener la información de la pila de ejecución (StackTrace) solo una vez
-        StackTraceElement element = Thread.currentThread().getStackTrace()[2];
-        String className = element.getClassName();
-        String methodName = element.getMethodName();
-        int lineNumber = element.getLineNumber();
+    private static String formatForConsole(LogLevel lvl, String time, String fullCls, StackTraceElement ste, String msg) {
+        if (!enableColors) return formatForFile(lvl, time, fullCls, ste, msg);
 
-        // Formatear la fecha y hora actual
-        String dateTime = dateFormatter.format(new Date());
-
-        // Usar StringBuilder para mejorar la eficiencia al concatenar cadenas
-        StringBuilder logMessage = new StringBuilder();
-
-        // Formato del log
-        logMessage.append(String.format("[%s] ", dateTime));
-
-        // Si los colores están habilitados, mostrar con el color adecuado para el nivel
-        if (enableColors) {
-            logMessage.append(level.getColor()).append("[").append(level).append("]").append(RESET_COLOR).append(" ");
-        } else {
-            logMessage.append("[").append(level).append("] ").append(" ");
+        // Separamos el paquete de la clase para darles colores distintos
+        String packageName = "";
+        String className = fullCls;
+        if (fullCls.contains(".")) {
+            packageName = fullCls.substring(0, fullCls.lastIndexOf('.') + 1);
+            className = fullCls.substring(fullCls.lastIndexOf('.') + 1);
         }
 
-        // Agregar la información sobre la clase, el método y la línea
-        logMessage.append(CLASS_COLOR).append(className).append(RESET_COLOR)
-                .append("::").append(METHOD_COLOR).append(methodName).append(RESET_COLOR)
-                .append(" (Línea: ").append(LINE_NUMBER_COLOR).append(lineNumber).append(RESET_COLOR).append(") - ");
-
-        // Agregar el mensaje del log
-        logMessage.append(MESSAGE_COLOR).append(message).append(RESET_COLOR);
-
-        // Imprimir el mensaje de log en consola
-        System.out.println(logMessage.toString());
+        // Estructura: TIME [LEVEL] package.Class::method(line) » message
+        return String.format("%s%s%s %s%s%s %s%s%s%s%s%s::%s%s%s(%s%d%s) %s %s%s%s",
+                TIME_COLOR, time, RESET,             // Tiempo
+                lvl.color, lvl.label, RESET,         // Nivel [INFO]
+                TIME_COLOR, packageName, RESET,      // Paquete (en gris para no saturar)
+                BOLD + CLASS_COLOR, className, RESET, // Clase (en Azul brillante)
+                METHOD_COLOR, ste.getMethodName(), RESET, // Método
+                LINE_COLOR, ste.getLineNumber(), RESET,   // Línea
+                BOLD + "»",                          // Separador
+                MSG_COLOR, msg, RESET);              // Mensaje
     }
 
-    // Métodos específicos para cada nivel de log
-    /*public static void logInfo(String message) {
-        log(LogLevel.INFO, message);
-    }*/
-
-    public static void logWarn(String message) {
-        log(LogLevel.WARN, message);
+    private static String formatForFile(LogLevel lvl, String time, String fullCls, StackTraceElement ste, String msg) {
+        return String.format("[%s] %s %s::%s(L:%d) - %s",
+                time, lvl.label, fullCls, ste.getMethodName(), ste.getLineNumber(), msg);
     }
 
-    public static void logError(String message) {
-        log(LogLevel.ERROR, message);
+    private static void saveToFile(String fullLog) {
+        File file = new File(LOG_FILE);
+        if (file.exists() && file.length() > MAX_FILE_SIZE) rotateLogs(file);
+        try (FileWriter fw = new FileWriter(LOG_FILE, true); PrintWriter pw = new PrintWriter(fw)) {
+            pw.println(fullLog);
+        } catch (IOException e) {
+            System.err.println("Error al escribir log: " + e.getMessage());
+        }
     }
 
-    public static void logDebug(String message) {
-        log(LogLevel.DEBUG, message);
+    private static void rotateLogs(File currentFile) {
+        File backup = new File(LOG_FILE + ".bak");
+        if (backup.exists()) backup.delete();
+        currentFile.renameTo(backup);
     }
 
-
+    public static void logInfo(String m) { log(LogLevel.INFO, m); }
+    public static void logError(String m) { log(LogLevel.ERROR, m); }
+    public static void logWarn(String m) { log(LogLevel.WARN, m); }
+    public static void logDebug(String m) { log(LogLevel.DEBUG, m); }
 }

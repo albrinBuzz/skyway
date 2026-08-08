@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition lang="es"
+                xmlns:f="jakarta.faces.core"
+                xmlns:h="jakarta.faces.html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                template="/template/main.xhtml">
+
+    <ui:define name="head">
+        <title>Selección de Asientos</title>
+        <h:outputStylesheet library="css" name="seleccionAsientos/style.css" />
+
+        <!-- Cliente WebSocket STOMP + SockJS -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+
+        <script type="text/javascript">
+            /* <![CDATA[ */
+            var stompClient = null;
+            var suscripcionActual = null;
+            var idVueloActual = "#{seleccionAsientosBean.vuelo.idVuelo}";
+
+            function conectarWebSocket() {
+                console.log("🔌 [WebSocket] Conectando SockJS en '/ws-asientos'...");
+                var socket = new SockJS('/ws-asientos');
+                stompClient = Stomp.over(socket);
+                stompClient.debug = null;
+
+                stompClient.connect({}, function (frame) {
+                    console.log("✅ [WebSocket] Conectado.");
+                    suscribirAEnlaceVuelo(idVueloActual);
+                }, function (error) {
+                    console.error("❌ [WebSocket] Error de conexión:", error);
+                });
+            }
+
+            function suscribirAEnlaceVuelo(idVuelo) {
+                if (suscripcionActual) {
+                    console.log("🔄 [WebSocket] Cancelando suscripción anterior...");
+                    suscripcionActual.unsubscribe();
+                }
+
+                idVueloActual = idVuelo;
+                var canal = '/topic/vuelo/' + idVueloActual;
+                console.log("📡 [WebSocket] Suscribiéndose a:", canal);
+
+                suscripcionActual = stompClient.subscribe(canal, function (mensaje) {
+                    console.log("📥 [WebSocket] Notificación recibida en:", canal);
+                    actualizarMapaRemoto();
+                });
+            }
+
+            function cambiarCanalWebSocket(nuevoIdVuelo) {
+                if (stompClient && stompClient.connected) {
+                    suscribirAEnlaceVuelo(nuevoIdVuelo);
+                } else {
+                    idVueloActual = nuevoIdVuelo;
+                    conectarWebSocket();
+                }
+            }
+
+            function flashCambioVuelo() {
+                var hero = document.getElementById('flightHeroCard');
+                if (!hero) return;
+                hero.classList.remove('hero-flash'); // reinicia si ya estaba corriendo
+                void hero.offsetWidth; // fuerza reflow para poder re-disparar la animación
+                hero.classList.add('hero-flash');
+                setTimeout(function () { hero.classList.remove('hero-flash'); }, 900);
+            }
+
+            document.addEventListener("DOMContentLoaded", conectarWebSocket);
+            /* ]]> */
+        </script>
+    </ui:define>
+
+    <ui:define name="contenido">
+
+        <main class="seat-selection-container">
+
+            <h:form id="seatForm">
+
+                <p:growl id="growl" showDetail="true" life="4000" />
+
+                <!-- Comando AJAX ejecutado por el WebSocket -->
+                <p:remoteCommand name="actualizarMapaRemoto"
+                                 actionListener="#{seleccionAsientosBean.recargarAsientos}"
+                                 update="seatForm:cabinaPanel seatForm:registroPanel" />
+
+                <!-- HEADER CON NAVEGACIÓN Y STEPPER -->
+                <div id="flightHeroCard" class="flight-hero-card">
+                    <div class="hero-top-row">
+                        <p:commandButton value="← Vuelo Anterior"
+                                         action="#{seleccionAsientosBean.vueloAnterior}"
+                                         rendered="#{seleccionAsientosBean.idxVuelo gt 0}"
+                                         styleClass="ui-button-outlined ui-button-secondary nav-btn"
+                                         process="@this"
+                                         update="seatForm" />
+                        <h:panelGroup rendered="#{seleccionAsientosBean.idxVuelo eq 0}" />
+
+                        <div class="hero-tramo-badge">
+                            TRAMO #{seleccionAsientosBean.idxVuelo + 1} DE #{seleccionAsientosBean.cantVuelos}
+                        </div>
+
+                        <p:commandButton value="Siguiente Vuelo →"
+                                         action="#{seleccionAsientosBean.siguienteVuelo}"
+                                         rendered="#{seleccionAsientosBean.idxVuelo + 1 lt seleccionAsientosBean.cantVuelos}"
+                                         styleClass="ui-button-primary nav-btn"
+                                         process="@this"
+                                         update="seatForm" />
+                        <h:panelGroup rendered="#{seleccionAsientosBean.idxVuelo + 1 ge seleccionAsientosBean.cantVuelos}" />
+                    </div>
+
+                    <div class="hero-main-info">
+                        <div class="hero-route">
+                            <span class="hero-route-code">#{seleccionAsientosBean.vuelo.segmentoVuelos[0].aeropuertoOrigen.codigoIata}</span>
+                            <i class="pi pi-arrow-right hero-route-arrow"></i>
+                            <span class="hero-route-code">#{seleccionAsientosBean.vuelo.segmentoVuelos[seleccionAsientosBean.vuelo.segmentoVuelos.size() - 1].aeropuertoDestino.codigoIata}</span>
+                        </div>
+                        <div class="hero-flight-meta">
+                            <span class="hero-flight-num"><i class="pi pi-send"></i> Vuelo #{seleccionAsientosBean.vuelo.numeroVuelo}</span>
+                            <span class="hero-flight-time">
+                <i class="pi pi-clock"></i>
+                <h:outputText value="#{seleccionAsientosBean.vuelo.fechaHoraSalida}">
+                    <f:convertDateTime pattern="dd/MM HH:mm" timeZone="America/Santiago"/>
+                </h:outputText>
+            </span>
+                        </div>
+                    </div>
+
+                    <!-- Mini-stepper de TODOS los tramos, cada uno navegable con un clic -->
+                    <p:outputPanel id="flightStepper" styleClass="flight-stepper">
+                        <ui:repeat value="#{seleccionAsientosBean.vuelos}" var="v" varStatus="st">
+                            <div class="flight-step-mini #{st.index eq seleccionAsientosBean.idxVuelo ? 'active' : ''} #{st.index lt seleccionAsientosBean.idxVuelo ? 'completado' : ''}">
+                                <div class="step-mini-icon">
+                                    <i class="pi #{st.index lt seleccionAsientosBean.idxVuelo ? 'pi-check' : 'pi-send'}"></i>
+                                </div>
+                                <div class="step-mini-info">
+                                    <span class="step-mini-ruta">#{seleccionAsientosBean.getRutaDeVuelo(v)}</span>
+                                    <span class="step-mini-num">Vuelo #{v.numeroVuelo}</span>
+                                </div>
+                            </div>
+                        </ui:repeat>
+                    </p:outputPanel>
+
+                    <div class="passenger-progress-bar">
+                        <div class="progress-label">
+                            <i class="pi pi-user"></i>
+                            Seleccionando asiento para:
+                            <b>
+                                <h:outputText value="#{seleccionAsientosBean.pasajeros[seleccionAsientosBean.idxAsientoSeleccion].nombre}"
+                                              rendered="#{seleccionAsientosBean.idxAsientoSeleccion lt seleccionAsientosBean.cantAdultos}" />
+                                <h:outputText value="Todos los pasajeros de este tramo listos ✓"
+                                              rendered="#{seleccionAsientosBean.idxAsientoSeleccion ge seleccionAsientosBean.cantAdultos}" />
+                            </b>
+                        </div>
+                        <div class="progress-dots">
+                            <ui:repeat value="#{seleccionAsientosBean.pasajeros}" var="p" varStatus="st">
+                                <span class="progress-dot #{st.index lt seleccionAsientosBean.idxAsientoSeleccion ? 'done' : (st.index eq seleccionAsientosBean.idxAsientoSeleccion ? 'active' : '')}"></span>
+                            </ui:repeat>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- GRID PRINCIPAL -->
+                <div class="booking-grid booking-grid-2col">
+
+                    <!-- COLUMNA IZQUIERDA: INFORMACIÓN, PASAJEROS Y RESUMEN -->
+                    <aside class="registry-sidebar">
+                        <h:panelGroup id="registroPanel">
+                        <div class="sidebar-card registry-card">
+                            <h3 class="card-subtitle"><i class="pi pi-table"></i> Registro por Pasajero</h3>
+                            <br> </br>
+                            <p class="registry-hint">Vista completa de tu viaje: qué asiento eligió cada pasajero en cada tramo.</p>
+
+                            <div class="registry-table-wrapper">
+                                <ui:repeat value="#{seleccionAsientosBean.pasajeros}" var="pas" varStatus="ps">
+                                    <div class="registry-pasajero-block #{ps.index eq seleccionAsientosBean.idxAsientoSeleccion and seleccionAsientosBean.idxAsientoSeleccion lt seleccionAsientosBean.cantAdultos ? 'pasajero-actual' : ''}">
+                                        <div class="registry-pasajero-header">
+                                            <span class="registry-pasajero-badge">#{ps.index + 1}</span>
+                                            <span class="registry-pasajero-nombre">#{pas.nombre}</span>
+                                        </div>
+
+                                        <ui:repeat value="#{seleccionAsientosBean.vuelos}" var="v" varStatus="vs">
+                                            <div class="registry-tramo-row #{vs.index eq seleccionAsientosBean.idxVuelo ? 'tramo-activo' : ''}">
+                                                <span class="registry-tramo-ruta">#{seleccionAsientosBean.getRutaDeVuelo(v)}</span>
+
+                                                <h:panelGroup rendered="#{not empty pas.asientos[vs.index]}">
+                                    <span class="registry-asiento-chip">
+                                        <i class="pi pi-check-circle"></i>
+                                        #{pas.asientos[vs.index].numeroAsiento}
+                                        <small>#{pas.asientos[vs.index].clase}</small>
+                                    </span>
+                                                </h:panelGroup>
+
+                                                <h:panelGroup rendered="#{empty pas.asientos[vs.index]}">
+                                    <span class="registry-pendiente-chip #{vs.index eq seleccionAsientosBean.idxVuelo ? 'seleccionando' : ''}">
+                                        #{vs.index eq seleccionAsientosBean.idxVuelo ? 'Seleccionando...' : 'Pendiente'}
+                                    </span>
+                                                </h:panelGroup>
+                                            </div>
+                                        </ui:repeat>
+                                    </div>
+                                </ui:repeat>
+                            </div>
+                        </div>
+                        </h:panelGroup>
+
+                        <!-- Leyenda de estados de asiento -->
+                        <div class="sidebar-card legend-card">
+                            <h3 class="card-subtitle"><i class="pi pi-info-circle"></i> Estado de Asientos</h3>
+                            <div class="seat-legend">
+                                <div class="legend-block"><span class="legend-square disponible"></span><span>Disponible</span></div>
+                                <div class="legend-block"><span class="legend-square ocupado"></span><span>Ocupado</span></div>
+                                <div class="legend-block"><span class="legend-square seleccionado"></span><span>Tu selección</span></div>
+                                <div class="legend-block"><span class="legend-square en_proceso"></span><span>Reservando (otro)</span></div>
+                            </div>
+                        </div>
+                    </aside>
+
+                    <!-- COLUMNA DERECHA: MAPA DE LA CABINA -->
+                    <section class="airplane-container">
+
+                        <div class="airplane-fuselage">
+
+                            <!-- Cabeza del Avión -->
+                            <div class="airplane-nose">
+                                <div class="cockpit-glass"></div>
+                                <span class="nose-title"><i class="pi pi-th-large"></i> DISTRIBUCIÓN DE CABINA</span>
+                            </div>
+
+                            <!-- CABINA ACTUALIZABLE -->
+                            <h:panelGroup id="cabinaPanel" layout="block" styleClass="cabina-premium">
+
+                                <!-- PRIMERA CLASE -->
+                                <h:panelGroup styleClass="class-section primera-clase" layout="block">
+                                    <div class="class-title"><i class="pi pi-star-fill"></i> Primera Clase</div>
+                                    <div class="seat-grid grid-small">
+                                        <ui:repeat value="#{seleccionAsientosBean.asientos}" var="a">
+                                            <h:panelGroup rendered="#{a.clase == 'Primera Clase'}" layout="block">
+                                                <p:commandButton value="#{a.numeroAsiento}"
+                                                                 title="Precio: $#{a.precio}"
+                                                                 styleClass="seat-btn #{a.getEstadoVisual(seleccionAsientosBean.miSessionId).toLowerCase()}"
+                                                                 disabled="#{a.getEstadoVisual(seleccionAsientosBean.miSessionId) == 'OCUPADO' or a.getEstadoVisual(seleccionAsientosBean.miSessionId) == 'EN_PROCESO'}"
+                                                                 action="#{seleccionAsientosBean.setearAsiento(a)}"
+                                                                 update="seatForm">
+                                                    <f:param name="sessionId" value="#{seleccionAsientosBean.miSessionId}" />
+                                                </p:commandButton>
+                                            </h:panelGroup>
+                                        </ui:repeat>
+                                    </div>
+                                </h:panelGroup>
+
+                                <!-- EJECUTIVA -->
+                                <h:panelGroup styleClass="class-section ejecutiva-clase" layout="block">
+                                    <div class="class-title"><i class="pi pi-briefcase"></i> Clase Ejecutiva</div>
+                                    <div class="seat-grid grid-medium">
+                                        <ui:repeat value="#{seleccionAsientosBean.asientos}" var="a">
+                                            <h:panelGroup rendered="#{a.clase == 'Ejecutiva'}" layout="block">
+                                                <p:commandButton value="#{a.numeroAsiento}"
+                                                                 title="Precio: $#{a.precio}"
+                                                                 styleClass="seat-btn #{a.getEstadoVisual(seleccionAsientosBean.miSessionId).toLowerCase()}"
+                                                                 disabled="#{a.getEstadoVisual(seleccionAsientosBean.miSessionId) == 'OCUPADO' or a.getEstadoVisual(seleccionAsientosBean.miSessionId) == 'EN_PROCESO'}"
+                                                                 action="#{seleccionAsientosBean.setearAsiento(a)}"
+                                                                 update="seatForm">
+                                                    <f:param name="sessionId" value="#{seleccionAsientosBean.miSessionId}" />
+                                                </p:commandButton>
+                                            </h:panelGroup>
+                                        </ui:repeat>
+                                    </div>
+                                </h:panelGroup>
+
+                                <!-- ECONÓMICA -->
+                                <h:panelGroup styleClass="class-section economica-clase" layout="block">
+                                    <div class="class-title"><i class="pi pi-user"></i> Clase Económica</div>
+                                    <div class="seat-grid grid-large">
+                                        <ui:repeat value="#{seleccionAsientosBean.asientos}" var="a">
+                                            <h:panelGroup rendered="#{a.clase == 'Económica'}" layout="block">
+                                                <p:commandButton value="#{a.numeroAsiento}"
+                                                                 title="Precio: $#{a.precio}"
+                                                                 styleClass="seat-btn #{a.getEstadoVisual(seleccionAsientosBean.miSessionId).toLowerCase()}"
+                                                                 disabled="#{a.getEstadoVisual(seleccionAsientosBean.miSessionId) == 'OCUPADO' or a.getEstadoVisual(seleccionAsientosBean.miSessionId) == 'EN_PROCESO'}"
+                                                                 action="#{seleccionAsientosBean.setearAsiento(a)}"
+                                                                 update="seatForm">
+                                                    <f:param name="sessionId" value="#{seleccionAsientosBean.miSessionId}" />
+                                                </p:commandButton>
+                                            </h:panelGroup>
+                                        </ui:repeat>
+                                    </div>
+                                </h:panelGroup>
+
+                            </h:panelGroup>
+
+                            <!-- Cola del Avión -->
+                            <div class="airplane-tail">
+                                <span>PARTE TRASERA DEL AVIÓN</span>
+                            </div>
+
+                        </div>
+
+                    </section>
+
+                </div>
+
+            </h:form>
+
+        </main>
+
+    </ui:define>
+
+</ui:composition>

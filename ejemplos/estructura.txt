@@ -1,0 +1,85 @@
+src
+└── main
+    ├── java
+    │   └── com
+    │       └── skyway
+    │           ├── SkyWayApplication.java
+
+    │           ├── config                        # Configuración general
+    │           │   ├── WebConfig.java
+    │           │   ├── SecurityConfig.java
+    │           │   ├── JsfConfig.java
+    │           │   └── SwaggerConfig.java
+
+    │           ├── shared                        # Código reutilizable
+    │           │   ├── exceptions
+    │           │   │   ├── BusinessException.java
+    │           │   │   ├── NotFoundException.java
+    │           │   │   └── ...
+    │           │   ├── utils
+    │           │   │   └── MapperUtil.java
+    │           │   └── enums
+    │           │       └── RolEnum.java
+
+    │           ├── modules                       # Dominio funcional
+    │           │   ├── usuario
+    │           │   │   ├── model
+    │           │   │   │   └── Usuario.java
+    │           │   │   ├── dto
+    │           │   │   │   └── UsuarioDTO.java
+    │           │   │   ├── repository
+    │           │   │   │   └── UsuarioRepository.java
+    │           │   │   ├── service
+    │           │   │   │   ├── UsuarioService.java
+    │           │   │   │   └── impl
+    │           │   │   │       └── UsuarioServiceImpl.java
+    │           │   │   ├── view                   # Beans JSF
+    │           │   │   │   └── UsuarioViewBean.java
+    │           │   │   └── controller             # REST API opcional
+    │           │   │       └── UsuarioRestController.java
+
+    │           │   ├── vuelo
+    │           │   │   ├── model
+    │           │   │   ├── dto
+    │           │   │   ├── repository
+    │           │   │   ├── service
+    │           │   │   ├── view
+    │           │   │   └── controller
+
+    │           │   ├── reserva
+    │           │   │   ├── model
+    │           │   │   ├── dto
+    │           │   │   ├── repository
+    │           │   │   ├── service
+    │           │   │   ├── view
+    │           │   │   └── controller
+
+    │           │   └── avion
+    │               └── ...
+
+    │           └── converter                    # JSF Converters (opcional)
+    │               └── EstadoConverter.java
+
+    ├── resources
+    │   ├── application.properties
+    │   ├── application-dev.properties
+    │   ├── messages_es.properties
+    │   └── templates                            # Para correos, PDF, etc.
+
+    └── webapp
+        ├── WEB-INF
+        │   ├── web.xml
+        │   └── faces-config.xml
+        └── views
+            ├── shared                          # Layouts, templates comunes
+            │   └── template.xhtml
+            ├── usuario
+            │   ├── login.xhtml
+            │   └── perfil.xhtml
+            ├── vuelo
+            │   ├── crearVuelo.xhtml
+            │   └── buscarVuelos.xhtml
+            ├── reserva
+            │   └── misReservas.xhtml
+            └── error
+                └── 404.xhtml

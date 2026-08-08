@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>SkyWay - Flight Management Dashboard</title>
+    <link rel="stylesheet" href="https://unpkg.com/primeicons/primeicons.css">
+    <style>
+        :root {
+            --bg-body: #050b16;
+            --bg-card: #0a192f;
+            --bg-sidebar: #071224;
+            --accent-blue: #00a3ff;
+            --text-main: #e6edf3;
+            --text-dim: #8b949e;
+            --status-green: #23d160;
+            --status-orange: #ff9f43;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+        }
+
+        /* --- SIDEBAR IZQUIERDO --- */
+        .sidebar {
+            width: 320px;
+            background-color: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
+            padding: 40px 25px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .profile-name { font-size: 28px; font-weight: 700; margin: 0; letter-spacing: -0.5px; }
+        .membership-badge {
+            background: linear-gradient(135deg, #b8860b 0%, #f1c40f 100%);
+            color: #000;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 4px;
+            display: inline-block;
+            margin: 15px 0 40px 0;
+            text-transform: uppercase;
+        }
+
+        .section-label { color: var(--text-dim); font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 20px; display: block; }
+        .data-row { display: flex; justify-content: space-between; margin-bottom: 18px; font-size: 14px; }
+        .data-label { color: var(--text-dim); }
+
+        /* --- CONTENIDO PRINCIPAL --- */
+        .main-view {
+            flex: 1;
+            padding: 40px 50px;
+            overflow-y: auto;
+        }
+
+        /* TABS DE VUELOS */
+        .tabs-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tabs-header { display: flex; gap: 30px; }
+        .tab-item {
+            padding-bottom: 15px;
+            cursor: pointer;
+            color: var(--text-dim);
+            font-size: 14px;
+            font-weight: 600;
+            position: relative;
+            transition: 0.3s;
+        }
+        .tab-item.active { color: var(--text-main); }
+        .tab-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--accent-blue);
+        }
+        .tab-count { font-weight: 400; font-size: 12px; margin-left: 4px; opacity: 0.7; }
+
+        /* CARDS DE VUELO */
+        .flight-card {
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            display: none; /* Se controla por JS */
+        }
+        .flight-card.visible { display: block; }
+
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 25px;
+        }
+        .res-code { color: var(--accent-blue); font-weight: 700; font-size: 15px; cursor: pointer; }
+        .btn-manage {
+            background: transparent;
+            border: 1px solid var(--text-dim);
+            color: var(--text-main);
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .card-body {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .route-info { display: flex; align-items: center; gap: 30px; }
+        .date-display { text-align: center; min-width: 50px; }
+        .date-month { display: block; font-size: 12px; color: var(--text-dim); text-transform: uppercase; }
+        .date-day { display: block; font-size: 24px; font-weight: 700; }
+
+        .airport-codes { display: flex; align-items: center; gap: 15px; }
+        .code { font-size: 20px; font-weight: 700; }
+        .status-pill {
+            font-size: 10px;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 10px;
+            text-transform: uppercase;
+        }
+        .pill-ontime { background: rgba(35, 209, 96, 0.15); color: var(--status-green); }
+        .pill-delayed { background: rgba(255, 159, 67, 0.15); color: var(--status-orange); }
+
+        .times-container { display: flex; gap: 50px; text-align: right; }
+        .time-group .label { display: block; font-size: 11px; color: var(--text-dim); margin-bottom: 4px; }
+        .time-group .value { font-size: 18px; font-weight: 700; }
+        .time-group .sub-value { font-size: 11px; color: var(--text-dim); display: block; }
+
+    </style>
+</head>
+<body>
+
+<nav class="sidebar">
+    <h1 class="profile-name">Jordan Parker</h1>
+    <div><span class="membership-badge">Gold Medallion</span></div>
+
+    <span class="section-label">Basic Info</span>
+    <div class="data-row"><span class="data-label">Name</span><span>Jordan Parker</span></div>
+    <div class="data-row"><span class="data-label">Gender</span><span>Female</span></div>
+
+    <span class="section-label" style="margin-top: 30px;">Contact Info</span>
+    <div class="data-row"><span class="data-label">Email</span><span style="color:var(--accent-blue)">jordan.p@skyway.com</span></div>
+    <div class="data-row"><span class="data-label">Phone</span><span>+1 564-4563-997</span></div>
+</nav>
+
+<main class="main-view">
+    <h2 style="margin-top: 0; margin-bottom: 30px; font-size: 32px;">Trips</h2>
+
+    <div class="tabs-container">
+        <div class="tabs-header">
+            <div class="tab-item active" onclick="showTab('today', this)">Today <span class="tab-count">(1)</span></div>
+            <div class="tab-item" onclick="showTab('upcoming', this)">Upcoming <span class="tab-count">(2)</span></div>
+            <div class="tab-item" onclick="showTab('past', this)">Past <span class="tab-count">(100)</span></div>
+        </div>
+    </div>
+
+    <div id="flights-list">
+
+        <div class="flight-card today visible">
+            <div class="card-top">
+                <span class="res-code">GLP4P18 <i class="pi pi-copy" style="font-size: 12px; margin-left: 5px;"></i></span>
+                <button class="btn-manage">Manage Trip</button>
+            </div>
+            <div class="card-body">
+                <div class="route-info">
+                    <div class="date-display">
+                        <span class="date-month">Jan</span>
+                        <span class="date-day">05</span>
+                    </div>
+                    <div>
+                        <div class="airport-codes">
+                            <span class="code">JFK</span>
+                            <i class="pi pi-arrow-right" style="color: var(--text-dim); font-size: 12px;"></i>
+                            <span class="code">LAX</span>
+                            <span class="status-pill pill-delayed">Delayed</span>
+                        </div>
+                        <span style="color: var(--text-dim); font-size: 14px;">Los Angeles, CA</span>
+                    </div>
+                </div>
+                <div class="times-container">
+                    <div class="time-group">
+                        <span class="label">Departs JFK</span>
+                        <span class="value">4:29 PM</span>
+                        <span class="sub-value">was 3:50 PM</span>
+                    </div>
+                    <div class="time-group">
+                        <span class="label">Arrives LAX</span>
+                        <span class="value" style="color:var(--accent-blue)">10:10 PM</span>
+                        <span class="sub-value">was 9:45 PM</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flight-card upcoming">
+            <div class="card-top">
+                <span class="res-code">KHR4H9 <i class="pi pi-copy"></i></span>
+                <button class="btn-manage">Manage Trip</button>
+            </div>
+            <div class="card-body">
+                <div class="route-info">
+                    <div class="date-display">
+                        <span class="date-month">Feb</span>
+                        <span class="date-day">12</span>
+                    </div>
+                    <div>
+                        <div class="airport-codes">
+                            <span class="code">ATL</span>
+                            <i class="pi pi-arrow-right"></i>
+                            <span class="code">MIA</span>
+                            <span class="status-pill pill-ontime">On Time</span>
+                        </div>
+                        <span style="color: var(--text-dim); font-size: 14px;">Miami, FL</span>
+                    </div>
+                </div>
+                <div class="times-container">
+                    <div class="time-group">
+                        <span class="label">Departs ATL</span>
+                        <span class="value">8:14 AM</span>
+                    </div>
+                    <div class="time-group">
+                        <span class="label">Arrives MIA</span>
+                        <span class="value">10:55 AM</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flight-card past">
+            <div class="card-top">
+                <span class="res-code">OLD99X <i class="pi pi-copy"></i></span>
+                <button class="btn-manage">Trip Activity</button>
+            </div>
+            <div class="card-body">
+                <div class="route-info">
+                    <div class="date-display"><span class="date-month">Dec</span><span class="date-day">20</span></div>
+                    <div>
+                        <div class="airport-codes"><span class="code">SCL</span><i class="pi pi-arrow-right"></i><span class="code">LIM</span></div>
+                        <span style="color: var(--text-dim); font-size: 14px;">Lima, Perú</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<script>
+    function showTab(category, element) {
+        // Actualizar Tabs
+        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+        element.classList.add('active');
+
+        // Filtrar Cards
+        document.querySelectorAll('.flight-card').forEach(card => {
+            card.classList.remove('visible');
+            if (card.classList.contains(category)) {
+                card.classList.add('visible');
+            }
+        });
+    }
+</script>
+</body>
+</html>

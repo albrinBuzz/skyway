@@ -22,7 +22,7 @@ import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
-import com.SkyWay.service.UsuarioService;
+import com.SkyWay.modules.usuario.domain.service.UsuarioService;
 
 @Configuration
 @EnableWebSecurity
@@ -50,10 +50,10 @@ public class SecurityConfig {
 	        return messageSource;
 	    }
 
-	@Bean
-	MvcRequestMatcher.Builder mvc(HandlerMappingIntrospector introspector){
-		   return new MvcRequestMatcher.Builder(introspector);
-	}
+		@Bean
+		MvcRequestMatcher.Builder mvc(HandlerMappingIntrospector introspector){
+			   return new MvcRequestMatcher.Builder(introspector);
+		}
 
 	    /*@Autowired
 	    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
@@ -80,6 +80,7 @@ public class SecurityConfig {
 	            UserDetailsService userDetailsService,
 	            PasswordEncoder passwordEncoder) {
 	        var provider = new DaoAuthenticationProvider();
+			
 	        provider.setUserDetailsService(userDetailsService);
 	        provider.setPasswordEncoder(passwordEncoder);
 	        return new ProviderManager(authenticationProvider());

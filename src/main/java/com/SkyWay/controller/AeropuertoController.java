@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.SkyWay.model.Aeropuerto;
-import com.SkyWay.service.AeropuertoService;
+
+import com.SkyWay.modules.aeropuerto.domain.service.AeropuertoService;
 
 @RestController
 @RequestMapping("/api/aeropuertos")
@@ -30,7 +30,7 @@ public class AeropuertoController {
     }
 
     // Obtener todos los aeropuertos
-    @GetMapping
+    /*@GetMapping
     public List<Aeropuerto> getAllAeropuertos() {
         return aeropuertoService.findAll();
     }
@@ -76,5 +76,5 @@ public class AeropuertoController {
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-    }
+    }*/
 }

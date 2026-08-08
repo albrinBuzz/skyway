@@ -18,8 +18,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.SkyWay.model.Avion;
-import com.SkyWay.service.AvionService;
+
+import com.SkyWay.modules.avion.domain.service.AvionService;
 
 
 @RestController
@@ -32,7 +32,7 @@ public class AvionController {
 	private final Logger LOGGER = LoggerFactory.getLogger(AvionController.class);
 	
 
-	@GetMapping(value =  "/",produces = MediaType.APPLICATION_JSON_VALUE)
+	/*@GetMapping(value =  "/",produces = MediaType.APPLICATION_JSON_VALUE)
 	public @ResponseBody List<Avion> getAll() {
 
 		System.out.println( avionService.findAll());
@@ -77,7 +77,7 @@ public class AvionController {
 		Avion avion= avionService.findById(avionId).get();
 		System.out.println(avion);
 		return avion;
-	}
+	}*/
 	
 	
 }

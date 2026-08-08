@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Aerolínea</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f4f7;
+            display: flex;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 240px;
+            background: #002f5e;
+            color: white;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            padding-top: 20px;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 22px;
+        }
+
+        .menu {
+            list-style: none;
+            padding: 0;
+        }
+
+        .menu li {
+            padding: 15px 25px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .menu li:hover {
+            background: #004c97;
+        }
+
+        /* MAIN CONTENT */
+        .main {
+            margin-left: 240px;
+            width: calc(100% - 240px);
+        }
+
+        /* HEADER */
+        header {
+            background: #004c97;
+            padding: 15px 30px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        input.search {
+            padding: 6px 12px;
+            border-radius: 5px;
+            border: none;
+        }
+
+        .container {
+            padding: 25px;
+        }
+
+        /* TITLES */
+        .section-title {
+            font-size: 20px;
+            margin: 15px 0 10px;
+            font-weight: bold;
+        }
+
+        /* KPIs */
+        .kpis {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .kpi {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .kpi .num {
+            font-size: 24px;
+            font-weight: bold;
+            display: block;
+            margin-top: 5px;
+        }
+
+        /* TABLE */
+        table {
+            width: 100%;
+            background: white;
+            border-collapse: collapse;
+            margin-top: 10px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+
+        th {
+            background: #e6e9ef;
+        }
+
+        /* CARDS */
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .notices div {
+            background: #fff3cd;
+            padding: 10px;
+            border-left: 4px solid #ffcc00;
+            margin-bottom: 8px;
+            border-radius: 4px;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 1000px) {
+            .kpis {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .cards {
+                grid-template-columns: repeat(1, 1fr);
+            }
+        }
+
+        @media (max-width: 700px) {
+            .sidebar {
+                display: none;
+            }
+            .main {
+                margin-left: 0;
+                width: 100%;
+            }
+        }
+
+        /* Floating Chat */
+.chat-window {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 320px;
+    height: 420px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.chat-header {
+    background: #004c97;
+    padding: 12px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+}
+
+.chat-body {
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
+}
+
+.chat-input-area {
+    padding: 10px;
+    background: #eee;
+}
+
+.chat-input-area input {
+    width: 100%;
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+/* Map container */
+.map-container {
+    width: 100%;
+    height: 300px;
+    background: #cce0ff;
+    border-radius: 10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+/* CRUD Modal */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.55);
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    width: 450px;
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+}
+
+.modal input {
+    width: 100%;
+    padding: 8px;
+    margin: 6px 0;
+}
+
+/* Notifications popup */
+.notification-popup {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background:white;
+    padding: 12px 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    display: none;
+}
+
+/* Small cards grid */
+.small-grid {
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    gap: 15px;
+}
+
+.small-card {
+    background: white;
+    padding: 12px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+}
+
+
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        // ----------- OCUPACIÓN ---------------
+        new Chart(document.getElementById("chartOcupacion"), {
+            type: "line",
+            data: {
+                labels: ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"],
+                datasets: [{
+                    label: "Ocupación (%)",
+                    data: [82, 88, 91, 85, 87, 89, 90],
+                    borderColor: "#004c97",
+                    backgroundColor: "rgba(0,76,151,0.15)",
+                    borderWidth: 3,
+                    fill: true
+                }]
+            }
+        });
+
+        // ----------- PUNTUALIDAD ---------------
+        new Chart(document.getElementById("chartPuntualidad"), {
+            type: "bar",
+            data: {
+                labels: ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"],
+                datasets: [{
+                    label: "Puntualidad (%)",
+                    data: [88, 91, 84, 89, 90, 93, 87],
+                    backgroundColor: "#1cc88a"
+                }]
+            }
+        });
+
+        // ----------- PASAJEROS ---------------
+        new Chart(document.getElementById("chartPasajeros"), {
+            type: "line",
+            data: {
+                labels: ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"],
+                datasets: [{
+                    label: "Pasajeros",
+                    data: [14800, 15300, 14700, 15900, 16200, 17000, 15800],
+                    borderColor: "#8e44ad",
+                    backgroundColor: "rgba(142,68,173,0.15)",
+                    borderWidth: 3,
+                    fill: true
+                }]
+            }
+        });
+
+        // ----------- INGRESOS ---------------
+        new Chart(document.getElementById("chartIngresos"), {
+            type: "bar",
+            data: {
+                labels: ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"],
+                datasets: [{
+                    label: "Ingresos (USD)",
+                    data: [1000000, 1120000, 1040000, 1260000, 1300000, 1480000, 1210000],
+                    backgroundColor: "#f6c23e"
+                }]
+            }
+        });
+
+        // ----------- COMBUSTIBLE ---------------
+        new Chart(document.getElementById("chartCombustible"), {
+            type: "line",
+            data: {
+                labels: ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"],
+                datasets: [{
+                    label: "Litros Consumidos",
+                    data: [310000, 305000, 320000, 315000, 312000, 330000, 318000],
+                    borderColor: "#e74a3b",
+                    backgroundColor: "rgba(231,74,59,0.15)",
+                    borderWidth: 3,
+                    fill: true
+                }]
+            }
+        });
+    </script>
+
+
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <h2>✈️ Aerolínea</h2>
+    <ul class="menu">
+        <li>🏠 Dashboard</li>
+        <li>✈️ Vuelos</li>
+        <li>🛫 Aeronaves</li>
+        <li>👨‍✈️ Tripulación</li>
+        <li>👥 Pasajeros</li>
+        <li>💰 Ventas</li>
+        <li>🛠️ Mantenimiento</li>
+        <li>⚙️ Configuración</li>
+    </ul>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+    <header>
+        <div>Panel de Administración</div>
+        <div class="right">
+            <input type="text" class="search" placeholder="Buscar vuelo...">
+            <span>🔔</span>
+            <span>👤 Admin</span>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <!-- Filters -->
+        <div class="section-title">Filtros Rápidos</div>
+        <div style="display:flex; gap:15px; margin-bottom:20px;">
+            <select style="padding:8px; border-radius:5px;">
+                <option>Filtrar por estado</option>
+                <option>En vuelo</option>
+                <option>Retrasado</option>
+                <option>Cancelado</option>
+            </select>
+            <select style="padding:8px; border-radius:5px;">
+                <option>Filtrar por aeropuerto</option>
+                <option>MEX</option>
+                <option>LAX</option>
+                <option>JFK</option>
+                <option>BOG</option>
+            </select>
+            <input type="date" style="padding:8px; border-radius:5px;">
+        </div>
+
+        <!-- KPIS -->
+        <div class="section-title">Resumen</div>
+        <div class="kpis">
+            <div class="kpi">✈️ Vuelos Hoy <span class="num">102</span></div>
+            <div class="kpi">💺 Ocupación <span class="num">87%</span></div>
+            <div class="kpi">💰 Ingresos Hoy <span class="num">$89,000</span></div>
+            <div class="kpi">⚠️ Alertas <span class="num">4</span></div>
+        </div>
+
+        <!-- CHARTS -->
+        <div class="cards" style="margin-top:25px;">
+            <div class="card">
+                <h3>Gráfica de Ocupación</h3>
+                <div style="background:#dfe7f2; height:180px; border-radius:6px;
+                        display:flex; align-items:center; justify-content:center;">
+                    <i>📊 Gráfica aquí</i>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Ingresos de la Semana</h3>
+                <div style="background:#dfe7f2; height:180px; border-radius:6px;
+                        display:flex; align-items:center; justify-content:center;">
+                    <i>📈 Gráfica aquí</i>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Rendimiento de Rutas</h3>
+                <ul>
+                    <li>MEX → JFK: 92% ocupación</li>
+                    <li>MEX → CUN: 85% ocupación</li>
+                    <li>LAX → SCL: 76% ocupación</li>
+                    <li>BOG → MAD: 64% ocupación</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- FLIGHTS TABLE -->
+        <div class="section-title">Estado de Vuelos</div>
+        <table>
+            <tr>
+                <th>Ruta</th>
+                <th>Hora</th>
+                <th>Estado</th>
+                <th>Aeronave</th>
+                <th>Puerta</th>
+                <th>Tripulación</th>
+            </tr>
+            <tr>
+                <td>MEX → JFK</td>
+                <td>10:45</td>
+                <td>🟢 En vuelo</td>
+                <td>A320</td>
+                <td>-</td>
+                <td>Completa</td>
+            </tr>
+            <tr>
+                <td>LAX → SCL</td>
+                <td>11:10</td>
+                <td>🟡 Retrasado</td>
+                <td>B787</td>
+                <td>22</td>
+                <td>Incompleta</td>
+            </tr>
+            <tr>
+                <td>BOG → MAD</td>
+                <td>11:30</td>
+                <td>🔴 Cancelado</td>
+                <td>A350</td>
+                <td>--</td>
+                <td>--</td>
+            </tr>
+            <tr>
+                <td>CDMX → CUN</td>
+                <td>12:00</td>
+                <td>🟢 Embarcando</td>
+                <td>A321</td>
+                <td>14</td>
+                <td>Completa</td>
+            </tr>
+        </table>
+
+        <!-- CARDS EXPANDED -->
+        <div class="cards">
+
+            <!-- Aeronaves -->
+            <div class="card">
+                <h3>Aeronaves</h3>
+                <p>Disponibles: <b>12</b></p>
+                <p>En vuelo: <b>18</b></p>
+                <p>En mantenimiento: <b>3</b></p>
+                <hr>
+                <p><b>Próximos mantenimientos:</b></p>
+                <ul>
+                    <li>A320 - XA-SFJ → 14:00 hoy</li>
+                    <li>B737 - XA-KMP → Mañana 09:00</li>
+                    <li>A350 - XA-RTT → 3 días</li>
+                </ul>
+            </div>
+
+            <!-- Crew -->
+            <div class="card">
+                <h3>Tripulación</h3>
+                <p>Pilotos disponibles: <b>22</b></p>
+                <p>Sobrecargos disponibles: <b>48</b></p>
+                <hr>
+                <p><b>Asignaciones pendientes:</b></p>
+                <ul>
+                    <li>LAX → SCL requiere 1 sobrecargo</li>
+                    <li>MEX → ORD requiere 1 copiloto</li>
+                </ul>
+            </div>
+
+            <!-- Weather -->
+            <div class="card">
+                <h3>Clima Aeroportuario</h3>
+                <ul>
+                    <li>MEX: 🌤️ 22°C – Operación normal</li>
+                    <li>LAX: 🌧️ 16°C – Posibles retrasos</li>
+                    <li>JFK: ❄️ 3°C – Precaución por hielo</li>
+                    <li>BOG: 🌦️ 18°C – Lluvia ligera</li>
+                </ul>
+            </div>
+
+            <!-- Cargo -->
+            <div class="card">
+                <h3>Carga y Mercancía</h3>
+                <p>Envíos del día: <b>534</b></p>
+                <p>Kilos transportados: <b>82,400 kg</b></p>
+                <p>Alertas: <b>2</b></p>
+                <hr>
+                <ul>
+                    <li>🎁 Envío prioritario → JFK</li>
+                    <li>⚠️ Carga especial requiere inspección en LAX</li>
+                </ul>
+            </div>
+
+            <!-- Reservations -->
+            <div class="card">
+                <h3>Reservas Recientes</h3>
+                <ul>
+                    <li>#99823 – Ana López – MEX → CUN</li>
+                    <li>#99819 – Pedro Ruiz – LAX → SCL</li>
+                    <li>#99811 – John Smith – JFK → MEX</li>
+                    <li>#99795 – Carla Gómez – BOG → MAD</li>
+                </ul>
+            </div>
+
+            <!-- Activity -->
+            <div class="card">
+                <h3>Actividad Reciente del Sistema</h3>
+                <ul>
+                    <li>⚙️ Admin cambió estado de vuelo MEX-JFK</li>
+                    <li>🛠️ Mantenimiento creado para XA-TLM</li>
+                    <li>👤 Nuevo usuario agregado: Operador 14</li>
+                    <li>💵 Tarifa ajustada para ruta MEX → CUN</li>
+                </ul>
+            </div>
+
+        </div>
+        <button onclick="toggleChat()"
+                style="position:fixed; bottom:20px; right:20px;
+               padding:12px 18px; border:none; border-radius:50%;
+               background:#004c97; color:white; font-size:20px;">
+            💬
+        </button>
+
+        <div class="chat-window" id="chatWindow">
+            <div class="chat-header">
+                Chat interno
+                <span style="cursor:pointer;" onclick="toggleChat()">✖</span>
+            </div>
+            <div class="chat-body" id="chatBody">
+                <p><b>Agente 1:</b> ¿Confirmas la salida del vuelo 554?</p>
+                <p><b>Agente 2:</b> Sí, sin retrasos.</p>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chatMsg" placeholder="Escribe un mensaje...">
+            </div>
+        </div>
+        <button onclick="openModal()" style="margin:20px 0; padding:10px 15px;">
+            ➕ Crear Vuelo
+        </button>
+
+        <div class="modal" id="crudModal">
+            <div class="modal-content">
+                <h3>Crear/Editar Vuelo</h3>
+                <input placeholder="Origen">
+                <input placeholder="Destino">
+                <input placeholder="Hora">
+                <input placeholder="Aeronave">
+                <button onclick="closeModal()" style="padding:8px 12px;">Guardar</button>
+            </div>
+        </div>
+
+        <div class="cards" style="margin-top:25px;">
+            <div class="card">
+                <h3>Ocupación (Semana)</h3>
+                <canvas id="chartOcupacion" height="140"></canvas>
+            </div>
+
+            <div class="card">
+                <h3>Puntualidad (OTP)</h3>
+                <canvas id="chartPuntualidad" height="140"></canvas>
+            </div>
+
+            <div class="card">
+                <h3>Pasajeros Transportados</h3>
+                <canvas id="chartPasajeros" height="140"></canvas>
+            </div>
+
+            <div class="card">
+                <h3>Ingresos por Día</h3>
+                <canvas id="chartIngresos" height="140"></canvas>
+            </div>
+
+            <div class="card">
+                <h3>Consumo de Combustible</h3>
+                <canvas id="chartCombustible" height="140"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+
+</div>
+
+</body>
+</html>

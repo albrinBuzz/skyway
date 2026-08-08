@@ -4,12 +4,17 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
-import com.SkyWay.dto.InfoAsientoDTO;
-import com.SkyWay.model.Ciudad;
-import com.SkyWay.service.*;
+import com.SkyWay.modules.asiento.presentation.dto.InfoAsientoDTO;
+
+import com.SkyWay.modules.asiento.domain.service.AsientoService;
+import com.SkyWay.modules.avion.domain.service.AvionService;
+import com.SkyWay.modules.ciudad.domain.model.Ciudad;
+import com.SkyWay.modules.ciudad.domain.service.CiudadService;
+import com.SkyWay.modules.pasajero.domain.service.PasajeroService;
+import com.SkyWay.modules.reserva.domain.service.ReservaService;
+import com.SkyWay.modules.vuelo.domain.service.VueloService;
 import com.SkyWay.util.Logger;
 import jakarta.annotation.PostConstruct;
 import org.primefaces.PrimeFaces;
@@ -183,7 +188,7 @@ public class FlightSearchBean {
 
 			Logger.logInfo(departureCity+" "+arrivalCity+" "+ range.get(0) +" "+ range.get(1));
 
-	    	 vuelos= vueloService.buscarVuelo(departureCity, arrivalCity,String.valueOf( range.get(0)),String.valueOf( range.get(1)));
+	    	 //vuelos= vueloService.buscarVuelo(departureCity, arrivalCity,String.valueOf( range.get(0)));
 	    	 
 	    	 System.out.println(vuelos);
 	    	 if (vuelos.size()==0) {

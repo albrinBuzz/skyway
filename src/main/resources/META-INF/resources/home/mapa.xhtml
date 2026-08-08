@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+<h:head>
+    <title>Mapa de Aeropuertos - Simulación</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <style>
+        #map {
+            height: 500px;
+            width: 100%;
+            margin-top: 20px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</h:head>
+
+<h:body>
+    <h:form id="form">
+        <h3>📍 Selecciona un aeropuerto</h3>
+
+        <p:selectOneMenu id="aeropuertoSelect" value="#{mapBean.aeropuertoSeleccionado}">
+            <f:selectItem itemLabel="Seleccione un aeropuerto" itemValue="" />
+            <f:selectItem itemLabel="🇺🇸 LAX - Los Ángeles" itemValue="LAX" />
+            <f:selectItem itemLabel="🇺🇸 JFK - New York" itemValue="JFK" />
+            <f:selectItem itemLabel="🇺🇸 ATL - Atlanta" itemValue="ATL" />
+            <f:selectItem itemLabel="🇪🇸 MAD - Madrid" itemValue="MAD" />
+            <f:selectItem itemLabel="🇫🇷 CDG - París" itemValue="CDG" />
+            <f:selectItem itemLabel="🇩🇪 FRA - Frankfurt" itemValue="FRA" />
+        </p:selectOneMenu>
+
+        <p:commandButton value="Ir al aeropuerto"
+                         update="mapPanel"
+                         process="@form"
+                         oncomplete="centrarEnAeropuerto('#{mapBean.aeropuertoSeleccionado}')" />
+
+        <p:outputPanel id="mapPanel">
+            <div id="map"></div>
+        </p:outputPanel>
+    </h:form>
+
+    <script type="text/javascript">
+        let map;
+        let marcadorActivo;
+
+        const aeropuertos = {
+            LAX: { nombre: "Los Angeles Intl", lat: 33.9416, lng: -118.4085, region: "EEUU" },
+            JFK: { nombre: "John F. Kennedy Intl", lat: 40.6413, lng: -73.7781, region: "EEUU" },
+            ATL: { nombre: "Hartsfield–Jackson Atlanta Intl", lat: 33.6407, lng: -84.4277, region: "EEUU" },
+            MAD: { nombre: "Madrid-Barajas Adolfo Suárez", lat: 40.4722, lng: -3.5608, region: "Europa" },
+            CDG: { nombre: "Charles de Gaulle", lat: 49.0097, lng: 2.5479, region: "Europa" },
+            FRA: { nombre: "Frankfurt am Main", lat: 50.0379, lng: 8.5622, region: "Europa" }
+        };
+
+        window.onload = function () {
+            console.log("🗺️ Inicializando mapa con aeropuertos");
+            initMapa();
+        };
+
+        function initMapa() {
+            map = L.map('map').setView([39.8283, -98.5795], 4); // Centro de EE. UU. por defecto
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 18,
+            }).addTo(map);
+
+            // Agregar todos los aeropuertos como marcadores
+            Object.entries(aeropuertos).forEach(([codigo, datos]) => {
+                const marker = L.marker([datos.lat, datos.lng]).addTo(map);
+                marker.bindPopup(`${codigo}${datos.nombre}<i>Región: ${datos.region}</i>`);
+            });
+
+            console.log("📍 Marcadores cargados:", Object.keys(aeropuertos).length);
+        }
+
+        function centrarEnAeropuerto(codigo) {
+            console.log("✈️ Selección de aeropuerto:", codigo);
+
+            const aeropuerto = aeropuertos[codigo];
+            if (!aeropuerto) {
+                alert("⚠️ Aeropuerto no válido o no seleccionado.");
+                return;
+            }
+
+            const latlng = [aeropuerto.lat, aeropuerto.lng];
+
+            // Mover mapa
+            map.setView(latlng, 10);
+            console.log("🔍 Centrado en:", aeropuerto.nombre);
+
+            // Remover marcador anterior si existe
+            if (marcadorActivo) {
+                map.removeLayer(marcadorActivo);
+            }
+
+            // Crear nuevo marcador activo
+            marcadorActivo = L.marker(latlng).addTo(map)
+                .bindPopup(`${codigo}${aeropuerto.nombre}<i>Región: ${aeropuerto.region}</i>`)
+                .openPopup();
+        }
+    </script>
+</h:body>
+</html>
