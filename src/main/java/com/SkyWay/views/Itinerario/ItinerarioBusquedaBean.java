@@ -63,32 +63,20 @@ public class ItinerarioBusquedaBean implements Serializable {
 
     @PostConstruct
     public void init() {
-        long inicioTotal = System.currentTimeMillis();
-        Logger.logInfo(">>> [PERF] Inicio de ItinerarioBusquedaBean.init()");
+
+
 
         aeropuertosMap = new HashMap<>();
 
-        // Log 1: Medición de CiudadService
-        long t1 = System.currentTimeMillis();
         ciudads = ciudadService.getAllCiudades();
-        long t2 = System.currentTimeMillis();
-        Logger.logInfo(">>> [PERF] Carga de Ciudades (" + (ciudads != null ? ciudads.size() : 0) + " registros): " + (t2 - t1) + " ms");
 
-        // Log 2: Medición de AeropuertoService
-        long t3 = System.currentTimeMillis();
         aeropuertos = aeropuertoService.findAll();
-        long t4 = System.currentTimeMillis();
-        Logger.logInfo(">>> [PERF] Carga de Aeropuertos (" + (aeropuertos != null ? aeropuertos.size() : 0) + " registros): " + (t4 - t3) + " ms");
 
-        // Log 3: Medición de procesamiento del HashMap
-        long t5 = System.currentTimeMillis();
         if (aeropuertos != null) {
             aeropuertos.forEach(aeropuerto -> aeropuertosMap.put(aeropuerto.getCodigoIata(), aeropuerto));
         }
-        long t6 = System.currentTimeMillis();
-        Logger.logInfo(">>> [PERF] Mapeo de HashMap en memoria: " + (t6 - t5) + " ms");
 
-        Logger.logInfo(">>> [PERF] Tiempo total init(): " + (System.currentTimeMillis() - inicioTotal) + " ms");
+
     }
     public void buscarVuelosSoloIda() throws ParseException {
         

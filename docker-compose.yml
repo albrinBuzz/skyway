@@ -1,38 +1,6 @@
 version: '3.8'
 
 services:
-  # =====================================================================
-  # CONTENEDOR 1: BASE DE DATOS POSTGRESQL (NATIVA SKYWAY)
-  # =====================================================================
-  skyway_postgres:
-    image: postgis/postgis:15-3.4-alpine
-    container_name: skyway_db_container
-    restart: always
-    environment:
-      POSTGRES_DB: aerolinea_db
-      POSTGRES_USER: aerolinea_user
-      POSTGRES_PASSWORD: aerolinea_user
-    ports:
-      - "5432:5432"
-    volumes:
-      - pg_skyway_data:/var/lib/postgresql/data
-      - ./dataBase/V3/tablas.sql:/docker-entrypoint-initdb.d/01-tablas.sql
-      - ./dataBase/V3/triggers.sql:/docker-entrypoint-initdb.d/02-triggers.sql
-      - ./dataBase/V3/funciones.sql:/docker-entrypoint-initdb.d/03-funciones.sql
-      - ./dataBase/V3/procedimientosSp.sql:/docker-entrypoint-initdb.d/04-procedimientosSp.sql
-      - ./dataBase/V3/poblado.sql:/docker-entrypoint-initdb.d/05-poblado.sql
-      - ./dataBase/V3/dump.sql:/docker-entrypoint-initdb.d/1-dump.sql
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U aerolinea_user -d aerolinea_db" ]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    networks:
-      - skyway_net
-
-  # =====================================================================
-  # CONTENEDOR 2: APLICACIÓN JAVA (SPRING BOOT + JSF MULTI-MODULE)
-  # =====================================================================
   skyway_backend:
     build:
       context: .
@@ -42,26 +10,14 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://skyway_postgres:5432/aerolinea_db?currentSchema=public
+      # Apunta a tu base de datos existente en Azure PostgreSQL
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://skyway-server.postgres.database.azure.com:5432/skyway?sslmode=require
       - SPRING_DATASOURCE_USERNAME=aerolinea_user
-      - SPRING_DATASOURCE_PASSWORD=aerolinea_user
+      - SPRING_DATASOURCE_PASSWORD=qTc31$#C1UNT#B
 
-      # --- SOLUCIÓN DE MEMORIA DE PAKETO ---
-      - BPL_JVM_THREAD_COUNT=100
-      - JAVA_TOOL_OPTIONS=-XX:ReservedCodeCacheSize=128M -Xss512k -XX:MaxMetaspaceSize=128M
+      # Forzar GC y optimización de memoria
+      - JAVA_TOOL_OPTIONS=-Xms192m -Xmx350m -XX:MaxMetaspaceSize=112m -XX:ReservedCodeCacheSize=48m -Xss256k -XX:+UseSerialGC
     deploy:
       resources:
         limits:
-          memory: 2048M  # Aumentado a 2GB para dar margen a la JVM y JSF
-    depends_on:
-      skyway_postgres:
-        condition: service_healthy
-    networks:
-      - skyway_net
-
-volumes:
-  pg_skyway_data:
-
-networks:
-  skyway_net:
-    driver: bridge
+          memory: 480M  # Límite duro del contenedor en el hosting
