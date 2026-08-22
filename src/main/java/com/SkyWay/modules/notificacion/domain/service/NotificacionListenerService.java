@@ -11,18 +11,17 @@ import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
 import java.sql.*;
 import java.util.Arrays;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @Service
 public class NotificacionListenerService {
-
-    @Autowired
-    private DataSource dataSource;
 
     @Autowired
     private PgNotifyConfig config;
@@ -30,17 +29,19 @@ public class NotificacionListenerService {
     @Autowired
     private JavaMailSender mailSender;
 
+    private final ExecutorService listenerExecutor = Executors.newSingleThreadExecutor();
+    private volatile boolean running = true;
+
     @PostConstruct
     public void startListener() {
-        Executors.newSingleThreadExecutor().submit(() -> {
-            try {
-                Connection conn = DriverManager.getConnection(
-                        config.getJdbcUrl(),
-                        config.getUsername(),
-                        config.getPassword()
-                );
+        listenerExecutor.submit(this::listenToChannel);
+    }
 
-                //Connection conn = DataSourceUtils.getConnection(dataSource);
+    private void listenToChannel() {
+        while (running) {
+            // Manejo automático de reconexión si cae la BD
+            try (Connection conn = DriverManager.getConnection(
+                    config.getJdbcUrl(), config.getUsername(), config.getPassword())) {
 
                 PGConnection pgconn = conn.unwrap(PGConnection.class);
 
@@ -48,35 +49,34 @@ public class NotificacionListenerService {
                     stmt.execute("LISTEN nuevo_correo");
                 }
 
-                Logger.logInfo("📡 Escuchando canal 'nuevo_correo'...");
+                Logger.logInfo("📡 Escuchando canal 'nuevo_correo' (PG LISTEN activo)...");
 
-                while (true) {
-                    PGNotification[] notifications = pgconn.getNotifications();
-                    //Logger.logInfo(Arrays.toString(notifications));
+                while (running && !conn.isClosed()) {
+                    // getNotifications(5000) bloquea el hilo hasta 5 segundos esperando un evento.
+                    // NO requiere ejecutar "SELECT 1" ni Thread.sleep()
+                    PGNotification[] notifications = pgconn.getNotifications(5000);
+
                     if (notifications != null) {
                         for (PGNotification notification : notifications) {
                             String idNotificacion = notification.getParameter();
-                            Logger.logInfo("🔔 Notificación recibida: ID = " + idNotificacion);
-                            procesarNotificacion(conn, idNotificacion);
+                            Logger.logInfo(" Notificación recibida ID = " + idNotificacion);
+
+                            // Delegar el procesamiento pesado a un hilo asíncrono
+                            procesarNotificacion(idNotificacion);
                         }
                     }
-
-                    // Esperar 1 segundo para no saturar el CPU
-                    Thread.sleep(1000);
-
-                    // Requiere una consulta vacía para que PostgreSQL envíe notificaciones
-                    try (Statement stmt = conn.createStatement()) {
-                        stmt.execute("SELECT 1");
-                    }
                 }
-
-            } catch (Exception e) {
-                e.printStackTrace();
+            } catch (SQLException e) {
+                Logger.logInfo("⚠️ Conexión con PG_NOTIFY perdida. Reintentando en 5 segundos...");
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException ignored) {}
             }
-        });
+        }
     }
 
-    private void procesarNotificacion(Connection conn, String idNotificacion) {
+    @Async
+    protected void procesarNotificacion(String idNotificacion) {
         String query = """
             SELECT n.id_notificacion, n.titulo, n.mensaje, u.correo_electronico
             FROM notificacion n
@@ -84,7 +84,9 @@ public class NotificacionListenerService {
             WHERE n.id_notificacion = ? AND n.enviada = FALSE AND n.canal = 'Email'
         """;
 
-        try (PreparedStatement ps = conn.prepareStatement(query)) {
+        try (Connection conn = DriverManager.getConnection(
+                config.getJdbcUrl(), config.getUsername(), config.getPassword());
+             PreparedStatement ps = conn.prepareStatement(query)) {
             ps.setInt(1, Integer.parseInt(idNotificacion));
             ResultSet rs = ps.executeQuery();
 
