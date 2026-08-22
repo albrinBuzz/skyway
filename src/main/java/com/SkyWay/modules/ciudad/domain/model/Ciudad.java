@@ -30,7 +30,7 @@ public class Ciudad implements Serializable {
 	private List<Aeropuerto> aeropuertos;
 
 	//bi-directional many-to-one association to Pai
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="id_pais")
 	private Pai pai;
 

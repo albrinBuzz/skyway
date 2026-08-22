@@ -33,7 +33,7 @@ public class Aeropuerto implements Serializable {
 	private String nombreAeropuerto;
 
 	//bi-directional many-to-one association to Ciudad
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="id_ciudad")
 	private Ciudad ciudad;
 
