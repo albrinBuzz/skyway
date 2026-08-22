@@ -90,18 +90,37 @@ public class ItinerarioBean implements Serializable {
 
     @PostConstruct
     public void init() {
+        long inicioTotal = System.currentTimeMillis();
+        Logger.logInfo(">>> [PERF-ITINERARIO] Inicio de ItinerarioBean.init()");
+
         this.aeropuertosMap = new HashMap<>();
         this.precioTarifas = new HashMap<>();
         this.itinerariosAsignados = new ArrayList<>();
-        this.vuelos = new ArrayList<>();
+        this.vuelos = new ArrayList<>(); // Inicializar lista vacía para la búsqueda
 
+        // 1. Cargar la matriz de itinerarios
+        long t1 = System.currentTimeMillis();
         cargarListaItinerarios();
-        this.vuelos = vueloService.findAll();
-        this.tarifas = tarifaService.listarTarifas();
-        this.ciudades = ciudadService.getAllCiudades();
-        this.aeropuertos = aeropuertoService.findAll();
+        long t2 = System.currentTimeMillis();
+        Logger.logInfo(">>> [PERF-ITINERARIO] Cargar lista itinerarios: " + (t2 - t1) + " ms");
 
-        this.aeropuertos.forEach(a -> aeropuertosMap.put(a.getCodigoIata(), a));
+        // 2. Cargar tarifas de catálogo
+        long t3 = System.currentTimeMillis();
+        this.tarifas = tarifaService.listarTarifas();
+        long t4 = System.currentTimeMillis();
+        Logger.logInfo(">>> [PERF-ITINERARIO] Cargar tarifas: " + (t4 - t3) + " ms");
+
+        // 3. Cargar aeropuertos
+        long t5 = System.currentTimeMillis();
+        this.aeropuertos = aeropuertoService.findAll();
+        if (this.aeropuertos != null) {
+            this.aeropuertos.forEach(a -> aeropuertosMap.put(a.getCodigoIata(), a));
+        }
+        long t6 = System.currentTimeMillis();
+        Logger.logInfo(">>> [PERF-ITINERARIO] Cargar aeropuertos (" + (aeropuertos != null ? aeropuertos.size() : 0) + "): " + (t6 - t5) + " ms");
+
+        // 4. Mapeo JSON para el mapa interactivo
+        long t7 = System.currentTimeMillis();
         try {
             ObjectMapper mapper = new ObjectMapper();
             this.aeropuertosMapaJson = mapper.writeValueAsString(aeropuertoService.findAllParaMapa());
@@ -109,7 +128,16 @@ public class ItinerarioBean implements Serializable {
             Logger.logInfo("Error serializando aeropuertos para mapa: " + e.getMessage());
             this.aeropuertosMapaJson = "[]";
         }
+        long t8 = System.currentTimeMillis();
+        Logger.logInfo(">>> [PERF-ITINERARIO] Serialización JSON mapa: " + (t8 - t7) + " ms");
+
+        // 5. Verificar si viene ID en la URL para edición
+        long t9 = System.currentTimeMillis();
         verificarParametroEdicion();
+        long t10 = System.currentTimeMillis();
+        Logger.logInfo(">>> [PERF-ITINERARIO] Verificación edición: " + (t10 - t9) + " ms");
+
+        Logger.logInfo(">>> [PERF-ITINERARIO] Tiempo TOTAL init(): " + (System.currentTimeMillis() - inicioTotal) + " ms");
     }
 
     public void cargarListaItinerarios() {

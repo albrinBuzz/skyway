@@ -50,7 +50,7 @@ public class Avion implements Serializable {
 	private List<Asiento> asientos;
 
 	//bi-directional many-to-one association to ModeloAvion
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="id_modelo")
 	private ModeloAvion modeloAvion;
 

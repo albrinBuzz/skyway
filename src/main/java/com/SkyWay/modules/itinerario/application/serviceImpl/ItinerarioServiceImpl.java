@@ -71,7 +71,7 @@ public class ItinerarioServiceImpl implements ItinerarioService {
 
     @Override
     public List<Itinerario> findAll() {
-        return itinerarioRepository.findAll();
+        return itinerarioRepository.findAllOptimized();
     }
 
 

@@ -5,6 +5,7 @@ import java.io.Serializable;
 import com.SkyWay.modules.aeropuerto.domain.model.Aeropuerto;
 import com.SkyWay.modules.itinerariovuelo.domain.model.ItinerarioVuelo;
 import com.SkyWay.modules.reservaitinerario.domain.model.ReservaItinerario;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.sql.Timestamp;
 import java.util.List;
@@ -62,7 +63,8 @@ public class Itinerario implements Serializable {
 
 
 	//bi-directional many-to-one association to ItinerarioVuelo
-	@OneToMany(mappedBy="itinerario",fetch = FetchType.EAGER)
+	@JsonIgnore
+	@OneToMany(mappedBy="itinerario", fetch = FetchType.LAZY)
 	private List<ItinerarioVuelo> itinerarioVuelos;
 
 	//bi-directional many-to-one association to ReservaItinerario

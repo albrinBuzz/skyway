@@ -35,6 +35,11 @@ public interface ItinerarioRepository extends JpaRepository<Itinerario, Integer>
             @Param("p_fecha_inicio") Date fechaInicio
     );
 
+    @Query("SELECT DISTINCT i FROM Itinerario i " +
+            "LEFT JOIN FETCH i.aeropuertoOrigen " +
+            "LEFT JOIN FETCH i.aeropuertoDestino")
+    List<Itinerario> findAllOptimized();
+
     @Query(value = """
         SELECT i.*
         FROM reserva r

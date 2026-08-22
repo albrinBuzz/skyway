@@ -41,7 +41,7 @@ public class AvionServiceImpl implements AvionService {
 	@Override
 	public List<Avion> findAll() {
 		// TODO Auto-generated method stub
-		return avionRepository.findAll();
+		return avionRepository.findAllOptimized();
 	}
 
 	@Override

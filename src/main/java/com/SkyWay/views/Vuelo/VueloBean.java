@@ -129,96 +129,115 @@ public class VueloBean implements Serializable {
     private Turno turno;
     private List<ClaseAsientoPrecioDto>preciosAsientos;
     private String aeropuertosMapaJson;
+
+
     @PostConstruct
     public void init() {
-        // Inicializaciones si se requieren
+        long inicioTotal = System.currentTimeMillis();
+        Logger.logInfo(">>> [PERF-VUELO] Inicio de VueloBean.init()");
+
         ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-        var idVuelo= externalContext.getRequestParameterMap().get("vueloId");
+        var idVuelo = externalContext.getRequestParameterMap().get("vueloId");
 
-
+        // 1. Carga de listas de catálogo
+        long t1 = System.currentTimeMillis();
         listaAeropuertos = aeropuertoService.findAll();
+        long t2 = System.currentTimeMillis();
+        Logger.logInfo(">>> [PERF-VUELO] Carga listaAeropuertos (" + (listaAeropuertos != null ? listaAeropuertos.size() : 0) + "): " + (t2 - t1) + " ms");
+
+        long t3 = System.currentTimeMillis();
         listaAviones = avionService.findAll();
-        avions= avionService.findAll();
+        avions = listaAviones; // Reutilizado para evitar llamada duplicada a la BD
+        long t4 = System.currentTimeMillis();
+        Logger.logInfo(">>> [PERF-VUELO] Carga listaAviones (" + (listaAviones != null ? listaAviones.size() : 0) + "): " + (t4 - t3) + " ms");
+
+        long t5 = System.currentTimeMillis();
         listaPilotos = pilotoService.findAll();
-        listaEstadosVuelo =estadoVueloService.findAll();
-        aeropuertos=new HashMap<>();
-        aviones=new HashMap<String, Avion>();
-        pilotos=new HashMap<String, Piloto>();
-        listaAeropuertos.forEach(aeropuerto -> aeropuertos.put(aeropuerto.getCodigoIata(),aeropuerto));
-        listaAviones.forEach(t -> aviones.put(t.getIdAvion().toString(),t));
-        listaPilotos.forEach(t -> pilotos.put(t.getRut(), t));
-        aerolineas=aerolineaService.findAll();
-        preciosPorClase=new HashMap<>();
-        preciosAsientos=new ArrayList<>();
-        aerolineas=aerolineaService.findAll();
-        preciosPorClase=new HashMap<>();
-        preciosAsientos=new ArrayList<>();
-        segmentoActual=new SegmentoVuelo();
-        turno=new Turno();
+        long t6 = System.currentTimeMillis();
+        Logger.logInfo(">>> [PERF-VUELO] Carga listaPilotos (" + (listaPilotos != null ? listaPilotos.size() : 0) + "): " + (t6 - t5) + " ms");
+
+        long t7 = System.currentTimeMillis();
+        listaEstadosVuelo = estadoVueloService.findAll();
+        long t8 = System.currentTimeMillis();
+        Logger.logInfo(">>> [PERF-VUELO] Carga listaEstadosVuelo (" + (listaEstadosVuelo != null ? listaEstadosVuelo.size() : 0) + "): " + (t8 - t7) + " ms");
+
+        // 2. Mapeos en memoria
+        long t9 = System.currentTimeMillis();
+        aeropuertos = new HashMap<>();
+        aviones = new HashMap<>();
+        pilotos = new HashMap<>();
+        if (listaAeropuertos != null) listaAeropuertos.forEach(a -> aeropuertos.put(a.getCodigoIata(), a));
+        if (listaAviones != null) listaAviones.forEach(a -> aviones.put(a.getIdAvion().toString(), a));
+        if (listaPilotos != null) listaPilotos.forEach(p -> pilotos.put(p.getRut(), p));
+
+        aerolineas = aerolineaService.findAll();
+        preciosPorClase = new HashMap<>();
+        preciosAsientos = new ArrayList<>();
+        segmentoActual = new SegmentoVuelo();
+        turno = new Turno();
+        long t10 = System.currentTimeMillis();
+        Logger.logInfo(">>> [PERF-VUELO] Mapeos y aerolineas: " + (t10 - t9) + " ms");
+
+        // 3. Carga en caso de edición de vuelo
         if (idVuelo != null) {
+            long t11 = System.currentTimeMillis();
+            Integer vId = Integer.valueOf(idVuelo);
 
-            segmentos=segmentoVueloService.findByIdVuelo(Integer.valueOf(idVuelo));
-
+            segmentos = segmentoVueloService.findByIdVuelo(vId);
             for (SegmentoVuelo segmento : segmentos) {
-                Logger.logInfo("segmento"+segmento.getIdSegmento());
                 List<AsignacionPuerta> asignaciones = asignacionPuertaService.findBySegmentoVuelo(segmento);
-                for (AsignacionPuerta asignacione : asignaciones) {
-                    Logger.logInfo("puerta-> "+asignacione.getPuertaEmbarque().getTerminal());
+            }
 
+            vuelo = vueloService.findById(vId).orElse(null);
+            var turnosOpt = turnoService.findByVueloId(vId);
+            if (!turnosOpt.isEmpty()) {
+                turno = turnosOpt.get(0);
+            }
+
+            if (vuelo != null) {
+                aerolineaId = vuelo.getAerolinea().getNombre();
+                avionId = vuelo.getAvion().getModeloAvion().getNombre();
+
+                this.numeroVuelo = vuelo.getNumeroVuelo();
+                this.pilotoId = vuelo.getPiloto().getRut();
+                this.aerolineaId = String.valueOf(vuelo.getAerolinea().getIdAerolinea());
+                this.avionId = String.valueOf(vuelo.getAvion().getIdAvion());
+                this.avionSeleccionado = vuelo.getAvion();
+
+                this.preciosAsientos = new ArrayList<>();
+                List<CapacidadClase> capacidades = capacidadClaseService.findByAvionId(vuelo.getAvion().getIdAvion());
+
+                for (CapacidadClase cap : capacidades) {
+                    ClaseAsientoPrecioDto dto = new ClaseAsientoPrecioDto();
+                    dto.setClaseAsiento(cap.getClaseAsiento1().getIdClase());
+                    dto.setClase(cap.getClaseAsiento1().getDescripcion());
+                    dto.setCantidad(cap.getCantidad());
+
+                    precioAsientoService.findByVueloAndClase(vuelo.getIdVuelo(), cap.getClaseAsiento1().getIdClase())
+                            .ifPresentOrElse(
+                                    pa -> dto.setPrecio(pa.getPrecio()),
+                                    () -> dto.setPrecio(0)
+                            );
+
+                    preciosAsientos.add(dto);
                 }
             }
 
-
-            vuelo=vueloService.findById(Integer.valueOf(idVuelo)).get();
-            turno=turnoService.findByVueloId(Integer.valueOf(idVuelo)).get(0);
-
-
-            aerolineaId=vuelo.getAerolinea().getNombre();
-            avionId=vuelo.getAvion().getModeloAvion().getNombre();
-
-
-
-            // Sincronizar IDs para los SelectOneMenu
-            this.numeroVuelo = vuelo.getNumeroVuelo();
-            this.pilotoId = vuelo.getPiloto().getRut();
-            this.aerolineaId = String.valueOf(vuelo.getAerolinea().getIdAerolinea());
-            this.avionId = String.valueOf(vuelo.getAvion().getIdAvion());
-            this.avionSeleccionado = vuelo.getAvion(); // Importante para el listener
-
-            // CARGAR PRECIOS EXISTENTES PARA EL PASO 2
-            this.preciosAsientos = new ArrayList<>();
-            // Primero obtenemos la capacidad del avión
-            List<CapacidadClase> capacidades = capacidadClaseService.findByAvionId(vuelo.getAvion().getIdAvion());
-
-            for (CapacidadClase cap : capacidades) {
-                ClaseAsientoPrecioDto dto = new ClaseAsientoPrecioDto();
-                dto.setClaseAsiento(cap.getClaseAsiento1().getIdClase());
-                dto.setClase(cap.getClaseAsiento1().getDescripcion());
-                dto.setCantidad(cap.getCantidad());
-
-                // Buscar si ya existe un precio guardado para este vuelo y clase
-                precioAsientoService.findByVueloAndClase(vuelo.getIdVuelo(), cap.getClaseAsiento1().getIdClase())
-                        .ifPresentOrElse(
-                                pa -> dto.setPrecio(pa.getPrecio()), // Si existe, ponemos el precio real
-                                () -> dto.setPrecio(0)             // Si no, empezamos en 0
-                        );
-
-                preciosAsientos.add(dto);
-            }
-
             vueloCreado = true;
+            long t12 = System.currentTimeMillis();
+            Logger.logInfo(">>> [PERF-VUELO] Carga detalle vuelo existente: " + (t12 - t11) + " ms");
+        } else {
+            long t13 = System.currentTimeMillis();
+            vuelo = new Vuelo();
+            turno = new Turno();
+            segmentos = new ArrayList<>();
+            vuelos = vueloService.findAll();
+            long t14 = System.currentTimeMillis();
+            Logger.logInfo(">>> [PERF-VUELO] Carga todos los vuelos (Modo creación): " + (t14 - t13) + " ms");
         }
 
-        else {
-            vuelo=new Vuelo();
-
-
-            turno=new Turno();
-            segmentos=new ArrayList<>();
-            vuelos=vueloService.findAll();
-            //segmentos=simularSegmentos();
-
-        }
+        // 4. Mapeo JSON para mapa
+        long t15 = System.currentTimeMillis();
         try {
             ObjectMapper mapper = new ObjectMapper();
             this.aeropuertosMapaJson = mapper.writeValueAsString(aeropuertoService.findAllParaMapa());
@@ -226,8 +245,10 @@ public class VueloBean implements Serializable {
             Logger.logError("Error serializando aeropuertos para mapa: " + e.getMessage());
             this.aeropuertosMapaJson = "[]";
         }
+        long t16 = System.currentTimeMillis();
+        Logger.logInfo(">>> [PERF-VUELO] Serialización JSON Mapa: " + (t16 - t15) + " ms");
 
-
+        Logger.logInfo(">>> [PERF-VUELO] Tiempo TOTAL init(): " + (System.currentTimeMillis() - inicioTotal) + " ms");
     }
 
 
