@@ -55,35 +55,45 @@ public class ReservaAsientoBean implements Serializable {
     private Integer idxAsientoSeleccion;
     private List<Pasajero> pasajeros;
     private String miSessionId;
-
     @PostConstruct
     @SuppressWarnings("unchecked")
     public void init() {
         ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
         Map<String, String> params = externalContext.getRequestParameterMap();
-        //Map<String, Object> sessionMap = externalContext.getSessionMap();
 
         String adultosStr = params.getOrDefault("adultos", "1");
         cantAdultos = Integer.valueOf(adultosStr);
         tarifasItinerarios = new HashMap<>();
 
-        Map<String, Object> sessionMap = FacesContext.getCurrentInstance()
-                .getExternalContext().getSessionMap();
+        Map<String, Object> sessionMap = externalContext.getSessionMap();
         if (sessionMap.containsKey("reservaSessionId")) {
             this.miSessionId = (String) sessionMap.get("reservaSessionId");
         } else {
             FacesContext facesContext = FacesContext.getCurrentInstance();
-
-            // Cambia 'false' por 'true' para asegurar que la sesión no sea null
             HttpSession session = (HttpSession) facesContext.getExternalContext().getSession(true);
-
             this.miSessionId = session.getId();
             sessionMap.put("reservaSessionId", this.miSessionId);
         }
+
         String idsParam = params.get("itinerarios");
         String idsTarifas = params.get("tarifas");
 
         if (idsParam != null && !idsParam.isEmpty() && idsTarifas != null && !idsTarifas.isEmpty()) {
+
+            // =========================================================================
+            // 💾 GUARDAR QUERY STRING DINÁMICA DE LA BÚSQUEDA ACTUAL EN LA SESIÓN
+            // =========================================================================
+            String queryString =  (String) sessionMap.get("ultimaBusquedaAsientosQuery");
+
+            if (queryString != null && !queryString.isBlank()) {
+                sessionMap.put("ultimaBusquedaAsientosQuery", queryString);
+            } else {
+                // Reconstrucción manual por respaldo en caso de que la query string venga vacía
+                sessionMap.put("ultimaBusquedaAsientosQuery",
+                        "tarifas=" + idsTarifas + "&adultos=" + cantAdultos + "&itinerarios=" + idsParam);
+            }
+            // =========================================================================
+
             var idsIte = idsParam.split(",");
             var idsTar = idsTarifas.split(",");
 
@@ -352,6 +362,30 @@ public class ReservaAsientoBean implements Serializable {
             ec.redirect("/home/reserva.xhtml");
         } catch (IOException e) {
             //Logger.logInfo("Redirección fallida a reserva.xhtml: " + e.getMessage());
+        }
+    }
+
+
+    /**
+     * Invocado vía PrimeFaces / WebSocket cuando un evento externo (o el TTL en segundo plano)
+     * libera un asiento del usuario.
+     */
+    public void sincronizarLiberacionExterna(Integer idAsientoLiberado) {
+        if (idAsientoLiberado == null) return;
+
+        List<InfoAsientoDTO> seleccionadosEnVuelo = asientosSeleccionados.get(vuelo.getIdVuelo());
+        if (seleccionadosEnVuelo != null) {
+            boolean seElimino = seleccionadosEnVuelo.removeIf(a -> a.getIdAsiento() == idAsientoLiberado);
+            if (seElimino) {
+                this.asientosSeleccionadosList = seleccionadosEnVuelo;
+                if (idxAsientoSeleccion > 0) {
+                    idxAsientoSeleccion--;
+                }
+                recargarAsientos();
+                addMessage(FacesMessage.SEVERITY_WARN, "Tiempo expirado",
+                        "Tu reserva temporal de uno o más asientos expiró por inactividad.");
+                PrimeFaces.current().ajax().update("seatForm");
+            }
         }
     }
 
