@@ -41,6 +41,8 @@ public class ItinerarioBusquedaBean implements Serializable {
     @Autowired
     private AeropuertoService aeropuertoService;
 
+    private Aeropuerto aeropuertoOrigen;
+    private Aeropuerto aeropuertoDestino;
 
     private List<Aeropuerto> aeropuertos;
     private HashMap<String, Aeropuerto> aeropuertosMap;
@@ -74,17 +76,23 @@ public class ItinerarioBusquedaBean implements Serializable {
 
 
     }
+
+
     public void buscarVuelosSoloIda() throws ParseException {
-        
         try {
             ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
+
+            // Extraemos los IATA de los objetos seleccionados
+            String origen = (aeropuertoOrigen != null) ? aeropuertoOrigen.getCodigoIata() : "";
+            String destino = (aeropuertoDestino != null) ? aeropuertoDestino.getCodigoIata() : "";
+
             String redirectUrl = "/home/vuelos.xhtml"
-                    + "?salida=" + URLEncoder.encode(codigoIataOrigen, StandardCharsets.UTF_8)
-                    + "&llegada=" + URLEncoder.encode(codigoIataDestino, StandardCharsets.UTF_8)
+                    + "?salida=" + URLEncoder.encode(origen, StandardCharsets.UTF_8)
+                    + "&llegada=" + URLEncoder.encode(destino, StandardCharsets.UTF_8)
                     + "&fechaIda=" + fechaIda
                     + "&adultos=" + adultos
                     + "&trip=OW";
-                    
+
             externalContext.redirect(redirectUrl);
         } catch (IOException e) {
             e.printStackTrace();
@@ -125,6 +133,7 @@ public class ItinerarioBusquedaBean implements Serializable {
                 .toList();
     }
 
+    // Método existente para objetos Aeropuerto
     public String getItemLabel(Aeropuerto a) {
         if (a == null) {
             return "";
@@ -138,13 +147,12 @@ public class ItinerarioBusquedaBean implements Serializable {
                 ? a.getNombreAeropuerto()
                 : "Aeropuerto desconocido";
 
-        String codigoIata = (a.getCodigoIata() != null)
+        String codigoIata = (a.getCiudad() != null)
                 ? a.getCodigoIata()
                 : "N/A";
 
         return ciudadNombre + " - " + aeropuertoNombre + " (" + codigoIata + ")";
     }
-
 
     // Método que se llama cuando se hace clic en "Seleccionar"
 
@@ -215,5 +223,10 @@ public class ItinerarioBusquedaBean implements Serializable {
         this.vueloSeleccionado = vueloSeleccionado;
     }
 
+    public Aeropuerto getAeropuertoOrigen() { return aeropuertoOrigen; }
+    public void setAeropuertoOrigen(Aeropuerto aeropuertoOrigen) { this.aeropuertoOrigen = aeropuertoOrigen; }
+
+    public Aeropuerto getAeropuertoDestino() { return aeropuertoDestino; }
+    public void setAeropuertoDestino(Aeropuerto aeropuertoDestino) { this.aeropuertoDestino = aeropuertoDestino; }
 
 }
