@@ -18,9 +18,11 @@ EXPOSE 8080
 # Reemplaza la línea ENTRYPOINT / CMD de tu Dockerfile con esto:
 ENTRYPOINT ["java", \
   "-Xms128m", \
-  "-Xmx256m", \
-  "-XX:MaxMetaspaceSize=180m", \
-  "-XX:ReservedCodeCacheSize=32m", \
+  "-Xmx220m", \
+  "-XX:MaxMetaspaceSize=190m", \
+  "-XX:ReservedCodeCacheSize=35m", \
   "-Xss256k", \
   "-XX:+UseSerialGC", \
+  "-XX:+ExitOnOutOfMemoryError", \
+  "-XX:+CrashOnOutOfMemoryError", \
   "-jar", "app.jar"]
