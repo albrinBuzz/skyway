@@ -30,14 +30,17 @@ public class InfoAsientoDTO {
 	 * "SELECCIONADO" se interpreta distinto si el sessionId coincide o no.
 	 */
 	public String getEstadoVisual(String miSessionId) {
-		if ("OCUPADO".equalsIgnoreCase(estado)) return "OCUPADO";
-		if ("SELECCIONADO".equalsIgnoreCase(estado)) {
-			if (reservadoPor != null && reservadoPor.equals(miSessionId)) {
-				return "SELECCIONADO"; // lo elegí yo
-			}
-			return "EN_PROCESO"; // lo eligió otro usuario, temporalmente
+		if ("OCUPADO".equalsIgnoreCase(this.estado)) {
+			return "OCUPADO";
 		}
-		return "DISPONIBLE";
+		if ("SELECCIONADO".equalsIgnoreCase(this.estado)) {
+			if (miSessionId != null && miSessionId.equals(this.reservadoPor)) {
+				return "SELECCIONADO"; // Naranjo / Tu selección
+			} else {
+				return "EN_PROCESO";  // Bloqueado para terceros
+			}
+		}
+		return "libre";
 	}
 
 	public int getIdAsiento() {

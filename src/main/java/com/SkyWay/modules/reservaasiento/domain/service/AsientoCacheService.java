@@ -22,78 +22,101 @@ public class AsientoCacheService {
     private AsientoService asientoService;
 
     // Tiempo máximo de retención temporal antes de liberar el asiento (10 minutos)
-    //private static final long TIEMPO_EXPIRACION_MS = 10 * 60 * 200;
+    private static final long TIEMPO_EXPIRACION_MS = 10 * 60 * 1000L;
 
-    //private static final long TIEMPO_EXPIRACION_MS = 1 * 60 * 1000L;
-    private static final long TIEMPO_EXPIRACION_MS =  10000;
+    //private static final long TIEMPO_EXPIRACION_MS = 25000;
+
 
     // Map<idVuelo, Map<idAsiento, InfoAsientoDTO>>
     private final Map<Integer, Map<Integer, InfoAsientoDTO>> mapaVuelos = new ConcurrentHashMap<>();
-
 
     // Map<idAsiento, TimestampSeleccionMs>
     private final Map<Integer, Long> tiempoSeleccionMap = new ConcurrentHashMap<>();
 
     public List<InfoAsientoDTO> getAsientosVuelo(Integer idVuelo) {
+        if (idVuelo == null) return Collections.emptyList();
+
         Map<Integer, InfoAsientoDTO> asientosMap = mapaVuelos.computeIfAbsent(idVuelo, k -> {
             List<InfoAsientoDTO> dbAsientos = asientoService.getAsientosDisponibles(idVuelo);
             Map<Integer, InfoAsientoDTO> map = new ConcurrentHashMap<>();
-            for (InfoAsientoDTO a : dbAsientos) map.put(a.getIdAsiento(), a);
+            for (InfoAsientoDTO a : dbAsientos) {
+                map.put(a.getIdAsiento(), a);
+            }
             return map;
         });
-        return new ArrayList<>(asientosMap.values());
+
+        // ⚠️ CLONAR / DUPLICAR CADA DTO PARA QUE CADA PESTAÑA TENGA SUS PROPIAS INSTANCIAS EN MEMORIA
+        List<InfoAsientoDTO> copias = new ArrayList<>();
+        for (InfoAsientoDTO original : asientosMap.values()) {
+            copias.add(clonarInfoAsiento(original));
+        }
+        return copias;
     }
 
-    /**
-     * Alterna la selección de un asiento, respetando el dueño del lock.
-     * - Si está OCUPADO: nunca se puede tocar (venta cerrada).
-     * - Si está libre (DISPONIBLE): se bloquea para este sessionId.
-     * - Si está SELECCIONADO por el mismo sessionId: se libera (toggle off).
-     * - Si está SELECCIONADO por OTRO sessionId (EN_PROCESO para mí): la operación falla.
-     */
-    public ResultadoSeleccion seleccionarOliberarAsiento(Integer idVuelo, InfoAsientoDTO asientoSolicitado, String sessionId) {
-        Logger.logInfo(String.format(
-                "[seleccionarOliberarAsiento] Inicio - Vuelo ID: %s, Asiento: %s, SessionID: %s",
-                idVuelo, asientoSolicitado != null ? asientoSolicitado.getNumeroAsiento() : "NULL", sessionId
-        ));
 
-        if (asientoSolicitado == null || idVuelo == null) {
+    private InfoAsientoDTO clonarInfoAsiento(InfoAsientoDTO a) {
+        InfoAsientoDTO copia = new InfoAsientoDTO();
+        copia.setIdAsiento(a.getIdAsiento());
+        copia.setNumeroAsiento(a.getNumeroAsiento());
+        copia.setClase(a.getClase());
+        copia.setPrecio(a.getPrecio());
+        copia.setEstado(a.getEstado());
+        copia.setReservadoPor(a.getReservadoPor());
+        return copia;
+    }
+
+    public ResultadoSeleccion seleccionarOliberarAsiento(Integer idVuelo, InfoAsientoDTO asientoSolicitado, String sessionId) {
+        if (asientoSolicitado == null || idVuelo == null || sessionId == null) {
+            Logger.logWarn(String.format("[seleccionarOliberarAsiento] Parámetros de entrada nulos: idVuelo=%s, asiento=%s, sessionId=%s",
+                    idVuelo, asientoSolicitado, sessionId));
             return ResultadoSeleccion.FALLO_ASIENTO_NO_DISPONIBLE;
         }
 
+        Logger.logInfo(String.format("[CacheService] Procesando solicitud - Vuelo: %d | Asiento ID: %d | SessionId: %s",
+                idVuelo, asientoSolicitado.getIdAsiento(), sessionId));
+
         Map<Integer, InfoAsientoDTO> asientosMap = mapaVuelos.get(idVuelo);
         if (asientosMap == null) {
+            Logger.logInfo(String.format("[CacheService] Vuelo %d no presente en cache. Recargando datos...", idVuelo));
             getAsientosVuelo(idVuelo);
             asientosMap = mapaVuelos.get(idVuelo);
-            if (asientosMap == null) return ResultadoSeleccion.FALLO_ASIENTO_NO_DISPONIBLE;
+            if (asientosMap == null) {
+                Logger.logWarn(String.format("[CacheService] No se pudo cargar la información del Vuelo %d en cache.", idVuelo));
+                return ResultadoSeleccion.FALLO_ASIENTO_NO_DISPONIBLE;
+            }
         }
 
         final ResultadoSeleccion[] resultado = { ResultadoSeleccion.FALLO_ASIENTO_NO_DISPONIBLE };
 
         asientosMap.computeIfPresent(asientoSolicitado.getIdAsiento(), (id, asientoActual) -> {
             if ("OCUPADO".equalsIgnoreCase(asientoActual.getEstado())) {
+                Logger.logWarn(String.format("[CacheService] Asiento %d rechazado: Estado OCUPADO en base de datos/cache.", id));
                 resultado[0] = ResultadoSeleccion.FALLO_ASIENTO_NO_DISPONIBLE;
                 return asientoActual;
             }
 
             boolean estaLibre = "libre".equalsIgnoreCase(asientoActual.getEstado());
             boolean esMio = "SELECCIONADO".equalsIgnoreCase(asientoActual.getEstado())
-                    && sessionId != null && sessionId.equals(asientoActual.getReservadoPor());
+                    && sessionId.equals(asientoActual.getReservadoPor());
 
             if (estaLibre) {
                 asientoActual.setEstado("SELECCIONADO");
                 asientoActual.setReservadoPor(sessionId);
-                tiempoSeleccionMap.put(id, System.currentTimeMillis()); // Registrar tiempo de selección
+                tiempoSeleccionMap.put(id, System.currentTimeMillis());
                 resultado[0] = ResultadoSeleccion.EXITO_SELECCIONADO;
+                Logger.logInfo(String.format("[CacheService] Asiento %d asignado con éxito a SessionId: %s", id, sessionId));
 
             } else if (esMio) {
                 asientoActual.setEstado("libre");
                 asientoActual.setReservadoPor(null);
-                tiempoSeleccionMap.remove(id); // Limpiar registro de tiempo
+                tiempoSeleccionMap.remove(id);
                 resultado[0] = ResultadoSeleccion.EXITO_LIBERADO;
+                Logger.logInfo(String.format("[CacheService] Asiento %d liberado por su dueño (SessionId: %s)", id, sessionId));
 
             } else {
                 resultado[0] = ResultadoSeleccion.FALLO_BLOQUEADO_POR_OTRO;
+                Logger.logWarn(String.format("[CacheService] Conflicto en Asiento %d: Retenido por SessionId %s, solicitado por %s",
+                        id, asientoActual.getReservadoPor(), sessionId));
             }
             return asientoActual;
         });
@@ -103,18 +126,18 @@ public class AsientoCacheService {
             if (actualizado != null) {
                 EventoAsientoPush evento = new EventoAsientoPush(
                         actualizado.getIdAsiento(), idVuelo, actualizado.getEstado(), sessionId);
+
+                Logger.logInfo(String.format("[CacheService] Difundiendo evento WebSocket /topic/vuelo/%d -> Asiento: %d, NuevoEstado: %s",
+                        idVuelo, actualizado.getIdAsiento(), actualizado.getEstado()));
+
                 messagingTemplate.convertAndSend("/topic/vuelo/" + idVuelo, evento);
             }
         }
 
         return resultado[0];
     }
-
-
-    /**
-     * Verifica si el asiento aún pertenece a la sesión y no ha sido liberado por el TTL.
-     */
     public boolean validarPertenenciaYSeleccion(Integer idVuelo, Integer idAsiento, String sessionId) {
+        if (idVuelo == null || idAsiento == null || sessionId == null) return false;
         Map<Integer, InfoAsientoDTO> asientosMap = mapaVuelos.get(idVuelo);
         if (asientosMap == null) return false;
 
@@ -122,118 +145,91 @@ public class AsientoCacheService {
         if (asiento == null) return false;
 
         return "SELECCIONADO".equalsIgnoreCase(asiento.getEstado())
-                && sessionId != null
                 && sessionId.equals(asiento.getReservadoPor());
     }
 
-
     /**
-     * Proceso en segundo plano que revisa y libera asientos expirados cada 30 segundos.
+     * Proceso en segundo plano que limpia asientos expirados cada 3 segundos (Optimizado para menor consumo de recursos).
      */
-    @Scheduled(fixedRate = 1000)
+    @Scheduled(fixedRate = 3000)
     public void liberarAsientosExpirados() {
+        if (tiempoSeleccionMap.isEmpty()) return;
+
         long ahora = System.currentTimeMillis();
-        int totalVuelosEnMemoria = mapaVuelos.size();
 
-        // Evitar saturar la consola si no hay vuelos cargados en la caché
-        if (totalVuelosEnMemoria == 0) {
-            return;
-        }
+        tiempoSeleccionMap.forEach((idAsiento, timestamp) -> {
+            if (ahora - timestamp > TIEMPO_EXPIRACION_MS) {
+                liberarAsientoEspecificoPorTimeout(idAsiento);
+            }
+        });
+    }
 
-        /*Logger.logInfo(String.format(
-                "🔍 [TTL-CLEANER] Inicio de escaneo | Vuelos activos en mapa: %d | Límite TTL: %d ms",
-                totalVuelosEnMemoria, TIEMPO_EXPIRACION_MS
-        ));*/
+    private void liberarAsientoEspecificoPorTimeout(Integer idAsiento) {
+        for (Map.Entry<Integer, Map<Integer, InfoAsientoDTO>> entryVuelo : mapaVuelos.entrySet()) {
+            Integer idVuelo = entryVuelo.getKey();
+            Map<Integer, InfoAsientoDTO> asientosMap = entryVuelo.getValue();
 
-        final int[] totalSeleccionados = {0};
-        final int[] totalExpirados = {0};
-
-        mapaVuelos.forEach((idVuelo, asientosMap) -> {
-            //Logger.logInfo(String.format("🛫 [TTL-CLEANER] Escaneando Vuelo ID: %d (%d asientos cargados)", idVuelo, asientosMap.size()));
-
-            asientosMap.forEach((idAsiento, asiento) -> {
-                if ("SELECCIONADO".equalsIgnoreCase(asiento.getEstado())) {
-                    totalSeleccionados[0]++;
-                    Long timestamp = tiempoSeleccionMap.get(idAsiento);
-
-                    if (timestamp != null) {
-                        long transcurridoMs = ahora - timestamp;
-                        long restanteMs = TIEMPO_EXPIRACION_MS - transcurridoMs;
-
-                        /*Logger.logInfo(String.format(
-                                "   ├─ Asiento ID: %d (%s) | Reservado por: %s | Transcurrido: %d ms | Restante: %d ms",
-                                idAsiento, asiento.getNumeroAsiento(), asiento.getReservadoPor(), transcurridoMs, Math.max(0, restanteMs)
-                        ));*/
-
-                        if (transcurridoMs > TIEMPO_EXPIRACION_MS) {
-                            totalExpirados[0]++;
-                            String sessionOriginal = asiento.getReservadoPor();
-
-                            // 1. Liberar Estado en Memoria
-                            asiento.setEstado("libre");
-                            asiento.setReservadoPor(null);
-                            tiempoSeleccionMap.remove(idAsiento);
-
-                            /*Logger.logInfo(String.format(
-                                    "⏰ [TTL-EXPIRADO] Asiento ID: %d (%s) del Vuelo %d LIBERADO automáticamente tras %d ms de inactividad (Session: %s)",
-                                    idAsiento, asiento.getNumeroAsiento(), idVuelo, transcurridoMs, sessionOriginal
-                            ));*/
-
-                            // 2. Notificación Push a los clientes WebSocket
-                            EventoAsientoPush evento = new EventoAsientoPush(idAsiento, idVuelo, "libre", sessionOriginal);
-                            String canalWebSocket = "/topic/vuelo/" + idVuelo;
-
-                            messagingTemplate.convertAndSend(canalWebSocket, evento);
-
-                            //Logger.logInfo(String.format("📡 [WEBSOCKET-PUSH] Evento de liberación enviado a '%s' para el Asiento ID: %d", canalWebSocket, idAsiento));
-                        }
-                    } else {
-                        /*Logger.logWarn(String.format(
-                                "   ⚠️ [TTL-CLEANER] Asiento ID: %d (%s) en estado SELECCIONADO pero sin timestamp en 'tiempoSeleccionMap'. Limpiando bloqueo huérfano...",
-                                idAsiento, asiento.getNumeroAsiento()
-                        ));*/
+            if (asientosMap.containsKey(idAsiento)) {
+                asientosMap.computeIfPresent(idAsiento, (id, asiento) -> {
+                    if ("SELECCIONADO".equalsIgnoreCase(asiento.getEstado())) {
+                        String sessionOriginal = asiento.getReservadoPor();
                         asiento.setEstado("libre");
                         asiento.setReservadoPor(null);
-                    }
-                }
-            });
-        });
+                        tiempoSeleccionMap.remove(idAsiento);
 
-        if (totalSeleccionados[0] > 0) {
-            Logger.logInfo(String.format(
-                    "✅ [TTL-CLEANER] Fin de escaneo | Asientos retenidos evaluados: %d | Asientos liberados en este ciclo: %d",
-                    totalSeleccionados[0], totalExpirados[0]
-            ));
+                        Logger.logInfo(String.format("⏰ [TTL-EXPIRADO] Asiento ID %d liberado automáticamente.", idAsiento));
+
+                        EventoAsientoPush evento = new EventoAsientoPush(idAsiento, idVuelo, "libre", sessionOriginal);
+                        messagingTemplate.convertAndSend("/topic/vuelo/" + idVuelo, evento);
+                    }
+                    return asiento;
+                });
+                break;
+            }
         }
     }
 
-
     /**
-     * Confirma la venta/reserva definitiva en memoria tras guardar en la BD.
-     * Cambia el estado a OCUPADO y anula el limpiador TTL.
+     * Retorna el tiempo restante del PRIMER asiento seleccionado por el usuario.
+     * Mantiene un temporizador constante para toda la sesión de compra.
      */
+    public long getTiempoRestanteMsParaSesion(String sessionId) {
+        if (sessionId == null) return -1;
+
+        long ahora = System.currentTimeMillis();
+        long menorTiempoRestante = Long.MAX_VALUE;
+        boolean tieneAsientos = false;
+
+        for (Map<Integer, InfoAsientoDTO> asientosMap : mapaVuelos.values()) {
+            for (Map.Entry<Integer, InfoAsientoDTO> entry : asientosMap.entrySet()) {
+                InfoAsientoDTO asiento = entry.getValue();
+                if ("SELECCIONADO".equalsIgnoreCase(asiento.getEstado()) && sessionId.equals(asiento.getReservadoPor())) {
+                    Long timestamp = tiempoSeleccionMap.get(entry.getKey());
+                    if (timestamp != null) {
+                        long restante = TIEMPO_EXPIRACION_MS - (ahora - timestamp);
+                        if (restante < menorTiempoRestante) {
+                            menorTiempoRestante = restante;
+                            tieneAsientos = true;
+                        }
+                    }
+                }
+            }
+        }
+        return tieneAsientos ? Math.max(0, menorTiempoRestante) : -1;
+    }
+
     public void confirmarReservaDefinitiva(Integer idVuelo, List<Integer> idsAsientos) {
         Map<Integer, InfoAsientoDTO> asientosMap = mapaVuelos.get(idVuelo);
-        if (asientosMap == null) return;
+        if (asientosMap == null || idsAsientos == null) return;
 
         for (Integer idAsiento : idsAsientos) {
             asientosMap.computeIfPresent(idAsiento, (id, asiento) -> {
-                // 1. Marcar como vendido
                 asiento.setEstado("OCUPADO");
                 asiento.setReservadoPor(null);
-
-                // 2. Cancelar el temporizador TTL para que el limpiador de fondo no lo toque
                 tiempoSeleccionMap.remove(id);
 
-                Logger.logInfo(String.format(
-                        "🔒 [COMPRA CONFIRMADA] Asiento ID: %d (%s) del Vuelo %d marcado como OCUPADO en memoria.",
-                        id, asiento.getNumeroAsiento(), idVuelo
-                ));
-
-                // 3. Emitir evento WebSocket para renderizar la silla en rojo/bloqueada para todos los clientes
                 EventoAsientoPush evento = new EventoAsientoPush(id, idVuelo, "OCUPADO", null);
                 messagingTemplate.convertAndSend("/topic/vuelo/" + idVuelo, evento);
-
                 return asiento;
             });
         }

@@ -62,29 +62,91 @@
             function flashCambioVuelo() {
                 var hero = document.getElementById('flightHeroCard');
                 if (!hero) return;
-                hero.classList.remove('hero-flash'); // reinicia si ya estaba corriendo
-                void hero.offsetWidth; // fuerza reflow para poder re-disparar la animación
+                hero.classList.remove('hero-flash');
+                void hero.offsetWidth;
                 hero.classList.add('hero-flash');
                 setTimeout(function () { hero.classList.remove('hero-flash'); }, 900);
             }
 
             document.addEventListener("DOMContentLoaded", conectarWebSocket);
+
+            // ==========================================
+            // CONTROL LÓGICO DEL CRONÓMETRO DE RESERVA
+            // ==========================================
+            var intervaloTimer = null;
+
+            function iniciarCronometroUI(segundos) {
+                var card = document.getElementById("timerCard");
+                var display = document.getElementById("timerDisplay");
+
+                if (!card || !display) return;
+
+                if (!segundos || segundos <= 0) {
+                    if (intervaloTimer) clearInterval(intervaloTimer);
+                    card.style.display = "none";
+                    return;
+                }
+
+                card.style.display = "flex";
+
+                if (intervaloTimer) clearInterval(intervaloTimer);
+
+                function render() {
+                    if (segundos <= 0) {
+                        clearInterval(intervaloTimer);
+                        display.innerText = "00:00";
+                        card.style.display = "none";
+                        notificarExpiracionServidor();
+                        return;
+                    }
+
+                    var min = Math.floor(segundos / 60);
+                    var seg = segundos % 60;
+                    display.innerText = (min < 10 ? "0" : "") + min + ":" + (seg < 10 ? "0" : "") + seg;
+                    segundos--;
+                }
+
+                render();
+                intervaloTimer = setInterval(render, 1000);
+            }
+
+            document.addEventListener("DOMContentLoaded", function() {
+                var tInicial = #{seleccionAsientosBean.tiempoRestanteSegundos};
+                if (tInicial > 0) {
+                    iniciarCronometroUI(tInicial);
+                }
+            });
             /* ]]> */
         </script>
     </ui:define>
 
     <ui:define name="contenido">
+        <f:metadata>
+            <f:viewAction action="#{seleccionAsientosBean.evaluarExpiracion}" />
+        </f:metadata>
 
         <main class="seat-selection-container">
+
+            <!-- BANNER FLOTANTE DE TIEMPO RESIDUAL (FUERA DE SEATFORM) -->
+            <div id="timerCard" class="timer-banner-container" style="display: none;">
+                <div class="timer-content">
+                    <i class="pi pi-clock timer-icon"></i>
+                    <span>Tiempo de retención temporal de asientos:</span>
+                </div>
+                <div id="timerDisplay" class="timer-clock">00:00</div>
+            </div>
 
             <h:form id="seatForm">
 
                 <p:growl id="growl" showDetail="true" life="4000" />
 
-                <!-- Comando AJAX ejecutado por el WebSocket -->
+                <!-- Comandos AJAX procesados por JSF -->
                 <p:remoteCommand name="actualizarMapaRemoto"
                                  actionListener="#{seleccionAsientosBean.recargarAsientos}"
                                  update="seatForm:cabinaPanel seatForm:registroPanel" />
+
+                <p:remoteCommand name="notificarExpiracionServidor"
+                                 actionListener="#{seleccionAsientosBean.forzarExpiracionPorTimeout}" />
 
                 <!-- HEADER CON NAVEGACIÓN Y STEPPER -->
                 <div id="flightHeroCard" class="flight-hero-card">
@@ -119,15 +181,15 @@
                         <div class="hero-flight-meta">
                             <span class="hero-flight-num"><i class="pi pi-send"></i> Vuelo #{seleccionAsientosBean.vuelo.numeroVuelo}</span>
                             <span class="hero-flight-time">
-                <i class="pi pi-clock"></i>
-                <h:outputText value="#{seleccionAsientosBean.vuelo.fechaHoraSalida}">
-                    <f:convertDateTime pattern="dd/MM HH:mm" timeZone="America/Santiago"/>
-                </h:outputText>
-            </span>
+                                <i class="pi pi-clock"></i>
+                                <h:outputText value="#{seleccionAsientosBean.vuelo.fechaHoraSalida}">
+                                    <f:convertDateTime pattern="dd/MM HH:mm" timeZone="America/Santiago"/>
+                                </h:outputText>
+                            </span>
                         </div>
                     </div>
 
-                    <!-- Mini-stepper de TODOS los tramos, cada uno navegable con un clic -->
+                    <!-- Mini-stepper de TODOS los tramos -->
                     <p:outputPanel id="flightStepper" styleClass="flight-stepper">
                         <ui:repeat value="#{seleccionAsientosBean.vuelos}" var="v" varStatus="st">
                             <div class="flight-step-mini #{st.index eq seleccionAsientosBean.idxVuelo ? 'active' : ''} #{st.index lt seleccionAsientosBean.idxVuelo ? 'completado' : ''}">
@@ -161,49 +223,48 @@
                     </div>
                 </div>
 
-
                 <!-- GRID PRINCIPAL -->
                 <div class="booking-grid booking-grid-2col">
 
-                    <!-- COLUMNA IZQUIERDA: INFORMACIÓN, PASAJEROS Y RESUMEN -->
+                    <!-- COLUMNA IZQUIERDA: INFORMACIÓN Y PASAJEROS -->
                     <aside class="registry-sidebar">
                         <h:panelGroup id="registroPanel">
-                        <div class="sidebar-card registry-card">
-                            <h3 class="card-subtitle"><i class="pi pi-table"></i> Registro por Pasajero</h3>
-                            <br> </br>
-                            <p class="registry-hint">Vista completa de tu viaje: qué asiento eligió cada pasajero en cada tramo.</p>
+                            <div class="sidebar-card registry-card">
+                                <h3 class="card-subtitle"><i class="pi pi-table"></i> Registro por Pasajero</h3>
+                                <br />
+                                <p class="registry-hint">Vista completa de tu viaje: qué asiento eligió cada pasajero en cada tramo.</p>
 
-                            <div class="registry-table-wrapper">
-                                <ui:repeat value="#{seleccionAsientosBean.pasajeros}" var="pas" varStatus="ps">
-                                    <div class="registry-pasajero-block #{ps.index eq seleccionAsientosBean.idxAsientoSeleccion and seleccionAsientosBean.idxAsientoSeleccion lt seleccionAsientosBean.cantAdultos ? 'pasajero-actual' : ''}">
-                                        <div class="registry-pasajero-header">
-                                            <span class="registry-pasajero-badge">#{ps.index + 1}</span>
-                                            <span class="registry-pasajero-nombre">#{pas.nombre}</span>
-                                        </div>
-
-                                        <ui:repeat value="#{seleccionAsientosBean.vuelos}" var="v" varStatus="vs">
-                                            <div class="registry-tramo-row #{vs.index eq seleccionAsientosBean.idxVuelo ? 'tramo-activo' : ''}">
-                                                <span class="registry-tramo-ruta">#{seleccionAsientosBean.getRutaDeVuelo(v)}</span>
-
-                                                <h:panelGroup rendered="#{not empty pas.asientos[vs.index]}">
-                                    <span class="registry-asiento-chip">
-                                        <i class="pi pi-check-circle"></i>
-                                        #{pas.asientos[vs.index].numeroAsiento}
-                                        <small>#{pas.asientos[vs.index].clase}</small>
-                                    </span>
-                                                </h:panelGroup>
-
-                                                <h:panelGroup rendered="#{empty pas.asientos[vs.index]}">
-                                    <span class="registry-pendiente-chip #{vs.index eq seleccionAsientosBean.idxVuelo ? 'seleccionando' : ''}">
-                                        #{vs.index eq seleccionAsientosBean.idxVuelo ? 'Seleccionando...' : 'Pendiente'}
-                                    </span>
-                                                </h:panelGroup>
+                                <div class="registry-table-wrapper">
+                                    <ui:repeat value="#{seleccionAsientosBean.pasajeros}" var="pas" varStatus="ps">
+                                        <div class="registry-pasajero-block #{ps.index eq seleccionAsientosBean.idxAsientoSeleccion and seleccionAsientosBean.idxAsientoSeleccion lt seleccionAsientosBean.cantAdultos ? 'pasajero-actual' : ''}">
+                                            <div class="registry-pasajero-header">
+                                                <span class="registry-pasajero-badge">#{ps.index + 1}</span>
+                                                <span class="registry-pasajero-nombre">#{pas.nombre}</span>
                                             </div>
-                                        </ui:repeat>
-                                    </div>
-                                </ui:repeat>
+
+                                            <ui:repeat value="#{seleccionAsientosBean.vuelos}" var="v" varStatus="vs">
+                                                <div class="registry-tramo-row #{vs.index eq seleccionAsientosBean.idxVuelo ? 'tramo-activo' : ''}">
+                                                    <span class="registry-tramo-ruta">#{seleccionAsientosBean.getRutaDeVuelo(v)}</span>
+
+                                                    <h:panelGroup rendered="#{not empty pas.asientos[vs.index]}">
+                                                        <span class="registry-asiento-chip">
+                                                            <i class="pi pi-check-circle"></i>
+                                                            #{pas.asientos[vs.index].numeroAsiento}
+                                                            <small>#{pas.asientos[vs.index].clase}</small>
+                                                        </span>
+                                                    </h:panelGroup>
+
+                                                    <h:panelGroup rendered="#{empty pas.asientos[vs.index]}">
+                                                        <span class="registry-pendiente-chip #{vs.index eq seleccionAsientosBean.idxVuelo ? 'seleccionando' : ''}">
+                                                            #{vs.index eq seleccionAsientosBean.idxVuelo ? 'Seleccionando...' : 'Pendiente'}
+                                                        </span>
+                                                    </h:panelGroup>
+                                                </div>
+                                            </ui:repeat>
+                                        </div>
+                                    </ui:repeat>
+                                </div>
                             </div>
-                        </div>
                         </h:panelGroup>
 
                         <!-- Leyenda de estados de asiento -->
@@ -243,9 +304,7 @@
                                                                  styleClass="seat-btn #{a.getEstadoVisual(seleccionAsientosBean.miSessionId).toLowerCase()}"
                                                                  disabled="#{a.getEstadoVisual(seleccionAsientosBean.miSessionId) == 'OCUPADO' or a.getEstadoVisual(seleccionAsientosBean.miSessionId) == 'EN_PROCESO'}"
                                                                  action="#{seleccionAsientosBean.setearAsiento(a)}"
-                                                                 update="seatForm">
-                                                    <f:param name="sessionId" value="#{seleccionAsientosBean.miSessionId}" />
-                                                </p:commandButton>
+                                                                 update="seatForm" />
                                             </h:panelGroup>
                                         </ui:repeat>
                                     </div>
@@ -262,9 +321,7 @@
                                                                  styleClass="seat-btn #{a.getEstadoVisual(seleccionAsientosBean.miSessionId).toLowerCase()}"
                                                                  disabled="#{a.getEstadoVisual(seleccionAsientosBean.miSessionId) == 'OCUPADO' or a.getEstadoVisual(seleccionAsientosBean.miSessionId) == 'EN_PROCESO'}"
                                                                  action="#{seleccionAsientosBean.setearAsiento(a)}"
-                                                                 update="seatForm">
-                                                    <f:param name="sessionId" value="#{seleccionAsientosBean.miSessionId}" />
-                                                </p:commandButton>
+                                                                 update="seatForm" />
                                             </h:panelGroup>
                                         </ui:repeat>
                                     </div>
@@ -281,9 +338,7 @@
                                                                  styleClass="seat-btn #{a.getEstadoVisual(seleccionAsientosBean.miSessionId).toLowerCase()}"
                                                                  disabled="#{a.getEstadoVisual(seleccionAsientosBean.miSessionId) == 'OCUPADO' or a.getEstadoVisual(seleccionAsientosBean.miSessionId) == 'EN_PROCESO'}"
                                                                  action="#{seleccionAsientosBean.setearAsiento(a)}"
-                                                                 update="seatForm">
-                                                    <f:param name="sessionId" value="#{seleccionAsientosBean.miSessionId}" />
-                                                </p:commandButton>
+                                                                 update="seatForm" />
                                             </h:panelGroup>
                                         </ui:repeat>
                                     </div>

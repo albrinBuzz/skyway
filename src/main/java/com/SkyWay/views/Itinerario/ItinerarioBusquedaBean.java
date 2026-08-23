@@ -4,34 +4,48 @@ import com.SkyWay.modules.aeropuerto.domain.model.Aeropuerto;
 import com.SkyWay.modules.aeropuerto.domain.service.AeropuertoService;
 import com.SkyWay.modules.ciudad.domain.model.Ciudad;
 import com.SkyWay.modules.ciudad.domain.service.CiudadService;
-
+import com.SkyWay.modules.itinerario.domain.model.Itinerario;
+import com.SkyWay.modules.itinerario.domain.service.ItinerarioService;
+import com.SkyWay.modules.itinerario.presentation.dto.ItinerarioDTO;
+import com.SkyWay.modules.itinerariovuelo.domain.model.ItinerarioVuelo;
+import com.SkyWay.modules.itinerariovuelo.domain.service.ItinerarioVueloService;
+import com.SkyWay.modules.segmentovuelo.domain.model.SegmentoVuelo;
+import com.SkyWay.modules.segmentovuelo.domain.service.SegmentoVueloService;
 import com.SkyWay.modules.vuelo.domain.model.Vuelo;
 import com.SkyWay.modules.vuelo.domain.service.VueloService;
 import com.SkyWay.util.Logger;
 import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.faces.context.ExternalContext;
 import jakarta.faces.context.FacesContext;
-import org.joinfaces.viewscope.ViewScope;
+//import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
 import jakarta.validation.constraints.Future;
 import org.omnifaces.cdi.ViewScoped;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-
+import java.sql.Timestamp;
 import java.text.ParseException;
 import java.time.LocalDate;
-
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-
 @Named("itinerarioBusquedaBean")
-@ViewScoped
+@RequestScoped
+
+
+//@Component("itinerarioBusquedaBean")
 //@Scope(value = "view", proxyMode = ScopedProxyMode.TARGET_CLASS)
+
 public class ItinerarioBusquedaBean implements Serializable {
 
 
@@ -59,21 +73,15 @@ public class ItinerarioBusquedaBean implements Serializable {
 
     @PostConstruct
     public void init() {
-
-
-
         aeropuertosMap = new HashMap<>();
+
 
         ciudads = ciudadService.getAllCiudades();
 
         aeropuertos = aeropuertoService.findAll();
-
-        if (aeropuertos != null) {
-            aeropuertos.forEach(aeropuerto -> aeropuertosMap.put(aeropuerto.getCodigoIata(), aeropuerto));
-        }
-
-
+        aeropuertos.forEach(aeropuerto -> aeropuertosMap.put(aeropuerto.getCodigoIata(), aeropuerto));
     }
+
     public void buscarVuelosSoloIda() throws ParseException {
 
         try {
@@ -125,24 +133,34 @@ public class ItinerarioBusquedaBean implements Serializable {
                 .toList();
     }
 
-    public String getItemLabel(Aeropuerto a) {
-        if (a == null) {
+    public String getItemLabel(Object item) {
+        if (item == null) {
             return "";
         }
 
-        String ciudadNombre = (a.getCiudad() != null && a.getCiudad().getNombre() != null)
-                ? a.getCiudad().getNombre()
-                : "Desconocida";
+        if (item instanceof Aeropuerto a) {
+            String ciudadNombre = (a.getCiudad() != null && a.getCiudad().getNombre() != null)
+                    ? a.getCiudad().getNombre()
+                    : "Desconocida";
 
-        String aeropuertoNombre = (a.getNombreAeropuerto() != null)
-                ? a.getNombreAeropuerto()
-                : "Aeropuerto desconocido";
+            String aeropuertoNombre = (a.getNombreAeropuerto() != null)
+                    ? a.getNombreAeropuerto()
+                    : "Aeropuerto desconocido";
 
-        String codigoIata = (a.getCodigoIata() != null)
-                ? a.getCodigoIata()
-                : "N/A";
+            String codigoIata = (a.getCodigoIata() != null)
+                    ? a.getCodigoIata()
+                    : "N/A";
 
-        return ciudadNombre + " - " + aeropuertoNombre + " (" + codigoIata + ")";
+            return ciudadNombre + " - " + aeropuertoNombre + " (" + codigoIata + ")";
+        } else if (item instanceof String s) {
+            if (s.isBlank()) return "";
+            if (aeropuertosMap != null && aeropuertosMap.containsKey(s.toUpperCase())) {
+                return getItemLabel(aeropuertosMap.get(s.toUpperCase()));
+            }
+            return s;
+        }
+
+        return item.toString();
     }
 
 
