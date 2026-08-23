@@ -13,9 +13,11 @@ import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.ExternalContext;
 import jakarta.faces.context.FacesContext;
-import jakarta.faces.view.ViewScoped;
+//import jakarta.faces.view.ViewScoped;
+
 import jakarta.inject.Named;
 import jakarta.servlet.http.HttpSession;
+import org.omnifaces.cdi.ViewScoped;
 import org.primefaces.PrimeFaces;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

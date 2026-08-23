@@ -13,6 +13,7 @@ import com.SkyWay.modules.reservaasiento.domain.model.ReservaAsiento;
 import com.SkyWay.modules.usuario.domain.model.Usuario;
 import com.SkyWay.util.Logger;
 import org.hibernate.exception.GenericJDBCException;
+import org.omnifaces.cdi.ViewScoped;
 import org.primefaces.PrimeFaces;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.event.UnselectEvent;
@@ -33,7 +34,8 @@ import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.ExternalContext;
 import jakarta.faces.context.FacesContext;
-import jakarta.faces.view.ViewScoped;
+//import jakarta.faces.view.ViewScoped;
+
 import jakarta.inject.Named;
 import jakarta.servlet.http.HttpSession;
 
