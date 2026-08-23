@@ -90,7 +90,7 @@ public class UnifiedSystemMonitorTask {
         );
     }
 
-    //@Scheduled(fixedDelay = 5000)
+    @Scheduled(fixedDelay = 5000)
     private void collectAndBroadcastMetrics() {
         try {
             Runtime runtime = Runtime.getRuntime();
