@@ -36,15 +36,15 @@ public class SkyWayApplication {
 			}
 		});
 
-		//bootMonitorThread.setDaemon(true);
-		//bootMonitorThread.setName("boot-memory-monitor");
-		//bootMonitorThread.start();
+		bootMonitorThread.setDaemon(true);
+		bootMonitorThread.setName("boot-memory-monitor");
+		bootMonitorThread.start();
 
 		// Inicia el proceso de Spring Boot
 		SpringApplication.run(SkyWayApplication.class, args);
 
 		// Detener el hilo de inicio limpiamente
 		bootMonitorThread.interrupt();
-		Logger.logInfo("✅ Arranque finalizado. Monitor de inicio detenido.");
+		Logger.logInfo(" Arranque finalizado. Monitor de inicio detenido.");
 	}
 }
