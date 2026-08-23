@@ -260,12 +260,11 @@
                                   <div class="col-md-6 mb-3 d-flex flex-column">
                                       <h:outputLabel for="aeropuertoSalida" styleClass="skyway-label" value="Aeropuerto de salida" />
                                       <p:autoComplete id="aeropuertoSalida"
-                                                      value="#{itinerarioBusquedaBean.aeropuertoOrigen}"
+                                                      value="#{itinerarioBusquedaBean.codigoIataOrigen}"
                                                       completeMethod="#{itinerarioBusquedaBean.buscarAeropuertos}"
                                                       var="a"
                                                       itemLabel="#{itinerarioBusquedaBean.getItemLabel(a)}"
-                                                      itemValue="#{a}"
-                                                      converter="omnifaces.SelectItemsConverter"
+                                                      itemValue="#{a.codigoIata}"
                                                       dropdown="true"
                                                       forceSelection="true"
                                                       placeholder="Buscar ciudad o código IATA..."
@@ -277,12 +276,11 @@
                                   <div class="col-md-6 mb-3 d-flex flex-column">
                                       <h:outputLabel for="aeropuertoLlegada" styleClass="skyway-label" value="Aeropuerto de llegada" />
                                       <p:autoComplete id="aeropuertoLlegada"
-                                                      value="#{itinerarioBusquedaBean.aeropuertoDestino}"
+                                                      value="#{itinerarioBusquedaBean.codigoIataDestino}"
                                                       completeMethod="#{itinerarioBusquedaBean.buscarAeropuertos}"
                                                       var="a"
                                                       itemLabel="#{itinerarioBusquedaBean.getItemLabel(a)}"
-                                                      itemValue="#{a}"
-                                                      converter="omnifaces.SelectItemsConverter"
+                                                      itemValue="#{a.codigoIata}"
                                                       dropdown="true"
                                                       forceSelection="true"
                                                       placeholder="Buscar aeropuerto de destino..."
