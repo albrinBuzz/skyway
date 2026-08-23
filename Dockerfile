@@ -8,6 +8,8 @@ RUN chmod +x mvnw && ./mvnw clean package -DskipTests
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 COPY --from=builder /app/target/*.jar app.jar
+# Forzar a la JVM a auto-destruirse inmediatamente si ocurre un OutOfMemoryError
+ENV JAVA_OPTS="-Xmx256m -Xms128m -XX:MaxMetaspaceSize=180m -XX:+ExitOnOutOfMemoryError -XX:+CrashOnOutOfMemoryError"
 
 ENV PORT=8080
 EXPOSE 8080
