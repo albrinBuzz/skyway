@@ -4,38 +4,34 @@ import com.SkyWay.modules.aeropuerto.domain.model.Aeropuerto;
 import com.SkyWay.modules.aeropuerto.domain.service.AeropuertoService;
 import com.SkyWay.modules.ciudad.domain.model.Ciudad;
 import com.SkyWay.modules.ciudad.domain.service.CiudadService;
-import com.SkyWay.modules.itinerario.domain.model.Itinerario;
-import com.SkyWay.modules.itinerario.domain.service.ItinerarioService;
-import com.SkyWay.modules.itinerario.presentation.dto.ItinerarioDTO;
-import com.SkyWay.modules.itinerariovuelo.domain.model.ItinerarioVuelo;
-import com.SkyWay.modules.itinerariovuelo.domain.service.ItinerarioVueloService;
-import com.SkyWay.modules.segmentovuelo.domain.model.SegmentoVuelo;
-import com.SkyWay.modules.segmentovuelo.domain.service.SegmentoVueloService;
+
 import com.SkyWay.modules.vuelo.domain.model.Vuelo;
 import com.SkyWay.modules.vuelo.domain.service.VueloService;
 import com.SkyWay.util.Logger;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.context.ExternalContext;
 import jakarta.faces.context.FacesContext;
-import jakarta.faces.view.ViewScoped;
+import org.joinfaces.viewscope.ViewScope;
 import jakarta.inject.Named;
 import jakarta.validation.constraints.Future;
+import org.omnifaces.cdi.ViewScoped;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.sql.Timestamp;
+
 import java.text.ParseException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Date;
+
 import java.util.HashMap;
 import java.util.List;
 
+
 @Named("itinerarioBusquedaBean")
 @ViewScoped
+//@Scope(value = "view", proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class ItinerarioBusquedaBean implements Serializable {
 
 
