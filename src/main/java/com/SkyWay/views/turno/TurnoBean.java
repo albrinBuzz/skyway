@@ -12,9 +12,11 @@ import com.SkyWay.util.Logger;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.context.ExternalContext;
 import jakarta.faces.context.FacesContext;
-import jakarta.faces.view.ViewScoped;
+//import jakarta.faces.view.ViewScoped;
+
 import jakarta.inject.Named;
 import org.apache.juli.logging.Log;
+import org.omnifaces.cdi.ViewScoped;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;

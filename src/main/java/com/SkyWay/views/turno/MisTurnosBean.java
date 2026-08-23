@@ -6,9 +6,11 @@ import com.SkyWay.modules.turnotripulacion.domain.model.TurnoTripulacion;
 import com.SkyWay.modules.turnotripulacion.domain.service.TurnoTripulacionService;
 import com.SkyWay.modules.usuario.domain.model.Usuario;
 import jakarta.annotation.PostConstruct;
-import jakarta.faces.view.ViewScoped;
+//import jakarta.faces.view.ViewScoped;
+
 import jakarta.inject.Named;
 import jakarta.servlet.http.HttpSession;
+import org.omnifaces.cdi.ViewScoped;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.Serializable;
