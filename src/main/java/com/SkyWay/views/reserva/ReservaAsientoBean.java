@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 
-@Component
+//@Component
 @Named("seleccionAsientosBean")
 @ViewScoped
 public class ReservaAsientoBean implements Serializable {
@@ -73,12 +73,13 @@ public class ReservaAsientoBean implements Serializable {
             this.miSessionId = (String) sessionMap.get("reservaSessionId");
         } else {
             FacesContext facesContext = FacesContext.getCurrentInstance();
-            HttpSession session = (HttpSession) facesContext.getExternalContext().getSession(false);
-            //this.miSessionId = UUID.randomUUID().toString();
-            this.miSessionId=session.getId();
+
+            // Cambia 'false' por 'true' para asegurar que la sesión no sea null
+            HttpSession session = (HttpSession) facesContext.getExternalContext().getSession(true);
+
+            this.miSessionId = session.getId();
             sessionMap.put("reservaSessionId", this.miSessionId);
         }
-
         String idsParam = params.get("itinerarios");
         String idsTarifas = params.get("tarifas");
 
