@@ -9,10 +9,49 @@
     <ui:define name="head">
         <title>Reserva | LATAM Style</title>
         <h:outputStylesheet library="css" name="reserva/style.css" />
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+
     </ui:define>
 
     <ui:define name="contenido">
+
         <p:growl id="growl" showDetail="true" />
+
+        <!-- Modal de Expiración Estilizado -->
+        <!-- Modal de Expiración Estilizado -->
+        <!-- Modal de Expiración Estilizado -->
+        <p:dialog header="⏱️ Tiempo Agotado"
+                  widgetVar="expiredDlg"
+                  modal="true"
+                  closable="false"
+                  resizable="false"
+                  draggable="false"
+                  responsive="true"
+                  styleClass="custom-expired-modal">
+
+            <div class="text-center p-3">
+                <i class="pi pi-clock text-warning mb-3" style="font-size: 3rem; display: block;"></i>
+                <h4 class="fw-bold mb-2">¡Tu tiempo de reserva ha expirado!</h4>
+                <p class="text-secondary mb-4" style="max-width: 320px;">
+                    El tiempo de retención temporal (2 min) se agotó. Tus asientos fueron liberados para otros pasajeros.
+                </p>
+
+                <h:form id="expiredForm">
+                    <p:remoteCommand name="notificarExpiracionCliente"
+                                     action="#{reservaBean.cancelarPorExpiracion}" />
+
+                    <!-- Redirección con URL Dinámica y Preservación de Parámetros -->
+                    <button type="button"
+                            onclick="window.location.href='#{request.contextPath}#{reservaBean.urlRetornoAsientos}';"
+                            class="btn btn-warning w-100 font-weight-bold py-2">
+                        <i class="pi pi-refresh mr-1"></i> Volver a Seleccionar Asientos
+                    </button>
+                </h:form>
+            </div>
+        </p:dialog>
+
 
         <div class="container mt-4">
             <div class="booking-stepper">
@@ -195,61 +234,81 @@
                             </ui:repeat>
                         </p:tab>
 
-                        <p:tab title="Asientos (#{reservaBean.asientosSeleccionados.size()})">
-                            <ui:repeat value="#{reservaBean.asientosSeleccionados.entrySet().toArray()}" var="entry">
-                                <div class="mb-4">
-                                    <div class="vuelo-header-asiento">
-                                        <i class="pi pi-ticket"></i>
-                                        <span>Vuelo: #{reservaBean.getVuelo(entry.key)}</span>
-                                    </div>
 
-                                    <ui:repeat value="#{entry.value}" var="asiento">
-                                        <div class="asiento-ticket #{asiento.clase.equalsIgnoreCase('Ejecutiva') ? 'asiento-EJECUTIVA' :
-                                            asiento.clase.equalsIgnoreCase('Primera Clase') ? 'asiento-PRIMERA' : 'asiento-ECONOMY'}">
+                        <p:tab title="Asientos (#{reservaBean.tolerantTotalAsientos})">
 
-                                            <div class="d-flex align-items-center">
-                                                <div class="mr-3 text-center" style="width: 45px;">
-                                                    <h:panelGroup rendered="#{asiento.clase.equalsIgnoreCase('Ejecutiva')}">
-                                                        <i class="pi pi-star-fill icon-EJECUTIVA" style="font-size: 1.4rem;"></i>
-                                                    </h:panelGroup>
-                                                    <h:panelGroup rendered="#{asiento.clase.equalsIgnoreCase('Economy')}">
-                                                        <i class="pi pi-user icon-ECONOMY" style="font-size: 1.4rem;"></i>
-                                                    </h:panelGroup>
-                                                    <h:panelGroup rendered="#{asiento.clase.equalsIgnoreCase('Primera Clase')}">
-                                                        <i class="pi pi-crown icon-PRIMERA" style="font-size: 1.4rem;"></i>
-                                                    </h:panelGroup>
-                                                    <span class="d-block asiento-numero mt-1">#{asiento.numeroAsiento}</span>
-                                                </div>
+                            <!-- ESTADO 1: NO HAY ASIENTOS SELECCIONADOS -->
+                            <h:panelGroup rendered="#{reservaBean.tolerantTotalAsientos == 0}">
+                                <div class="text-center py-5 px-3 rounded" style="background: rgba(22, 30, 46, 0.6); border: 1px dashed #243044;">
+                                    <i class="pi pi-inbox text-muted mb-3" style="font-size: 2.5rem; display: block;"></i>
+                                    <h5 class="font-weight-bold text-white mb-2">Sin asientos seleccionados</h5>
+                                    <p class="text-muted small mb-4">No has asignado asientos para los vuelos de tu itinerario.</p>
 
-                                                <div>
-                            <span class="clase-caracteristica #{asiento.clase.equalsIgnoreCase('Ejecutiva') ? 'badge-EJECUTIVA' :
-                                                              asiento.clase.equalsIgnoreCase('Primera Clase') ? 'badge-PRIMERA' : 'badge-ECONOMY'}">
-                                #{asiento.clase}
-                            </span>
+                                    <p:button value="Seleccionar Asientos Ahora"
+                                              href="#{request.contextPath}#{reservaBean.urlRetornoAsientos}"
+                                              icon="pi pi-refresh"
+                                              styleClass="ui-button-outlined ui-button-info" />
+                                </div>
+                            </h:panelGroup>
 
-                                                    <div class="small mt-1" style="font-size: 0.7rem; color: rgba(255,255,255,0.6);">
-                                                        <ui:fragment rendered="#{asiento.clase.equalsIgnoreCase('Ejecutiva')}">
-                                                            <i class="pi pi-briefcase mr-1"></i> Asiento Cama + Lounge
-                                                        </ui:fragment>
-                                                        <ui:fragment rendered="#{asiento.clase.equalsIgnoreCase('Economy')}">
-                                                            <i class="pi pi-check-circle mr-1"></i> Selección Estándar
-                                                        </ui:fragment>
-                                                        <ui:fragment rendered="#{asiento.clase.equalsIgnoreCase('Primera Clase')}">
-                                                            <i class="pi pi-shield mr-1"></i> Máxima Privacidad
-                                                        </ui:fragment>
+                            <!-- ESTADO 2: LISTADO DE ASIENTOS CON TICKETS -->
+                            <h:panelGroup rendered="#{reservaBean.tolerantTotalAsientos > 0}">
+                                <ui:repeat value="#{reservaBean.asientosSeleccionados.entrySet().toArray()}" var="entry">
+                                    <div class="mb-4">
+                                        <div class="vuelo-header-asiento d-flex align-items-center mb-2">
+                                            <i class="pi pi-ticket mr-2 text-info"></i>
+                                            <span class="font-weight-bold">Vuelo: #{reservaBean.getVuelo(entry.key)}</span>
+                                        </div>
+
+                                        <ui:repeat value="#{entry.value}" var="asiento">
+                                            <div class="asiento-ticket mb-2 p-2 rounded d-flex align-items-center justify-content-between #{asiento.clase.equalsIgnoreCase('Ejecutiva') ? 'asiento-EJECUTIVA' :
+                                                 asiento.clase.equalsIgnoreCase('Primera Clase') ? 'asiento-PRIMERA' : 'asiento-ECONOMY'}">
+
+                                                <div class="d-flex align-items-center">
+                                                    <div class="mr-3 text-center" style="width: 45px;">
+                                                        <h:panelGroup rendered="#{asiento.clase.equalsIgnoreCase('Ejecutiva')}">
+                                                            <i class="pi pi-star-fill icon-EJECUTIVA" style="font-size: 1.4rem;"></i>
+                                                        </h:panelGroup>
+                                                        <h:panelGroup rendered="#{asiento.clase.equalsIgnoreCase('Economy')}">
+                                                            <i class="pi pi-user icon-ECONOMY" style="font-size: 1.4rem;"></i>
+                                                        </h:panelGroup>
+                                                        <h:panelGroup rendered="#{asiento.clase.equalsIgnoreCase('Primera Clase')}">
+                                                            <i class="pi pi-crown icon-PRIMERA" style="font-size: 1.4rem;"></i>
+                                                        </h:panelGroup>
+                                                        <span class="d-block asiento-numero mt-1 font-weight-bold">#{asiento.numeroAsiento}</span>
+                                                    </div>
+
+                                                    <div>
+                                                <span class="clase-caracteristica badge #{asiento.clase.equalsIgnoreCase('Ejecutiva') ? 'badge-EJECUTIVA' :
+                                                                  asiento.clase.equalsIgnoreCase('Primera Clase') ? 'badge-PRIMERA' : 'badge-ECONOMY'}">
+                                                    #{asiento.clase}
+                                                </span>
+
+                                                        <div class="small mt-1" style="font-size: 0.7rem; color: rgba(255,255,255,0.6);">
+                                                            <ui:fragment rendered="#{asiento.clase.equalsIgnoreCase('Ejecutiva')}">
+                                                                <i class="pi pi-briefcase mr-1"></i> Asiento Cama + Lounge
+                                                            </ui:fragment>
+                                                            <ui:fragment rendered="#{asiento.clase.equalsIgnoreCase('Economy')}">
+                                                                <i class="pi pi-check-circle mr-1"></i> Selección Estándar
+                                                            </ui:fragment>
+                                                            <ui:fragment rendered="#{asiento.clase.equalsIgnoreCase('Primera Clase')}">
+                                                                <i class="pi pi-shield mr-1"></i> Máxima Privacidad
+                                                            </ui:fragment>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
 
-                                            <div class="text-right">
-                                                <div class="small text-muted" style="font-size: 0.6rem; letter-spacing: 1px;">PRECIO</div>
-                                                <div class="font-weight-bold" style="color: white; font-size: 1.1rem;">$#{asiento.precio}</div>
+                                                <div class="text-right">
+                                                    <div class="small text-muted" style="font-size: 0.6rem; letter-spacing: 1px;">PRECIO</div>
+                                                    <div class="font-weight-bold" style="color: white; font-size: 1.1rem;">$#{asiento.precio}</div>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </ui:repeat>
-                                </div>
-                            </ui:repeat>
+                                        </ui:repeat>
+                                    </div>
+                                </ui:repeat>
+                            </h:panelGroup>
                         </p:tab>
+
                     </p:accordionPanel>
 
                     <div class="price-breakdown pt-3">
@@ -282,5 +341,47 @@
                 </div>
             </div>
         </div>
+
+        <script type="text/javascript">
+            //<![CDATA[
+            document.addEventListener("DOMContentLoaded", function () {
+                // Generación limpia de Arrays JavaScript desde expresiones EL de JSF (sin tags HTML/XML)
+                const misAsientosIds = [#{reservaBean.asientosSeleccionados.values().stream().flatMap(l -> l.stream()).map(a -> a.idAsiento).toList().toString().replaceAll("^\\[|\\]$", "")}];
+                const misVuelosIds = [#{reservaBean.itinerarios.stream().flatMap(it -> it.itinerarioVuelos.stream()).map(iv -> iv.vuelo.idVuelo).distinct().toList().toString().replaceAll("^\\[|\\]$", "")}];
+
+                console.log("✈️ Vuelos a monitorear:", misVuelosIds);
+                console.log("💺 Asientos en checkout:", misAsientosIds);
+
+                // Conexión SockJS y STOMP
+                const socket = new SockJS('/ws-asientos');
+                const stompClient = Stomp.over(socket);
+                stompClient.debug = null;
+
+                stompClient.connect({}, function (frame) {
+                    console.log("🟢 WebSocket conectado exitosamente en la vista de Reserva/Checkout.");
+
+                    // Suscribirse únicamente a los tópicos de los vuelos del itinerario
+                    misVuelosIds.forEach(function (idVuelo) {
+                        stompClient.subscribe('/topic/vuelo/' + idVuelo, function (message) {
+                            const evento = JSON.parse(message.body);
+                            console.log("📡 Evento recibido en Checkout:", evento);
+
+                            // Si un asiento de la reserva actual pasa a 'libre', gatillar expiración
+                            if (evento.estado === 'libre' && misAsientosIds.includes(evento.idAsiento)) {
+                                console.warn("⏰ Se detectó liberación por TTL del asiento " + evento.idAsiento);
+                                if (typeof notificarExpiracionCliente === 'function') {
+                                    notificarExpiracionCliente();
+                                }
+                                PF('expiredDlg').show();
+                            }
+                        });
+                    });
+                }, function (error) {
+                    console.error("🔴 Error de conexión WebSocket:", error);
+                });
+            });
+            //]]>
+        </script>
+
     </ui:define>
 </ui:composition>
