@@ -13,12 +13,12 @@ ENV PORT=8080
 EXPOSE 8080
 
 # Balance Perfecto: 300MB Heap + 112MB Metaspace + 32MB CodeCache = ~444MB Total en Render
+# Reemplaza la línea ENTRYPOINT / CMD de tu Dockerfile con esto:
 ENTRYPOINT ["java", \
-  "-Xms128m", \
-  "-Xmx300m", \
-  "-XX:MaxMetaspaceSize=112m", \
+  "-Xms96m", \
+  "-Xmx180m", \
+  "-XX:MaxMetaspaceSize=220m", \
   "-XX:ReservedCodeCacheSize=32m", \
   "-Xss256k", \
   "-XX:+UseSerialGC", \
-  "-XX:+ExitOnOutOfMemoryError", \
-  "-jar", "/app/app.jar"]
+  "-jar", "app.jar"]
