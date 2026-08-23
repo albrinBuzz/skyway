@@ -19,21 +19,27 @@ import com.SkyWay.util.Logger;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
-//import jakarta.faces.view.ViewScoped;
-import org.omnifaces.cdi.ViewScoped;
+import jakarta.faces.context.ExternalContext;
+import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
+
+//import org.omnifaces.cdi.ViewScoped;
+
 import org.primefaces.PrimeFaces;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.*;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.SkyWay.modules.aeropuerto.presentation.dto.AeropuertoMapaDTO;
 import com.SkyWay.modules.vuelo.presentation.dto.VueloMapaDTO;
-import jakarta.faces.context.ExternalContext;
+
+@Component
 @Named("itinerarioBean")
 @ViewScoped
 public class ItinerarioBean implements Serializable {
@@ -72,7 +78,6 @@ public class ItinerarioBean implements Serializable {
     private String aeropuertosMapaJson;
     private String vuelosMapaJson = "[]";
 
-    // Indicador analítico de persistencia
     private boolean esModificacion = false;
 
     @Autowired
@@ -97,7 +102,7 @@ public class ItinerarioBean implements Serializable {
         this.aeropuertosMap = new HashMap<>();
         this.precioTarifas = new HashMap<>();
         this.itinerariosAsignados = new ArrayList<>();
-        this.vuelos = new ArrayList<>(); // Inicializar lista vacía para la búsqueda
+        this.vuelos = new ArrayList<>();
 
         // 1. Cargar la matriz de itinerarios
         long t1 = System.currentTimeMillis();
@@ -150,11 +155,16 @@ public class ItinerarioBean implements Serializable {
         }
     }
 
-    // --- DETECTA Y PRECARGA SI ES EDICIÓN ---
-    // --- DENTRO DE ItinerarioBean.java ---
     public String getItinerarioArmadoMapaJson() { return itinerarioArmadoMapaJson; }
+
     private void verificarParametroEdicion() {
-        String idParam = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("id");
+        FacesContext fc = FacesContext.getCurrentInstance();
+        // 🔒 Control de seguridad contra invocaciones fuera de una petición web
+        if (fc == null || fc.getExternalContext() == null) {
+            return;
+        }
+
+        String idParam = fc.getExternalContext().getRequestParameterMap().get("id");
         if (idParam != null && !idParam.isEmpty()) {
             try {
                 Integer id = Integer.parseInt(idParam);
@@ -165,13 +175,11 @@ public class ItinerarioBean implements Serializable {
                     this.aeropuertoDestino = this.itinerario.getAeropuertoDestino().getCodigoIata();
                     this.esModificacion = true;
 
-                    // 1. Precargar tramos físicos
                     if (this.itinerario.getItinerarioVuelos() != null) {
                         this.itinerariosAsignados = new ArrayList<>(this.itinerario.getItinerarioVuelos());
                         this.itinerariosAsignados.sort(Comparator.comparingInt(ItinerarioVuelo::getOrden));
                     }
 
-                    // 2. SOLUCIÓN: Usar el método del servicio en lugar de la entidad
                     List<ItinerarioTarifa> tarifasAsociadas = itinerarioTarifaService.findByItinerario(id);
                     if (tarifasAsociadas != null) {
                         for (ItinerarioTarifa it : tarifasAsociadas) {
@@ -201,7 +209,6 @@ public class ItinerarioBean implements Serializable {
         }
     }
 
-    // --- PASO 1: RUTA MAESTRA (Fijar o Actualizar) ---
     public void saveItinerario() {
         if (this.aeropuertoOrigen == null || this.aeropuertoDestino == null) {
             addMessage(FacesMessage.SEVERITY_WARN, "Validación", "Debe especificar un origen y un destino comercial.");
@@ -218,20 +225,17 @@ public class ItinerarioBean implements Serializable {
         this.itinerario.setAeropuertoOrigen(origen);
         this.itinerario.setAeropuertoDestino(destino);
 
-        // Precargar el buscador del paso 3 con la ruta recién fijada, como ayuda al operador
         this.aeropuertoOrigenBusqueda = this.aeropuertoOrigen;
         this.aeropuertoDestinoBusqueda = this.aeropuertoDestino;
-        this.vuelosMapaJson = "[]"; // limpia geometría vieja hasta la próxima búsqueda
+        this.vuelosMapaJson = "[]";
 
         Logger.logInfo("Ruta maestra modificada/fijada: " + origen.getCodigoIata() + " -> " + destino.getCodigoIata());
         addMessage(FacesMessage.SEVERITY_INFO, "Ruta Actualizada", "Ruta base establecida correctamente.");
     }
 
-
     public void agregarVuelo(Vuelo vuelo) {
         if (vuelo == null) {
-            addMessage(FacesMessage.SEVERITY_WARN, "Selección Inválida",
-                    "No se ha seleccionado ningún vuelo para agregar.");
+            addMessage(FacesMessage.SEVERITY_WARN, "Selección Inválida", "No se ha seleccionado ningún vuelo para agregar.");
             return;
         }
 
@@ -245,42 +249,32 @@ public class ItinerarioBean implements Serializable {
             Vuelo ultimo = itinerariosAsignados.get(itinerariosAsignados.size() - 1).getVuelo();
             addMessage(FacesMessage.SEVERITY_WARN, "Incoherencia Horaria",
                     String.format("El vuelo %s sale (%s) antes de que aterrice el vuelo anterior %s (%s).",
-                            vuelo.getNumeroVuelo(),
-                            vuelo.getFechaHoraSalida(),
-                            ultimo.getNumeroVuelo(),
-                            ultimo.getFechaHoraLlegada()));
+                            vuelo.getNumeroVuelo(), vuelo.getFechaHoraSalida(), ultimo.getNumeroVuelo(), ultimo.getFechaHoraLlegada()));
             return;
         }
 
         if (!ultimoAeropuertoCorrecto(vuelo)) {
             Vuelo ultimo = itinerariosAsignados.get(itinerariosAsignados.size() - 1).getVuelo();
-
             var origenNuevo = vuelo.getSegmentoVuelos().get(0).getAeropuertoOrigen();
             var destinoUltimo = ultimo.getSegmentoVuelos().get(ultimo.getSegmentoVuelos().size() - 1).getAeropuertoDestino();
 
             addMessage(FacesMessage.SEVERITY_WARN, "Desconexión Geográfica",
                     String.format("El origen de este vuelo (%s - %s) no coincide con el destino del vuelo anterior (%s - %s).",
-                            origenNuevo.getCodigoIata(),
-                            origenNuevo.getNombreAeropuerto(),
-                            destinoUltimo.getCodigoIata(),
-                            destinoUltimo.getNombreAeropuerto()));
+                            origenNuevo.getCodigoIata(), origenNuevo.getNombreAeropuerto(), destinoUltimo.getCodigoIata(), destinoUltimo.getNombreAeropuerto()));
             return;
         }
 
-        // Si pasa todas las validaciones:
         ItinerarioVuelo iv = new ItinerarioVuelo();
         iv.setItinerario(this.itinerario);
         iv.setVuelo(vuelo);
         iv.setOrden(this.itinerariosAsignados.size() + 1);
 
         this.itinerariosAsignados.add(iv);
-        actualizarItinerarioArmadoMapa(); // Refresca el mapa
+        actualizarItinerarioArmadoMapa();
 
         Logger.logInfo("Vuelo " + vuelo.getNumeroVuelo() + " acoplado exitosamente al itinerario.");
         addMessage(FacesMessage.SEVERITY_INFO, "Tramo Vinculado",
-                String.format("El vuelo %s ha sido agregado correctamente en la posición #%d.",
-                        vuelo.getNumeroVuelo(),
-                        iv.getOrden()));
+                String.format("El vuelo %s ha sido agregado correctamente en la posición #%d.", vuelo.getNumeroVuelo(), iv.getOrden()));
     }
 
     public boolean esFechaCorrecta(Vuelo vuelo) {
@@ -289,8 +283,6 @@ public class ItinerarioBean implements Serializable {
         }
 
         var ultimoVuelo = itinerariosAsignados.get(itinerariosAsignados.size() - 1).getVuelo();
-
-        // Válido solo si la salida del nuevo vuelo es IGUAL o POSTERIOR a la llegada del anterior
         return !vuelo.getFechaHoraSalida().before(ultimoVuelo.getFechaHoraLlegada());
     }
 
@@ -300,14 +292,11 @@ public class ItinerarioBean implements Serializable {
         }
 
         var ultimoVuelo = itinerariosAsignados.get(itinerariosAsignados.size() - 1).getVuelo();
-
-        // Destino del ÚLTIMO segmento del ÚLTIMO vuelo asignado
         var aeropuertoDestinoUltimo = ultimoVuelo.getSegmentoVuelos()
                 .get(ultimoVuelo.getSegmentoVuelos().size() - 1)
                 .getAeropuertoDestino()
                 .getIdAeropuerto();
 
-        // Origen del PRIMER segmento del NUEVO vuelo (revisar get(0))
         var aeropuertoOrigenNuevo = vuelo.getSegmentoVuelos()
                 .get(0)
                 .getAeropuertoOrigen()
@@ -323,7 +312,6 @@ public class ItinerarioBean implements Serializable {
 
             if (!geometrias.isEmpty()) {
                 String jsonVuelo = mapper.writeValueAsString(geometrias.get(0));
-                // Pasa los datos del vuelo formateados directamente a la callback de PrimeFaces
                 PrimeFaces.current().ajax().addCallbackParam("vueloJson", jsonVuelo);
             }
         } catch (Exception e) {
@@ -331,13 +319,12 @@ public class ItinerarioBean implements Serializable {
         }
     }
 
-
     public void removerVuelo(ItinerarioVuelo iv) {
         this.itinerariosAsignados.remove(iv);
         for (int i = 0; i < this.itinerariosAsignados.size(); i++) {
             this.itinerariosAsignados.get(i).setOrden(i + 1);
         }
-        actualizarItinerarioArmadoMapa(); // 👈 refresca el mapa de la derecha
+        actualizarItinerarioArmadoMapa();
         addMessage(FacesMessage.SEVERITY_INFO, "Tramo Removido", "Se actualizó la secuencia operativa.");
     }
 
@@ -363,20 +350,19 @@ public class ItinerarioBean implements Serializable {
         }
     }
 
-    // --- CONSOLIDACIÓN FINAL (CREATE OR UPDATE) ---
     public void guardarItinerario() {
-        boolean ok=true;
+        boolean ok = true;
         if (this.itinerario.getAeropuertoOrigen() == null || this.itinerario.getAeropuertoDestino() == null) {
             addMessage(FacesMessage.SEVERITY_WARN, "Error de Secuencia", "Debe fijar primero la ruta maestra (Paso 1).");
-          ok    =false;
+            ok = false;
         }
         if (this.precioTarifas.isEmpty() || this.precioTarifas.size() < this.tarifas.size()) {
             addMessage(FacesMessage.SEVERITY_WARN, "Estrategia Comercial", "Debe establecer los precios de todas las tarifas comerciales (Paso 2).");
-            ok    =false;
+            ok = false;
         }
         if (this.itinerariosAsignados.isEmpty()) {
             addMessage(FacesMessage.SEVERITY_WARN, "Plan Operativo Vacío", "Debe enlazar al menos un tramo operativo de vuelo (Paso 3).");
-            ok    =false;
+            ok = false;
         }
 
         String resumenSecuencia = getResumenSecuencia();
@@ -386,56 +372,41 @@ public class ItinerarioBean implements Serializable {
             return;
         }
 
-        // --- REEMPLAZA ESTE BLOQUE DENTRO DE guardarItinerario() EN ItinerarioBean.java ---
-
         if (ok) {
-
             try {
                 this.itinerario.setNumeroEscalas(Math.max(0, this.itinerariosAsignados.size() - 1));
 
-                // 1. Guardar o actualizar la raíz del Itinerario
                 Itinerario itinerarioGuardado = itinerarioService.save(this.itinerario);
 
-                // 2. SOLUCIÓN COMPATIBLE: Limpieza en cascada manual para el modo Modificación
                 if (esModificacion) {
-                    // Limpiar Tramos de Vuelo antiguos asociados a este itinerario
                     List<ItinerarioVuelo> tramosViejos = itinVueloService.findByItinerarioId(itinerarioGuardado.getIdItinerario());
                     if (tramosViejos != null) {
                         for (ItinerarioVuelo tv : tramosViejos) {
-                            // Asumiendo que tu entidad ItinerarioVuelo tiene un método getIdItinerarioVuelo() o similar
-                            // Ajusta el getter del ID según cómo se llame la Primary Key en tu entidad ItinerarioVuelo
                             itinVueloService.deleteById(tv.getIdItinerarioVuelo());
                         }
                     }
 
-                    // Limpiar Tarifas antiguas asociadas a este itinerario
                     List<ItinerarioTarifa> tarifasViejas = itinerarioTarifaService.findByItinerario(itinerarioGuardado.getIdItinerario());
                     if (tarifasViejas != null) {
                         for (ItinerarioTarifa tv : tarifasViejas) {
-                            // Ajusta el getter del ID según corresponda en tu entidad ItinerarioTarifa
                             itinerarioTarifaService.deleteById(tv.getIdItinerarioTarifa());
                         }
                     }
                 }
 
-                // 3. Persistir los nuevos Tramos Físicos de Vuelo configurados en la UI
                 for (ItinerarioVuelo iv : this.itinerariosAsignados) {
-                    // Importante: Blanqueamos el ID de la relación para que JPA lo maneje como una inserción nueva y limpia
-                    iv.setIdItinerarioVuelo(null); // Ajusta al nombre de tu setter de ID (ej: setId(), setIdItinerarioVuelo())
+                    iv.setIdItinerarioVuelo(null);
                     iv.setItinerario(itinerarioGuardado);
                     itinVueloService.save(iv);
                 }
 
-                // 4. Persistir la nueva matriz de precios por tarifa
                 for (Map.Entry<Integer, BigDecimal> entry : this.precioTarifas.entrySet()) {
                     Optional<Tarifa> tOpt = tarifaService.buscarPorId(entry.getKey());
                     if (tOpt.isPresent()) {
                         ItinerarioTarifa itinerarioTarifa = new ItinerarioTarifa();
-                        // itinerarioTarifa.setIdItinerarioTarifa(null); // Descomenta si tiene ID autoincremental simple
                         itinerarioTarifa.setTarifa(tOpt.get());
                         itinerarioTarifa.setItinerario(itinerarioGuardado);
                         itinerarioTarifa.setPrecio(entry.getValue());
-
                         itinerarioTarifaService.save(itinerarioTarifa);
                     }
                 }
@@ -468,12 +439,17 @@ public class ItinerarioBean implements Serializable {
     }
 
     private void addMessage(FacesMessage.Severity severity, String summary, String detail) {
-        FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(severity, summary, detail));
+        FacesContext fc = FacesContext.getCurrentInstance();
+        if (fc != null) {
+            fc.addMessage(null, new FacesMessage(severity, summary, detail));
+        }
     }
 
     public void seleccionarOrigenMapa() {
-        String iata = FacesContext.getCurrentInstance().getExternalContext()
-                .getRequestParameterMap().get("iata");
+        FacesContext fc = FacesContext.getCurrentInstance();
+        if (fc == null || fc.getExternalContext() == null) return;
+
+        String iata = fc.getExternalContext().getRequestParameterMap().get("iata");
 
         if (iata == null || !aeropuertosMap.containsKey(iata)) {
             addMessage(FacesMessage.SEVERITY_WARN, "Selección inválida", "Aeropuerto no reconocido.");
@@ -490,8 +466,10 @@ public class ItinerarioBean implements Serializable {
     }
 
     public void seleccionarDestinoMapa() {
-        String iata = FacesContext.getCurrentInstance().getExternalContext()
-                .getRequestParameterMap().get("iata");
+        FacesContext fc = FacesContext.getCurrentInstance();
+        if (fc == null || fc.getExternalContext() == null) return;
+
+        String iata = fc.getExternalContext().getRequestParameterMap().get("iata");
 
         if (iata == null || !aeropuertosMap.containsKey(iata)) {
             addMessage(FacesMessage.SEVERITY_WARN, "Selección inválida", "Aeropuerto no reconocido.");
@@ -516,35 +494,15 @@ public class ItinerarioBean implements Serializable {
         String fechaStr = (this.fechaBusqueda != null) ? this.fechaBusqueda.toString() : null;
         this.vuelos = vueloService.buscarVuelo(aeropuertoOrigenBusqueda, aeropuertoDestinoBusqueda, fechaStr);
         Logger.logInfo("Registros de vuelo indexados para selección: " + vuelos.size());
-        //actualizarVuelosMapaJson();
     }
 
-    public Map<String, Aeropuerto> getAeropuertosMap() {
-        return aeropuertosMap;
-    }
-
-
-    private void actualizarVuelosMapaJson() {
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            List<VueloMapaDTO> geometrias = vueloService.construirGeometriaVuelos(this.vuelos);
-            // Marca en el JSON cuáles ya están vinculados, para pintarlos distinto en el mapa
-            for (VueloMapaDTO g : geometrias) {
-                boolean yaVinculado = itinerariosAsignados.stream()
-                        .anyMatch(iv -> iv.getVuelo().getIdVuelo().equals(g.getIdVuelo()));
-                g.setVinculado(yaVinculado);
-            }
-            this.vuelosMapaJson = mapper.writeValueAsString(geometrias);
-            PrimeFaces.current().executeScript("renderVuelosMapa(" + this.vuelosMapaJson + ")");
-        } catch (Exception e) {
-            Logger.logInfo("Error serializando vuelos para mapa: " + e.getMessage());
-            this.vuelosMapaJson = "[]";
-        }
-    }
+    public Map<String, Aeropuerto> getAeropuertosMap() { return aeropuertosMap; }
 
     public void vincularVueloDesdeMapa() {
-        String idVueloStr = FacesContext.getCurrentInstance().getExternalContext()
-                .getRequestParameterMap().get("idVuelo");
+        FacesContext fc = FacesContext.getCurrentInstance();
+        if (fc == null || fc.getExternalContext() == null) return;
+
+        String idVueloStr = fc.getExternalContext().getRequestParameterMap().get("idVuelo");
 
         if (idVueloStr == null) {
             addMessage(FacesMessage.SEVERITY_WARN, "Operación Inválida", "No se pudo identificar el vuelo seleccionado.");
@@ -572,7 +530,6 @@ public class ItinerarioBean implements Serializable {
         agregarVuelo(vuelo);
     }
 
-
     public boolean estaVinculado(Vuelo vuelo) {
         if (vuelo == null) return false;
         return itinerariosAsignados.stream()
@@ -584,11 +541,9 @@ public class ItinerarioBean implements Serializable {
             return "El itinerario no tiene vuelos asignados.";
         }
 
-        // Origen del primer segmento del primer vuelo
         String origenPrimero = itinerariosAsignados.get(0).getVuelo()
                 .getSegmentoVuelos().get(0).getAeropuertoOrigen().getCodigoIata();
 
-        // Destino del último segmento del último vuelo
         var ultimoVuelo = itinerariosAsignados.get(itinerariosAsignados.size() - 1).getVuelo();
         String destinoUltimo = ultimoVuelo.getSegmentoVuelos()
                 .get(ultimoVuelo.getSegmentoVuelos().size() - 1)
@@ -617,8 +572,6 @@ public class ItinerarioBean implements Serializable {
         return Math.max(0, itinerariosAsignados.size() - 1);
     }
 
-
-    // Reconstruye y empuja al cliente la geometría del itinerario tal como va quedando armado
     private void actualizarItinerarioArmadoMapa() {
         try {
             ObjectMapper mapper = new ObjectMapper();
@@ -632,7 +585,6 @@ public class ItinerarioBean implements Serializable {
 
             Logger.logInfo(itinerarioArmadoMapaJson);
 
-            // Si es una petición AJAX (ej. vincular un vuelo), ejecutamos el script dinámicamente:
             if (PrimeFaces.current().isAjaxRequest()) {
                 String script = String.format("renderItinerarioArmado(%s);", mapper.writeValueAsString(this.itinerarioArmadoMapaJson));
                 PrimeFaces.current().executeScript(script);

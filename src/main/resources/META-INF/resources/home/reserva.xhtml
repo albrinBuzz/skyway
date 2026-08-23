@@ -13,6 +13,7 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 
+
     </ui:define>
 
     <ui:define name="contenido">
@@ -35,7 +36,7 @@
                 <i class="pi pi-clock text-warning mb-3" style="font-size: 3rem; display: block;"></i>
                 <h4 class="fw-bold mb-2">¡Tu tiempo de reserva ha expirado!</h4>
                 <p class="text-secondary mb-4" style="max-width: 320px;">
-                    El tiempo de retención temporal (2 min) se agotó. Tus asientos fueron liberados para otros pasajeros.
+                    El tiempo de retención temporal (10 min) se agotó. Tus asientos fueron liberados para otros pasajeros.
                 </p>
 
                 <h:form id="expiredForm">
@@ -52,6 +53,20 @@
             </div>
         </p:dialog>
 
+
+        <!-- BANNER DEL CRONÓMETRO DE RETENCIÓN -->
+        <div class="container mt-3">
+            <div class="d-flex align-items-center justify-content-between p-3 rounded"
+                 style="background: rgba(220, 53, 69, 0.15); border: 1px solid var(--latam-red, #e30613);">
+                <div class="d-flex align-items-center">
+                    <i class="pi pi-clock mr-2 text-warning" style="font-size: 1.4rem;"></i>
+                    <span class="font-weight-bold text-white">Tiempo de retención temporal de asientos:</span>
+                </div>
+                <div class="badge badge-danger p-2" style="font-size: 1.1rem; font-family: monospace;" id="timerDisplay">
+                    00:00
+                </div>
+            </div>
+        </div>
 
         <div class="container mt-4">
             <div class="booking-stepper">
@@ -344,42 +359,87 @@
 
         <script type="text/javascript">
             //<![CDATA[
-            document.addEventListener("DOMContentLoaded", function () {
-                // Generación limpia de Arrays JavaScript desde expresiones EL de JSF (sin tags HTML/XML)
-                const misAsientosIds = [#{reservaBean.asientosSeleccionados.values().stream().flatMap(l -> l.stream()).map(a -> a.idAsiento).toList().toString().replaceAll("^\\[|\\]$", "")}];
-                const misVuelosIds = [#{reservaBean.itinerarios.stream().flatMap(it -> it.itinerarioVuelos.stream()).map(iv -> iv.vuelo.idVuelo).distinct().toList().toString().replaceAll("^\\[|\\]$", "")}];
+            (function () {
+                let timerInterval = null;
 
-                console.log("✈️ Vuelos a monitorear:", misVuelosIds);
-                console.log("💺 Asientos en checkout:", misAsientosIds);
+                // 1. Lógica del Cronómetro de Retención
+                function iniciarCronometroCheckout(segundosTotales) {
+                    if (timerInterval) clearInterval(timerInterval);
 
-                // Conexión SockJS y STOMP
-                const socket = new SockJS('/ws-asientos');
-                const stompClient = Stomp.over(socket);
-                stompClient.debug = null;
+                    let tiempoRestante = segundosTotales;
+                    const display = document.getElementById("timerDisplay");
 
-                stompClient.connect({}, function (frame) {
-                    console.log("🟢 WebSocket conectado exitosamente en la vista de Reserva/Checkout.");
+                    function actualizarUI() {
+                        if (tiempoRestante <= 0) {
+                            if (display) display.textContent = "00:00";
+                            clearInterval(timerInterval);
 
-                    // Suscribirse únicamente a los tópicos de los vuelos del itinerario
-                    misVuelosIds.forEach(function (idVuelo) {
-                        stompClient.subscribe('/topic/vuelo/' + idVuelo, function (message) {
-                            const evento = JSON.parse(message.body);
-                            console.log("📡 Evento recibido en Checkout:", evento);
-
-                            // Si un asiento de la reserva actual pasa a 'libre', gatillar expiración
-                            if (evento.estado === 'libre' && misAsientosIds.includes(evento.idAsiento)) {
-                                console.warn("⏰ Se detectó liberación por TTL del asiento " + evento.idAsiento);
-                                if (typeof notificarExpiracionCliente === 'function') {
-                                    notificarExpiracionCliente();
-                                }
+                            if (typeof notificarExpiracionCliente === 'function') {
+                                notificarExpiracionCliente();
+                            }
+                            if (window.PF && PF('expiredDlg')) {
                                 PF('expiredDlg').show();
                             }
+                            return;
+                        }
+
+                        const minutos = Math.floor(tiempoRestante / 60);
+                        const segundos = tiempoRestante % 60;
+                        if (display) {
+                            display.textContent =
+                                (minutos < 10 ? "0" : "") + minutos + ":" +
+                                (segundos < 10 ? "0" : "") + segundos;
+                        }
+                        tiempoRestante--;
+                    }
+
+                    actualizarUI();
+                    timerInterval = setInterval(actualizarUI, 1000);
+                }
+
+                // 2. Inicialización General al cargar el DOM
+                document.addEventListener("DOMContentLoaded", function () {
+                    // A. Arrancar reloj con tiempo retornado desde ReservaBean
+                    const tiempoRestanteServer = #{reservaBean.tiempoRestanteSegundos};
+                    iniciarCronometroCheckout(tiempoRestanteServer);
+
+                    // B. Colecciones EL de JSF
+                    const misAsientosIds = [#{reservaBean.asientosSeleccionados.values().stream().flatMap(l -> l.stream()).map(a -> a.idAsiento).toList().toString().replaceAll("^\\[|\\]$", "")}];
+                    const misVuelosIds = [#{reservaBean.itinerarios.stream().flatMap(it -> it.itinerarioVuelos.stream()).map(iv -> iv.vuelo.idVuelo).distinct().toList().toString().replaceAll("^\\[|\\]$", "")}];
+
+                    console.log("✈️ Monitoreando Vuelos:", misVuelosIds);
+                    console.log("💺 Monitoreando Asientos:", misAsientosIds);
+
+                    // C. Conexión SockJS y STOMP
+                    if (typeof SockJS !== 'undefined' && typeof Stomp !== 'undefined') {
+                        const socket = new SockJS('/ws-asientos');
+                        const stompClient = Stomp.over(socket);
+                        stompClient.debug = null;
+
+                        stompClient.connect({}, function () {
+                            console.log("🟢 WebSocket activo en vista Checkout.");
+
+                            misVuelosIds.forEach(function (idVuelo) {
+                                stompClient.subscribe('/topic/vuelo/' + idVuelo, function (message) {
+                                    const evento = JSON.parse(message.body);
+
+                                    if (evento.estado === 'libre' && misAsientosIds.includes(evento.idAsiento)) {
+                                        console.warn("⏰ Liberación externa/timeout detectada en asiento " + evento.idAsiento);
+                                        if (typeof notificarExpiracionCliente === 'function') {
+                                            notificarExpiracionCliente();
+                                        }
+                                        if (window.PF && PF('expiredDlg')) {
+                                            PF('expiredDlg').show();
+                                        }
+                                    }
+                                });
+                            });
+                        }, function (error) {
+                            console.error("🔴 Error en WebSocket Checkout:", error);
                         });
-                    });
-                }, function (error) {
-                    console.error("🔴 Error de conexión WebSocket:", error);
+                    }
                 });
-            });
+            })();
             //]]>
         </script>
 

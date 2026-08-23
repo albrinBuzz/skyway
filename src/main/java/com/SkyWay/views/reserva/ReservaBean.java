@@ -42,7 +42,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Named("reservaBean")
-@RequestScoped
+//@RequestScoped
+@ViewScoped
 public class ReservaBean implements Serializable {
 
     //private ClienteDTO cliente;
@@ -461,6 +462,15 @@ public class ReservaBean implements Serializable {
         return "";
     }
 
+
+
+    public long getTiempoRestanteSegundos() {
+        if (miSessionId == null || miSessionId.isBlank()) {
+            return 0;
+        }
+        long restanteMs = asientoCacheService.getTiempoRestanteMsParaSesion(miSessionId);
+        return restanteMs > 0 ? (restanteMs / 1000) : 0;
+    }
 
     /**
      * Genera la URL dinámica para retornar a la selección de asientos preservando los parámetros de búsqueda.

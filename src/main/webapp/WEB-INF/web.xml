@@ -28,17 +28,29 @@
     </context-param>
 
 
-    <!-- Manejadores de errores -->
+    <!-- Manejador para fallos de Sesión/Vista expirada de JSF -->
     <error-page>
         <exception-type>jakarta.faces.application.ViewExpiredException</exception-type>
-        <location>/WEB-INF/errorpages/expired.xhtml</location>
+        <location>/home/index.xhtml?faces-redirect=true</location>
     </error-page>
 
-    <!-- Manejador genérico para errores 500 -->
+    <!-- Manejador para errores de Scope de Spring (Inactivos) -->
+    <error-page>
+        <exception-type>org.springframework.beans.factory.support.ScopeNotActiveException</exception-type>
+        <location>/home/index.xhtml?faces-redirect=true</location>
+    </error-page>
+
+    <!-- Manejador genérico para Errores Internos 500 y Excepciones no capturadas -->
     <error-page>
         <error-code>500</error-code>
-        <location>/error500.xhtml</location>
+        <location>/home/error.xhtml</location>
     </error-page>
+
+    <error-page>
+        <exception-type>java.lang.Exception</exception-type>
+        <location>/home/error.xhtml</location>
+    </error-page>
+
 
     <context-param>
         <param-name>primefaces.THEME</param-name>
