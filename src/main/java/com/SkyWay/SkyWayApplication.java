@@ -36,9 +36,9 @@ public class SkyWayApplication {
 			}
 		});
 
-		bootMonitorThread.setDaemon(true);
-		bootMonitorThread.setName("boot-memory-monitor");
-		bootMonitorThread.start();
+		//bootMonitorThread.setDaemon(true);
+		//bootMonitorThread.setName("boot-memory-monitor");
+		//bootMonitorThread.start();
 
 		// Inicia el proceso de Spring Boot
 		SpringApplication.run(SkyWayApplication.class, args);
