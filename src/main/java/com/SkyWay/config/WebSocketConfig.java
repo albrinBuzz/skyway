@@ -21,5 +21,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         // Punto de entrada del WebSocket para el cliente JS JSF
         registry.addEndpoint("/ws-asientos").withSockJS();
+
+        registry.addEndpoint("/ws-metrics")
+                .setAllowedOriginPatterns("*")
+                .withSockJS();
     }
 }
