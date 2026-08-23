@@ -4,12 +4,14 @@ import com.SkyWay.util.Logger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 
 @SpringBootApplication
 @ComponentScan(basePackages = "com.SkyWay")
+@EnableScheduling
 public class SkyWayApplication {
 
 	public static void main(String[] args) {
@@ -36,15 +38,15 @@ public class SkyWayApplication {
 			}
 		});
 
-		bootMonitorThread.setDaemon(true);
+		/*bootMonitorThread.setDaemon(true);
 		bootMonitorThread.setName("boot-memory-monitor");
-		bootMonitorThread.start();
+		bootMonitorThread.start();*/
 
 		// Inicia el proceso de Spring Boot
 		SpringApplication.run(SkyWayApplication.class, args);
 
 		// Detener el hilo de inicio limpiamente
-		bootMonitorThread.interrupt();
+		//bootMonitorThread.interrupt();
 		Logger.logInfo(" Arranque finalizado. Monitor de inicio detenido.");
 	}
 }
