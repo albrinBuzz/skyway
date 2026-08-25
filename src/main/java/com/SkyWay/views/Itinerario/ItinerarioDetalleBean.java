@@ -17,6 +17,8 @@ import jakarta.faces.context.ExternalContext;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
+import org.springframework.context.annotation.ScopedProxyMode;
+import org.springframework.stereotype.Component;
 
 //import org.omnifaces.cdi.ViewScoped;
 
@@ -31,7 +33,7 @@ import java.util.*;
 
 @Component
 @Named("itinerarioDetalleBean")
-@ViewScoped
+@Scope(value = "view", proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class ItinerarioDetalleBean implements Serializable {
 
     private ItinerarioDTO selectedVuelo;
