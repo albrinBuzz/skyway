@@ -8,21 +8,18 @@ RUN chmod +x mvnw && ./mvnw clean package -DskipTests
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 COPY --from=builder /app/target/*.jar app.jar
-# Forzar a la JVM a auto-destruirse inmediatamente si ocurre un OutOfMemoryError
-ENV JAVA_OPTS="-Xmx256m -Xms128m -XX:MaxMetaspaceSize=180m -XX:+ExitOnOutOfMemoryError -XX:+CrashOnOutOfMemoryError"
 
 ENV PORT=8080
 EXPOSE 8080
 
-# Balance Perfecto: 300MB Heap + 112MB Metaspace + 32MB CodeCache = ~444MB Total en Render
-# Reemplaza la línea ENTRYPOINT / CMD de tu Dockerfile con esto:
+# Cambios: Se usa G1GC y se remueven los flags que crashean la JVM
 ENTRYPOINT ["java", \
   "-Xms128m", \
-  "-Xmx220m", \
-  "-XX:MaxMetaspaceSize=190m", \
-  "-XX:ReservedCodeCacheSize=35m", \
+  "-Xmx240m", \
+  "-XX:MaxMetaspaceSize=180m", \
+  "-XX:ReservedCodeCacheSize=30m", \
   "-Xss256k", \
-  "-XX:+UseSerialGC", \
-  "-XX:+ExitOnOutOfMemoryError", \
-  "-XX:+CrashOnOutOfMemoryError", \
+  "-XX:+UseG1GC", \
+  "-XX:MaxGCPauseMillis=200", \
+  "-XX:InitiatingHeapOccupancyPercent=45", \
   "-jar", "app.jar"]
