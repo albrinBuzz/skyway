@@ -10,7 +10,7 @@ import com.SkyWay.modules.tarifaItinerario.domain.model.ItinerarioTarifa;
 import com.SkyWay.modules.tarifaItinerario.domain.service.ItinerarioTarifaService;
 import com.SkyWay.util.Logger;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
+import org.springframework.context.annotation.Scope;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.ExternalContext;
@@ -19,8 +19,12 @@ import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
-
+import org.springframework.context.annotation.Scope;
 //import org.omnifaces.cdi.ViewScoped;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope; 
+import org.springframework.context.annotation.ScopedProxyMode;
+import org.springframework.stereotype.Component;
 
 import org.primefaces.PrimeFaces;
 import org.primefaces.event.SelectEvent;
