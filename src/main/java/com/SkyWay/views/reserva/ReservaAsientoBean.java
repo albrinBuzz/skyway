@@ -371,6 +371,30 @@ public class ReservaAsientoBean implements Serializable {
         return null;
     }
 
+    public String irASeleccionEquipaje() throws IOException {
+        // Validar que todos los pasajeros tengan asiento en todos los tramos
+        for (Vuelo v : vuelos) {
+            List<InfoAsientoDTO> elegidos = asientosSeleccionados.getOrDefault(v.getIdVuelo(), Collections.emptyList());
+            if (elegidos.size() < cantAdultos) {
+                addMessage(FacesMessage.SEVERITY_WARN, "Incompleto", "Debe seleccionar asientos para todos los pasajeros en todos los tramos.");
+                return null;
+            }
+        }
+
+        // Guardar en la sesión HTTP los asientos e itinerarios confirmados
+        FacesContext fc = FacesContext.getCurrentInstance();
+        ExternalContext ec = FacesContext.getCurrentInstance().getExternalContext();
+        Map<String, Object> sessionMap = fc.getExternalContext().getSessionMap();
+        sessionMap.put("asientosSeleccionados", this.asientosSeleccionados);
+        sessionMap.put("pasajeros", this.pasajeros);
+        sessionMap.put("itinerarios", this.idsItinerarios);
+        sessionMap.put("tarifasItinerios", this.tarifasItinerarios);
+
+        ec.redirect("/home/equipaje.xhtml?faces-redirect=true");
+        return "/home/equipaje.xhtml?faces-redirect=true";
+    }
+
+
     public static class ResumenTramo implements Serializable {
         private String numeroVuelo;
         private int cantidadAsientos;
@@ -461,15 +485,19 @@ public class ReservaAsientoBean implements Serializable {
     private void finalizarReserva() {
         try {
             ExternalContext ec = FacesContext.getCurrentInstance().getExternalContext();
+
+            // Persistir la selección de asientos e itinerarios en la sesión JSF
             ec.getSessionMap().put("asientosSeleccionados", asientosSeleccionados);
             ec.getSessionMap().put("itinerarios", idsItinerarios);
             ec.getSessionMap().put("pasajeros", pasajeros);
             ec.getSessionMap().put("tarifasItinerios", tarifasItinerarios);
 
-            Logger.logInfo(String.format("[finalizarReserva] Reserva finalizada para SessionId: %s. Redirigiendo a /home/reserva.xhtml", miSessionId));
-            ec.redirect("/home/reserva.xhtml");
+            Logger.logInfo(String.format("[finalizarReserva] Asientos completados para SessionId: %s. Redirigiendo a /home/equipaje.xhtml", miSessionId));
+
+            // Redirección hacia la pantalla de selección de equipaje
+            ec.redirect("/home/equipaje.xhtml");
         } catch (IOException e) {
-            Logger.logError("Redirección fallida a reserva.xhtml: " + e.getMessage());
+            Logger.logError("Redirección fallida a equipaje.xhtml: " + e.getMessage());
         }
     }
 

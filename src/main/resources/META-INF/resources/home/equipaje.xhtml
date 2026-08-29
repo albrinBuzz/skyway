@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="jakarta.faces.core"
+                xmlns:h="jakarta.faces.html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                template="/template/main.xhtml">
+
+    <ui:define name="contenido">
+        <style>
+            :root {
+                --sky-primary: #0284c7;
+                --sky-border: #1e293b;
+                --sky-bg-card: #0f172a;
+                --sky-text-main: #f8fafc;
+                --sky-text-muted: #94a3b8;
+            }
+
+            body {
+                background-color: #0b1120;
+            }
+
+            .equipaje-wrapper { max-width: 1050px; margin: 2rem auto 7rem auto; padding: 0 1rem; font-family: system-ui, sans-serif; }
+            .page-header { margin-bottom: 2rem; }
+            .page-title { font-size: 1.875rem; font-weight: 800; color: var(--sky-text-main); margin: 0 0 0.5rem 0; }
+            .page-subtitle { color: var(--sky-text-muted); font-size: 0.975rem; margin: 0; }
+
+            .pasajero-card {
+                background: #111827;
+                border: 1px solid #1f2937;
+                border-radius: 12px;
+                padding: 1.75rem;
+                margin-bottom: 2rem;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            }
+
+            .pasajero-header {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                font-size: 1.2rem;
+                font-weight: 700;
+                color: var(--sky-text-main);
+                padding-bottom: 1rem;
+                border-bottom: 1px solid #1f2937;
+                margin-bottom: 1.5rem;
+            }
+
+            .pasajero-icon-badge {
+                background: rgba(2, 132, 199, 0.15);
+                color: #38bdf8;
+                width: 36px;
+                height: 36px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .options-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+                gap: 1.25rem;
+                margin-bottom: 1.75rem;
+            }
+
+            .option-box {
+                border: 1px solid #1f2937;
+                border-radius: 10px;
+                padding: 1.25rem;
+                text-align: center;
+                background: #111827;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+            }
+
+            .option-icon { font-size: 1.75rem; color: #38bdf8; margin-bottom: 0.75rem; }
+            .option-title { font-weight: 700; font-size: 1.05rem; color: var(--sky-text-main); }
+            .option-desc { font-size: 0.85rem; color: var(--sky-text-muted); margin: 0.25rem 0 0.5rem 0; min-height: 2.5em; }
+            .badge-limite { font-size: 0.75rem; font-weight: 600; color: #38bdf8; background: rgba(56, 189, 248, 0.1); padding: 0.2rem 0.5rem; border-radius: 4px; margin-bottom: 0.75rem; display: inline-block; }
+            .price-tag { font-size: 1.25rem; font-weight: 800; color: var(--sky-text-main); margin-bottom: 1rem; }
+
+            .selected-section {
+                background: rgba(15, 23, 42, 0.5);
+                border-radius: 8px;
+                padding: 1rem 1.25rem;
+                border: 1px dashed #374151;
+            }
+
+            .selected-title {
+                font-size: 0.85rem;
+                font-weight: 700;
+                color: var(--sky-text-muted);
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                margin-bottom: 0.75rem;
+            }
+
+            .total-bar {
+                position: fixed;
+                bottom: 1.5rem;
+                left: 50%;
+                transform: translateX(-50%);
+                width: calc(100% - 2rem);
+                max-width: 1018px;
+                background: rgba(15, 23, 42, 0.95);
+                backdrop-filter: blur(8px);
+                color: #ffffff;
+                padding: 1rem 2rem;
+                border-radius: 14px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+                z-index: 1000;
+            }
+
+            .total-label { font-size: 0.85rem; color: #94a3b8; text-transform: uppercase; }
+            .total-amount { font-size: 1.65rem; font-weight: 800; color: #38bdf8; margin-left: 0.5rem; }
+        </style>
+
+        <div class="equipaje-wrapper">
+            <h:form id="equipajeForm">
+                <p:growl id="messages" showDetail="true" life="2500"/>
+
+                <div class="page-header">
+                    <h1 class="page-title">Personaliza tu equipaje</h1>
+                    <p class="page-subtitle">Añade o remueve maletas para cada pasajero de la reserva.</p>
+                </div>
+
+                <!-- Lista de Pasajeros -->
+                <ui:repeat value="#{equipajeBean.equipajePorPasajero}" var="pasajeroDto" varStatus="status">
+
+                    <!-- Panel contenedor individual con id explicito usando index -->
+                    <p:outputPanel id="panelPasajeroCard" styleClass="pasajero-card" layout="block">
+                        <div class="pasajero-header">
+                            <div class="pasajero-icon-badge">
+                                <i class="pi pi-user"></i>
+                            </div>
+                            <span>Pasajero: <h:outputText value="#{pasajeroDto.nombrePasajero}" /></span>
+                        </div>
+
+                        <!-- Grid de Opciones -->
+                        <div class="options-grid">
+
+                            <!-- Cabina -->
+                            <div class="option-box">
+                                <div>
+                                    <i class="pi pi-briefcase option-icon"></i>
+                                    <div class="option-title">Equipaje de Cabina</div>
+                                    <div class="option-desc">10 kg (40 x 30 x 20 cm)</div>
+                                    <span class="badge-limite">Máx. 1 por pasajero</span>
+                                </div>
+                                <div>
+                                    <div class="price-tag">$15.000</div>
+                                    <p:commandButton value="#{equipajeBean.puedeAgregarCabina(pasajeroDto) ? 'Añadir' : 'Límite alcanzado'}"
+                                                     icon="pi pi-plus"
+                                                     disabled="#{not equipajeBean.puedeAgregarCabina(pasajeroDto)}"
+                                                     actionListener="#{equipajeBean.agregarEquipaje(pasajeroDto.pasajeroIndex, 'CABINA', 'Equipaje Cabina (10kg)', 15000, 10, '40x30x20')}"
+                                                     update="panelPasajeroCard :equipajeForm:resumenTotal :equipajeForm:messages"
+                                                     process="@this"
+                                                     styleClass="ui-button-outlined ui-button-info"
+                                                     style="width: 100%; border-radius: 6px;"/>
+                                </div>
+                            </div>
+
+                            <!-- Bodega 15kg -->
+                            <div class="option-box">
+                                <div>
+                                    <i class="pi pi-box option-icon"></i>
+                                    <div class="option-title">Bodega Mediana</div>
+                                    <div class="option-desc">15 kg facturados en bodega</div>
+                                    <span class="badge-limite">Máx. 3 bodega en total</span>
+                                </div>
+                                <div>
+                                    <div class="price-tag">$22.000</div>
+                                    <p:commandButton value="#{equipajeBean.puedeAgregarBodega(pasajeroDto) ? 'Añadir' : 'Límite alcanzado'}"
+                                                     icon="pi pi-plus"
+                                                     disabled="#{not equipajeBean.puedeAgregarBodega(pasajeroDto)}"
+                                                     actionListener="#{equipajeBean.agregarEquipaje(pasajeroDto.pasajeroIndex, 'BODEGA_15KG', 'Maleta Bodega (15kg)', 22000, 15, '158cm')}"
+                                                     update="panelPasajeroCard :equipajeForm:resumenTotal :equipajeForm:messages"
+                                                     process="@this"
+                                                     styleClass="ui-button-outlined ui-button-info"
+                                                     style="width: 100%; border-radius: 6px;"/>
+                                </div>
+                            </div>
+
+                            <!-- Bodega 23kg -->
+                            <div class="option-box">
+                                <div>
+                                    <i class="pi pi-shopping-bag option-icon"></i>
+                                    <div class="option-title">Bodega Grande</div>
+                                    <div class="option-desc">23 kg facturados en bodega</div>
+                                    <span class="badge-limite">Máx. 3 bodega en total</span>
+                                </div>
+                                <div>
+                                    <div class="price-tag">$30.000</div>
+                                    <p:commandButton value="#{equipajeBean.puedeAgregarBodega(pasajeroDto) ? 'Añadir' : 'Límite alcanzado'}"
+                                                     icon="pi pi-plus"
+                                                     disabled="#{not equipajeBean.puedeAgregarBodega(pasajeroDto)}"
+                                                     actionListener="#{equipajeBean.agregarEquipaje(pasajeroDto.pasajeroIndex, 'BODEGA_23KG', 'Maleta Bodega (23kg)', 30000, 23, '158cm')}"
+                                                     update="panelPasajeroCard :equipajeForm:resumenTotal :equipajeForm:messages"
+                                                     process="@this"
+                                                     styleClass="ui-button-outlined ui-button-info"
+                                                     style="width: 100%; border-radius: 6px;"/>
+                                </div>
+                            </div>
+
+
+                        </div>
+
+                        <!-- Sección Equipaje Asignado -->
+                        <div class="selected-section">
+                            <div class="selected-title">Equipaje asignado</div>
+
+                            <h:outputText value="No se ha añadido equipaje adicional."
+                                          rendered="#{empty pasajeroDto.maletas}"
+                                          style="color: #64748b; font-size: 0.9rem; font-style: italic;" />
+
+                            <p:dataTable value="#{pasajeroDto.maletas}"
+                                         var="maleta"
+                                         rendered="#{not empty pasajeroDto.maletas}"
+                                         styleClass="ui-datatable-sm ui-datatable-striped">
+
+                                <p:column headerText="Descripción">
+                                    <i class="pi pi-check-circle" style="color: #10b981; margin-right: 0.5rem;"></i>
+                                    <h:outputText value="#{maleta.descripcion}" style="font-weight: 600;" />
+                                </p:column>
+
+                                <p:column headerText="Precio" style="width: 120px;">
+                                    <h:outputText value="$#{maleta.precio}" style="font-weight: 700;" />
+                                </p:column>
+
+                                <p:column headerText="Acción" style="width: 70px; text-align: center;">
+                                    <!-- UPDATE USANDO RESOLUCIÓN RELATIVA DE CLIENT ID PRIMEFACES -->
+                                    <p:commandButton icon="pi pi-trash"
+                                                     actionListener="#{equipajeBean.eliminarEquipaje(pasajeroDto.pasajeroIndex, maleta)}"
+                                                     update="equipajeForm :equipajeForm:resumenTotal :equipajeForm:messages"
+                                                     process="@this"
+                                                     styleClass="ui-button-danger ui-button-flat ui-button-rounded"/>
+                                </p:column>
+                            </p:dataTable>
+                        </div>
+                    </p:outputPanel>
+
+                </ui:repeat>
+
+                <!-- Barra Flotante de Total -->
+                <div class="total-bar">
+                    <div>
+                        <div class="total-label">Total Equipaje Extra</div>
+                        <h:outputText id="resumenTotal" value="$#{equipajeBean.totalEquipaje}" styleClass="total-amount" />
+                    </div>
+                    <p:commandButton value="Continuar al Pago"
+                                     actionListener="#{equipajeBean.continuarACheckout}"
+                                     styleClass="ui-button-success"
+                                     icon="pi pi-arrow-right"
+                                     iconPos="right"
+                                     style="border-radius: 8px; padding: 0.6rem 1.5rem; font-weight: 700;"/>
+                </div>
+            </h:form>
+        </div>
+    </ui:define>
+</ui:composition>
