@@ -344,6 +344,34 @@
                         </div>
                     </div>
 
+
+                    <div class="card-latam mt-4" style="background: #111827; border: 1px solid #1f2937; border-radius: 12px; padding: 1.5rem;">
+                        <div class="titulo mb-3 d-flex align-items-center justify-content-between" style="font-size: 1.25rem; font-weight: 700;">
+                            <span><i class="pi pi-briefcase mr-2 text-info"></i> Resumen de Equipaje</span>
+                            <span class="badge badge-info">$#{reservaBean.totalEquipaje}</span>
+                        </div>
+
+                        <h:panelGroup rendered="#{not reservaBean.tieneEquipajeAsignado}">
+                            <p class="text-muted mb-0 font-italic">No se ha añadido equipaje adicional a esta reserva.</p>
+                        </h:panelGroup>
+
+                        <h:panelGroup rendered="#{reservaBean.tieneEquipajeAsignado}">
+                            <!-- Se cambió var="eq" por var="eqPasajero" para evitar conflicto con la palabra reservada 'eq' -->
+                            <ui:repeat value="#{reservaBean.equipajePorPasajero}" var="eqPasajero">
+                                <h:panelGroup rendered="#{not empty eqPasajero.maletas}">
+                                    <div class="p-2 mb-2 rounded" style="background: rgba(15, 23, 42, 0.6); border: 1px solid #374151;">
+                                        <span class="font-weight-bold text-light d-block mb-1">Pasajero: #{eqPasajero.nombrePasajero}</span>
+                                        <ul class="mb-0 pl-3 small text-secondary">
+                                            <ui:repeat value="#{eqPasajero.maletas}" var="item">
+                                                <li>#{item.descripcion} - <strong class="text-white">$#{item.precio}</strong></li>
+                                            </ui:repeat>
+                                        </ul>
+                                    </div>
+                                </h:panelGroup>
+                            </ui:repeat>
+                        </h:panelGroup>
+                    </div>
+
                     <p:commandButton value="Confirmar y Pagar"
                                      action="#{reservaBean.confirmarReserva}"
                                      update="pasajerosForm growl"

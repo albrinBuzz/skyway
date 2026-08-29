@@ -4,6 +4,8 @@ package com.SkyWay.views.reserva;
 
 import com.SkyWay.modules.asiento.domain.service.AsientoService;
 import com.SkyWay.modules.asiento.presentation.dto.InfoAsientoDTO;
+import com.SkyWay.modules.equipaje.domain.model.Equipaje;
+import com.SkyWay.modules.equipaje.domain.service.EquipajeService;
 import com.SkyWay.modules.estadoreserva.domain.service.EstadoReservaService;
 import com.SkyWay.modules.itinerario.domain.model.Itinerario;
 import com.SkyWay.modules.itinerario.domain.service.ItinerarioService;
@@ -83,10 +85,15 @@ public class ReservaBean implements Serializable {
     List<ReservaAsientoBean.Pasajero> pasajeros;
     List<Pasajero>pasajerosList;
 
+    private List<EquipajePasajeroDTO> equipajePorPasajero;
+    private int totalEquipaje = 0;
+
     @Autowired
     private HttpSession session;
     Usuario usuario;
     String miSessionId;
+    @Autowired
+    private EquipajeService equipajeService;
 
     // Simulamos una inyección de un servicio (puedes usar @Inject si usas CDI)
     // @Inject
@@ -99,6 +106,7 @@ public class ReservaBean implements Serializable {
         if (context == null || context.getExternalContext() == null) return;
 
         Map<String, Object> sessionMap = context.getExternalContext().getSessionMap();
+
 
         // Obtener usuario autenticado o ID de sesión de manera SEGURA
         this.usuario = (Usuario) sessionMap.get("usuario");
@@ -161,6 +169,14 @@ public class ReservaBean implements Serializable {
                 }
             });
         }
+
+        this.equipajePorPasajero = (List<EquipajePasajeroDTO>) sessionMap.get("equipajePorPasajero");
+
+        if (sessionMap.containsKey("totalEquipaje")) {
+            this.totalEquipaje = (Integer) sessionMap.get("totalEquipaje");
+            this.total += this.totalEquipaje; // Acumular al costo final del vuelo
+        }
+
     }
 
 
@@ -177,11 +193,12 @@ public class ReservaBean implements Serializable {
 
     // Acción del botón
     public void confirmarReserva() {
-        // Aquí guardas la reserva en BD o llamas al servicio
-        //System.out.println("Reserva confirmada para: " + cliente.getNombre());
 
-         miSessionId = (String) FacesContext.getCurrentInstance().getExternalContext()
+        miSessionId = (String) FacesContext.getCurrentInstance().getExternalContext()
                 .getSessionMap().get("reservaSessionId");
+
+
+        // 1. VALIDACIÓN EN CACHÉ (TTL)
 
         for (Map.Entry<Integer, List<InfoAsientoDTO>> entry : asientosSeleccionados.entrySet()) {
             Integer idVuelo = entry.getKey();
@@ -189,21 +206,24 @@ public class ReservaBean implements Serializable {
 
             for (InfoAsientoDTO asiento : asientos) {
                 boolean sigueValido = asientoCacheService.validarPertenenciaYSeleccion(idVuelo, asiento.getIdAsiento(), miSessionId);
+
+
                 if (!sigueValido) {
+
                     addMessage(FacesMessage.SEVERITY_ERROR, "Tiempo Agotado",
                             "Tu reserva temporal expiró. El asiento " + asiento.getNumeroAsiento() + " fue liberado.");
 
-                    // Redirigir de vuelta a la selección de asientos
                     try {
                         FacesContext.getCurrentInstance().getExternalContext().redirect("/home/reservaAsiento.xhtml?error=expired");
                     } catch (IOException e) {
                         Logger.logInfo("Error al redirigir: " + e.getMessage());
                     }
-                    return; // Cancelar confirmación y no tocar la BD
+                    return; // Cancelar confirmación
                 }
             }
         }
 
+        // 2. VERIFICACIÓN DE DISPONIBILIDAD EN BD
 
         boolean resultadoDisp = false;
         List<String> erroresDisponibilidad = new ArrayList<>();
@@ -213,160 +233,118 @@ public class ReservaBean implements Serializable {
             List<InfoAsientoDTO> asientos = entry.getValue();
 
             for (InfoAsientoDTO asiento : asientos) {
-                Logger.logInfo("Vuelo: " + idVuelo + ", Asiento: " + asiento.getNumeroAsiento());
+
 
                 Integer[] asientosIds = { asiento.getIdAsiento() };
 
                 try {
-                    Logger.logInfo(Arrays.toString(asientosIds));
-                    // Llamada al servicio para verificar disponibilidad
+
                     var resultado = asientoService.verificarDisponibilidad(idVuelo, asientosIds);
-                    Logger.logInfo(resultado);
-                    if (resultado.isEmpty()||resultado.isBlank()) {
-                        resultadoDisp = true;  // Marcar como disponible si no hay error
+
+                    if (resultado == null || resultado.isEmpty() || resultado.isBlank()) {
+                        resultadoDisp = true;
                         break;
                     }
 
                 } catch (SQLException e) {
-                    Logger.logInfo("Error SQL en la reserva. verificando disponibilidad: " + e.getMessage());
+                    Logger.logInfo("❌ [DISPONIBILIDAD] Error SQL: " + e.getMessage());
                     resultadoDisp = false;
                     break;
-                    // Otros manejos de errores...
                 } catch (Exception ex) {
-                    Logger.logInfo("Error inesperado: " + ex.getClass().getName());
-                    Logger.logInfo("Error inesperado: " + ex.getMessage());
+                    Logger.logInfo("❌ [DISPONIBILIDAD] Error inesperado (" + ex.getClass().getName() + "): " + ex.getMessage());
                     erroresDisponibilidad.add("Asiento " + asiento.getNumeroAsiento() + ": " + ex.getMessage());
                     resultadoDisp = false;
                     break;
-                    // Otros manejos de excepciones...
                 }
             }
             if (resultadoDisp) break;
         }
+
         if (!erroresDisponibilidad.isEmpty()) {
-            // Mostramos todos los errores acumulados en la interfaz
             for (String error : erroresDisponibilidad) {
                 FacesContext.getCurrentInstance().addMessage(null,
                         new FacesMessage(FacesMessage.SEVERITY_WARN, "Disponibilidad", error));
             }
-            return; // Detenemos la reserva
+            return;
         }
 
-        Logger.logInfo(String.valueOf(resultadoDisp));
+
+        // 3. CONFIRMACIÓN Y PERSISTENCIA
         if (resultadoDisp) {
-
-            Logger.logInfo("confirma la reserva");
-
 
             var reserva = new Reserva();
             if (usuario == null) {
-                Logger.logInfo("No autenticado");
                 for (int i = 0; i < pasajerosList.size(); i++) {
                     Pasajero pasajero = pasajerosList.get(i);
 
+                    if (equipajePorPasajero != null && i < equipajePorPasajero.size()) {
+                        equipajePorPasajero.get(i).setRutPasajero(pasajero.getRut());
+                    }
 
-                    if (i == 0) { // pasajeros adicionales
-                        Usuario usuario = pasajero.getUsuario();
-                        // Asegurarse de que el rut esté asignado en Usuario
-                        usuario.setRut(pasajero.getRut());
+                    Usuario usr = pasajero.getUsuario();
+                    if (usr == null) {
+                        usr = new Usuario();
+                    }
+                    usr.setRut(pasajero.getRut());
+                    pasajero.setUsuario(usr);
 
-                        // Asignar usuario al pasajero
-                        pasajero.setUsuario(usuario);
+                    pasajeroService.save(pasajero);
 
-                        // Guardar el pasajero (cascade se encargará de guardar Usuario)
-                        pasajeroService.save(pasajero);
+                    if (i == 0) {
                         reserva.setPasajero(pasajero);
-
-                    }else{
-                        Usuario usuario = pasajero.getUsuario();
-
-                        // Asegurarse de que el rut esté asignado en Usuario
-                        usuario.setRut(pasajero.getRut());
-
-                        // Asignar usuario al pasajero
-                        pasajero.setUsuario(usuario);
-
-                        // Guardar el pasajero (cascade se encargará de guardar Usuario)
-                        pasajeroService.save(pasajero);
                     }
                 }
             } else {
-
-                Logger.logInfo("Autenticado");
-                /*this.pasajero = pasajeroService.findById(usuario.getRut())
-                        .orElseThrow(() -> new RuntimeException("Pasajero no encontrado"));*/
-
-                // 2. Asignamos la instancia oficial a la reserva
                 reserva.setPasajero(this.pasajero);
-
-
 
                 for (int i = 0; i < pasajerosList.size(); i++) {
                     Pasajero pLista = pasajerosList.get(i);
+                    if (equipajePorPasajero != null && i < equipajePorPasajero.size()) {
+                        equipajePorPasajero.get(i).setRutPasajero(pLista.getRut());
+                    }
 
-                    // Si es el pasajero autenticado, no hacemos nada, ya está en la DB
                     if (i == 0 || pLista.getRut().equals(this.pasajero.getRut())) {
                         continue;
                     } else {
-                        // Para pasajeros adicionales, verifica si ya existen antes de salvar
-                        // para evitar el error de Duplicate ID
                         Usuario userAdicional = pLista.getUsuario();
+                        if (userAdicional == null) {
+                            userAdicional = new Usuario();
+                        }
                         userAdicional.setRut(pLista.getRut());
                         pLista.setUsuario(userAdicional);
 
-                        // IMPORTANTE: Solo guarda si estás seguro de que es nuevo
-                        // o usa un método que haga merge en el service
                         if (!pasajeroService.findById(pLista.getRut()).isPresent()) {
                             pasajeroService.save(pLista);
                         }
                     }
                 }
-
             }
 
-
             var estatus = estadoReservaService.findById(2).get();
-
-            //var pasajero=pasajeroService.findById("12345678-9").get();
-
             reserva.setEstadoReservaBean(estatus);
-
             reserva.setTotal(new BigDecimal(total));
             reserva.setFechaReserva(new Timestamp(System.currentTimeMillis()));
 
             var reservaGuardada = reservaService.save(reserva);
-            AtomicReference<String> mensaje = new AtomicReference<>();
 
+            AtomicReference<String> mensaje = new AtomicReference<>("Reserva registrada correctamente.");
+
+            // 4. CONFIRMAR ASIENTOS
             asientosSeleccionados.forEach((idVuelo, asientos) -> {
                 List<Integer> idsConfirmados = new ArrayList<>();
                 asientos.forEach(asiento -> {
-                    //Logger.logInfo("Vuelo: " + idVuelo + ", Asiento: " + asiento.getNumeroAsiento());
-
                     Integer[] asientosIds = {asiento.getIdAsiento()};
-
-
                     try {
-                        //Logger.logInfo(reserva.toString());
-                        ///Logger.logInfo(pasajero.getRut());
-                        //Logger.logInfo(String.valueOf(asiento.getIdAsiento()));
+                        var rut = getRutPasajero(asiento.getIdAsiento(), asiento.getNumeroAsiento());
 
-                        var rut=getRutPasajero(asiento.getIdAsiento(),asiento.getNumeroAsiento());
 
-                        Logger.logInfo(rut+"->"+asiento.getIdAsiento()+"->"+asiento.getNumeroAsiento());
-                        //Logger.logInfo("ID de reserva antes de llamar al procedimiento: " + reservaGuardada.getIdReserva());
-                        //String mensaje = reservaService.confirmarReserva(idVuelo, asientos, "12345678-9",reservaGuardada.getIdReserva());
-                        mensaje.set(reservaService.confirmarReserva(idVuelo, asientosIds, rut, reservaGuardada.getIdReserva()));
-
+                        String resMensaje = reservaService.confirmarReserva(idVuelo, asientosIds, rut, reservaGuardada.getIdReserva());
+                        mensaje.set(resMensaje);
                         idsConfirmados.add(asiento.getIdAsiento());
-
-                        //Logger.logInfo(mensaje.get());
 
 
                     } catch (Exception ex) {
-                        Logger.logInfo("Error inesperado: " + ex.getMessage());
-                        //FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error inesperado", ex.getMessage());
-                        //PrimeFaces.current().dialog().showMessageDynamic(message);
-
+                        Logger.logInfo("❌ [ASIENTOS] Error al confirmar asiento ID " + asiento.getIdAsiento() + ": " + ex.getMessage());
                         addMessage(FacesMessage.SEVERITY_ERROR, "Error En la reserva", ex.getMessage());
                     }
                 });
@@ -374,63 +352,59 @@ public class ReservaBean implements Serializable {
                 if (!idsConfirmados.isEmpty()) {
                     asientoCacheService.confirmarReservaDefinitiva(idVuelo, idsConfirmados);
                 }
+            });
+
+            // 5. ITINERARIOS Y TARIFAS
+
+            tarifasItinerarios.forEach((idItinerario, idTarifa) -> {
+                var itinerario = itinerarioService.findById(idItinerario);
+                ReservaItinerario rersv = new ReservaItinerario();
+                rersv.setReserva(reservaGuardada);
+                rersv.setItinerario(itinerario);
+
+
+                var tarifaItinerario = itinerarioTarifaService.getByTarifaAndItinerario(idItinerario, idTarifa);
+                if (tarifaItinerario == null) {
+
+                    throw new IllegalStateException("No se encontró ItinerarioTarifa para itinerario " + idItinerario + " y tarifa " + idTarifa);
+                }
+                rersv.setItinerarioTarifa(tarifaItinerario);
+                reservaItinerarioService.save(rersv);
 
             });
 
+            // 6. PERSISTENCIA DE EQUIPAJE
+            if (equipajePorPasajero != null && !equipajePorPasajero.isEmpty()) {
+                int totalEquipajesGuardados = 0;
+
+                for (EquipajePasajeroDTO dto : equipajePorPasajero) {
+                    if (dto.getMaletas() != null) {
+                        for (EquipajePasajeroDTO.ItemEquipaje item : dto.getMaletas()) {
+                            Equipaje equipaje = new Equipaje();
+                            equipaje.setPeso(item.getPeso());
+                            equipaje.setDimensiones(item.getDimensiones());
+                            equipaje.setTipo(item.getTipo());
+
+
+                            equipajeService.guardar(equipaje, reservaGuardada.getIdReserva(), dto.getRutPasajero(), item.getIdTipo());
+                            totalEquipajesGuardados++;
+                        }
+                    }
+                }
+            }
+
+            // 7. FINALIZACIÓN Y NOTIFICACIÓN AL USUARIO
             FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, "Reserva confirmada", mensaje.get());
             PrimeFaces.current().dialog().showMessageDynamic(message);
 
             addMessage(FacesMessage.SEVERITY_INFO, "Reserva confirmada", mensaje.get());
 
-            Logger.logInfo("arreglar la asignacion de la tarifa, solo se setea un vaalor preestablecido");
 
-
-            tarifasItinerarios.forEach((idItinerario, idTarifa) -> {
-
-                var itinerario = itinerarioService.findById(idItinerario);
-                ReservaItinerario rersv = new ReservaItinerario();
-                rersv.setReserva(reserva);
-                rersv.setItinerario(itinerario);
-                Logger.logInfo(idItinerario + "->" + idTarifa);
-                var tarifaItinerario = itinerarioTarifaService.getByTarifaAndItinerario(idItinerario, idTarifa);
-                if (tarifaItinerario == null) {
-                    Logger.logInfo("No se encontró ItinerarioTarifa para itinerario " + idItinerario + " y tarifa " + idItinerario);
-                    throw new IllegalStateException("No se encontró ItinerarioTarifa para itinerario " + idItinerario + " y tarifa " + idTarifa);
-                }
-                rersv.setItinerarioTarifa(tarifaItinerario);
-
-                Logger.logInfo(tarifaItinerario.toString());
-
-
-                reservaItinerarioService.save(rersv);
-            });
-
-
-
-        /*for (Itinerario itinerario : itinerarios) {
-
-            ReservaItinerario rersv=new ReservaItinerario();
-            rersv.setReserva(reservaGuardada);
-            rersv.setItinerario(itinerario);
-
-            //esto corregir
-            var tarifas=itinerarioTarifaService.findByItinerario(itinerario.getIdItinerario());
-            rersv.setItinerarioTarifa(tarifas.get(0));
-
-            reservaItinerarioService.save(rersv);
-
-        }*/
-
-        }else {
-            Logger.logInfo("asientos no disponibles");
+        } else {
+            Logger.logInfo("⚠️ [CONFIRMAR_RESERVA] La confirmación fue rechazada: Asientos no disponibles.");
             addMessage(FacesMessage.SEVERITY_WARN, "Aviso", "Uno o más asientos ya no están disponibles.");
         }
-
-
-            // Redirigir a página de éxito
-        //return "reservaExitosa.xhtml?faces-redirect=true";
     }
-
 
     public void addMessage(FacesMessage.Severity severity, String summary, String detail) {
         FacesContext.getCurrentInstance().
@@ -563,4 +537,25 @@ public class ReservaBean implements Serializable {
     public void setMiSessionId(String miSessionId) {
         this.miSessionId = miSessionId;
     }
+
+    public List<EquipajePasajeroDTO> getEquipajePorPasajero() {
+        return equipajePorPasajero;
+    }
+
+    public int getTotalEquipaje() {
+        return totalEquipaje;
+    }
+
+    /**
+     * Retorna verdadero si al menos un pasajero tiene equipaje asignado
+     */
+    public boolean isTieneEquipajeAsignado() {
+        if (equipajePorPasajero == null || equipajePorPasajero.isEmpty()) {
+            return false;
+        }
+        return equipajePorPasajero.stream()
+                .anyMatch(dto -> dto.getMaletas() != null && !dto.getMaletas().isEmpty());
+    }
+
+
 }
