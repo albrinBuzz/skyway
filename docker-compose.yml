@@ -6,17 +6,12 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: skyway_app_container
-    restart: on-failure
     ports:
       - "8080:8080"
-    environment:
-      # Inyección dinámica de perfil y Base de Datos
-      - SPRING_PROFILES_ACTIVE=prod
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://skyway-server.postgres.database.azure.com:5432/skyway?sslmode=require
-      - SPRING_DATASOURCE_USERNAME=aerolinea_user
-      - SPRING_DATASOURCE_PASSWORD=qTc31$#C1UNT#B
-
     deploy:
       resources:
         limits:
-          memory: 480M
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          memory: 256M
