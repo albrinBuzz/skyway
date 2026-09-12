@@ -449,45 +449,59 @@ CREATE TABLE Itinerario_Vuelo (
 );
 
 
+-- 1. Catálogo de tipos de datos permitidos
+CREATE TABLE Tipo_Dato (
+                           ID_TIPO_DATO VARCHAR(20) PRIMARY KEY
+);
+
+
+-- 2. Tabla de Tarifas Base
 CREATE TABLE Tarifa (
-                        ID_TARIFA INT PRIMARY KEY DEFAULT nextval('tarifa_seq'),
-                        Nombre VARCHAR(50) NOT NULL UNIQUE
+            ID_TARIFA INT PRIMARY KEY DEFAULT nextval('tarifa_seq'),
+            Nombre VARCHAR(50) NOT NULL UNIQUE
 );
 
-
+-- 3. Definición de Características
 CREATE TABLE Caracteristica_Tarifa (
-                                       ID_CARACTERISTICA INT PRIMARY KEY DEFAULT nextval('caracteristica_tarifa_seq'),
-                                       Nombre VARCHAR(100) NOT NULL UNIQUE,
-                                       Descripcion TEXT,
-                                       Tipo_Dato VARCHAR(20)  CHECK (Tipo_Dato IN ('boolean', 'int', 'text'))
+           ID_CARACTERISTICA INT PRIMARY KEY DEFAULT nextval('caracteristica_tarifa_seq'),
+           Nombre VARCHAR(100) NOT NULL UNIQUE,
+           Descripcion TEXT,
+           ID_TIPO_DATO VARCHAR(20) NOT NULL REFERENCES Tipo_Dato(ID_TIPO_DATO)
 );
 
+-- 4. Asociación Tarifa - Característica con valores fuertemente tipados
 CREATE TABLE Tarifa_Caracteristica (
-                                       ID_TARIFA_CARACTERISTICA INT PRIMARY KEY DEFAULT nextval('tarifa_caracteristica_seq'),
-                                       ID_TARIFA INT REFERENCES Tarifa(ID_TARIFA) ON DELETE CASCADE,
-                                       ID_CARACTERISTICA INT REFERENCES Caracteristica_Tarifa(ID_CARACTERISTICA) ON DELETE CASCADE,
-                                       Valor VARCHAR(100),
-                                       Valor_Bool BOOLEAN,
-                                       Valor_Int INT,
-                                       CONSTRAINT unique_tarifa_caracteristica UNIQUE (ID_TARIFA, ID_CARACTERISTICA)
-);
+       ID_TARIFA_CARACTERISTICA INT PRIMARY KEY DEFAULT nextval('tarifa_caracteristica_seq'),
+       ID_TARIFA INT NOT NULL REFERENCES Tarifa(ID_TARIFA) ON DELETE CASCADE,
+       ID_CARACTERISTICA INT NOT NULL REFERENCES Caracteristica_Tarifa(ID_CARACTERISTICA) ON DELETE CASCADE,
+       Valor_Text TEXT,
+       Valor_Int INT,
+       Valor_Bool BOOLEAN,
 
--- Tabla Itinerario_Tarifa con ID autoincremental y restricción única para combinación
+       CONSTRAINT unique_tarifa_caracteristica UNIQUE (ID_TARIFA, ID_CARACTERISTICA),
+       CONSTRAINT chk_un_solo_valor CHECK (
+           (Valor_Text IS NOT NULL)::INT +
+           (Valor_Int IS NOT NULL)::INT +
+           (Valor_Bool IS NOT NULL)::INT = 1
+)
+    );
+
+-- 5. Relación de Precios por Itinerario
 CREATE TABLE Itinerario_Tarifa (
-                                   ID_ITINERARIO_TARIFA INT PRIMARY KEY DEFAULT nextval('itinerario_tarifa_seq'),
-                                   ID_ITINERARIO INT NOT NULL REFERENCES Itinerario(ID_ITINERARIO) ON DELETE CASCADE,
-                                   ID_TARIFA INT NOT NULL REFERENCES Tarifa(ID_TARIFA) ON DELETE CASCADE,
-                                   Precio DECIMAL(10,2) NOT NULL,
-                                   CONSTRAINT unique_itinerario_tarifa UNIQUE (ID_ITINERARIO, ID_TARIFA)
+       ID_ITINERARIO_TARIFA INT PRIMARY KEY DEFAULT nextval('itinerario_tarifa_seq'),
+       ID_ITINERARIO INT NOT NULL REFERENCES Itinerario(ID_ITINERARIO) ON DELETE CASCADE,
+       ID_TARIFA INT NOT NULL REFERENCES Tarifa(ID_TARIFA) ON DELETE CASCADE,
+       Precio DECIMAL(10,2) NOT NULL CHECK (Precio >= 0),
+       CONSTRAINT unique_itinerario_tarifa UNIQUE (ID_ITINERARIO, ID_TARIFA)
 );
 
 CREATE TABLE Turno (
-                       ID_TURNO INT PRIMARY KEY DEFAULT nextval('turno_seq'), -- Secuencia añadida
-                       ID_VUELO INT NOT NULL REFERENCES Vuelo(ID_VUELO),
-                       Fecha DATE ,
-                       Hora_Inicio TIMESTAMP ,
-                       Hora_Fin TIMESTAMP ,
-                       ID_TIPO_TURNO INT REFERENCES Tipo_Turno(ID_TIPO)
+               ID_TURNO INT PRIMARY KEY DEFAULT nextval('turno_seq'), -- Secuencia añadida
+               ID_VUELO INT NOT NULL REFERENCES Vuelo(ID_VUELO),
+               Fecha DATE ,
+               Hora_Inicio TIMESTAMP ,
+               Hora_Fin TIMESTAMP ,
+               ID_TIPO_TURNO INT REFERENCES Tipo_Turno(ID_TIPO)
 );
 
 

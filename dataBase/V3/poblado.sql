@@ -1001,35 +1001,95 @@ select * from aeropuerto arp
                        on prt.id_aeropuerto = arp.id_aeropuerto
 where prt.id_aeropuerto is null;
 
+-- 1. Catálogo de Tipos de Dato
+INSERT INTO Tipo_Dato (ID_TIPO_DATO) VALUES
+             ('BOOLEAN'),
+             ('INT'),
+             ('TEXT');
+
+-- 2. Tarifas (Ampliadas)
 INSERT INTO Tarifa (Nombre) VALUES
-                                ('Básica'),
-                                ('Flexible'),
-                                ('Premium');
+                                ('Promocional'), -- ID: 1
+                                ('Básica'),      -- ID: 2
+                                ('Flexible'),    -- ID: 3
+                                ('Premium'),     -- ID: 4
+                                ('Ejecutiva');   -- ID: 5
 
--- Características
-INSERT INTO Caracteristica_Tarifa (Nombre, Descripcion, Tipo_Dato) VALUES
-                                                                       ('Permite Cambios Asiento', 'Permite cambiar los asiento luego de la compra', 'boolean'),
-                                                                       ('Horas Minimas Cambio Asiento', 'Horas mínimas antes del vuelo para cambiar', 'int'),
-                                                                       ('Permite Cancelacion', 'Permite cancelar la reserva', 'boolean');
+-- 3. Catálogo de Características de Tarifa
+INSERT INTO Caracteristica_Tarifa (Nombre, Descripcion, ID_TIPO_DATO) VALUES
+-- Características Existentes
+('Permite Cambios Asiento', 'Permite cambiar el asiento asignado después de realizar la compra', 'BOOLEAN'), -- ID: 1
+('Horas Minimas Cambio Asiento', 'Cantidad de horas previas al vuelo límite para solicitar cambio', 'INT'),       -- ID: 2
+('Permite Cancelacion', 'Permite cancelar la reserva con opción a reembolso o crédito', 'BOOLEAN'),        -- ID: 3
 
--- Tarifa Básica
-INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool) VALUES
-                                                                                 (1, 1, FALSE),
-                                                                                 (1, 3, TRUE);
+-- Nuevas Características
+('Equipaje Mano Incluido', 'Permite llevar pieza de mano o mochila personal en cabina', 'BOOLEAN'),        -- ID: 4
+('Equipaje Bodega kg', 'Peso máximo en kilogramos del equipaje facturado en bodega', 'INT'),                -- ID: 5
+('Abordaje Prioritario', 'Acceso a fila rápida durante el embarque', 'BOOLEAN'),                           -- ID: 6
+('Seleccion Asiento Gratuita', 'Permite seleccionar asiento sin costo extra previo al check-in', 'BOOLEAN'), -- ID: 7
+('Politica Reembolso', 'Descripción general de la devolución otorgada en caso de anulación', 'TEXT');      -- ID: 8
 
--- Tarifa Flexible
-INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool) VALUES
-                                                                                 (2, 1, TRUE),
-                                                                                 (2, 3, TRUE);
-INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Int) VALUES
-    (2, 2, 48);
 
--- Tarifa Premium
-INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool) VALUES
-                                                                                 (3, 1, TRUE),
-                                                                                 (3, 3, TRUE);
-INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Int) VALUES
-    (3, 2, 24);
+-- 4. Asociación Tarifa_Caracteristica (Cumpliendo el constraint chk_un_solo_valor)
+
+-- ==========================================
+-- TARIFA 1: Promocional
+-- ==========================================
+INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool, Valor_Int, Valor_Text) VALUES
+    (1, 1, FALSE, NULL, NULL),
+    (1, 3, FALSE, NULL, NULL),
+    (1, 4, TRUE, NULL, NULL),
+    (1, 5, NULL, 0, NULL),
+    (1, 8, NULL, NULL, 'Sin derecho a reembolso ni devolución de tasas');
+
+-- ==========================================
+-- TARIFA 2: Básica
+-- ==========================================
+INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool, Valor_Int, Valor_Text) VALUES
+    (2, 1, FALSE, NULL, NULL),
+    (2, 3, TRUE, NULL, NULL),
+    (2, 4, TRUE, NULL, NULL),
+    (2, 5, NULL, 0, NULL),
+    (2, 7, FALSE, NULL, NULL),
+    (2, 8, NULL, NULL, 'Devolución del 50% en voucher de vuelo');
+
+-- ==========================================
+-- TARIFA 3: Flexible
+-- ==========================================
+INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool, Valor_Int, Valor_Text) VALUES
+        (3, 1, TRUE, NULL, NULL),
+        (3, 2, NULL, 48, NULL),
+        (3, 3, TRUE, NULL, NULL),
+        (3, 4, TRUE, NULL, NULL),
+        (3, 5, NULL, 15, NULL),
+        (3, 7, TRUE, NULL, NULL),
+        (3, 8, NULL, NULL, 'Reembolso del 80% al medio de pago original');
+
+-- ==========================================
+-- TARIFA 4: Premium
+-- ==========================================
+INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool, Valor_Int, Valor_Text) VALUES
+    (4, 1, TRUE, NULL, NULL),
+    (4, 2, NULL, 24, NULL),
+    (4, 3, TRUE, NULL, NULL),
+    (4, 4, TRUE, NULL, NULL),
+    (4, 5, NULL, 23, NULL),
+    (4, 6, TRUE, NULL, NULL),
+    (4, 7, TRUE, NULL, NULL),
+    (4, 8, NULL, NULL, 'Reembolso del 100% en cualquier momento previa al vuelo');
+
+-- ==========================================
+-- TARIFA 5: Ejecutiva
+-- ==========================================
+INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool, Valor_Int, Valor_Text) VALUES
+    (5, 1, TRUE, NULL, NULL),
+    (5, 2, NULL, 2, NULL),
+    (5, 3, TRUE, NULL, NULL),
+    (5, 4, TRUE, NULL, NULL),
+    (5, 5, NULL, 32, NULL),
+    (5, 6, TRUE, NULL, NULL),
+    (5, 7, TRUE, NULL, NULL),
+    (5, 8, NULL, NULL, 'Reembolso completo inmediato y cambios de fecha ilimitados sin costo');
 
 -- Insertar vuelos
 TRUNCATE TABLE Asignacion_Puerta, Segmento_Vuelo, Precio_Asiento, Vuelo CASCADE;
