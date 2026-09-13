@@ -2,6 +2,10 @@ package com.SkyWay.views.reserva;
 
 
 
+import cl.transbank.webpay.webpayplus.responses.WebpayPlusTransactionCreateResponse;
+import com.SkyWay.config.webPay.WebPayService;
+import com.SkyWay.config.webPay.entity.WebPayTransactionRequest;
+import com.SkyWay.config.webPay.entity.WebPayTransactionResponse;
 import com.SkyWay.modules.asiento.domain.service.AsientoService;
 import com.SkyWay.modules.asiento.presentation.dto.InfoAsientoDTO;
 import com.SkyWay.modules.equipaje.domain.model.Equipaje;
@@ -13,6 +17,7 @@ import com.SkyWay.modules.pasajero.domain.model.Pasajero;
 import com.SkyWay.modules.pasajero.domain.service.PasajeroService;
 import com.SkyWay.modules.reserva.domain.model.Reserva;
 import com.SkyWay.modules.reserva.domain.service.ReservaService;
+import com.SkyWay.modules.reserva.presentation.dto.SolicitudReservaDTO;
 import com.SkyWay.modules.reservaasiento.domain.service.AsientoCacheService;
 import com.SkyWay.modules.reservaitinerario.domain.model.ReservaItinerario;
 import com.SkyWay.modules.reservaitinerario.domain.service.ReservaItinerarioService;
@@ -23,24 +28,23 @@ import com.SkyWay.modules.usuario.domain.service.UsuarioService;
 import com.SkyWay.modules.vuelo.domain.service.VueloService;
 import com.SkyWay.util.Logger;
 import jakarta.annotation.PostConstruct;
-import jakarta.enterprise.context.RequestScoped;
 import jakarta.faces.application.FacesMessage;
+import jakarta.faces.context.ExternalContext;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
 import org.primefaces.PrimeFaces;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Named("reservaBean")
@@ -94,6 +98,12 @@ public class ReservaBean implements Serializable {
     String miSessionId;
     @Autowired
     private EquipajeService equipajeService;
+
+    @Value("${webpay.return-path:/webpay/commit}")
+    private String returnPath;
+
+    @Autowired
+    private WebPayService webPayService;
 
     // Simulamos una inyección de un servicio (puedes usar @Inject si usas CDI)
     // @Inject
@@ -193,219 +203,68 @@ public class ReservaBean implements Serializable {
 
     // Acción del botón
     public void confirmarReserva() {
-
         miSessionId = (String) FacesContext.getCurrentInstance().getExternalContext()
                 .getSessionMap().get("reservaSessionId");
 
-
         // 1. VALIDACIÓN EN CACHÉ (TTL)
-
         for (Map.Entry<Integer, List<InfoAsientoDTO>> entry : asientosSeleccionados.entrySet()) {
             Integer idVuelo = entry.getKey();
-            List<InfoAsientoDTO> asientos = entry.getValue();
-
-            for (InfoAsientoDTO asiento : asientos) {
+            for (InfoAsientoDTO asiento : entry.getValue()) {
                 boolean sigueValido = asientoCacheService.validarPertenenciaYSeleccion(idVuelo, asiento.getIdAsiento(), miSessionId);
-
-
                 if (!sigueValido) {
-
                     addMessage(FacesMessage.SEVERITY_ERROR, "Tiempo Agotado",
-                            "Tu reserva temporal expiró. El asiento " + asiento.getNumeroAsiento() + " fue liberado.");
-
-                    try {
-                        FacesContext.getCurrentInstance().getExternalContext().redirect("/home/reservaAsiento.xhtml?error=expired");
-                    } catch (IOException e) {
-                        Logger.logInfo("Error al redirigir: " + e.getMessage());
-                    }
-                    return; // Cancelar confirmación
+                            String.format("Tu reserva del asiento %s en el vuelo #%d expiró.", asiento.getNumeroAsiento(), idVuelo));
+                    return;
                 }
+            }
+        }
+
+        for (Pasajero pasajero : pasajerosList) {
+            if (pasajero.getRut() == null || pasajero.getRut().isBlank() ||
+                    pasajero.getUsuario() == null || pasajero.getUsuario().getNombre() == null || pasajero.getUsuario().getNombre().isBlank()) {
+                addMessage(FacesMessage.SEVERITY_WARN, "Formulario Incompleto",
+                        "Por favor, complete todos los campos obligatorios de cada pasajero.");
+                return;
             }
         }
 
         // 2. VERIFICACIÓN DE DISPONIBILIDAD EN BD
-
-        boolean resultadoDisp = false;
-        List<String> erroresDisponibilidad = new ArrayList<>();
-
         for (Map.Entry<Integer, List<InfoAsientoDTO>> entry : asientosSeleccionados.entrySet()) {
             Integer idVuelo = entry.getKey();
-            List<InfoAsientoDTO> asientos = entry.getValue();
-
-            for (InfoAsientoDTO asiento : asientos) {
-
-
+            for (InfoAsientoDTO asiento : entry.getValue()) {
                 Integer[] asientosIds = { asiento.getIdAsiento() };
-
                 try {
-
                     var resultado = asientoService.verificarDisponibilidad(idVuelo, asientosIds);
-
-                    if (resultado == null || resultado.isEmpty() || resultado.isBlank()) {
-                        resultadoDisp = true;
-                        break;
+                    if (resultado != null && !resultado.isBlank()) {
+                        addMessage(FacesMessage.SEVERITY_WARN, "Asiento Ocupado",
+                                String.format("El asiento %s del vuelo #%d ya fue reservado por otro pasajero.", asiento.getNumeroAsiento(), idVuelo));
+                        return;
                     }
-
-                } catch (SQLException e) {
-                    Logger.logInfo("❌ [DISPONIBILIDAD] Error SQL: " + e.getMessage());
-                    resultadoDisp = false;
-                    break;
-                } catch (Exception ex) {
-                    Logger.logInfo("❌ [DISPONIBILIDAD] Error inesperado (" + ex.getClass().getName() + "): " + ex.getMessage());
-                    erroresDisponibilidad.add("Asiento " + asiento.getNumeroAsiento() + ": " + ex.getMessage());
-                    resultadoDisp = false;
-                    break;
+                } catch (Exception e) {
+                    addMessage(FacesMessage.SEVERITY_ERROR, "Error de Verificación", "Ocurrió un problema al consultar el estado de las plazas.");
+                    return;
                 }
             }
-            if (resultadoDisp) break;
         }
 
-        if (!erroresDisponibilidad.isEmpty()) {
-            for (String error : erroresDisponibilidad) {
-                FacesContext.getCurrentInstance().addMessage(null,
-                        new FacesMessage(FacesMessage.SEVERITY_WARN, "Disponibilidad", error));
-            }
-            return;
-        }
+        // 3. PERSISTIR EN SESIÓN Y PAGAR
+        // 3. PERSISTIR EN SESIÓN Y PAGAR
+        SolicitudReservaDTO dto = new SolicitudReservaDTO(
+                this.usuario != null ? this.usuario.getRut() : null,
+                this.pasajerosList,
+                this.asientosSeleccionados,
+                this.tarifasItinerarios,
+                this.equipajePorPasajero,
+                new BigDecimal(this.total),
+                this.miSessionId
+        );
 
+        // 3. Dejar el DTO en la HttpSession nativa
+        FacesContext.getCurrentInstance().getExternalContext()
+                .getSessionMap().put("SOLICITUD_RESERVA_PENDIENTE", dto);
 
-        // 3. CONFIRMACIÓN Y PERSISTENCIA
-        if (resultadoDisp) {
-
-            var reserva = new Reserva();
-            if (usuario == null) {
-                for (int i = 0; i < pasajerosList.size(); i++) {
-                    Pasajero pasajero = pasajerosList.get(i);
-
-                    if (equipajePorPasajero != null && i < equipajePorPasajero.size()) {
-                        equipajePorPasajero.get(i).setRutPasajero(pasajero.getRut());
-                    }
-
-                    Usuario usr = pasajero.getUsuario();
-                    if (usr == null) {
-                        usr = new Usuario();
-                    }
-                    usr.setRut(pasajero.getRut());
-                    pasajero.setUsuario(usr);
-
-                    pasajeroService.save(pasajero);
-
-                    if (i == 0) {
-                        reserva.setPasajero(pasajero);
-                    }
-                }
-            } else {
-                reserva.setPasajero(this.pasajero);
-
-                for (int i = 0; i < pasajerosList.size(); i++) {
-                    Pasajero pLista = pasajerosList.get(i);
-                    if (equipajePorPasajero != null && i < equipajePorPasajero.size()) {
-                        equipajePorPasajero.get(i).setRutPasajero(pLista.getRut());
-                    }
-
-                    if (i == 0 || pLista.getRut().equals(this.pasajero.getRut())) {
-                        continue;
-                    } else {
-                        Usuario userAdicional = pLista.getUsuario();
-                        if (userAdicional == null) {
-                            userAdicional = new Usuario();
-                        }
-                        userAdicional.setRut(pLista.getRut());
-                        pLista.setUsuario(userAdicional);
-
-                        if (!pasajeroService.findById(pLista.getRut()).isPresent()) {
-                            pasajeroService.save(pLista);
-                        }
-                    }
-                }
-            }
-
-            var estatus = estadoReservaService.findById(2).get();
-            reserva.setEstadoReservaBean(estatus);
-            reserva.setTotal(new BigDecimal(total));
-            reserva.setFechaReserva(new Timestamp(System.currentTimeMillis()));
-
-            var reservaGuardada = reservaService.save(reserva);
-
-            AtomicReference<String> mensaje = new AtomicReference<>("Reserva registrada correctamente.");
-
-            // 4. CONFIRMAR ASIENTOS
-            asientosSeleccionados.forEach((idVuelo, asientos) -> {
-                List<Integer> idsConfirmados = new ArrayList<>();
-                asientos.forEach(asiento -> {
-                    Integer[] asientosIds = {asiento.getIdAsiento()};
-                    try {
-                        var rut = getRutPasajero(asiento.getIdAsiento(), asiento.getNumeroAsiento());
-
-
-                        String resMensaje = reservaService.confirmarReserva(idVuelo, asientosIds, rut, reservaGuardada.getIdReserva());
-                        mensaje.set(resMensaje);
-                        idsConfirmados.add(asiento.getIdAsiento());
-
-
-                    } catch (Exception ex) {
-                        Logger.logInfo("❌ [ASIENTOS] Error al confirmar asiento ID " + asiento.getIdAsiento() + ": " + ex.getMessage());
-                        addMessage(FacesMessage.SEVERITY_ERROR, "Error En la reserva", ex.getMessage());
-                    }
-                });
-
-                if (!idsConfirmados.isEmpty()) {
-                    asientoCacheService.confirmarReservaDefinitiva(idVuelo, idsConfirmados);
-                }
-            });
-
-            // 5. ITINERARIOS Y TARIFAS
-
-            tarifasItinerarios.forEach((idItinerario, idTarifa) -> {
-                var itinerario = itinerarioService.findById(idItinerario);
-                ReservaItinerario rersv = new ReservaItinerario();
-                rersv.setReserva(reservaGuardada);
-                rersv.setItinerario(itinerario);
-
-
-                var tarifaItinerario = itinerarioTarifaService.getByTarifaAndItinerario(idItinerario, idTarifa);
-                if (tarifaItinerario == null) {
-
-                    throw new IllegalStateException("No se encontró ItinerarioTarifa para itinerario " + idItinerario + " y tarifa " + idTarifa);
-                }
-                rersv.setItinerarioTarifa(tarifaItinerario);
-                reservaItinerarioService.save(rersv);
-
-            });
-
-            // 6. PERSISTENCIA DE EQUIPAJE
-            if (equipajePorPasajero != null && !equipajePorPasajero.isEmpty()) {
-                int totalEquipajesGuardados = 0;
-
-                for (EquipajePasajeroDTO dto : equipajePorPasajero) {
-                    if (dto.getMaletas() != null) {
-                        for (EquipajePasajeroDTO.ItemEquipaje item : dto.getMaletas()) {
-                            Equipaje equipaje = new Equipaje();
-                            equipaje.setPeso(item.getPeso());
-                            equipaje.setDimensiones(item.getDimensiones());
-                            equipaje.setTipo(item.getTipo());
-
-
-                            equipajeService.guardar(equipaje, reservaGuardada.getIdReserva(), dto.getRutPasajero(), item.getIdTipo());
-                            totalEquipajesGuardados++;
-                        }
-                    }
-                }
-            }
-
-            // 7. FINALIZACIÓN Y NOTIFICACIÓN AL USUARIO
-            FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, "Reserva confirmada", mensaje.get());
-            PrimeFaces.current().dialog().showMessageDynamic(message);
-
-            addMessage(FacesMessage.SEVERITY_INFO, "Reserva confirmada", mensaje.get());
-
-
-        } else {
-            Logger.logInfo("⚠️ [CONFIRMAR_RESERVA] La confirmación fue rechazada: Asientos no disponibles.");
-            addMessage(FacesMessage.SEVERITY_WARN, "Aviso", "Uno o más asientos ya no están disponibles.");
-        }
+        pagar();
     }
-
     public void addMessage(FacesMessage.Severity severity, String summary, String detail) {
         FacesContext.getCurrentInstance().
                 addMessage(null, new FacesMessage(severity, summary, detail));
@@ -437,6 +296,53 @@ public class ReservaBean implements Serializable {
     }
 
 
+
+
+    public void pagar() {
+        try {
+            // 1. Obtención de URL Base dinámica (http/https, dominio y puerto actual)
+            ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
+            HttpServletRequest request = (HttpServletRequest) externalContext.getRequest();
+
+            String scheme = request.getScheme();             // http o https
+            String serverName = request.getServerName();     // localhost o midominio.cl
+            int serverPort = request.getServerPort();       // 8080, 443, etc.
+            String contextPath = request.getContextPath();   // /tu-app (si aplica)
+
+            // Construye p.ej. http://localhost:8080/webpay/commit o https://skyway.cl/webpay/commit
+            String portSegment = ((scheme.equals("http") && serverPort == 80) || (scheme.equals("https") && serverPort == 443))
+                    ? "" : ":" + serverPort;
+            String returnUrl = String.format("%s://%s%s%s%s", scheme, serverName, portSegment, contextPath, returnPath);
+
+            // 2. Generación de BuyOrder y SessionId únicos (Transbank permite máx 26 caracteres para buyOrder)
+            // Ejemplo: ORDEN-171542839210-942
+            String buyOrder = "ORD-" + System.currentTimeMillis() % 1000000000L + "-" + UUID.randomUUID().toString().substring(0, 4);
+
+            // Asignar el ID de sesión de JSF/Servlet o usar el ID dinámico creado previamente
+            String currentSessionId = (this.miSessionId != null && !this.miSessionId.isBlank())
+                    ? this.miSessionId
+                    : request.getSession().getId();
+
+            // 3. Crear transacción usando el servicio refactorizado
+            WebpayPlusTransactionCreateResponse response = webPayService.createTransaction(
+                    buyOrder,
+                    currentSessionId,
+                    this.total, // valor double o BigDecimal del total
+                    returnUrl
+            );
+
+            Logger.logInfo("WebPay Transaction iniciada - Order: " + buyOrder + " | Token: " + response.getToken());
+
+            // 4. Redirección al formulario/sitio de Webpay
+            // Transbank retorna la URL de pago en response.getUrl() y el token en response.getToken()
+            String redirectUrl = response.getUrl() + "?token_ws=" + response.getToken();
+            externalContext.redirect(redirectUrl);
+
+        } catch (Exception e) {
+            Logger.logError("Error al iniciar pago en WebPay: " + e.getMessage());
+            addMessage(FacesMessage.SEVERITY_ERROR, "Error de Pago", "No fue posible conectar con la pasarela de pago. Intente nuevamente.");
+        }
+    }
 
     public long getTiempoRestanteSegundos() {
         if (miSessionId == null || miSessionId.isBlank()) {

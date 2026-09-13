@@ -105,35 +105,54 @@
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
                                             <p:outputLabel value="RUT" styleClass="small text-muted mb-1 d-block" />
-                                            <p:inputText value="#{pasajero.rut}" required="true"
+                                            <p:inputText value="#{pasajero.rut}" required="true" requiredMessage="El RUT es obligatorio"
                                                          disabled="#{st.index == 0 and reservaBean.usuario != null}" styleClass="w-100" />
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <p:outputLabel value="Nombre" styleClass="small text-muted mb-1 d-block" />
-                                            <p:inputText value="#{pasajero.usuario.nombre}" required="true"
+                                            <p:inputText value="#{pasajero.usuario.nombre}" required="true" requiredMessage="El nombre es obligatorio"
                                                          disabled="#{st.index == 0 and reservaBean.usuario != null}" styleClass="w-100" />
                                         </div>
 
                                         <div class="col-md-6 mb-3">
                                             <p:outputLabel value="Apellido" styleClass="small text-muted mb-1 d-block" />
-                                            <p:inputText value="#{pasajero.usuario.apellido}" required="true"
+                                            <p:inputText value="#{pasajero.usuario.apellido}" required="true" requiredMessage="El apellido es obligatorio"
                                                          disabled="#{st.index == 0 and reservaBean.usuario != null}" styleClass="w-100" />
                                         </div>
-                                        <div class="col-md-6 mb-3">
-                                            <p:outputLabel value="Fecha Nacimiento" styleClass="small text-muted mb-1 d-block" />
-                                            <p:datePicker value="#{pasajero.usuario.fechaNacimiento}" pattern="dd/MM/yyyy"
-                                                          monthNavigator="true" yearNavigator="true" required="true"
-                                                          disabled="#{st.index == 0 and reservaBean.usuario != null}" styleClass="w-100" />
-                                        </div>
+                                            <div class="col-md-6 mb-3">
+                                                <p:outputLabel for="fechaNac"
+                                                               value="Fecha de Nacimiento"
+                                                               styleClass="form-label-custom small text-muted mb-1 d-block font-weight-bold" />
+
+                                                <div class="ui-inputgroup custom-datepicker-group">
+                                                    <span class="ui-inputgroup-addon bg-dark-subtle border-right-0">
+                                                        <i class="pi pi-calendar text-info"></i>
+                                                    </span>
+
+                                                    <p:datePicker id="fechaNac"
+                                                                  value="#{pasajero.usuario.fechaNacimiento}"
+                                                                  pattern="dd/MM/yyyy"
+                                                                  monthNavigator="true"
+                                                                  yearNavigator="true"
+                                                                  yearRange="1930:2026"
+                                                                  showIcon="false"
+                                                                  placeholder="DD/MM/AAAA"
+                                                                  required="true"
+                                                                  requiredMessage="La fecha de nacimiento es obligatoria"
+                                                                  disabled="#{st.index == 0 and reservaBean.usuario != null}"
+                                                                  styleClass="w-100 flex-grow-1 custom-datepicker"
+                                                                  inputStyleClass="form-control-dark w-100" />
+                                               </div>
+                                            </div>
 
                                         <div class="col-md-6 mb-3">
                                             <p:outputLabel value="Correo" styleClass="small text-muted mb-1 d-block" />
-                                            <p:inputText value="#{pasajero.usuario.correoElectronico}" required="true"
+                                            <p:inputText value="#{pasajero.usuario.correoElectronico}" required="true" requiredMessage="El correo es obligatorio"
                                                          disabled="#{st.index == 0 and reservaBean.usuario != null}" styleClass="w-100" />
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <p:outputLabel value="Teléfono" styleClass="small text-muted mb-1 d-block" />
-                                            <p:inputMask mask="(99) 9999-9999" value="#{pasajero.usuario.telefono}" required="true"
+                                            <p:inputMask mask="(99) 9999-9999" value="#{pasajero.usuario.telefono}" required="true" requiredMessage="El teléfono es obligatorio"
                                                          disabled="#{st.index == 0 and reservaBean.usuario != null}" styleClass="w-100" />
                                         </div>
                                     </div>
@@ -147,7 +166,7 @@
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
                                             <p:outputLabel value="Tipo Documento" styleClass="small text-muted mb-1 d-block" />
-                                            <p:selectOneMenu value="#{pasajero.tipoDocumento}" required="true"
+                                            <p:selectOneMenu value="#{pasajero.tipoDocumento}" required="true" requiredMessage="Seleccione tipo de documento"
                                                              disabled="#{st.index == 0 and reservaBean.usuario != null}" styleClass="w-100">
                                                 <f:selectItem itemLabel="Seleccione" itemValue=""/>
                                                 <f:selectItem itemLabel="Pasaporte" itemValue="PASAPORTE"/>
@@ -156,18 +175,18 @@
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <p:outputLabel value="Número Documento" styleClass="small text-muted mb-1 d-block" />
-                                            <p:inputText value="#{pasajero.numeroDocumento}" required="true"
+                                            <p:inputText value="#{pasajero.numeroDocumento}" required="true" requiredMessage="El número de documento es obligatorio"
                                                          disabled="#{st.index == 0 and reservaBean.usuario != null}" styleClass="w-100" />
                                         </div>
 
                                         <div class="col-md-6 mb-3">
                                             <p:outputLabel value="Documento Identidad (ID)" styleClass="small text-muted mb-1 d-block" />
-                                            <p:inputText value="#{pasajero.usuario.documentoIdentidad}" required="true"
+                                            <p:inputText value="#{pasajero.usuario.documentoIdentidad}" required="true" requiredMessage="El ID de identidad es obligatorio"
                                                          disabled="#{st.index == 0 and reservaBean.usuario != null}" styleClass="w-100" />
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <p:outputLabel value="Nacionalidad" styleClass="small text-muted mb-1 d-block" />
-                                            <p:inputText value="#{pasajero.nacionalidad}" required="true"
+                                            <p:inputText value="#{pasajero.nacionalidad}" required="true" requiredMessage="La nacionalidad es obligatoria"
                                                          disabled="#{st.index == 0 and reservaBean.usuario != null}" styleClass="w-100" />
                                         </div>
                                     </div>
@@ -372,14 +391,25 @@
                         </h:panelGroup>
                     </div>
 
-                    <p:commandButton value="Confirmar y Pagar"
-                                     action="#{reservaBean.confirmarReserva}"
-                                     update="pasajerosForm growl"
-                                     styleClass="btn-latam-confirm mt-4 w-100"
-                                     icon="pi pi-credit-card" />
+                    <h:form id="formPago">
+                        <!-- Otros campos o información si existen -->
 
-                    <div class="text-center mt-3">
-                        <span class="small text-muted"><i class="pi pi-lock mr-1"></i> Transacción encriptada</span>
+                        <p:commandButton value="Pagar con Webpay"
+                                         actionListener="#{reservaBean.confirmarReserva}"
+                                         styleClass="btn-webpay-confirm mt-4 w-100"
+                                         icon="icon-webpay"
+                                         update="@form growl" />
+                        <!-- Tip: 'update' sirve para refrescar componentes o mostrar mensajes si algo falla -->
+                    </h:form>
+
+                    <div class="webpay-footer-lock">
+                        <i class="pi pi-lock"></i>
+                        <span>Transacción encriptada por</span>
+                        <h:graphicImage library="assets"
+                                        name="icons/logo_webpay.png"
+                                        alt="Webpay Plus"
+                                        height="26"
+                                        styleClass="footer-webpay-logo" />
                     </div>
                 </div>
             </div>
