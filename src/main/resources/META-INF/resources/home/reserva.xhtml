@@ -392,25 +392,51 @@
                     </div>
 
                     <h:form id="formPago">
-                        <!-- Otros campos o información si existen -->
+                        <div class="card-latam mb-4 p-4 rounded-3 border-dark-subtle">
+                            <h5 class="font-weight-bold mb-3 text-light">
+                                <i class="pi pi-credit-card me-2 text-info"></i>Selecciona tu método de pago
+                            </h5>
 
-                        <p:commandButton value="Pagar con Webpay"
-                                         actionListener="#{reservaBean.confirmarReserva}"
-                                         styleClass="btn-webpay-confirm mt-4 w-100"
-                                         icon="icon-webpay"
-                                         update="@form growl" />
-                        <!-- Tip: 'update' sirve para refrescar componentes o mostrar mensajes si algo falla -->
+                            <!-- Radio button maestro con Enum -->
+                            <p:selectOneRadio id="customRadio" value="#{reservaBean.metodoPagoSeleccionado}" layout="custom">
+                                <f:selectItems value="#{reservaBean.opcionesPago}"
+                                               var="opcion"
+                                               itemValue="#{opcion.metodo}"
+                                               itemLabel="#{opcion.label}" />
+                            </p:selectOneRadio>
+
+                            <!-- Opciones renderizadas dinámicamente -->
+                            <div class="d-flex flex-column gap-2">
+                                <ui:repeat value="#{reservaBean.opcionesPago}" var="opcion" varStatus="status">
+                                    <div class="d-flex align-items-center p-3 rounded border border-secondary bg-dark">
+                                        <p:radioButton id="optRadio" for=":formPago:customRadio" itemIndex="#{status.index}" />
+
+                                        <h:outputLabel for="optRadio" styleClass="ms-2 mb-0 d-flex align-items-center cursor-pointer text-light w-100">
+                                            <h:graphicImage library="assets"
+                                                            name="#{opcion.imageName}"
+                                                            alt="#{opcion.alt}"
+                                                            style="max-height: 22px; width: auto; max-width: 90px; object-fit: contain;"
+                                                            styleClass="me-2" />
+                                            <span class="pago-text">#{opcion.label}</span>
+                                        </h:outputLabel>
+                                    </div>
+                                </ui:repeat>
+                            </div>
+                        </div>
+
+                        <!-- Botón de Pago que invoca la estrategia -->
+                        <p:commandButton value="Proceder al Pago"
+                                         actionListener="#{reservaBean.confirmarReserva()}"
+                                         styleClass="btn-webpay-confirm mt-3 w-100 py-3 font-weight-bold"
+                                         update=":growl @form" />
                     </h:form>
 
-                    <div class="webpay-footer-lock">
-                        <i class="pi pi-lock"></i>
-                        <span>Transacción encriptada por</span>
-                        <h:graphicImage library="assets"
-                                        name="icons/logo_webpay.png"
-                                        alt="Webpay Plus"
-                                        height="26"
-                                        styleClass="footer-webpay-logo" />
+                    <!-- Pie de seguridad -->
+                    <div class="webpay-footer-lock d-flex align-items-center justify-content-center gap-2 mt-4 text-muted small">
+                        <i class="pi pi-lock text-success"></i>
+                        <span>Transacción segura y encriptada</span>
                     </div>
+
                 </div>
             </div>
         </div>

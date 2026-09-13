@@ -3,6 +3,10 @@ package com.SkyWay.views.reserva;
 
 
 import cl.transbank.webpay.webpayplus.responses.WebpayPlusTransactionCreateResponse;
+import com.SkyWay.config.pago.MetodoPagoEnum;
+import com.SkyWay.config.pago.PagoFactoryService;
+import com.SkyWay.config.pago.PasarelaPagoStrategy;
+import com.SkyWay.config.pago.SolicitudPagoDTO;
 import com.SkyWay.config.webPay.WebPayService;
 import com.SkyWay.config.webPay.entity.WebPayTransactionRequest;
 import com.SkyWay.config.webPay.entity.WebPayTransactionResponse;
@@ -29,6 +33,8 @@ import com.SkyWay.modules.vuelo.domain.service.VueloService;
 import com.SkyWay.util.Logger;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
+import jakarta.faces.component.UIInput;
+import jakarta.faces.component.html.HtmlInputText;
 import jakarta.faces.context.ExternalContext;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
@@ -43,6 +49,7 @@ import org.springframework.beans.factory.annotation.Value;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -104,6 +111,12 @@ public class ReservaBean implements Serializable {
 
     @Autowired
     private WebPayService webPayService;
+
+    @Autowired
+    private PagoFactoryService pagoFactoryService;
+
+    private MetodoPagoEnum metodoPagoSeleccionado = MetodoPagoEnum.WEBPAY;
+    private List<OpcionPagoView> opcionesPago;
 
     // Simulamos una inyección de un servicio (puedes usar @Inject si usas CDI)
     // @Inject
@@ -186,6 +199,14 @@ public class ReservaBean implements Serializable {
             this.totalEquipaje = (Integer) sessionMap.get("totalEquipaje");
             this.total += this.totalEquipaje; // Acumular al costo final del vuelo
         }
+
+        opcionesPago = new ArrayList<>();
+        // Asocia cada enum con su ícono en assets y su etiqueta
+        opcionesPago.add(new OpcionPagoView(MetodoPagoEnum.WEBPAY, "icons/logo_webpay.png", "Webpay Plus", "Webpay"));
+
+        //opcionesPago.add(new OpcionPagoView(MetodoPagoEnum.MERCADOPAGO, "icons/logo_mercadopago.png", "Mercado Pago", "Mercado Pago"));
+
+        opcionesPago.add(new OpcionPagoView(MetodoPagoEnum.PAYPAL, "icons/logo_paypal.png", "PayPal (USD)", "PayPal"));
 
     }
 
@@ -296,51 +317,49 @@ public class ReservaBean implements Serializable {
     }
 
 
-
-
     public void pagar() {
         try {
-            // 1. Obtención de URL Base dinámica (http/https, dominio y puerto actual)
             ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
             HttpServletRequest request = (HttpServletRequest) externalContext.getRequest();
 
-            String scheme = request.getScheme();             // http o https
-            String serverName = request.getServerName();     // localhost o midominio.cl
-            int serverPort = request.getServerPort();       // 8080, 443, etc.
-            String contextPath = request.getContextPath();   // /tu-app (si aplica)
+            String scheme = request.getScheme();
+            String serverName = request.getServerName();
+            int serverPort = request.getServerPort();
+            String contextPath = request.getContextPath();
 
-            // Construye p.ej. http://localhost:8080/webpay/commit o https://skyway.cl/webpay/commit
             String portSegment = ((scheme.equals("http") && serverPort == 80) || (scheme.equals("https") && serverPort == 443))
                     ? "" : ":" + serverPort;
-            String returnUrl = String.format("%s://%s%s%s%s", scheme, serverName, portSegment, contextPath, returnPath);
+            String baseUrl = String.format("%s://%s%s%s", scheme, serverName, portSegment, contextPath);
 
-            // 2. Generación de BuyOrder y SessionId únicos (Transbank permite máx 26 caracteres para buyOrder)
-            // Ejemplo: ORDEN-171542839210-942
-            String buyOrder = "ORD-" + System.currentTimeMillis() % 1000000000L + "-" + UUID.randomUUID().toString().substring(0, 4);
+            // Generar DTO Unificado
+            SolicitudPagoDTO solicitud = new SolicitudPagoDTO();
+            solicitud.setOrdenCompra("ORD-" + System.currentTimeMillis() % 1000000000L);
+            solicitud.setSessionId(this.miSessionId != null ? this.miSessionId : request.getSession().getId());
+            solicitud.setMonto(BigDecimal.valueOf(this.total));
+            solicitud.setDescripcion("Reserva de vuelo SkyWay");
 
-            // Asignar el ID de sesión de JSF/Servlet o usar el ID dinámico creado previamente
-            String currentSessionId = (this.miSessionId != null && !this.miSessionId.isBlank())
-                    ? this.miSessionId
-                    : request.getSession().getId();
+            // Ajustar moneda si es PayPal (ejemplo: conversión a USD si tu base es CLP)
+            if (metodoPagoSeleccionado == MetodoPagoEnum.PAYPAL) {
+                solicitud.setMoneda("USD");
+                solicitud.setMonto(BigDecimal.valueOf(this.total / 950.0).setScale(2, RoundingMode.HALF_UP)); // Conversión de CLP a USD
+                solicitud.setReturnUrl(baseUrl + "/paypal/commit");
+                solicitud.setCancelUrl(baseUrl + "/paypal/cancel");
+            } else {
+                solicitud.setMoneda("CLP");
+                solicitud.setReturnUrl(baseUrl + "/webpay/commit");
+                solicitud.setCancelUrl(baseUrl + "/reserva.xhtml");
+            }
 
-            // 3. Crear transacción usando el servicio refactorizado
-            WebpayPlusTransactionCreateResponse response = webPayService.createTransaction(
-                    buyOrder,
-                    currentSessionId,
-                    this.total, // valor double o BigDecimal del total
-                    returnUrl
-            );
+            // Obtener la estrategia adecuada (Webpay, MercadoPago o PayPal)
+            PasarelaPagoStrategy pasarela = pagoFactoryService.obtenerEstrategia(metodoPagoSeleccionado);
 
-            Logger.logInfo("WebPay Transaction iniciada - Order: " + buyOrder + " | Token: " + response.getToken());
-
-            // 4. Redirección al formulario/sitio de Webpay
-            // Transbank retorna la URL de pago en response.getUrl() y el token en response.getToken()
-            String redirectUrl = response.getUrl() + "?token_ws=" + response.getToken();
+            // Iniciar transacción y redirigir a la URL correspondiente
+            String redirectUrl = pasarela.iniciarTransaccion(solicitud);
             externalContext.redirect(redirectUrl);
 
         } catch (Exception e) {
-            Logger.logError("Error al iniciar pago en WebPay: " + e.getMessage());
-            addMessage(FacesMessage.SEVERITY_ERROR, "Error de Pago", "No fue posible conectar con la pasarela de pago. Intente nuevamente.");
+            Logger.logInfo(e.getMessage());
+            addMessage(FacesMessage.SEVERITY_ERROR, "Error de Pago", "No fue posible procesar la solicitud con el medio de pago seleccionado.");
         }
     }
 
@@ -447,6 +466,38 @@ public class ReservaBean implements Serializable {
     public List<EquipajePasajeroDTO> getEquipajePorPasajero() {
         return equipajePorPasajero;
     }
+
+    public MetodoPagoEnum getMetodoPagoSeleccionado() {
+        return metodoPagoSeleccionado;
+    }
+
+    public void setMetodoPagoSeleccionado(MetodoPagoEnum metodoPagoSeleccionado) {
+        this.metodoPagoSeleccionado = metodoPagoSeleccionado;
+    }
+
+
+
+    // DTO interno para el renderizado en vista
+    public static class OpcionPagoView {
+        private MetodoPagoEnum metodo;
+        private String imageName;
+        private String label;
+        private String alt;
+
+        public OpcionPagoView(MetodoPagoEnum metodo, String imageName, String label, String alt) {
+            this.metodo = metodo;
+            this.imageName = imageName;
+            this.label = label;
+            this.alt = alt;
+        }
+
+        public MetodoPagoEnum getMetodo() { return metodo; }
+        public String getImageName() { return imageName; }
+        public String getLabel() { return label; }
+        public String getAlt() { return alt; }
+    }
+
+    public List<OpcionPagoView> getOpcionesPago() { return opcionesPago; }
 
     public int getTotalEquipaje() {
         return totalEquipaje;

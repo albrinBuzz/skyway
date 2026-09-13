@@ -1,5 +1,8 @@
 package com.SkyWay.controller;
 
+import com.SkyWay.config.pago.MetodoPagoEnum;
+import com.SkyWay.config.pago.PagoFactoryService;
+import com.SkyWay.config.pago.PasarelaPagoStrategy;
 import com.SkyWay.config.webPay.WebPayService;
 
 import com.SkyWay.modules.reserva.domain.service.ReservaProcesadorService;
@@ -20,6 +23,14 @@ public class WebPayController {
 
     @Autowired private WebPayService webPayService;
     @Autowired private ReservaProcesadorService procesarReservaUseCase;
+
+
+    private final PagoFactoryService pagoFactoryService;
+
+    public WebPayController(PagoFactoryService pagoFactoryService) {
+        this.pagoFactoryService = pagoFactoryService;
+    }
+
     @GetMapping("/webpay/commit")
     public RedirectView responderWebPay(
             @RequestParam(value = "token_ws", required = false) Optional<String> tokenWs,
@@ -31,9 +42,16 @@ public class WebPayController {
             return new RedirectView("/home/errorPago.xhtml?reason=CANCELLED");
         }
 
+
+
+
         if (tokenWs.isPresent() && !tokenWs.get().isBlank()) {
+
             String token = tokenWs.get();
             boolean pagoAutorizado = webPayService.confirmarPagoWebPay(token);
+
+            //PasarelaPagoStrategy webpayStrategy = pagoFactoryService.obtenerEstrategia(MetodoPagoEnum.WEBPAY);
+            //boolean pagoAprobado = webpayStrategy.confirmarPago(String.valueOf(tokenWs));
 
             if (!pagoAutorizado) {
                 return new RedirectView("/home/errorPago.xhtml?reason=REJECTED");
