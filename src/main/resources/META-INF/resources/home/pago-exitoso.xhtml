@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition lang="es"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="jakarta.faces.core"
+                xmlns:h="jakarta.faces.html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                template="/template/main.xhtml">
+
+    <ui:define name="contenido">
+        <!-- Carga de CSS limpio en la plantilla -->
+        <h:outputStylesheet library="css" name="reservaExitosa/custom.css" />
+
+        <div class="pago-exitoso-container">
+            <h:form id="formPagoExitoso">
+
+                <p:card id="comprobanteCard" styleClass="comprobante-card">
+
+                    <!-- Encabezado de Éxito -->
+                    <div class="pago-header">
+                        <i class="pi pi-check-circle status-icon"></i>
+                        <h2>¡Reserva Confirmada!</h2>
+                        <p>Tu pago mediante Webpay se ha procesado con éxito.</p>
+                    </div>
+
+                    <!-- PNR / Código de Reserva -->
+                    <div class="pnr-box">
+                        <div>
+                            <span class="pnr-label">Código de Reserva (PNR)</span>
+                            <h3 class="pnr-code">
+                                #{pagoExitosoController.pnr}
+                            </h3>
+                        </div>
+                        <p:tag value="Vuelo Confirmado" severity="success" round="true" />
+                    </div>
+
+                    <!-- Comprobante y Detalle de Reserva -->
+                    <div class="detalle-box">
+                        <h4 class="detalle-title">Detalle de la Transacción</h4>
+
+                        <p:panelGrid columns="2" layout="flex" styleClass="ui-noborder detalle-grid">
+                            <h:outputText value="Monto Total:" styleClass="text-muted" />
+                            <h:outputText value="$#{pagoExitosoController.reserva.total} CLP" styleClass="text-highlight" />
+
+                            <h:outputText value="Fecha de Reserva:" styleClass="text-muted" />
+                            <h:outputText value="#{pagoExitosoController.reserva.fechaReserva}">
+                                <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/Santiago" />
+                            </h:outputText>
+
+                            <h:outputText value="Titular:" styleClass="text-muted" />
+                            <h:outputText value="#{pagoExitosoController.reserva.pasajero.usuario.nombre} #{pagoExitosoController.reserva.pasajero.usuario.apellido}" />
+
+                            <h:outputText value="RUT Titular:" styleClass="text-muted" />
+                            <h:outputText value="#{pagoExitosoController.reserva.pasajero.rut}" />
+
+                            <h:outputText value="Estado Pago:" styleClass="text-muted" />
+                            <h:outputText value="#{pagoExitosoController.reserva.estadoReservaBean.descripcion}" styleClass="text-status" />
+                        </p:panelGrid>
+                    </div>
+
+                    <!-- Botones de Acción -->
+                    <div class="actions-container">
+                        <p:commandButton value="Imprimir / Guardar PDF"
+                                         icon="pi pi-print"
+                                         styleClass="ui-button-outlined ui-button-secondary btn-action">
+                            <p:printer target="comprobanteCard" />
+                        </p:commandButton>
+
+                        <p:button value="Ir a Mis Reservas"
+                                  outcome="/home/reserva.xhtml"
+                                  icon="pi pi-arrow-right"
+                                  styleClass="ui-button-primary btn-action" />
+                    </div>
+
+                </p:card>
+
+            </h:form>
+        </div>
+    </ui:define>
+
+</ui:composition>

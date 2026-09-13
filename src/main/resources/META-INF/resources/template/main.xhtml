@@ -59,20 +59,31 @@
         box-shadow: 0 2px 12px rgba(0,0,0,.35);
     }
 
-    /* LOGO */
-    .navbar-brand {
-        font-size: 1.7rem;
-        font-weight: 800;
-        color: #e2e8f0 !important;
-        display: flex;
-        align-items: center;
-    }
+        /* Estilo para la marca con el logo completo */
+        .navbar-brand {
+            display: inline-flex !important;
+            align-items: center !important;
+            font-size: 0 !important; /* Oculta el texto HTML 'SKYWAY' sin borrarlo del código */
+            text-decoration: none !important;
+        }
 
-    .sky-logo {
-        width: 50px;
-        margin-right: 10px;
-        filter: drop-shadow(0 2px 4px rgba(0,0,0,.4));
-    }
+        .sky-logo {
+            height: 48px !important;            /* Tamaño adecuado para el header */
+            width: auto !important;
+            max-width: 180px !important;
+            object-fit: contain !important;
+            border-radius: 4px !important;      /* Suaviza los bordes si la imagen tiene fondo blanco */
+            display: inline-block !important;
+        }
+
+        /*version transparente con el fondo*/
+        /*.sky-logo {
+            height: 45px !important;
+            width: auto !important;
+            object-fit: contain !important;
+            mix-blend-mode: multiply !important; /* Fusiona el fondo blanco con el azul oscuro
+            filter: contrast(110%);
+        }*/
 
     /* NAV LINKS */
     .navbar-nav .nav-link {
@@ -422,7 +433,7 @@ label,
         <div class="col-lg-3 d-flex align-items-center">
             <p:link href="/" styleClass="navbar-brand">
                 <h:graphicImage
-                        value="#{resource['assets/icons/aviones.png']}"
+                        value="#{resource['assets/icons/logo_sky.png']}"
                         styleClass="sky-logo"
                         alt="Skyway Logo" />
 
