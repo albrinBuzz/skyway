@@ -1,425 +1,82 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui:composition lang="es"
+                xmlns="http://www.w3.org/1999/xhtml"
                 xmlns:f="jakarta.faces.core"
                 xmlns:h="jakarta.faces.html"
                 xmlns:p="http://primefaces.org/ui"
-                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:ui="jakarta.faces.facelets"
                 template="/template/main.xhtml">
-
-
 
     <ui:define name="head">
         <title>Perfil de Usuario - SkyWay</title>
-        <style>
-            /* Paleta de colores */
-            :root {
-                --primary-ticket: #1a2a6c;
-                --accent-ticket: #f2a900;
-                --text-light: #777;
-            }
-
-            .ticket-container {
-                display: flex;
-                flex-direction: column;
-                gap: 20px;
-                padding: 10px;
-                align-items: center;
-            }
-
-            .boarding-pass {
-                display: flex;
-                width: 100%;
-                max-width: 650px;
-                height: 220px;
-                background: white;
-                border-radius: 15px;
-                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-                overflow: hidden;
-                position: relative;
-                border: 1px solid #eee;
-                margin-bottom: 10px;
-            }
-
-            .main-section {
-                flex: 2;
-                padding: 20px;
-                display: flex;
-                flex-direction: column;
-                justify-content: space-between;
-            }
-
-            .pass-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                border-bottom: 1px solid #f0f0f0;
-                padding-bottom: 8px;
-            }
-
-            .airline-brand {
-                font-weight: 800;
-                color: var(--primary-ticket);
-                font-size: 1rem;
-            }
-
-            .pass-type {
-                font-size: 0.65rem;
-                font-weight: bold;
-                color: var(--text-light);
-                letter-spacing: 1px;
-            }
-
-            .pass-row {
-                display: flex;
-                justify-content: space-between;
-                margin-top: 10px;
-            }
-
-            .label {
-                font-size: 0.6rem;
-                color: var(--text-light);
-                display: block;
-                text-transform: uppercase;
-            }
-
-            .value {
-                font-size: 0.95rem;
-                font-weight: 700;
-                color: #333;
-            }
-
-            .value.highlight {
-                color: var(--primary-ticket);
-                font-size: 1.2rem;
-            }
-
-            .value-time {
-                font-size: 0.85rem;
-                font-weight: 700;
-            }
-
-            .divider-dashed {
-                border-top: 1px dashed #ddd;
-                margin: 10px 0;
-            }
-
-            .seat-badge {
-                background-color: var(--primary-ticket);
-                padding: 5px 15px;
-                border-radius: 8px;
-                text-align: center;
-            }
-
-            .stub {
-                flex: 0.8;
-                background: var(--primary-ticket);
-                color: white;
-                padding: 20px;
-                display: flex;
-                flex-direction: column;
-                justify-content: space-between;
-                border-left: 2px dashed rgba(255,255,255,0.3);
-                position: relative;
-            }
-
-            .stub::before, .stub::after {
-                content: '';
-                position: absolute;
-                width: 20px;
-                height: 20px;
-                background-color: white;
-                border-radius: 50%;
-                left: -10px;
-            }
-            .stub::before { top: -10px; }
-            .stub::after { bottom: -10px; }
-
-            .stub-title {
-                font-size: 0.7rem;
-                text-align: center;
-                border-bottom: 1px solid rgba(255,255,255,0.2);
-                padding-bottom: 5px;
-            }
-
-            .barcode-container {
-                background: white;
-                height: 35px;
-                width: 100%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 1px;
-                padding: 4px;
-                border-radius: 3px;
-            }
-
-            .bar { background: black; height: 100%; width: 2px; }
-
-            .boarding-notice {
-                font-size: 0.65rem;
-                color: #e74c3c;
-                font-weight: bold;
-                margin-top: 5px;
-            }
-
-            /* --- LÓGICA DE IMPRESIÓN --- */
-            @media print {
-                body * {
-                    visibility: hidden;
-                }
-                .printable-area, .printable-area * {
-                    visibility: visible;
-                }
-                .printable-area {
-                    position: absolute;
-                    left: 0;
-                    top: 0;
-                    width: 100%;
-                }
-                .boarding-pass {
-                    box-shadow: none !important;
-                    border: 1px solid #000 !important;
-                    page-break-inside: avoid;
-                }
-                .stub {
-                    -webkit-print-color-adjust: exact;
-                    background-color: #1a2a6c !important;
-                }
-            }
-
-            /* ============================================================
-   ESTILO NEGRO PARA LA TABLA DE VUELOS
-============================================================ */
-.custom-datatable.ui-datatable {
-    background-color: #0b0f14 !important; /* Fondo del contenedor */
-    border: 1px solid #2a2f3a !important;
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-/* Fondo de las celdas del encabezado */
-.custom-datatable.ui-datatable thead th {
-    background-color: #141a22 !important;
-    color: #8fd3ff !important; /* Azul claro para los títulos */
-    border: 1px solid #2a2f3a !important;
-    font-weight: bold;
-    text-transform: uppercase;
-    font-size: 12px;
-}
-
-/* Fondo de las filas del cuerpo */
-.custom-datatable.ui-datatable tbody tr {
-    background-color: #0b0f14 !important;
-    color: #ffffff !important;
-}
-
-/* Bordes de las celdas */
-.custom-datatable.ui-datatable tbody td {
-    border: 1px solid #1f2733 !important;
-    padding: 12px !important;
-}
-
-/* Efecto Hover al pasar el mouse por la fila */
-.custom-datatable.ui-datatable tbody tr:hover {
-    background-color: #1c242e !important;
-}
-
-/* Estilo para el paginador */
-.custom-datatable.ui-datatable .ui-paginator {
-    background-color: #141a22 !important;
-    border: 1px solid #2a2f3a !important;
-    color: white !important;
-}
-
-.custom-datatable.ui-datatable .ui-paginator span,
-.custom-datatable.ui-datatable .ui-paginator a {
-    color: #8fd3ff !important;
-}
-
-/* Estilo para el mensaje de "No se encontraron vuelos" */
-.custom-datatable.ui-datatable .ui-datatable-empty-message td {
-    background-color: #0b0f14 !important;
-    color: #9aa5b1 !important;
-    font-style: italic;
-}
-
-
-/* ============================================================
-   TICKETS EN MODO OSCURO (SKYWAY STYLE)
-============================================================ */
-
-/* Contenedor del modal */
-.dialog-boarding .ui-dialog-content {
-    background-color: #0b1016 !important; /* Fondo negro azulado */
-}
-
-/* La tarjeta de embarque principal */
-.boarding-pass {
-    display: flex;
-    width: 100%;
-    max-width: 650px;
-    height: 220px;
-    background: #141a22 !important; /* Fondo gris oscuro */
-    border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    overflow: hidden;
-    position: relative;
-    border: 1px solid #2a2f3a !important; /* Borde sutil */
-    margin-bottom: 20px;
-}
-
-/* Sección izquierda (Principal) */
-.main-section {
-    flex: 2;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    background: #141a22;
-}
-
-.pass-header {
-    border-bottom: 1px solid #2a2f3a !important;
-}
-
-.airline-brand {
-    color: #00d1ff !important; /* Azul neón SkyWay */
-}
-
-.pass-type {
-    color: #9aa5b1 !important;
-}
-
-/* Etiquetas y Valores */
-.label {
-    color: #6272a4 !important; /* Color tipo comentario/suave */
-}
-
-.value {
-    color: #ffffff !important;
-}
-
-.value.highlight {
-    color: #00d1ff !important;
-}
-
-.divider-dashed {
-    border-top: 1px dashed #2a2f3a !important;
-}
-
-/* Badge del asiento */
-.seat-badge {
-    background-color: #00d1ff !important;
-    padding: 5px 15px;
-    border-radius: 8px;
-}
-
-.seat-badge .value {
-    color: #0b0f14 !important; /* Texto oscuro sobre fondo celeste */
-}
-
-/* Sección derecha (Stub / Talón) */
-.stub {
-    flex: 0.8;
-    background: #1c242e !important; /* Un tono un poco más claro para contrastar */
-    color: white;
-    padding: 20px;
-    border-left: 2px dashed #2a2f3a !important;
-}
-
-/* Los círculos de recorte del ticket */
-.stub::before, .stub::after {
-    background-color: #0b1016 !important; /* Debe ser igual al fondo del modal */
-}
-
-/* Código de barras (Invertido para modo oscuro) */
-.barcode-container {
-    background: #ffffff !important; /* Mantenemos blanco para que las barras negras se lean bien */
-    padding: 6px;
-    opacity: 0.9;
-}
-
-
-        </style>
+        <h:outputStylesheet library="css" name="perfil/pasajero.css" />
     </ui:define>
 
-
     <ui:define name="contenido">
-        <h:messages id="msgs" globalOnly="true" styleClass="ui-messages ui-widget" />
+        <p:growl id="globalGrowl" showDetail="true" keepAlive="true" />
 
-        <div class="container">
+        <div class="skyway-container layout-content skyway-theme">
 
-            <!-- Título Itinerarios -->
-            <h2 style="margin-bottom: 15px;">Tus Itinerarios</h2>
+            <!-- CABECERA DE SECCIÓN -->
+            <header class="page-header">
+                <h2 class="page-title">Mis Itinerarios y Reservas</h2>
+                <p class="page-subtitle">Gestiona tus próximos viajes, tarjetas de embarque y selección de asientos.</p>
+            </header>
 
-
-            <!-- FORMULARIO DE FILTRO DE FECHAS -->
-            <h:form id="formFiltroFechas" prependId="false">
-                <p:messages id="messages" showSummary="true" showDetail="false" closable="true" style="margin-bottom: 1rem;" />
-                <p:growl id="message" showDetail="true"/>
-                <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
-
-                    <div style="flex: 1; min-width: 150px;">
+            <!-- FILTROS DE BÚSQUEDA Y FECHA -->
+            <h:form id="formFiltroFechas" styleClass="filter-card skyway-card">
+                <div class="ui-fluid form-grid-inline">
+                    <div class="field-item">
+                        <p:outputLabel for="fechaInicio" value="Desde:" styleClass="field-label" />
                         <p:datePicker id="fechaInicio"
                                       value="#{perfilPasajeroView.fechaInicioFiltro}"
                                       showIcon="true"
-                                      required="true"
-                                      requiredMessage="Debe seleccionar la fecha desde"
-                                      placeholder="Fecha desde"
+                                      placeholder="dd/mm/aaaa"
                                       pattern="dd/MM/yyyy"
-                                      readonlyInput="true"
-                                      style="width: 100%;"
-                                      mindate="#{java.time.LocalDate.now()}" />
+                                      readonlyInput="true" />
                     </div>
 
-                    <div style="flex: 1; min-width: 150px;">
+                    <div class="field-item">
+                        <p:outputLabel for="fechaFin" value="Hasta:" styleClass="field-label" />
                         <p:datePicker id="fechaFin"
                                       value="#{perfilPasajeroView.fechaFinFiltro}"
                                       showIcon="true"
-                                      required="true"
-                                      requiredMessage="Debe seleccionar la fecha hasta"
-                                      placeholder="Fecha hasta"
+                                      placeholder="dd/mm/aaaa"
                                       pattern="dd/MM/yyyy"
-                                      readonlyInput="true"
-                                      style="width: 100%;"
-                                      mindate="#{java.time.LocalDate.now()}" />
+                                      readonlyInput="true" />
                     </div>
 
-                    <div>
-                        <p:commandButton value="Buscar"
+                    <div class="field-actions">
+                        <p:commandButton value="Filtrar"
                                          actionListener="#{perfilPasajeroView.buscarPorRangoFechas}"
-                                         update="formVuelos:tablaItinerarios formFiltroFechas messages"
+                                         update=":formVuelos:tablaItinerarios :globalGrowl"
                                          process="@form"
-                                         icon="pi pi-search"
-                                         styleClass="filter-btn"
-                                         style="height: 40px; min-width: 120px;" />
+                                         icon="pi pi-filter"
+                                         styleClass="btn-skyway-primary" />
                     </div>
-
                 </div>
             </h:form>
 
-
-            <!-- FORMULARIO PRINCIPAL DE VUELOS Y BOTONES DE FILTRO -->
+            <!-- TABLA PRINCIPAL Y ACCIONES -->
             <h:form id="formVuelos">
-                <p:growl id="message" showDetail="true"/>
-                <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                <div class="quick-filters">
                     <p:commandButton value="Hoy"
                                      action="#{perfilPasajeroView.filtrarVuelosHoy}"
                                      update="tablaItinerarios"
                                      icon="pi pi-calendar"
-                                     styleClass="filter-btn" />
+                                     styleClass="btn-skyway-outlined" />
 
                     <p:commandButton value="Futuros"
                                      action="#{perfilPasajeroView.filtrarVuelosFuturos}"
                                      update="tablaItinerarios"
                                      icon="pi pi-clock"
-                                     styleClass="filter-btn" />
+                                     styleClass="btn-skyway-outlined" />
 
                     <p:commandButton value="Pasados"
                                      action="#{perfilPasajeroView.filtrarVuelosPasados}"
                                      update="tablaItinerarios"
                                      icon="pi pi-history"
-                                     styleClass="filter-btn" />
+                                     styleClass="btn-skyway-outlined" />
                 </div>
 
                 <p:dataTable id="tablaItinerarios"
@@ -428,121 +85,143 @@
                              rows="10"
                              paginator="true"
                              paginatorPosition="bottom"
-                             emptyMessage="No se encontraron vuelos."
-                             styleClass="custom-datatable"
+                             responsiveLayout="scroll"
+                             emptyMessage="No tienes itinerarios registrados."
+                             styleClass="skyway-datatable"
                              rowKey="#{it.idItinerario}">
 
-                    <p:column headerText="Origen">
-                        <h:outputText value="#{it.codigoIataOrigen}" />
+                    <p:column headerText="Origen / Destino" styleClass="col-route">
+                        <span class="iata-code">#{it.codigoIataOrigen}</span>
+                        <i class="pi pi-arrow-right route-icon"></i>
+                        <span class="iata-code">#{it.codigoIataDestino}</span>
                     </p:column>
 
-                    <p:column headerText="Destino">
-                        <h:outputText value="#{it.codigoIataDestino}" />
-                    </p:column>
-
-                    <p:column headerText="Salida" sortBy="#{it.horaSalida}">
+                    <p:column headerText="Salida" sortBy="#{it.horaSalida}" styleClass="col-date">
                         <h:outputText value="#{it.horaSalida}">
-                            <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago"/>
+                            <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/Santiago"/>
                         </h:outputText>
                     </p:column>
 
-                    <p:column headerText="Acciones" style="text-align: center;">
-                        <p:commandButton value="Itinerario"
-                                         icon="pi pi-search"
-                                         styleClass="btn-detail"
-                                         actionListener="#{perfilPasajeroView.verDetalleItinerario(it)}"
-                                         update="formDetalle:dlgDetalle"
-                                         oncomplete="PF('dlgDetalle').show()" />
-                    </p:column>
-
-                    <p:column headerText="Itinerario" style="text-align: center;">
-                        <p:commandButton value="Ver Detalles" icon="pi pi-info-circle" action="#{itinerarioDetalleBean.showParadas(it.idItinerario)}" update=":sidebarParadas"
-                                         oncomplete="PF('sidebarParadas').show();"/>
-                    </p:column>
-
-                    <p:column headerText="Ticket" style="text-align: center;">
-                        <p:commandButton value="Ticket" icon="pi pi-info-circle" action="#{perfilPasajeroView.getTicket(it)}"
-                                         update="formDetalleTicket:dlgDetalleTicket"
+                    <p:column headerText="Tarjeta Embarque" styleClass="col-center">
+                        <p:commandButton value="Ver Ticket"
+                                         icon="pi pi-ticket"
+                                         styleClass="btn-skyway-success ui-button-sm"
+                                         action="#{perfilPasajeroView.getTicket(it)}"
+                                         update=":formDetalleTicket:dlgDetalleTicket"
                                          oncomplete="PF('dlgDetalleTicket').show();"/>
                     </p:column>
 
-                    <p:column headerText="Acciones" style="text-align: center;">
-                        <p:commandButton value="Ver Asientos"
-                                         icon="pi pi-search"
-                                         styleClass="btn-detail"
-                                         actionListener="#{perfilPasajeroView.verAsientoItinerario(it)}"
-                                         update="formAsientos:tablaAsientos"
-                                         oncomplete="PF('dlgAsientos').show();"
-                                         />
+                    <p:column headerText="Gestión del Vuelo" styleClass="col-actions">
+                        <div class="action-buttons-wrapper">
+                            <p:commandButton icon="pi pi-info-circle"
+                                             title="Ver Escalas / Paradas"
+                                             styleClass="btn-icon-cyan"
+                                             action="#{itinerarioDetalleBean.showParadas(it.idItinerario)}"
+                                             update=":sidebarParadas"
+                                             oncomplete="PF('sidebarParadas').show();"/>
+
+                            <p:commandButton icon="pi pi-user"
+                                             title="Ver Asientos"
+                                             styleClass="btn-icon-blue"
+                                             actionListener="#{perfilPasajeroView.verAsientoItinerario(it)}"
+                                             update=":formAsientos:tablaAsientos"
+                                             oncomplete="PF('dlgAsientos').show();" />
+
+                            <p:commandButton icon="pi pi-dollar"
+                                             title="Detalle Resumen"
+                                             styleClass="btn-icon-secondary"
+                                             actionListener="#{perfilPasajeroView.verDetalleItinerario(it)}"
+                                             update=":formDetalle:dlgDetalle"
+                                             oncomplete="PF('dlgDetalle').show();" />
+                        </div>
                     </p:column>
                 </p:dataTable>
             </h:form>
 
-            <!-- Modal Detalle -->
+            <!-- MODAL DETALLE DE PRECIO / RESUMEN -->
             <h:form id="formDetalle">
-                <p:dialog header="Detalle del Itinerario"
+                <p:dialog header="Resumen del Itinerario"
                           widgetVar="dlgDetalle"
                           modal="true"
                           resizable="false"
                           id="dlgDetalle"
-                          closable="true"
-                          width="400"
-                          showEffect="fade" hideEffect="fade">
+                          width="420"
+                          showEffect="fade"
+                          hideEffect="fade"
+                          responsive="true"
+                          styleClass="skyway-dialog">
 
-                    <h:panelGroup rendered="#{not empty perfilPasajeroView.itinerarioDetalle}" layout="block" styleClass="printable">
-                        <h3 style="margin-bottom: 10px;">
-                            #{perfilPasajeroView.itinerarioDetalle.aeropuertoOrigen.codigoIata}
-                            →
-                            #{perfilPasajeroView.itinerarioDetalle.aeropuertoDestino.codigoIata}
-                        </h3>
+                    <h:panelGroup id="cntDetalle" rendered="#{not empty perfilPasajeroView.itinerarioDetalle}" layout="block" styleClass="dialog-padding">
+                        <div class="route-header-modal">
+                            <h3 class="route-title">
+                                #{perfilPasajeroView.itinerarioDetalle.aeropuertoOrigen.codigoIata}
+                                <i class="pi pi-send icon-flight"></i>
+                                #{perfilPasajeroView.itinerarioDetalle.aeropuertoDestino.codigoIata}
+                            </h3>
+                        </div>
 
-                        <p><strong>Salida:</strong>
-                            <h:outputText value="#{perfilPasajeroView.itinerarioDetalle.horaSalida}">
-                                <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago"/>
-                            </h:outputText>
-                        </p>
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">Salida</span>
+                                <strong class="detail-value">
+                                    <h:outputText value="#{perfilPasajeroView.itinerarioDetalle.horaSalida}">
+                                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/Santiago"/>
+                                    </h:outputText>
+                                </strong>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Llegada</span>
+                                <strong class="detail-value">
+                                    <h:outputText value="#{perfilPasajeroView.itinerarioDetalle.horaLlegada}">
+                                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/Santiago"/>
+                                    </h:outputText>
+                                </strong>
+                            </div>
+                        </div>
 
-                        <p><strong>Llegada:</strong>
-                            <h:outputText value="#{perfilPasajeroView.itinerarioDetalle.horaLlegada}">
-                                <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago"/>
-                            </h:outputText>
-                        </p>
+                        <p:divider styleClass="skyway-divider" />
 
-                        <p><strong>Escalas:</strong> #{perfilPasajeroView.itinerarioDetalle.numeroEscalas}</p>
-
-                        <p><strong>Precio:</strong>
-                            <h:outputText value="#{perfilPasajeroView.itinerarioDetalle.precioBase}">
-                                <f:convertNumber type="currency" currencySymbol="$" />
-                            </h:outputText>
-                        </p>
+                        <div class="summary-info">
+                            <p><strong>Escalas totales:</strong> #{perfilPasajeroView.itinerarioDetalle.numeroEscalas}</p>
+                            <p class="price-row">
+                                <strong>Precio Base:</strong>
+                                <span class="price-tag">
+                                    <h:outputText value="#{perfilPasajeroView.itinerarioDetalle.precioBase}">
+                                        <f:convertNumber type="currency" currencySymbol="$" />
+                                    </h:outputText>
+                                </span>
+                            </p>
+                        </div>
                     </h:panelGroup>
                 </p:dialog>
             </h:form>
 
-
+            <!-- MODAL TICKET / BOARDING PASS -->
             <h:form id="formDetalleTicket">
                 <p:dialog header="Tarjetas de Embarque"
                           widgetVar="dlgDetalleTicket"
                           modal="true"
                           resizable="false"
                           id="dlgDetalleTicket"
-                          width="700"
-                          height="600"
+                          width="780"
+                          height="520"
                           showEffect="fade"
                           hideEffect="fade"
-                          styleClass="dialog-boarding">
+                          responsive="true"
+                          styleClass="skyway-dialog dialog-boarding">
 
                     <div class="printable-area">
                         <h:panelGroup rendered="#{not empty perfilPasajeroView.ticketInfos}" layout="block" styleClass="ticket-container">
                             <ui:repeat value="#{perfilPasajeroView.ticketInfos}" var="ticket">
-
                                 <div class="boarding-pass">
+
+                                    <!-- SECCIÓN PRINCIPAL (IZQUIERDA) -->
                                     <div class="main-section">
                                         <div class="pass-header">
                                             <div class="airline-brand">
                                                 <i class="pi pi-send"></i> <span>SKYWAY AIRLINES</span>
                                             </div>
-                                            <div class="pass-type">BOARDING PASS</div>
+                                            <div class="pass-type">TARJETA DE EMBARQUE</div>
                                         </div>
 
                                         <div class="pass-content">
@@ -557,18 +236,17 @@
                                                 </div>
                                             </div>
 
-                                            <div class="pass-row" style="margin-top: 10px;">
+                                            <div class="pass-row">
                                                 <div class="pass-col">
-                                                    <span class="label">FECHA Y HORA SALIDA</span>
-                                                    <h:outputText value="#{ticket.horaSalida}">
-                                                        <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago"/>
+                                                    <span class="label">SALIDA</span>
+                                                    <h:outputText value="#{ticket.horaSalida}" styleClass="value">
+                                                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/Santiago"/>
                                                     </h:outputText>
-
                                                 </div>
                                                 <div class="pass-col text-right">
-                                                    <span class="label">FECHA Y HORA LLEGADA</span>
-                                                    <h:outputText value="#{ticket.horaLlegada}">
-                                                        <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago"/>
+                                                    <span class="label">LLEGADA</span>
+                                                    <h:outputText value="#{ticket.horaLlegada}" styleClass="value">
+                                                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/Santiago"/>
                                                     </h:outputText>
                                                 </div>
                                             </div>
@@ -578,12 +256,12 @@
                                             <div class="pass-row">
                                                 <div class="pass-col">
                                                     <span class="label">PUERTA / TERMINAL</span>
-                                                    <span class="value">#{ticket.codigoPuerta} / #{ticket.terminal}</span>
+                                                    <span class="value">#{empty ticket.codigoPuerta ? 'TBD' : ticket.codigoPuerta} / #{empty ticket.terminal ? 'TBD' : ticket.terminal}</span>
                                                 </div>
                                                 <div class="pass-col">
                                                     <div class="seat-badge">
-                                                        <span class="label" style="color: rgba(255,255,255,0.6) !important;">ASIENTO</span>
-                                                        <span class="value" style="color: white !important;">#{ticket.numeroAsiento}</span>
+                                                        <span class="label">ASIENTO</span>
+                                                        <span class="value">#{ticket.numeroAsiento}</span>
                                                     </div>
                                                 </div>
                                                 <div class="pass-col text-right">
@@ -594,240 +272,178 @@
                                         </div>
 
                                         <div class="boarding-notice">
-                                            <i class="pi pi-clock"></i> PRESENTARSE 2 HORAS ANTES
+                                            <i class="pi pi-clock"></i> PRESENTARSE 2 HORAS ANTES EN PUERTA
                                         </div>
                                     </div>
 
+                                    <!-- TALÓN DEL PASAJERO (DERECHA) -->
                                     <div class="stub">
-                                        <div class="stub-title">TALÓN PASAJERO</div>
-
-                                        <div class="pass-col">
-                                            <span class="label" style="color: rgba(255,255,255,0.6)">PASAJERO</span>
-                                            <span class="value" style="color: white; font-size: 0.8rem;">#{ticket.nombre}</span>
+                                        <div>
+                                            <div class="stub-title">TALÓN PASAJERO</div>
+                                            <div class="pass-col" style="margin-bottom: 12px;">
+                                                <span class="label">PASAJERO</span>
+                                                <span class="value" style="font-size: 0.85rem;">#{ticket.nombre}</span>
+                                            </div>
                                         </div>
-
                                         <div class="pass-row">
                                             <div class="pass-col">
-                                                <span class="label" style="color: rgba(255,255,255,0.6)">VUELO</span>
-                                                <span class="value" style="color: white">#{ticket.numeroVuelo}</span>
+                                                <span class="label">VUELO</span>
+                                                <span class="value">#{ticket.numeroVuelo}</span>
                                             </div>
                                             <div class="pass-col text-right">
-                                                <span class="label" style="color: rgba(255,255,255,0.6)">ASIENTO</span>
-                                                <span class="value" style="color: white">#{ticket.numeroAsiento}</span>
+                                                <span class="label">ASIENTO</span>
+                                                <span class="value">#{ticket.numeroAsiento}</span>
                                             </div>
                                         </div>
-
-                                        <div class="barcode-container">
-                                            <div class="bar" style="width: 3px"></div>
-                                            <div class="bar" style="width: 1px"></div>
-                                            <div class="bar" style="width: 4px"></div>
-                                            <div class="bar" style="width: 2px"></div>
-                                            <div class="bar" style="width: 1px"></div>
-                                            <div class="bar" style="width: 3px"></div>
-                                            <div class="bar" style="width: 2px"></div>
-                                            <div class="bar" style="width: 4px"></div>
-                                        </div>
                                     </div>
-                                </div>
 
+                                </div>
                             </ui:repeat>
                         </h:panelGroup>
                     </div>
 
                     <f:facet name="footer">
-                        <p:commandButton value="Imprimir"
+                        <p:commandButton value="Imprimir Ticket"
                                          icon="pi pi-print"
                                          type="button"
                                          onclick="window.print()"
-                                         styleClass="ui-button-raised"
-                                         style="margin-right: 10px; background-color: var(--primary-ticket); border-color: var(--primary-ticket);"/>
-
+                                         styleClass="btn-skyway-primary" />
                         <p:commandButton value="Cerrar"
                                          onclick="PF('dlgDetalleTicket').hide()"
                                          type="button"
-                                         styleClass="ui-button-flat"
-                                         style="color: var(--text-light);"/>
+                                         styleClass="btn-skyway-outlined" />
                     </f:facet>
                 </p:dialog>
             </h:form>
 
-
-
-
+            <!-- MODAL ASIENTOS RESERVADOS -->
             <h:form id="formAsientos">
-                <p:growl id="growl" showDetail="true" sticky="true" />
-
-                <!-- Botón para abrir el diálogo -->
-
-
-                <!-- Diálogo con la tabla de asientos -->
                 <p:dialog header="Asientos Reservados"
                           widgetVar="dlgAsientos"
                           modal="true"
                           showEffect="fade"
                           hideEffect="fade"
                           resizable="false"
-                          width="50%"
-                          height="auto"
-                          closable="true">
-
-                    <h3>Asientos Reservados para tu vuelo</h3>
+                          width="550"
+                          responsive="true"
+                          styleClass="skyway-dialog">
 
                     <p:dataTable value="#{perfilPasajeroView.listaAsientosReservados}"
                                  var="asiento"
                                  id="tablaAsientos"
-                                 rows="10"
+                                 rows="5"
                                  paginator="true"
                                  paginatorPosition="bottom"
-                                 emptyMessage="No se encontraron asientos reservados."
-                                 styleClass="custom-datatable"
-                                 responsiveLayout="scroll">
+                                 responsiveLayout="scroll"
+                                 emptyMessage="No hay asientos registrados para este itinerario."
+                                 styleClass="skyway-datatable">
 
-                        <p:column headerText="Número de Asiento">
-                            <h:outputText value="#{asiento.numeroAsiento}" />
+                        <p:column headerText="Asiento">
+                            <h:outputText value="#{asiento.numeroAsiento}" styleClass="seat-number" />
                         </p:column>
 
                         <p:column headerText="Clase">
                             <h:outputText value="#{asiento.claseAsiento}" />
                         </p:column>
 
-                        <p:column headerText="Numero Vuelo">
+                        <p:column headerText="N° Vuelo">
                             <h:outputText value="#{perfilPasajeroView.getNumeroVuelo(asiento.idVuelo)}" />
                         </p:column>
 
-
-                        <p:column headerText="cambiarAsiento" style="text-align: center;">
-                            <p:commandButton value="CambiarAsiento"
-                                             icon="pi pi-search"
-                                             styleClass="btn-detail"
+                        <p:column headerText="Acciones" styleClass="col-center">
+                            <p:commandButton value="Cambiar"
+                                             icon="pi pi-refresh"
+                                             styleClass="btn-skyway-warning ui-button-sm"
                                              update="@form"
                                              process="@form"
-                                             actionListener="#{perfilPasajeroView.cambiarAsiento(asiento)}"
-                            />
+                                             actionListener="#{perfilPasajeroView.cambiarAsiento(asiento)}" />
                         </p:column>
-
                     </p:dataTable>
                 </p:dialog>
             </h:form>
 
+            <!-- SIDEBAR PARADAS (ESCALAS CON TIMELINE ENRIQUECIDO) -->
+            <p:sidebar widgetVar="sidebarParadas"
+                       position="right"
+                       id="sidebarParadas"
+                       styleClass="skyway-sidebar sidebar-corporativo">
 
-            <!-- Modal de detalles de paradas -->
-            <p:sidebar widgetVar="sidebarParadas" position="right" id="sidebarParadas" width="400" showEffect="slideIn" hideEffect="slideOut">
-                <h3 style="text-align: center; color: #4CAF50; margin-bottom: 20px; font-size: 22px; font-weight: bold;">Detalles de las Paradas</h3>
+                <div class="header-titulo">
+                    <i class="pi pi-route"></i> Detalle del Itinerario
+                </div>
 
-                <p:scrollPanel style="width: 100%; height: 100%;" mode="native" class="sidebar-content">
-                    <div class="scrollable-content">
-                        <ui:repeat value="#{itinerarioDetalleBean.paradasVuelo}" var="parada" varStatus="status">
-                            <div class="flight-segment" style="background-color: #f9f9f9; margin-bottom: 25px; border-radius: 10px; padding: 20px; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);">
+                <p:scrollPanel mode="native" styleClass="sidebar-scroll-panel">
+                    <div class="skyway-timeline">
+                        <ui:repeat value="#{itinerarioDetalleBean.paradasVuelo}" var="p" varStatus="st">
+                            <div class="timeline-item tramo-bloque">
+                                <div class="timeline-content card-parada card-parada-separada">
 
-                                <!-- Título de la parada -->
-                                <h4 style="color: #333; font-size: 20px; margin-bottom: 15px; font-weight: bold;">Parada #{status.index + 1}</h4>
+                                    <!-- Encabezado del tramo -->
+                                    <div class="card-header">
+                                        <span>Tramo #{st.index + 1}</span>
+                                        <h:panelGroup rendered="#{not empty p.aerolinea}" layout="block" styleClass="badge-aerolinea">
+                                            <i class="pi pi-building"></i> #{p.aerolinea}
+                                        </h:panelGroup>
+                                    </div>
 
-                                <!-- Sección destacada: Aeropuertos de salida y llegada -->
-                                <div class="airport-info" style="background-color: #e0f7fa; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
-                                    <h5 style="color: #00796b; margin-bottom: 20px; font-size: 18px; font-weight: bold;">Información de Aeropuertos</h5>
-
-                                    <!-- Aeropuerto de Origen -->
-                                    <div class="details" style="margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;">
-                                        <i class="pi pi-plane" style="color: #00796b; font-size: 1.8em; margin-right: 15px;"></i>
-                                        <div>
-                                            <span class="label" style="font-size: 16px; color: #333;">Aeropuerto Origen:</span><br />
-                                            <span class="text" style="font-size: 16px; color: #4CAF50; font-weight: bold;">#{parada.aeropuertoSalida}</span>
+                                    <!-- Sección: Ruta y Horarios -->
+                                    <div class="section">
+                                        <div class="section-title"><i class="pi pi-map-marker"></i> Tramo del Vuelo</div>
+                                        <div class="timeline-leg">
+                                            <div class="city-block">
+                                                <div class="city-code">#{p.aeropuertoSalida}</div>
+                                                <div class="city-time"><i class="pi pi-calendar"></i> #{p.salida}</div>
+                                            </div>
+                                            <div class="timeline-arrow">
+                                                <i class="pi pi-arrow-down"></i>
+                                            </div>
+                                            <div class="city-block">
+                                                <div class="city-code">#{p.aeropuertoLlegada}</div>
+                                                <div class="city-time"><i class="pi pi-clock"></i> #{p.llegada}</div>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <!-- Fecha y Hora de Salida -->
-                                    <div class="details" style="margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;">
-                                        <i class="pi pi-calendar" style="color: #00796b; font-size: 1.8em; margin-right: 15px;"></i>
-                                        <div>
-                                            <span class="label" style="font-size: 16px; color: #333;">Fecha y Hora de Salida:</span><br />
-                                            <span class="text" style="font-size: 16px; color: #FF7043; font-weight: bold;">#{parada.salida}</span>
+                                    <!-- Sección: Métricas del Vuelo -->
+                                    <div class="section">
+                                        <div class="section-title"><i class="pi pi-info-circle"></i> Información del Vuelo</div>
+                                        <div class="info-grid">
+                                            <div class="info-item">
+                                                <span class="label">Vuelo:</span>
+                                                <span class="value"><i class="pi pi-plane"></i> #{p.vuelo}</span>
+                                            </div>
+                                            <div class="info-item">
+                                                <span class="label">Duración:</span>
+                                                <span class="value"><i class="pi pi-clock"></i> #{p.duracion}</span>
+                                            </div>
+                                            <div class="info-item">
+                                                <span class="label">Espera:</span>
+                                                <span class="value #{not empty p.tiempoEspera ? 'has-wait' : ''}">
+                                        <i class="pi pi-hourglass"></i> #{empty p.tiempoEspera ? 'N/A' : p.tiempoEspera}
+                                    </span>
+                                            </div>
+                                            <div class="info-item">
+                                                <span class="label">Aeronave:</span>
+                                                <span class="value"><i class="pi pi-cog"></i> #{p.modeloAvion}</span>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <!-- Aeropuerto de Destino -->
-                                    <div class="details" style="margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;">
-                                        <i class="pi pi-plane-slash" style="color: #00796b; font-size: 1.8em; margin-right: 15px;"></i>
-                                        <div>
-                                            <span class="label" style="font-size: 16px; color: #333;">Aeropuerto Destino:</span><br />
-                                            <span class="text" style="font-size: 16px; color: #FF7043; font-weight: bold;">#{parada.aeropuertoLlegada}</span>
-                                        </div>
-                                    </div>
+                                    <!-- Sección: Descripción Adicional -->
+                                    <h:panelGroup rendered="#{not empty p.descripcionVuelo}" layout="block" styleClass="section">
+                                        <div class="section-title"><i class="pi pi-align-left"></i> Descripción</div>
+                                        <div class="descripcion descripcion-espaciada">#{p.descripcionVuelo}</div>
+                                    </h:panelGroup>
 
-                                    <!-- Fecha y Hora de Llegada -->
-                                    <div class="details" style="margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;">
-                                        <i class="pi pi-calendar" style="color: #00796b; font-size: 1.8em; margin-right: 15px;"></i>
-                                        <div>
-                                            <span class="label" style="font-size: 16px; color: #333;">Fecha y Hora de Llegada:</span><br />
-                                            <span class="text" style="font-size: 16px; color: #FF7043; font-weight: bold;">#{parada.llegada}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Información adicional del vuelo -->
-                                <div class="details-group" style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 20px; margin-bottom: 20px;">
-
-                                    <!-- Información sobre el vuelo -->
-                                    <div class="info-card" style="flex: 1; min-width: 180px; background-color: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-                                        <div class="details" style="margin-bottom: 10px;">
-                                            <i class="pi pi-plane" style="color: #4CAF50; margin-right: 10px;"></i><span class="label">Vuelo:</span>
-                                            <span class="text" style="font-weight: bold;">#{parada.vuelo}</span>
-                                        </div>
-                                        <div class="details" style="margin-bottom: 10px;">
-                                            <i class="pi pi-calendar" style="color: #4CAF50; margin-right: 10px;"></i><span class="label">Duración Total:</span>
-                                            <span class="text" style="font-weight: bold;">#{parada.duracionTotal}</span>
-                                        </div>
-                                        <div class="details" style="margin-bottom: 10px;">
-                                            <i class="pi pi-clock" style="color: #4CAF50; margin-right: 10px;"></i><span class="label">Duración:</span>
-                                            <span class="text" style="font-weight: bold;">#{parada.duracion}</span>
-                                        </div>
-                                    </div>
-
-                                    <!-- Información adicional del aeropuerto y ciudad -->
-                                    <div class="info-card" style="flex: 1; min-width: 180px; background-color: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-                                        <div class="details" style="margin-bottom: 10px;">
-                                            <i class="pi pi-clock" style="color: #4CAF50; margin-right: 10px;"></i><span class="label">Tiempo de Espera:</span>
-                                            <span class="text" style="font-weight: bold;">#{parada.tiempoEspera}</span>
-                                        </div>
-                                        <div class="details" style="margin-bottom: 10px;">
-                                            <i class="pi pi-tag" style="color: #4CAF50; margin-right: 10px;"></i><span class="label">Aerolínea:</span>
-                                            <span class="text" style="font-weight: bold;">#{parada.aerolinea}</span>
-                                        </div>
-                                        <div class="details" style="margin-bottom: 10px;">
-                                            <i class="pi pi-cogs" style="color: #4CAF50; margin-right: 10px;"></i><span class="label">Modelo de Avión:</span>
-                                            <span class="text" style="font-weight: bold;">#{parada.modeloAvion}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Detalles adicionales -->
-                                <div class="details-group" style="margin-top: 15px;">
-                                    <div class="details" style="margin-bottom: 10px;">
-                                        <i class="pi pi-calendar-plus" style="color: #4CAF50; margin-right: 10px;"></i><span class="label">Descripción:</span>
-                                        <span class="text" style="font-weight: bold;">#{parada.descripcionVuelo}</span>
-                                    </div>
-                                </div>
-
-                                <!-- Tiempo de espera entre paradas -->
-                                <div class="layover" style="background-color: #f0f0f0; padding: 15px; border-radius: 8px; margin-top: 15px; font-weight: bold;">
-                                    <i class="pi pi-hourglass" style="color: #4CAF50; margin-right: 10px;"></i> Tiempo de espera entre paradas: #{parada.tiempoEspera}
                                 </div>
                             </div>
-                            <hr />
                         </ui:repeat>
-
                     </div>
 
-                    <!-- Botón de scroll -->
-                    <p:scrollTop target="parent" threshold="100" styleClass="custom-scrolltop" icon="pi pi-arrow-up" />
+                    <p:scrollTop target="parent" threshold="100" icon="pi pi-arrow-up" styleClass="btn-scrolltop-skyway" />
                 </p:scrollPanel>
             </p:sidebar>
 
         </div>
-
-
-
-
     </ui:define>
-
 </ui:composition>
