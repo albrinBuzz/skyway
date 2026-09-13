@@ -1,0 +1,610 @@
+/* =============================================================
+   1. PALETA CORPORATIVA SKYWAY
+   ============================================================= */
+:root {
+    --deep-space: #080e1a;
+    --midnight-blue: #0b1426;
+    --slate-glass: #1e293b;
+    --border-ui: #334155;
+
+    --cyber-cyan: #00d1ff;
+    --aviation-blue: #4c7cf3;
+    --text-primary: #f8fafc;
+    --text-dim: #94a3b8;
+
+    --status-ontime: #0d9488;
+    --status-delayed: #d97706;
+    --status-cancelled: #dc2626;
+}
+
+.skyway-container {
+    padding: 1.5rem;
+}
+
+/* =============================================================
+   2. CABECERA Y TARJETAS (FILTROS)
+   ============================================================= */
+.page-header {
+    margin-bottom: 1.5rem;
+}
+
+.page-title {
+    color: var(--cyber-cyan);
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+}
+
+.page-subtitle {
+    color: var(--text-dim);
+    margin: 0;
+}
+
+.skyway-card {
+    background-color: var(--midnight-blue) !important;
+    border: 1px solid var(--slate-glass) !important;
+    border-radius: 10px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-grid-inline {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.form-grid-inline .field-item {
+    flex: 1;
+    min-width: 180px;
+}
+
+.field-label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 0.35rem;
+    color: var(--text-primary);
+}
+
+.quick-filters {
+    display: flex;
+    gap: 0.625rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+/* =============================================================
+   3. PRIMEFACES OVERRIDES (INPUTS, PAGINADOR Y TABLA)
+   ============================================================= */
+.ui-inputfield,
+.ui-datepicker input {
+    background-color: var(--deep-space) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-ui) !important;
+}
+
+.ui-inputfield.ui-state-focus,
+.ui-datepicker input:focus {
+    border-color: var(--cyber-cyan) !important;
+}
+
+.ui-datepicker {
+    background-color: var(--midnight-blue) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-ui) !important;
+}
+
+.ui-datepicker table td a.ui-state-active {
+    background-color: var(--aviation-blue) !important;
+}
+
+.skyway-datatable .ui-datatable-header,
+.skyway-datatable th {
+    background-color: var(--midnight-blue) !important;
+    color: var(--cyber-cyan) !important;
+    border-color: var(--slate-glass) !important;
+}
+
+.skyway-datatable td {
+    background-color: var(--deep-space) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--slate-glass) !important;
+}
+
+.skyway-datatable tr:hover td {
+    background-color: var(--midnight-blue) !important;
+}
+
+.skyway-datatable .ui-paginator {
+    background-color: var(--midnight-blue) !important;
+    border-color: var(--slate-glass) !important;
+}
+
+.skyway-datatable .ui-paginator .ui-paginator-page,
+.skyway-datatable .ui-paginator .ui-paginator-first,
+.skyway-datatable .ui-paginator .ui-paginator-prev,
+.skyway-datatable .ui-paginator .ui-paginator-next,
+.skyway-datatable .ui-paginator .ui-paginator-last {
+    background-color: var(--deep-space) !important;
+    color: var(--text-dim) !important;
+    border: 1px solid var(--border-ui) !important;
+}
+
+.skyway-datatable .ui-paginator .ui-paginator-page.ui-state-active {
+    background-color: var(--aviation-blue) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--aviation-blue) !important;
+}
+
+.col-route { min-width: 140px; }
+.col-date { color: var(--text-primary); }
+.col-center { text-align: center; }
+.col-actions { text-align: center; width: 220px; }
+
+.iata-code {
+    font-weight: 700;
+    font-size: 1.05em;
+    color: var(--cyber-cyan);
+}
+
+.route-icon {
+    margin: 0 8px;
+    font-size: 0.8em;
+    color: var(--aviation-blue);
+}
+
+.action-buttons-wrapper {
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+}
+
+/* =============================================================
+   4. BOTONES PERSONALIZADOS
+   ============================================================= */
+.btn-skyway-primary {
+    background-color: var(--aviation-blue) !important;
+    border-color: var(--aviation-blue) !important;
+    color: var(--text-primary) !important;
+}
+
+.btn-skyway-primary:hover {
+    background-color: #3b6be2 !important;
+}
+
+.btn-skyway-outlined {
+    background-color: transparent !important;
+    border: 1px solid var(--border-ui) !important;
+    color: var(--cyber-cyan) !important;
+}
+
+.btn-skyway-outlined:hover {
+    background-color: rgba(0, 209, 255, 0.08) !important;
+    border-color: var(--cyber-cyan) !important;
+}
+
+.btn-skyway-success {
+    background-color: var(--status-ontime) !important;
+    border-color: var(--status-ontime) !important;
+    color: var(--text-primary) !important;
+    font-weight: 600;
+}
+
+.btn-skyway-warning {
+    background-color: var(--status-delayed) !important;
+    border-color: var(--status-delayed) !important;
+    color: var(--text-primary) !important;
+    font-weight: 600;
+}
+
+.btn-icon-cyan {
+    background: transparent !important;
+    border: none !important;
+    color: var(--cyber-cyan) !important;
+}
+
+.btn-icon-cyan:hover { background: rgba(0, 209, 255, 0.12) !important; }
+
+.btn-icon-blue {
+    background: transparent !important;
+    border: none !important;
+    color: var(--aviation-blue) !important;
+}
+
+.btn-icon-blue:hover { background: rgba(76, 124, 243, 0.12) !important; }
+
+.btn-icon-secondary {
+    background: transparent !important;
+    border: none !important;
+    color: var(--text-dim) !important;
+}
+
+.btn-icon-secondary:hover { color: var(--text-primary) !important; }
+
+/* =============================================================
+   5. TARJETA DE EMBARQUE (BOARDING PASS) - RESTRUCTURADO Y RESTAURADO
+   ============================================================= */
+.skyway-dialog .ui-dialog-content,
+.skyway-dialog .ui-dialog-titlebar,
+.skyway-dialog .ui-dialog-footer {
+    background-color: var(--midnight-blue) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--slate-glass) !important;
+}
+
+.skyway-dialog .ui-dialog-title {
+    color: var(--cyber-cyan) !important;
+}
+
+/* Tarjeta principal contenedor Flex */
+.boarding-pass {
+    display: flex !important;
+    flex-direction: row !important;
+    background-color: var(--midnight-blue);
+    border: 1px solid var(--slate-glass);
+    border-radius: 12px;
+    overflow: hidden;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.boarding-pass .main-section {
+    flex: 3;
+    padding: 20px;
+    border-right: 2px dashed var(--slate-glass);
+}
+
+.boarding-pass .stub {
+    flex: 1;
+    padding: 20px;
+    background-color: var(--deep-space);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.boarding-pass .pass-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--slate-glass);
+}
+
+.boarding-pass .airline-brand {
+    color: var(--cyber-cyan);
+    font-weight: bold;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.boarding-pass .pass-type {
+    color: var(--aviation-blue);
+    font-size: 0.85rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.boarding-pass .pass-row {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.boarding-pass .pass-col {
+    display: flex;
+    flex-direction: column;
+}
+
+.text-right { text-align: right; }
+
+.boarding-pass .label {
+    display: block;
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.boarding-pass .value {
+    color: var(--text-primary);
+    font-weight: bold;
+    font-size: 0.95rem;
+}
+
+.boarding-pass .value.highlight {
+    color: var(--cyber-cyan);
+}
+
+.divider-dashed {
+    border-bottom: 1px dashed var(--slate-glass);
+    margin: 12px 0;
+}
+
+.boarding-pass .seat-badge {
+    background-color: var(--slate-glass);
+    padding: 6px 12px;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.boarding-pass .boarding-notice {
+    margin-top: 15px;
+    font-size: 0.8rem;
+    color: var(--status-delayed);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.stub-title {
+    color: var(--aviation-blue);
+    font-weight: bold;
+    font-size: 0.85rem;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--slate-glass);
+    padding-bottom: 5px;
+}
+
+/* =============================================================
+   6. REGLA DE IMPRESIÓN CORREGIDA (SOLO ACTIVA AL IMPRIMIR)
+   ============================================================= */
+@media print {
+    body * {
+        visibility: hidden !important;
+    }
+    .printable-area, .printable-area * {
+        visibility: visible !important;
+    }
+    .printable-area {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+    }
+    .boarding-pass {
+        border: 1px solid #000 !important;
+        color: #000 !important;
+        background: #fff !important;
+    }
+    .boarding-pass .main-section {
+        border-right: 2px dashed #000 !important;
+    }
+    .boarding-pass .stub {
+        background: #f0f0f0 !important;
+    }
+    .boarding-pass .label {
+        color: #555 !important;
+    }
+    .boarding-pass .value,
+    .boarding-pass .airline-brand,
+    .boarding-pass .value.highlight {
+        color: #000 !important;
+    }
+}
+
+
+/* =============================================================
+   SIDEBAR CORPORATIVO Y TIMELINE ENRIQUECIDO (SKYWAY THEME)
+   ============================================================= */
+
+/* Ajuste general del Sidebar */
+body .sidebar-corporativo {
+    width: 500px !important;
+    background-color: var(--midnight-blue) !important;
+    border-left: 1px solid var(--slate-glass) !important;
+    padding: 0 !important;
+}
+
+@media (max-width: 576px) {
+    body .sidebar-corporativo {
+        width: 100% !important;
+    }
+}
+
+/* Cabecera principal del Sidebar */
+.sidebar-corporativo .header-titulo {
+    background-color: var(--deep-space);
+    color: var(--cyber-cyan);
+    font-size: 1.25rem;
+    font-weight: 700;
+    padding: 1.25rem;
+    border-bottom: 1px solid var(--slate-glass);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* ScrollPanel Interno */
+.sidebar-scroll-panel {
+    width: 100%;
+    height: calc(100vh - 70px);
+    background: transparent !important;
+}
+
+.sidebar-scroll-panel .ui-scrollpanel-content {
+    padding: 1.25rem !important;
+    background: transparent !important;
+}
+
+/* Estructura del Timeline */
+.skyway-timeline {
+    position: relative;
+    padding-left: 1rem;
+}
+
+.skyway-timeline::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 2px;
+    background: var(--slate-glass);
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -1rem;
+    top: 15px;
+    transform: translateX(-50%);
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: var(--cyber-cyan);
+    box-shadow: 0 0 8px rgba(0, 209, 255, 0.6);
+}
+
+/* Cards de Paradas/Escalas */
+.card-parada {
+    background-color: var(--deep-space) !important;
+    border: 1px solid var(--slate-glass) !important;
+    border-radius: 10px;
+    padding: 1.25rem;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--cyber-cyan);
+    font-weight: 700;
+    font-size: 1.1rem;
+    border-bottom: 1px dashed var(--slate-glass);
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.badge-aerolinea {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    background-color: var(--slate-glass);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: normal;
+}
+
+/* Subsecciones internas */
+.card-parada .section {
+    margin-bottom: 1.2rem;
+}
+
+.card-parada .section:last-child {
+    margin-bottom: 0;
+}
+
+.section-title {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.section-title i {
+    color: var(--aviation-blue);
+}
+
+/* Layout del Tramo de Vuelo (Salida -> Llegada) */
+.timeline-leg {
+    background-color: var(--midnight-blue);
+    border-radius: 8px;
+    padding: 1rem;
+    border: 1px solid var(--border-ui);
+}
+
+.city-block {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.city-code {
+    color: var(--text-primary);
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.city-time {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+}
+
+.timeline-arrow {
+    text-align: center;
+    color: var(--cyber-cyan);
+    margin: 0.4rem 0;
+    font-size: 0.9rem;
+}
+
+/* Grilla de Información de Vuelo */
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    background-color: var(--midnight-blue);
+    padding: 0.85rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-ui);
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.info-item .label {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+}
+
+.info-item .value {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.info-item .value i {
+    color: var(--cyber-cyan);
+    font-size: 0.85rem;
+}
+
+.info-item .value.has-wait {
+    color: var(--status-delayed);
+}
+
+/* Descripción */
+.descripcion {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    line-height: 1.5;
+    background-color: var(--midnight-blue);
+    padding: 0.75rem;
+    border-radius: 6px;
+    border-left: 3px solid var(--aviation-blue);
+}
+
+/* Botón ScrollTop personalizado */
+body .btn-scrolltop-skyway {
+    background-color: var(--aviation-blue) !important;
+    color: var(--text-primary) !important;
+    border: none !important;
+}
