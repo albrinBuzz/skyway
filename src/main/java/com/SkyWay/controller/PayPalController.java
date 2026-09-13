@@ -3,8 +3,6 @@ package com.SkyWay.controller;
 import com.SkyWay.config.pago.MetodoPagoEnum;
 import com.SkyWay.config.pago.PagoFactoryService;
 import com.SkyWay.config.pago.PasarelaPagoStrategy;
-import com.SkyWay.config.webPay.WebPayService;
-
 import com.SkyWay.modules.reserva.domain.service.ReservaProcesadorService;
 import com.SkyWay.modules.reserva.presentation.dto.SolicitudReservaDTO;
 import com.SkyWay.util.Logger;
@@ -19,46 +17,43 @@ import org.springframework.web.servlet.view.RedirectView;
 import java.util.Optional;
 
 @RestController
-public class WebPayController {
+public class PayPalController {
 
-    @Autowired private WebPayService webPayService;
-    @Autowired private ReservaProcesadorService procesarReservaUseCase;
-
+    @Autowired
+    private ReservaProcesadorService procesarReservaUseCase;
 
     private final PagoFactoryService pagoFactoryService;
 
-    public WebPayController(PagoFactoryService pagoFactoryService) {
+    public PayPalController(PagoFactoryService pagoFactoryService) {
         this.pagoFactoryService = pagoFactoryService;
     }
 
-    @GetMapping("/webpay/commit")
-    public RedirectView responderWebPay(
-            @RequestParam(value = "token_ws", required = false) Optional<String> tokenWs,
-            @RequestParam(value = "TBK_TOKEN", required = false) Optional<String> tbkToken,
+    /**
+     * Endpoint invocado por PayPal al completar la aprobación del pago (returnUrl).
+     * PayPal devuelve el identificador de la orden en el parámetro query 'token'.
+     */
+    @GetMapping("/paypal/commit")
+    public RedirectView responderPayPal(
+            @RequestParam(value = "token", required = false) Optional<String> tokenPayPal,
             HttpServletRequest request) {
 
-        // El usuario canceló la compra en la pasarela
-        if (tbkToken.isPresent()) {
-            return new RedirectView("/home/errorPago.xhtml?reason=CANCELLED");
-        }
+        if (tokenPayPal.isPresent() && !tokenPayPal.get().isBlank()) {
+            String token = tokenPayPal.get();
 
-
-
-
-        if (tokenWs.isPresent() && !tokenWs.get().isBlank()) {
-
-            String token = tokenWs.get();
-            boolean pagoAutorizado = webPayService.confirmarPagoWebPay(token);
-
-            //PasarelaPagoStrategy webpayStrategy = pagoFactoryService.obtenerEstrategia(MetodoPagoEnum.WEBPAY);
-            //boolean pagoAprobado = webpayStrategy.confirmarPago(String.valueOf(tokenWs));
+            // Usamos la estrategia mediante el Factory
+            PasarelaPagoStrategy payPalStrategy = pagoFactoryService.obtenerEstrategia(MetodoPagoEnum.PAYPAL);
+            boolean pagoAutorizado = payPalStrategy.confirmarPago(token);
 
             if (!pagoAutorizado) {
+                Logger.logError("❌ PayPal no autorizó o falló la captura del pago para el token: " + token);
                 return new RedirectView("/home/errorPago.xhtml?reason=REJECTED");
             }
 
+            // Recuperar DTO guardado en la sesión
             HttpSession session = request.getSession(false);
-            SolicitudReservaDTO dto = (session != null) ? (SolicitudReservaDTO) session.getAttribute("SOLICITUD_RESERVA_PENDIENTE") : null;
+            SolicitudReservaDTO dto = (session != null)
+                    ? (SolicitudReservaDTO) session.getAttribute("SOLICITUD_RESERVA_PENDIENTE")
+                    : null;
 
             if (dto == null) {
                 Logger.logError("❌ No se encontraron los datos DTO de la reserva en la sesión.");
@@ -66,15 +61,25 @@ public class WebPayController {
             }
 
             try {
+                // Persistir reserva en la BD
                 Integer idReserva = procesarReservaUseCase.ejecutarPersistenciaReserva(dto);
                 session.removeAttribute("SOLICITUD_RESERVA_PENDIENTE");
                 return new RedirectView("/home/pago-exitoso.xhtml?idReserva=" + idReserva);
             } catch (Exception e) {
-                Logger.logError("💥 Error al escribir la reserva: " + e.getMessage());
+                Logger.logError("💥 Error al escribir la reserva tras pago con PayPal: " + e.getMessage());
                 return new RedirectView("/home/errorPago.xhtml?reason=PERSISTENCE_ERROR");
             }
         }
 
         return new RedirectView("/home/errorPago.xhtml?reason=INVALID_TOKEN");
+    }
+
+    /**
+     * Endpoint invocado por PayPal si el usuario decide cancelar la transacción (cancelUrl).
+     */
+    @GetMapping("/paypal/cancel")
+    public RedirectView cancelarPayPal() {
+        Logger.logInfo("El usuario canceló la compra en la pasarela de PayPal.");
+        return new RedirectView("/home/errorPago.xhtml?reason=CANCELLED");
     }
 }

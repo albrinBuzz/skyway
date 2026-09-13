@@ -22,7 +22,7 @@ public class Piloto implements Serializable {
     private String especializaciones;
 
     // Relación con la tabla Usuario (herencia por RUT)
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.EAGER)
     @MapsId
     @JoinColumn(name = "RUT", referencedColumnName = "RUT")
     private Usuario usuario;
