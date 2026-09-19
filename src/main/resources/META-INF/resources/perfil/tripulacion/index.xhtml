@@ -3,128 +3,400 @@
                 xmlns:f="jakarta.faces.core"
                 xmlns:h="jakarta.faces.html"
                 xmlns:p="http://primefaces.org/ui"
-                xmlns:fs="http://xmlns.jcp.org/jsf/core"
                 xmlns:ui="http://java.sun.com/jsf/facelets"
                 template="/template/main.xhtml">
 
-    <h:head>
-        <title>Mis Próximos Vuelos</title>
-    </h:head>
+    <ui:define name="head">
+        <title>Mis Turnos y Asignaciones - SkyWay</title>
+        <style type="text/css">
+            :root {
+                --deep-space: #080e1a;
+                --midnight-blue: #0b1426;
+                --slate-glass: #1e293b;
+                --border-ui: #334155;
 
-    <ui:define name="contenido">
-        <h1>Mis Turnos Asignados</h1>
+                --aviation-blue: #4c7cf3;
+                --glow-white: #f8fafc;
+                --text-dim: #94a3b8;
+            }
 
-        <!-- Formulario para mostrar los turnos del tripulante -->
-        <h:form id="misTurnosForm">
-            <!-- Tabla con los turnos asignados -->
-            <p:dataTable value="#{misTurnosBean.turnosTripulante}" var="turnoTripulacion"
-                         responsiveLayout="scroll"
-                         styleClass="table"
-                         rowIndexVar="index"
-                         rowKey="#{turnoTripulacion.idTurnoTripulacion}"
-                         paginator="true" rows="10">
+            .crew-wrapper {
+                max-width: 1100px;
+                margin: 0 auto;
+                padding: 24px 12px;
+            }
 
-                <!-- Columna con el ID del turno -->
-                <p:column headerText="ID Turno">
-                    #{turnoTripulacion.idTurnoTripulacion}
-                </p:column>
+            .page-header {
+                margin-bottom: 24px;
+                border-bottom: 1px solid var(--slate-glass);
+                padding-bottom: 16px;
+            }
 
-                <!-- Columna con el nombre del tripulante -->
-                <p:column headerText="Tripulante">
-                    #{turnoTripulacion.tripulacion1.usuario.nombre} #{turnoTripulacion.tripulacion1.usuario.apellido}
-                </p:column>
+            .page-title {
+                color: var(--glow-white);
+                font-size: 22px;
+                font-weight: 600;
+                margin: 0 0 4px 0;
+            }
 
-                <!-- Columna con el cargo del tripulante -->
-                <p:column headerText="Cargo">
-                    #{turnoTripulacion.tripulacion1.cargo}
-                </p:column>
+            .page-subtitle {
+                color: var(--text-dim);
+                font-size: 13px;
+                margin: 0;
+            }
 
-                <!-- Columna con el tipo de turno -->
-                <p:column headerText="Tipo de Turno">
-                    #{turnoTripulacion.turno1.tipoTurno.nombre}
-                </p:column>
+            .skyway-card {
+                background-color: var(--midnight-blue);
+                border: 1px solid var(--slate-glass);
+                border-radius: 8px;
+                padding: 20px;
+                margin-bottom: 24px;
+            }
 
-                <!-- Columna con la hora de inicio -->
-                <p:column headerText="Hora Inicio">
-                    <h:outputText value="#{turnoTripulacion.turno1.horaInicio}">
-                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm"/>
-                    </h:outputText>
-                </p:column>
+            .card-header-title {
+                color: var(--glow-white);
+                font-size: 15px;
+                font-weight: 600;
+                margin: 0 0 16px 0;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
 
-                <!-- Columna con la hora de fin -->
-                <p:column headerText="Hora Fin">
-                    <h:outputText value="#{turnoTripulacion.turno1.horaFin}">
-                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm"/>
-                    </h:outputText>
-                </p:column>
+            .card-header-title i {
+                color: var(--text-dim);
+            }
 
-                <!-- Acción para ver los detalles del turno -->
-                <p:column headerText="Acciones" styleClass="text-center">
-                    <p:commandButton value="Ver Detalles"
-                                     icon="pi pi-search"
-                                     styleClass="p-button-info"
-                                     action="#{misTurnosBean.verDetallesTurno(turnoTripulacion)}"
-                                     process="@this"
-                                     ajax="true"/>
-                </p:column>
+            /* ESTRUCTURA EXPEDIENTE TRIPULANTE */
+            .crew-info-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+                gap: 12px;
+            }
 
-                <!-- Acción para confirmar asistencia al turno -->
-                <p:column headerText="Confirmar Asistencia" styleClass="text-center">
-                    <p:commandButton value="Confirmar"
-                                     icon="pi pi-check"
-                                     styleClass="p-button-success"
-                                     action="#{misTurnosBean.confirmarAsistencia(turnoTripulacion)}"
-                                     update="misTurnosForm"
-                                     process="@this"
-                                     ajax="true"/>
-                </p:column>
+            .info-box {
+                background-color: var(--deep-space);
+                border: 1px solid var(--slate-glass);
+                border-radius: 6px;
+                padding: 12px 16px;
+            }
 
-                <!-- Acción para rechazar el turno -->
-                <p:column headerText="Rechazar Turno" styleClass="text-center">
-                    <p:commandButton value="Rechazar"
-                                     icon="pi pi-times"
-                                     styleClass="p-button-danger"
-                                     action="#{misTurnosBean.rechazarTurno(turnoTripulacion)}"
-                                     update="misTurnosForm"
-                                     process="@this"
-                                     ajax="true"/>
-                </p:column>
-            </p:dataTable>
-        </h:form>
+            .info-label {
+                font-size: 11px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: var(--text-dim);
+                font-weight: 600;
+                margin-bottom: 4px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
 
-        <!-- Modal para mostrar detalles del turno -->
-        <p:dialog header="Detalles del Turno"
-                  widgetVar="detalleDialog"
-                  modal="true"
-                  closable="true"
-                  showEffect="fade"
-                  hideEffect="fade"
-                  width="500">
-            <h:panelGrid columns="2">
-                <p:outputLabel value="ID Turno:" />
-                <h:outputText value="#{misTurnosBean.selectedTurno.idTurnoTripulacion}" />
+            .info-value {
+                font-size: 14px;
+                color: var(--glow-white);
+                font-weight: 500;
+            }
 
-                <p:outputLabel value="Tripulante:" />
-                <h:outputText value="#{misTurnosBean.selectedTurno.tripulacion1.usuario.nombre} #{misTurnosBean.selectedTurno.tripulacion1.usuario.apellido}" />
+            /* TABLA CORPORATIVA SOBRIA SIN BORDES VERTICALES */
+            .skyway-table {
+                background: transparent !important;
+                border: none !important;
+            }
 
-                <p:outputLabel value="Cargo:" />
-                <h:outputText value="#{misTurnosBean.selectedTurno.tripulacion1.cargo}" />
+            .skyway-table thead th {
+                background-color: var(--deep-space) !important;
+                border-bottom: 1px solid var(--border-ui) !important;
+                border-top: none !important;
+                border-left: none !important;
+                border-right: none !important;
+                color: var(--text-dim) !important;
+                font-size: 11px !important;
+                font-weight: 600 !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.8px !important;
+                padding: 12px 16px !important;
+            }
 
-                <p:outputLabel value="Tipo de Turno:" />
-                <h:outputText value="#{misTurnosBean.selectedTurno.turno1.tipoTurno.nombre}" />
+            .skyway-table tbody td {
+                background-color: var(--midnight-blue) !important;
+                border-bottom: 1px solid var(--slate-glass) !important;
+                border-top: none !important;
+                border-left: none !important;
+                border-right: none !important;
+                color: var(--glow-white) !important;
+                padding: 14px 16px !important;
+            }
 
-                <p:outputLabel value="Hora de Inicio:" />
-                <h:outputText value="#{misTurnosBean.selectedTurno.turno1.horaInicio}">
-                    <f:convertDateTime pattern="HH:mm"/>
-                </h:outputText>
+            .skyway-table tbody tr:hover td {
+                background-color: var(--deep-space) !important;
+            }
 
-                <p:outputLabel value="Hora de Fin:" />
-                <h:outputText value="#{misTurnosBean.selectedTurno.turno1.horaFin}">
-                    <f:convertDateTime pattern="HH:mm"/>
-                </h:outputText>
-            </h:panelGrid>
-        </p:dialog>
+            /* OCULTAR PAGINADOR SI SOLO HAY UNA PÁGINA */
+            .skyway-table .ui-paginator {
+                background-color: var(--deep-space) !important;
+                border: 1px solid var(--slate-glass) !important;
+                border-radius: 6px !important;
+                margin-top: 16px !important;
+                padding: 4px !important;
+            }
 
+            .skyway-table .ui-paginator .ui-paginator-page,
+            .skyway-table .ui-paginator .ui-paginator-first,
+            .skyway-table .ui-paginator .ui-paginator-prev,
+            .skyway-table .ui-paginator .ui-paginator-next,
+            .skyway-table .ui-paginator .ui-paginator-last {
+                background-color: var(--midnight-blue) !important;
+                color: var(--text-dim) !important;
+                border: 1px solid var(--border-ui) !important;
+                border-radius: 4px !important;
+            }
+
+            .skyway-table .ui-paginator .ui-paginator-page.ui-state-active {
+                background-color: var(--slate-glass) !important;
+                color: var(--glow-white) !important;
+                border-color: var(--border-ui) !important;
+            }
+
+            /* ACCIONES SOBRIAS SIN ROJO NI AZUL LLAMATIVO */
+            .btn-action-minimal {
+                background: transparent !important;
+                border: 1px solid var(--border-ui) !important;
+                color: var(--text-dim) !important;
+                font-size: 12px !important;
+                font-weight: 500 !important;
+                border-radius: 4px !important;
+                padding: 2px 10px !important;
+                transition: all 0.2s ease !important;
+            }
+
+            .btn-action-minimal:hover {
+                border-color: var(--glow-white) !important;
+                color: var(--glow-white) !important;
+                background-color: var(--slate-glass) !important;
+            }
+
+            .btn-action-minimal.danger:hover {
+                border-color: #94a3b8 !important;
+                color: #f8fafc !important;
+                background-color: rgba(239, 68, 68, 0.15) !important;
+            }
+
+            /* MODAL */
+            .skyway-dialog .ui-dialog-content,
+            .skyway-dialog .ui-dialog-titlebar,
+            .skyway-dialog .ui-dialog-footer {
+                background-color: var(--midnight-blue) !important;
+                color: var(--glow-white) !important;
+                border-color: var(--slate-glass) !important;
+            }
+
+            /* BOTÓN ACEPTAR: Verde Esmeralda Corporativo */
+            .btn-skyway-accept {
+                background-color: rgba(16, 185, 129, 0.08) !important;
+                border: 1px solid #10b981 !important;
+                color: #34d399 !important;
+                font-size: 12px !important;
+                font-weight: 600 !important;
+                border-radius: 4px !important;
+                padding: 2px 10px !important;
+                transition: all 0.2s ease !important;
+            }
+
+            .btn-skyway-accept:hover {
+                background-color: #10b981 !important;
+                color: #ffffff !important;
+                box-shadow: 0 0 8px rgba(16, 185, 129, 0.3) !important;
+            }
+
+            /* BOTÓN RECHAZAR: Rojo Carmesí Corporativo */
+            .btn-skyway-reject {
+                background-color: rgba(239, 68, 68, 0.08) !important;
+                border: 1px solid #ef4444 !important;
+                color: #f87171 !important;
+                font-size: 12px !important;
+                font-weight: 600 !important;
+                border-radius: 4px !important;
+                padding: 2px 10px !important;
+                transition: all 0.2s ease !important;
+            }
+
+            .btn-skyway-reject:hover {
+                background-color: #ef4444 !important;
+                color: #ffffff !important;
+                box-shadow: 0 0 8px rgba(239, 68, 68, 0.3) !important;
+            }
+
+            /* BOTÓN BUSCADOR SECUNDARIO */
+            .btn-skyway-search {
+                background-color: transparent !important;
+                border: 1px solid var(--border-ui) !important;
+                color: var(--text-dim) !important;
+                border-radius: 4px !important;
+            }
+
+            .btn-skyway-search:hover {
+                border-color: var(--glow-white) !important;
+                color: var(--glow-white) !important;
+                background-color: var(--slate-glass) !important;
+            }
+
+        </style>
     </ui:define>
 
+    <ui:define name="contenido">
+
+        <div class="crew-wrapper">
+            <p:growl id="growlTurnos" showDetail="true" />
+
+            <!-- ENCABEZADO -->
+            <header class="page-header">
+                <h2 class="page-title">Gestión de Turnos y Tripulación</h2>
+                <p class="page-subtitle">Consola de confirmación de servicios de cabina y guardia operacional.</p>
+            </header>
+
+            <!-- DATOS DEL TRIPULANTE -->
+            <div class="skyway-card">
+                <div class="card-header-title">
+                    <i class="pi pi-user"></i> Expediente del Tripulante
+                </div>
+
+                <div class="crew-info-grid">
+                    <div class="info-box">
+                        <span class="info-label"><i class="pi pi-user"></i> Nombre Completo</span>
+                        <div class="info-value">#{misTurnosBean.usuario.nombre} #{misTurnosBean.usuario.apellido}</div>
+                    </div>
+
+                    <div class="info-box">
+                        <span class="info-label"><i class="pi pi-briefcase"></i> Cargo Asignado</span>
+                        <div class="info-value">
+                            #{empty misTurnosBean.tripulacion.cargo ? 'Tripulante de Cabina' : misTurnosBean.tripulacion.cargo}
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <span class="info-label"><i class="pi pi-shield"></i> RUT / Identificación</span>
+                        <div class="info-value">#{misTurnosBean.usuario.rut}</div>
+                    </div>
+
+                    <div class="info-box">
+                        <span class="info-label"><i class="pi pi-calendar"></i> Fecha de Ingreso</span>
+                        <div class="info-value">
+                            <h:outputText value="#{misTurnosBean.tripulacion.fechaIngreso}">
+                                <f:convertDateTime pattern="dd/MM/yyyy" />
+                            </h:outputText>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABLA SOBRIA DE TURNOS -->
+
+            <div class="skyway-card">
+                <div class="card-header-title">
+                    <i class="pi pi-clock"></i> Mis Turnos de Servicio Asignados
+                </div>
+
+                <h:form id="misTurnosForm">
+                    <p:dataTable value="#{misTurnosBean.turnosTripulante}"
+                                 var="turnoTrip"
+                                 responsiveLayout="scroll"
+                                 styleClass="skyway-table"
+                                 rowKey="#{turnoTrip.idTurnoTripulacion}"
+                                 paginator="true"
+                                 rows="10"
+                                 paginatorPosition="bottom"
+                                 paginatorAlwaysVisible="false"
+                                 emptyMessage="No tienes turnos asignados actualmente.">
+
+                        <p:column headerText="ID Turno" style="width: 90px; text-align: center;">
+                            <span style="font-weight: 600; color: var(--text-dim);">##{turnoTrip.idTurnoTripulacion}</span>
+                        </p:column>
+
+                        <p:column headerText="Tipo de Servicio">
+                            <span style="font-weight: 500;">#{turnoTrip.turno1.tipoTurno.nombre}</span>
+                        </p:column>
+
+                        <p:column headerText="Inicio de Servicio">
+                            <h:outputText value="#{turnoTrip.turno1.horaInicio}">
+                                <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/Santiago"/>
+                            </h:outputText>
+                        </p:column>
+
+                        <p:column headerText="Fin de Servicio">
+                            <h:outputText value="#{turnoTrip.turno1.horaFin}">
+                                <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/Santiago"/>
+                            </h:outputText>
+                        </p:column>
+
+                        <!-- ACCIONES CORPORATIVAS CON SEMÁFORO PROFESIONAL -->
+                        <p:column headerText="Acciones Operativas" styleClass="text-center" style="width: 250px;">
+                            <div class="d-flex justify-content-center gap-2">
+                                <p:commandButton icon="pi pi-search"
+                                                 title="Ver Detalles"
+                                                 styleClass="btn-skyway-search ui-button-sm"
+                                                 action="#{misTurnosBean.verDetallesTurno(turnoTrip)}"
+                                                 update=":dlgDetalleTurno"
+                                                 oncomplete="PF('detalleDialog').show();"
+                                                 process="@this" />
+
+                                <p:commandButton value="Aceptar"
+                                                 icon="pi pi-check"
+                                                 styleClass="btn-skyway-accept"
+                                                 action="#{misTurnosBean.confirmarAsistencia(turnoTrip)}"
+                                                 update=":growlTurnos misTurnosForm"
+                                                 process="@this" />
+
+                                <p:commandButton value="Rechazar"
+                                                 icon="pi pi-times"
+                                                 styleClass="btn-skyway-reject"
+                                                 action="#{misTurnosBean.rechazarTurno(turnoTrip)}"
+                                                 update=":growlTurnos misTurnosForm"
+                                                 process="@this" />
+                            </div>
+                        </p:column>
+
+                    </p:dataTable>
+                </h:form>
+            </div>
+
+
+            <!-- MODAL -->
+            <p:dialog id="dlgDetalleTurno"
+                      header="Detalles de Asignación de Turno"
+                      widgetVar="detalleDialog"
+                      modal="true"
+                      closable="true"
+                      showEffect="fade"
+                      hideEffect="fade"
+                      width="480"
+                      responsive="true"
+                      styleClass="skyway-dialog">
+
+                <h:panelGroup rendered="#{not empty misTurnosBean.selectedTurno}" layout="block">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; background-color: var(--deep-space); padding: 18px; border-radius: 6px; border: 1px solid var(--slate-glass);">
+                        <div>
+                            <span style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); display: block; margin-bottom: 4px;">Código Turno</span>
+                            <span style="color: var(--glow-white); font-weight: 600;">##{misTurnosBean.selectedTurno.idTurnoTripulacion}</span>
+                        </div>
+                        <div>
+                            <span style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); display: block; margin-bottom: 4px;">Cargo</span>
+                            <span style="color: var(--glow-white); font-weight: 500;">#{misTurnosBean.selectedTurno.tripulacion1.cargo}</span>
+                        </div>
+                        <div style="grid-column: 1 / -1;">
+                            <span style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); display: block; margin-bottom: 4px;">Servicio</span>
+                            <span style="color: var(--glow-white); font-weight: 500;">#{misTurnosBean.selectedTurno.turno1.tipoTurno.nombre}</span>
+                        </div>
+                    </div>
+                </h:panelGroup>
+
+                <f:facet name="footer">
+                    <p:commandButton value="Cerrar" type="button" onclick="PF('detalleDialog').hide()" styleClass="btn-action-minimal" />
+                </f:facet>
+            </p:dialog>
+
+        </div>
+
+    </ui:define>
 </ui:composition>

@@ -1,208 +1,194 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<html lang="es"
-      xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:h="jakarta.faces.html"
-      xmlns:p="http://primefaces.org/ui"
-      xmlns:f="http://xmlns.jcp.org/jsf/core"
-      xmlns:ui="http://java.sun.com/jsf/facelets">
-<h:head>
-    <title>Login</title>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="jakarta.faces.core"
+                xmlns:h="jakarta.faces.html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                template="/template/main.xhtml">
 
-    <style>
-        /* Reset styles */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+    <ui:define name="contenido">
+        <style type="text/css">
+            :root {
+                --deep-space: #080e1a;
+                --midnight-blue: #0b1426;
+                --slate-glass: #1e293b;
+                --border-ui: #334155;
 
-        /* Body */
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #1c92d2, #f2fcfe);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            color: #fff;
-            overflow: hidden;
-        }
+                --cyber-cyan: #00d1ff;
+                --aviation-blue: #4c7cf3;
+                --aviation-hover: #3b68d6;
+                --glow-white: #f8fafc;
+                --text-dim: #94a3b8;
+            }
 
-        /* Contenedor del formulario de login */
-        .login-container {
-            background-color: #fff;
-            padding: 40px 50px;
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-            width: 100%;
-            max-width: 420px;
-            text-align: center;
-            transition: transform 0.3s ease-in-out;
-        }
+            .login-wrapper {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: calc(100vh - 160px);
+                background-color: var(--deep-space);
+                padding: 40px 20px;
+            }
 
-        /* Efecto de hover en el contenedor */
-        .login-container:hover {
-            transform: translateY(-10px);
-        }
+            .login-container {
+                background-color: var(--midnight-blue);
+                border: 1px solid var(--slate-glass);
+                padding: 40px;
+                border-radius: 12px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+                width: 100%;
+                max-width: 420px;
+                text-align: center;
+            }
 
-        /* Logo */
-        .login-logo {
-            width: 80px;
-            margin-bottom: 20px;
-            animation: fadeIn 1s ease-out;
-            transition: transform 0.3s ease, opacity 0.3s ease;
-            cursor: pointer;
-        }
+            .login-logo-text {
+                font-size: 26px;
+                font-weight: 800;
+                color: var(--cyber-cyan);
+                letter-spacing: 1px;
+                margin-bottom: 8px;
+                display: inline-block;
+            }
 
-        .login-logo:hover {
-            transform: scale(1.1);
-            opacity: 0.9;
-        }
+            .login-title {
+                font-size: 22px;
+                font-weight: 700;
+                margin: 10px 0 6px 0;
+                color: var(--glow-white);
+            }
 
-        /* Título */
-        .login-title {
-            font-size: 32px;
-            font-weight: 600;
-            margin-bottom: 10px;
-            color: #333;
-        }
+            .login-subtitle {
+                font-size: 13px;
+                color: var(--text-dim);
+                margin-bottom: 28px;
+            }
 
-        /* Subtítulo */
-        .login-subtitle {
-            font-size: 16px;
-            color: #777;
-            margin-bottom: 30px;
-        }
+            .form-field {
+                margin-bottom: 20px;
+                text-align: left;
+            }
 
-        /* Estilos para las etiquetas de entrada */
-        .input-label {
-            display: block;
-            text-align: left;
-            font-weight: 600;
-            margin-bottom: 8px;
-            font-size: 14px;
-            color: #555;
-        }
+            .form-field label {
+                display: block;
+                font-size: 13px;
+                font-weight: 500;
+                color: var(--glow-white);
+                margin-bottom: 8px;
+            }
 
-        /* Estilos para los campos de entrada */
-        .input-field {
-            width: 100%;
-            padding: 15px;
-            margin-bottom: 20px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            color: #333;
-            background-color: #f8f8f8;
-            outline: none;
-            transition: all 0.3s ease-in-out;
-        }
+            .input-container {
+                position: relative;
+                display: flex;
+                align-items: center;
+            }
 
-        .input-field:focus {
-            border-color: #1c92d2;
-            background-color: #e0f7fa;
-            box-shadow: 0 0 10px rgba(28, 146, 210, 0.2);
-        }
+            .input-container i {
+                position: absolute;
+                left: 14px;
+                color: var(--text-dim);
+                font-size: 14px;
+                z-index: 2;
+                pointer-events: none;
+            }
 
-        /* Botón de login */
-        .btn-login {
-            width: 100%;
-            padding: 15px;
-            background-color: #1c92d2;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            font-size: 18px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
+            .input-field {
+                width: 100% !important;
+                padding: 10px 12px 10px 40px !important;
+                background-color: var(--deep-space) !important;
+                border: 1px solid var(--border-ui) !important;
+                border-radius: 6px !important;
+                font-size: 14px !important;
+                color: var(--glow-white) !important;
+                box-sizing: border-box;
+            }
 
-        .btn-login:hover {
-            background-color: #146a92;
-        }
+            .input-field:focus {
+                border-color: var(--aviation-blue) !important;
+                box-shadow: 0 0 0 2px rgba(76, 124, 243, 0.2) !important;
+            }
 
-        /* Mensaje de error */
-        .error-message {
-            font-size: 14px;
-            color: red;
-            margin-top: 10px;
-        }
+            .btn-login {
+                width: 100% !important;
+                padding: 11px !important;
+                background: var(--aviation-blue) !important;
+                border: none !important;
+                border-radius: 6px !important;
+                font-size: 14px !important;
+                font-weight: 600 !important;
+                color: #ffffff !important;
+                margin-top: 10px;
+                cursor: pointer;
+            }
 
-        /* Enlace de olvido de contraseña */
-        .forgot-password {
-            display: block;
-            margin-top: 15px;
-            font-size: 14px;
-            color: #1c92d2;
-            text-decoration: none;
-        }
+            .btn-login:hover {
+                background: var(--aviation-hover) !important;
+            }
 
-        .forgot-password:hover {
-            text-decoration: underline;
-        }
+            .forgot-password {
+                display: inline-block;
+                margin-top: 20px;
+                font-size: 13px;
+                color: var(--cyber-cyan);
+                text-decoration: none;
+            }
 
-        /* Contenedor de input con icono */
-        .input-group {
-            position: relative;
-            margin-bottom: 20px;
-        }
+            .forgot-password:hover {
+                text-decoration: underline;
+            }
+        </style>
 
-        .input-icon {
-            position: absolute;
-            top: 14px;
-            left: 15px;
-            color: #bbb;
-            font-size: 18px;
-        }
+        <div class="login-wrapper">
+            <div class="login-container">
+                <!-- Identidad SkyWay -->
+                <div class="login-logo-text">
+                    <i class="pi pi-send" style="margin-right: 6px;"></i>SKYWAY
+                </div>
 
-        /* Animación de fade-in */
-        @keyframes fadeIn {
-            0% { opacity: 0; }
-            100% { opacity: 1; }
-        }
-    </style>
-</h:head>
+                <h1 class="login-title">Iniciar sesión</h1>
+                <p class="login-subtitle">Accede a tu cuenta de usuario</p>
 
-<h:body>
-    <div class="login-container">
-        <!-- Logo clickeable -->
-        <h:link outcome="/">
-            <h:graphicImage value="https://www.clipartmax.com/png/middle/201-2011455_logo-de-peruvian-airlines-vector-and-clip-art-inspiration-peruvian-airlines.png"
-                            alt="Logo"
-                            styleClass="login-logo" />
-        </h:link>
+                <h:form id="frmLogin">
+                    <p:messages id="msgs" globalOnly="true" showDetail="true" closable="true"/>
 
-        <h1 class="login-title">Iniciar sesión</h1>
-        <p class="login-subtitle">Accede a tu cuenta para continuar</p>
+                    <!-- Usuario -->
+                    <div class="form-field">
+                        <h:outputLabel for="username" value="Usuario o Correo" />
+                        <div class="input-container">
+                            <i class="pi pi-user"></i>
+                            <h:inputText id="username"
+                                         value="#{loginBean.username}"
+                                         required="true"
+                                         requiredMessage="Ingresa tu usuario"
+                                         styleClass="input-field"
+                                         placeholder="ejemplo@skyway.cl" />
+                        </div>
+                    </div>
 
-        <h:form>
-            <!-- Usuario -->
-            <div class="input-group">
-                <i class="input-icon fa fa-user"></i>
-                <h:outputLabel for="username" value="Usuario" class="input-label" />
-                <h:inputText id="username" value="#{loginBean.username}" required="true"
-                             class="input-field" placeholder="Ingresa tu usuario" />
+                    <!-- Contraseña -->
+                    <div class="form-field">
+                        <h:outputLabel for="password" value="Contraseña" />
+                        <div class="input-container">
+                            <i class="pi pi-lock"></i>
+                            <h:inputSecret id="password"
+                                           value="#{loginBean.password}"
+                                           required="true"
+                                           requiredMessage="Ingresa tu contraseña"
+                                           styleClass="input-field"
+                                           placeholder="••••••••" />
+                        </div>
+                    </div>
+
+                    <p:commandButton value="Iniciar sesión"
+                                     action="#{loginBean.login}"
+                                     update="frmLogin"
+                                     styleClass="btn-login" />
+
+                    <div>
+                        <a href="#" class="forgot-password">¿Olvidaste tu contraseña?</a>
+                    </div>
+                </h:form>
             </div>
+        </div>
+    </ui:define>
 
-            <!-- Contraseña -->
-            <div class="input-group">
-                <i class="input-icon fa fa-lock"></i>
-                <h:outputLabel for="password" value="Contraseña" class="input-label" />
-                <h:inputSecret id="password" value="#{loginBean.password}" required="true"
-                               class="input-field" placeholder="Ingresa tu contraseña" />
-            </div>
-
-            <h:commandButton value="Iniciar sesión"
-                             action="#{loginBean.login}"
-                             class="btn-login" />
-
-            <h:messages globalOnly="true" class="error-message" />
-
-            <a href="#" class="forgot-password">¿Olvidaste tu contraseña?</a>
-        </h:form>
-    </div>
-
-    <!-- Font Awesome -->
-    <h:outputScript name="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js" />
-</h:body>
-</html>
+</ui:composition>

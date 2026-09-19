@@ -61,7 +61,7 @@ public class Vuelo implements Serializable {
 
 	@JsonIgnore
 	//bi-directional many-to-one association to SegmentoVuelo
-	@OneToMany(mappedBy="vuelo", fetch = FetchType.LAZY)
+	@OneToMany(mappedBy="vuelo", fetch = FetchType.EAGER)
 	private List<SegmentoVuelo> segmentoVuelos;
 
 	//bi-directional many-to-one association to Turno
