@@ -6,168 +6,487 @@
                 xmlns:ui="http://java.sun.com/jsf/facelets"
                 template="/template/main.xhtml">
 
-
     <ui:define name="head">
+        <title>Perfil del Piloto - SkyWay</title>
         <style type="text/css">
-            /* Colores corporativos */
-:root {
-    --primary-color: #003366;  /* Azul oscuro */
-    --secondary-color: #006699; /* Azul intermedio */
-    --button-color: #007acc; /* Azul para botones */
-    --button-hover: #005f99;  /* Hover de los botones */
-}
+            :root {
+                --deep-space: #080e1a;
+                --midnight-blue: #0b1426;
+                --slate-glass: #1e293b;
+                --border-ui: #334155;
 
-/* Paneles de perfil */
-.perfil-panel {
-    background-color: #f8f8f8;
-    border-radius: 10px;
-    padding: 20px;
-    margin-top: 20px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
+                --aviation-blue: #4c7cf3;
+                --glow-white: #f8fafc;
+                --text-dim: #94a3b8;
 
-/* Cabecera de la tabla */
-h:column .ui-column-title {
-    background-color: var(--primary-color);
-    color: white;
-    text-align: center;
-}
+                --status-ontime-bg: rgba(16, 185, 129, 0.1);
+                --status-ontime-border: #10b981;
+                --status-ontime-text: #34d399;
+            }
 
-/* Estilo para las filas de la tabla */
-.table-striped tbody tr:nth-child(odd) {
-    background-color: #f2f2f2;
-}
+            .pilot-wrapper {
+                max-width: 1100px;
+                margin: 0 auto;
+                padding: 24px 12px;
+            }
 
-/* Botones */
-.p-button-info {
-    background-color: var(--button-color);
-    border-color: var(--button-color);
-}
+            .page-header {
+                margin-bottom: 24px;
+                border-bottom: 1px solid var(--slate-glass);
+                padding-bottom: 16px;
+            }
 
-.p-button-info:hover {
-    background-color: var(--button-hover);
-    border-color: var(--button-hover);
-}
+            .page-title {
+                color: var(--glow-white);
+                font-size: 22px;
+                font-weight: 600;
+                margin: 0 0 4px 0;
+            }
 
-/* Estilo para el modal */
-.ui-dialog {
-    border-radius: 8px;
-}
+            .page-subtitle {
+                color: var(--text-dim);
+                font-size: 13px;
+                margin: 0;
+            }
 
-/* Títulos */
-h2, h3 {
-    color: var(--primary-color);
-    font-weight: bold;
-}
+            .skyway-card {
+                background-color: var(--midnight-blue);
+                border: 1px solid var(--slate-glass);
+                border-radius: 8px;
+                padding: 20px;
+                margin-bottom: 24px;
+            }
 
-/* Enlaces */
-.ui-link {
-    color: var(--secondary-color);
-}
+            .card-header-title {
+                color: var(--glow-white);
+                font-size: 15px;
+                font-weight: 600;
+                margin: 0 0 16px 0;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
 
+            .card-header-title i {
+                color: var(--text-dim);
+            }
+
+            /* 1. REJILLA DE KPIs */
+            .kpi-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                gap: 14px;
+                margin-bottom: 24px;
+            }
+
+            .kpi-card {
+                background-color: var(--midnight-blue);
+                border: 1px solid var(--slate-glass);
+                border-radius: 8px;
+                padding: 16px;
+                display: flex;
+                align-items: center;
+                gap: 14px;
+            }
+
+            .kpi-icon {
+                width: 42px;
+                height: 42px;
+                border-radius: 6px;
+                background-color: var(--deep-space);
+                border: 1px solid var(--border-ui);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: var(--text-dim);
+                font-size: 18px;
+            }
+
+            .kpi-label {
+                font-size: 11px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: var(--text-dim);
+                font-weight: 600;
+                display: block;
+                margin-bottom: 2px;
+            }
+
+            .kpi-value {
+                font-size: 18px;
+                font-weight: 700;
+                color: var(--glow-white);
+            }
+
+            .kpi-unit {
+                font-size: 12px;
+                font-weight: 400;
+                color: var(--text-dim);
+            }
+
+            /* 2. ESTRUCTURA DATOS PERSONALES */
+            .pilot-info-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 12px;
+            }
+
+            .info-box {
+                background-color: var(--deep-space);
+                border: 1px solid var(--slate-glass);
+                border-radius: 6px;
+                padding: 12px 16px;
+            }
+
+            .info-label {
+                font-size: 11px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: var(--text-dim);
+                font-weight: 600;
+                margin-bottom: 4px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .info-label i {
+                color: var(--text-dim);
+                font-size: 12px;
+            }
+
+            .info-value {
+                font-size: 14px;
+                color: var(--glow-white);
+                font-weight: 500;
+            }
+
+            /* 3. TARJETAS HORIZONTALES DE VUELO */
+            .flight-item-card {
+                background-color: var(--deep-space);
+                border: 1px solid var(--slate-glass);
+                border-radius: 6px;
+                padding: 16px 20px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 16px;
+                margin-bottom: 8px;
+                transition: border-color 0.2s ease;
+            }
+
+            .flight-item-card:hover {
+                border-color: var(--border-ui);
+            }
+
+            .flight-route-box {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+
+            .flight-code {
+                font-size: 16px;
+                font-weight: 700;
+                color: var(--glow-white);
+                letter-spacing: 0.5px;
+            }
+
+            .flight-date-box {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                color: var(--text-dim);
+                font-size: 13px;
+            }
+
+            .badge-status {
+                display: inline-block;
+                background-color: rgba(76, 124, 243, 0.12) !important;
+                border: 1px solid var(--aviation-blue) !important;
+                color: var(--glow-white) !important;
+                padding: 4px 12px !important;
+                border-radius: 4px !important;
+                font-size: 12px !important;
+                font-weight: 500 !important;
+            }
+
+            .btn-flight-details {
+                background-color: transparent !important;
+                border: 1px solid var(--border-ui) !important;
+                color: var(--glow-white) !important;
+                font-size: 12px !important;
+                font-weight: 500 !important;
+                border-radius: 4px !important;
+            }
+
+            .btn-flight-details:hover {
+                background-color: var(--aviation-blue) !important;
+                border-color: var(--aviation-blue) !important;
+                color: #ffffff !important;
+            }
+
+            /* 4. OVERRIDES PRIMEFACES PAGINADOR */
+            .skyway-dataview .ui-dataview-content {
+                background: transparent !important;
+                border: none !important;
+            }
+
+            .skyway-dataview .ui-paginator {
+                background-color: var(--deep-space) !important;
+                border: 1px solid var(--slate-glass) !important;
+                border-radius: 6px !important;
+                margin-top: 16px !important;
+                padding: 6px !important;
+            }
+
+            .skyway-dataview .ui-paginator .ui-paginator-page,
+            .skyway-dataview .ui-paginator .ui-paginator-first,
+            .skyway-dataview .ui-paginator .ui-paginator-prev,
+            .skyway-dataview .ui-paginator .ui-paginator-next,
+            .skyway-dataview .ui-paginator .ui-paginator-last {
+                background-color: var(--midnight-blue) !important;
+                color: var(--text-dim) !important;
+                border: 1px solid var(--border-ui) !important;
+                border-radius: 4px !important;
+            }
+
+            .skyway-dataview .ui-paginator .ui-paginator-page.ui-state-active {
+                background-color: var(--aviation-blue) !important;
+                color: #ffffff !important;
+                border-color: var(--aviation-blue) !important;
+            }
+
+            /* MODAL */
+            .skyway-dialog .ui-dialog-content,
+            .skyway-dialog .ui-dialog-titlebar,
+            .skyway-dialog .ui-dialog-footer {
+                background-color: var(--midnight-blue) !important;
+                border-color: var(--slate-glass) !important;
+                color: var(--glow-white) !important;
+            }
+
+            .skyway-dialog .ui-dialog-footer {
+                border-top: 1px solid var(--border-ui) !important;
+                padding: 12px 16px !important;
+            }
         </style>
     </ui:define>
 
-
     <ui:define name="contenido">
 
-        <!-- Navbar End -->
-        <!-- Header Start -->
-        <div class="container-fluid bg-breadcrumb">
-            <div class="container text-center py-5" style="max-width: 900px;">
-                <h3 class="text-white display-3 mb-4">Perfil del Piloto</h3>
-                <ol class="breadcrumb justify-content-center mb-0">
-                    <li class="breadcrumb-item"><h:link value="Home" outcome="/" /></li>
-                    <li class="breadcrumb-item active text-white">Perfil del Piloto</li>
-                </ol>
+        <div class="pilot-wrapper">
+
+            <!-- ENCABEZADO -->
+            <header class="page-header">
+                <h2 class="page-title">Perfil del Piloto</h2>
+                <p class="page-subtitle">Panel operativo de tripulación de mando y asignación de itinerarios.</p>
+            </header>
+
+            <!-- SECCIÓN 1: KPIs OPERATIVOS DE ALTO NIVEL -->
+            <div class="kpi-grid">
+
+                <div class="kpi-card">
+                    <div class="kpi-icon">
+                        <i class="pi pi-clock"></i>
+                    </div>
+                    <div>
+                        <span class="kpi-label">Horas Voladas</span>
+                        <div class="kpi-value">
+                            #{perfilPilotoBean.totalHorasVuelo} <span class="kpi-unit">hrs</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon">
+                        <i class="pi pi-send"></i>
+                    </div>
+                    <div>
+                        <span class="kpi-label">Vuelos Asignados</span>
+                        <div class="kpi-value">
+                            #{perfilPilotoBean.totalVuelosCompletados} <span class="kpi-unit">servicios</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon">
+                        <i class="pi pi-compass"></i>
+                    </div>
+                    <div>
+                        <span class="kpi-label">Flota Habilitada</span>
+                        <div class="kpi-value" style="font-size: 15px;">
+                            #{perfilPilotoBean.modeloAvionPrincipal}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon">
+                        <i class="pi pi-briefcase"></i>
+                    </div>
+                    <div>
+                        <span class="kpi-label">Experiencia Mando</span>
+                        <div class="kpi-value">
+                            #{perfilPilotoBean.piloto.experienciaAnos} <span class="kpi-unit">años</span>
+                        </div>
+                    </div>
+                </div>
+
             </div>
-        </div>
-        <!-- Header End -->
 
-        <!-- User Profile Start -->
-        <div class="container py-5">
+            <!-- SECCIÓN 2: EXPEDIENTE Y DATOS DEL COMANDANTE -->
+            <div class="skyway-card">
+                <div class="card-header-title">
+                    <i class="pi pi-id-card"></i> Expediente del Comandante
+                </div>
 
-            <!-- Información Personal -->
-            <h2 class="mb-4">Información Personal</h2>
-            <p:panel header="Datos del Piloto" styleClass="perfil-panel">
-                <h:panelGrid columns="2" styleClass="p-4">
-                    <!-- Mostrar Nombre y Apellido -->
-                    <p:outputLabel for="nombre" value="Nombre Completo:" styleClass="label" />
-                    <h:outputText id="nombre" value="#{userBean.usuario.nombre} #{userBean.usuario.apellido}" styleClass="data-text" />
+                <div class="pilot-info-grid">
+                    <div class="info-box">
+                        <span class="info-label"><i class="pi pi-user"></i> Nombre Completo</span>
+                        <div class="info-value">#{perfilPilotoBean.piloto.usuario.nombre} #{perfilPilotoBean.piloto.usuario.apellido}</div>
+                    </div>
 
-                    <p:outputLabel for="correo" value="Correo Electrónico:" styleClass="label" />
-                    <h:outputText id="correo" value="#{userBean.usuario.correoElectronico}" styleClass="data-text" />
+                    <div class="info-box">
+                        <span class="info-label"><i class="pi pi-shield"></i> RUT / Identificación</span>
+                        <div class="info-value">#{perfilPilotoBean.piloto.rut}</div>
+                    </div>
 
-                    <p:outputLabel for="telefono" value="Teléfono:" styleClass="label" />
-                    <h:outputText id="telefono" value="#{userBean.usuario.telefono}" styleClass="data-text" />
+                    <div class="info-box">
+                        <span class="info-label"><i class="pi pi-verified"></i> N° Licencia Aeronáutica</span>
+                        <div class="info-value" style="color: var(--aviation-blue); font-weight: 700;">
+                            #{perfilPilotoBean.piloto.licencia}
+                        </div>
+                    </div>
 
-                    <p:outputLabel for="documento" value="Documento de Identidad:" styleClass="label" />
-                    <h:outputText id="documento" value="#{userBean.usuario.documentoIdentidad}" styleClass="data-text" />
+                    <div class="info-box">
+                        <span class="info-label"><i class="pi pi-chart-line"></i> Experiencia de Mando</span>
+                        <div class="info-value">#{perfilPilotoBean.piloto.experienciaAnos} Años de Servicio</div>
+                    </div>
 
-                    <p:outputLabel for="fechaNacimiento" value="Fecha de Nacimiento:" styleClass="label" />
-                    <h:outputText id="fechaNacimiento" value="#{userBean.usuario.fechaNacimiento}">
-                        <f:convertDateTime pattern="dd/MM/yyyy"/>
-                    </h:outputText>
+                    <div class="info-box">
+                        <span class="info-label"><i class="pi pi-envelope"></i> Correo Electrónico</span>
+                        <div class="info-value">#{perfilPilotoBean.piloto.usuario.correoElectronico}</div>
+                    </div>
 
-                    <p:outputLabel for="fechaRegistro" value="Fecha de Registro:" styleClass="label" />
-                    <h:outputText id="fechaRegistro" value="#{userBean.usuario.fechaRegistro}">
-                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm"/>
-                    </h:outputText>
-                </h:panelGrid>
-            </p:panel>
+                    <div class="info-box">
+                        <span class="info-label"><i class="pi pi-phone"></i> Teléfono de Contacto</span>
+                        <div class="info-value">#{perfilPilotoBean.piloto.usuario.telefono}</div>
+                    </div>
 
-            <!-- Vuelos del Piloto -->
-            <h2 class="mb-4">Mis Próximos Vuelos</h2>
-            <p:panel header="Vuelos Asignados" styleClass="perfil-panel">
-                <h:dataTable value="#{perfilPilotoBean.vuelos}" var="vuelo" border="1" styleClass="table table-striped table-bordered">
-                    <h:column>
-                        <f:facet name="header">Número de Vuelo</f:facet>
-                        #{vuelo.numeroVuelo}
-                    </h:column>
+                    <div class="info-box" style="grid-column: 1 / -1;">
+                        <span class="info-label"><i class="pi pi-briefcase"></i> Especializaciones y Certificaciones de Aeronave</span>
+                        <div class="info-value" style="color: var(--text-dim); font-size: 13px; line-height: 1.4;">
+                            #{perfilPilotoBean.piloto.especializaciones}
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                    <h:column>
-                        <f:facet name="header">Fecha de Salida</f:facet>
-                        <h:outputText value="#{vuelo.fechaHoraSalida}">
-                            <f:convertDateTime pattern="dd/MM/yyyy HH:mm"/>
-                        </h:outputText>
-                    </h:column>
+            <!-- SECCIÓN 3: PRÓXIMOS VUELOS ASIGNADOS -->
+            <div class="skyway-card">
+                <div class="card-header-title">
+                    <i class="pi pi-send"></i> Mis Próximos Vuelos Asignados
+                </div>
 
-                    <h:column>
-                        <f:facet name="header">Estado</f:facet>
-                        #{vuelo.estadoVuelo.descripcion}
-                    </h:column>
+                <h:form id="formVuelos">
+                    <p:dataView value="#{perfilPilotoBean.vuelos}"
+                                var="vuelo"
+                                rows="6"
+                                paginator="true"
+                                paginatorPosition="bottom"
+                                emptyMessage="No tienes vuelos asignados actualmente."
+                                styleClass="skyway-dataview">
 
-                    <h:column>
-                        <f:facet name="header">Acciones</f:facet>
-                        <p:commandButton value="Ver Detalles"
-                                         icon="pi pi-search"
-                                         styleClass="p-button-info"
-                                         action="#{perfilPilotoBean.verDetallesVuelo(vuelo)}"
+                        <p:dataViewListItem>
+                            <div class="flight-item-card">
 
-                                         ajax="true" />
-                    </h:column>
-                </h:dataTable>
-            </p:panel>
+                                <div class="flight-route-box">
+                                    <i class="pi pi-plane" style="color: var(--text-dim); font-size: 18px;"></i>
+                                    <div>
+                                        <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase;">Itinerario</div>
+                                        <div class="flight-code">#{vuelo.numeroVuelo}</div>
+                                    </div>
+                                </div>
 
-            <!-- Modal para detalles del vuelo -->
-            <p:dialog header="Detalles del Vuelo" widgetVar="vueloDetailsDialog" modal="true" closable="true" showEffect="fade" hideEffect="fade" width="600">
-                <h:panelGrid columns="2">
-                    <p:outputLabel value="Número de Vuelo:" />
-                    <h:outputText value="#{perfilPilotoBean.selectedVuelo.numeroVuelo}" />
+                                <div class="flight-date-box">
+                                    <i class="pi pi-calendar"></i>
+                                    <span>
+                                        <h:outputText value="#{vuelo.fechaHoraSalida}">
+                                            <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/Santiago"/>
+                                        </h:outputText>
+                                    </span>
+                                </div>
 
-                    <p:outputLabel value="Fecha de Salida:" />
+                                <div>
+                                    <span class="badge-status">#{vuelo.estadoVuelo.descripcion}</span>
+                                </div>
+
+                                <div>
+                                    <p:commandButton value="Ver Detalles"
+                                                     icon="pi pi-search"
+                                                     styleClass="btn-flight-details ui-button-sm"
+                                                     action="#{perfilPilotoBean.verDetallesVuelo(vuelo)}"
+                                                     update=":dlgVueloDetails"
+                                                     oncomplete="PF('vueloDetailsDialog').show();" />
+                                </div>
+
+                            </div>
+                        </p:dataViewListItem>
+
+                    </p:dataView>
+                </h:form>
+            </div>
+
+            <!-- SECCIÓN 4: MODAL DETALLES DEL VUELO -->
+            <!-- MODAL DE DETALLES TOTALMENTE INTEGRADO AL TEMA OSCURO -->
+            <p:dialog id="dlgVueloDetails"
+                      header="Detalles de Operación de Vuelo"
+                      widgetVar="vueloDetailsDialog"
+                      modal="true"
+                      closable="true"
+                      showEffect="fade"
+                      hideEffect="fade"
+                      width="480"
+                      responsive="true"
+                      styleClass="skyway-dialog">
+
+                <h:panelGroup rendered="#{not empty perfilPilotoBean.selectedVuelo}" layout="block">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; background-color: var(--deep-space); padding: 18px; border-radius: 6px; border: 1px solid var(--border-ui);">
+
+                        <div>
+                            <span style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); display: block; margin-bottom: 4px;">Código de Vuelo</span>
+                            <span style="color: var(--glow-white); font-weight: 600; font-size: 15px;">#{perfilPilotoBean.selectedVuelo.numeroVuelo}</span>
+                        </div>
+
+                        <div>
+                            <span style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); display: block; margin-bottom: 4px;">Estado Actual</span>
+                            <span class="badge-status">#{perfilPilotoBean.selectedVuelo.estadoVuelo.descripcion}</span>
+                        </div>
+
+                        <div style="grid-column: 1 / -1;">
+                            <span style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); display: block; margin-bottom: 4px;">Salida Programada</span>
+                            <span style="color: var(--glow-white); font-weight: 500;">
                     <h:outputText value="#{perfilPilotoBean.selectedVuelo.fechaHoraSalida}">
-                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm"/>
+                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/Santiago"/>
                     </h:outputText>
+                </span>
+                        </div>
 
-                    <p:outputLabel value="Estado del Vuelo:" />
-                    <h:outputText value="#{perfilPilotoBean.selectedVuelo.estadoVuelo.descripcion}" />
-                </h:panelGrid>
+                    </div>
+                </h:panelGroup>
+
+                <f:facet name="footer">
+                    <p:commandButton value="Cerrar"
+                                     type="button"
+                                     onclick="PF('vueloDetailsDialog').hide()"
+                                     styleClass="btn-flight-details ui-button-sm" />
+                </f:facet>
             </p:dialog>
 
         </div>
-        <!-- User Profile End -->
 
     </ui:define>
-
 </ui:composition>

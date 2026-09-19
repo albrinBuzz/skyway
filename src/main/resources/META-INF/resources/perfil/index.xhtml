@@ -3,79 +3,264 @@
                 xmlns:f="jakarta.faces.core"
                 xmlns:h="jakarta.faces.html"
                 xmlns:p="http://primefaces.org/ui"
-                xmlns:fs="http://xmlns.jcp.org/jsf/core"
                 xmlns:ui="http://java.sun.com/jsf/facelets"
                 template="/template/main.xhtml">
 
-    <h:head>
-        <title>Perfil de Usuario</title>
-    </h:head>
-
     <ui:define name="contenido">
-        <!-- Título de la página -->
-        <h1>Mi Perfil</h1>
 
-        <!-- Formulario que usa el Bean de Usuario para mostrar los datos -->
-        <h:form id="formPerfil">
+        <!-- ESTILOS BASADOS STRICTAMENTE EN LA PALETA CORPORATIVA SKYWAY -->
+        <style type="text/css">
+            :root {
+                --deep-space: #080e1a;
+                --midnight-blue: #0b1426;
+                --slate-glass: #1e293b;
+                --border-ui: #334155;
+                --cyber-cyan: #00d1ff;
+                --aviation-blue: #4c7cf3;
+                --glow-white: #f8fafc;
+                --text-dim: #94a3b8;
+            }
 
-            <p:panel header="Información del Usuario" styleClass="p-4">
-                <h:panelGrid columns="2" styleClass="p-4">
-                    <!-- Mostrar Nombre y Apellido -->
-                    <p:outputLabel for="nombre" value="Nombre:" />
-                    <h:outputText id="nombre" value="#{usuarioBean.usuario.nombre}" />
+            .profile-wrapper {
+                max-width: 1000px;
+                margin: 0 auto;
+                padding: 20px 10px;
+            }
 
-                    <p:outputLabel for="apellido" value="Apellido:" />
-                    <h:outputText id="apellido" value="#{userBean.usuario.apellido}" />
+            .profile-card {
+                background-color: var(--midnight-blue);
+                border: 1px solid var(--border-ui);
+                border-radius: 12px;
+                overflow: hidden;
+            }
 
-                    <p:outputLabel for="correo" value="Correo Electrónico:" />
-                    <h:outputText id="correo" value="#{userBean.usuario.correoElectronico}" />
+            .profile-header {
+                background-color: rgba(30, 41, 59, 0.4);
+                border-bottom: 1px solid var(--border-ui);
+                padding: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 16px;
+            }
 
-                    <p:outputLabel for="telefono" value="Teléfono:" />
-                    <h:outputText id="telefono" value="#{userBean.usuario.telefono}" />
+            .avatar-badge {
+                width: 64px;
+                height: 64px;
+                border-radius: 50%;
+                background-color: var(--slate-glass);
+                border: 2px solid var(--aviation-blue);
+                color: var(--cyber-cyan);
+                font-size: 24px;
+                font-weight: 700;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
 
-                    <p:outputLabel for="documento" value="Documento de Identidad:" />
-                    <h:outputText id="documento" value="#{userBean.usuario.documentoIdentidad}" />
+            .profile-title {
+                margin: 0;
+                color: var(--glow-white);
+                font-size: 22px;
+                font-weight: 600;
+            }
 
-                    <p:outputLabel for="fechaNacimiento" value="Fecha de Nacimiento:" />
-                    <h:outputText id="fechaNacimiento" value="#{userBean.usuario.fechaNacimiento}">
-                        <f:convertDateTime pattern="dd/MM/yyyy"/>
-                    </h:outputText>
+            .profile-subtitle {
+                color: var(--cyber-cyan);
+                font-size: 13px;
+                font-weight: 500;
+                margin-top: 4px;
+                display: block;
+            }
 
-                    <p:outputLabel for="fechaRegistro" value="Fecha de Registro:" />
-                    <h:outputText id="fechaRegistro" value="#{userBean.usuario.fechaRegistro}">
-                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm"/>
-                    </h:outputText>
+            /* ESTRUCTURA EN CUADRÍCULA (GRID LAYOUT) */
+            .info-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 16px;
+                padding: 24px;
+            }
 
-                    <p:outputLabel value="Roles:" />
-                    <h:panelGrid columns="1">
-                        <ui:repeat value="#{userBean.usuario.roles}" var="role">
-                            <h:outputText value="#{role.nombre}" />
-                        </ui:repeat>
-                    </h:panelGrid>
+            .info-box {
+                background-color: var(--deep-space);
+                border: 1px solid var(--slate-glass);
+                border-radius: 8px;
+                padding: 14px 18px;
+            }
 
+            .info-box.full-width {
+                grid-column: 1 / -1;
+            }
 
+            .info-label {
+                font-size: 11px;
+                text-transform: uppercase;
+                letter-spacing: 0.8px;
+                color: var(--text-dim);
+                font-weight: 600;
+                margin-bottom: 6px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
 
-                </h:panelGrid>
-            </p:panel>
+            .info-label i {
+                color: var(--aviation-blue);
+                font-size: 13px;
+            }
 
-            <!-- Botón para actualizar información (si se permite) -->
-            <p:commandButton value="Actualizar Datos"
-                             icon="pi pi-pencil"
-                             styleClass="p-button-info"
-                             action="#{userBean.actualizarUsuario}"
-                             process="@form"
-                             update="formPerfil"
-                             ajax="true" />
+            .info-value {
+                font-size: 14px;
+                color: var(--glow-white);
+                font-weight: 500;
+            }
 
-            <!-- Botón para cambiar contraseña -->
-            <p:commandButton value="Cambiar Contraseña"
-                             icon="pi pi-lock"
-                             styleClass="p-button-warning"
-                             action="#{userBean.cambiarContrasena}"
-                             update="formPerfil"
-                             ajax="true" />
+            .role-pill {
+                display: inline-block;
+                background-color: rgba(76, 124, 243, 0.15);
+                border: 1px solid var(--aviation-blue);
+                color: var(--glow-white);
+                padding: 4px 12px;
+                border-radius: 20px;
+                font-size: 12px;
+                font-weight: 600;
+            }
 
-        </h:form>
+            .profile-footer {
+                padding: 16px 24px;
+                border-top: 1px solid var(--border-ui);
+                background-color: rgba(8, 14, 26, 0.5);
+                display: flex;
+                justify-content: flex-end;
+                gap: 12px;
+            }
+
+            /* Sobrescribir botones PrimeFaces con paleta limpia */
+            .btn-skyway-primary {
+                background-color: var(--aviation-blue) !important;
+                border-color: var(--aviation-blue) !important;
+                color: #ffffff !important;
+                font-weight: 600 !important;
+            }
+
+            .btn-skyway-primary:hover {
+                background-color: #3b68d6 !important;
+            }
+
+            .btn-skyway-secondary {
+                background-color: transparent !important;
+                border: 1px solid var(--border-ui) !important;
+                color: var(--text-dim) !important;
+            }
+
+            .btn-skyway-secondary:hover {
+                border-color: var(--aviation-blue) !important;
+                color: var(--glow-white) !important;
+            }
+        </style>
+
+        <div class="profile-wrapper">
+            <h:form id="formPerfil">
+                <p:growl id="messages" showDetail="true" />
+
+                <!-- TARJETA PRINCIPAL CORPORATIVA -->
+                <div class="profile-card">
+
+                    <!-- CABECERA -->
+                    <div class="profile-header">
+                        <div style="display: flex; align-items: center; gap: 16px;">
+                            <div class="avatar-badge">
+                                <h:outputText value="#{userBean.usuario.nombre.substring(0,1)}#{userBean.usuario.apellido.substring(0,1)}"
+                                              rendered="#{not empty userBean.usuario.nombre and not empty userBean.usuario.apellido}" />
+                                <h:outputText value="U" rendered="#{empty userBean.usuario.nombre}" />
+                            </div>
+                            <div>
+                                <h2 class="profile-title">
+                                    #{userBean.usuario.nombre} #{userBean.usuario.apellido}
+                                </h2>
+                                <span class="profile-subtitle">
+                                    RUT: #{userBean.usuario.rut}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- ROLES -->
+                        <div>
+                            <ui:repeat value="#{userBean.usuario.roles}" var="role">
+                                <span class="role-pill">#{role.nombre}</span>
+                            </ui:repeat>
+                        </div>
+                    </div>
+
+                    <!-- CAMPOS ORGANIZADOS EN CUADRÍCULA MULTICOLUMNA -->
+                    <div class="info-grid">
+
+                        <div class="info-box">
+                            <span class="info-label">
+                                <i class="pi pi-id-card"></i> Documento de Identidad
+                            </span>
+                            <div class="info-value">#{userBean.usuario.documentoIdentidad}</div>
+                        </div>
+
+                        <div class="info-box">
+                            <span class="info-label">
+                                <i class="pi pi-envelope"></i> Correo Electrónico
+                            </span>
+                            <div class="info-value">#{userBean.usuario.correoElectronico}</div>
+                        </div>
+
+                        <div class="info-box">
+                            <span class="info-label">
+                                <i class="pi pi-phone"></i> Teléfono de Contacto
+                            </span>
+                            <div class="info-value">#{userBean.usuario.telefono}</div>
+                        </div>
+
+                        <div class="info-box">
+                            <span class="info-label">
+                                <i class="pi pi-calendar"></i> Fecha de Nacimiento
+                            </span>
+                            <div class="info-value">
+                                <h:outputText value="#{userBean.usuario.fechaNacimiento}">
+                                    <f:convertDateTime pattern="dd/MM/yyyy" />
+                                </h:outputText>
+                            </div>
+                        </div>
+
+                        <div class="info-box full-width">
+                            <span class="info-label">
+                                <i class="pi pi-clock"></i> Fecha de Registro en Plataforma
+                            </span>
+                            <div class="info-value">
+                                <h:outputText value="#{userBean.usuario.fechaRegistro}">
+                                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+                                </h:outputText>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- FOOTER CON ACCIONES SOBRIAS -->
+                    <div class="profile-footer">
+                        <p:commandButton value="Actualizar Perfil"
+                                         icon="pi pi-user-edit"
+                                         styleClass="btn-skyway-secondary"
+                                         action="#{userBean.actualizarUsuario}"
+                                         process="@this"
+                                         update="formPerfil" />
+
+                        <p:commandButton value="Cambiar Contraseña"
+                                         icon="pi pi-lock"
+                                         styleClass="btn-skyway-primary"
+                                         action="#{userBean.cambiarContrasena}"
+                                         process="@this"
+                                         update="formPerfil" />
+                    </div>
+
+                </div>
+            </h:form>
+        </div>
 
     </ui:define>
 
