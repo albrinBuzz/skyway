@@ -763,70 +763,154 @@ END $$;
 INSERT INTO Aerolinea (ID_AEROLINEA, Nombre, Codigo) VALUES
     (1, 'SkyWay Airlines', 'SW');
 
-
+-- =============================================================================
+-- SCRIPT DE POBLADO INTEGRAL Y COHERENTE - SKYWAY ENTERPRISE
+-- =============================================================================
 INSERT INTO Clase_asiento (Descripcion) VALUES
                                             ('Económica'),
                                             ('Ejecutiva'),
                                             ('Primera Clase');
 
+-- =============================================================================
+-- 2. FABRICANTES DE AERONAVES
+-- =============================================================================
+INSERT INTO Fabricante (Nombre) VALUES
+                                    ('Airbus'),
+                                    ('Boeing'),
+                                    ('Embraer');
 
-INSERT INTO Fabricante (Nombre)
-VALUES
-    ('Airbus'),
-    ('Boeing'),
-    ('Embraer');
+-- =============================================================================
+-- 3. MODELOS DE AVIÓN
+-- =============================================================================
+INSERT INTO Modelo_Avion (Nombre, ID_FABRICANTE) VALUES
+                                                     ('Airbus A320',  (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Airbus')),
+                                                     ('Boeing 747',   (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Boeing')),
+                                                     ('Airbus A350',  (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Airbus')),
+                                                     ('Boeing 787',   (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Boeing')),
+                                                     ('Embraer E195', (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Embraer')),
+                                                     ('Boeing 777',   (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Boeing')),
+                                                     ('Airbus A380',  (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Airbus')),
+                                                     ('Airbus A330',  (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Airbus')),
+                                                     ('Boeing 757',   (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Boeing'));
 
--- Insertar los modelos de aviones
-INSERT INTO Modelo_Avion (Nombre, ID_FABRICANTE)
-VALUES
-    ('Airbus A320', (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Airbus')),
-    ('Boeing 747', (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Boeing')),
-    ('Airbus A350', (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Airbus')),
-    ('Boeing 787', (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Boeing')),
-    ('Embraer E195', (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Embraer')),
-    ('Boeing 777', (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Boeing')),
-    ('Airbus A380', (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Airbus')),
-    ('Airbus A330', (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Airbus')),
-    ('Boeing 757', (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Boeing'));
+-- =============================================================================
+-- 4. CONFIGURACIÓN ESPACIAL DE CABINAS POR MODELO (REALISTA)
+-- =============================================================================
 
--- Insertar aviones con los datos correspondientes
-INSERT INTO Avion (
-    Numero_de_Registro,
-    ID_MODELO,
-    Ano_de_Fabricacion,
-    Capacidad_de_Pasajeros,
-    Capacidad_de_Carga,
-    Estado_de_Mantenimiento,
-    Fecha_Proximo_Mantenimiento
-)
-VALUES
-    ('DEF456', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), 2018, 185, 15000, 'En mantenimiento', NULL),
-    ('GHI789', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 747'), 2005, 380, 45000, 'Operativo', NULL),
-    ('JKL012', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'), 2019, 310, 40000, 'Operativo', NULL),
-    ('MNO345', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 787'), 2020, 220, 35000, 'En servicio', NULL),
-    ('PQR678', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Embraer E195'), 2016, 120, 12000, 'Operativo', NULL),
-    ('XYZ123', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 777'), 2014, 450, 50000, 'En servicio', NULL),
-    ('LMN987', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A380'), 2018, 650, 75000, 'Operativo', NULL),
-    ('STU456', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A330'), 2017, 250, 35000, 'En mantenimiento', NULL),
-    ('WXY543', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 757'), 2003, 190, 22000, 'Operativo', NULL);
+-- -----------------------------------------------------------------------------
+-- AIRBUS A320 (Fusilaje Estrecho | Total: 180 asientos -> 12 Ejecutiva + 168 Económica)
+-- -----------------------------------------------------------------------------
+INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'), 1, 3, '2-2', 'A,C,D,F', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 4, 11, '3-3', 'A,B,C,D,E,F', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 12, 13, '3-3', 'A,B,C,D,E,F', TRUE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 14, 31, '3-3', 'A,B,C,D,E,F', FALSE);
 
+-- -----------------------------------------------------------------------------
+-- BOEING 747-400 (Fusilaje Ancho | Total: 380 asientos -> 12 Primera + 56 Ejecutiva + 312 Económica)
+-- -----------------------------------------------------------------------------
+INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 747'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Primera Clase'), 1, 3, '1-2-1', 'A,D,G,K', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 747'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'),     4, 11, '2-3-2', 'A,B,D,E,F,J,K', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 747'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     12, 12, '3-4-3', 'A,B,C,D,E,F,G,H,J,K', TRUE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 747'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     14, 43, '3-4-3', 'A,B,C,D,E,F,G,H,J,K', FALSE);
+
+-- -----------------------------------------------------------------------------
+-- AIRBUS A350-900 (Fusilaje Ancho | Total: 310 asientos -> 16 Primera + 48 Ejecutiva + 246 Económica)
+-- -----------------------------------------------------------------------------
+INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Primera Clase'), 1, 4, '1-2-1', 'A,D,G,K', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'),     5, 12, '2-2-2', 'A,C,D,G,H,K', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     14, 14, '3-3-3', 'A,B,C,D,E,F,J,K,L', TRUE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     15, 40, '3-3-3', 'A,B,C,D,E,F,J,K,L', FALSE);
+
+-- -----------------------------------------------------------------------------
+-- BOEING 787-9 (Fusilaje Ancho | Total: 220 asientos -> 12 Primera + 36 Ejecutiva + 172 Económica)
+-- -----------------------------------------------------------------------------
+INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 787'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Primera Clase'), 1, 3, '1-2-1', 'A,D,G,K', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 787'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'),     4, 9, '2-2-2', 'A,C,D,G,H,K', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 787'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     10, 10, '3-3-3', 'A,B,C,D,E,F,J,K,L', TRUE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 787'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     11, 28, '3-3-3', 'A,B,C,D,E,F,J,K,L', FALSE);
+
+-- -----------------------------------------------------------------------------
+-- EMBRAER E195 (Regional | Total: 120 asientos -> 12 Ejecutiva + 108 Económica)
+-- -----------------------------------------------------------------------------
+INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Embraer E195'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'), 1, 4, '1-2', 'A,C,D', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Embraer E195'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 5, 12, '2-2', 'A,B,C,D', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Embraer E195'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 13, 13, '2-2', 'A,B,C,D', TRUE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Embraer E195'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 14, 30, '2-2', 'A,B,C,D', FALSE);
+
+-- -----------------------------------------------------------------------------
+-- BOEING 777-300ER (Fusilaje Ancho Grande | Total: 450 asientos -> 16 Primera + 70 Ejecutiva + 364 Económica)
+-- -----------------------------------------------------------------------------
+INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 777'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Primera Clase'), 1, 4, '1-2-1', 'A,D,G,K', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 777'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'),     5, 14, '2-3-2', 'A,B,D,E,F,J,K', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 777'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     15, 15, '3-4-3', 'A,B,C,D,E,F,G,H,J,K', TRUE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 777'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     16, 50, '3-4-3', 'A,B,C,D,E,F,G,H,J,K', FALSE);
+
+-- -----------------------------------------------------------------------------
+-- AIRBUS A380-800 (Superjumbo | Total: 650 asientos -> 20 Primera + 96 Ejecutiva + 534 Económica)
+-- -----------------------------------------------------------------------------
+INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A380'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Primera Clase'), 1, 5, '1-2-1', 'A,E,F,K', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A380'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'),     6, 21, '2-2-2', 'A,B,E,F,J,K', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A380'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     22, 22, '3-4-3', 'A,B,C,D,E,F,G,H,J,K', TRUE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A380'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     23, 74, '3-4-3', 'A,B,C,D,E,F,G,H,J,K', FALSE);
+
+-- -----------------------------------------------------------------------------
+-- AIRBUS A330-300 (Fusilaje Ancho Medio | Total: 250 asientos -> 8 Primera + 36 Ejecutiva + 206 Económica)
+-- -----------------------------------------------------------------------------
+INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A330'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Primera Clase'), 1, 2, '1-2-1', 'A,D,G,K', FALSE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A330'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'),     3, 8, '2-2-2', 'A,B,D,G,J,K', FALSE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A330'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     9, 9, '2-4-2', 'A,C,D,E,F,G,H,K', TRUE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A330'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     10, 34, '2-4-2', 'A,C,D,E,F,G,H,K', FALSE);
+
+-- -----------------------------------------------------------------------------
+-- BOEING 757-200 (Fusilaje Estrecho Largo | Total: 190 asientos -> 16 Ejecutiva + 174 Económica)
+-- -----------------------------------------------------------------------------
+INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 757'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'), 1, 4, '2-2', 'A,C,D,F', FALSE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 757'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 5, 14, '3-3', 'A,B,C,D,E,F', FALSE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 757'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 15, 16, '3-3', 'A,B,C,D,E,F', TRUE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 757'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 17, 33, '3-3', 'A,B,C,D,E,F', FALSE);
+
+-- =============================================================================
+-- 5. UNIDADES FÍSICAS DE AVIONES
+-- =============================================================================
+INSERT INTO Avion (Numero_de_Registro, ID_MODELO, Ano_de_Fabricacion, Capacidad_de_Pasajeros, Capacidad_de_Carga, Estado_de_Mantenimiento, Fecha_Proximo_Mantenimiento) VALUES
+                                                                                                                                                                            ('DEF456', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'),  2018, 180, 15000, 'En mantenimiento', NULL),
+                                                                                                                                                                            ('GHI789', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 747'),   2005, 380, 45000, 'Operativo', NULL),
+                                                                                                                                                                            ('JKL012', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'),  2019, 310, 40000, 'Operativo', NULL),
+                                                                                                                                                                            ('MNO345', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 787'),   2020, 220, 35000, 'En servicio', NULL),
+                                                                                                                                                                            ('PQR678', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Embraer E195'), 2016, 120, 12000, 'Operativo', NULL),
+                                                                                                                                                                            ('XYZ123', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 777'),   2014, 450, 50000, 'En servicio', NULL),
+                                                                                                                                                                            ('LMN987', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A380'),  2018, 650, 75000, 'Operativo', NULL),
+                                                                                                                                                                            ('STU456', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A330'),  2017, 250, 35000, 'En mantenimiento', NULL),
+                                                                                                                                                                            ('WXY543', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 757'),   2003, 190, 22000, 'Operativo', NULL);
+
+-- =============================================================================
+-- 6. CAPACIDAD OPERATIVA POR CLASE
+-- =============================================================================
 INSERT INTO Capacidad_Clase (ID_AVION, ID_CLASE, Cantidad)
 SELECT avion.ID_AVION, clase.ID_CLASE, capacidad
 FROM (
          VALUES
-             ('DEF456', 'Económica', 150), ('DEF456', 'Ejecutiva', 30), ('DEF456', 'Primera Clase', 5),
-             ('GHI789', 'Económica', 300), ('GHI789', 'Ejecutiva', 50), ('GHI789', 'Primera Clase', 30),
-             ('JKL012', 'Económica', 250), ('JKL012', 'Ejecutiva', 40), ('JKL012', 'Primera Clase', 20),
-             ('MNO345', 'Económica', 180), ('MNO345', 'Ejecutiva', 40), ('MNO345', 'Primera Clase', 15),
-             ('PQR678', 'Económica', 100), ('PQR678', 'Ejecutiva', 10), ('PQR678', 'Primera Clase', 5),
-             ('XYZ123', 'Económica', 350), ('XYZ123', 'Ejecutiva', 70), ('XYZ123', 'Primera Clase', 30),
-             ('LMN987', 'Económica', 500), ('LMN987', 'Ejecutiva', 100), ('LMN987', 'Primera Clase', 50),
-             ('STU456', 'Económica', 200), ('STU456', 'Ejecutiva', 40), ('STU456', 'Primera Clase', 10),
-             ('WXY543', 'Económica', 150), ('WXY543', 'Ejecutiva', 30), ('WXY543', 'Primera Clase', 10)
+             ('DEF456', 'Ejecutiva', 12),     ('DEF456', 'Económica', 168),
+             ('GHI789', 'Primera Clase', 12), ('GHI789', 'Ejecutiva', 56),  ('GHI789', 'Económica', 312),
+             ('JKL012', 'Primera Clase', 16), ('JKL012', 'Ejecutiva', 48),  ('JKL012', 'Económica', 246),
+             ('MNO345', 'Primera Clase', 12), ('MNO345', 'Ejecutiva', 36),  ('MNO345', 'Económica', 172),
+             ('PQR678', 'Ejecutiva', 12),     ('PQR678', 'Económica', 108),
+             ('XYZ123', 'Primera Clase', 16), ('XYZ123', 'Ejecutiva', 70),  ('XYZ123', 'Económica', 364),
+             ('LMN987', 'Primera Clase', 20), ('LMN987', 'Ejecutiva', 96),  ('LMN987', 'Económica', 534),
+             ('STU456', 'Primera Clase', 8),  ('STU456', 'Ejecutiva', 36),  ('STU456', 'Económica', 206),
+             ('WXY543', 'Ejecutiva', 16),     ('WXY543', 'Económica', 174)
      ) AS datos(numero_registro, descripcion_clase, capacidad)
          JOIN Avion avion ON avion.Numero_de_Registro = datos.numero_registro
          JOIN Clase_asiento clase ON clase.Descripcion = datos.descripcion_clase;
-
 
 
 -- Insertar datos en la tabla Estado_Vuelo
@@ -1039,32 +1123,32 @@ TRUNCATE TABLE Asignacion_Puerta, Segmento_Vuelo, Precio_Asiento, Vuelo CASCADE;
 -- POBLADO DE VUELOS OPERADOS EXCLUSIVAMENTE POR SKYWAY AIRLINES (ID_AEROLINEA = 1)
 -- =========================================================================
 INSERT INTO Vuelo (ID_VUELO, Numero_Vuelo, Fecha_Hora_Salida, Fecha_Hora_Llegada, ID_ESTADO_VUELO, ID_AVION, RUT_PILOTO, ID_AEROLINEA) VALUES
-                                                                                                                                           (nextval('vuelo_seq'), 'SW8117', '2025-08-01 14:30', '2025-08-01 17:45', 1, 1, '12345678-9', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW8118', '2025-08-01 18:55', '2025-08-01 21:30', 1, 1, '12345678-9', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW8180', '2025-08-01 22:50', '2025-08-02 07:35', 1, 2, '98765432-1', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW8989', '2025-08-02 09:55', '2025-08-02 12:50', 1, 3, '98765432-1', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW650',  '2025-08-01 07:50', '2025-08-01 10:40', 1, 1, '12345678-9', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW2482', '2025-08-01 12:00', '2025-08-01 20:15', 1, 3, '12345678-9', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW8954', '2025-08-01 22:30', '2025-08-02 01:06', 1, 1, '98765432-1', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW8120', '2025-08-02 15:00', '2025-08-02 17:30', 1, 2, '12345678-9', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW8130', '2025-08-02 19:00', '2025-08-02 21:45', 1, 1, '98765432-1', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW8140', '2025-08-02 22:30', '2025-08-03 01:30', 1, 3, '12345678-9', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW8150', '2025-08-03 03:00', '2025-08-03 06:00', 1, 2, '98765432-1', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW8160', '2025-08-03 08:00', '2025-08-03 10:30', 1, 1, '12345678-9', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW8170', '2025-08-03 11:30', '2025-08-03 14:00', 1, 3, '98765432-1', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW8185', '2025-08-03 15:00', '2025-08-03 20:30', 1, 2, '12345678-9', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW9000', '2025-08-08 06:00', '2025-08-08 13:00', 1, 1, '12345678-9', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW9001', '2025-08-08 15:00', '2025-08-08 22:00', 1, 3, '98765432-1', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW9002', '2025-08-09 06:00', '2025-08-09 10:00', 1, 2, '12345678-9', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW9100', '2025-08-03 15:00', '2025-08-03 19:30', 1, 1, '12345678-9', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW9200', '2025-08-04 08:00', '2025-08-04 11:30', 1, 1, '12345678-9', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW9201', '2025-08-04 13:00', '2025-08-04 16:00', 1, 2, '98765432-1', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW9202', '2025-08-04 18:00', '2025-08-04 21:00', 1, 3, '12345678-9', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW9900', '2025-08-01 23:55', '2025-08-02 09:30', 1, 1, '12345678-9', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW9901', '2025-08-01 09:00', '2025-08-01 15:00', 1, 2, '98765432-1', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW9902', '2025-08-01 17:00', '2025-08-01 22:00', 1, 2, '12345678-9', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW9400', '2025-08-10 08:00', '2025-08-10 15:00', 1, 2, '98765432-1', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW9500', '2025-08-10 17:00', '2025-08-10 23:30', 1, 2, '98765432-1', 1);
+   (nextval('vuelo_seq'), 'SW8117', '2025-08-01 14:30', '2025-08-01 17:45', 1, 1, '12345678-9', 1),
+   (nextval('vuelo_seq'), 'SW8118', '2025-08-01 18:55', '2025-08-01 21:30', 1, 1, '12345678-9', 1),
+   (nextval('vuelo_seq'), 'SW8180', '2025-08-01 22:50', '2025-08-02 07:35', 1, 2, '98765432-1', 1),
+   (nextval('vuelo_seq'), 'SW8989', '2025-08-02 09:55', '2025-08-02 12:50', 1, 3, '98765432-1', 1),
+   (nextval('vuelo_seq'), 'SW650',  '2025-08-01 07:50', '2025-08-01 10:40', 1, 1, '12345678-9', 1),
+   (nextval('vuelo_seq'), 'SW2482', '2025-08-01 12:00', '2025-08-01 20:15', 1, 3, '12345678-9', 1),
+   (nextval('vuelo_seq'), 'SW8954', '2025-08-01 22:30', '2025-08-02 01:06', 1, 1, '98765432-1', 1),
+   (nextval('vuelo_seq'), 'SW8120', '2025-08-02 15:00', '2025-08-02 17:30', 1, 2, '12345678-9', 1),
+   (nextval('vuelo_seq'), 'SW8130', '2025-08-02 19:00', '2025-08-02 21:45', 1, 1, '98765432-1', 1),
+   (nextval('vuelo_seq'), 'SW8140', '2025-08-02 22:30', '2025-08-03 01:30', 1, 3, '12345678-9', 1),
+   (nextval('vuelo_seq'), 'SW8150', '2025-08-03 03:00', '2025-08-03 06:00', 1, 2, '98765432-1', 1),
+   (nextval('vuelo_seq'), 'SW8160', '2025-08-03 08:00', '2025-08-03 10:30', 1, 1, '12345678-9', 1),
+   (nextval('vuelo_seq'), 'SW8170', '2025-08-03 11:30', '2025-08-03 14:00', 1, 3, '98765432-1', 1),
+   (nextval('vuelo_seq'), 'SW8185', '2025-08-03 15:00', '2025-08-03 20:30', 1, 2, '12345678-9', 1),
+   (nextval('vuelo_seq'), 'SW9000', '2025-08-08 06:00', '2025-08-08 13:00', 1, 1, '12345678-9', 1),
+   (nextval('vuelo_seq'), 'SW9001', '2025-08-08 15:00', '2025-08-08 22:00', 1, 3, '98765432-1', 1),
+   (nextval('vuelo_seq'), 'SW9002', '2025-08-09 06:00', '2025-08-09 10:00', 1, 2, '12345678-9', 1),
+   (nextval('vuelo_seq'), 'SW9100', '2025-08-03 15:00', '2025-08-03 19:30', 1, 1, '12345678-9', 1),
+   (nextval('vuelo_seq'), 'SW9200', '2025-08-04 08:00', '2025-08-04 11:30', 1, 1, '12345678-9', 1),
+   (nextval('vuelo_seq'), 'SW9201', '2025-08-04 13:00', '2025-08-04 16:00', 1, 2, '98765432-1', 1),
+   (nextval('vuelo_seq'), 'SW9202', '2025-08-04 18:00', '2025-08-04 21:00', 1, 3, '12345678-9', 1),
+   (nextval('vuelo_seq'), 'SW9900', '2025-08-01 23:55', '2025-08-02 09:30', 1, 1, '12345678-9', 1),
+   (nextval('vuelo_seq'), 'SW9901', '2025-08-01 09:00', '2025-08-01 15:00', 1, 2, '98765432-1', 1),
+   (nextval('vuelo_seq'), 'SW9902', '2025-08-01 17:00', '2025-08-01 22:00', 1, 2, '12345678-9', 1),
+   (nextval('vuelo_seq'), 'SW9400', '2025-08-10 08:00', '2025-08-10 15:00', 1, 2, '98765432-1', 1),
+   (nextval('vuelo_seq'), 'SW9500', '2025-08-10 17:00', '2025-08-10 23:30', 1, 2, '98765432-1', 1);
 
 
 INSERT INTO Precio_Asiento (ID_VUELO, ID_CLASE, PRECIO)
@@ -1427,9 +1511,17 @@ FROM Segmento_Vuelo sg
 ORDER BY v.Numero_Vuelo, sg.ORDEN_SEGMENTO;
 
 
-/*INSERT INTO aeropuertos (nombre, ciudad, codigo_iata, latitud, longitud, ubicacion)
-VALUES
-('Aeropuerto Internacional de la Ciudad de México', 'Ciudad de México', 'MMMX', 19.4361, -99.0721, ST_SetSRID(ST_MakePoint(-99.0721, 19.4361), 4326)),
-('Aeropuerto Internacional de Madrid-Barajas', 'Madrid', 'LEMD', 40.4531, -3.5772, ST_SetSRID(ST_MakePoint(-3.5772, 40.4531), 4326)),
-('Aeropuerto de Barcelona-El Prat', 'Barcelona', 'LEBL', 41.2973, 2.0833, ST_SetSRID(ST_MakePoint(2.0833, 41.2973), 4326)),
-('Aeropuerto de Los Ángeles', 'Los Ángeles', 'KLAX', 33.9416, -118.4085, ST_SetSRID(ST_MakePoint(-118.4085, 33.9416), 4326));*/
+
+SELECT
+    c1.nombre || '-' || aprt1.nombre_aeropuerto || ' ' || aprt1.codigo_iata AS origen,
+    c2.nombre || '-' || aprt2.nombre_aeropuerto || ' ' || aprt2.codigo_iata AS destino,
+    it.hora_salida,
+    it.hora_llegada
+FROM itinerario it
+         JOIN aeropuerto aprt1 ON aprt1.id_aeropuerto = it.origen_aeropuerto
+         JOIN aeropuerto aprt2 ON aprt2.id_aeropuerto = it.destino_aeropuerto
+         JOIN ciudad c1 ON c1.id_ciudad = aprt1.id_ciudad
+         JOIN ciudad c2 ON c2.id_ciudad = aprt2.id_ciudad
+WHERE it.hora_salida >= NOW()
+  AND it.hora_salida < NOW() + INTERVAL '7 days'
+ORDER BY it.hora_salida ASC;

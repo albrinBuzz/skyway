@@ -1,21 +1,39 @@
 package com.SkyWay.modules.asiento.presentation.dto;
 
-
+import java.io.Serializable;
 import java.util.Objects;
 
-public class InfoAsientoDTO {
-    private int idAsiento;
-    private String numeroAsiento;
-    private String estado;
+public class InfoAsientoDTO implements Serializable {
+	private static final long serialVersionUID = 1L;
+
+	private int idAsiento;
+	private String numeroAsiento;
+	private String estado;
 	private int precio;
 	private String clase;
-	private String reservadoPor;  // sessionId que tiene el lock temporal (null si libre/ocupado)
+	private String reservadoPor;
 
-	// Constructor
+	// Campos Espaciales para Cabina Dinámica
+	private Integer fila;
+	private String letra;
+	private Boolean esVentana = false;
+	private Boolean esPasillo = false;
+	private Boolean esEmergencia = false;
 
+	public InfoAsientoDTO() {}
 
-    public InfoAsientoDTO() {
-		// TODO Auto-generated constructor stub
+	public InfoAsientoDTO(int idAsiento, String numeroAsiento, String estado, int precio, String clase,
+	                      Integer fila, String letra, Boolean esVentana, Boolean esPasillo, Boolean esEmergencia) {
+		this.idAsiento = idAsiento;
+		this.numeroAsiento = numeroAsiento;
+		this.estado = estado;
+		this.precio = precio;
+		this.clase = clase;
+		this.fila = fila;
+		this.letra = letra;
+		this.esVentana = esVentana;
+		this.esPasillo = esPasillo;
+		this.esEmergencia = esEmergencia;
 	}
 
 	public InfoAsientoDTO(int idAsiento, String numeroAsiento, String estado, int precio, String clase) {
@@ -25,66 +43,54 @@ public class InfoAsientoDTO {
 		this.precio = precio;
 		this.clase = clase;
 	}
-	/**
-	 * Estado VISUAL relativo a quién está mirando: el mismo dato crudo
-	 * "SELECCIONADO" se interpreta distinto si el sessionId coincide o no.
-	 */
+
 	public String getEstadoVisual(String miSessionId) {
 		if ("OCUPADO".equalsIgnoreCase(this.estado)) {
 			return "OCUPADO";
 		}
 		if ("SELECCIONADO".equalsIgnoreCase(this.estado)) {
 			if (miSessionId != null && miSessionId.equals(this.reservadoPor)) {
-				return "SELECCIONADO"; // Naranjo / Tu selección
+				return "SELECCIONADO";
 			} else {
-				return "EN_PROCESO";  // Bloqueado para terceros
+				return "EN_PROCESO";
 			}
 		}
 		return "libre";
 	}
 
-	public int getIdAsiento() {
-		return idAsiento;
-	}
+	// --- Getters y Setters ---
+	public int getIdAsiento() { return idAsiento; }
+	public void setIdAsiento(int idAsiento) { this.idAsiento = idAsiento; }
 
-	public void setIdAsiento(int idAsiento) {
-		this.idAsiento = idAsiento;
-	}
+	public String getNumeroAsiento() { return numeroAsiento; }
+	public void setNumeroAsiento(String numeroAsiento) { this.numeroAsiento = numeroAsiento; }
 
-	public String getNumeroAsiento() {
-		return numeroAsiento;
-	}
+	public String getEstado() { return estado != null ? estado.toLowerCase() : "libre"; }
+	public void setEstado(String estado) { this.estado = estado; }
 
-	public void setNumeroAsiento(String numeroAsiento) {
-		this.numeroAsiento = numeroAsiento;
-	}
+	public int getPrecio() { return precio; }
+	public void setPrecio(int precio) { this.precio = precio; }
 
-	public String getEstado() {
-		return estado.toLowerCase();
-	}
+	public String getClase() { return clase; }
+	public void setClase(String clase) { this.clase = clase; }
 
-	public void setEstado(String estado) {
-		this.estado = estado;
-	}
-
-	public int getPrecio() {
-		return precio;
-	}
-
-	public void setPrecio(int precio) {
-		this.precio = precio;
-	}
-
-	public String getClase() {
-		return clase;
-	}
-
-	public void setClase(String clase) {
-		this.clase = clase;
-	}
 	public String getReservadoPor() { return reservadoPor; }
 	public void setReservadoPor(String reservadoPor) { this.reservadoPor = reservadoPor; }
 
+	public Integer getFila() { return fila; }
+	public void setFila(Integer fila) { this.fila = fila; }
+
+	public String getLetra() { return letra; }
+	public void setLetra(String letra) { this.letra = letra; }
+
+	public Boolean getEsVentana() { return esVentana; }
+	public void setEsVentana(Boolean esVentana) { this.esVentana = esVentana; }
+
+	public Boolean getEsPasillo() { return esPasillo; }
+	public void setEsPasillo(Boolean esPasillo) { this.esPasillo = esPasillo; }
+
+	public Boolean getEsEmergencia() { return esEmergencia; }
+	public void setEsEmergencia(Boolean esEmergencia) { this.esEmergencia = esEmergencia; }
 
 	@Override
 	public boolean equals(Object obj) {
@@ -98,16 +104,4 @@ public class InfoAsientoDTO {
 	public int hashCode() {
 		return Objects.hash(idAsiento);
 	}
-	@Override
-	public String toString() {
-		return "InfoAsientoDTO{" +
-				"idAsiento=" + idAsiento +
-				", numeroAsiento='" + numeroAsiento + '\'' +
-				", estado='" + estado + '\'' +
-				", precio=" + precio +
-				", clase='" + clase + '\'' +
-				'}';
-	}
 }
-
-

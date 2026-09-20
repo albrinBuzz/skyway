@@ -46,6 +46,7 @@ DROP SEQUENCE IF EXISTS itinerario_tarifa_seq CASCADE;
 DROP SEQUENCE IF EXISTS caracteristica_tarifa_seq CASCADE;
 DROP SEQUENCE IF EXISTS tarifa_caracteristica_seq CASCADE;
 DROP SEQUENCE IF EXISTS reserva_pasajero_seq CASCADE;
+DROP SEQUENCE IF EXISTS configuracion_cabina_seq CASCADE;
 
 
 -- Eliminar Tablas con CASCADE
@@ -96,6 +97,8 @@ DROP TABLE IF EXISTS Tarifa CASCADE;
 DROP TABLE IF EXISTS Caracteristica_Tarifa CASCADE;
 DROP TABLE IF EXISTS Tarifa_Caracteristica CASCADE;
 DROP TABLE IF EXISTS pasajero_reserva CASCADE;
+DROP TABLE IF EXISTS Configuracion_Cabina CASCADE;
+
 
 
 -- SECUENCIAS INICIALES
@@ -140,7 +143,7 @@ CREATE SEQUENCE rolusuario_id_seq START 1 INCREMENT 1;
 CREATE SEQUENCE caracteristica_tarifa_seq START 1 INCREMENT 1;
 CREATE SEQUENCE tarifa_caracteristica_seq START 1 INCREMENT 1;
 CREATE SEQUENCE reserva_pasajero_seq START 1 INCREMENT 1;
-
+CREATE SEQUENCE configuracion_cabina_seq START WITH 1 INCREMENT BY 1;
 
 CREATE SEQUENCE tarifa_seq
     START WITH 1
@@ -359,13 +362,34 @@ CREATE TABLE Capacidad_Clase (
     --CONSTRAINT unique_avion_clase UNIQUE (ID_AVION, ID_CLASE)                 -- Se mantiene la unicidad de la combinación
 );
 
-CREATE TABLE Asiento (
-                         ID_ASIENTO INT PRIMARY KEY DEFAULT nextval('asiento_seq'),
-                         Numero_Asiento VARCHAR(10) NOT NULL,
-                         ID_CLASE INT REFERENCES Clase_asiento(ID_CLASE),
-                         ID_AVION INT REFERENCES Avion(ID_AVION)
+
+CREATE TABLE Configuracion_Cabina (
+      ID_CONFIGURACION INT PRIMARY KEY DEFAULT nextval('configuracion_cabina_seq'),
+      ID_MODELO INT REFERENCES Modelo_Avion(ID_MODELO) ON DELETE CASCADE,
+      ID_CLASE INT REFERENCES Clase_asiento(ID_CLASE) ON DELETE CASCADE,
+      Fila_Inicio INT NOT NULL,                     -- Ej: Fila 1
+      Fila_Fin INT NOT NULL,                        -- Ej: Fila 5
+      Distribucion_Columnas VARCHAR(20) NOT NULL,   -- Ej: "2-2" (Ejecutiva), "3-3" (Pasillo único), "3-3-3" (Doble pasillo)
+      Letras_Columnas VARCHAR(30) NOT NULL,         -- Ej: "A,B,C,D,E,F" o "A,B,C,D,E,F,G,H,J"
+      Es_Salida_Emergencia BOOLEAN DEFAULT FALSE,
+      CONSTRAINT unique_modelo_filas UNIQUE (ID_MODELO, Fila_Inicio, Fila_Fin)
 );
 
+-- =============================================================================
+-- 4. TABLA ASIENTO (EXTENDIDA CON COORDENADAS ESPACIALES)
+-- =============================================================================
+CREATE TABLE Asiento (
+     ID_ASIENTO INT PRIMARY KEY DEFAULT nextval('asiento_seq'),
+     Numero_Asiento VARCHAR(10) NOT NULL,         -- Ej: "12A"
+     Fila INT NOT NULL,                           -- Ej: 12
+     Letra VARCHAR(2) NOT NULL,                   -- Ej: "A"
+     ID_CLASE INT REFERENCES Clase_asiento(ID_CLASE),
+     ID_AVION INT REFERENCES Avion(ID_AVION) ON DELETE CASCADE,
+     Es_Ventana BOOLEAN DEFAULT FALSE,
+     Es_Pasillo BOOLEAN DEFAULT FALSE,
+     Es_Emergencia BOOLEAN DEFAULT FALSE,
+     CONSTRAINT unique_avion_numero_asiento UNIQUE (ID_AVION, Numero_Asiento)
+);
 --ALTER TABLE Asiento
 --ADD CONSTRAINT unique_asiento_avion UNIQUE (Numero_Asiento, ID_AVION);
 

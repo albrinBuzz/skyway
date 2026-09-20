@@ -1,5 +1,7 @@
 package com.SkyWay.views.reserva;
 
+import com.SkyWay.modules.asiento.presentation.dto.BloqueAsientosDTO;
+import com.SkyWay.modules.asiento.presentation.dto.FilaCabinaDTO;
 import com.SkyWay.modules.asiento.presentation.dto.InfoAsientoDTO;
 import com.SkyWay.modules.itinerario.domain.model.Itinerario;
 import com.SkyWay.modules.itinerario.domain.service.ItinerarioService;
@@ -53,6 +55,7 @@ public class ReservaAsientoBean implements Serializable {
     private List<Pasajero> pasajeros;
     private String miSessionId;
 
+    private List<FilaCabinaDTO> filasCabina = new ArrayList<>();
     @PostConstruct
     @SuppressWarnings("unchecked")
     public void init() {
@@ -204,13 +207,126 @@ public class ReservaAsientoBean implements Serializable {
         }
     }
 
+
+
     private void cargarDatosVueloActual() {
+        if (this.vuelo == null) {
+            Logger.logWarn("[cargarDatosVueloActual] El objeto vuelo es NULL. Se cancela la carga de asientos.");
+            return;
+        }
+
+
         this.asientos = asientoCacheService.getAsientosVuelo(vuelo.getIdVuelo());
         this.asientosSeleccionadosList = asientosSeleccionados.getOrDefault(vuelo.getIdVuelo(), new ArrayList<>());
 
-        Logger.logInfo(String.format("[cargarDatosVueloActual] Cargados %d asientos para Vuelo ID %d. Seleccionados previamente en este vuelo: %d",
-                asientos != null ? asientos.size() : 0, vuelo.getIdVuelo(), asientosSeleccionadosList.size()));
+        // Construir estructura dinámica de cabina
+        construirFilasCabina();
+
     }
+    private void construirFilasCabina() {
+        this.filasCabina = new ArrayList<>();
+
+        if (this.asientos == null || this.asientos.isEmpty()) {
+            Logger.logWarn("[construirFilasCabina] La lista de asientos está vacía o es nula.");
+            return;
+        }
+
+        // 1. Agrupar por número de fila en un Map ordenado por número de fila
+        Map<Integer, List<InfoAsientoDTO>> mapaFilas = new TreeMap<>();
+        for (InfoAsientoDTO a : this.asientos) {
+            int numFila = (a.getFila() != null && a.getFila() > 0) ? a.getFila() : extraerFilaDeNumero(a.getNumeroAsiento());
+
+            // Si el DTO no trae la letra asignada, la extraemos dinámicamente del número ("14A" -> "A")
+            if (a.getLetra() == null || a.getLetra().trim().isEmpty()) {
+                a.setLetra(extraerLetraDeNumero(a.getNumeroAsiento()));
+            }
+
+            mapaFilas.computeIfAbsent(numFila, k -> new ArrayList<>()).add(a);
+        }
+
+
+        // 2. Procesar cada fila
+        for (Map.Entry<Integer, List<InfoAsientoDTO>> entry : mapaFilas.entrySet()) {
+            int numFila = entry.getKey();
+            List<InfoAsientoDTO> asientosFila = entry.getValue();
+
+            // **PASO CRUCIAL 1**: Ordenar los asientos alfabéticamente por letra (A, B, C, D, E, F...)
+            asientosFila.sort(Comparator.comparing(InfoAsientoDTO::getLetra));
+
+            boolean esEmergencia = asientosFila.stream().anyMatch(a -> Boolean.TRUE.equals(a.getEsEmergencia()));
+            String claseFila = asientosFila.get(0).getClase();
+
+            FilaCabinaDTO filaDTO = new FilaCabinaDTO(numFila, claseFila, esEmergencia);
+
+            // **PASO CRUCIAL 2**: Algoritmo Fallback de Pasillos si la BD no los marca
+            boolean usaPasilloBD = asientosFila.stream().anyMatch(a -> Boolean.TRUE.equals(a.getEsPasillo()));
+
+            BloqueAsientosDTO bloqueActual = new BloqueAsientosDTO();
+            int totalAsientosFila = asientosFila.size();
+
+            for (int i = 0; i < totalAsientosFila; i++) {
+                InfoAsientoDTO asiento = asientosFila.get(i);
+                bloqueActual.getAsientos().add(asiento);
+
+                boolean romperBloque = false;
+
+                if (usaPasilloBD) {
+                    // Si la BD especifica esPasillo, respetamos esa bandera
+                    romperBloque = Boolean.TRUE.equals(asiento.getEsPasillo()) && i < totalAsientosFila - 1;
+                } else {
+                    // FALLBACK AUTOMÁTICO según la cantidad de asientos en la fila:
+                    if (totalAsientosFila == 10) {
+                        // Configuración Avión Ancho 3-4-3 (ej: A-B-C | D-E-F-G | H-J-K)
+                        romperBloque = (i == 2 || i == 6) && i < totalAsientosFila - 1;
+                    } else if (totalAsientosFila == 7 || totalAsientosFila == 8) {
+                        // Configuración 2-3-2 o 2-4-2 (ej: A-B | C-D-E | F-G)
+                        romperBloque = (i == 1 || i == 4) && i < totalAsientosFila - 1;
+                    } else if (totalAsientosFila == 6) {
+                        // Configuración Avión Estándar 3-3 (ej: A-B-C | D-E-F)
+                        romperBloque = (i == 2) && i < totalAsientosFila - 1;
+                    } else if (totalAsientosFila == 4) {
+                        // Primera Clase 2-2 (ej: A-B | J-K)
+                        romperBloque = (i == 1) && i < totalAsientosFila - 1;
+                    }
+                }
+
+                if (romperBloque) {
+                    filaDTO.getBloques().add(bloqueActual);
+                    bloqueActual = new BloqueAsientosDTO();
+                }
+            }
+
+            if (!bloqueActual.getAsientos().isEmpty()) {
+                filaDTO.getBloques().add(bloqueActual);
+            }
+
+
+            this.filasCabina.add(filaDTO);
+        }
+    }
+
+    // Método auxiliar para extraer la letra ("14A" -> "A")
+    private String extraerLetraDeNumero(String numeroAsiento) {
+        if (numeroAsiento == null) return "";
+        String letra = numeroAsiento.replaceAll("[0-9]", "").trim();
+        return letra.isEmpty() ? numeroAsiento : letra;
+    }
+
+    private int extraerFilaDeNumero(String numeroAsiento) {
+        if (numeroAsiento == null) {
+            Logger.logWarn("[extraerFilaDeNumero] Numero de asiento es NULL, asignando fila 1 por defecto.");
+            return 1;
+        }
+        String digits = numeroAsiento.replaceAll("[^0-9]", "");
+        int filaCalculada = digits.isEmpty() ? 1 : Integer.parseInt(digits);
+
+
+
+        return filaCalculada;
+    }
+
+
+
 
     public void setearAsiento(InfoAsientoDTO asiento) {
         if (asiento == null) {
@@ -636,5 +752,9 @@ public class ReservaAsientoBean implements Serializable {
         public int getPrecio() { return precio; }
         public String getNumeroVuelo() { return numeroVuelo; }
         public int getIdAsiento() { return idAsiento; }
+    }
+
+    public List<FilaCabinaDTO> getFilasCabina() {
+        return filasCabina;
     }
 }

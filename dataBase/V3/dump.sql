@@ -1,3 +1,4 @@
+
 ALTER USER aerolinea_user SET search_path TO public, directus;
 
 SET search_path TO public, directus;
@@ -45,6 +46,7 @@ DROP SEQUENCE IF EXISTS itinerario_tarifa_seq CASCADE;
 DROP SEQUENCE IF EXISTS caracteristica_tarifa_seq CASCADE;
 DROP SEQUENCE IF EXISTS tarifa_caracteristica_seq CASCADE;
 DROP SEQUENCE IF EXISTS reserva_pasajero_seq CASCADE;
+DROP SEQUENCE IF EXISTS configuracion_cabina_seq CASCADE;
 
 
 -- Eliminar Tablas con CASCADE
@@ -95,6 +97,8 @@ DROP TABLE IF EXISTS Tarifa CASCADE;
 DROP TABLE IF EXISTS Caracteristica_Tarifa CASCADE;
 DROP TABLE IF EXISTS Tarifa_Caracteristica CASCADE;
 DROP TABLE IF EXISTS pasajero_reserva CASCADE;
+DROP TABLE IF EXISTS Configuracion_Cabina CASCADE;
+
 
 
 -- SECUENCIAS INICIALES
@@ -139,7 +143,7 @@ CREATE SEQUENCE rolusuario_id_seq START 1 INCREMENT 1;
 CREATE SEQUENCE caracteristica_tarifa_seq START 1 INCREMENT 1;
 CREATE SEQUENCE tarifa_caracteristica_seq START 1 INCREMENT 1;
 CREATE SEQUENCE reserva_pasajero_seq START 1 INCREMENT 1;
-
+CREATE SEQUENCE configuracion_cabina_seq START WITH 1 INCREMENT BY 1;
 
 CREATE SEQUENCE tarifa_seq
     START WITH 1
@@ -276,7 +280,7 @@ CREATE TABLE Ciudad (
                         ID_PAIS INT REFERENCES Pais(ID_PAIS)
 );
 
---CREATE EXTENSION IF NOT EXISTS postgis;
+CREATE EXTENSION IF NOT EXISTS postgis;
 CREATE TABLE Aeropuerto (
                             ID_AEROPUERTO     INT PRIMARY KEY DEFAULT nextval('aeropuerto_seq'),
                             Nombre_Aeropuerto VARCHAR(100) NOT NULL,
@@ -358,13 +362,34 @@ CREATE TABLE Capacidad_Clase (
     --CONSTRAINT unique_avion_clase UNIQUE (ID_AVION, ID_CLASE)                 -- Se mantiene la unicidad de la combinación
 );
 
-CREATE TABLE Asiento (
-                         ID_ASIENTO INT PRIMARY KEY DEFAULT nextval('asiento_seq'),
-                         Numero_Asiento VARCHAR(10) NOT NULL,
-                         ID_CLASE INT REFERENCES Clase_asiento(ID_CLASE),
-                         ID_AVION INT REFERENCES Avion(ID_AVION)
+
+CREATE TABLE Configuracion_Cabina (
+                                      ID_CONFIGURACION INT PRIMARY KEY DEFAULT nextval('configuracion_cabina_seq'),
+                                      ID_MODELO INT REFERENCES Modelo_Avion(ID_MODELO) ON DELETE CASCADE,
+                                      ID_CLASE INT REFERENCES Clase_asiento(ID_CLASE) ON DELETE CASCADE,
+                                      Fila_Inicio INT NOT NULL,                     -- Ej: Fila 1
+                                      Fila_Fin INT NOT NULL,                        -- Ej: Fila 5
+                                      Distribucion_Columnas VARCHAR(20) NOT NULL,   -- Ej: "2-2" (Ejecutiva), "3-3" (Pasillo único), "3-3-3" (Doble pasillo)
+                                      Letras_Columnas VARCHAR(30) NOT NULL,         -- Ej: "A,B,C,D,E,F" o "A,B,C,D,E,F,G,H,J"
+                                      Es_Salida_Emergencia BOOLEAN DEFAULT FALSE,
+                                      CONSTRAINT unique_modelo_filas UNIQUE (ID_MODELO, Fila_Inicio, Fila_Fin)
 );
 
+-- =============================================================================
+-- 4. TABLA ASIENTO (EXTENDIDA CON COORDENADAS ESPACIALES)
+-- =============================================================================
+CREATE TABLE Asiento (
+                         ID_ASIENTO INT PRIMARY KEY DEFAULT nextval('asiento_seq'),
+                         Numero_Asiento VARCHAR(10) NOT NULL,         -- Ej: "12A"
+                         Fila INT NOT NULL,                           -- Ej: 12
+                         Letra VARCHAR(2) NOT NULL,                   -- Ej: "A"
+                         ID_CLASE INT REFERENCES Clase_asiento(ID_CLASE),
+                         ID_AVION INT REFERENCES Avion(ID_AVION) ON DELETE CASCADE,
+                         Es_Ventana BOOLEAN DEFAULT FALSE,
+                         Es_Pasillo BOOLEAN DEFAULT FALSE,
+                         Es_Emergencia BOOLEAN DEFAULT FALSE,
+                         CONSTRAINT unique_avion_numero_asiento UNIQUE (ID_AVION, Numero_Asiento)
+);
 --ALTER TABLE Asiento
 --ADD CONSTRAINT unique_asiento_avion UNIQUE (Numero_Asiento, ID_AVION);
 
@@ -673,6 +698,9 @@ ADD CONSTRAINT reserva_asiento_id_vuelo_fkey
 FOREIGN KEY (ID_VUELO) REFERENCES Vuelo(ID_VUELO) ON DELETE CASCADE;*/
 
 
+
+
+
 DO $$
 DECLARE
 reg RECORD;
@@ -687,8 +715,9 @@ FROM pg_proc p
          JOIN pg_namespace n ON p.pronamespace = n.oid
          JOIN pg_language l ON p.prolang = l.oid
 WHERE n.nspname = 'public'
+  -- 🎯 Filtro idéntico a las primeras 22 filas de tu imagen
   AND l.lanname = 'plpgsql'
-  -- Excluir cualquier función amarrada al sistema (PostGIS)
+  -- 🛑 Excluir cualquier función amarrada al sistema (PostGIS)
   AND p.oid NOT IN (
     SELECT objid
     FROM pg_depend
@@ -705,43 +734,140 @@ END;
 END LOOP;
 END $$;
 
--- 1️⃣ ASINTOS: Función y Trigger (Protegido contra duplicados)
-CREATE OR REPLACE FUNCTION fn_insertarAsientos()
-RETURNS TRIGGER AS $$
-DECLARE
-indice INTEGER;
-    letra CHAR;
-    asiento VARCHAR;
-BEGIN
-FOR indice IN 0 .. NEW.cantidad - 1 LOOP
-        letra := chr(65 + (indice % 6));  -- A-F
-        asiento := (indice + 1) || letra;
 
-INSERT INTO Asiento (Numero_Asiento, ID_CLASE, ID_AVION)
-VALUES (asiento, NEW.ID_CLASE, NEW.ID_AVION);
+
+CREATE OR REPLACE FUNCTION fn_insertarAsientos()
+    RETURNS TRIGGER AS $$
+DECLARE
+v_id_modelo INT;
+    v_config RECORD;
+    v_fila INT;
+    v_letras TEXT[];
+    v_letra VARCHAR(2);
+    v_asientos_creados INT := 0;
+    v_total_letras INT;
+    v_idx_letra INT;
+    v_es_ventana BOOLEAN;
+    v_es_pasillo BOOLEAN;
+    v_numero_asiento VARCHAR(10);
+BEGIN
+    -- 1. Obtener el ID del modelo del avión desde la tabla Avion
+SELECT ID_MODELO INTO v_id_modelo
+FROM Avion
+WHERE ID_AVION = NEW.ID_AVION;
+
+-- 2. Recorrer la configuración de cabina del modelo para la clase insertada
+FOR v_config IN
+SELECT Fila_Inicio, Fila_Fin, Letras_Columnas, Es_Salida_Emergencia
+FROM Configuracion_Cabina
+WHERE ID_MODELO = v_id_modelo
+  AND ID_CLASE = NEW.ID_CLASE
+ORDER BY Fila_Inicio ASC
+    LOOP
+            -- Convertir la cadena "A,B,C,D,E,F" en un arreglo de Postgres
+            v_letras := string_to_array(v_config.Letras_Columnas, ',');
+v_total_letras := array_length(v_letras, 1);
+
+            -- Recorrer cada fila del rango configurado (ej: Fila 1 a Fila 30)
+FOR v_fila IN v_config.Fila_Inicio .. v_config.Fila_Fin LOOP
+
+                    -- Recorrer las letras configuradas para esa fila
+                    FOR v_idx_letra IN 1 .. v_total_letras LOOP
+
+                            -- Validar no exceder la cantidad total especificada en Capacidad_Clase
+                            IF v_asientos_creados >= NEW.Cantidad THEN
+                                EXIT;
+END IF;
+
+                            v_letra := trim(v_letras[v_idx_letra]);
+                            v_numero_asiento := v_fila || v_letra;
+
+                            -- Determinar si es Ventana (primera o última letra)
+                            v_es_ventana := (v_idx_letra = 1 OR v_idx_letra = v_total_letras);
+
+                            -- Determinar si es Pasillo (según posición relativa simple)
+                            v_es_pasillo := (v_idx_letra = 2 OR v_idx_letra = v_total_letras - 1);
+
+                            -- Insertar el asiento con todas sus coordenadas espaciales
+INSERT INTO Asiento (
+    Numero_Asiento,
+    Fila,
+    Letra,
+    ID_CLASE,
+    ID_AVION,
+    Es_Ventana,
+    Es_Pasillo,
+    Es_Emergencia
+)
+VALUES (
+           v_numero_asiento,
+           v_fila,
+           v_letra,
+           NEW.ID_CLASE,
+           NEW.ID_AVION,
+           v_es_ventana,
+           v_es_pasillo,
+           v_config.Es_Salida_Emergencia
+       );
+
+v_asientos_creados := v_asientos_creados + 1;
+
 END LOOP;
+
+                    IF v_asientos_creados >= NEW.Cantidad THEN
+                        EXIT;
+END IF;
+
+END LOOP;
+
+            IF v_asientos_creados >= NEW.Cantidad THEN
+                EXIT;
+END IF;
+
+END LOOP;
+
 RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
--- Solución al error 42710: Borrar si ya existe antes de crear
 DROP TRIGGER IF EXISTS trigger_insertar_asientos ON Capacidad_Clase;
+
 CREATE TRIGGER trigger_insertar_asientos
     AFTER INSERT ON Capacidad_Clase
     FOR EACH ROW
     EXECUTE FUNCTION fn_insertarAsientos();
 
 
--- 2️⃣ ORDEN ITINERARIO VUELO: Función y Trigger
+
+
+/*ALTER TABLE Segmento_Vuelo DISABLE TRIGGER trg_set_orden_segmento_vuelo;
+
+ALTER TABLE Segmento_Vuelo DISABLE TRIGGER trg_set_numero_vuelo;
+
+ALTER TABLE Segmento_Vuelo DISABLE TRIGGER trg_set_fecha_vuelo;
+
+ALTER TABLE Itinerario_Vuelo DISABLE TRIGGER trg_set_fecha_itinerario;
+
+ALTER TABLE Itinerario_Vuelo DISABLE TRIGGER trg_set_orden_itinerario_vuelo;*/
+
+
+
+
+
+
+
+
 CREATE OR REPLACE FUNCTION fn_set_orden_itinerario_vuelo()
 RETURNS TRIGGER AS $$
 DECLARE
 ultimo_orden INT;
 BEGIN
+    -- Si es UPDATE y viene NULL, rescatamos el anterior
     IF (TG_OP = 'UPDATE' AND NEW.ORDEN IS NULL) THEN
         NEW.ORDEN := OLD.ORDEN;
 END IF;
 
+    -- Si sigue siendo NULL (en INSERT), calculamos el siguiente
     IF NEW.ORDEN IS NULL THEN
 SELECT COALESCE(MAX(ORDEN), 0) INTO ultimo_orden
 FROM Itinerario_Vuelo
@@ -761,28 +887,39 @@ CREATE TRIGGER trg_set_orden_itinerario_vuelo
                          EXECUTE FUNCTION fn_set_orden_itinerario_vuelo();
 
 
--- 3️⃣ ORDEN SEGMENTO VUELO: Función y Trigger
+
+
+
+
 CREATE OR REPLACE FUNCTION fn_set_orden_segmento_vuelo()
 RETURNS TRIGGER AS $$
 DECLARE
 v_ultimo_orden INT;
 BEGIN
+    -- 1. Manejo para UPDATE
     IF (TG_OP = 'UPDATE') THEN
+        -- Si JPA envió un NULL en el orden, rescatamos el valor que ya tenía el registro
         IF NEW.ORDEN_SEGMENTO IS NULL THEN
             NEW.ORDEN_SEGMENTO := OLD.ORDEN_SEGMENTO;
 END IF;
 
+        -- Si el vuelo NO cambió, ya no hay nada más que hacer, retornamos el NEW corregido
         IF (OLD.ID_VUELO = NEW.ID_VUELO) THEN
             RETURN NEW;
 END IF;
 
+        -- Si cambió el ID_VUELO y el orden seguía siendo el viejo,
+        -- quizás quieras recalcularlo para el nuevo vuelo.
+        -- En ese caso, podrías ponerlo en NULL aquí para que siga a la lógica de abajo.
         IF (OLD.ID_VUELO <> NEW.ID_VUELO AND NEW.ORDEN_SEGMENTO = OLD.ORDEN_SEGMENTO) THEN
              NEW.ORDEN_SEGMENTO := NULL;
 END IF;
 END IF;
 
+    -- 2. Lógica de Asignación Automática (Solo si es NULL después de las validaciones de arriba)
     IF NEW.ORDEN_SEGMENTO IS NULL THEN
-SELECT COALESCE(MAX(ORDEN_SEGMENTO), 0) INTO v_ultimo_orden
+SELECT COALESCE(MAX(ORDEN_SEGMENTO), 0)
+INTO v_ultimo_orden
 FROM Segmento_Vuelo
 WHERE ID_VUELO = NEW.ID_VUELO;
 
@@ -793,14 +930,18 @@ RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_set_orden_segmento_vuelo ON Segmento_Vuelo;
+
+
+-- Trigger configurado para actuar antes de insertar o actualizar
 CREATE TRIGGER trg_set_orden_segmento_vuelo
     BEFORE INSERT OR UPDATE ON Segmento_Vuelo
                          FOR EACH ROW
                          EXECUTE FUNCTION fn_set_orden_segmento_vuelo();
 
 
--- 4️⃣ NÚMERO DE VUELO AUTOMÁTICO: Función y Trigger
+
+
+
 CREATE OR REPLACE FUNCTION fn_set_numero_vuelo()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -808,17 +949,22 @@ codigoArp1 varchar;
     codigoArp2 varchar;
     numeroVueloN varchar;
 BEGIN
+    -- Obtenemos los códigos IATA de origen y destino
 SELECT Codigo_IATA INTO codigoArp1 FROM aeropuerto WHERE id_aeropuerto = NEW.ID_AEROPUERTO_ORIGEN;
 SELECT Codigo_IATA INTO codigoArp2 FROM aeropuerto WHERE id_aeropuerto = NEW.ID_AEROPUERTO_DESTINO;
 
+-- Construimos el número basado en el ID real del segmento
 numeroVueloN := codigoArp1 || '-' || codigoArp2 || NEW.ID_SEGMENTO::TEXT;
 
-UPDATE vuelo SET numero_vuelo = numeroVueloN WHERE id_vuelo = NEW.ID_VUELO;
+UPDATE vuelo
+SET numero_vuelo = numeroVueloN
+WHERE id_vuelo = NEW.ID_VUELO;
 
 RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
+-- Lo activamos también en UPDATE por si cambian los aeropuertos
 DROP TRIGGER IF EXISTS trg_set_numero_vuelo ON Segmento_Vuelo;
 CREATE TRIGGER trg_set_numero_vuelo
     AFTER INSERT OR UPDATE OF ID_AEROPUERTO_ORIGEN, ID_AEROPUERTO_DESTINO ON Segmento_Vuelo
@@ -826,68 +972,103 @@ CREATE TRIGGER trg_set_numero_vuelo
     EXECUTE FUNCTION fn_set_numero_vuelo();
 
 
--- 5️⃣ FECHA ITINERARIO: Función y Trigger
+
 CREATE OR REPLACE FUNCTION fn_set_fecha_itinerario()
 RETURNS TRIGGER AS $$
 DECLARE
 fechaSalida TIMESTAMP;
     fechaLlegada TIMESTAMP;
 BEGIN
+    -- Si es el primer vuelo del itinerario, establecemos hora de salida y llegada
     IF NEW.ORDEN = 1 THEN
-SELECT sgv.hora_salida INTO fechaSalida FROM Segmento_Vuelo sgv WHERE sgv.id_vuelo = NEW.ID_VUELO AND sgv.ORDEN_SEGMENTO = 1;
-SELECT sgv.hora_llegada INTO fechaLlegada FROM Segmento_Vuelo sgv WHERE sgv.id_vuelo = NEW.ID_VUELO AND sgv.ORDEN_SEGMENTO = (
-    SELECT MAX(sgv2.ORDEN_SEGMENTO) FROM Segmento_Vuelo sgv2 WHERE sgv2.id_vuelo = NEW.ID_VUELO
+SELECT sgv.hora_salida
+INTO fechaSalida
+FROM Segmento_Vuelo sgv
+WHERE sgv.id_vuelo = NEW.ID_VUELO
+  AND sgv.ORDEN_SEGMENTO = 1;
+
+SELECT sgv.hora_llegada
+INTO fechaLlegada
+FROM Segmento_Vuelo sgv
+WHERE sgv.id_vuelo = NEW.ID_VUELO
+  AND sgv.ORDEN_SEGMENTO = (
+    SELECT MAX(sgv2.ORDEN_SEGMENTO)
+    FROM Segmento_Vuelo sgv2
+    WHERE sgv2.id_vuelo = NEW.ID_VUELO
 );
 
-UPDATE Itinerario SET HORA_SALIDA = fechaSalida, HORA_LLEGADA = fechaLlegada WHERE ID_ITINERARIO = NEW.ID_ITINERARIO;
+UPDATE Itinerario
+SET HORA_SALIDA = fechaSalida,
+    HORA_LLEGADA = fechaLlegada
+WHERE ID_ITINERARIO = NEW.ID_ITINERARIO;
 
 ELSIF NEW.ORDEN > 1 THEN
-SELECT sgv.hora_llegada INTO fechaLlegada FROM Segmento_Vuelo sgv WHERE sgv.id_vuelo = NEW.ID_VUELO AND sgv.ORDEN_SEGMENTO = (
-    SELECT MAX(sgv2.ORDEN_SEGMENTO) FROM Segmento_Vuelo sgv2 WHERE sgv2.id_vuelo = NEW.ID_VUELO
+        -- En vuelos posteriores (conexiones), actualizamos solo la hora de llegada
+SELECT sgv.hora_llegada
+INTO fechaLlegada
+FROM Segmento_Vuelo sgv
+WHERE sgv.id_vuelo = NEW.ID_VUELO
+  AND sgv.ORDEN_SEGMENTO = (
+    SELECT MAX(sgv2.ORDEN_SEGMENTO)
+    FROM Segmento_Vuelo sgv2
+    WHERE sgv2.id_vuelo = NEW.ID_VUELO
 );
 
-UPDATE Itinerario SET HORA_LLEGADA = fechaLlegada WHERE ID_ITINERARIO = NEW.ID_ITINERARIO;
+UPDATE Itinerario
+SET HORA_LLEGADA = fechaLlegada
+WHERE ID_ITINERARIO = NEW.ID_ITINERARIO;
 END IF;
 
 RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_set_fecha_itinerario ON Itinerario_Vuelo;
+
+
+
 CREATE TRIGGER trg_set_fecha_itinerario
     AFTER INSERT ON Itinerario_Vuelo
     FOR EACH ROW
     EXECUTE FUNCTION fn_set_fecha_itinerario();
 
 
--- 6️⃣ ACTUALIZAR ITINERARIO DESDE VUELO: Función y Trigger
+
+
+
 CREATE OR REPLACE FUNCTION fn_update_itinerario_desde_vuelo()
 RETURNS TRIGGER AS $$
 BEGIN
+    -- 1. Actualizar HORA_SALIDA del Itinerario si este vuelo es el PRIMERO (ORDEN 1)
 UPDATE Itinerario i
 SET HORA_SALIDA = NEW.Fecha_Hora_Salida
     FROM Itinerario_Vuelo iv
-WHERE iv.ID_ITINERARIO = i.ID_ITINERARIO AND iv.ID_VUELO = NEW.ID_VUELO AND iv.ORDEN = 1;
+WHERE iv.ID_ITINERARIO = i.ID_ITINERARIO
+  AND iv.ID_VUELO = NEW.ID_VUELO
+  AND iv.ORDEN = 1;
 
+-- 2. Actualizar HORA_LLEGADA del Itinerario si este vuelo es el ÚLTIMO
 UPDATE Itinerario i
 SET HORA_LLEGADA = NEW.Fecha_Hora_Llegada
     FROM Itinerario_Vuelo iv
-WHERE iv.ID_ITINERARIO = i.ID_ITINERARIO AND iv.ID_VUELO = NEW.ID_VUELO AND iv.ORDEN = (
-    SELECT MAX(iv2.ORDEN) FROM Itinerario_Vuelo iv2 WHERE iv2.ID_ITINERARIO = i.ID_ITINERARIO
+WHERE iv.ID_ITINERARIO = i.ID_ITINERARIO
+  AND iv.ID_VUELO = NEW.ID_VUELO
+  AND iv.ORDEN = (
+    SELECT MAX(iv2.ORDEN)
+    FROM Itinerario_Vuelo iv2
+    WHERE iv2.ID_ITINERARIO = i.ID_ITINERARIO
     );
 
 RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_vuelo_hacia_itinerario ON Vuelo;
 CREATE TRIGGER trg_vuelo_hacia_itinerario
     AFTER UPDATE OF Fecha_Hora_Salida, Fecha_Hora_Llegada ON Vuelo
     FOR EACH ROW
     EXECUTE FUNCTION fn_update_itinerario_desde_vuelo();
 
 
--- 7️⃣ DINÁMICA DE FECHAS EN VUELO: Función y Trigger
+
 CREATE OR REPLACE FUNCTION fn_set_fecha_vuelo()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -895,55 +1076,80 @@ v_id_vuelo INT;
     v_fecha_salida TIMESTAMP;
     v_fecha_llegada TIMESTAMP;
 BEGIN
+    -- 1. Determinar el ID del vuelo afectado (Maneja INSERT, UPDATE y DELETE)
+    -- Si es un UPDATE y cambió el ID_VUELO, debemos actualizar el Vuelo antiguo también.
+    -- Para simplificar, primero identificamos qué vuelo procesar en este hilo.
     IF (TG_OP = 'DELETE') THEN
         v_id_vuelo := OLD.ID_VUELO;
 ELSE
         v_id_vuelo := NEW.ID_VUELO;
 END IF;
 
+    -- 2. Obtener la salida del primer segmento y la llegada del último en una sola consulta
+    -- Esto es más eficiente que hacer dos SELECT por separado.
 SELECT
     (SELECT hora_salida FROM Segmento_Vuelo WHERE id_vuelo = v_id_vuelo ORDER BY ORDEN_SEGMENTO ASC LIMIT 1),
         (SELECT hora_llegada FROM Segmento_Vuelo WHERE id_vuelo = v_id_vuelo ORDER BY ORDEN_SEGMENTO DESC LIMIT 1)
 INTO v_fecha_salida, v_fecha_llegada;
 
-UPDATE Vuelo SET Fecha_Hora_Salida = v_fecha_salida, Fecha_Hora_Llegada = v_fecha_llegada WHERE ID_VUELO = v_id_vuelo;
+-- 3. Actualizar la tabla Vuelo
+UPDATE Vuelo
+SET Fecha_Hora_Salida = v_fecha_salida,
+    Fecha_Hora_Llegada = v_fecha_llegada
+WHERE ID_VUELO = v_id_vuelo;
 
+-- 4. Caso Especial: Si hubo un UPDATE y se cambió el ID_VUELO de un segmento,
+-- debemos recalcular también el Vuelo que perdió el segmento.
 IF (TG_OP = 'UPDATE' AND OLD.ID_VUELO <> NEW.ID_VUELO) THEN
-UPDATE Vuelo SET
-                 Fecha_Hora_Salida = (SELECT hora_salida FROM Segmento_Vuelo WHERE id_vuelo = OLD.ID_VUELO ORDER BY ORDEN_SEGMENTO ASC LIMIT 1),
+UPDATE Vuelo
+SET Fecha_Hora_Salida = (SELECT hora_salida FROM Segmento_Vuelo WHERE id_vuelo = OLD.ID_VUELO ORDER BY ORDEN_SEGMENTO ASC LIMIT 1),
     Fecha_Hora_Llegada = (SELECT hora_llegada FROM Segmento_Vuelo WHERE id_vuelo = OLD.ID_VUELO ORDER BY ORDEN_SEGMENTO DESC LIMIT 1)
 WHERE ID_VUELO = OLD.ID_VUELO;
 END IF;
 
-RETURN NULL;
+RETURN NULL; -- En triggers AFTER el valor de retorno no afecta al registro
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_set_fecha_vuelo ON Segmento_Vuelo;
+-- Definición del Trigger incluyendo DELETE
 CREATE TRIGGER trg_set_fecha_vuelo
     AFTER INSERT OR UPDATE OR DELETE ON Segmento_Vuelo
     FOR EACH ROW
     EXECUTE FUNCTION fn_set_fecha_vuelo();
 
 
--- 8️⃣ TURNOS AUTOMÁTICOS: Función y Trigger
+
 CREATE OR REPLACE FUNCTION fn_set_fecha_turno_automatico()
 RETURNS TRIGGER AS $$
 DECLARE
 v_hora_inicio TIMESTAMP;
     v_hora_fin TIMESTAMP;
 BEGIN
-SELECT hora_salida INTO v_hora_inicio FROM Segmento_Vuelo WHERE id_vuelo = NEW.ID_VUELO AND ORDEN_SEGMENTO = 1;
+    -- 1. Obtener la hora de salida del primer segmento (Orden 1)
+SELECT hora_salida
+INTO v_hora_inicio
+FROM Segmento_Vuelo
+WHERE id_vuelo = NEW.ID_VUELO
+  AND ORDEN_SEGMENTO = 1;
 
-SELECT hora_llegada INTO v_hora_fin FROM Segmento_Vuelo WHERE id_vuelo = NEW.ID_VUELO AND ORDEN_SEGMENTO = (
-    SELECT MAX(sgv2.ORDEN_SEGMENTO) FROM Segmento_Vuelo sgv2 WHERE sgv2.id_vuelo = NEW.ID_VUELO
+-- 2. Obtener la hora de llegada del último segmento (El de mayor orden)
+SELECT hora_llegada
+INTO v_hora_fin
+FROM Segmento_Vuelo
+WHERE id_vuelo = NEW.ID_VUELO
+  AND ORDEN_SEGMENTO = (
+    SELECT MAX(sgv2.ORDEN_SEGMENTO)
+    FROM Segmento_Vuelo sgv2
+    WHERE sgv2.id_vuelo = NEW.ID_VUELO
 );
 
+-- 3. Actualizar los turnos asociados a este vuelo
+-- Solo se actualiza si se encontraron ambos extremos (inicio y fin)
 IF v_hora_inicio IS NOT NULL AND v_hora_fin IS NOT NULL THEN
 UPDATE Turno
 SET Hora_Inicio = v_hora_inicio,
     Hora_Fin = v_hora_fin,
-    Fecha = CAST(v_hora_inicio AS DATE)
+    Fecha = CAST(v_hora_inicio AS DATE) -- Se asume que la fecha del turno es el día de salida
 WHERE ID_VUELO = NEW.ID_VUELO;
 END IF;
 
@@ -951,63 +1157,128 @@ RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_actualizar_fechas_turno ON Segmento_Vuelo;
+
 CREATE TRIGGER trg_actualizar_fechas_turno
     AFTER INSERT OR UPDATE ON Segmento_Vuelo
                         FOR EACH ROW
                         EXECUTE FUNCTION fn_set_fecha_turno_automatico();
 
 
--- 9️⃣ ESTRUCTURA NOTIFICACIONES Y TURNOS
+/*ALTER TABLE Segmento_Vuelo DISABLE TRIGGER trg_set_orden_segmento_vuelo;
+
+ALTER TABLE Segmento_Vuelo DISABLE TRIGGER trg_set_numero_vuelo;
+
+ALTER TABLE Segmento_Vuelo DISABLE TRIGGER trg_set_fecha_vuelo;
+
+ALTER TABLE Itinerario_Vuelo DISABLE TRIGGER trg_set_fecha_itinerario;
+
+ALTER TABLE Itinerario_Vuelo DISABLE TRIGGER trg_set_orden_itinerario_vuelo;*/
+
+
+
+
 ALTER TABLE notificacion
     ADD COLUMN IF NOT EXISTS enviada BOOLEAN DEFAULT FALSE,
     ADD COLUMN IF NOT EXISTS canal VARCHAR(20) DEFAULT 'Email';
+
+
+
+
+
+
+
 
 UPDATE Usuario
 SET Correo_Electronico = 'cr.romanz@duocuc.cl'
 WHERE Correo_Electronico = 'juan.perez@piloto.com';
 
+
 CREATE OR REPLACE FUNCTION fn_notificacionVueloEstado()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE PLPGSQL
+AS
+$$
 DECLARE
 pasajero RECORD;
     mensaje TEXT;
 BEGIN
+    -- Iterar sobre cada pasajero asociado al vuelo actualizado
 FOR pasajero IN
 SELECT rsv.rut_pasajero, vl.numero_vuelo
 FROM reserva_itinerario rsvi
-         JOIN itinerario_vuelo itv ON itv.id_itinerario = rsvi.id_itinerario
-         JOIN reserva rsv ON rsv.id_reserva = rsvi.id_reserva
-         JOIN vuelo vl ON vl.id_vuelo = itv.id_vuelo
+         join itinerario_vuelo itv
+              on itv.id_itinerario = rsvi.id_itinerario
+         join reserva rsv on rsv.id_reserva = rsvi.id_reserva
+         join vuelo vl on vl.id_vuelo = itv.id_vuelo
 WHERE itv.id_vuelo = NEW.id_vuelo
+
     LOOP
-        mensaje := 'Estimado/a pasajero/a, su vuelo número ' || pasajero.numero_vuelo || ' ha sido actualizado. ';
+        -- Construir el mensaje de notificación con detalles específicos
+        mensaje := 'Estimado/a pasajero/a, su vuelo número ' || pasajero.numero_vuelo ||
+                   ' ha sido actualizado. ';
+
+-- Incluir información sobre la nueva hora de salida
 
 IF OLD.hora_salida IS DISTINCT FROM NEW.hora_salida THEN
-            mensaje := mensaje || 'La nueva hora de salida es: ' || TO_CHAR(NEW.hora_salida, 'DD/MM/YYYY HH24:MI') || '. ';
+			  mensaje := mensaje || 'La nueva hora de salida es: ' || TO_CHAR(NEW.hora_salida, 'DD/MM/YYYY HH24:MI') || '. ';
+
+        /*IF NEW.fecha_hora_salida IS NOT NULL THEN
+            mensaje := mensaje || 'La nueva hora de salida es: ' || TO_CHAR(NEW.fecha_hora_salida, 'DD/MM/YYYY HH24:MI') || '. ';
+        ELSE
+            mensaje := mensaje || 'La hora de salida no ha sido modificada. ';*/
 END IF;
 
+        -- Incluir información sobre la nueva hora de llegada
         IF OLD.hora_llegada IS DISTINCT FROM NEW.hora_llegada THEN
             mensaje := mensaje || 'La nueva hora de llegada es: ' || TO_CHAR(NEW.hora_llegada, 'DD/MM/YYYY HH24:MI') || '. ';
+ELSE
+            --mensaje := mensaje || 'La hora de llegada no ha sido modificada. ';
 END IF;
 
+        -- Añadir información adicional si está disponible
+        /*IF NEW.id_aeropuerto_salida IS NOT NULL THEN
+            mensaje := mensaje || 'Aeropuerto de salida: ' || NEW.id_aeropuerto_salida || '. ';
+        END IF;
+        IF NEW.id_aeropuerto_llegada IS NOT NULL THEN
+            mensaje := mensaje || 'Aeropuerto de llegada: ' || NEW.id_aeropuerto_llegada || '. ';
+        END IF;
+        IF NEW.precio IS NOT NULL THEN
+            mensaje := mensaje || 'Precio del boleto: $' || NEW.precio || '. ';
+        END IF;
+        IF NEW.rut_piloto IS NOT NULL THEN
+
+
+            mensaje := mensaje || 'Piloto a cargo: ' || NEW.rut_piloto || '. ';
+        END IF;*/
+
+        -- Insertar la notificación en la tabla correspondiente
 INSERT INTO notificacion(rut_destinatario, titulo, mensaje, fecha, leido)
-VALUES (pasajero.rut_pasajero, 'Actualización de Vuelo: ' || pasajero.numero_vuelo, mensaje, NOW(), FALSE);
+VALUES (
+           pasajero.rut_pasajero,
+           'Actualización de Vuelo: ' || pasajero.numero_vuelo,
+           mensaje,
+           NOW(),
+           FALSE
+       );
 END LOOP;
 RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
-
-DROP TRIGGER IF EXISTS tr_notificacionVueloEstado ON Segmento_Vuelo;
-CREATE TRIGGER tr_notificacionVueloEstado
-    AFTER UPDATE ON Segmento_Vuelo
-    FOR EACH ROW
-    EXECUTE FUNCTION fn_notificacionVueloEstado();
+$$;
 
 
--- 🔟 NOTIFICACIONES EN TIEMPO REAL (LISTEN / NOTIFY)
+
+-- Crear el Trigger para enviar notificaciones después de actualizar un vuelo
+CREATE OR REPLACE TRIGGER tr_notificacionVueloEstado
+AFTER UPDATE ON Segmento_Vuelo
+                 FOR EACH ROW
+                 EXECUTE FUNCTION fn_notificacionVueloEstado();
+
+
+
+
 CREATE OR REPLACE FUNCTION fn_notify_new_notification()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER AS
+$$
 BEGIN
     PERFORM pg_notify('nuevo_correo', NEW.id_notificacion::TEXT);
 RETURN NEW;
@@ -1015,194 +1286,13 @@ END;
 $$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS tr_notify_new_notificacion ON notificacion;
+
 CREATE TRIGGER tr_notify_new_notificacion
     AFTER INSERT ON notificacion
     FOR EACH ROW
     EXECUTE FUNCTION fn_notify_new_notification();
 
 
--- ==========================================
--- 1. PROCEDIMIENTO: CONFIRMAR RESERVA
--- ==========================================
-CREATE OR REPLACE PROCEDURE spConfirmar_reserva(
-    IN p_idVuelo INT,
-    IN p_idReserva INT,
-    IN p_asientos INT[],
-    IN p_rutPasajero TEXT,
-    OUT p_resultado TEXT
-)
-LANGUAGE plpgsql
-AS $confirmar_reserva$
-DECLARE
-reserva_id INT;
-    estado_reserva_id INT := 1;
-    i INT;
-    id_avion INT;
-    id_asientoP INT;
-    asiento_en_reserva INT;
-    numero_asiento TEXT;
-    asientos_reservados TEXT := '';
-BEGIN
-    -- Obtener el avión asignado al vuelo
-SELECT vl.id_avion INTO id_avion
-FROM vuelo vl
-WHERE vl.id_vuelo = p_idVuelo;
-
-FOR i IN 1..array_length(p_asientos, 1)
-    LOOP
-        id_asientoP := p_asientos[i];
-        asiento_en_reserva := 0;
-
-        -- Verificar si el asiento ya está reservado (Sin FOR UPDATE para evitar conflicto con EXCEPTION)
-SELECT 1 INTO asiento_en_reserva
-FROM reserva_asiento ra
-WHERE ra.ID_VUELO = p_idVuelo
-  AND ra.ID_ASIENTO = id_asientoP;
-
-IF asiento_en_reserva IS NOT NULL AND asiento_en_reserva > 0 THEN
-SELECT ast.numero_asiento INTO numero_asiento
-FROM asiento ast
-WHERE ast.id_asiento = id_asientoP;
-
-asientos_reservados := asientos_reservados || numero_asiento || ', ';
-ELSE
-            -- Insertar en reserva_asiento
-            INSERT INTO reserva_asiento (id_reserva, id_asiento, ID_VUELO, rut)
-            VALUES (p_idReserva, id_asientoP, p_idVuelo, p_rutPasajero);
-END IF;
-END LOOP;
-
-    IF asientos_reservados <> '' THEN
-        p_resultado := 'ERROR: Asientos ya reservados: ' || LEFT(asientos_reservados, LENGTH(asientos_reservados) - 2);
-DELETE FROM reserva WHERE id_reserva = p_idReserva;
-ELSE
-        p_resultado := 'OK: Reserva realizada correctamente.';
-END IF;
-EXCEPTION
-    WHEN OTHERS THEN
-        RAISE NOTICE 'Ocurrió un error: %', SQLERRM;
-DELETE FROM reserva WHERE id_reserva = p_idReserva;
-p_resultado := 'ERROR: No se pudo completar la reserva. ' || SQLERRM;
-END;
-$confirmar_reserva$;
-
-
--- ==========================================
--- 2. PROCEDIMIENTO: VERIFICAR DISPONIBILIDAD
--- ==========================================
-CREATE OR REPLACE PROCEDURE spVerificarDisponinibilidadAsientos(
-    IN p_idVuelo INT,
-    IN p_asientos INT[],
-    OUT p_resultado TEXT
-)
-LANGUAGE plpgsql
-AS $verificar_asientos$
-DECLARE
-id_asientoP INT;
-    asiento_en_reserva INT;
-    v_numero_asiento TEXT;
-    v_asientos_erroneos TEXT := '';
-BEGIN
-    p_resultado := 'OK';
-
-FOR i IN 1..array_length(p_asientos, 1)
-    LOOP
-        id_asientoP := p_asientos[i];
-        asiento_en_reserva := NULL;
-
-SELECT a.numero_asiento,
-       (SELECT 1 FROM reserva_asiento ra
-        WHERE ra.id_vuelo = p_idVuelo
-          AND ra.id_asiento = id_asientoP LIMIT 1)
-INTO v_numero_asiento, asiento_en_reserva
-FROM asiento a
-WHERE a.id_asiento = id_asientoP;
-
-IF asiento_en_reserva IS NOT NULL THEN
-            v_asientos_erroneos := v_asientos_erroneos || v_numero_asiento || ', ';
-END IF;
-END LOOP;
-
-    IF v_asientos_erroneos <> '' THEN
-        p_resultado := 'ERROR: Asientos ya reservados: ' || LEFT(v_asientos_erroneos, LENGTH(v_asientos_erroneos) - 2);
-END IF;
-EXCEPTION
-    WHEN OTHERS THEN
-        p_resultado := 'ERROR: Error interno: ' || SQLERRM;
-END;
-$verificar_asientos$;
-
-
--- ==========================================
--- 3. PROCEDIMIENTO: CAMBIAR ASIENTO
--- ==========================================
-CREATE OR REPLACE PROCEDURE sp_cambiarAsiento(
-   IN p_id_asiento INT,
-   IN p_id_reserva INT,
-   IN p_id_asiento_org INT
-)
-LANGUAGE plpgsql
-AS $cambiar_asiento$
-BEGIN
-UPDATE reserva_asiento
-SET id_asiento = p_id_asiento
-WHERE id_reserva = p_id_reserva
-  AND id_asiento = p_id_asiento_org;
-END;
-$cambiar_asiento$;
-
-
--- ==========================================
--- 4. PROCEDIMIENTO: UPSERT PASAJERO
--- ==========================================
-CREATE OR REPLACE PROCEDURE sp_upsertPasajero(
-    p_rut VARCHAR,
-    p_nombre VARCHAR,
-    p_apellido VARCHAR,
-    p_correo VARCHAR,
-    p_telefono VARCHAR,
-    p_documento VARCHAR,
-    p_fecha_nacimiento DATE,
-    p_contrasena VARCHAR
-)
-LANGUAGE plpgsql
-AS $upsert_pasajero$
-DECLARE
-v_id_rol INT;
-BEGIN
-    -- 1. Insertar o actualizar usuario
-INSERT INTO Usuario(RUT, Nombre, Apellido, Correo_Electronico, Telefono, Documento_Identidad, Fecha_Nacimiento, Contrasena, Fecha_Registro)
-VALUES (p_rut, p_nombre, p_apellido, p_correo, p_telefono, p_documento, p_fecha_nacimiento, p_contrasena, NOW())
-    ON CONFLICT (RUT)
-    DO UPDATE SET
-    Nombre = EXCLUDED.Nombre,
-               Apellido = EXCLUDED.Apellido,
-               Correo_Electronico = EXCLUDED.Correo_Electronico,
-               Telefono = EXCLUDED.Telefono,
-               Documento_Identidad = EXCLUDED.Documento_Identidad,
-               Fecha_Nacimiento = EXCLUDED.Fecha_Nacimiento,
-               Contrasena = EXCLUDED.Contrasena,
-               Fecha_Registro = NOW();
-
--- 2. Insertar o actualizar Pasajero
-INSERT INTO Pasajero(RUT, Tipo_Documento, Numero_Documento, Fecha_Nacimiento, Nacionalidad)
-VALUES (p_rut, 'DNI', p_documento, p_fecha_nacimiento, 'Desconocida')
-    ON CONFLICT (RUT)
-    DO UPDATE SET
-    Tipo_Documento = EXCLUDED.Tipo_Documento,
-               Numero_Documento = EXCLUDED.Numero_Documento,
-               Fecha_Nacimiento = EXCLUDED.Fecha_Nacimiento,
-               Nacionalidad = EXCLUDED.Nacionalidad;
-
--- 3. Obtener id del rol "Pasajero"
-SELECT id_rol INTO v_id_rol FROM Roles WHERE nombre = 'Pasajero';
-
--- 4. Insertar rol si no existe
-INSERT INTO RolUsuario(id_rol, rut_usuario)
-VALUES (v_id_rol, p_rut)
-    ON CONFLICT (id_rol, rut_usuario) DO NOTHING;
-END;
-$upsert_pasajero$;
 
 
 
@@ -1317,12 +1407,13 @@ order by v.id_vuelo;
 
 
 
+
 CREATE OR REPLACE FUNCTION fnDTinitinerario(p_id_itinerario INT)
 RETURNS TABLE(
   ID_ITINERARIO INT,
   Aeropuerto_Origen VARCHAR(100),
   Aeropuerto_Destino VARCHAR(100),
-  DURACION_TOTAL TEXT,              -- Convertir INTERVAL a TEXT
+  DURACION_TOTAL TEXT,
   NUMERO_ESCALAS INT,
   ORDEN INT,
   Salida TEXT,
@@ -1332,7 +1423,7 @@ RETURNS TABLE(
   Aeropuerto_Llegada VARCHAR(100),
   Ciudad_Llegada VARCHAR(100),
   Duracion TEXT,
-  Tiempo_Espera TEXT,              -- Convertir INTERVAL a TEXT
+  Tiempo_Espera TEXT,
   Modelo_Avion VARCHAR(100),
   Aerolinea VARCHAR(100),
   Vuelo VARCHAR(50),
@@ -1341,56 +1432,84 @@ RETURNS TABLE(
 AS $$
 BEGIN
 RETURN QUERY
+    WITH tramos_calculados AS (
+    SELECT
+        it.ID_ITINERARIO AS id_it_temp,
+        a3.Nombre_Aeropuerto AS At_Origen,
+        a4.Nombre_Aeropuerto AS At_Destino,
+        TO_CHAR(it.DURACION_TOTAL, 'HH24 "h" MI "min"') AS Dur_Total,
+        it.NUMERO_ESCALAS,
+        iv.ORDEN AS orden_vuelo,
+        a1.Codigo_IATA AS Iata_Salida,
+        a1.Nombre_Aeropuerto AS Ap_Salida,
+        c1.nombre AS Cd_Salida,
+        a2.Codigo_IATA AS Iata_Llegada,
+        a2.Nombre_Aeropuerto AS Ap_Llegada,
+        c2.nombre AS Cd_Llegada,
+
+        (sv_dest.HORA_LLEGADA - sv_orig.HORA_SALIDA) AS duracion_vuelo,
+        iv.TIEMPO_ESPERA::INTERVAL AS espera_conexion,
+
+        COALESCE(
+            LAG(it.HORA_SALIDA) OVER (PARTITION BY it.ID_ITINERARIO ORDER BY iv.ORDEN),
+            it.HORA_SALIDA
+        ) AS base_salida,
+
+        mdv.Nombre AS Mod_Avion,
+        al.Nombre AS Name_Aerolinea,
+        v.Numero_Vuelo AS Num_Vuelo
+    FROM Itinerario it
+    JOIN Itinerario_Vuelo iv ON iv.ID_ITINERARIO = it.ID_ITINERARIO
+    JOIN Vuelo v            ON v.ID_VUELO = iv.ID_VUELO
+    JOIN Avion av           ON av.ID_AVION = v.ID_AVION
+    JOIN modelo_avion mdv   ON mdv.id_modelo = av.id_modelo
+    JOIN Aerolinea al       ON al.ID_AEROLINEA = v.ID_AEROLINEA
+
+    JOIN (SELECT id_vuelo, min(orden_segmento) as p, max(orden_segmento) as u FROM segmento_vuelo GROUP BY id_vuelo) ext
+         ON ext.id_vuelo = v.id_vuelo
+    JOIN Segmento_Vuelo sv_orig ON sv_orig.ID_VUELO = v.ID_VUELO AND sv_orig.orden_segmento = ext.p
+    JOIN Segmento_Vuelo sv_dest ON sv_dest.ID_VUELO = v.ID_VUELO AND sv_dest.orden_segmento = ext.u
+
+    JOIN Aeropuerto a1 ON a1.ID_AEROPUERTO = sv_orig.ID_AEROPUERTO_ORIGEN
+    JOIN Aeropuerto a2 ON a2.ID_AEROPUERTO = sv_dest.ID_AEROPUERTO_DESTINO
+    JOIN ciudad c1     ON c1.ID_CIUDAD = a1.ID_CIUDAD
+    JOIN ciudad c2     ON c2.ID_CIUDAD = a2.ID_CIUDAD
+    JOIN Aeropuerto a3 ON a3.ID_AEROPUERTO = it.ORIGEN_AEROPUERTO
+    JOIN Aeropuerto a4 ON a4.ID_AEROPUERTO = it.DESTINO_AEROPUERTO
+    WHERE it.ID_ITINERARIO = p_id_itinerario
+),
+linea_tiempo_acumulada AS (
+    SELECT
+        *,
+        CASE
+            WHEN orden_vuelo = 1 THEN base_salida
+            ELSE base_salida + SUM(duracion_vuelo + espera_conexion) OVER (PARTITION BY id_it_temp ORDER BY orden_vuelo ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) + espera_conexion
+        END AS hora_salida_real
+    FROM tramos_calculados
+)
 SELECT
-    it.ID_ITINERARIO,
-    a3.Nombre_Aeropuerto AS Aeropuerto_Origen,
-    a4.Nombre_Aeropuerto AS Aeropuerto_Destino,
-    -- Convertir INTERVAL a texto
-    TO_CHAR(it.DURACION_TOTAL, 'HH24 "h" MI "min"') AS DURACION_TOTAL,  -- Aquí se formatea el INTERVAL
-    it.NUMERO_ESCALAS,
-    iv.ORDEN,
-    a1.Codigo_IATA || ' ' || TO_CHAR(sv.HORA_SALIDA, 'DD/MM/YYYY') || ' ' || TO_CHAR(sv.HORA_SALIDA, 'HH:MI AM') AS Salida,
-    a1.Nombre_Aeropuerto AS Aeropuerto_Salida,
-    c1.nombre AS Ciudad_Salida,
-    a2.Codigo_IATA || ' ' || TO_CHAR(sv.HORA_LLEGADA, 'DD/MM/YYYY') || ' ' || TO_CHAR(sv.HORA_LLEGADA, 'HH:MI AM') AS Llegada,
-    a2.Nombre_Aeropuerto AS Aeropuerto_Llegada,
-    c2.nombre AS Ciudad_Llegada,
+    l.id_it_temp AS ID_ITINERARIO,
+    l.At_Origen,
+    l.At_Destino,
+    l.Dur_Total,
+    l.NUMERO_ESCALAS,
+    l.orden_vuelo AS ORDEN,
+    l.Iata_Salida || ' ' || TO_CHAR(l.hora_salida_real, 'DD/MM/YYYY HH:MI AM') AS Salida,
+    l.Ap_Salida,
+    l.Cd_Salida,
+    l.Iata_Llegada || ' ' || TO_CHAR(l.hora_salida_real + l.duracion_vuelo, 'DD/MM/YYYY HH:MI AM') AS Llegada,
+    l.Ap_Llegada,
+    l.Cd_Llegada,
 
-    -- Convertir la duración a formato de texto
-    EXTRACT(HOUR FROM (sv.HORA_LLEGADA - sv.HORA_SALIDA)) || ' h ' ||
-    EXTRACT(MINUTE FROM (sv.HORA_LLEGADA - sv.HORA_SALIDA)) || ' min' AS Duracion,
+    EXTRACT(HOUR FROM l.duracion_vuelo) || ' h ' || EXTRACT(MINUTE FROM l.duracion_vuelo) || ' min' AS Duracion,
+    EXTRACT(HOUR FROM l.espera_conexion) || ' h ' || EXTRACT(MINUTE FROM l.espera_conexion) || ' min' AS Tiempo_Espera,
 
-    -- Convertir el tiempo de espera a texto
-    CASE
-        WHEN LAG(sv.HORA_LLEGADA) OVER (PARTITION BY it.ID_ITINERARIO ORDER BY iv.ORDEN) IS NOT NULL THEN
-        EXTRACT(HOUR FROM (sv.HORA_SALIDA - LAG(sv.HORA_LLEGADA) OVER (PARTITION BY it.ID_ITINERARIO ORDER BY iv.ORDEN))) || ' h ' ||
-        EXTRACT(MINUTE FROM (sv.HORA_SALIDA - LAG(sv.HORA_LLEGADA) OVER (PARTITION BY it.ID_ITINERARIO ORDER BY iv.ORDEN))) || ' min'
-      ELSE
-        '0 h 0 min'
-END AS Tiempo_Espera,
-
-    mdv.Nombre AS Modelo_Avion,
-    al.Nombre AS Aerolinea,
-    v.Numero_Vuelo AS Vuelo,
-    'Vuelo ' || v.Numero_Vuelo || ', ' || mdv.Nombre || ', Operado por ' || al.Nombre AS Descripcion_Vuelo
-
-  FROM Itinerario it
-  JOIN Itinerario_Vuelo iv ON iv.ID_ITINERARIO = it.ID_ITINERARIO
-  JOIN Vuelo v ON v.ID_VUELO = iv.ID_VUELO
-  JOIN Avion av ON av.ID_AVION = v.ID_AVION
-  JOIN modelo_avion mdv on mdv.id_modelo = av.id_modelo
-  JOIN Aerolinea al ON al.ID_AEROLINEA = v.ID_AEROLINEA
-  JOIN Piloto p ON p.RUT = v.RUT_PILOTO
-  JOIN Segmento_Vuelo sv ON sv.ID_VUELO = v.ID_VUELO
-  JOIN Aeropuerto a1 ON a1.ID_AEROPUERTO = sv.ID_AEROPUERTO_ORIGEN
-  JOIN Aeropuerto a2 ON a2.ID_AEROPUERTO = sv.ID_AEROPUERTO_DESTINO
-  JOIN ciudad c1 on c1.ID_CIUDAD = a1.ID_CIUDAD
-  JOIN ciudad c2 on c2.ID_CIUDAD = a2.ID_CIUDAD
-  JOIN Aeropuerto a3 ON a3.ID_AEROPUERTO = it.ORIGEN_AEROPUERTO
-  JOIN Aeropuerto a4 ON a4.ID_AEROPUERTO = it.DESTINO_AEROPUERTO
-
-  WHERE it.ID_ITINERARIO = p_id_itinerario
-  ORDER BY iv.ORDEN;
+    l.Mod_Avion,
+    l.Name_Aerolinea,
+    l.Num_Vuelo,
+    'Vuelo ' || l.Num_Vuelo || ', ' || l.Mod_Avion || ', Operado por ' || l.Name_Aerolinea AS Descripcion_Vuelo
+FROM linea_tiempo_acumulada l
+ORDER BY l.orden_vuelo;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -1405,7 +1524,12 @@ RETURNS TABLE (
     numero_asiento VARCHAR,
     estado TEXT,
     precio INT,
-    clase VARCHAR
+    clase VARCHAR,
+    fila INT,
+    letra VARCHAR,
+    es_ventana BOOLEAN,
+    es_pasillo BOOLEAN,
+    es_emergencia BOOLEAN
 ) AS $$
 BEGIN
 RETURN QUERY
@@ -1418,15 +1542,20 @@ SELECT
         ELSE 'libre'
         END AS estado,
     psa.precio,
-    cls.descripcion AS clase
+    cls.descripcion AS clase,
+    a.fila,
+    a.letra,
+    a.es_ventana,
+    a.es_pasillo,
+    a.es_emergencia
 FROM vuelo vl
          JOIN avion av ON av.id_avion = vl.id_avion
-         JOIN asiento a ON a.id_avion = av.id_avion AND a.id_avion = vl.id_avion
+         JOIN asiento a ON a.id_avion = av.id_avion
          LEFT JOIN reserva_asiento rsv ON rsv.id_asiento = a.id_asiento AND rsv.id_vuelo = vl.id_vuelo
          JOIN precio_asiento psa ON psa.id_clase = a.id_clase AND psa.id_vuelo = vl.id_vuelo
          LEFT JOIN clase_asiento cls ON cls.id_clase = a.id_clase
 WHERE vl.id_vuelo = p_idVuelo
-ORDER BY a.numero_asiento;
+ORDER BY a.fila ASC, a.letra ASC;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -1655,6 +1784,196 @@ SELECT * FROM fn_getItinerariosPorRutYFechas('12345678-9', 10, 0, '2025-09-01', 
 SELECT * FROM fn_getItinerariosPorRutYFechas('12345678-9', 10, 0, NULL, NULL);
 
 SELECT * FROM fn_getItinerariosPorRutYFechas('12345678-9', 10, 0, '2025-09-01', NULL);
+
+
+
+
+
+
+-- ==========================================
+-- 1. PROCEDIMIENTO: CONFIRMAR RESERVA
+-- ==========================================
+CREATE OR REPLACE PROCEDURE spConfirmar_reserva(
+    IN p_idVuelo INT,
+    IN p_idReserva INT,
+    IN p_asientos INT[],
+    IN p_rutPasajero TEXT,
+    OUT p_resultado TEXT
+)
+LANGUAGE plpgsql
+AS $confirmar_reserva$
+DECLARE
+reserva_id INT;
+    estado_reserva_id INT := 1;
+    i INT;
+    id_avion INT;
+    id_asientoP INT;
+    asiento_en_reserva INT;
+    numero_asiento TEXT;
+    asientos_reservados TEXT := '';
+BEGIN
+    -- Obtener el avión asignado al vuelo
+SELECT vl.id_avion INTO id_avion
+FROM vuelo vl
+WHERE vl.id_vuelo = p_idVuelo;
+
+FOR i IN 1..array_length(p_asientos, 1)
+    LOOP
+        id_asientoP := p_asientos[i];
+        asiento_en_reserva := 0;
+
+        -- Verificar si el asiento ya está reservado (Sin FOR UPDATE para evitar conflicto con EXCEPTION)
+SELECT 1 INTO asiento_en_reserva
+FROM reserva_asiento ra
+WHERE ra.ID_VUELO = p_idVuelo
+  AND ra.ID_ASIENTO = id_asientoP;
+
+IF asiento_en_reserva IS NOT NULL AND asiento_en_reserva > 0 THEN
+SELECT ast.numero_asiento INTO numero_asiento
+FROM asiento ast
+WHERE ast.id_asiento = id_asientoP;
+
+asientos_reservados := asientos_reservados || numero_asiento || ', ';
+ELSE
+            -- Insertar en reserva_asiento
+            INSERT INTO reserva_asiento (id_reserva, id_asiento, ID_VUELO, rut)
+            VALUES (p_idReserva, id_asientoP, p_idVuelo, p_rutPasajero);
+END IF;
+END LOOP;
+
+    IF asientos_reservados <> '' THEN
+        p_resultado := 'ERROR: Asientos ya reservados: ' || LEFT(asientos_reservados, LENGTH(asientos_reservados) - 2);
+DELETE FROM reserva WHERE id_reserva = p_idReserva;
+ELSE
+        p_resultado := 'OK: Reserva realizada correctamente.';
+END IF;
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE NOTICE 'Ocurrió un error: %', SQLERRM;
+DELETE FROM reserva WHERE id_reserva = p_idReserva;
+p_resultado := 'ERROR: No se pudo completar la reserva. ' || SQLERRM;
+END;
+$confirmar_reserva$;
+
+
+-- ==========================================
+-- 2. PROCEDIMIENTO: VERIFICAR DISPONIBILIDAD
+-- ==========================================
+CREATE OR REPLACE PROCEDURE spVerificarDisponinibilidadAsientos(
+    IN p_idVuelo INT,
+    IN p_asientos INT[],
+    OUT p_resultado TEXT
+)
+LANGUAGE plpgsql
+AS $verificar_asientos$
+DECLARE
+id_asientoP INT;
+    asiento_en_reserva INT;
+    v_numero_asiento TEXT;
+    v_asientos_erroneos TEXT := '';
+BEGIN
+    p_resultado := 'OK';
+
+FOR i IN 1..array_length(p_asientos, 1)
+    LOOP
+        id_asientoP := p_asientos[i];
+        asiento_en_reserva := NULL;
+
+SELECT a.numero_asiento,
+       (SELECT 1 FROM reserva_asiento ra
+        WHERE ra.id_vuelo = p_idVuelo
+          AND ra.id_asiento = id_asientoP LIMIT 1)
+INTO v_numero_asiento, asiento_en_reserva
+FROM asiento a
+WHERE a.id_asiento = id_asientoP;
+
+IF asiento_en_reserva IS NOT NULL THEN
+            v_asientos_erroneos := v_asientos_erroneos || v_numero_asiento || ', ';
+END IF;
+END LOOP;
+
+    IF v_asientos_erroneos <> '' THEN
+        p_resultado := 'ERROR: Asientos ya reservados: ' || LEFT(v_asientos_erroneos, LENGTH(v_asientos_erroneos) - 2);
+END IF;
+EXCEPTION
+    WHEN OTHERS THEN
+        p_resultado := 'ERROR: Error interno: ' || SQLERRM;
+END;
+$verificar_asientos$;
+
+
+-- ==========================================
+-- 3. PROCEDIMIENTO: CAMBIAR ASIENTO
+-- ==========================================
+CREATE OR REPLACE PROCEDURE sp_cambiarAsiento(
+   IN p_id_asiento INT,
+   IN p_id_reserva INT,
+   IN p_id_asiento_org INT
+)
+LANGUAGE plpgsql
+AS $cambiar_asiento$
+BEGIN
+UPDATE reserva_asiento
+SET id_asiento = p_id_asiento
+WHERE id_reserva = p_id_reserva
+  AND id_asiento = p_id_asiento_org;
+END;
+$cambiar_asiento$;
+
+
+-- ==========================================
+-- 4. PROCEDIMIENTO: UPSERT PASAJERO
+-- ==========================================
+CREATE OR REPLACE PROCEDURE sp_upsertPasajero(
+    p_rut VARCHAR,
+    p_nombre VARCHAR,
+    p_apellido VARCHAR,
+    p_correo VARCHAR,
+    p_telefono VARCHAR,
+    p_documento VARCHAR,
+    p_fecha_nacimiento DATE,
+    p_contrasena VARCHAR
+)
+LANGUAGE plpgsql
+AS $upsert_pasajero$
+DECLARE
+v_id_rol INT;
+BEGIN
+    -- 1. Insertar o actualizar usuario
+INSERT INTO Usuario(RUT, Nombre, Apellido, Correo_Electronico, Telefono, Documento_Identidad, Fecha_Nacimiento, Contrasena, Fecha_Registro)
+VALUES (p_rut, p_nombre, p_apellido, p_correo, p_telefono, p_documento, p_fecha_nacimiento, p_contrasena, NOW())
+    ON CONFLICT (RUT)
+    DO UPDATE SET
+    Nombre = EXCLUDED.Nombre,
+               Apellido = EXCLUDED.Apellido,
+               Correo_Electronico = EXCLUDED.Correo_Electronico,
+               Telefono = EXCLUDED.Telefono,
+               Documento_Identidad = EXCLUDED.Documento_Identidad,
+               Fecha_Nacimiento = EXCLUDED.Fecha_Nacimiento,
+               Contrasena = EXCLUDED.Contrasena,
+               Fecha_Registro = NOW();
+
+-- 2. Insertar o actualizar Pasajero
+INSERT INTO Pasajero(RUT, Tipo_Documento, Numero_Documento, Fecha_Nacimiento, Nacionalidad)
+VALUES (p_rut, 'DNI', p_documento, p_fecha_nacimiento, 'Desconocida')
+    ON CONFLICT (RUT)
+    DO UPDATE SET
+    Tipo_Documento = EXCLUDED.Tipo_Documento,
+               Numero_Documento = EXCLUDED.Numero_Documento,
+               Fecha_Nacimiento = EXCLUDED.Fecha_Nacimiento,
+               Nacionalidad = EXCLUDED.Nacionalidad;
+
+-- 3. Obtener id del rol "Pasajero"
+SELECT id_rol INTO v_id_rol FROM Roles WHERE nombre = 'Pasajero';
+
+-- 4. Insertar rol si no existe
+INSERT INTO RolUsuario(id_rol, rut_usuario)
+VALUES (v_id_rol, p_rut)
+    ON CONFLICT (id_rol, rut_usuario) DO NOTHING;
+END;
+$upsert_pasajero$;
+
+
 
 
 
@@ -2423,70 +2742,154 @@ END $$;
 INSERT INTO Aerolinea (ID_AEROLINEA, Nombre, Codigo) VALUES
     (1, 'SkyWay Airlines', 'SW');
 
-
+-- =============================================================================
+-- SCRIPT DE POBLADO INTEGRAL Y COHERENTE - SKYWAY ENTERPRISE
+-- =============================================================================
 INSERT INTO Clase_asiento (Descripcion) VALUES
                                             ('Económica'),
                                             ('Ejecutiva'),
                                             ('Primera Clase');
 
+-- =============================================================================
+-- 2. FABRICANTES DE AERONAVES
+-- =============================================================================
+INSERT INTO Fabricante (Nombre) VALUES
+                                    ('Airbus'),
+                                    ('Boeing'),
+                                    ('Embraer');
 
-INSERT INTO Fabricante (Nombre)
-VALUES
-    ('Airbus'),
-    ('Boeing'),
-    ('Embraer');
+-- =============================================================================
+-- 3. MODELOS DE AVIÓN
+-- =============================================================================
+INSERT INTO Modelo_Avion (Nombre, ID_FABRICANTE) VALUES
+                                                     ('Airbus A320',  (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Airbus')),
+                                                     ('Boeing 747',   (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Boeing')),
+                                                     ('Airbus A350',  (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Airbus')),
+                                                     ('Boeing 787',   (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Boeing')),
+                                                     ('Embraer E195', (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Embraer')),
+                                                     ('Boeing 777',   (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Boeing')),
+                                                     ('Airbus A380',  (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Airbus')),
+                                                     ('Airbus A330',  (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Airbus')),
+                                                     ('Boeing 757',   (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Boeing'));
 
--- Insertar los modelos de aviones
-INSERT INTO Modelo_Avion (Nombre, ID_FABRICANTE)
-VALUES
-    ('Airbus A320', (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Airbus')),
-    ('Boeing 747', (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Boeing')),
-    ('Airbus A350', (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Airbus')),
-    ('Boeing 787', (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Boeing')),
-    ('Embraer E195', (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Embraer')),
-    ('Boeing 777', (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Boeing')),
-    ('Airbus A380', (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Airbus')),
-    ('Airbus A330', (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Airbus')),
-    ('Boeing 757', (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Boeing'));
+-- =============================================================================
+-- 4. CONFIGURACIÓN ESPACIAL DE CABINAS POR MODELO (REALISTA)
+-- =============================================================================
 
--- Insertar aviones con los datos correspondientes
-INSERT INTO Avion (
-    Numero_de_Registro,
-    ID_MODELO,
-    Ano_de_Fabricacion,
-    Capacidad_de_Pasajeros,
-    Capacidad_de_Carga,
-    Estado_de_Mantenimiento,
-    Fecha_Proximo_Mantenimiento
-)
-VALUES
-    ('DEF456', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), 2018, 185, 15000, 'En mantenimiento', NULL),
-    ('GHI789', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 747'), 2005, 380, 45000, 'Operativo', NULL),
-    ('JKL012', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'), 2019, 310, 40000, 'Operativo', NULL),
-    ('MNO345', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 787'), 2020, 220, 35000, 'En servicio', NULL),
-    ('PQR678', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Embraer E195'), 2016, 120, 12000, 'Operativo', NULL),
-    ('XYZ123', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 777'), 2014, 450, 50000, 'En servicio', NULL),
-    ('LMN987', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A380'), 2018, 650, 75000, 'Operativo', NULL),
-    ('STU456', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A330'), 2017, 250, 35000, 'En mantenimiento', NULL),
-    ('WXY543', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 757'), 2003, 190, 22000, 'Operativo', NULL);
+-- -----------------------------------------------------------------------------
+-- AIRBUS A320 (Fusilaje Estrecho | Total: 180 asientos -> 12 Ejecutiva + 168 Económica)
+-- -----------------------------------------------------------------------------
+INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'), 1, 3, '2-2', 'A,C,D,F', FALSE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 4, 11, '3-3', 'A,B,C,D,E,F', FALSE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 12, 13, '3-3', 'A,B,C,D,E,F', TRUE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 14, 31, '3-3', 'A,B,C,D,E,F', FALSE);
 
+-- -----------------------------------------------------------------------------
+-- BOEING 747-400 (Fusilaje Ancho | Total: 380 asientos -> 12 Primera + 56 Ejecutiva + 312 Económica)
+-- -----------------------------------------------------------------------------
+INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 747'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Primera Clase'), 1, 3, '1-2-1', 'A,D,G,K', FALSE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 747'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'),     4, 11, '2-3-2', 'A,B,D,E,F,J,K', FALSE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 747'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     12, 12, '3-4-3', 'A,B,C,D,E,F,G,H,J,K', TRUE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 747'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     14, 43, '3-4-3', 'A,B,C,D,E,F,G,H,J,K', FALSE);
+
+-- -----------------------------------------------------------------------------
+-- AIRBUS A350-900 (Fusilaje Ancho | Total: 310 asientos -> 16 Primera + 48 Ejecutiva + 246 Económica)
+-- -----------------------------------------------------------------------------
+INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Primera Clase'), 1, 4, '1-2-1', 'A,D,G,K', FALSE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'),     5, 12, '2-2-2', 'A,C,D,G,H,K', FALSE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     14, 14, '3-3-3', 'A,B,C,D,E,F,J,K,L', TRUE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     15, 40, '3-3-3', 'A,B,C,D,E,F,J,K,L', FALSE);
+
+-- -----------------------------------------------------------------------------
+-- BOEING 787-9 (Fusilaje Ancho | Total: 220 asientos -> 12 Primera + 36 Ejecutiva + 172 Económica)
+-- -----------------------------------------------------------------------------
+INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 787'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Primera Clase'), 1, 3, '1-2-1', 'A,D,G,K', FALSE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 787'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'),     4, 9, '2-2-2', 'A,C,D,G,H,K', FALSE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 787'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     10, 10, '3-3-3', 'A,B,C,D,E,F,J,K,L', TRUE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 787'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     11, 28, '3-3-3', 'A,B,C,D,E,F,J,K,L', FALSE);
+
+-- -----------------------------------------------------------------------------
+-- EMBRAER E195 (Regional | Total: 120 asientos -> 12 Ejecutiva + 108 Económica)
+-- -----------------------------------------------------------------------------
+INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Embraer E195'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'), 1, 4, '1-2', 'A,C,D', FALSE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Embraer E195'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 5, 12, '2-2', 'A,B,C,D', FALSE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Embraer E195'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 13, 13, '2-2', 'A,B,C,D', TRUE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Embraer E195'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 14, 30, '2-2', 'A,B,C,D', FALSE);
+
+-- -----------------------------------------------------------------------------
+-- BOEING 777-300ER (Fusilaje Ancho Grande | Total: 450 asientos -> 16 Primera + 70 Ejecutiva + 364 Económica)
+-- -----------------------------------------------------------------------------
+INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 777'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Primera Clase'), 1, 4, '1-2-1', 'A,D,G,K', FALSE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 777'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'),     5, 14, '2-3-2', 'A,B,D,E,F,J,K', FALSE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 777'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     15, 15, '3-4-3', 'A,B,C,D,E,F,G,H,J,K', TRUE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 777'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     16, 50, '3-4-3', 'A,B,C,D,E,F,G,H,J,K', FALSE);
+
+-- -----------------------------------------------------------------------------
+-- AIRBUS A380-800 (Superjumbo | Total: 650 asientos -> 20 Primera + 96 Ejecutiva + 534 Económica)
+-- -----------------------------------------------------------------------------
+INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A380'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Primera Clase'), 1, 5, '1-2-1', 'A,E,F,K', FALSE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A380'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'),     6, 21, '2-2-2', 'A,B,E,F,J,K', FALSE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A380'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     22, 22, '3-4-3', 'A,B,C,D,E,F,G,H,J,K', TRUE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A380'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     23, 74, '3-4-3', 'A,B,C,D,E,F,G,H,J,K', FALSE);
+
+-- -----------------------------------------------------------------------------
+-- AIRBUS A330-300 (Fusilaje Ancho Medio | Total: 250 asientos -> 8 Primera + 36 Ejecutiva + 206 Económica)
+-- -----------------------------------------------------------------------------
+INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A330'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Primera Clase'), 1, 2, '1-2-1', 'A,D,G,K', FALSE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A330'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'),     3, 8, '2-2-2', 'A,B,D,G,J,K', FALSE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A330'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     9, 9, '2-4-2', 'A,C,D,E,F,G,H,K', TRUE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A330'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     10, 34, '2-4-2', 'A,C,D,E,F,G,H,K', FALSE);
+
+-- -----------------------------------------------------------------------------
+-- BOEING 757-200 (Fusilaje Estrecho Largo | Total: 190 asientos -> 16 Ejecutiva + 174 Económica)
+-- -----------------------------------------------------------------------------
+INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 757'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'), 1, 4, '2-2', 'A,C,D,F', FALSE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 757'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 5, 14, '3-3', 'A,B,C,D,E,F', FALSE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 757'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 15, 16, '3-3', 'A,B,C,D,E,F', TRUE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 757'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 17, 33, '3-3', 'A,B,C,D,E,F', FALSE);
+
+-- =============================================================================
+-- 5. UNIDADES FÍSICAS DE AVIONES
+-- =============================================================================
+INSERT INTO Avion (Numero_de_Registro, ID_MODELO, Ano_de_Fabricacion, Capacidad_de_Pasajeros, Capacidad_de_Carga, Estado_de_Mantenimiento, Fecha_Proximo_Mantenimiento) VALUES
+                                                                                                                                                                            ('DEF456', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'),  2018, 180, 15000, 'En mantenimiento', NULL),
+                                                                                                                                                                            ('GHI789', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 747'),   2005, 380, 45000, 'Operativo', NULL),
+                                                                                                                                                                            ('JKL012', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'),  2019, 310, 40000, 'Operativo', NULL),
+                                                                                                                                                                            ('MNO345', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 787'),   2020, 220, 35000, 'En servicio', NULL),
+                                                                                                                                                                            ('PQR678', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Embraer E195'), 2016, 120, 12000, 'Operativo', NULL),
+                                                                                                                                                                            ('XYZ123', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 777'),   2014, 450, 50000, 'En servicio', NULL),
+                                                                                                                                                                            ('LMN987', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A380'),  2018, 650, 75000, 'Operativo', NULL),
+                                                                                                                                                                            ('STU456', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A330'),  2017, 250, 35000, 'En mantenimiento', NULL),
+                                                                                                                                                                            ('WXY543', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 757'),   2003, 190, 22000, 'Operativo', NULL);
+
+-- =============================================================================
+-- 6. CAPACIDAD OPERATIVA POR CLASE
+-- =============================================================================
 INSERT INTO Capacidad_Clase (ID_AVION, ID_CLASE, Cantidad)
 SELECT avion.ID_AVION, clase.ID_CLASE, capacidad
 FROM (
          VALUES
-             ('DEF456', 'Económica', 150), ('DEF456', 'Ejecutiva', 30), ('DEF456', 'Primera Clase', 5),
-             ('GHI789', 'Económica', 300), ('GHI789', 'Ejecutiva', 50), ('GHI789', 'Primera Clase', 30),
-             ('JKL012', 'Económica', 250), ('JKL012', 'Ejecutiva', 40), ('JKL012', 'Primera Clase', 20),
-             ('MNO345', 'Económica', 180), ('MNO345', 'Ejecutiva', 40), ('MNO345', 'Primera Clase', 15),
-             ('PQR678', 'Económica', 100), ('PQR678', 'Ejecutiva', 10), ('PQR678', 'Primera Clase', 5),
-             ('XYZ123', 'Económica', 350), ('XYZ123', 'Ejecutiva', 70), ('XYZ123', 'Primera Clase', 30),
-             ('LMN987', 'Económica', 500), ('LMN987', 'Ejecutiva', 100), ('LMN987', 'Primera Clase', 50),
-             ('STU456', 'Económica', 200), ('STU456', 'Ejecutiva', 40), ('STU456', 'Primera Clase', 10),
-             ('WXY543', 'Económica', 150), ('WXY543', 'Ejecutiva', 30), ('WXY543', 'Primera Clase', 10)
+             ('DEF456', 'Ejecutiva', 12),     ('DEF456', 'Económica', 168),
+             ('GHI789', 'Primera Clase', 12), ('GHI789', 'Ejecutiva', 56),  ('GHI789', 'Económica', 312),
+             ('JKL012', 'Primera Clase', 16), ('JKL012', 'Ejecutiva', 48),  ('JKL012', 'Económica', 246),
+             ('MNO345', 'Primera Clase', 12), ('MNO345', 'Ejecutiva', 36),  ('MNO345', 'Económica', 172),
+             ('PQR678', 'Ejecutiva', 12),     ('PQR678', 'Económica', 108),
+             ('XYZ123', 'Primera Clase', 16), ('XYZ123', 'Ejecutiva', 70),  ('XYZ123', 'Económica', 364),
+             ('LMN987', 'Primera Clase', 20), ('LMN987', 'Ejecutiva', 96),  ('LMN987', 'Económica', 534),
+             ('STU456', 'Primera Clase', 8),  ('STU456', 'Ejecutiva', 36),  ('STU456', 'Económica', 206),
+             ('WXY543', 'Ejecutiva', 16),     ('WXY543', 'Económica', 174)
      ) AS datos(numero_registro, descripcion_clase, capacidad)
          JOIN Avion avion ON avion.Numero_de_Registro = datos.numero_registro
          JOIN Clase_asiento clase ON clase.Descripcion = datos.descripcion_clase;
-
 
 
 -- Insertar datos en la tabla Estado_Vuelo
@@ -3093,3 +3496,21 @@ VALUES
 ('Aeropuerto Internacional de Madrid-Barajas', 'Madrid', 'LEMD', 40.4531, -3.5772, ST_SetSRID(ST_MakePoint(-3.5772, 40.4531), 4326)),
 ('Aeropuerto de Barcelona-El Prat', 'Barcelona', 'LEBL', 41.2973, 2.0833, ST_SetSRID(ST_MakePoint(2.0833, 41.2973), 4326)),
 ('Aeropuerto de Los Ángeles', 'Los Ángeles', 'KLAX', 33.9416, -118.4085, ST_SetSRID(ST_MakePoint(-118.4085, 33.9416), 4326));*/
+
+
+
+
+
+SELECT
+    c1.nombre || '-' || aprt1.nombre_aeropuerto || ' ' || aprt1.codigo_iata AS origen,
+    c2.nombre || '-' || aprt2.nombre_aeropuerto || ' ' || aprt2.codigo_iata AS destino,
+    it.hora_salida,
+    it.hora_llegada
+FROM itinerario it
+         JOIN aeropuerto aprt1 ON aprt1.id_aeropuerto = it.origen_aeropuerto
+         JOIN aeropuerto aprt2 ON aprt2.id_aeropuerto = it.destino_aeropuerto
+         JOIN ciudad c1 ON c1.id_ciudad = aprt1.id_ciudad
+         JOIN ciudad c2 ON c2.id_ciudad = aprt2.id_ciudad
+WHERE it.hora_salida >= NOW()
+  AND it.hora_salida < NOW() + INTERVAL '7 days'
+ORDER BY it.hora_salida ASC;
