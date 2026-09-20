@@ -94,84 +94,9 @@ public class AsientoServiceImpl implements AsientoService {
 	@Transactional
 	public List<InfoAsientoDTO> getAsientosDisponibles(Integer idVuelo) {
 		// TODO Auto-generated method stub
-		
-		
+
 		List<InfoAsientoDTO> asientos;
-		/*StoredProcedureQuery query = em.createStoredProcedureQuery("sp_getAsientosAvion");
-	    
-	    // Registrar los parámetros del procedimiento
-	    query.registerStoredProcedureParameter("p_id_avion", Integer.class, ParameterMode.IN);
-	    query.registerStoredProcedureParameter("cursor_asientos", void.class, ParameterMode.REF_CURSOR);
-	    
-	    // Establecer los valores de los parámetros
-	    query.setParameter("p_id_avion", idAvion);
-	    //query.setParameter(2, ParameterMode.REF_CURSOR);
-	 
-	    
-	    // Ejecutar el procedimiento
-	    query.execute();
-	    
-	    ResultSet cursor = (ResultSet) query.getOutputParameterValue("cursor_asientos");
-	    
-	     List<Object[]> resultList = query.getResultList();
-	    // Mapeo a objetos DTO
-	    
-	    // Obtener el cursor
-	
-	
-	    
-	    for (Object[] row : resultList) {
-	        InfoVueloDTO vuelo = new InfoVueloDTO();
-	        InfoAsientoDTO asiento=new InfoAsientoDTO();
-	        asiento.setIdAsiento((Integer) row[0]);
-	        asiento.setNumeroAsiento((String) row[1]);
-	  
 
-	        //asiento.setEstado( (estado) ? "libre" : "ocupado"));
-
-	        
-	        asientos.add(asiento);
-	    }
-	    
-	
-
-	   /* try (Connection conn = dataSource.getConnection();
-	    		   CallableStatement stmt = conn.prepareCall("CALL sp_getAsientosAvion(?, ?)")) {
-	        
-	        stmt.setInt(1, idAvion);
-	        stmt.registerOutParameter(2, Types.REF_CURSOR);
-
-	        // Ejecutar el procedimiento
-	        stmt.execute();
-
-	        // Obtener el cursor
-	        try (ResultSet rs = (ResultSet) stmt.getObject(2)) {
-	            while (rs.next()) {
-	                InfoAsientoDTO asiento = new InfoAsientoDTO();
-	                asiento.setIdAsiento(rs.getInt(1));
-	                asiento.setNumeroAsiento(rs.getString(2));
-	                String estado= rs.getString(3);
-	    	        
-	    	        if(estado.equals("libre")) {
-	    	          	asiento.setEstado(true);
-	    	        }else {
-	    	          	asiento.setEstado(false);
-	    	        }
-	                asientos.add(asiento);
-	            }
-	        }
-	    } catch (SQLException e) {
-	    	System.out.println(e.getMessage());
-	    	e.printStackTrace();
-		  
-    		//throw new RuntimeException("Error al llamar al procedimiento: " + e.getMessage());
-		}*/
-		
-	      /*Query query = em.createNativeQuery(
-	        		 "select * from fn_getAsientosAvion(:idAvion,:p_vuelo)",
-	        		    InfoAsientoDTO.class);
-	          		query.setParameter("idAvion", idAvion);
-	          		query.setParameter("p_vuelo", idVuelo);*/
 		com.SkyWay.util.Logger.logInfo("Vuelo-> :"+idVuelo);
 		Query query = em.createNativeQuery(
 				"select * from fn_getAsientosAvion(:p_vuelo)",
@@ -181,10 +106,6 @@ public class AsientoServiceImpl implements AsientoService {
 	
 	   	asientos= query.getResultList();
 
-		/*for (InfoAsientoDTO asiento : asientos) {
-			System.out.println(asiento.toString());
-		}*/
- 		
 		return asientos;
 	}
 

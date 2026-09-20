@@ -32,34 +32,109 @@ END LOOP;
 END $$;
 
 
--- Crear la función del trigger
+
 CREATE OR REPLACE FUNCTION fn_insertarAsientos()
-RETURNS TRIGGER AS $$
+    RETURNS TRIGGER AS $$
 DECLARE
-indice INTEGER;
-    letra CHAR;
-    asiento VARCHAR;
+    v_id_modelo INT;
+    v_config RECORD;
+    v_fila INT;
+    v_letras TEXT[];
+    v_letra VARCHAR(2);
+    v_asientos_creados INT := 0;
+    v_total_letras INT;
+    v_idx_letra INT;
+    v_es_ventana BOOLEAN;
+    v_es_pasillo BOOLEAN;
+    v_numero_asiento VARCHAR(10);
 BEGIN
-FOR indice IN 0 .. NEW.cantidad - 1 LOOP
-        letra := chr(65 + (indice % 6));  -- A-F
-        asiento := (indice + 1) || letra;
+    -- 1. Obtener el ID del modelo del avión desde la tabla Avion
+    SELECT ID_MODELO INTO v_id_modelo
+    FROM Avion
+    WHERE ID_AVION = NEW.ID_AVION;
 
-INSERT INTO Asiento (Numero_Asiento, ID_CLASE, ID_AVION)
-VALUES (asiento, NEW.ID_CLASE, NEW.ID_AVION);
-END LOOP;
+    -- 2. Recorrer la configuración de cabina del modelo para la clase insertada
+    FOR v_config IN
+        SELECT Fila_Inicio, Fila_Fin, Letras_Columnas, Es_Salida_Emergencia
+        FROM Configuracion_Cabina
+        WHERE ID_MODELO = v_id_modelo
+          AND ID_CLASE = NEW.ID_CLASE
+        ORDER BY Fila_Inicio ASC
+        LOOP
+            -- Convertir la cadena "A,B,C,D,E,F" en un arreglo de Postgres
+            v_letras := string_to_array(v_config.Letras_Columnas, ',');
+            v_total_letras := array_length(v_letras, 1);
 
-RETURN NEW;
+            -- Recorrer cada fila del rango configurado (ej: Fila 1 a Fila 30)
+            FOR v_fila IN v_config.Fila_Inicio .. v_config.Fila_Fin LOOP
+
+                    -- Recorrer las letras configuradas para esa fila
+                    FOR v_idx_letra IN 1 .. v_total_letras LOOP
+
+                            -- Validar no exceder la cantidad total especificada en Capacidad_Clase
+                            IF v_asientos_creados >= NEW.Cantidad THEN
+                                EXIT;
+                            END IF;
+
+                            v_letra := trim(v_letras[v_idx_letra]);
+                            v_numero_asiento := v_fila || v_letra;
+
+                            -- Determinar si es Ventana (primera o última letra)
+                            v_es_ventana := (v_idx_letra = 1 OR v_idx_letra = v_total_letras);
+
+                            -- Determinar si es Pasillo (según posición relativa simple)
+                            v_es_pasillo := (v_idx_letra = 2 OR v_idx_letra = v_total_letras - 1);
+
+                            -- Insertar el asiento con todas sus coordenadas espaciales
+                            INSERT INTO Asiento (
+                                Numero_Asiento,
+                                Fila,
+                                Letra,
+                                ID_CLASE,
+                                ID_AVION,
+                                Es_Ventana,
+                                Es_Pasillo,
+                                Es_Emergencia
+                            )
+                            VALUES (
+                                       v_numero_asiento,
+                                       v_fila,
+                                       v_letra,
+                                       NEW.ID_CLASE,
+                                       NEW.ID_AVION,
+                                       v_es_ventana,
+                                       v_es_pasillo,
+                                       v_config.Es_Salida_Emergencia
+                                   );
+
+                            v_asientos_creados := v_asientos_creados + 1;
+
+                        END LOOP;
+
+                    IF v_asientos_creados >= NEW.Cantidad THEN
+                        EXIT;
+                    END IF;
+
+                END LOOP;
+
+            IF v_asientos_creados >= NEW.Cantidad THEN
+                EXIT;
+            END IF;
+
+        END LOOP;
+
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_insertar_asientos ON Capacidad_Clase;
 
-
-
--- Crear el trigger que llama a la función cuando se inserta un avión
 CREATE TRIGGER trigger_insertar_asientos
     AFTER INSERT ON Capacidad_Clase
     FOR EACH ROW
-    EXECUTE FUNCTION fn_insertarAsientos();
+EXECUTE FUNCTION fn_insertarAsientos();
+
+
 
 
 /*ALTER TABLE Segmento_Vuelo DISABLE TRIGGER trg_set_orden_segmento_vuelo;

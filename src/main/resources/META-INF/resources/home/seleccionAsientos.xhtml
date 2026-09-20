@@ -127,7 +127,7 @@
 
         <main class="seat-selection-container">
 
-            <!-- BANNER FLOTANTE DE TIEMPO RESIDUAL (FUERA DE SEATFORM) -->
+            <!-- BANNER FLOTANTE DE TIEMPO RESIDUAL -->
             <div id="timerCard" class="timer-banner-container" style="display: none;">
                 <div class="timer-content">
                     <i class="pi pi-clock timer-icon"></i>
@@ -140,10 +140,17 @@
 
                 <p:growl id="growl" showDetail="true" life="4000" />
 
+                <!-- ACTUALIZADOR AUTOMÁTICO DE CRONÓMETRO TRAS CADA ACCIÓN AJAX -->
+                <p:outputPanel id="timerTriggerPanel">
+                    <h:outputScript>
+                        iniciarCronometroUI(#{seleccionAsientosBean.tiempoRestanteSegundos});
+                    </h:outputScript>
+                </p:outputPanel>
+
                 <!-- Comandos AJAX procesados por JSF -->
                 <p:remoteCommand name="actualizarMapaRemoto"
                                  actionListener="#{seleccionAsientosBean.recargarAsientos}"
-                                 update="seatForm:cabinaPanel seatForm:registroPanel" />
+                                 update="seatForm:cabinaPanel seatForm:registroPanel seatForm:timerTriggerPanel" />
 
                 <p:remoteCommand name="notificarExpiracionServidor"
                                  actionListener="#{seleccionAsientosBean.forzarExpiracionPorTimeout}" />
@@ -279,7 +286,7 @@
                         </div>
                     </aside>
 
-                    <!-- COLUMNA DERECHA: MAPA DE LA CABINA -->
+                    <!-- COLUMNA DERECHA: MAPA DE LA CABINA REALISTA (ESTRUCTURADO POR FILAS Y PASILLOS) -->
                     <section class="airplane-container">
 
                         <div class="airplane-fuselage">
@@ -290,59 +297,60 @@
                                 <span class="nose-title"><i class="pi pi-th-large"></i> DISTRIBUCIÓN DE CABINA</span>
                             </div>
 
-                            <!-- CABINA ACTUALIZABLE -->
-                            <h:panelGroup id="cabinaPanel" layout="block" styleClass="cabina-premium">
+                            <!-- CABINA ACTUALIZABLE POR FILAS -->
+                            <h:panelGroup id="cabinaPanel" layout="block" styleClass="cabina-body">
 
-                                <!-- PRIMERA CLASE -->
-                                <h:panelGroup styleClass="class-section primera-clase" layout="block">
-                                    <div class="class-title"><i class="pi pi-star-fill"></i> Primera Clase</div>
-                                    <div class="seat-grid grid-small">
-                                        <ui:repeat value="#{seleccionAsientosBean.asientos}" var="a">
-                                            <h:panelGroup rendered="#{a.clase == 'Primera Clase'}" layout="block">
-                                                <p:commandButton value="#{a.numeroAsiento}"
-                                                                 title="Precio: $#{a.precio}"
-                                                                 styleClass="seat-btn #{a.getEstadoVisual(seleccionAsientosBean.miSessionId).toLowerCase()}"
-                                                                 disabled="#{a.getEstadoVisual(seleccionAsientosBean.miSessionId) == 'OCUPADO' or a.getEstadoVisual(seleccionAsientosBean.miSessionId) == 'EN_PROCESO'}"
-                                                                 action="#{seleccionAsientosBean.setearAsiento(a)}"
-                                                                 update="seatForm" />
-                                            </h:panelGroup>
-                                        </ui:repeat>
-                                    </div>
-                                </h:panelGroup>
+                                <ui:repeat value="#{seleccionAsientosBean.filasCabina}" var="fila" varStatus="fSt">
 
-                                <!-- EJECUTIVA -->
-                                <h:panelGroup styleClass="class-section ejecutiva-clase" layout="block">
-                                    <div class="class-title"><i class="pi pi-briefcase"></i> Clase Ejecutiva</div>
-                                    <div class="seat-grid grid-medium">
-                                        <ui:repeat value="#{seleccionAsientosBean.asientos}" var="a">
-                                            <h:panelGroup rendered="#{a.clase == 'Ejecutiva'}" layout="block">
-                                                <p:commandButton value="#{a.numeroAsiento}"
-                                                                 title="Precio: $#{a.precio}"
-                                                                 styleClass="seat-btn #{a.getEstadoVisual(seleccionAsientosBean.miSessionId).toLowerCase()}"
-                                                                 disabled="#{a.getEstadoVisual(seleccionAsientosBean.miSessionId) == 'OCUPADO' or a.getEstadoVisual(seleccionAsientosBean.miSessionId) == 'EN_PROCESO'}"
-                                                                 action="#{seleccionAsientosBean.setearAsiento(a)}"
-                                                                 update="seatForm" />
-                                            </h:panelGroup>
-                                        </ui:repeat>
-                                    </div>
-                                </h:panelGroup>
+                                    <!-- DIVISIONES DE CLASE -->
+                                    <h:panelGroup rendered="#{fila.numeroFila == 1}" layout="block" styleClass="class-divider first-class">
+                                        <span><i class="pi pi-star-fill"></i> PRIMERA CLASE</span>
+                                    </h:panelGroup>
 
-                                <!-- ECONÓMICA -->
-                                <h:panelGroup styleClass="class-section economica-clase" layout="block">
-                                    <div class="class-title"><i class="pi pi-user"></i> Clase Económica</div>
-                                    <div class="seat-grid grid-large">
-                                        <ui:repeat value="#{seleccionAsientosBean.asientos}" var="a">
-                                            <h:panelGroup rendered="#{a.clase == 'Económica'}" layout="block">
-                                                <p:commandButton value="#{a.numeroAsiento}"
-                                                                 title="Precio: $#{a.precio}"
-                                                                 styleClass="seat-btn #{a.getEstadoVisual(seleccionAsientosBean.miSessionId).toLowerCase()}"
-                                                                 disabled="#{a.getEstadoVisual(seleccionAsientosBean.miSessionId) == 'OCUPADO' or a.getEstadoVisual(seleccionAsientosBean.miSessionId) == 'EN_PROCESO'}"
-                                                                 action="#{seleccionAsientosBean.setearAsiento(a)}"
-                                                                 update="seatForm" />
-                                            </h:panelGroup>
-                                        </ui:repeat>
+                                    <h:panelGroup rendered="#{fila.numeroFila == 6}" layout="block" styleClass="class-divider business-class">
+                                        <span><i class="pi pi-briefcase"></i> CLASE EJECUTIVA</span>
+                                    </h:panelGroup>
+
+                                    <h:panelGroup rendered="#{fila.numeroFila == 14}" layout="block" styleClass="class-divider economy-class">
+                                        <span><i class="pi pi-users"></i> CLASE ECONÓMICA</span>
+                                    </h:panelGroup>
+
+                                    <!-- Salida de Emergencia -->
+                                    <h:panelGroup rendered="#{fila.esEmergencia}" layout="block" styleClass="exit-row-badge">
+                                        <i class="pi pi-exclamation-triangle"></i> SALIDA DE EMERGENCIA
+                                    </h:panelGroup>
+
+                                    <!-- FILA HORIZONTAL DE ASIENTOS -->
+                                    <div class="cabin-row">
+                                        <span class="row-number">#{fila.numeroFila}</span>
+
+                                        <div class="row-seats-wrapper">
+                                            <ui:repeat value="#{fila.bloques}" var="bloque" varStatus="bSt">
+
+                                                <!-- BLOQUE DE ASIENTOS -->
+                                                <div class="seat-block">
+                                                    <ui:repeat value="#{bloque.asientos}" var="a">
+                                                        <div class="seat-wrapper">
+                                                            <p:commandButton value="#{a.letra}"
+                                                                             title="Asiento #{a.numeroAsiento} (#{a.clase}) - $#{a.precio}"
+                                                                             styleClass="seat-btn #{a.getEstadoVisual(seleccionAsientosBean.miSessionId).toLowerCase()}"
+                                                                             disabled="#{a.getEstadoVisual(seleccionAsientosBean.miSessionId) == 'OCUPADO' or a.getEstadoVisual(seleccionAsientosBean.miSessionId) == 'EN_PROCESO'}"
+                                                                             action="#{seleccionAsientosBean.setearAsiento(a)}"
+                                                                             update="seatForm" />
+                                                        </div>
+                                                    </ui:repeat>
+                                                </div>
+
+                                                <!-- PASILLO VIRTUAL -->
+                                                <h:panelGroup rendered="#{!bSt.last}" layout="block" styleClass="aisle-gap" />
+
+                                            </ui:repeat>
+                                        </div>
+
+                                        <span class="row-number">#{fila.numeroFila}</span>
                                     </div>
-                                </h:panelGroup>
+
+                                </ui:repeat>
 
                             </h:panelGroup>
 

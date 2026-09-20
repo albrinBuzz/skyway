@@ -224,28 +224,38 @@ RETURNS TABLE (
     numero_asiento VARCHAR,
     estado TEXT,
     precio INT,
-    clase VARCHAR
+    clase VARCHAR,
+    fila INT,
+    letra VARCHAR,
+    es_ventana BOOLEAN,
+    es_pasillo BOOLEAN,
+    es_emergencia BOOLEAN
 ) AS $$
 BEGIN
-    RETURN QUERY
-    SELECT
-        a.id_asiento,
-        a.numero_asiento,
-        CASE
-            WHEN p_idReserva IS NOT NULL AND rsv.id_reserva = p_idReserva THEN 'seleccionado'
-            WHEN rsv.id_reserva IS NOT NULL THEN 'ocupado'
-            ELSE 'libre'
+RETURN QUERY
+SELECT
+    a.id_asiento,
+    a.numero_asiento,
+    CASE
+        WHEN p_idReserva IS NOT NULL AND rsv.id_reserva = p_idReserva THEN 'seleccionado'
+        WHEN rsv.id_reserva IS NOT NULL THEN 'ocupado'
+        ELSE 'libre'
         END AS estado,
-        psa.precio,
-        cls.descripcion AS clase
-    FROM vuelo vl
-    JOIN avion av ON av.id_avion = vl.id_avion
-    JOIN asiento a ON a.id_avion = av.id_avion AND a.id_avion = vl.id_avion
-    LEFT JOIN reserva_asiento rsv ON rsv.id_asiento = a.id_asiento AND rsv.id_vuelo = vl.id_vuelo
-    JOIN precio_asiento psa ON psa.id_clase = a.id_clase AND psa.id_vuelo = vl.id_vuelo
-    LEFT JOIN clase_asiento cls ON cls.id_clase = a.id_clase
-    WHERE vl.id_vuelo = p_idVuelo
-    ORDER BY a.numero_asiento;
+    psa.precio,
+    cls.descripcion AS clase,
+    a.fila,
+    a.letra,
+    a.es_ventana,
+    a.es_pasillo,
+    a.es_emergencia
+FROM vuelo vl
+         JOIN avion av ON av.id_avion = vl.id_avion
+         JOIN asiento a ON a.id_avion = av.id_avion
+         LEFT JOIN reserva_asiento rsv ON rsv.id_asiento = a.id_asiento AND rsv.id_vuelo = vl.id_vuelo
+         JOIN precio_asiento psa ON psa.id_clase = a.id_clase AND psa.id_vuelo = vl.id_vuelo
+         LEFT JOIN clase_asiento cls ON cls.id_clase = a.id_clase
+WHERE vl.id_vuelo = p_idVuelo
+ORDER BY a.fila ASC, a.letra ASC;
 END;
 $$ LANGUAGE plpgsql;
 
