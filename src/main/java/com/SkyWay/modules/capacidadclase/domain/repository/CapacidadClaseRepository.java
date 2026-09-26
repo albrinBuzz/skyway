@@ -16,4 +16,6 @@ public interface CapacidadClaseRepository extends JpaRepository<CapacidadClase, 
     // Alternativamente, si solo tienes el id del avion:
     List<CapacidadClase> findByAvion1_IdAvion(Integer idAvion);
 
+    void deleteByAvion1_IdAvion(Integer idAvion);
+
 }
