@@ -1,0 +1,829 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition lang="es"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="jakarta.faces.core"
+                xmlns:h="jakarta.faces.html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:ui="jakarta.faces.facelets"
+                template="/admin/template.xhtml">
+
+    <ui:define name="head-admin">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+        <style type="text/css">
+            /* --- SKYWAY PREMIUM DARK PALETTE --- */
+            :root {
+                --sky-blue: #3b82f6;
+                --sky-light: #60a5fa;
+                --bg-body: #050b18;
+                --bg-panel: #0b1329;
+                --bg-header: #0e1a3a;
+                --border-soft: rgba(59, 130, 246, 0.2);
+                --text-main: #f1f5f9;
+                --text-dim: #789dc9;
+            }
+
+            .header-container {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 1.5rem;
+                padding: 0.5rem 0;
+            }
+
+            .header-container h2 {
+                color: var(--text-main) !important;
+                font-weight: 800 !important;
+                letter-spacing: -0.025em;
+            }
+
+            /* MÉTRICAS Y KPIS SUPERIORES */
+            .kpi-container {
+                display: flex;
+                gap: 1rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .kpi-card {
+                background: var(--bg-panel);
+                border: 1px solid var(--border-soft);
+                border-radius: 10px;
+                padding: 1rem 1.25rem;
+                flex: 1;
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            }
+
+            .kpi-icon {
+                width: 42px;
+                height: 42px;
+                border-radius: 8px;
+                background: rgba(59, 130, 246, 0.15);
+                color: var(--sky-blue);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.25rem;
+            }
+
+            .kpi-title {
+                font-size: 0.75rem;
+                color: var(--text-dim);
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+            }
+
+            .kpi-value {
+                font-size: 1.25rem;
+                font-weight: 700;
+                color: var(--text-main);
+            }
+
+            /* DATA TABLE PREMIUM */
+            .ui-datatable {
+                border-radius: 12px;
+                overflow: hidden;
+                border: 1px solid var(--border-soft) !important;
+                box-shadow: 0 20px 25px -5px rgba(5, 11, 24, 0.8);
+            }
+
+            .ui-datatable-header {
+                background: var(--bg-panel) !important;
+                padding: 1rem 1.25rem !important;
+                border-bottom: 1px solid var(--border-soft) !important;
+            }
+
+            .ui-datatable thead th {
+                background: var(--bg-header) !important;
+                color: var(--text-dim) !important;
+                text-transform: uppercase;
+                font-size: 0.75rem;
+                letter-spacing: 0.075em;
+                padding: 1.1rem 1rem !important;
+                border: none !important;
+                border-bottom: 2px solid var(--border-soft) !important;
+            }
+
+            .ui-datatable tbody td {
+                background: var(--bg-panel) !important;
+                color: var(--text-main) !important;
+                padding: 1.1rem 1rem !important;
+                border: none !important;
+                border-bottom: 1px solid rgba(59, 130, 246, 0.08) !important;
+            }
+
+            .ui-datatable-striped .ui-datatable-data > tr.ui-datatable-odd {
+                background: rgba(14, 26, 58, 0.4) !important;
+            }
+
+            .ui-datatable tbody tr:hover {
+                background: rgba(59, 130, 246, 0.12) !important;
+                transition: background 0.25s ease;
+            }
+
+            .badge-iata {
+                background: rgba(59, 130, 246, 0.15);
+                color: var(--sky-light);
+                padding: 4px 10px;
+                border-radius: 6px;
+                font-weight: 700;
+                letter-spacing: 0.025em;
+                border: 1px solid rgba(59, 130, 246, 0.3);
+                display: inline-block;
+            }
+
+            .btn-new {
+                background: #10b981 !important;
+                border: none !important;
+                border-radius: 8px !important;
+                font-weight: 600 !important;
+                box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            }
+
+            .btn-new:hover {
+                background: #34d399 !important;
+            }
+
+            .fancy-dialog .ui-dialog-content {
+                background-color: var(--bg-panel) !important;
+                color: var(--text-main) !important;
+                padding: 1.25rem !important;
+            }
+
+            .grid-dialog {
+                display: grid;
+                grid-template-columns: 420px 1fr;
+                gap: 1.5rem;
+            }
+
+            .map-wrapper {
+                position: relative;
+                border-radius: 12px;
+                overflow: hidden;
+                border: 1px solid var(--border-soft);
+            }
+
+            #mapaDialog {
+                height: 500px;
+                width: 100%;
+                background: #e5e7eb;
+            }
+
+            .map-hud-overlay {
+                position: absolute;
+                bottom: 12px;
+                left: 12px;
+                z-index: 1000;
+                background: rgba(11, 20, 38, 0.92);
+                backdrop-filter: blur(8px);
+                border: 1px solid rgba(56, 189, 248, 0.3);
+                border-radius: 10px;
+                padding: 10px 14px;
+                font-size: 0.78rem;
+                color: #e2e8f0;
+                box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+                max-width: 330px;
+            }
+
+            .hud-title {
+                color: #38bdf8;
+                font-weight: 700;
+                letter-spacing: 0.5px;
+                margin-bottom: 4px;
+                text-transform: uppercase;
+                font-size: 0.7rem;
+            }
+
+            .proximity-warning {
+                background: rgba(239, 68, 68, 0.25);
+                border: 1px solid #ef4444;
+                color: #fca5a5;
+                padding: 8px;
+                border-radius: 6px;
+                margin-top: 6px;
+                font-size: 0.75rem;
+            }
+
+            .auto-expand-banner {
+                background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(6, 182, 212, 0.2) 100%);
+                border: 1px solid #10b981;
+                color: #6ee7b7;
+                padding: 8px 12px;
+                border-radius: 8px;
+                font-size: 0.78rem;
+                margin-top: 6px;
+                cursor: pointer;
+            }
+
+            .map-search-bar {
+                position: absolute;
+                top: 12px;
+                left: 12px;
+                right: 12px;
+                z-index: 1000;
+                display: flex;
+                gap: 8px;
+                background: rgba(11, 20, 38, 0.9);
+                padding: 6px;
+                border-radius: 8px;
+                border: 1px solid var(--border-soft);
+            }
+
+            .map-search-input {
+                background: #131f33 !important;
+                border: 1px solid var(--border-soft) !important;
+                color: #fff !important;
+                font-size: 0.85rem;
+            }
+
+            .insitu-link {
+                font-size: 0.78rem;
+                color: var(--sky-light);
+                cursor: pointer;
+                font-weight: 600;
+            }
+        </style>
+
+        <script type="text/javascript">
+            /* <![CDATA[ */
+            window.mapDialog = null;
+            window.markerSeleccion = null;
+            window.layerGroupExistentes = null;
+            window.connectionLine = null;
+
+            window.HUB_BASE_LAT = -33.3930;
+            window.HUB_BASE_LNG = -70.7858;
+
+            window.obtenerAeropuertosBD = function() {
+                try {
+                    return #{gestionAeropuertosBean.aeropuertosJson};
+                } catch(e) {
+                    return [];
+                }
+            };
+
+            // FUNCIÓN REESTRUCTURADA Y ROBUSTA DE INICIALIZACIÓN
+            window.initMapaDialog = function() {
+                var elMapContainer = document.getElementById('mapaDialog');
+                if (!elMapContainer) return;
+
+                // Destruir mapa previo si existe o si el DOM cambió
+                if (window.mapDialog !== null) {
+                    try {
+                        window.mapDialog.remove();
+                    } catch(e) {
+                        console.warn("Limpia de mapa anterior:", e);
+                    }
+                    window.mapDialog = null;
+                }
+
+                window.markerSeleccion = null;
+                window.connectionLine = null;
+
+                // Crear nueva instancia de Leaflet
+                window.mapDialog = L.map('mapaDialog', { zoomControl: false }).setView([20.0, 0.0], 2);
+                L.control.zoom({ position: 'bottomright' }).addTo(window.mapDialog);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors',
+                    maxZoom: 19
+                }).addTo(window.mapDialog);
+
+                window.layerGroupExistentes = L.layerGroup().addTo(window.mapDialog);
+
+                window.mapDialog.on('click', function (e) {
+                    window.setCoordenadasDialog(e.latlng.lat, e.latlng.lng, true);
+                });
+
+                window.pintarAeropuertosExistentes();
+            };
+
+            window.pintarAeropuertosExistentes = function() {
+                if (!window.layerGroupExistentes) return;
+                window.layerGroupExistentes.clearLayers();
+
+                var aeropuertosBD = window.obtenerAeropuertosBD();
+                var currentId = document.getElementById('formDialog:inputIdAeropuerto') ? document.getElementById('formDialog:inputIdAeropuerto').value : null;
+
+                aeropuertosBD.forEach(function(a) {
+                    if (currentId && a.id == currentId) return;
+
+                    var circle = L.circleMarker([a.lat, a.lng], {
+                        radius: 7,
+                        fillColor: "#0284c7",
+                        color: "#ffffff",
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 0.9
+                    });
+
+                    circle.bindTooltip("<b>" + a.nombre + " (" + a.iata + ")</b>", { permanent: false, direction: 'top' });
+                    window.layerGroupExistentes.addLayer(circle);
+                });
+            };
+
+            window.setCoordenadasDialog = function(lat, lng, esInverso) {
+                var latFixed = parseFloat(lat).toFixed(6);
+                var lngFixed = parseFloat(lng).toFixed(6);
+
+                var elLat = document.getElementById('formDialog:inputLat');
+                var elLng = document.getElementById('formDialog:inputLng');
+
+                if (elLat) elLat.value = latFixed;
+                if (elLng) elLng.value = lngFixed;
+
+                if (window.markerSeleccion) {
+                    window.markerSeleccion.setLatLng([lat, lng]);
+                } else {
+                    window.markerSeleccion = L.marker([lat, lng], { draggable: true }).addTo(window.mapDialog);
+                    window.markerSeleccion.on('dragend', function () {
+                        var pos = window.markerSeleccion.getLatLng();
+                        window.setCoordenadasDialog(pos.lat, pos.lng, true);
+                    });
+                }
+
+                window.dibujarRutaHub(lat, lng);
+                window.actualizarHUD(lat, lng);
+                window.verificarProximidadAeropuertos(lat, lng);
+
+                if (esInverso) {
+                    window.geocodificarInverso(latFixed, lngFixed);
+                }
+            };
+
+            window.verificarProximidadAeropuertos = function(lat, lng) {
+                var warningBox = document.getElementById('proximityWarningBox');
+                if (!warningBox) return;
+
+                var currentId = document.getElementById('formDialog:inputIdAeropuerto') ? document.getElementById('formDialog:inputIdAeropuerto').value : null;
+                var aeropuertosBD = window.obtenerAeropuertosBD();
+
+                var cercano = null;
+                var menorDist = 99999;
+
+                aeropuertosBD.forEach(function(a) {
+                    if (currentId && a.id == currentId) return;
+
+                    var dist = window.calcularDistanciaKm(lat, lng, a.lat, a.lng);
+                    if (dist < 30 && dist < menorDist) {
+                        menorDist = dist;
+                        cercano = a;
+                    }
+                });
+
+                if (cercano) {
+                    warningBox.style.display = "block";
+                    warningBox.innerHTML = "⚠️ <b>Aeropuerto existente cerca:</b><br/>" + cercano.nombre + " (" + cercano.iata + ") a " + menorDist.toFixed(1) + " km de este punto.";
+                } else {
+                    warningBox.style.display = "none";
+                }
+            };
+
+            window.calcularDistanciaKm = function(lat1, lon1, lat2, lon2) {
+                var R = 6371;
+                var dLat = (lat2 - lat1) * Math.PI / 180;
+                var dLon = (lon2 - lon1) * Math.PI / 180;
+                var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                    Math.sin(dLon/2) * Math.sin(dLon/2);
+                return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            };
+
+            window.dibujarRutaHub = function(destLat, destLng) {
+                if (window.connectionLine) window.mapDialog.removeLayer(window.connectionLine);
+
+                window.connectionLine = L.polyline([
+                    [window.HUB_BASE_LAT, window.HUB_BASE_LNG],
+                    [destLat, destLng]
+                ], {
+                    color: '#0284c7',
+                    weight: 2,
+                    dashArray: '6, 8',
+                    opacity: 0.85
+                }).addTo(window.mapDialog);
+            };
+
+            window.actualizarHUD = function(lat, lng) {
+                var distKm = window.calcularDistanciaKm(window.HUB_BASE_LAT, window.HUB_BASE_LNG, lat, lng).toFixed(0);
+
+                var elCoords = document.getElementById('hudCoords');
+                var elDist = document.getElementById('hudDistance');
+
+                if (elCoords) elCoords.innerText = parseFloat(lat).toFixed(4) + '°, ' + parseFloat(lng).toFixed(4) + '°';
+                if (elDist) elDist.innerText = distKm + ' km (' + (distKm * 0.539957).toFixed(0) + ' NM)';
+            };
+
+            window.geocodificarInverso = function(lat, lng) {
+                var elLoc = document.getElementById('hudLocation');
+                if (elLoc) elLoc.innerText = "Identificando infraestructura...";
+
+                fetch('https://nominatim.openstreetmap.org/reverse?format=json&extratags=1&namedetails=1&lat=' + lat + '&lon=' + lng)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data && data.address) {
+                            var addr = data.address;
+                            var extra = data.extratags || {};
+
+                            var pais = addr.country || "";
+                            var ciudad = addr.city || addr.town || addr.county || addr.state || "";
+
+                            var aeropuertoNombre = "";
+
+                            if (extra.aeroway === "aerodrome" || extra.aeroway === "terminal" || addr.aeroway) {
+                                aeropuertoNombre = addr.aeroway || data.namedetails.name || data.display_name.split(',')[0];
+                            } else if (data.name && !data.name.match(/^[A-Z]\d+/)) {
+                                aeropuertoNombre = data.name;
+                            }
+
+                            if (!aeropuertoNombre || aeropuertoNombre.match(/^[A-Z]\d+/)) {
+                                if (ciudad) {
+                                    aeropuertoNombre = "Aeropuerto Internacional de " + ciudad;
+                                } else {
+                                    aeropuertoNombre = "Aeropuerto Internacional";
+                                }
+                            }
+
+                            var iataCode = extra.iata || extra.IATA || addr.iata || "";
+
+                            var inputNombre = document.getElementById('formDialog:inputNombreAeropuerto');
+                            var inputIata = document.getElementById('formDialog:inputIata');
+
+                            if (inputNombre) {
+                                inputNombre.value = aeropuertoNombre;
+                            }
+
+                            if (inputIata && iataCode && iataCode.length === 3) {
+                                inputIata.value = iataCode.toUpperCase();
+                            }
+
+                            if (elLoc) elLoc.innerText = (ciudad ? ciudad + ", " : "") + pais;
+
+                            if (typeof window.sincronizarUbicacionJSF === 'function') {
+                                window.sincronizarUbicacionJSF([
+                                    { name: 'paisDetectado', value: pais },
+                                    { name: 'ciudadDetectada', value: ciudad }
+                                ]);
+                            }
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Error en geocodificación inversa:", err);
+                        if (elLoc) elLoc.innerText = "Ubicación personalizada";
+                    });
+            };
+
+            window.ejecutarAutoCreacionCiudad = function(nombreCiudad) {
+                if (typeof window.autoCrearCiudadJSF === 'function') {
+                    window.autoCrearCiudadJSF([
+                        { name: 'ciudadAuto', value: nombreCiudad }
+                    ]);
+                }
+            };
+
+            window.buscarDireccionEnMapa = function() {
+                var query = document.getElementById('searchMapInput') ? document.getElementById('searchMapInput').value : '';
+                if (!query) return;
+
+                fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(query))
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data && data.length > 0) {
+                            var lat = parseFloat(data[0].lat);
+                            var lon = parseFloat(data[0].lon);
+                            window.mapDialog.flyTo([lat, lon], 12, { duration: 1.5 });
+                            window.setCoordenadasDialog(lat, lon, true);
+                        } else {
+                            alert("Ubicación no encontrada.");
+                        }
+                    });
+            };
+
+            window.centrarEnCiudadSeleccionada = function() {
+                var select = document.getElementById('formDialog:selectCiudad_input');
+                if (!select) return;
+
+                var textCiudad = select.options[select.selectedIndex].text;
+                if (!textCiudad || textCiudad.includes('Seleccione')) return;
+
+                fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(textCiudad))
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data && data.length > 0) {
+                            window.mapDialog.flyTo([parseFloat(data[0].lat), parseFloat(data[0].lon)], 11, { duration: 1.2 });
+                        }
+                    });
+            };
+
+            window.refrescarTamanoMapa = function() {
+                setTimeout(function() {
+                    if (window.mapDialog) {
+                        window.mapDialog.invalidateSize();
+                        window.pintarAeropuertosExistentes();
+                    }
+                }, 350);
+            };
+
+            window.cargarUbicacionExistente = function(lat, lng) {
+                window.initMapaDialog();
+                setTimeout(function() {
+                    if (window.mapDialog) {
+                        window.mapDialog.invalidateSize();
+                        window.mapDialog.setView([lat, lng], 11);
+                        window.setCoordenadasDialog(lat, lng, false);
+                        window.pintarAeropuertosExistentes();
+                    }
+                }, 350);
+            };
+
+            window.resetearMapa = function() {
+                window.initMapaDialog();
+                setTimeout(function() {
+                    if (window.mapDialog) {
+                        window.mapDialog.invalidateSize();
+                        if (window.markerSeleccion) window.mapDialog.removeLayer(window.markerSeleccion);
+                        if (window.connectionLine) window.mapDialog.removeLayer(window.connectionLine);
+                        window.markerSeleccion = null;
+                        window.connectionLine = null;
+                        window.mapDialog.setView([20.0, 0.0], 2);
+
+                        var elCoords = document.getElementById('hudCoords');
+                        var elDist = document.getElementById('hudDistance');
+                        var elLoc = document.getElementById('hudLocation');
+                        var elWarn = document.getElementById('proximityWarningBox');
+
+                        if (elCoords) elCoords.innerText = "Esperando marca...";
+                        if (elDist) elDist.innerText = "--";
+                        if (elLoc) elLoc.innerText = "--";
+                        if (elWarn) elWarn.style.display = "none";
+
+                        window.pintarAeropuertosExistentes();
+                    }
+                }, 350);
+            };
+            /* ]]> */
+        </script>
+    </ui:define>
+
+    <ui:define name="contenido-admin">
+
+        <!-- CABECERA DE LA PÁGINA -->
+        <div class="header-container">
+            <div>
+                <h2 style="margin:0;">Gestión Global de Aeropuertos</h2>
+                <small class="text-muted">Command Center y mapa GIS interactivo de infraestructura aeroportuaria</small>
+            </div>
+            <p:commandButton value="+ Nuevo Aeropuerto / Destino"
+                             icon="pi pi-plus"
+                             actionListener="#{gestionAeropuertosBean.nuevoAeropuerto}"
+                             update=":formDialog"
+                             oncomplete="PF('dlgAeropuerto').show(); window.resetearMapa();"
+                             styleClass="btn-new" />
+        </div>
+
+        <!-- TARJETAS KPIS SUPERIORES -->
+        <div class="kpi-container">
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="pi pi-building"></i></div>
+                <div>
+                    <div class="kpi-title">Infraestructuras Activas</div>
+                    <div class="kpi-value">#{gestionAeropuertosBean.listaAeropuertos.size()}</div>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-icon" style="color: #10b981; background: rgba(16, 185, 129, 0.15);"><i class="pi pi-send"></i></div>
+                <div>
+                    <div class="kpi-title">Conexión a Hub Base (SCL)</div>
+                    <div class="kpi-value">100% Operativo</div>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.15);"><i class="pi pi-globe"></i></div>
+                <div>
+                    <div class="kpi-title">Cobertura Geográfica</div>
+                    <div class="kpi-value">#{gestionAeropuertosBean.paisesDisponibles.size()} Países</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FORMULARIO Y TABLA PRINCIPAL MULTIFUNCIONAL -->
+        <h:form id="formTabla">
+            <p:growl id="growl" showDetail="true" life="4000" />
+
+            <p:remoteCommand name="sincronizarUbicacionJSF"
+                             actionListener="#{gestionAeropuertosBean.seleccionarUbicacionDesdeMapa}"
+                             update=":formDialog:panelUbicacion :formTabla:growl" />
+
+            <p:remoteCommand name="autoCrearCiudadJSF"
+                             actionListener="#{gestionAeropuertosBean.registrarCiudadAutoDetectada}"
+                             update=":formDialog:panelUbicacion :formTabla:growl" />
+
+            <p:dataTable id="dt-aeropuertos"
+                         value="#{gestionAeropuertosBean.listaAeropuertos}"
+                         var="a"
+                         widgetVar="wvAeropuertos"
+                         paginator="true"
+                         rows="10"
+                         rowsPerPageTemplate="10,25,50"
+                         paginatorPosition="bottom"
+                         paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                         currentPageReportTemplate="Mostrando {startRecord} - {endRecord} de {totalRecords} aeropuertos"
+                         responsiveLayout="scroll"
+                         styleClass="ui-datatable-striped"
+                         emptyMessage="No se encontraron aeropuertos con los criterios de búsqueda.">
+
+                <!-- BUSCADOR GLOBAL Y ACCIONES DE FILTRADO EN CABECERA -->
+                <f:facet name="header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted fw-bold" style="font-size: 0.85rem;">REPOSITORIO GLOBAL DE DESTINOS</span>
+                        <div class="d-flex gap-2">
+                            <span class="ui-input-icon-left">
+                                <i class="pi pi-search" style="color: var(--text-dim);" />
+                                <p:inputText id="globalFilter"
+                                             onkeyup="PF('wvAeropuertos').filter()"
+                                             placeholder="Buscar IATA, Nombre, Ciudad..."
+                                             style="width: 280px;" />
+                            </span>
+                        </div>
+                    </div>
+                </f:facet>
+
+                <p:column headerText="ID" sortBy="#{a.idAeropuerto}" style="width: 4rem;">
+                    <h:outputText value="#{a.idAeropuerto}" />
+                </p:column>
+
+                <p:column headerText="IATA" sortBy="#{a.codigoIata}" filterBy="#{a.codigoIata}" filterMatchMode="contains" filterStyle="display:none;" style="width: 7rem;">
+                    <span class="badge-iata">#{a.codigoIata}</span>
+                </p:column>
+
+                <p:column headerText="Nombre Aeropuerto" sortBy="#{a.nombreAeropuerto}" filterBy="#{a.nombreAeropuerto}" filterMatchMode="contains" filterStyle="display:none;">
+                    <h:outputText value="#{a.nombreAeropuerto}" style="font-weight: 600;" />
+                </p:column>
+
+                <p:column headerText="Ciudad" sortBy="#{a.ciudad}" filterBy="#{a.ciudad}" filterMatchMode="contains" filterStyle="display:none;">
+                    <h:outputText value="#{a.ciudad}" />
+                </p:column>
+
+                <p:column headerText="Posición GPS">
+                    <small style="color: var(--sky-light);" class="font-monospace"><i class="pi pi-map-marker me-1"></i> #{a.latitud}, #{a.longitud}</small>
+                </p:column>
+
+                <p:column headerText="Acciones" style="width: 12rem; text-align: center;">
+                    <div class="d-flex gap-1 justify-content-center">
+                        <p:commandButton icon="pi pi-compass"
+                                         actionListener="#{gestionAeropuertosBean.prepararEdicion(a)}"
+                                         update=":formDialog"
+                                         oncomplete="PF('dlgAeropuerto').show(); window.cargarUbicacionExistente(#{a.latitud}, #{a.longitud});"
+                                         styleClass="ui-button-flat ui-button-plain text-info"
+                                         title="Ver Ubicación en Mapa" />
+
+                        <p:commandButton icon="pi pi-pencil"
+                                         actionListener="#{gestionAeropuertosBean.prepararEdicion(a)}"
+                                         update=":formDialog"
+                                         oncomplete="PF('dlgAeropuerto').show(); window.cargarUbicacionExistente(#{a.latitud}, #{a.longitud});"
+                                         styleClass="ui-button-flat ui-button-plain"
+                                         style="color: var(--text-dim);"
+                                         title="Editar Registros" />
+
+                        <p:commandButton icon="pi pi-trash"
+                                         actionListener="#{gestionAeropuertosBean.eliminar(a.idAeropuerto)}"
+                                         update=":formTabla"
+                                         styleClass="ui-button-flat ui-button-danger"
+                                         title="Eliminar">
+                            <p:confirm header="Confirmar" message="¿Desea eliminar este aeropuerto?" icon="pi pi-exclamation-triangle" />
+                        </p:commandButton>
+                    </div>
+                </p:column>
+            </p:dataTable>
+
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" width="350">
+                <p:commandButton value="Cancelar" type="button" styleClass="ui-confirmdialog-no ui-button-flat text-muted" style="color: var(--text-dim) !important;" />
+                <p:commandButton value="Eliminar" type="button" styleClass="ui-confirmdialog-yes ui-button-danger bg-danger text-white" />
+            </p:confirmDialog>
+        </h:form>
+
+        <!-- DIÁLOGOS DE REGISTRO / EDICIÓN -->
+        <p:dialog header="#{gestionAeropuertosBean.modoEdicion ? 'Editar Aeropuerto' : 'Alta de Nuevo Destino / Aeropuerto'}"
+                  widgetVar="dlgAeropuerto"
+                  modal="true"
+                  width="1100"
+                  styleClass="fancy-dialog"
+                  onShow="window.refrescarTamanoMapa()"
+                  responsive="true"
+                  resizable="false">
+
+            <h:form id="formDialog">
+                <h:inputHidden id="inputIdAeropuerto" value="#{gestionAeropuertosBean.idAeropuerto}" />
+                <h:inputHidden id="inputLat" value="#{gestionAeropuertosBean.latitud}" />
+                <h:inputHidden id="inputLng" value="#{gestionAeropuertosBean.longitud}" />
+
+                <div class="grid-dialog p-1">
+                    <div>
+                        <div class="mb-3">
+                            <p:outputLabel value="Nombre Aeropuerto *" styleClass="fw-bold text-light" />
+                            <p:inputText id="inputNombreAeropuerto"
+                                         value="#{gestionAeropuertosBean.nombreAeropuerto}"
+                                         required="true"
+                                         placeholder="Ej: Aeropuerto Internacional de Manchester"
+                                         styleClass="w-100 mt-1" />
+                        </div>
+
+                        <div class="mb-3">
+                            <p:outputLabel value="Código IATA (3 Letras) *" styleClass="fw-bold text-light" />
+                            <p:inputText id="inputIata"
+                                         value="#{gestionAeropuertosBean.codigoIata}"
+                                         maxlength="3"
+                                         required="true"
+                                         placeholder="Ej: MAN / BCN"
+                                         styleClass="w-100 text-uppercase mt-1 font-monospace" />
+                        </div>
+
+                        <h:panelGroup id="panelUbicacion">
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <p:outputLabel value="País *" styleClass="fw-bold text-light" />
+                                    <span class="insitu-link" onclick="PF('dlgNuevoPais').show();">+ Crear País</span>
+                                </div>
+                                <p:selectOneMenu value="#{gestionAeropuertosBean.idPaisSeleccionado}" styleClass="w-100">
+                                    <f:selectItem itemLabel="-- Seleccione País --" itemValue="" />
+                                    <f:selectItems value="#{gestionAeropuertosBean.paisesDisponibles}" var="p" itemLabel="#{p.nombre}" itemValue="#{p.idPais}" />
+                                    <p:ajax listener="#{gestionAeropuertosBean.onPaisChange}" update="selectCiudad" />
+                                </p:selectOneMenu>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <p:outputLabel value="Ciudad *" styleClass="fw-bold text-light" />
+                                    <span class="insitu-link" onclick="PF('dlgNuevaCiudad').show();">+ Crear Ciudad</span>
+                                </div>
+                                <p:selectOneMenu id="selectCiudad"
+                                                 value="#{gestionAeropuertosBean.idCiudad}"
+                                                 required="true"
+                                                 onchange="window.centrarEnCiudadSeleccionada()"
+                                                 styleClass="w-100">
+                                    <f:selectItem itemLabel="-- Seleccione Ciudad --" itemValue="" />
+                                    <f:selectItems value="#{gestionAeropuertosBean.ciudadesFiltradas}" var="c" itemLabel="#{c.nombre}" itemValue="#{c.idCiudad}" />
+                                </p:selectOneMenu>
+
+                                <h:panelGroup rendered="#{not empty gestionAeropuertosBean.nuevaCiudadNombre}">
+                                    <div class="auto-expand-banner" onclick="window.ejecutarAutoCreacionCiudad('#{gestionAeropuertosBean.nuevaCiudadNombre}')">
+                                        <i class="pi pi-plus-circle me-1"></i> Añadir e integrar <b>"#{gestionAeropuertosBean.nuevaCiudadNombre}"</b> (1-Clic)
+                                    </div>
+                                </h:panelGroup>
+                            </div>
+                        </h:panelGroup>
+
+                        <div class="mt-4 pt-2 text-end">
+                            <p:commandButton value="Cancelar" type="button" onclick="PF('dlgAeropuerto').hide();" styleClass="ui-button-flat text-muted" style="color: var(--text-dim) !important;" />
+                            <p:commandButton value="Confirmar y Guardar" action="#{gestionAeropuertosBean.guardar}" update=":formTabla :formDialog" styleClass="ui-button-primary ms-2" icon="pi pi-check" />
+                        </div>
+                    </div>
+
+                    <div class="map-wrapper">
+                        <div class="map-search-bar">
+                            <input type="text" id="searchMapInput" class="form-control form-control-sm map-search-input" placeholder="Buscar dirección, ciudad o aeropuerto..." />
+                            <button type="button" class="btn btn-sm btn-primary" onclick="window.buscarDireccionEnMapa()"><i class="pi pi-search"></i></button>
+                        </div>
+
+                        <div id="mapaDialog"></div>
+
+                        <div class="map-hud-overlay">
+                            <div class="hud-title"><i class="pi pi-send me-1"></i> Telemetría y Proximidad</div>
+                            <div>Ubicación: <b id="hudLocation" class="text-white">--</b></div>
+                            <div>GPS: <span id="hudCoords" style="color: var(--sky-light)" class="font-monospace">--</span></div>
+                            <div>Distancia a Hub (SCL): <b id="hudDistance" class="text-warning">--</b></div>
+
+                            <div id="proximityWarningBox" class="proximity-warning" style="display:none;"></div>
+                        </div>
+                    </div>
+                </div>
+            </h:form>
+        </p:dialog>
+
+        <p:dialog header="Registrar País" widgetVar="dlgNuevoPais" modal="true" width="350">
+            <h:form>
+                <div class="mb-3">
+                    <p:outputLabel value="Nombre del País" />
+                    <p:inputText value="#{gestionAeropuertosBean.nuevoPaisNombre}" required="true" styleClass="w-100 mt-1" />
+                </div>
+                <p:commandButton value="Guardar País" action="#{gestionAeropuertosBean.guardarNuevoPais}" update=":formDialog:panelUbicacion" styleClass="ui-button-success w-100" />
+            </h:form>
+        </p:dialog>
+
+        <p:dialog header="Registrar Ciudad" widgetVar="dlgNuevaCiudad" modal="true" width="350">
+            <h:form>
+                <div class="mb-3">
+                    <p:outputLabel value="Nombre de la Ciudad" />
+                    <p:inputText value="#{gestionAeropuertosBean.nuevaCiudadNombre}" required="true" styleClass="w-100 mt-1" />
+                </div>
+                <p:commandButton value="Guardar Ciudad" action="#{gestionAeropuertosBean.guardarNuevaCiudad}" update=":formDialog:panelUbicacion" styleClass="ui-button-success w-100" />
+            </h:form>
+        </p:dialog>
+
+    </ui:define>
+
+</ui:composition>
