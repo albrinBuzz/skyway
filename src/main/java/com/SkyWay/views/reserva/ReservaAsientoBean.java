@@ -276,17 +276,20 @@ public class ReservaAsientoBean implements Serializable {
                 } else {
                     // FALLBACK AUTOMÁTICO según la cantidad de asientos en la fila:
                     if (totalAsientosFila == 10) {
-                        // Configuración Avión Ancho 3-4-3 (ej: A-B-C | D-E-F-G | H-J-K)
+                        // Configuración Avión Ancho 3-4-3
                         romperBloque = (i == 2 || i == 6) && i < totalAsientosFila - 1;
                     } else if (totalAsientosFila == 7 || totalAsientosFila == 8) {
-                        // Configuración 2-3-2 o 2-4-2 (ej: A-B | C-D-E | F-G)
+                        // Configuración 2-3-2 o 2-4-2
                         romperBloque = (i == 1 || i == 4) && i < totalAsientosFila - 1;
                     } else if (totalAsientosFila == 6) {
-                        // Configuración Avión Estándar 3-3 (ej: A-B-C | D-E-F)
+                        // Económica 3-3 (ej: A-B-C | D-E-F)
                         romperBloque = (i == 2) && i < totalAsientosFila - 1;
                     } else if (totalAsientosFila == 4) {
-                        // Primera Clase 2-2 (ej: A-B | J-K)
+                        // Primera Clase / Ejecutiva 2-2 (ej: A-C | D-F)
                         romperBloque = (i == 1) && i < totalAsientosFila - 1;
+                    } else if (totalAsientosFila == 3) {
+                        // Primera Clase VIP / Embraer 1-2 (ej: A | C-D)
+                        romperBloque = (i == 0) && i < totalAsientosFila - 1;
                     }
                 }
 

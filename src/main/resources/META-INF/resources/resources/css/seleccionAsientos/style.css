@@ -641,3 +641,91 @@ body {
     font-size: 0.7rem;
     font-weight: 700;
 }
+
+/* =========================================================
+   DISEÑO REALISTA Y DIFERENCIADO POR CLASE DE CABINA
+   ========================================================= */
+
+/* --- 1. PRIMERA CLASE (Suites Espaciosas VIP) --- */
+.cabin-row.first-class-row {
+    margin-bottom: 16px !important; /* Más separación longitudinal (pitch real) */
+}
+
+.cabin-row.first-class-row .seat-btn.ui-button {
+    width: 52px !important;          /* Asientos mucho más anchos */
+    height: 50px !important;
+    min-width: 52px !important;
+    max-width: 52px !important;
+    border-radius: 12px 12px 8px 8px !important;
+    font-size: 0.85rem !important;
+    border: 2px solid #f59e0b !important; /* Borde Dorado VIP */
+}
+
+/* Consola/Descansabrazos VIP dorado */
+.cabin-row.first-class-row .seat-btn.ui-button::before {
+    height: 10px !important;
+    background: linear-gradient(180deg, rgba(245, 158, 11, 0.4), rgba(217, 119, 6, 0.2)) !important;
+    border-radius: 6px !important;
+}
+
+/* Espaciador central / pasillo VIP más amplio */
+.cabin-row.first-class-row .aisle-gap {
+    width: 50px !important;
+}
+
+
+/* --- 2. CLASE EJECUTIVA / BUSINESS --- */
+.cabin-row.business-class-row {
+    margin-bottom: 11px !important;
+}
+
+.cabin-row.business-class-row .seat-btn.ui-button {
+    width: 44px !important;
+    height: 45px !important;
+    min-width: 44px !important;
+    max-width: 44px !important;
+    border-radius: 10px 10px 6px 6px !important;
+    border: 1px solid #c084fc !important; /* Borde Púrpura Executive */
+}
+
+.cabin-row.business-class-row .aisle-gap {
+    width: 38px !important;
+}
+
+
+/* --- 3. CLASE ECONÓMICA (Estándar 3-3) --- */
+.cabin-row.economy-class-row {
+    margin-bottom: 6px !important;
+}
+
+
+/* --- SEPARADORES FISICOS REALES ENTRE CLASES (Mamparas) --- */
+.class-divider {
+    width: 100%;
+    margin: 28px 0 16px 0 !important;
+    text-align: center;
+    position: relative;
+}
+
+.class-divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 2%;
+    right: 2%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #334155, transparent) !important;
+    z-index: 1;
+}
+
+.class-divider span {
+    position: relative;
+    z-index: 2;
+    background: #080e1a !important;
+    font-size: 0.7rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 1.5px !important;
+    padding: 4px 16px !important;
+    border-radius: 20px !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+}

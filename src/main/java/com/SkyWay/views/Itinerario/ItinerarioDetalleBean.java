@@ -75,6 +75,7 @@ public class ItinerarioDetalleBean implements Serializable {
         if (fc == null || fc.getExternalContext() == null) {
             return;
         }
+        boolean busquedaValida=true;
 
         try {
             ExternalContext externalContext = fc.getExternalContext();
@@ -91,29 +92,36 @@ public class ItinerarioDetalleBean implements Serializable {
 
             if (salida == null || llegada == null || fechaIdaStr == null || salida.isBlank() || llegada.isBlank()) {
                 addMessage(FacesMessage.SEVERITY_ERROR, "Parámetros incompletos", "Debes completar origen, destino y fecha.");
-                return;
+                //return;
+                busquedaValida = false;
             }
 
             if (salida.equalsIgnoreCase(llegada)) {
                 addMessage(FacesMessage.SEVERITY_WARN, "Destino inválido", "El destino no puede ser igual al origen.");
-                return;
+                //return;
+                busquedaValida = false;
             }
 
             this.fechaIda = LocalDate.parse(fechaIdaStr);
             if (fechaIda.isBefore(LocalDate.now())) {
                 addMessage(FacesMessage.SEVERITY_ERROR, "Fecha inválida", "La fecha de ida no puede estar en el pasado.");
-                return;
+                //return;
+                busquedaValida = false;
             }
 
             if ("RT".equals(tipoViaje) && fechaRegresoStr != null) {
                 this.fechaRegreso = LocalDate.parse(fechaRegresoStr);
                 if (fechaRegreso.isBefore(fechaIda)) {
                     addMessage(FacesMessage.SEVERITY_ERROR, "Fechas inválidas", "La fecha de regreso no puede ser antes que la de ida.");
-                    return;
+                    //return;
+                    busquedaValida = false;
                 }
             }
 
             this.tipoVuelo = "RT".equals(tipoViaje) ? " Vuelos Ida" : "Solo Ida";
+
+            if (busquedaValida) {
+
 
             vuelosIda = itinerarioService.buscarItinerarios(salida, llegada, fechaIda.toString());
             if (vuelosIda != null) {
@@ -135,6 +143,7 @@ public class ItinerarioDetalleBean implements Serializable {
             vuelosSeleccionados = new ArrayList<>();
             itinerariosTarifas = new HashMap<>();
             total = 0;
+        }
 
         } catch (Exception e) {
             addMessage(FacesMessage.SEVERITY_ERROR, "Error", "Hubo un problema al cargar los vuelos.");
@@ -143,10 +152,8 @@ public class ItinerarioDetalleBean implements Serializable {
     }
 
     private void addMessage(FacesMessage.Severity severity, String summary, String detail) {
-        FacesContext fc = FacesContext.getCurrentInstance();
-        if (fc != null) {
-            fc.addMessage(null, new FacesMessage(severity, summary, detail));
-        }
+        FacesContext.getCurrentInstance().
+                addMessage(null, new FacesMessage(severity, summary, detail));
     }
 
     public void showParadas(Integer idItinerario) {
