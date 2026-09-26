@@ -10,6 +10,9 @@ import jakarta.persistence.*;
 import java.util.List;
 import java.util.Objects;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import org.locationtech.jts.geom.Point;
 
 /**
  * The persistent class for the aeropuerto database table.
@@ -31,6 +34,10 @@ public class Aeropuerto implements Serializable {
 
 	@Column(name="nombre_aeropuerto")
 	private String nombreAeropuerto;
+
+	@Column(name = "posicion", columnDefinition = "GEOGRAPHY(Point, 4326)")
+	@JdbcTypeCode(SqlTypes.GEOMETRY)
+	private Point posicion;
 
 	//bi-directional many-to-one association to Ciudad
 	@ManyToOne(fetch = FetchType.LAZY)
@@ -120,6 +127,13 @@ public class Aeropuerto implements Serializable {
 		this.itinerarios2 = itinerarios2;
 	}
 
+	public Point getPosicion() {
+		return posicion;
+	}
+
+	public void setPosicion(Point posicion) {
+		this.posicion = posicion;
+	}
 	/*public List<Itinerario> getItinerarios3() {
 		return this.itinerarios3;
 	}

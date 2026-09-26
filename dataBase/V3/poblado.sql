@@ -157,6 +157,11 @@ INSERT INTO Pais (ID_PAIS, Nombre, ID_CONTINENTE) VALUES
                                                       (128, 'Surinam',                1),
                                                       (129, 'Guyana Francesa',        1);
 
+SELECT setval('pais_seq', COALESCE((SELECT MAX(id_pais) FROM Pais), 1), true);
+
+
+
+
 -- =========================================================================
 -- 3. MAESTRO DE CIUDADES
 -- =========================================================================
@@ -365,6 +370,9 @@ INSERT INTO Ciudad (ID_CIUDAD, Nombre, ID_PAIS) VALUES
                                                     (189, 'Cusco',              5),
                                                     (190, 'Santa Cruz',         59),
                                                     (191, 'Cochabamba',         59);
+
+SELECT setval('ciudad_seq', COALESCE((SELECT MAX(id_ciudad) FROM public.ciudad), 1), true);
+
 
 -- =========================================================================
 -- 4. MAESTRO DE AEROPUERTOS CON GEOLOCALIZACIÓN REAL (PostGIS)
@@ -604,6 +612,8 @@ INSERT INTO Aeropuerto (ID_AEROPUERTO, Nombre_Aeropuerto, Codigo_IATA, ID_CIUDAD
 (171, 'Aeropuerto Internacional de Perth',               'PER', 164, ST_MakePoint(115.9672,  -31.9402)::geography),
 (172, 'Aeropuerto Internacional de Christchurch',        'CHC', 166, ST_MakePoint(172.5369,  -43.4894)::geography);
 
+
+SELECT setval('aeropuerto_seq', COALESCE((SELECT MAX(ID_AEROPUERTO) FROM public.Aeropuerto), 1), true);
 
 -- ============================================================
 -- VERIFICACIÓN: distancia entre SCL y EZE (debe ser ~1135 km)
