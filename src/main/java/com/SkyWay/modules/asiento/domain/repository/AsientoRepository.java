@@ -13,5 +13,8 @@ import org.springframework.stereotype.Repository;
 public interface AsientoRepository extends JpaRepository<Asiento, Integer>{
 
 	List<Asiento> findByAvion(Avion avion);
+
+	List<Asiento> findByAvion_IdAvionOrderByFilaAscLetraAsc(Integer idAvion);
+	long countByAvion_IdAvion(Integer idAvion);
 	
 }
