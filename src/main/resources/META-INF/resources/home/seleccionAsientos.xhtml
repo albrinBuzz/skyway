@@ -321,7 +321,9 @@
                                     </h:panelGroup>
 
                                     <!-- FILA HORIZONTAL DE ASIENTOS -->
-                                    <div class="cabin-row">
+                                    <!-- FILA HORIZONTAL DE ASIENTOS CON CLASE DINÁMICA -->
+                                    <div class="cabin-row #{fila.clase.toLowerCase().contains('primera') ? 'first-class-row' : (fila.clase.toLowerCase().contains('ejecutiva') or fila.clase.toLowerCase().contains('ECONÓMICA') ? 'business-class-row' : 'economy-class-row')}">
+
                                         <span class="row-number">#{fila.numeroFila}</span>
 
                                         <div class="row-seats-wrapper">
@@ -341,7 +343,7 @@
                                                     </ui:repeat>
                                                 </div>
 
-                                                <!-- PASILLO VIRTUAL -->
+                                                <!-- PASILLO VIRTUAL O CONSOLA CENTRAL -->
                                                 <h:panelGroup rendered="#{!bSt.last}" layout="block" styleClass="aisle-gap" />
 
                                             </ui:repeat>

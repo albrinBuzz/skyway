@@ -3,197 +3,269 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SkyWay - Brand Palette</title>
+    <title>SkyWay - Deep Corporate Navy Palette</title>
     <link rel="stylesheet" href="https://unpkg.com/primeflex@latest/primeflex.css">
     <link rel="stylesheet" href="https://unpkg.com/primeicons/primeicons.css">
     <style>
         :root {
-            /* Neutros - La Base */
-            --deep-space: #080e1a;
-            --midnight-blue: #0b1426;
-            --slate-glass: #1e293b;
-            --border-ui: #334155;
+            /* ======= NEUTROS OSCUROS (Base Grafito & Marino) ======= */
+            --bg-base: #0F172A;          /* Azul Marino Grafito (Background principal) */
+            --bg-surface: #1E293B;       /* Azul Noche Mate (Cards, Modales, Tablas) */
+            --bg-elevated: #334155;      /* Gris Azulado Elegante (Hovers, Inputs) */
+            --border-color: #334155;     /* Borde UI sobrio de bajo contraste */
 
-            /* Identidad - El Brillo */
-            --cyber-cyan: #00d1ff;
-            --aviation-blue: #4c7cf3;
-            --glow-white: #f8fafc;
-            --text-dim: #94a3b8;
+            /* ======= IDENTIDAD Y MARCA ======= */
+            --aviation-blue: #3B82F6;   /* Azul Corporativo Clásico (Primario) */
+            --steel-blue: #60A5FA;      /* Azul Cielo Suave (Acentos / Interactivo) */
+            --slate-accent: #475569;    /* Botones Secundarios / Bordes activos */
 
-            /* Semántica - Los Estados */
-            --status-ontime: #10b981;
-            --status-delayed: #f59e0b;
-            --status-cancelled: #ef4444;
+            /* ======= TIPOGRAFÍA SUAVE Y ELEGANTE ======= */
+            --text-primary: #F8FAFC;     /* Blanco Alabastro (Títulos principales) */
+            --text-secondary: #CBD5E1;   /* Gris Claro Mate (Cuerpo de texto) */
+            --text-muted: #94A3B8;       /* Pizarra Tenue (Placeholders, Labels) */
+
+            /* ======= ESTADOS SEMÁNTICOS SOBRIOS (Muted) ======= */
+            --status-ontime-bg: rgba(16, 185, 129, 0.15);
+            --status-ontime-text: #34D399;   /* Verde Menta Mate */
+
+            --status-delayed-bg: rgba(245, 158, 11, 0.15);
+            --status-delayed-text: #FBBF24;  /* Ocre Ámbar */
+
+            --status-cancelled-bg: rgba(239, 68, 68, 0.15);
+            --status-cancelled-text: #F87171;/* Rojo Carmesí */
         }
 
         body {
-            background-color: var(--deep-space);
-            color: var(--glow-white);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             margin: 0;
             padding: 40px;
         }
 
         .header {
-            border-bottom: 2px solid var(--cyber-cyan);
+            border-bottom: 1px solid var(--border-color);
             margin-bottom: 40px;
-            padding-bottom: 10px;
+            padding-bottom: 15px;
         }
 
         .header h1 {
-            color: var(--cyber-cyan);
-            margin: 0;
+            color: var(--text-primary);
+            margin: 0 0 8px 0;
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .header h1 i {
+            color: var(--aviation-blue);
+        }
+
+        .header p {
+            color: var(--text-muted);
+            margin: 0;
+            font-size: 0.95rem;
+        }
+
+        .section-title {
+            color: var(--steel-blue);
+            font-size: 1.05rem;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-top: 35px;
+            margin-bottom: 15px;
+            font-weight: 700;
         }
 
         .color-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
             gap: 20px;
-            margin-bottom: 50px;
+            margin-bottom: 30px;
         }
 
         .color-card {
-            background: var(--midnight-blue);
-            border: 1px solid var(--slate-glass);
-            border-radius: 12px;
-            padding: 15px;
-            transition: transform 0.2s;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            transition: transform 0.2s, border-color 0.2s;
         }
 
         .color-card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-3px);
             border-color: var(--aviation-blue);
         }
 
         .swatch {
-            height: 120px;
-            border-radius: 8px;
-            margin-bottom: 15px;
+            height: 90px;
+            border-radius: 6px;
+            margin-bottom: 12px;
             display: flex;
             align-items: flex-end;
             justify-content: flex-end;
             padding: 10px;
-            font-weight: bold;
-            font-family: monospace;
-            border: 1px solid rgba(255,255,255,0.1);
+            font-weight: 700;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.85rem;
+            border: 1px solid rgba(255,255,255,0.05);
         }
 
-        .info h3 { margin: 0 0 5px 0; font-size: 1.1rem; }
-        .info p { margin: 0; color: var(--text-dim); font-size: 0.9rem; }
+        .info h3 {
+            margin: 0 0 4px 0;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        .info p {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            line-height: 1.35;
+        }
 
-        /* Estilos específicos de muestras */
-        .bg-deep-space { background-color: var(--deep-space); }
-        .bg-midnight { background-color: var(--midnight-blue); }
-        .bg-slate { background-color: var(--slate-glass); }
-        .bg-cyan { background-color: var(--cyber-cyan); color: var(--deep-space); }
-        .bg-aviation { background-color: var(--aviation-blue); }
-        .bg-ontime { background-color: var(--status-ontime); }
-        .bg-delayed { background-color: var(--status-delayed); }
-        .bg-cancelled { background-color: var(--status-cancelled); }
+        /* Clases de Muestra */
+        .bg-base { background-color: var(--bg-base); color: var(--text-primary); }
+        .bg-surface { background-color: var(--bg-surface); color: var(--text-primary); }
+        .bg-elevated { background-color: var(--bg-elevated); color: var(--text-primary); }
+
+        .bg-aviation { background-color: var(--aviation-blue); color: #FFF; }
+        .bg-steel { background-color: var(--steel-blue); color: #0F172A; }
+        .bg-slate { background-color: var(--slate-accent); color: #FFF; }
+
+        .bg-ontime { background-color: var(--status-ontime-bg); color: var(--status-ontime-text); border: 1px solid var(--status-ontime-text); }
+        .bg-delayed { background-color: var(--status-delayed-bg); color: var(--status-delayed-text); border: 1px solid var(--status-delayed-text); }
+        .bg-cancelled { background-color: var(--status-cancelled-bg); color: var(--status-cancelled-text); border: 1px solid var(--status-cancelled-text); }
 
         .code-block {
-            background: #000;
+            background: #090D16;
             padding: 20px;
             border-radius: 8px;
+            border: 1px solid var(--border-color);
             border-left: 4px solid var(--aviation-blue);
             overflow-x: auto;
         }
 
-        pre { margin: 0; color: #a5d6ff; }
+        pre {
+            margin: 0;
+            color: #CBD5E1;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.88rem;
+            line-height: 1.5;
+        }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <h1><i class="pi pi-send"></i> SKYWAY Brand Palette</h1>
-    <p style="color: var(--text-dim)">Guía de colores oficial para la interfaz de administración y operaciones.</p>
+    <h1><i class="pi pi-send"></i> SKYWAY Deep Corporate Navy</h1>
+    <p>Paleta oscura corporativa sin brillos estruendosos, optimizada para consolas operativas aéreas.</p>
 </div>
 
-<h2 style="color: var(--aviation-blue)">1. Colores de Interfaz (Neutros)</h2>
+<div class="section-title">1. Superficies Neutras Oscuras</div>
 <div class="color-grid">
     <div class="color-card">
-        <div class="swatch bg-deep-space">#080E1A</div>
+        <div class="swatch bg-base">#0F172A</div>
         <div class="info">
-            <h3>Deep Space</h3>
-            <p>Fondo principal de la aplicación (Content area).</p>
+            <h3>Slate Navy Base</h3>
+            <p>Fondo principal de la aplicación. Elimina el negro absoluto para dar calidez y sobriedad.</p>
         </div>
     </div>
     <div class="color-card">
-        <div class="swatch bg-midnight">#0B1426</div>
+        <div class="swatch bg-surface">#1E293B</div>
         <div class="info">
-            <h3>Midnight Blue</h3>
-            <p>Superficies elevadas: Cards, Modales y Sidebar.</p>
+            <h3>Midnight Slate</h3>
+            <p>Superficie de componentes: Cards, modales, tablas operacionales y menús.</p>
         </div>
     </div>
     <div class="color-card">
-        <div class="swatch bg-slate">#1E293B</div>
+        <div class="swatch bg-elevated">#334155</div>
         <div class="info">
-            <h3>Slate Glass</h3>
-            <p>Bordes divisorios y fondos de inputs.</p>
+            <h3>Steel Glass Hover</h3>
+            <p>Estados hover de filas, campos de formulario e ítems secundarios.</p>
         </div>
     </div>
 </div>
 
-<h2 style="color: var(--aviation-blue)">2. Acentos y Marca</h2>
+<div class="section-title">2. Identidad y Acentos Corporativos</div>
 <div class="color-grid">
     <div class="color-card">
-        <div class="swatch bg-cyan">#00D1FF</div>
+        <div class="swatch bg-aviation">#3B82F6</div>
         <div class="info">
-            <h3>Cyber Cyan</h3>
-            <p>Color de énfasis, títulos y elementos activos.</p>
+            <h3>Corporate Aviation Blue</h3>
+            <p>Azul insignia de la aerolínea. Botones de acción primaria (CTA) y títulos principales.</p>
         </div>
     </div>
     <div class="color-card">
-        <div class="swatch bg-aviation">#4C7CF3</div>
+        <div class="swatch bg-steel">#60A5FA</div>
         <div class="info">
-            <h3>Aviation Blue</h3>
-            <p>Botones de acción primaria y enlaces.</p>
+            <h3>Soft Sky Accent</h3>
+            <p>Acento de interacción ligera: Enlaces, íconos activos y tildes de selección.</p>
+        </div>
+    </div>
+    <div class="color-card">
+        <div class="swatch bg-slate">#475569</div>
+        <div class="info">
+            <h3>Slate Secondary</h3>
+            <p>Botones de cancelación, bordes divisores y elementos neutros de soporte.</p>
         </div>
     </div>
 </div>
 
-<h2 style="color: var(--aviation-blue)">3. Estados Operativos</h2>
+<div class="section-title">3. Indicadores Semánticos Sobrios</div>
 <div class="color-grid">
     <div class="color-card">
-        <div class="swatch bg-ontime">#10B981</div>
+        <div class="swatch bg-ontime">#34D399</div>
         <div class="info">
-            <h3>On-Time</h3>
-            <p>Vuelos confirmados y procesos exitosos.</p>
+            <h3>Muted Mint</h3>
+            <p>Vuelos a tiempo, asignación exitosa de turnos y procesos confirmados.</p>
         </div>
     </div>
     <div class="color-card">
-        <div class="swatch bg-delayed">#F59E0B</div>
+        <div class="swatch bg-delayed">#FBBF24</div>
         <div class="info">
-            <h3>Delayed</h3>
-            <p>Alertas de tiempo y advertencias técnicas.</p>
+            <h3>Muted Amber</h3>
+            <p>Vuelos demorados, alertas de descanso y advertencias operativas.</p>
         </div>
     </div>
     <div class="color-card">
-        <div class="swatch bg-cancelled">#EF4444</div>
+        <div class="swatch bg-cancelled">#F87171</div>
         <div class="info">
-            <h3>Cancelled</h3>
-            <p>Vuelos cancelados o errores críticos.</p>
+            <h3>Muted Crimson</h3>
+            <p>Vuelos cancelados, rechazo de turnos y errores del sistema.</p>
         </div>
     </div>
 </div>
 
-<h2 style="color: var(--aviation-blue)">Variables CSS (Listo para copiar)</h2>
+<div class="section-title">Variables CSS (Reemplazo directo)</div>
 <div class="code-block">
 <pre>
 :root {
-    --bg-base: #080e1a;
-    --bg-surface: #0b1426;
-    --border-color: #1e293b;
-    --accent-primary: #00d1ff;
-    --accent-secondary: #4c7cf3;
-    --text-primary: #f8fafc;
-    --text-secondary: #94a3b8;
-    --success: #10b981;
-    --warning: #f59e0b;
-    --danger: #ef4444;
+    /* Superficies y Fondos Oscuros Corporativos */
+    --deep-space: #0f172a;
+    --midnight-blue: #1e293b;
+    --slate-glass: #334155;
+    --border-ui: #334155;
+
+    /* Acentos y Marca */
+    --aviation-blue: #3b82f6;
+    --steel-blue: #60a5fa;
+    --slate-accent: #475569;
+
+    /* Tipografía Legible Suave */
+    --glow-white: #f8fafc;
+    --text-dim: #cbd5e1;
+    --text-muted: #94a3b8;
+
+    /* Estados Semánticos (Muted Badges) */
+    --status-ontime-bg: rgba(16, 185, 129, 0.15);
+    --status-ontime-text: #34d399;
+    --status-delayed-bg: rgba(245, 158, 11, 0.15);
+    --status-delayed-text: #fbbf24;
+    --status-cancelled-bg: rgba(239, 68, 68, 0.15);
+    --status-cancelled-text: #f87171;
 }
 </pre>
 </div>

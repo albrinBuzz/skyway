@@ -13,9 +13,10 @@ import com.SkyWay.modules.segmentovuelo.domain.model.SegmentoVuelo;
 import com.SkyWay.modules.segmentovuelo.domain.service.SegmentoVueloService;
 import com.SkyWay.modules.vuelo.domain.model.Vuelo;
 import com.SkyWay.modules.vuelo.domain.service.VueloService;
-import com.SkyWay.util.Logger;
+
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.RequestScoped;
+import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.ExternalContext;
 import jakarta.faces.context.FacesContext;
 //import jakarta.faces.view.ViewScoped;
@@ -38,6 +39,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Named("itinerarioBusquedaBean")
 @RequestScoped
@@ -70,16 +73,36 @@ public class ItinerarioBusquedaBean implements Serializable {
     private Integer adultos = 1;
     private List<Ciudad> ciudads;
 
+    private static final Logger LOGGER = Logger.getLogger(ItinerarioBusquedaBean.class.getName());
 
     @PostConstruct
     public void init() {
-        aeropuertosMap = new HashMap<>();
+        try {
+            aeropuertosMap = new HashMap<>();
 
+            ciudads = ciudadService.getAllCiudades();
 
-        ciudads = ciudadService.getAllCiudades();
+            aeropuertos = aeropuertoService.findAll();
 
-        aeropuertos = aeropuertoService.findAll();
-        aeropuertos.forEach(aeropuerto -> aeropuertosMap.put(aeropuerto.getCodigoIata(), aeropuerto));
+            if (aeropuertos != null) {
+                aeropuertos.forEach(aeropuerto ->
+                        aeropuertosMap.put(aeropuerto.getCodigoIata(), aeropuerto)
+                );
+            }
+        } catch (Exception e) {
+            // 1. Registrar la excepción en el log del servidor
+            LOGGER.log(Level.SEVERE, "Error al inicializar los datos de ciudades y aeropuertos", e);
+            com.SkyWay.util.Logger.logError(e.getMessage());
+            // 2. Opcional: Notificar a PrimeFaces / JSF si la vista está lista
+            FacesContext context = FacesContext.getCurrentInstance();
+            if (context != null) {
+                context.addMessage(null, new FacesMessage(
+                        FacesMessage.SEVERITY_ERROR,
+                        "Error de Carga",
+                        "No se pudieron cargar los datos iniciales de aeropuertos."
+                ));
+            }
+        }
     }
 
     public void buscarVuelosSoloIda() throws ParseException {
@@ -122,7 +145,7 @@ public class ItinerarioBusquedaBean implements Serializable {
 
     public List<Aeropuerto> buscarAeropuertos(String query) {
         String filtro = query.toLowerCase();
-        Logger.logInfo(filtro);
+        //Logger.logInfo(filtro);
 
         return aeropuertos.stream()
                 .filter(a ->
