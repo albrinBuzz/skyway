@@ -1,0 +1,516 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition lang="es"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="jakarta.faces.core"
+                xmlns:h="jakarta.faces.html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:ui="jakarta.faces.facelets"
+                template="/admin/template.xhtml">
+
+    <ui:define name="head-admin">
+        <style type="text/css">
+            /* --- SKYWAY PREMIUM DARK PALETTE --- */
+            :root {
+                --sky-blue: #3b82f6;
+                --sky-light: #60a5fa;
+                --bg-body: #050b18;
+                --bg-panel: #0b1329;
+                --bg-header: #0e1a3a;
+                --border-soft: rgba(59, 130, 246, 0.2);
+                --text-main: #f1f5f9;
+                --text-dim: #789dc9;
+            }
+
+            .header-container {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 1.5rem;
+                padding: 0.5rem 0;
+            }
+
+            .header-container h2 {
+                color: var(--text-main) !important;
+                font-weight: 800 !important;
+                letter-spacing: -0.025em;
+            }
+
+            /* KPIS MÉTIRCAS DE FLOTA */
+            .kpi-container {
+                display: flex;
+                gap: 1rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .kpi-card {
+                background: var(--bg-panel);
+                border: 1px solid var(--border-soft);
+                border-radius: 10px;
+                padding: 1rem 1.25rem;
+                flex: 1;
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            }
+
+            .kpi-icon {
+                width: 42px;
+                height: 42px;
+                border-radius: 8px;
+                background: rgba(59, 130, 246, 0.15);
+                color: var(--sky-blue);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.25rem;
+            }
+
+            .kpi-title {
+                font-size: 0.75rem;
+                color: var(--text-dim);
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+            }
+
+            .kpi-value {
+                font-size: 1.25rem;
+                font-weight: 700;
+                color: var(--text-main);
+            }
+
+            /* --- DATA TABLE PREMIUM --- */
+            .ui-datatable {
+                border-radius: 12px;
+                overflow: hidden;
+                border: 1px solid var(--border-soft) !important;
+                box-shadow: 0 20px 25px -5px rgba(5, 11, 24, 0.8);
+            }
+
+            .ui-datatable-header {
+                background: var(--bg-panel) !important;
+                padding: 1rem 1.25rem !important;
+                border-bottom: 1px solid var(--border-soft) !important;
+            }
+
+            .ui-datatable thead th {
+                background: var(--bg-header) !important;
+                color: var(--text-dim) !important;
+                text-transform: uppercase;
+                font-size: 0.75rem;
+                letter-spacing: 0.075em;
+                padding: 1.1rem 1rem !important;
+                border: none !important;
+                border-bottom: 2px solid var(--border-soft) !important;
+            }
+
+            .ui-datatable tbody td {
+                background: var(--bg-panel) !important;
+                color: var(--text-main) !important;
+                padding: 1.1rem 1rem !important;
+                border: none !important;
+                border-bottom: 1px solid rgba(59, 130, 246, 0.08) !important;
+            }
+
+            .ui-datatable-striped .ui-datatable-data > tr.ui-datatable-odd {
+                background: rgba(14, 26, 58, 0.4) !important;
+            }
+
+            .ui-datatable tbody tr:hover {
+                background: rgba(59, 130, 246, 0.12) !important;
+                transition: background 0.25s ease;
+            }
+
+            .badge-tail {
+                background: rgba(59, 130, 246, 0.15);
+                color: var(--sky-light);
+                padding: 4px 10px;
+                border-radius: 6px;
+                font-weight: 700;
+                letter-spacing: 0.025em;
+                border: 1px solid rgba(59, 130, 246, 0.3);
+                display: inline-block;
+            }
+
+            .btn-new {
+                background: #10b981 !important;
+                border: none !important;
+                border-radius: 8px !important;
+                font-weight: 600 !important;
+                box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            }
+
+            .btn-new:hover {
+                background: #34d399 !important;
+            }
+
+            .pax-total-badge {
+                background: rgba(56, 189, 248, 0.15);
+                border: 1px solid #38bdf8;
+                color: #38bdf8;
+                font-weight: 700;
+                padding: 4px 8px;
+                border-radius: 6px;
+                font-size: 0.82rem;
+                display: inline-block;
+                margin-bottom: 4px;
+            }
+
+            .class-pills-container {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 4px;
+                max-width: 260px;
+            }
+
+            .class-pill {
+                background: #1e293b;
+                color: #cbd5e1;
+                font-size: 0.7rem;
+                padding: 3px 7px;
+                border-radius: 4px;
+                border: 1px solid #334155;
+                white-space: nowrap;
+            }
+
+            .fancy-dialog .ui-dialog-content {
+                background-color: var(--bg-panel) !important;
+                color: var(--text-main) !important;
+                padding: 1.25rem !important;
+            }
+
+            /* ESTRUCTURA ESPACIAL DEL FUSELAJE */
+            .fuselage-container {
+                background: #030712;
+                border: 2px solid var(--border-soft);
+                border-radius: 60px 60px 20px 20px;
+                padding: 25px 20px;
+                max-height: 500px;
+                overflow-y: auto;
+            }
+
+            .cockpit-header {
+                text-align: center;
+                border-bottom: 2px dashed var(--border-soft);
+                padding-bottom: 12px;
+                margin-bottom: 20px;
+                color: var(--sky-light);
+                font-weight: bold;
+                letter-spacing: 2px;
+                font-size: 0.85rem;
+            }
+
+            .row-container {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                margin-bottom: 8px;
+            }
+
+            .row-number {
+                width: 30px;
+                text-align: right;
+                font-size: 0.75rem;
+                color: var(--text-dim);
+                font-weight: bold;
+            }
+
+            .seat-item {
+                width: 42px;
+                height: 42px;
+                background: #0f172a;
+                border: 1px solid #334155;
+                border-radius: 6px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.72rem;
+                color: #f8fafc;
+            }
+
+            .seat-item.window { border-left: 3px solid #38bdf8; }
+            .seat-item.aisle { border-right: 3px solid #f59e0b; margin-right: 12px; }
+            .seat-item.emergency { background: rgba(239, 68, 68, 0.2); border-color: #ef4444; }
+
+            .class-tag {
+                font-size: 0.58rem;
+                color: #94a3b8;
+                text-transform: uppercase;
+            }
+        </style>
+    </ui:define>
+
+    <ui:define name="contenido-admin">
+
+        <!-- HEADER PRINCIPAL -->
+        <div class="header-container">
+            <div>
+                <h2 style="margin:0;">Gestión Global de Flota</h2>
+                <small class="text-muted">Control operativo, capacidades de carga y mapa de fuselaje</small>
+            </div>
+            <!-- BOTÓN CORREGIDO CON ONCOMPLETE QUE DESPLIEGA EL MODAL PF('dlgAvion').show() -->
+            <p:commandButton value="+ Registrar Nueva Aeronave"
+                             icon="pi pi-plus"
+                             actionListener="#{gestionAvionesBean.prepararNuevoAvion}"
+                             update=":formDialog"
+                             oncomplete="PF('dlgAvion').show();"
+                             styleClass="btn-new" />
+        </div>
+
+        <!-- TARJETAS KPIS SUPERIORES -->
+        <div class="kpi-container">
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="pi pi-send"></i></div>
+                <div>
+                    <div class="kpi-title">Aeronaves Registradas</div>
+                    <div class="kpi-value">#{gestionAvionesBean.listaAviones.size()} Flota</div>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-icon" style="color: #10b981; background: rgba(16, 185, 129, 0.15);"><i class="pi pi-check-circle"></i></div>
+                <div>
+                    <div class="kpi-title">Estado Operaciones</div>
+                    <div class="kpi-value">Optimizada</div>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.15);"><i class="pi pi-users"></i></div>
+                <div>
+                    <div class="kpi-title">Clases Configuradas</div>
+                    <div class="kpi-value">#{gestionAvionesBean.listaClases.size()} Categorías</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FORMULARIO Y TABLA DE FLOTA -->
+        <h:form id="formTabla">
+            <p:growl id="growl" showDetail="true" life="4000" />
+
+            <p:dataTable id="dt-aviones"
+                         value="#{gestionAvionesBean.listaAviones}"
+                         var="a"
+                         widgetVar="wvAviones"
+                         paginator="true"
+                         rows="10"
+                         rowsPerPageTemplate="10,25,50"
+                         paginatorPosition="bottom"
+                         paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                         currentPageReportTemplate="Mostrando {startRecord} - {endRecord} de {totalRecords} aeronaves"
+                         responsiveLayout="scroll"
+                         styleClass="ui-datatable-striped"
+                         emptyMessage="No se encuentran aeronaves registradas en la flota.">
+
+                <!-- CABECERA CON FILTRO GLOBAL -->
+                <f:facet name="header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted fw-bold" style="font-size: 0.85rem;">INVENTARIO Y MATRIZ DE CABINAS</span>
+                        <div class="d-flex gap-2">
+                            <span class="ui-input-icon-left">
+                                <i class="pi pi-search" style="color: var(--text-dim);" />
+                                <p:inputText id="globalFilter"
+                                             onkeyup="PF('wvAviones').filter()"
+                                             placeholder="Buscar por Matrícula, Modelo..."
+                                             style="width: 280px;" />
+                            </span>
+                        </div>
+                    </div>
+                </f:facet>
+
+                <p:column headerText="ID" sortBy="#{a.idAvion}" style="width: 3.5rem;">
+                    <h:outputText value="#{a.idAvion}" />
+                </p:column>
+
+                <p:column headerText="Matrícula" sortBy="#{a.numeroDeRegistro}" filterBy="#{a.numeroDeRegistro}" filterMatchMode="contains" filterStyle="display:none;" style="width: 8rem;">
+                    <span class="badge-tail font-monospace">#{a.numeroDeRegistro}</span>
+                </p:column>
+
+                <p:column headerText="Fabricante y Modelo" sortBy="#{a.modeloAvion.nombre}" filterBy="#{a.modeloAvion.nombre}" filterMatchMode="contains" filterStyle="display:none;">
+                    <b>#{a.modeloAvion.fabricante.nombre}</b> #{a.modeloAvion.nombre}
+                </p:column>
+
+                <p:column headerText="Año Fab." sortBy="#{a.anoDeFabricacion}" style="width: 6rem;">
+                    <h:outputText value="#{a.anoDeFabricacion}" />
+                </p:column>
+
+                <p:column headerText="Capacidad y Clases" style="min-width: 15rem;">
+                    <div class="pax-total-badge mb-1">
+                        <i class="pi pi-users me-1"></i>#{a.capacidadDePasajeros} Pasajeros
+                    </div>
+                    <div class="class-pills-container">
+                        <ui:repeat value="#{a.capacidadClases1}" var="cc">
+                            <span class="class-pill">
+                                <b>#{cc.claseAsiento1.descripcion}:</b> #{cc.cantidad}
+                            </span>
+                        </ui:repeat>
+                    </div>
+                </p:column>
+
+                <p:column headerText="Capacidad Carga" sortBy="#{a.capacidadDeCarga}" style="width: 9rem;">
+                    <h:outputText value="#{a.capacidadDeCarga} kg" />
+                </p:column>
+
+                <p:column headerText="Estado" style="width: 8rem;">
+                    <span class="badge #{a.estadoDeMantenimiento eq 'Operativo' ? 'bg-success' : 'bg-warning'}">
+                        #{a.estadoDeMantenimiento}
+                    </span>
+                </p:column>
+
+                <p:column headerText="Acciones" style="width: 10rem; text-align: center;">
+                    <div class="d-flex gap-1 justify-content-center">
+                        <p:commandButton icon="pi pi-th-large"
+                                         actionListener="#{gestionAvionesBean.verMapaAsientos(a)}"
+                                         update=":dialogMapa"
+                                         oncomplete="PF('dlgMapaAsientos').show();"
+                                         styleClass="ui-button-flat ui-button-plain text-info"
+                                         title="Ver Fuselaje de Asientos" />
+
+                        <p:commandButton icon="pi pi-pencil"
+                                         actionListener="#{gestionAvionesBean.prepararEdicion(a)}"
+                                         update=":formDialog"
+                                         oncomplete="PF('dlgAvion').show();"
+                                         styleClass="ui-button-flat ui-button-plain"
+                                         style="color: var(--text-dim);"
+                                         title="Editar" />
+
+                        <p:commandButton icon="pi pi-trash"
+                                         actionListener="#{gestionAvionesBean.eliminarAvion(a.idAvion)}"
+                                         update=":formTabla"
+                                         styleClass="ui-button-flat ui-button-danger"
+                                         title="Eliminar">
+                            <p:confirm header="Confirmar" message="¿Desea eliminar este avión de la flota?" icon="pi pi-exclamation-triangle" />
+                        </p:commandButton>
+                    </div>
+                </p:column>
+            </p:dataTable>
+
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" width="350">
+                <p:commandButton value="Cancelar" type="button" styleClass="ui-confirmdialog-no ui-button-flat text-muted" style="color: var(--text-dim) !important;" />
+                <p:commandButton value="Eliminar" type="button" styleClass="ui-confirmdialog-yes ui-button-danger bg-danger text-white" />
+            </p:confirmDialog>
+        </h:form>
+
+        <!-- DIÁLOGO CREAR / EDITAR AERONAVE -->
+        <p:dialog header="#{gestionAvionesBean.modoEdicion ? 'Editar Aeronave' : 'Registrar Nueva Aeronave'}"
+                  widgetVar="dlgAvion"
+                  modal="true"
+                  width="750"
+                  styleClass="fancy-dialog"
+                  responsive="true"
+                  resizable="false">
+
+            <h:form id="formDialog">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <p:outputLabel value="Número de Registro (Matrícula) *" styleClass="fw-bold text-light" />
+                        <p:inputText value="#{gestionAvionesBean.avionSeleccionado.numeroDeRegistro}"
+                                     required="true"
+                                     placeholder="EJ: CC-BBA / N707SA"
+                                     styleClass="w-100 font-monospace text-uppercase mt-1" />
+                    </div>
+
+                    <div class="col-md-6">
+                        <p:outputLabel value="Modelo de Avión *" styleClass="fw-bold text-light" />
+                        <p:selectOneMenu value="#{gestionAvionesBean.idModeloSeleccionado}" required="true" styleClass="w-100 mt-1">
+                            <f:selectItem itemLabel="-- Seleccionar Modelo --" itemValue="" />
+                            <f:selectItems value="#{gestionAvionesBean.listaModelos}" var="m" itemLabel="#{m.fabricante.nombre} #{m.nombre}" itemValue="#{m.idModelo}" />
+                        </p:selectOneMenu>
+                    </div>
+
+                    <div class="col-md-6">
+                        <p:outputLabel value="Año de Fabricación *" styleClass="fw-bold text-light" />
+                        <p:spinner value="#{gestionAvionesBean.avionSeleccionado.anoDeFabricacion}" min="1960" max="2030" styleClass="w-100 mt-1" />
+                    </div>
+
+                    <div class="col-md-6">
+                        <p:outputLabel value="Capacidad Carga Bodega (Kg) *" styleClass="fw-bold text-light" />
+                        <p:spinner value="#{gestionAvionesBean.avionSeleccionado.capacidadDeCarga}" min="1000" stepFactor="500" styleClass="w-100 mt-1" />
+                    </div>
+
+                    <div class="col-md-6">
+                        <p:outputLabel value="Estado Mantenimiento *" styleClass="fw-bold text-light" />
+                        <p:selectOneMenu value="#{gestionAvionesBean.avionSeleccionado.estadoDeMantenimiento}" styleClass="w-100 mt-1">
+                            <f:selectItem itemLabel="Operativo" itemValue="Operativo" />
+                            <f:selectItem itemLabel="En servicio" itemValue="En servicio" />
+                            <f:selectItem itemLabel="En mantenimiento" itemValue="En mantenimiento" />
+                            <f:selectItem itemLabel="Inactivo" itemValue="Inactivo" />
+                        </p:selectOneMenu>
+                    </div>
+
+                    <div class="col-md-6">
+                        <p:outputLabel value="Próximo Mantenimiento *" styleClass="fw-bold text-light" />
+                        <p:datePicker value="#{gestionAvionesBean.fechaMantenimientoAux}" showIcon="true" required="true" styleClass="w-100 mt-1" />
+                    </div>
+
+                    <div class="col-12 mt-4">
+                        <div class="d-flex justify-content-between align-items-center border-bottom border-secondary pb-2 mb-3">
+                            <h6 style="color: var(--sky-light);" class="mb-0">
+                                <i class="pi pi-cog me-1"></i> Configuración por Clase
+                            </h6>
+                            <h:panelGroup id="panelTotalPax">
+                                <span class="badge bg-primary fs-6">
+                                    Total Pasajeros: #{gestionAvionesBean.totalAsientosCalculados}
+                                </span>
+                            </h:panelGroup>
+                        </div>
+
+                        <div class="row g-2">
+                            <ui:repeat value="#{gestionAvionesBean.listaClases}" var="c">
+                                <div class="col-md-4">
+                                    <div class="p-3 border border-secondary rounded bg-dark">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <small class="text-light fw-bold">#{c.descripcion}</small>
+                                            <span class="badge bg-secondary" style="font-size:0.65rem;">Clase ID: #{c.idClase}</span>
+                                        </div>
+                                        <p:spinner value="#{gestionAvionesBean.capacidadesClaseMap[c.idClase]}" min="0" max="600" styleClass="w-100 mt-1">
+                                            <p:ajax event="change" listener="#{gestionAvionesBean.recalcularTotalAsientos}" update=":formDialog:panelTotalPax" />
+                                        </p:spinner>
+                                    </div>
+                                </div>
+                            </ui:repeat>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 text-end">
+                    <p:commandButton value="Cancelar" type="button" onclick="PF('dlgAvion').hide();" styleClass="ui-button-flat text-muted" style="color: var(--text-dim) !important;" />
+                    <p:commandButton value="Guardar y Generar Asientos" action="#{gestionAvionesBean.guardarAvion}" update=":formTabla :formDialog" styleClass="ui-button-primary ms-2" icon="pi pi-check" />
+                </div>
+            </h:form>
+        </p:dialog>
+
+        <!-- DIÁLOGO MAPA ESPACIAL DE ASIENTOS Y FUSELAJE -->
+        <p:dialog header="Simulador Espacial de Fuselaje - #{gestionAvionesBean.avionSeleccionado.numeroDeRegistro}"
+                  widgetVar="dlgMapaAsientos"
+                  id="dialogMapa"
+                  modal="true"
+                  width="720"
+                  styleClass="fancy-dialog"
+                  responsive="true"
+                  resizable="false">
+
+            <div class="fuselage-container">
+                <div class="cockpit-header">
+                    <i class="pi pi-compass me-1"></i> CABINA DE MANDO / COCKPIT (PROA)
+                </div>
+
+                <ui:repeat value="#{gestionAvionesBean.asientosPorFilaMap.entrySet().toArray()}" var="entry">
+                    <div class="row-container">
+                        <span class="row-number">F#{entry.key}</span>
+
+                        <ui:repeat value="#{entry.value}" var="st">
+                            <div class="seat-item #{st.esVentana ? 'window' : ''} #{st.esPasillo ? 'aisle' : ''} #{st.esEmergencia ? 'emergency' : ''}">
+                                <span class="fw-bold">#{st.numeroAsiento}</span>
+                                <span class="class-tag">#{st.claseAsiento.descripcion.substring(0, 3)}</span>
+                            </div>
+                        </ui:repeat>
+                    </div>
+                </ui:repeat>
+            </div>
+        </p:dialog>
+    </ui:define>
+
+</ui:composition>
