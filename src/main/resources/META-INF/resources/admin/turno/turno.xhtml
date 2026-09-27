@@ -1,155 +1,440 @@
-<ui:composition xmlns="http://www.w3.org/1999/xhtml"
-                xmlns:h="jakarta.faces.html"
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition lang="es"
+                xmlns="http://www.w3.org/1999/xhtml"
                 xmlns:f="jakarta.faces.core"
-                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="jakarta.faces.html"
                 xmlns:p="http://primefaces.org/ui"
+                xmlns:ui="jakarta.faces.facelets"
                 template="/admin/template.xhtml">
 
-    <ui:define name="contenido-admin">
+    <ui:define name="head-admin">
         <style type="text/css">
-            /* 1. Fondo de la cabecera */
-            .header-container h2 { color: #00d1ff !important; }
-            .header-container p { color: #94a3b8 !important; }
+            :root {
+                --bg-deep: #0b1120;
+                --bg-card: #0f172a;
+                --bg-header: #1e293b;
+                --border-subtle: #334155;
 
-            /* 2. Badges para cargos de tripulación (Ajustados para contraste oscuro) */
-            .badge-cargo {
-                padding: 4px 8px;
-                border-radius: 4px;
-                font-size: 0.75rem;
-                font-weight: bold;
-                color: white;
-                text-transform: uppercase;
-                border: 1px solid rgba(255,255,255,0.1);
+                --navy-brand: #2563eb;
+                --navy-hover: #1d4ed8;
+
+                --text-heading: #e2e8f0;
+                --text-body: #cbd5e1;
+                --text-muted: #94a3b8;
+                --text-dim: #64748b;
             }
-            /* Colores inspirados en rangos aeronáuticos */
-            .cargo-piloto { background-color: #1e293b; border-color: #00d1ff; color: #00d1ff; }
-            .cargo-copiloto { background-color: #334155; color: #e2e8f0; }
-            .cargo-tripulante { background-color: #0369a1; color: #bae6fd; }
 
-            /* 3. Barra de Asignación (Ahora integrada al azul oscuro) */
-            .assignment-bar {
-                background: #0b1426 !important;
-                border: 1px solid #1e293b !important;
+            .ops-container { padding: 0.75rem 0; width: 100%; font-family: inherit; }
+
+            /* HEADER FLIGHT CONTROL */
+            .flight-header-card {
+                background: var(--bg-card);
+                border: 1px solid var(--border-subtle);
                 border-radius: 12px;
-                padding: 20px;
-                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
-                margin-bottom: 25px;
+                padding: 1.25rem 1.5rem;
+                margin-bottom: 20px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.25);
             }
 
-            .assignment-bar .p-outputlabel {
-                color: #00d1ff !important;
+            .flight-info-group { display: flex; align-items: center; gap: 16px; }
+
+            .flight-badge {
+                background: rgba(37, 99, 235, 0.15);
+                border: 1px solid var(--navy-brand);
+                color: var(--text-heading);
+                font-weight: 700;
+                font-size: 1.1rem;
+                padding: 8px 14px;
+                border-radius: 8px;
             }
 
-            /* 4. Tabla y Card de Personal Asignado */
-            .ui-card {
-                background-color: #0b1426 !important;
-                border: 1px solid #1e293b !important;
+            .flight-route {
+                color: var(--text-heading);
+                font-size: 1.2rem;
+                font-weight: 700;
+                margin: 0;
             }
 
-            .ui-datatable thead th {
-                background-color: #141e33 !important;
-                color: #00d1ff !important;
-                border-color: #1e293b !important;
+            .flight-meta {
+                color: var(--text-muted);
+                font-size: 0.85rem;
             }
 
-            .ui-datatable tbody td {
-                background-color: #0b1426 !important;
-                color: #f8fafc !important;
-                border-color: #1e293b !important;
+            /* TARJETAS KPIS DE CABINA */
+            .kpi-crew-container {
+                display: flex;
+                gap: 1rem;
+                margin-bottom: 20px;
             }
 
-            /* Estilos de texto secundario y avatares */
-            .text-500 { color: #64748b !important; }
-            .ui-avatar { background: #1e293b !important; color: #00d1ff !important; border: 1px solid #00d1ff; }
-
-            /* 5. Inputs y Selects */
-            .ui-selectonemenu, .ui-selectonemenu-panel {
-                background-color: #0f172a !important;
-                color: white !important;
-                border: 1px solid #334155 !important;
+            .kpi-crew-card {
+                background: var(--bg-card);
+                border: 1px solid var(--border-subtle);
+                border-radius: 10px;
+                padding: 1rem 1.25rem;
+                flex: 1;
+                display: flex;
+                align-items: center;
+                gap: 1rem;
             }
 
-            .ui-selectonemenu-label { color: white !important; }
+            .kpi-crew-icon {
+                width: 40px;
+                height: 40px;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.2rem;
+            }
 
-            /* 6. Diálogos de Confirmación */
-            .ui-confirm-dialog, .ui-dialog-titlebar, .ui-dialog-content {
-                background-color: #0b1426 !important;
-                color: white !important;
-                border: 1px solid #1e293b !important;
+            .kpi-crew-title {
+                font-size: 0.725rem;
+                color: var(--text-muted);
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                font-weight: 700;
+            }
+
+            .kpi-crew-value {
+                font-size: 1.2rem;
+                font-weight: 700;
+                color: var(--text-heading);
+            }
+
+            /* BARRA DE ASIGNACIÓN */
+            .assignment-box {
+                background: var(--bg-card);
+                border: 1px solid var(--border-subtle);
+                border-radius: 12px;
+                padding: 1.25rem 1.5rem;
+                margin-bottom: 20px;
+            }
+
+            .assignment-box label {
+                display: block;
+                color: var(--text-muted) !important;
+                font-size: 0.725rem !important;
+                font-weight: 700 !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.05em !important;
+                margin-bottom: 6px;
+            }
+
+            /* SELECTOR PRINCIPAL EN REPOSO */
+            body .assignment-box .ui-selectonemenu {
+                background-color: var(--bg-deep) !important;
+                border: 1px solid var(--border-subtle) !important;
+                color: var(--text-heading) !important;
+                font-size: 0.875rem !important;
+                border-radius: 6px !important;
+                width: 100% !important;
+                box-shadow: none !important;
+            }
+
+            body .assignment-box .ui-selectonemenu .ui-selectonemenu-label {
+                color: var(--text-heading) !important;
+            }
+
+            body .assignment-box .ui-selectonemenu .ui-selectonemenu-trigger {
+                background: transparent !important;
+                border-left: none !important;
+                color: var(--text-muted) !important;
+            }
+
+            /* ==========================================================================
+               🛠 FIX FORZADO PARA PANEL FLOTANTE Y BÚSQUEDA DEL SELECTONEMENU (DARK MODE)
+               ========================================================================== */
+            body .ui-selectonemenu-panel {
+                background-color: var(--bg-card) !important;
+                border: 1px solid var(--border-subtle) !important;
+                border-radius: 8px !important;
+                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6) !important;
+            }
+
+            body .ui-selectonemenu-panel .ui-selectonemenu-filter-container {
+                background-color: var(--bg-header) !important;
+                padding: 8px !important;
+                border-bottom: 1px solid var(--border-subtle) !important;
+            }
+
+            body .ui-selectonemenu-panel .ui-selectonemenu-filter {
+                background-color: var(--bg-deep) !important;
+                border: 1px solid var(--border-subtle) !important;
+                color: var(--text-heading) !important;
+                border-radius: 6px !important;
+                padding: 6px 10px !important;
+                width: 100% !important;
+                box-shadow: none !important;
+            }
+
+            body .ui-selectonemenu-panel .ui-selectonemenu-filter:focus {
+                border-color: var(--navy-brand) !important;
+            }
+
+            body .ui-selectonemenu-panel .ui-selectonemenu-items-wrapper {
+                background-color: var(--bg-card) !important;
+            }
+
+            body .ui-selectonemenu-panel .ui-selectonemenu-list {
+                background-color: var(--bg-card) !important;
+                padding: 4px 0 !important;
+            }
+
+            body .ui-selectonemenu-panel .ui-selectonemenu-item {
+                background-color: var(--bg-card) !important;
+                color: var(--text-body) !important;
+                padding: 8px 12px !important;
+                font-size: 0.875rem !important;
+            }
+
+            body .ui-selectonemenu-panel .ui-selectonemenu-item:hover,
+            body .ui-selectonemenu-panel .ui-selectonemenu-item.ui-state-highlight {
+                background-color: var(--navy-brand) !important;
+                color: #ffffff !important;
+            }
+
+            .btn-new {
+                background: var(--navy-brand) !important;
+                border: none !important;
+                border-radius: 6px !important;
+                font-weight: 600 !important;
+                color: #ffffff !important;
+                font-size: 0.85rem !important;
+                padding: 8px 16px !important;
+            }
+
+            .btn-new:hover { background: var(--navy-hover) !important; }
+
+            /* BADGES DE CARGO DE TRIPULACIÓN */
+            .badge-cargo {
+                font-size: 0.725rem;
+                font-weight: 700;
+                padding: 4px 10px;
+                border-radius: 4px;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                display: inline-block;
+            }
+
+            .cargo-piloto { background: rgba(30, 58, 138, 0.4); border: 1px solid var(--navy-brand); color: #93c5fd; }
+            .cargo-copiloto { background: rgba(51, 65, 85, 0.5); border: 1px solid #475569; color: #e2e8f0; }
+            .cargo-tripulante { background: rgba(14, 116, 144, 0.3); border: 1px solid #0891b2; color: #a5f3fc; }
+
+            /* TABLA LIMPIA Y UNIFICADA */
+            body .skyway-ops-table {
+                background-color: var(--bg-card) !important;
+                border: 1px solid var(--border-subtle) !important;
+                border-radius: 8px !important;
+                overflow: hidden !important;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            }
+
+            body .skyway-ops-table .ui-datatable-tablewrapper table { border-collapse: collapse !important; }
+
+            body .skyway-ops-table .ui-datatable-header {
+                background-color: var(--bg-header) !important;
+                padding: 14px 18px !important;
+                border-bottom: 1px solid var(--border-subtle) !important;
+            }
+
+            body .skyway-ops-table thead th {
+                background-color: var(--bg-deep) !important;
+                color: var(--text-muted) !important;
+                font-size: 0.75rem !important;
+                font-weight: 700 !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.05em !important;
+                padding: 12px 16px !important;
+                border: none !important;
+                border-bottom: 1px solid var(--border-subtle) !important;
+            }
+
+            body .skyway-ops-table tbody td {
+                background-color: var(--bg-card) !important;
+                color: var(--text-body) !important;
+                font-size: 0.875rem !important;
+                font-weight: 500 !important;
+                padding: 12px 16px !important;
+                border: none !important;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important;
+            }
+
+            body .skyway-ops-table tbody tr:hover td { background-color: var(--bg-header) !important; }
+            body .skyway-ops-table tbody tr:last-child td { border-bottom: none !important; }
+
+            body .skyway-ops-table .ui-paginator {
+                background-color: var(--bg-deep) !important;
+                border: none !important;
+                border-top: 1px solid var(--border-subtle) !important;
+                padding: 10px !important;
+            }
+
+            body .skyway-ops-table .ui-paginator .ui-paginator-page {
+                background-color: var(--bg-card) !important;
+                color: var(--text-muted) !important;
+                border: 1px solid var(--border-subtle) !important;
+                border-radius: 4px !important;
+            }
+
+            body .skyway-ops-table .ui-paginator .ui-paginator-page.ui-state-active {
+                background-color: var(--navy-brand) !important;
+                color: #ffffff !important;
+                border-color: var(--navy-brand) !important;
+            }
+
+            /* DIÁLOGO DARK */
+            body .ui-dialog.custom-dialog {
+                background-color: var(--bg-card) !important;
+                border: 1px solid var(--border-subtle) !important;
+                border-radius: 12px !important;
+            }
+
+            body .ui-dialog.custom-dialog .ui-dialog-titlebar {
+                background-color: var(--bg-header) !important;
+                color: var(--text-heading) !important;
+                border-bottom: 1px solid var(--border-subtle) !important;
+            }
+
+            body .ui-dialog.custom-dialog .ui-dialog-content {
+                background-color: var(--bg-card) !important;
+                color: var(--text-body) !important;
             }
         </style>
+    </ui:define>
 
-        <div class="header-container mb-4">
-            <h2 class="m-0"><i class="pi pi-users mr-2 text-primary"></i>Gestión de Tripulación por Vuelo</h2>
-            <p class="text-secondary">Asigne personal y gestione turnos para el vuelo actual.</p>
-        </div>
+    <ui:define name="contenido-admin">
+        <div class="ops-container">
+            <p:growl id="msgs" showDetail="true" life="4000" />
 
-        <h:form id="tripulanteForm">
-            <p:growl id="growl" showDetail="true" />
-
-            <div class="assignment-bar flex align-items-center flex-wrap gap-3">
-                <div class="flex-grow-1">
-                    <p:outputLabel for="tripulante" value="Tripulante Disponible" styleClass="block mb-2 font-bold text-700" />
-                    <p:selectOneMenu id="tripulante" value="#{turnoBean.selectedTripulante}"
-                                     filter="true" filterMatchMode="contains"
-                                     styleClass="select-tripulante" required="true">
-                        <f:selectItem itemLabel="Seleccione un tripulante para asignar..." itemValue="" noSelectionOption="true" />
-                        <f:selectItems value="#{turnoBean.tripulantes}" var="tp"
-                                       itemLabel="#{tp.usuario.nombre} #{tp.usuario.apellido} [#{tp.cargo}]"
-                                       itemValue="#{tp.usuario.rut}" />
-                    </p:selectOneMenu>
+            <!-- ENCABEZADO DE CONTROL DE VUELO -->
+            <div class="flight-header-card">
+                <div class="flight-info-group">
+                    <span class="flight-badge">
+                        <i class="pi pi-compass me-1"></i>Vuelo #{turnoBean.numeroVueloDisplay}
+                    </span>
+                    <div>
+                        <h3 class="flight-route">
+                            #{turnoBean.origenIata}
+                            <i class="pi pi-arrow-right mx-2 text-primary" style="font-size: 0.9rem;"></i>
+                            #{turnoBean.destinoIata}
+                        </h3>
+                        <div class="flight-meta">
+                            <span>Origen: #{turnoBean.origenNombre} — Destino: #{turnoBean.destinoNombre}</span>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="flex align-items-end h-full pt-4">
-                    <p:commandButton value="Añadir a Tripulación"
-                                     icon="pi pi-user-plus"
-                                     action="#{turnoBean.asignarTripulanteAlTurno}"
-                                     update=":turnoForm tripulanteForm"
-                                     process="@form"
-                                     styleClass="ui-button-primary shadow-2" />
+                <div>
+                    <p:button outcome="/admin/index.xhtml" value="Volver a Vuelos" icon="pi pi-arrow-left" styleClass="ui-button-outlined ui-button-secondary" />
                 </div>
             </div>
-        </h:form>
 
-        <h:form id="turnoForm">
-            <p:card styleClass="shadow-1">
+            <!-- DASHBOARD / KPIS DE CABINA Y PILOTOS -->
+            <div class="kpi-crew-container">
+                <div class="kpi-crew-card">
+                    <div class="kpi-crew-icon" style="background: rgba(37, 99, 235, 0.15); color: #60a5fa;">
+                        <i class="pi pi-user"></i>
+                    </div>
+                    <div>
+                        <div class="kpi-crew-title">Pilotos / Comandantes</div>
+                        <div class="kpi-crew-value">#{turnoBean.totalPilotos} Asignados</div>
+                    </div>
+                </div>
+
+                <div class="kpi-crew-card">
+                    <div class="kpi-crew-icon" style="background: rgba(71, 85, 105, 0.2); color: #cbd5e1;">
+                        <i class="pi pi-shield"></i>
+                    </div>
+                    <div>
+                        <div class="kpi-crew-title">Copilotos / Primer Oficial</div>
+                        <div class="kpi-crew-value">#{turnoBean.totalCopilotos} Asignados</div>
+                    </div>
+                </div>
+
+                <div class="kpi-crew-card">
+                    <div class="kpi-crew-icon" style="background: rgba(14, 116, 144, 0.2); color: #38bdf8;">
+                        <i class="pi pi-users"></i>
+                    </div>
+                    <div>
+                        <div class="kpi-crew-title">Cabina / Sobrecargos</div>
+                        <div class="kpi-crew-value">#{turnoBean.totalCabina} Asignados</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN DE ASIGNACIÓN RÁPIDA -->
+            <h:form id="tripulanteForm">
+                <div class="assignment-box">
+                    <div class="row align-items-end g-3">
+                        <div class="col-md-9">
+                            <label>Seleccionar Personal Disponible de Flota</label>
+                            <p:selectOneMenu id="tripulante" value="#{turnoBean.selectedTripulanteRut}"
+                                             filter="true" filterMatchMode="contains">
+                                <f:selectItem itemLabel="-- Seleccionar tripulante activo por RUT o Nombre --" itemValue="" noSelectionOption="true" />
+                                <f:selectItems value="#{turnoBean.tripulantesDisponibles}" var="tp"
+                                               itemLabel="#{tp.usuario.nombre} #{tp.usuario.apellido} — [#{tp.cargo}] (RUT: #{tp.usuario.rut})"
+                                               itemValue="#{tp.usuario.rut}" />
+                            </p:selectOneMenu>
+                        </div>
+
+                        <div class="col-md-3 text-end">
+                            <p:commandButton value="Integrar a Tripulación"
+                                             icon="pi pi-user-plus"
+                                             actionListener="#{turnoBean.asignarTripulanteAlTurno}"
+                                             process="@form"
+                                             update=":tripulanteForm :turnoForm :msgs"
+                                             styleClass="btn-new w-100" />
+                        </div>
+                    </div>
+                </div>
+            </h:form>
+
+            <!-- TABLA PRINCIPAL DE TRIPULANTES DEL VUELO -->
+            <h:form id="turnoForm">
                 <p:dataTable value="#{turnoBean.turnosTripulacion}" var="turnoTrip"
                              id="dt-tripulacion"
-                             responsiveLayout="stack"
-                             paginator="true" rows="8"
+                             paginator="true" rows="10"
                              paginatorPosition="bottom"
-                             styleClass="ui-datatable-sm">
+                             styleClass="skyway-ops-table"
+                             emptyMessage="No hay tripulantes asignados a este vuelo. Utiliza el selector superior para incorporar personal.">
 
                     <f:facet name="header">
-                        <div class="flex justify-content-between align-items-center">
-                            <span>Personal Asignado</span>
-                            <p:commandButton icon="pi pi-refresh" update="dt-tripulacion" styleClass="ui-button-flat ui-button-plain" />
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 700;">MANIFIESTO Y ROSTER DE TRIPULACIÓN VIGENTE</span>
+                            <p:commandButton icon="pi pi-refresh" update="dt-tripulacion" process="@this" styleClass="ui-button-flat ui-button-plain" title="Actualizar Roster" />
                         </div>
                     </f:facet>
 
                     <p:column headerText="Tripulante" sortBy="#{turnoTrip.tripulacion1.usuario.nombre}">
-                        <div class="flex align-items-center">
-                            <p:avatar label="#{turnoTrip.tripulacion1.usuario.nombre.substring(0,1)}" shape="circle" styleClass="mr-2" />
-                            <div class="flex flex-column">
-                                <h:outputText value="#{turnoTrip.tripulacion1.usuario.nombre} #{turnoTrip.tripulacion1.usuario.apellido}" styleClass="font-bold" />
-                                <small class="text-500">#{turnoTrip.tripulacion1.usuario.rut}</small>
+                        <div class="d-flex align-items-center gap-3">
+                            <p:avatar label="#{turnoTrip.tripulacion1.usuario.nombre.substring(0,1)}" shape="circle"
+                                      style="background: var(--bg-deep); color: var(--navy-brand); border: 1px solid var(--border-subtle); font-weight: 700;" />
+                            <div>
+                                <span style="font-weight: 600; color: var(--text-heading); display: block;">
+                                    #{turnoTrip.tripulacion1.usuario.nombre} #{turnoTrip.tripulacion1.usuario.apellido}
+                                </span>
+                                <span style="color: var(--text-dim); font-size: 0.775rem;">RUT: #{turnoTrip.tripulacion1.usuario.rut}</span>
                             </div>
                         </div>
                     </p:column>
 
-                    <p:column headerText="Cargo" style="width: 150px; text-align: center;">
-                        <span class="badge-cargo #{turnoTrip.tripulacion1.cargo.toLowerCase().contains('piloto') ? 'cargo-piloto' : 'cargo-tripulante'}">
+                    <p:column headerText="Función / Cargo" style="width: 180px; text-align: center;">
+                        <span class="badge-cargo #{turnoTrip.tripulacion1.cargo.toLowerCase().contains('piloto') ? 'cargo-piloto' : (turnoTrip.tripulacion1.cargo.toLowerCase().contains('copiloto') ? 'cargo-copiloto' : 'cargo-tripulante')}">
                             #{turnoTrip.tripulacion1.cargo}
                         </span>
                     </p:column>
 
-                    <p:column headerText="Turno Operativo">
-                        <div class="flex align-items-center text-sm">
-                            <i class="pi pi-clock mr-2 text-primary"></i>
+                    <p:column headerText="Horario Operativo" style="width: 200px;">
+                        <div class="d-flex align-items-center" style="color: var(--text-body); font-size: 0.85rem;">
+                            <i class="pi pi-clock me-2" style="color: var(--navy-brand);"></i>
                             <h:outputText value="#{turnoTrip.turno1.horaInicio}">
                                 <f:convertDateTime pattern="HH:mm"/>
                             </h:outputText>
-                            <span class="mx-2">→</span>
+                            <span class="mx-2" style="color: var(--text-dim);">→</span>
                             <h:outputText value="#{turnoTrip.turno1.horaFin}">
                                 <f:convertDateTime pattern="HH:mm"/>
                             </h:outputText>
@@ -158,20 +443,21 @@
 
                     <p:column headerText="Acciones" style="width: 100px; text-align: center;">
                         <p:commandButton icon="pi pi-trash"
-                                         title="Eliminar del vuelo"
-                                         styleClass="ui-button-danger ui-button-flat p-button-rounded"
-                                         action="#{turnoBean.eliminarTripulante(turnoTrip)}"
-                                         update=":turnoForm">
-                            <p:confirm header="Confirmación" message="¿Retirar a este tripulante del vuelo?" icon="pi pi-exclamation-triangle" />
+                                         title="Retirar del Manifiesto"
+                                         styleClass="ui-button-outlined ui-button-danger"
+                                         actionListener="#{turnoBean.eliminarTripulante(turnoTrip)}"
+                                         process="@this"
+                                         update=":turnoForm :tripulanteForm :msgs">
+                            <p:confirm header="Confirmar Desvinculación" message="¿Desea desvincular a este tripulante del vuelo actual?" icon="pi pi-exclamation-triangle" />
                         </p:commandButton>
                     </p:column>
                 </p:dataTable>
-            </p:card>
 
-            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" width="350">
-                <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-flat"/>
-                <p:commandButton value="Sí, Retirar" type="button" styleClass="ui-confirmdialog-yes ui-button-danger" />
-            </p:confirmDialog>
-        </h:form>
+                <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" appendTo="@(body)" styleClass="custom-dialog">
+                    <p:commandButton value="Cancelar" type="button" styleClass="ui-confirmdialog-no ui-button-flat ui-button-secondary" />
+                    <p:commandButton value="Sí, Retirar" type="button" styleClass="ui-confirmdialog-yes btn-new" />
+                </p:confirmDialog>
+            </h:form>
+        </div>
     </ui:define>
 </ui:composition>
