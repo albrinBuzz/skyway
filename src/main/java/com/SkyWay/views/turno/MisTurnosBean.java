@@ -9,9 +9,11 @@ import com.SkyWay.util.Logger;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
+import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
 import jakarta.servlet.http.HttpSession;
-import org.omnifaces.cdi.ViewScoped;
+//import org.omnifaces.cdi.ViewScoped;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.Serializable;
@@ -39,7 +41,15 @@ public class MisTurnosBean implements Serializable {
 
     @PostConstruct
     public void init() {
-        usuario = (Usuario) session.getAttribute("usuario");
+        //usuario = (Usuario) session.getAttribute("usuario");
+
+        FacesContext facesContext = FacesContext.getCurrentInstance();
+        if (facesContext != null && facesContext.getExternalContext() != null) {
+            HttpSession session = (HttpSession) facesContext.getExternalContext().getSession(false);
+            if (session != null) {
+                usuario = (Usuario) session.getAttribute("usuario");
+            }
+        }
 
         if (usuario != null) {
             // Cargar datos específicos del tripulante
