@@ -7,56 +7,95 @@
                 template="/template/main.xhtml">
 
     <ui:define name="contenido">
-        <style>
+        <style type="text/css">
+            /* ==========================================================================
+               ✈️ SKYWAY DEEP CORPORATE NAVY PALETTE - EQUIPAJE
+               ========================================================================== */
             :root {
-                --sky-primary: #0284c7;
-                --sky-border: #1e293b;
-                --sky-bg-card: #0f172a;
-                --sky-text-main: #f8fafc;
-                --sky-text-muted: #94a3b8;
+                --bg-base: #0F172A;
+                --bg-surface: #1E293B;
+                --bg-elevated: #334155;
+                --border-color: #334155;
+
+                --aviation-blue: #3B82F6;
+                --steel-blue: #60A5FA;
+                --slate-accent: #475569;
+
+                --text-primary: #F8FAFC;
+                --text-secondary: #CBD5E1;
+                --text-muted: #94A3B8;
+
+                --status-ontime-bg: rgba(16, 185, 129, 0.15);
+                --status-ontime-text: #34D399;
+                --status-cancelled-bg: rgba(239, 68, 68, 0.15);
+                --status-cancelled-text: #F87171;
             }
 
             body {
-                background-color: #0b1120;
+                background-color: var(--bg-base) !important;
+                color: var(--text-primary) !important;
             }
 
-            .equipaje-wrapper { max-width: 1050px; margin: 2rem auto 7rem auto; padding: 0 1rem; font-family: system-ui, sans-serif; }
-            .page-header { margin-bottom: 2rem; }
-            .page-title { font-size: 1.875rem; font-weight: 800; color: var(--sky-text-main); margin: 0 0 0.5rem 0; }
-            .page-subtitle { color: var(--sky-text-muted); font-size: 0.975rem; margin: 0; }
+            .equipaje-wrapper {
+                max-width: 1050px;
+                margin: 2.5rem auto 7rem auto;
+                padding: 0 1rem;
+                font-family: system-ui, -apple-system, sans-serif;
+            }
 
-            .pasajero-card {
-                background: #111827;
-                border: 1px solid #1f2937;
-                border-radius: 12px;
-                padding: 1.75rem;
+            .page-header {
                 margin-bottom: 2rem;
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+                border-bottom: 1px solid var(--border-color);
+                padding-bottom: 1rem;
+            }
+
+            .page-title {
+                font-size: 1.75rem;
+                font-weight: 700;
+                color: var(--text-primary);
+                margin: 0 0 0.4rem 0;
+            }
+
+            .page-subtitle {
+                color: var(--text-muted);
+                font-size: 0.925rem;
+                margin: 0;
+            }
+
+            /* --- CONTENEDOR PASAJERO --- */
+            .pasajero-card {
+                background: var(--bg-surface) !important;
+                border: 1px solid var(--border-color) !important;
+                border-radius: 8px !important;
+                padding: 1.5rem !important;
+                margin-bottom: 2rem !important;
             }
 
             .pasajero-header {
                 display: flex;
                 align-items: center;
                 gap: 0.75rem;
-                font-size: 1.2rem;
+                font-size: 1.1rem;
                 font-weight: 700;
-                color: var(--sky-text-main);
+                color: var(--text-primary);
                 padding-bottom: 1rem;
-                border-bottom: 1px solid #1f2937;
+                border-bottom: 1px solid var(--border-color);
                 margin-bottom: 1.5rem;
             }
 
             .pasajero-icon-badge {
-                background: rgba(2, 132, 199, 0.15);
-                color: #38bdf8;
-                width: 36px;
-                height: 36px;
+                background: var(--bg-base);
+                color: var(--steel-blue);
+                border: 1px solid var(--border-color);
+                width: 34px;
+                height: 34px;
                 border-radius: 50%;
                 display: flex;
                 align-items: center;
                 justify-content: center;
             }
 
+            /* --- GRID DE OPCIONES --- */
             .options-grid {
                 display: grid;
                 grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -65,38 +104,130 @@
             }
 
             .option-box {
-                border: 1px solid #1f2937;
-                border-radius: 10px;
+                border: 1px solid var(--border-color);
+                border-radius: 8px;
                 padding: 1.25rem;
                 text-align: center;
-                background: #111827;
+                background: var(--bg-base);
                 display: flex;
                 flex-direction: column;
                 justify-content: space-between;
+                transition: border-color 0.2s ease;
             }
 
-            .option-icon { font-size: 1.75rem; color: #38bdf8; margin-bottom: 0.75rem; }
-            .option-title { font-weight: 700; font-size: 1.05rem; color: var(--sky-text-main); }
-            .option-desc { font-size: 0.85rem; color: var(--sky-text-muted); margin: 0.25rem 0 0.5rem 0; min-height: 2.5em; }
-            .badge-limite { font-size: 0.75rem; font-weight: 600; color: #38bdf8; background: rgba(56, 189, 248, 0.1); padding: 0.2rem 0.5rem; border-radius: 4px; margin-bottom: 0.75rem; display: inline-block; }
-            .price-tag { font-size: 1.25rem; font-weight: 800; color: var(--sky-text-main); margin-bottom: 1rem; }
-
-            .selected-section {
-                background: rgba(15, 23, 42, 0.5);
-                border-radius: 8px;
-                padding: 1rem 1.25rem;
-                border: 1px dashed #374151;
+            .option-box:hover {
+                border-color: var(--aviation-blue);
             }
 
-            .selected-title {
-                font-size: 0.85rem;
-                font-weight: 700;
-                color: var(--sky-text-muted);
-                text-transform: uppercase;
-                letter-spacing: 0.05em;
+            .option-icon {
+                font-size: 1.5rem;
+                color: var(--steel-blue);
                 margin-bottom: 0.75rem;
             }
 
+            .option-title {
+                font-weight: 700;
+                font-size: 1rem;
+                color: var(--text-primary);
+            }
+
+            .option-desc {
+                font-size: 0.85rem;
+                color: var(--text-muted);
+                margin: 0.25rem 0 0.5rem 0;
+                min-height: 2.2em;
+            }
+
+            .badge-limite {
+                font-size: 0.75rem;
+                font-weight: 600;
+                color: var(--text-secondary);
+                background: var(--bg-surface);
+                border: 1px solid var(--border-color);
+                padding: 0.2rem 0.5rem;
+                border-radius: 4px;
+                margin-bottom: 0.75rem;
+                display: inline-block;
+            }
+
+            .price-tag {
+                font-size: 1.2rem;
+                font-weight: 800;
+                color: var(--text-primary);
+                margin-bottom: 0.85rem;
+            }
+
+            /* --- BOTONES DE OPCIÓN --- */
+            .btn-add-equipaje.ui-button {
+                background: var(--aviation-blue) !important;
+                border: none !important;
+                color: #FFFFFF !important;
+                font-weight: 600 !important;
+                font-size: 0.88rem !important;
+                border-radius: 6px !important;
+                width: 100% !important;
+                padding: 8px !important;
+            }
+
+            .btn-add-equipaje.ui-button:hover {
+                background: #2563EB !important;
+            }
+
+            .btn-add-equipaje.ui-button.ui-state-disabled {
+                background: var(--bg-surface) !important;
+                color: var(--text-muted) !important;
+                border: 1px solid var(--border-color) !important;
+                opacity: 0.7 !important;
+            }
+
+            /* --- SECCIÓN SELECCIONADA Y SOLUCIÓN DE TABLA BLANCA --- */
+            .selected-section {
+                background: var(--bg-base);
+                border-radius: 8px;
+                padding: 1.25rem;
+                border: 1px solid var(--border-color);
+            }
+
+            .selected-title {
+                font-size: 0.8rem;
+                font-weight: 700;
+                color: var(--steel-blue);
+                text-transform: uppercase;
+                letter-spacing: 0.8px;
+                margin-bottom: 0.85rem;
+            }
+
+            /* REGLAS DE CORRECCIÓN DARK PARA PRIMEFACES DATATABLE */
+            .selected-section .ui-datatable,
+            .selected-section .ui-datatable-tablewrapper,
+            .selected-section table {
+                background: var(--bg-base) !important;
+                border: none !important;
+            }
+
+            .selected-section .ui-datatable th {
+                background: var(--bg-surface) !important;
+                color: var(--text-muted) !important;
+                border: 1px solid var(--border-color) !important;
+                font-size: 0.8rem !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.5px !important;
+                padding: 8px 12px !important;
+            }
+
+            .selected-section .ui-datatable td {
+                background: var(--bg-base) !important;
+                color: var(--text-primary) !important;
+                border: 1px solid var(--border-color) !important;
+                padding: 10px 12px !important;
+                font-size: 0.9rem !important;
+            }
+
+            .selected-section .ui-datatable tbody tr {
+                background: var(--bg-base) !important;
+            }
+
+            /* --- BARRA FLOTANTE DE TOTAL --- */
             .total-bar {
                 position: fixed;
                 bottom: 1.5rem;
@@ -104,20 +235,45 @@
                 transform: translateX(-50%);
                 width: calc(100% - 2rem);
                 max-width: 1018px;
-                background: rgba(15, 23, 42, 0.95);
-                backdrop-filter: blur(8px);
-                color: #ffffff;
+                background: var(--bg-surface);
+                border: 1px solid var(--border-color);
+                color: var(--text-primary);
                 padding: 1rem 2rem;
-                border-radius: 14px;
+                border-radius: 8px;
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
                 z-index: 1000;
             }
 
-            .total-label { font-size: 0.85rem; color: #94a3b8; text-transform: uppercase; }
-            .total-amount { font-size: 1.65rem; font-weight: 800; color: #38bdf8; margin-left: 0.5rem; }
+            .total-label {
+                font-size: 0.78rem;
+                color: var(--text-muted);
+                text-transform: uppercase;
+                letter-spacing: 0.8px;
+                font-weight: 700;
+            }
+
+            .total-amount {
+                font-size: 1.5rem;
+                font-weight: 800;
+                color: var(--text-primary);
+                margin-left: 0.5rem;
+            }
+
+            .btn-continue-checkout.ui-button {
+                background: var(--aviation-blue) !important;
+                border: none !important;
+                color: #FFFFFF !important;
+                border-radius: 6px !important;
+                padding: 0.6rem 1.5rem !important;
+                font-weight: 700 !important;
+            }
+
+            .btn-continue-checkout.ui-button:hover {
+                background: #2563EB !important;
+            }
         </style>
 
         <div class="equipaje-wrapper">
@@ -132,7 +288,6 @@
                 <!-- Lista de Pasajeros -->
                 <ui:repeat value="#{equipajeBean.equipajePorPasajero}" var="pasajeroDto" varStatus="status">
 
-                    <!-- Panel contenedor individual con id explicito usando index -->
                     <p:outputPanel id="panelPasajeroCard" styleClass="pasajero-card" layout="block">
                         <div class="pasajero-header">
                             <div class="pasajero-icon-badge">
@@ -160,8 +315,7 @@
                                                      actionListener="#{equipajeBean.agregarEquipaje(pasajeroDto.pasajeroIndex, 'CABINA', 'Equipaje Cabina (10kg)', 15000, 10, '40x30x20')}"
                                                      update="panelPasajeroCard :equipajeForm:resumenTotal :equipajeForm:messages"
                                                      process="@this"
-                                                     styleClass="ui-button-outlined ui-button-info"
-                                                     style="width: 100%; border-radius: 6px;"/>
+                                                     styleClass="btn-add-equipaje" />
                                 </div>
                             </div>
 
@@ -181,8 +335,7 @@
                                                      actionListener="#{equipajeBean.agregarEquipaje(pasajeroDto.pasajeroIndex, 'BODEGA_15KG', 'Maleta Bodega (15kg)', 22000, 15, '158cm')}"
                                                      update="panelPasajeroCard :equipajeForm:resumenTotal :equipajeForm:messages"
                                                      process="@this"
-                                                     styleClass="ui-button-outlined ui-button-info"
-                                                     style="width: 100%; border-radius: 6px;"/>
+                                                     styleClass="btn-add-equipaje" />
                                 </div>
                             </div>
 
@@ -202,11 +355,9 @@
                                                      actionListener="#{equipajeBean.agregarEquipaje(pasajeroDto.pasajeroIndex, 'BODEGA_23KG', 'Maleta Bodega (23kg)', 30000, 23, '158cm')}"
                                                      update="panelPasajeroCard :equipajeForm:resumenTotal :equipajeForm:messages"
                                                      process="@this"
-                                                     styleClass="ui-button-outlined ui-button-info"
-                                                     style="width: 100%; border-radius: 6px;"/>
+                                                     styleClass="btn-add-equipaje" />
                                 </div>
                             </div>
-
 
                         </div>
 
@@ -216,15 +367,15 @@
 
                             <h:outputText value="No se ha añadido equipaje adicional."
                                           rendered="#{empty pasajeroDto.maletas}"
-                                          style="color: #64748b; font-size: 0.9rem; font-style: italic;" />
+                                          style="color: var(--text-muted); font-size: 0.88rem; font-style: italic;" />
 
                             <p:dataTable value="#{pasajeroDto.maletas}"
                                          var="maleta"
                                          rendered="#{not empty pasajeroDto.maletas}"
-                                         styleClass="ui-datatable-sm ui-datatable-striped">
+                                         styleClass="ui-datatable-sm">
 
                                 <p:column headerText="Descripción">
-                                    <i class="pi pi-check-circle" style="color: #10b981; margin-right: 0.5rem;"></i>
+                                    <i class="pi pi-check-circle" style="color: var(--status-ontime-text); margin-right: 0.5rem;"></i>
                                     <h:outputText value="#{maleta.descripcion}" style="font-weight: 600;" />
                                 </p:column>
 
@@ -233,12 +384,12 @@
                                 </p:column>
 
                                 <p:column headerText="Acción" style="width: 70px; text-align: center;">
-                                    <!-- UPDATE USANDO RESOLUCIÓN RELATIVA DE CLIENT ID PRIMEFACES -->
                                     <p:commandButton icon="pi pi-trash"
                                                      actionListener="#{equipajeBean.eliminarEquipaje(pasajeroDto.pasajeroIndex, maleta)}"
                                                      update="equipajeForm :equipajeForm:resumenTotal :equipajeForm:messages"
                                                      process="@this"
-                                                     styleClass="ui-button-danger ui-button-flat ui-button-rounded"/>
+                                                     styleClass="ui-button-flat ui-button-rounded"
+                                                     style="color: var(--status-cancelled-text) !important;"/>
                                 </p:column>
                             </p:dataTable>
                         </div>
@@ -254,10 +405,9 @@
                     </div>
                     <p:commandButton value="Continuar al Pago"
                                      actionListener="#{equipajeBean.continuarACheckout}"
-                                     styleClass="ui-button-success"
+                                     styleClass="btn-continue-checkout"
                                      icon="pi pi-arrow-right"
-                                     iconPos="right"
-                                     style="border-radius: 8px; padding: 0.6rem 1.5rem; font-weight: 700;"/>
+                                     iconPos="right" />
                 </div>
             </h:form>
         </div>
