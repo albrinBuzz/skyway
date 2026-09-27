@@ -14,7 +14,10 @@ import com.SkyWay.modules.vuelo.domain.model.Vuelo;
 import com.SkyWay.modules.vuelo.domain.service.VueloService;
 import com.SkyWay.util.Logger;
 import jakarta.annotation.PostConstruct;
-import org.omnifaces.cdi.ViewScoped;
+import jakarta.faces.context.FacesContext;
+//import org.omnifaces.cdi.ViewScoped;
+
+import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,7 +72,13 @@ public class PerfilBean implements Serializable {
     public void init() {
         long startTime = System.currentTimeMillis();
 
-        usuario = (Usuario) session.getAttribute("usuario");
+        FacesContext facesContext = FacesContext.getCurrentInstance();
+        if (facesContext != null && facesContext.getExternalContext() != null) {
+            HttpSession session = (HttpSession) facesContext.getExternalContext().getSession(false);
+            if (session != null) {
+                usuario = (Usuario) session.getAttribute("usuario");
+            }
+        }
 
         if (usuario != null) {
             piloService.findByRut(usuario.getRut()).ifPresent(p -> {

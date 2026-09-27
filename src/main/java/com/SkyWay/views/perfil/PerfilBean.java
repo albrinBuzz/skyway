@@ -22,9 +22,11 @@ import com.SkyWay.util.Logger;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
+import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
 import jakarta.servlet.http.HttpSession;
-import org.omnifaces.cdi.ViewScoped;
+//import org.omnifaces.cdi.ViewScoped;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
@@ -55,9 +57,6 @@ public class PerfilBean implements Serializable {
 	private AsientoService asientoService;
 
 	@Autowired
-	private HttpSession session;
-
-	@Autowired
 	private ReservaItinerarioService reservaItinerarioService;
 
 	@Autowired
@@ -86,7 +85,15 @@ public class PerfilBean implements Serializable {
 	@PostConstruct
 	public void init() {
 		long startTime = System.currentTimeMillis();
-		usuario = (Usuario) session.getAttribute("usuario");
+
+		// ✅ Obtención segura de la sesión HTTP a través de FacesContext
+		FacesContext facesContext = FacesContext.getCurrentInstance();
+		if (facesContext != null && facesContext.getExternalContext() != null) {
+			HttpSession session = (HttpSession) facesContext.getExternalContext().getSession(false);
+			if (session != null) {
+				usuario = (Usuario) session.getAttribute("usuario");
+			}
+		}
 
 		if (usuario != null && usuario.getRoles() != null) {
 			for (Role role : usuario.getRoles()) {
@@ -151,7 +158,6 @@ public class PerfilBean implements Serializable {
 		if (tarifaActual != null && !tarifaValidator.permiteCambio(tarifaActual.getTarifaCaracteristicas())) {
 			Logger.logInfo("La tarifa no permite cambios para la reserva/itinerario actual.");
 
-			// Mensaje que ahora sí se capturará y renderizará en el <p:growl id="globalGrowl"> o <p:growl id="growl">
 			FacesContext.getCurrentInstance().addMessage(null,
 					new FacesMessage(FacesMessage.SEVERITY_ERROR, "Cambio No Permitido", "Tu tarifa asignada no permite realizar cambios de asiento."));
 		} else {
@@ -166,10 +172,6 @@ public class PerfilBean implements Serializable {
 		ticketInfos = reservaService.getTicket(usuario.getRut(), itinerario.getIdReserva(), itinerario.getIdItinerario());
 	}
 
-	/**
-	 * Resuelve el número de vuelo utilizando un HashMap en memoria para evitar
-	 * el problema N+1 de consultas recurrentes a la base de datos.
-	 */
 	public String getNumeroVuelo(int idVuelo) {
 		return numeroVueloCache.computeIfAbsent(idVuelo, id ->
 				vueloService.findById(id)

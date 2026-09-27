@@ -37,7 +37,8 @@ import java.util.*;
 
 @Component
 @Named("itinerarioDetalleBean")
-@Scope(value = "view", proxyMode = ScopedProxyMode.TARGET_CLASS)
+//@Scope(value = "view", proxyMode = ScopedProxyMode.TARGET_CLASS)
+@ViewScoped
 public class ItinerarioDetalleBean implements Serializable {
 
     private ItinerarioDTO selectedVuelo;

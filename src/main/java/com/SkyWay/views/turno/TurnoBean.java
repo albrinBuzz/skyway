@@ -7,6 +7,7 @@ import com.SkyWay.modules.turno.domain.model.Turno;
 import com.SkyWay.modules.turno.domain.service.TurnoService;
 import com.SkyWay.modules.turnotripulacion.domain.model.TurnoTripulacion;
 import com.SkyWay.modules.turnotripulacion.domain.service.TurnoTripulacionService;
+import com.SkyWay.modules.usuario.domain.model.Usuario;
 import com.SkyWay.modules.vuelo.domain.model.Vuelo;
 import com.SkyWay.util.Logger;
 import jakarta.annotation.PostConstruct;
@@ -15,6 +16,7 @@ import jakarta.faces.context.FacesContext;
 //import jakarta.faces.view.ViewScoped;
 
 import jakarta.inject.Named;
+import jakarta.servlet.http.HttpSession;
 import org.apache.juli.logging.Log;
 import org.omnifaces.cdi.ViewScoped;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,16 +49,26 @@ public class TurnoBean {
 
     @PostConstruct
     public void init(){
-        ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-        vueloId= externalContext.getRequestParameterMap().get("vueloId");
 
-        //turnosTripulacion=new ArrayList<>();
-        for (Turno turno1 : turnoService.findByVueloId(Integer.valueOf(vueloId))) {
-            Logger.logInfo(turno1.toString());
+        FacesContext facesContext = FacesContext.getCurrentInstance();
+        if (facesContext != null && facesContext.getExternalContext() != null) {
+            HttpSession session = (HttpSession) facesContext.getExternalContext().getSession(false);
+            if (session != null) {
+
+
+                ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
+                vueloId= externalContext.getRequestParameterMap().get("vueloId");
+
+                //turnosTripulacion=new ArrayList<>();
+                for (Turno turno1 : turnoService.findByVueloId(Integer.valueOf(vueloId))) {
+                    Logger.logInfo(turno1.toString());
+                }
+                turno=turnoService.findByVueloId(Integer.valueOf(vueloId)).get(0);
+                turnosTripulacion= turno.getTurnoTripulacions1();
+                tripulantes=tripulacionService.findAll();
+            }
         }
-        turno=turnoService.findByVueloId(Integer.valueOf(vueloId)).get(0);
-        turnosTripulacion= turno.getTurnoTripulacions1();
-        tripulantes=tripulacionService.findAll();
+
 
 
     }

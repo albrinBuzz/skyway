@@ -49,41 +49,37 @@ public class CambioAsientoBean {
 
     // Almacena asientos particionados en grupos
     private List<List<InfoAsientoDTO>> asientosParticionados;
-
     @PostConstruct
     public void init() {
-        // Obtener parámetros de la URL
-        idVuelo = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("idVuelo");
-        idReserva = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("idReserva");
-
-        asientosCambio=new HashMap<Integer, InfoAsientoDTO>();
-
-        // Cargar detalles del vuelo
-        //vuelo = vueloService.getInfoVuelo(Integer.parseInt(idVuelo));
-        vuelo=vueloService.findById(Integer.parseInt(idVuelo)).get();
-
-        // Si se encontró el vuelo, obtener los asientos
-        System.out.println("Vuelo seleccionado: " + vuelo);
-        //asientos = asientoService.getAsientosDisponibles(vuelo.getIdAvion(), vuelo.getIdVuelo());
-
-        asientos = asientoService.getAsientosVuelo(Integer.parseInt(idReserva), Integer.parseInt(idVuelo));
-
-
-        // Filtrar los asientos seleccionados
-        asientoSeleccionados = asientos.stream()
-                .filter(asiento -> "seleccionado".equals(asiento.getEstado()))
-                .toList();
-
-        // Verificar si los asientos se cargaron correctamente
-        System.out.println("Número de asientos cargados: " + (asientos != null ? asientos.size() : 0));
-
-        // Obtener lista de asientos
-
-
-        // Particionar los asientos en grupos (por ejemplo, 6 por fila)
+        asientosCambio = new HashMap<>();
+        asientos = new ArrayList<>();
+        asientoSeleccionados = new ArrayList<>();
         asientosParticionados = new ArrayList<>();
-        for (int i = 0; i < asientos.size(); i += 6) {
-            asientosParticionados.add(asientos.subList(i, Math.min(i + 6, asientos.size())));
+
+        // ✅ SEGURIDAD: Solo ejecutar si existe una petición web/JSF activa
+        FacesContext facesContext = FacesContext.getCurrentInstance();
+        if (facesContext != null && facesContext.getExternalContext() != null) {
+            Map<String, String> params = facesContext.getExternalContext().getRequestParameterMap();
+            idVuelo = params.get("idVuelo");
+            idReserva = params.get("idReserva");
+
+            if (idVuelo != null && !idVuelo.isEmpty() && idReserva != null && !idReserva.isEmpty()) {
+                vuelo = vueloService.findById(Integer.parseInt(idVuelo)).orElse(null);
+
+                if (vuelo != null) {
+                    asientos = asientoService.getAsientosVuelo(Integer.parseInt(idReserva), Integer.parseInt(idVuelo));
+
+                    if (asientos != null) {
+                        asientoSeleccionados = asientos.stream()
+                                .filter(asiento -> "seleccionado".equals(asiento.getEstado()))
+                                .toList();
+
+                        for (int i = 0; i < asientos.size(); i += 6) {
+                            asientosParticionados.add(asientos.subList(i, Math.min(i + 6, asientos.size())));
+                        }
+                    }
+                }
+            }
         }
     }
 

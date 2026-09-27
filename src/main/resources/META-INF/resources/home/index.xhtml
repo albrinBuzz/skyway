@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <ui:composition lang="es"
                 xmlns:f="jakarta.faces.core"
                 xmlns:h="jakarta.faces.html"
@@ -9,18 +8,14 @@
                 template="/template/main.xhtml">
 
     <ui:define name="head">
-        <title>Próximos Vuelos</title>
-        <!-- Leaflet CSS y JS -->
-        <!-- Leaflet CSS -->
-        <!-- Leaflet JS -->
-        <script
-                src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        <title>SkyWay Airlines | Sistema de Reserva de Vuelos</title>
+
+        <!-- Leaflet JS y CSS -->
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
                 integrity="sha512‑gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
                 crossorigin="">
         </script>
 
-
-        <!-- Script para inicializar el mapa -->
         <script type="text/javascript">
             <![CDATA[
             document.addEventListener("DOMContentLoaded", function () {
@@ -39,14 +34,24 @@
                 locations.forEach(function (loc) {
                     L.marker([loc.lat, loc.lng])
                         .addTo(map)
-                        .bindPopup(loc.name);
+                        .bindPopup("<b>" + loc.name + "</b><br><a href='#formOneWay' class='text-primary'>Buscar Vuelos</a>");
                 });
 
-                // Forzar recalculo del tamaño después de renderizar
                 setTimeout(function () {
                     map.invalidateSize();
                 }, 200);
             });
+
+            // Función interactiva para el modal del Blog
+            function abrirBlogModal(titulo, categoria, tiempo, imagen, contenido) {
+                document.getElementById("modalBlogTitulo").innerText = titulo;
+                document.getElementById("modalBlogCategoria").innerText = categoria;
+                document.getElementById("modalBlogTiempo").innerText = tiempo;
+                document.getElementById("modalBlogImagen").src = imagen;
+                document.getElementById("modalBlogTexto").innerText = contenido;
+                var blogModal = new bootstrap.Modal(document.getElementById('blogArticleModal'));
+                blogModal.show();
+            }
             ]]>
         </script>
 
@@ -227,16 +232,19 @@
         </style>
 
 
-
     </ui:define>
-
 
     <ui:define name="contenido">
 
+        <!-- ========================================================= -->
+        <!-- ✈️ SECCIÓN 1: BÚSQUEDA DE VUELOS                           -->
+        <!-- ========================================================= -->
         <div class="container py-5">
             <div class="card skyway-card shadow-lg p-4 rounded-3">
 
-                <h2 class="text-center mb-4 skyway-title">Buscar Vuelos</h2>
+                <h2 class="text-center mb-4 skyway-title">
+                    <i class="pi pi-send me-2"></i>Buscar Vuelos
+                </h2>
 
                 <ul class="nav nav-tabs skyway-tabs" id="searchTabs" role="tablist">
                     <li class="nav-item" role="presentation">
@@ -253,6 +261,7 @@
 
                 <div class="tab-content mt-4" id="searchTabsContent">
 
+                    <!-- Tab Solo Ida -->
                     <div class="tab-pane fade show active" id="one-way" role="tabpanel" aria-labelledby="one-way-tab">
                         <h:form id="formOneWay">
 
@@ -336,6 +345,7 @@
                         </h:form>
                     </div>
 
+                    <!-- Tab Ida y Vuelta -->
                     <div class="tab-pane fade" id="round-trip" role="tabpanel" aria-labelledby="round-trip-tab">
                         <h:form id="formRoundTrip">
 
@@ -427,284 +437,265 @@
         </div>
 
 
-
         <!-- ========================================================= -->
-        <!-- ⭐ SECCIÓN: Beneficios -->
+        <!-- 🌟 SECCIÓN 2: POR QUÉ VOLAR EN SKYWAY                     -->
         <!-- ========================================================= -->
-        <!-- Beneficios adaptados a aerolínea chilena -->
-        <div class="container mt-5">
-            <h3 class="text-center mb-5" style="color:#3b82f6; font-size:2.2rem; font-weight:bold;">
-                ¿Por qué volar con nosotros?
-            </h3>
+        <div class="container my-5">
+            <div class="text-center mb-5">
+                <span class="badge bg-primary px-3 py-2 text-uppercase mb-2">Plataforma Digital de Vuelos</span>
+                <h2 class="display-6 fw-bold text-white">¿Por qué reservar en SkyWay?</h2>
+                <p class="lead" style="color:#94a3b8;">Ofrecemos un proceso de reserva web rápido, claro y seguro.</p>
+            </div>
 
-            <div class="row text-center g-4">
-                <!-- Seguridad y confianza -->
-                <div class="col-md-3">
-                    <div class="p-4 rounded shadow-lg benefit-card">
-                        <i class="pi pi-shield" style="font-size:3rem; color:#3b82f6;"></i>
-                        <h5 class="mt-3" style="font-weight:bold; color:#ffffff;">Compra Segura</h5>
-                        <p style="color:#94a3b8; font-size:1rem;">
-                            Pago protegido — datos cifrados y respaldo bancario.
-                        </p>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="feature-card h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="mb-3 d-inline-block p-3 rounded-circle" style="background: rgba(59, 130, 246, 0.1);">
+                                <i class="pi pi-shield text-primary" style="font-size: 2rem;"></i>
+                            </div>
+                            <h4 class="text-white fw-bold mb-3">Compra Segura</h4>
+                            <p style="color:#94a3b8;">Validación de datos en tiempo real y flujo de compra protegido para resguardar la información de tus pasajeros.</p>
+                        </div>
+                        <ul class="list-unstyled text-white-50 mt-3 small">
+                            <li><i class="pi pi-check text-success me-2"></i>Confirmación inmediata de reserva</li>
+                            <li><i class="pi pi-check text-success me-2"></i>Comprobante digital</li>
+                        </ul>
                     </div>
                 </div>
 
-                <!-- Precios competitivos / descuentos locales -->
-                <div class="col-md-3">
-                    <div class="p-4 rounded shadow-lg benefit-card">
-                        <i class="pi pi-percentage" style="font-size:3rem; color:#3b82f6;"></i>
-                        <h5 class="mt-3" style="font-weight:bold; color:#ffffff;">Precios en CLP  Ofertas</h5>
-                        <p style="color:#94a3b8; font-size:1rem;">
-                            Tarifas en pesos, sin sorpresas en el cambio.
-                        </p>
+                <div class="col-md-4">
+                    <div class="feature-card h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="mb-3 d-inline-block p-3 rounded-circle" style="background: rgba(59, 130, 246, 0.1);">
+                                <i class="pi pi-percentage text-primary" style="font-size: 2rem;"></i>
+                            </div>
+                            <h4 class="text-white fw-bold mb-3">Tarifas Transparentes</h4>
+                            <p style="color:#94a3b8;">Desglose detallado de costos en pesos chilenos (CLP) desde la búsqueda inicial hasta el pago final.</p>
+                        </div>
+                        <ul class="list-unstyled text-white-50 mt-3 small">
+                            <li><i class="pi pi-check text-success me-2"></i>Precios claros por pasajero</li>
+                            <li><i class="pi pi-check text-success me-2"></i>Sin comisiones adicionales ocultas</li>
+                        </ul>
                     </div>
                 </div>
 
-                <!-- Programa de fidelidad/chilenización -->
-                <div class="col-md-3">
-                    <div class="p-4 rounded shadow-lg benefit-card">
-                        <i class="pi pi-star" style="font-size:3rem; color:#3b82f6;"></i>
-                        <h5 class="mt-3" style="font-weight:bold; color:#ffffff;">Programa de Millas</h5>
-                        <p style="color:#94a3b8; font-size:1rem;">
-                            Acumula kilómetros exclusivos — descuentos y upgrades.
-                        </p>
+                <div class="col-md-4">
+                    <div class="feature-card h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="mb-3 d-inline-block p-3 rounded-circle" style="background: rgba(59, 130, 246, 0.1);">
+                                <i class="pi pi-desktop text-primary" style="font-size: 2rem;"></i>
+                            </div>
+                            <h4 class="text-white fw-bold mb-3">Gestión 100% Web</h4>
+                            <p style="color:#94a3b8;">Accede a tus consultas y selecciona tus itinerarios directamente desde nuestra plataforma web de forma intuitiva.</p>
+                        </div>
+                        <ul class="list-unstyled text-white-50 mt-3 small">
+                            <li><i class="pi pi-check text-success me-2"></i>Búsqueda directa por código IATA</li>
+                            <li><i class="pi pi-check text-success me-2"></i>Interfaz optimizada y clara</li>
+                        </ul>
                     </div>
                 </div>
-
-                <!-- Soporte y conveniencia local -->
-                <div class="col-md-3">
-                    <div class="p-4 rounded shadow-lg benefit-card">
-                        <i class="pi pi-headphones" style="font-size:3rem; color:#3b82f6;"></i>
-                        <h5 class="mt-3" style="font-weight:bold; color:#ffffff;">Soporte 24/7 CL</h5>
-                        <p style="color:#94a3b8; font-size:1rem;">
-                            Atención en español, todos los días — antes, durante y después del vuelo.
-                        </p>
-                    </div>
-                </div>
-
             </div>
         </div>
 
-        <!-- Métodos de pago adaptados a Chile -->
-        <div class="container mt-5">
-            <h3 class="text-center mb-5" style="color:#3b82f6; font-size:2.2rem; font-weight:bold;">
-                Métodos de Pago Aceptados
-            </h3>
 
-            <div class="row justify-content-center text-center g-4">
+        <!-- ========================================================= -->
+        <!-- 📖 SECCIÓN 3: BLOG INTERACTIVO Y GUÍAS DE VIAJE           -->
+        <!-- ========================================================= -->
+        <div class="container my-5">
+            <div class="d-flex justify-content-between align-items-end mb-4">
+                <div>
+                    <span class="text-primary fw-bold">Guías y Recomendaciones</span>
+                    <h3 class="text-white fw-bold m-0" style="font-size:2.2rem;">Blog de Viajes</h3>
+                </div>
+                <span class="text-white-50 small d-none d-md-block">Haz clic en cualquier artículo para ver los detalles</span>
+            </div>
 
-                <!-- Tarjeta crédito/débito -->
-                <div class="col-6 col-md-2">
-                    <div class="p-3 rounded shadow-lg payment-card">
-                        <i class="pi pi-credit-card" style="font-size:2.5rem; color:#3b82f6;"></i>
-                        <p class="mt-2" style="color:#ffffff; font-weight:bold;">Visa / Mastercard</p>
+            <div class="row g-4">
+                <!-- Artículo 1 -->
+                <div class="col-md-4">
+                    <div class="blog-card h-100 d-flex flex-column">
+                        <div class="position-relative">
+                            <h:graphicImage value="#{resource['assets/icons/premium_photo-1661954654458-c673671d4a08.jpeg']}" alt="Guía Viaje" styleClass="w-100" />
+                            <span class="badge bg-primary position-absolute top-0 start-0 m-3">Consejos</span>
+                        </div>
+                        <div class="p-4 d-flex flex-column justify-content-between flex-grow-1">
+                            <div>
+                                <div class="d-flex align-items-center gap-3 text-white-50 mb-2 small">
+                                    <span><i class="pi pi-calendar me-1"></i>12 Ene 2025</span>
+                                    <span><i class="pi pi-clock me-1"></i>5 min lectura</span>
+                                </div>
+                                <h5 class="text-white fw-bold mb-2">Consejos para planificar tu itinerario de vuelo</h5>
+                                <p style="color:#94a3b8; font-size:0.92rem;">
+                                    Recomendaciones útiles sobre antelación en las reservas, elección de fechas y gestión de horarios.
+                                </p>
+                            </div>
+                            <div class="pt-3 border-top border-secondary mt-3">
+                                <button type="button" class="btn btn-sm btn-outline-primary w-100 fw-bold"
+                                        onclick="abrirBlogModal('Consejos para planificar tu itinerario de vuelo', 'Consejos', '5 min', '#{resource['assets/icons/premium_photo-1661954654458-c673671d4a08.jpeg']}', 'Para encontrar disponibilidad en tus itinerarios preferidos, te recomendamos buscar con tiempo de anticipación y revisar las distintas combinaciones de fechas disponibles.')">
+                                    <i class="pi pi-book me-1"></i> Leer Artículo Completo
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Transferencia / pago en línea / Webpay u otro gateway -->
-                <div class="col-6 col-md-2">
-                    <div class="p-3 rounded shadow-lg payment-card">
-                        <i class="pi pi-wallet" style="font-size:2.5rem; color:#3b82f6;"></i>
-                        <p class="mt-2" style="color:#ffffff; font-weight:bold;">Transferencia / E‑wallet</p>
+                <!-- Artículo 2 -->
+                <div class="col-md-4">
+                    <div class="blog-card h-100 d-flex flex-column">
+                        <div class="position-relative">
+                            <h:graphicImage value="#{resource['assets/icons/rio-de-janeiro-1963744_640.jpg']}" alt="Ecoturismo" styleClass="w-100" />
+                            <span class="badge bg-success position-absolute top-0 start-0 m-3">Destinos</span>
+                        </div>
+                        <div class="p-4 d-flex flex-column justify-content-between flex-grow-1">
+                            <div>
+                                <div class="d-flex align-items-center gap-3 text-white-50 mb-2 small">
+                                    <span><i class="pi pi-calendar me-1"></i>08 Feb 2025</span>
+                                    <span><i class="pi pi-clock me-1"></i>4 min lectura</span>
+                                </div>
+                                <h5 class="text-white fw-bold mb-2">Descubre los atractivos turísticos de Sudamérica</h5>
+                                <p style="color:#94a3b8; font-size:0.92rem;">
+                                    Una mirada rápida a las principales ciudades culturales y paisajes naturales de la región.
+                                </p>
+                            </div>
+                            <div class="pt-3 border-top border-secondary mt-3">
+                                <button type="button" class="btn btn-sm btn-outline-primary w-100 fw-bold"
+                                        onclick="abrirBlogModal('Descubre los atractivos turísticos de Sudamérica', 'Destinos', '4 min', '#{resource['assets/icons/rio-de-janeiro-1963744_640.jpg']}', 'Sudamérica ofrece una diversidad geográfica increíble. Revisa nuestras rutas sugeridas para conectar con las principales capitales de la región.')">
+                                    <i class="pi pi-book me-1"></i> Leer Artículo Completo
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Pago local efectivo / Servipag / opciones Chilenas -->
-                <div class="col-6 col-md-2">
-                    <div class="p-3 rounded shadow-lg payment-card">
-                        <i class="pi pi-money-bill" style="font-size:2.5rem; color:#3b82f6;"></i>
-                        <p class="mt-2" style="color:#ffffff; font-weight:bold;">Pago en efectivo o depósito</p>
+                <!-- Artículo 3 -->
+                <div class="col-md-4">
+                    <div class="blog-card h-100 d-flex flex-column">
+                        <div class="position-relative">
+                            <h:graphicImage value="#{resource['assets/icons/pexels-abhishek-verma-209130-670261.jpg']}" alt="Planificación" styleClass="w-100" />
+                            <span class="badge bg-warning text-dark position-absolute top-0 start-0 m-3">Guías</span>
+                        </div>
+                        <div class="p-4 d-flex flex-column justify-content-between flex-grow-1">
+                            <div>
+                                <div class="d-flex align-items-center gap-3 text-white-50 mb-2 small">
+                                    <span><i class="pi pi-calendar me-1"></i>20 Feb 2025</span>
+                                    <span><i class="pi pi-clock me-1"></i>6 min lectura</span>
+                                </div>
+                                <h5 class="text-white fw-bold mb-2">Preparativos generales para tu viaje</h5>
+                                <p style="color:#94a3b8; font-size:0.92rem;">
+                                    Lista de verificación de documentos, equipaje permitido e información relevante para el aeropuerto.
+                                </p>
+                            </div>
+                            <div class="pt-3 border-top border-secondary mt-3">
+                                <button type="button" class="btn btn-sm btn-outline-primary w-100 fw-bold"
+                                        onclick="abrirBlogModal('Preparativos generales para tu viaje', 'Guías', '6 min', '#{resource['assets/icons/pexels-abhishek-verma-209130-670261.jpg']}', 'Recuerda verificar que tus documentos de identificación estén vigentes antes de tu fecha de viaje y llegar con anticipación al aeropuerto.')">
+                                    <i class="pi pi-book me-1"></i> Leer Artículo Completo
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
-
-                <!-- Pago con tarjetas bancarias locales / débito nacional -->
-                <div class="col-6 col-md-2">
-                    <div class="p-3 rounded shadow-lg payment-card">
-                        <i class="pi pi-wallet" style="font-size:2.5rem; color:#3b82f6;"></i>
-                        <p class="mt-2" style="color:#ffffff; font-weight:bold;">Débito Nacional / RedCompra</p>
-                    </div>
-                </div>
-
             </div>
         </div>
 
-        <style>
-            .benefit-card {
-                background: #101b33;
-                border: 1px solid #1e2a44;
-                transition: transform 0.3s, box-shadow 0.3s;
-            }
-            .benefit-card:hover {
-                transform: translateY(-8px);
-                box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-            }
-
-            .payment-card {
-                background: #101b33;
-                border: 1px solid #1e2a44;
-                transition: transform 0.3s, box-shadow 0.3s;
-            }
-            .payment-card:hover {
-                transform: translateY(-5px);
-                box-shadow: 0 15px 30px rgba(0,0,0,0.4);
-            }
-        </style>
-
-
 
         <!-- ========================================================= -->
-        <!-- ⭐ SECCIÓN EXTRA: Destinos Recomendados -->
+        <!-- 🎯 SECCIÓN 4: OFERTAS Y DESTINOS (RELEGADAS AL 2º PLANO)  -->
         <!-- ========================================================= -->
-        <div class="container mt-5 mb-5">
-            <h3 class="text-center mb-4" style="color:#3b82f6;">Destinos Recomendados</h3>
+        <div class="secondary-section my-5">
+            <div class="container">
 
-            <div class="row">
+                <div class="row align-items-center mb-4">
+                    <div class="col-md-8">
+                        <h4 class="text-white fw-bold m-0"><i class="pi pi-tag me-2 text-primary"></i>Rutas Sugeridas y Ofertas</h4>
+                        <p class="text-white-50 m-0">Precios promocionales disponibles según las fechas seleccionadas.</p>
+                    </div>
+                </div>
 
-                <!-- Nueva York -->
-                <div class="col-md-6 mb-4">
-                    <div class="card shadow" style="background:#101b33; border:1px solid #1e2a44; border-radius: 15px; overflow: hidden; transition: transform 0.3s;">
-                        <h:graphicImage
-                                value="#{resource['assets/icons/premium_photo-1661954654458-c673671d4a08.jpeg']}"
-                                alt="Nueva York"
-                                style="width:100%; height:300px; object-fit:cover;" />
-                        <div class="card-body" style="padding: 1.5rem;">
-                            <h5 class="card-title text-white" style="font-size:1.8rem; font-weight:bold; margin-bottom:0.5rem;">Nueva York</h5>
-                            <p class="card-text" style="color:#94a3b8; font-size:1.1rem; margin-bottom:1rem;">
-                                La ciudad que nunca duerme.
-                            </p>
-                            <p:commandButton value="Ver vuelos"
-                                             styleClass="p-button-success p-button-lg"
-                                             icon="pi pi-search"
-                                             style="width:100%;" />
+                <div class="row g-3 mb-5">
+                    <div class="col-md-4">
+                        <div class="p-3 rounded-3" style="background:#101b33; border: 1px solid #1e3a5c;">
+                            <div class="d-flex justify-content-between">
+                                <span class="badge bg-primary">30% OFF</span>
+                                <span class="text-white-50 small">Solo ida</span>
+                            </div>
+                            <h6 class="text-white fw-bold mt-2 mb-1">Santiago ➔ Rio de Janeiro</h6>
+                            <small style="color:#94a3b8;">Tarifa promocional</small>
+                            <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top border-secondary">
+                                <span class="text-primary fw-bold">$89.900 CLP</span>
+                                <a href="#formOneWay" class="btn btn-sm btn-outline-primary">Ver fechas</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="p-3 rounded-3" style="background:#101b33; border: 1px solid #1e3a5c;">
+                            <div class="d-flex justify-content-between">
+                                <span class="badge bg-primary">Destacado</span>
+                                <span class="text-white-50 small">Ida y vuelta</span>
+                            </div>
+                            <h6 class="text-white fw-bold mt-2 mb-1">Santiago ➔ Madrid</h6>
+                            <small style="color:#94a3b8;">Ruta internacional</small>
+                            <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top border-secondary">
+                                <span class="text-primary fw-bold">$540.000 CLP</span>
+                                <a href="#formRoundTrip" class="btn btn-sm btn-outline-primary">Ver fechas</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="p-3 rounded-3" style="background:#101b33; border: 1px solid #1e3a5c;">
+                            <div class="d-flex justify-content-between">
+                                <span class="badge bg-success">Promoción</span>
+                                <span class="text-white-50 small">Solo ida</span>
+                            </div>
+                            <h6 class="text-white fw-bold mt-2 mb-1">Santiago ➔ Nueva York</h6>
+                            <small style="color:#94a3b8;">Tarifa Promo</small>
+                            <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top border-secondary">
+                                <span class="text-primary fw-bold">$310.000 CLP</span>
+                                <a href="#formOneWay" class="btn btn-sm btn-outline-primary">Ver fechas</a>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Madrid -->
-                <div class="col-md-6 mb-4">
-                    <div class="card shadow" style="background:#101b33; border:1px solid #1e2a44; border-radius: 15px; overflow: hidden; transition: transform 0.3s;">
-                        <h:graphicImage
-                                value="#{resource['assets/icons/pexels-abhishek-verma-209130-670261.jpg']}"
-                                alt="Madrid"
-                                style="width:100%; height:300px; object-fit:cover;" />
-                        <div class="card-body" style="padding: 1.5rem;">
-                            <h5 class="card-title text-white" style="font-size:1.8rem; font-weight:bold; margin-bottom:0.5rem;">Madrid</h5>
-                            <p class="card-text" style="color:#94a3b8; font-size:1.1rem; margin-bottom:1rem;">
-                                Historia, cultura y gastronomía.
-                            </p>
-                            <p:commandButton value="Ver vuelos"
-                                             styleClass="p-button-success p-button-lg"
-                                             icon="pi pi-search"
-                                             style="width:100%;" />
+                <!-- Destinos Frecuentes -->
+                <h4 class="text-white fw-bold mb-3"><i class="pi pi-map-marker me-2 text-primary"></i>Destinos Disponibles</h4>
+                <div class="row g-3">
+                    <div class="col-6 col-md-3">
+                        <div class="card bg-dark text-white border-secondary overflow-hidden">
+                            <h:graphicImage value="#{resource['assets/icons/premium_photo-1661954654458-c673671d4a08.jpeg']}" style="height: 120px; object-fit: cover;" />
+                            <div class="card-img-overlay bg-dark bg-opacity-50 d-flex flex-column justify-content-end p-2">
+                                <h6 class="fw-bold m-0">Nueva York</h6>
+                                <small class="text-white-50">EE.UU.</small>
+                            </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Río de Janeiro -->
-                <div class="col-md-6 mb-4">
-                    <div class="card shadow" style="background:#101b33; border:1px solid #1e2a44; border-radius: 15px; overflow: hidden; transition: transform 0.3s;">
-                        <h:graphicImage
-                                value="#{resource['assets/icons/rio-de-janeiro-1963744_640.jpg']}"
-                                alt="Río de Janeiro"
-                                style="width:100%; height:300px; object-fit:cover;" />
-                        <div class="card-body" style="padding: 1.5rem;">
-                            <h5 class="card-title text-white" style="font-size:1.8rem; font-weight:bold; margin-bottom:0.5rem;">Río de Janeiro</h5>
-                            <p class="card-text" style="color:#94a3b8; font-size:1.1rem; margin-bottom:1rem;">
-                                Playas, samba y alegría.
-                            </p>
-                            <p:commandButton value="Ver vuelos"
-                                             styleClass="p-button-success p-button-lg"
-                                             icon="pi pi-search"
-                                             style="width:100%;" />
+                    <div class="col-6 col-md-3">
+                        <div class="card bg-dark text-white border-secondary overflow-hidden">
+                            <h:graphicImage value="#{resource['assets/icons/pexels-abhishek-verma-209130-670261.jpg']}" style="height: 120px; object-fit: cover;" />
+                            <div class="card-img-overlay bg-dark bg-opacity-50 d-flex flex-column justify-content-end p-2">
+                                <h6 class="fw-bold m-0">Madrid</h6>
+                                <small class="text-white-50">España</small>
+                            </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Tokio -->
-                <div class="col-md-6 mb-4">
-                    <div class="card shadow" style="background:#101b33; border:1px solid #1e2a44; border-radius: 15px; overflow: hidden; transition: transform 0.3s;">
-                        <h:graphicImage
-                                value="#{resource['assets/icons/pexels-apasaric-2506923.jpg']}"
-                                alt="Tokio"
-                                style="width:100%; height:300px; object-fit:cover;" />
-                        <div class="card-body" style="padding: 1.5rem;">
-                            <h5 class="card-title text-white" style="font-size:1.8rem; font-weight:bold; margin-bottom:0.5rem;">Tokio</h5>
-                            <p class="card-text" style="color:#94a3b8; font-size:1.1rem; margin-bottom:1rem;">
-                                Tradición y tecnología en perfecta armonía.
-                            </p>
-                            <p:commandButton value="Ver vuelos"
-                                             styleClass="p-button-success p-button-lg"
-                                             icon="pi pi-search"
-                                             style="width:100%;" />
+                    <div class="col-6 col-md-3">
+                        <div class="card bg-dark text-white border-secondary overflow-hidden">
+                            <h:graphicImage value="#{resource['assets/icons/rio-de-janeiro-1963744_640.jpg']}" style="height: 120px; object-fit: cover;" />
+                            <div class="card-img-overlay bg-dark bg-opacity-50 d-flex flex-column justify-content-end p-2">
+                                <h6 class="fw-bold m-0">Río de Janeiro</h6>
+                                <small class="text-white-50">Brasil</small>
+                            </div>
                         </div>
                     </div>
-                </div>
-
-            </div>
-
-            <!-- Estilos hover -->
-            <style>
-                .card.shadow:hover {
-                    transform: translateY(-5px);
-                    box-shadow: 0 15px 30px rgba(0,0,0,0.4);
-                }
-            </style>
-
-
-        </div>
-
-
-        <!-- ========================================================= -->
-        <!-- SECCIÓN: Mapa Interactivo -->
-        <!-- ========================================================= -->
-        <!-- SECCIÓN LEAFLET MAP INTERACTIVO -->
-        <div class="container mt-5">
-            <h3 class="text-center mb-4" style="color:#3b82f6;">Nuestros Destinos en el Mapa</h3>
-            <div id="leafletMap" style="border:1px solid #1e2a44; border-radius:8px;"></div>
-        </div>
-
-
-
-
-        <!-- ========================================================= -->
-        <!-- SECCIÓN: Blog / Artículos de Viaje -->
-        <!-- ========================================================= -->
-        <div class="container mt-5">
-            <h3 class="text-center mb-4" style="color:#3b82f6;">Blog de Viajes</h3>
-            <div class="row">
-
-                <div class="col-md-4 mb-4">
-                    <div class="card" style="background:#101b33; border:1px solid #1e2a44;">
-                        <div class="card-body">
-                            <h5 class="card-title text-white">Cómo viajar barato en 2025</h5>
-                            <p class="card-text" style="color:#94a3b8;">
-                                Consejos prácticos para conseguir vuelos, hospedaje y más sin gastar de más.
-                            </p>
-                            <p:commandButton value="Leer más" styleClass="p-button-sm" icon="pi pi-book" />
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-4 mb-4">
-                    <div class="card" style="background:#101b33; border:1px solid #1e2a44;">
-                        <div class="card-body">
-                            <h5 class="card-title text-white">Destinos sostenibles para visitar</h5>
-                            <p class="card-text" style="color:#94a3b8;">
-                                Lugares eco-friendly que puedes conocer sin dañar el medioambiente.
-                            </p>
-                            <p:commandButton value="Leer más" styleClass="p-button-sm" icon="pi pi-book" />
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-4 mb-4">
-                    <div class="card" style="background:#101b33; border:1px solid #1e2a44;">
-                        <div class="card-body">
-                            <h5 class="card-title text-white">¿Cuándo es la mejor temporada para viajar?</h5>
-                            <p class="card-text" style="color:#94a3b8;">
-                                Guía para elegir las mejores fechas según clima, festividades y precios.
-                            </p>
-                            <p:commandButton value="Leer más" styleClass="p-button-sm" icon="pi pi-book" />
+                    <div class="col-6 col-md-3">
+                        <div class="card bg-dark text-white border-secondary overflow-hidden">
+                            <h:graphicImage value="#{resource['assets/icons/pexels-apasaric-2506923.jpg']}" style="height: 120px; object-fit: cover;" />
+                            <div class="card-img-overlay bg-dark bg-opacity-50 d-flex flex-column justify-content-end p-2">
+                                <h6 class="fw-bold m-0">Tokio</h6>
+                                <small class="text-white-50">Japón</small>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -714,73 +705,84 @@
 
 
         <!-- ========================================================= -->
-        <!-- SECCIÓN: FAQ (Preguntas frecuentes) -->
+        <!-- 🗺️ MAPA INTERACTIVO Y METODOS DE PAGO                     -->
         <!-- ========================================================= -->
-        <div class="container mt-5 mb-5">
-            <h3 class="text-center mb-4" style="color:#3b82f6;">Preguntas Frecuentes</h3>
+        <div class="container my-5">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-7">
+                    <h3 class="text-white fw-bold mb-3"><i class="pi pi-globe me-2 text-primary"></i>Red de Rutas Registradas</h3>
+                    <div id="leafletMap" style="height: 350px; border:1px solid #1e3a5c; border-radius:12px;"></div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="p-4 rounded-3 skyway-card">
+                        <h4 class="text-white fw-bold mb-3"><i class="pi pi-credit-card me-2 text-primary"></i>Métodos de Pago Soportados</h4>
+                        <p class="text-white-50 small">Opciones simuladas de pago para la plataforma.</p>
+
+                        <div class="row g-2 text-center">
+                            <div class="col-6">
+                                <div class="p-2 border border-secondary rounded text-white">
+                                    <i class="pi pi-credit-card text-primary d-block fs-4"></i>
+                                    <small>Tarjetas Crédito/Débito</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-2 border border-secondary rounded text-white">
+                                    <i class="pi pi-shield text-primary d-block fs-4"></i>
+                                    <small>Pasarela Web</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-2 border border-secondary rounded text-white">
+                                    <i class="pi pi-wallet text-primary d-block fs-4"></i>
+                                    <small>Transferencia Bancaria</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-2 border border-secondary rounded text-white">
+                                    <i class="pi pi-check-circle text-primary d-block fs-4"></i>
+                                    <small>Pago Seguro</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ========================================================= -->
+        <!-- ❓ PREGUNTAS FRECUENTES (FAQ)                            -->
+        <!-- ========================================================= -->
+        <div class="container my-5">
+            <h3 class="text-center text-white fw-bold mb-4">Preguntas Frecuentes</h3>
             <div class="accordion" id="faqAccordion">
 
-                <div class="accordion-item" style="background:#101b33; border:1px solid #1e2a44;">
+                <div class="accordion-item mb-2" style="background:#101b33; border:1px solid #1e2a44; border-radius:8px; overflow:hidden;">
                     <h2 class="accordion-header" id="faqHeadingOne">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                                 data-bs-target="#faqCollapseOne" aria-expanded="false" aria-controls="faqCollapseOne"
-                                style="background:#101b33; color:#e2e8f0;">
-                            ¿Cómo puedo cambiar o cancelar mi vuelo?
+                                style="background:#101b33; color:#e2e8f0; font-weight:600;">
+                            <i class="pi pi-question-circle me-2 text-primary"></i>¿Cómo puedo buscar y consultar un vuelo?
                         </button>
                     </h2>
-                    <div id="faqCollapseOne" class="accordion-collapse collapse" aria-labelledby="faqHeadingOne"
-                         data-bs-parent="#faqAccordion">
+                    <div id="faqCollapseOne" class="accordion-collapse collapse" aria-labelledby="faqHeadingOne" data-bs-parent="#faqAccordion">
                         <div class="accordion-body" style="color:#94a3b8; background:#0a1224;">
-                            Puedes cambiar o cancelar tu vuelo hasta 24 horas antes, dependiendo de la tarifa. Consulta nuestra política de cambios
-                            en la sección de Términos y Condiciones o contáctanos para asistencia personalizada.
+                            Ingresa al buscador superior, selecciona el tipo de viaje (Solo Ida o Ida y Vuelta), elige los aeropuertos de origen y destino, la fecha y haz clic en "Buscar Vuelos".
                         </div>
                     </div>
                 </div>
 
-                <div class="accordion-item" style="background:#101b33; border:1px solid #1e2a44;">
+                <div class="accordion-item mb-2" style="background:#101b33; border:1px solid #1e2a44; border-radius:8px; overflow:hidden;">
                     <h2 class="accordion-header" id="faqHeadingTwo">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                                 data-bs-target="#faqCollapseTwo" aria-expanded="false" aria-controls="faqCollapseTwo"
-                                style="background:#101b33; color:#e2e8f0;">
-                            ¿Qué métodos de pago aceptan?
+                                style="background:#101b33; color:#e2e8f0; font-weight:600;">
+                            <i class="pi pi-question-circle me-2 text-primary"></i>¿Qué información incluye la consulta de itinerario?
                         </button>
                     </h2>
-                    <div id="faqCollapseTwo" class="accordion-collapse collapse" aria-labelledby="faqHeadingTwo"
-                         data-bs-parent="#faqAccordion">
+                    <div id="faqCollapseTwo" class="accordion-collapse collapse" aria-labelledby="faqHeadingTwo" data-bs-parent="#faqAccordion">
                         <div class="accordion-body" style="color:#94a3b8; background:#0a1224;">
-                            Aceptamos tarjetas Visa, Mastercard, PayPal, transferencia bancaria y criptomonedas. Todos los pagos son seguros y están protegidos.
-                        </div>
-                    </div>
-                </div>
-
-                <div class="accordion-item" style="background:#101b33; border:1px solid #1e2a44;">
-                    <h2 class="accordion-header" id="faqHeadingThree">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                data-bs-target="#faqCollapseThree" aria-expanded="false" aria-controls="faqCollapseThree"
-                                style="background:#101b33; color:#e2e8f0;">
-                            ¿Puedo reservar solo ida o ida y vuelta?
-                        </button>
-                    </h2>
-                    <div id="faqCollapseThree" class="accordion-collapse collapse" aria-labelledby="faqHeadingThree"
-                         data-bs-parent="#faqAccordion">
-                        <div class="accordion-body" style="color:#94a3b8; background:#0a1224;">
-                            Sí, ofrecemos ambas opciones. Puedes seleccionar “Solo Ida” o “Ida y Vuelta” en el buscador según tus necesidades.
-                        </div>
-                    </div>
-                </div>
-
-                <div class="accordion-item" style="background:#101b33; border:1px solid #1e2a44;">
-                    <h2 class="accordion-header" id="faqHeadingFour">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                data-bs-target="#faqCollapseFour" aria-expanded="false" aria-controls="faqCollapseFour"
-                                style="background:#101b33; color:#e2e8f0;">
-                            ¿Cómo se asegura la privacidad de mis datos personales?
-                        </button>
-                    </h2>
-                    <div id="faqCollapseFour" class="accordion-collapse collapse" aria-labelledby="faqHeadingFour"
-                         data-bs-parent="#faqAccordion">
-                        <div class="accordion-body" style="color:#94a3b8; background:#0a1224;">
-                            Usamos encriptación SSL para todas las transacciones y almacenamos tus datos con los más altos estándares de seguridad. No compartimos tu información con terceros.
+                            Muestra la hora de salida, hora de llegada, número de vuelo, aeropuertos involucrados y la tarifa base disponible por pasajero.
                         </div>
                     </div>
                 </div>
@@ -789,16 +791,31 @@
         </div>
 
 
-
-
-
-
-
-
-
-
-
+        <!-- ========================================================= -->
+        <!-- 💬 MODAL INTERACTIVO PARA LECTURA DEL BLOG               -->
+        <!-- ========================================================= -->
+        <div class="modal fade" id="blogArticleModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content" style="background:#101b33; border:1px solid #1e3a5c; color:#e6eef7;">
+                    <div class="modal-header border-bottom border-secondary">
+                        <div>
+                            <span class="badge bg-primary" id="modalBlogCategoria">Categoría</span>
+                            <small class="ms-2 text-white-50" id="modalBlogTiempo">Lectura</small>
+                            <h4 class="modal-title fw-bold text-white mt-1" id="modalBlogTitulo">Título del Artículo</h4>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <img id="modalBlogImagen" src="" class="img-fluid rounded-3 mb-3 w-100" style="max-height: 280px; object-fit: cover;" alt="Blog" />
+                        <p id="modalBlogTexto" style="color:#94a3b8; line-height: 1.7; font-size:1.05rem;"></p>
+                    </div>
+                    <div class="modal-footer border-top border-secondary">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        <a href="#formOneWay" class="btn btn-primary" data-bs-dismiss="modal">Ir al Buscador</a>
+                    </div>
+                </div>
+            </div>
+        </div>
 
     </ui:define>
-
 </ui:composition>

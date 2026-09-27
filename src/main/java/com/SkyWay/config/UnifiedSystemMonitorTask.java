@@ -82,12 +82,12 @@ public class UnifiedSystemMonitorTask {
     public void startMonitor() {
         Logger.logInfo("📊 Monitor Unificado Cloud iniciado (Intervalo: " + MONITOR_INTERVAL_SECONDS + "s)");
 
-        this.scheduler.scheduleAtFixedRate(
+        /*this.scheduler.scheduleAtFixedRate(
                 this::collectAndBroadcastMetrics,
                 2,
                 MONITOR_INTERVAL_SECONDS,
                 TimeUnit.SECONDS
-        );
+        );*/
     }
 
     //@Scheduled(fixedDelay = 5000)
