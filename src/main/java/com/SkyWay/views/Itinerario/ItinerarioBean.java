@@ -329,14 +329,16 @@ public class ItinerarioBean implements Serializable {
     }
 
     public void actualizarPrecioTarifaIndividual(Tarifa tarifa, Object valorInput) {
-        if (tarifa == null || valorInput == null || valorInput.toString().trim().isEmpty()) {
+        if (tarifa == null || valorInput == null) {
             addMessage(FacesMessage.SEVERITY_WARN, "Validación", "Debe proporcionar un monto tarifario correcto.");
             return;
         }
 
         try {
             BigDecimal precioIngresado;
-            if (valorInput instanceof Number) {
+            if (valorInput instanceof BigDecimal) {
+                precioIngresado = (BigDecimal) valorInput;
+            } else if (valorInput instanceof Number) {
                 precioIngresado = BigDecimal.valueOf(((Number) valorInput).doubleValue());
             } else {
                 String limpio = valorInput.toString().replaceAll("[^0-9.]", "");
@@ -344,8 +346,10 @@ public class ItinerarioBean implements Serializable {
             }
 
             this.precioTarifas.put(tarifa.getIdTarifa(), precioIngresado);
-            addMessage(FacesMessage.SEVERITY_INFO, "Precio Modificado", "Categoría " + tarifa.getNombre() + ": $" + precioIngresado);
-        } catch (NumberFormatException e) {
+            Logger.logInfo("Tarifa " + tarifa.getNombre() + " asignada: $" + precioIngresado);
+            addMessage(FacesMessage.SEVERITY_INFO, "Tarifa Asignada", "Categoría " + tarifa.getNombre() + ": $" + precioIngresado);
+        } catch (Exception e) {
+            Logger.logInfo("Error parseando tarifa: " + e.getMessage());
             addMessage(FacesMessage.SEVERITY_ERROR, "Error de Formato", "El valor monetario no es válido.");
         }
     }
@@ -374,6 +378,29 @@ public class ItinerarioBean implements Serializable {
 
         if (ok) {
             try {
+
+                this.itinerariosAsignados.sort(Comparator.comparingInt(ItinerarioVuelo::getOrden));
+
+                // -----------------------------------------------------------------
+                // 2. CÁLCULO AUTOMÁTICO DE HORARIOS Y DURACIÓN TOTAL
+                // -----------------------------------------------------------------
+                Vuelo primerVuelo = this.itinerariosAsignados.get(0).getVuelo();
+                Vuelo ultimoVuelo = this.itinerariosAsignados.get(this.itinerariosAsignados.size() - 1).getVuelo();
+
+                Timestamp fechaSalidaInicial = primerVuelo.getFechaHoraSalida();
+                Timestamp fechaLlegadaFinal = ultimoVuelo.getFechaHoraLlegada();
+
+                this.itinerario.setHoraSalida(fechaSalidaInicial);
+                this.itinerario.setHoraLlegada(fechaLlegadaFinal);
+
+                if (fechaSalidaInicial != null && fechaLlegadaFinal != null) {
+                    java.time.Duration duracion = java.time.Duration.between(
+                            fechaSalidaInicial.toInstant(),
+                            fechaLlegadaFinal.toInstant()
+                    );
+                    //this.itinerario.setDuracionTotal(duracion);
+                }
+
                 this.itinerario.setNumeroEscalas(Math.max(0, this.itinerariosAsignados.size() - 1));
 
                 Itinerario itinerarioGuardado = itinerarioService.save(this.itinerario);
@@ -593,6 +620,25 @@ public class ItinerarioBean implements Serializable {
             Logger.logInfo("Error serializando itinerario armado para mapa: " + e.getMessage());
             this.itinerarioArmadoMapaJson = "[]";
         }
+    }
+
+    public String getDuracionTotalFormateada() {
+        if (itinerariosAsignados == null || itinerariosAsignados.isEmpty()) {
+            return "0h 0m";
+        }
+
+        Vuelo primero = itinerariosAsignados.get(0).getVuelo();
+        Vuelo ultimo = itinerariosAsignados.get(itinerariosAsignados.size() - 1).getVuelo();
+
+        if (primero.getFechaHoraSalida() == null || ultimo.getFechaHoraLlegada() == null) {
+            return "N/A";
+        }
+
+        long millis = ultimo.getFechaHoraLlegada().getTime() - primero.getFechaHoraSalida().getTime();
+        long horas = java.util.concurrent.TimeUnit.MILLISECONDS.toHours(millis);
+        long minutos = java.util.concurrent.TimeUnit.MILLISECONDS.toMinutes(millis) % 60;
+
+        return String.format("%dh %02dm", horas, minutos);
     }
 
     public String getAeropuertosMapaJson() { return aeropuertosMapaJson; }
