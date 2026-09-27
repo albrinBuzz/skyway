@@ -4,6 +4,7 @@ import com.SkyWay.modules.tarifa.domain.model.Tarifa;
 import com.SkyWay.modules.tarifa.domain.repository.TarifaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,19 +15,31 @@ public class TarifaService {
     @Autowired
     private TarifaRepository tarifaRepository;
 
-    public List<Tarifa> listarTarifas() {
+    @Transactional(readOnly = true)
+    public List<Tarifa> findAll() {
         return tarifaRepository.findAll();
     }
 
-    public Tarifa guardarTarifa(Tarifa tarifa) {
-        return tarifaRepository.save(tarifa);
-    }
-
-    public Optional<Tarifa> buscarPorId(Integer id) {
+    @Transactional(readOnly = true)
+    public Optional<Tarifa> findById(Integer id) {
         return tarifaRepository.findById(id);
     }
 
-    public void eliminarTarifa(Integer id) {
+    @Transactional
+    public Tarifa save(Tarifa tarifa) {
+        return tarifaRepository.save(tarifa);
+    }
+
+    @Transactional
+    public void deleteById(Integer id) {
         tarifaRepository.deleteById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean existsByNombreAndNotId(String nombre, Integer id) {
+        if (id == null) {
+            return tarifaRepository.findByNombreIgnoreCase(nombre).isPresent();
+        }
+        return tarifaRepository.existsByNombreIgnoreCaseAndIdTarifaNot(nombre, id);
     }
 }
