@@ -69,4 +69,11 @@ public class Fabricante implements Serializable {
 		return modeloAvion;
 	}
 
+	@Override
+	public String toString() {
+		return "Fabricante{" +
+				"nombre='" + nombre + '\'' +
+				", idFabricante=" + idFabricante +
+				'}';
+	}
 }

@@ -84,4 +84,12 @@ public class ModeloAvion implements Serializable {
 		this.fabricante = fabricante;
 	}
 
+	@Override
+	public String toString() {
+		return "ModeloAvion{" +
+				"idModelo=" + idModelo +
+				", nombre='" + nombre + '\'' +
+				", fabricante=" + fabricante.toString() +
+				'}';
+	}
 }
