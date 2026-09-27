@@ -3,6 +3,7 @@ package com.SkyWay.modules.notificacion.domain.service;
 import com.SkyWay.config.dataBase.PgNotifyConfig;
 import com.SkyWay.util.Logger;
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import jakarta.mail.internet.MimeMessage;
 import org.postgresql.PGConnection;
 import org.postgresql.PGNotification;
@@ -12,6 +13,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
@@ -34,12 +36,21 @@ public class NotificacionListenerService {
 
     @PostConstruct
     public void startListener() {
+        Logger.logInfo("🚀 [INIT] Ejecutando PostConstruct de NotificacionListenerService...");
         listenerExecutor.submit(this::listenToChannel);
     }
 
+    @PreDestroy
+    public void stopListener() {
+        this.running = false;
+        listenerExecutor.shutdownNow();
+        Logger.logInfo("🛑 Listener PG_NOTIFY detenido.");
+    }
+
     private void listenToChannel() {
+
+        Logger.logInfo("📡 Iniciando hilo de escucha PG_NOTIFY en segundo plano...");
         while (running) {
-            // Manejo automático de reconexión si cae la BD
             try (Connection conn = DriverManager.getConnection(
                     config.getJdbcUrl(), config.getUsername(), config.getPassword())) {
 
@@ -52,25 +63,30 @@ public class NotificacionListenerService {
                 Logger.logInfo("📡 Escuchando canal 'nuevo_correo' (PG LISTEN activo)...");
 
                 while (running && !conn.isClosed()) {
-                    // getNotifications(5000) bloquea el hilo hasta 5 segundos esperando un evento.
-                    // NO requiere ejecutar "SELECT 1" ni Thread.sleep()
-                    PGNotification[] notifications = pgconn.getNotifications(5000);
+                    // Fuerza al driver a verificar si hay eventos entrantes en el socket
+                    try (Statement stmt = conn.createStatement()) {
+                        stmt.execute("SELECT 1");
+                    }
 
-                    if (notifications != null) {
+                    PGNotification[] notifications = pgconn.getNotifications(3000);
+
+                    if (notifications != null && notifications.length > 0) {
                         for (PGNotification notification : notifications) {
                             String idNotificacion = notification.getParameter();
-                            Logger.logInfo(" Notificación recibida ID = " + idNotificacion);
-
-                            // Delegar el procesamiento pesado a un hilo asíncrono
+                            Logger.logInfo("🔔 Notificación recibida desde PG_NOTIFY -> ID = " + idNotificacion);
                             procesarNotificacion(idNotificacion);
                         }
                     }
+
+                    Thread.sleep(1000); // Pausa de 1 segundo para evitar consumo excesivo de CPU
                 }
-            } catch (SQLException e) {
-                Logger.logInfo("⚠️ Conexión con PG_NOTIFY perdida. Reintentando en 5 segundos...");
-                try {
-                    Thread.sleep(5000);
-                } catch (InterruptedException ignored) {}
+            } catch (Exception e) {
+                if (running) {
+                    Logger.logInfo("⚠️ Conexión con PG_NOTIFY interrumpida. Reintentando en 5 segundos... (" + e.getMessage() + ")");
+                    try {
+                        Thread.sleep(5000);
+                    } catch (InterruptedException ignored) {}
+                }
             }
         }
     }
