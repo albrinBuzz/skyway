@@ -1,0 +1,378 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition lang="es"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="jakarta.faces.core"
+                xmlns:h="jakarta.faces.html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:ui="jakarta.faces.facelets"
+                template="/admin/template.xhtml">
+
+    <ui:define name="head-admin">
+        <style type="text/css">
+            :root {
+                --bg-deep: #0b1120;
+                --bg-card: #0f172a;
+                --bg-header: #1e293b;
+                --border-subtle: #334155;
+                --navy-brand: #2563eb;
+                --navy-hover: #1d4ed8;
+
+                /* Tonalidades de tipografía suavizadas para Dark Mode */
+                --text-heading: #e2e8f0;   /* Blanco suavizado mate (Slate 200) */
+                --text-body: #cbd5e1;      /* Texto de tabla refinado (Slate 300) */
+                --text-muted: #94a3b8;     /* Texto secundario y placeholders (Slate 400) */
+                --text-dim: #64748b;       /* Identificadores e IDs (Slate 500) */
+            }
+
+            .ops-container { padding: 0.75rem 0; width: 100%; font-family: inherit; }
+
+            .header-container {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+                border-bottom: 1px solid var(--border-subtle);
+                padding-bottom: 16px;
+            }
+
+            .header-container h2 {
+                color: var(--text-heading) !important;
+                font-size: 1.35rem !important;
+                font-weight: 700 !important;
+                letter-spacing: -0.02em !important;
+                margin: 0 0 4px 0 !important;
+            }
+
+            .header-container span {
+                color: var(--text-muted) !important;
+                font-size: 0.85rem !important;
+            }
+
+            /* --- PESTAÑAS DE NAVEGACIÓN --- */
+            .custom-nav-tabs {
+                display: flex;
+                gap: 8px;
+                margin-bottom: 20px;
+                border-bottom: 1px solid var(--border-subtle);
+                padding-bottom: 10px;
+                flex-wrap: wrap;
+            }
+
+            .nav-tab-btn {
+                background: var(--bg-card) !important;
+                border: 1px solid var(--border-subtle) !important;
+                color: var(--text-muted) !important;
+                padding: 8px 16px !important;
+                border-radius: 6px !important;
+                font-weight: 500 !important;
+                font-size: 0.85rem !important;
+                cursor: pointer;
+            }
+
+            .nav-tab-btn.active {
+                background: var(--navy-brand) !important;
+                border-color: var(--navy-brand) !important;
+                color: #ffffff !important;
+                font-weight: 600 !important;
+            }
+
+            /* --- TABLA LIMPIA Y TIPOGRAFÍA MEJORADA --- */
+            body .skyway-ops-table {
+                background-color: var(--bg-card) !important;
+                border: 1px solid var(--border-subtle) !important;
+                border-radius: 8px !important;
+                overflow: hidden !important;
+            }
+
+            body .skyway-ops-table .ui-datatable-tablewrapper table {
+                border-collapse: collapse !important;
+            }
+
+            body .skyway-ops-table thead th {
+                background-color: var(--bg-deep) !important;
+                color: var(--text-muted) !important;
+                font-size: 0.75rem !important;
+                font-weight: 700 !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.05em !important;
+                border-top: none !important;
+                border-left: none !important;
+                border-right: none !important;
+                border-bottom: 1px solid var(--border-subtle) !important;
+                padding: 12px 16px !important;
+            }
+
+            body .skyway-ops-table tbody td {
+                background-color: var(--bg-card) !important;
+                color: var(--text-body) !important;
+                font-size: 0.875rem !important;
+                font-weight: 500 !important;
+                border-left: none !important;
+                border-right: none !important;
+                border-top: none !important;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important;
+                padding: 12px 16px !important;
+            }
+
+            body .skyway-ops-table tbody tr:last-child td {
+                border-bottom: none !important;
+            }
+
+            .id-tag {
+                color: var(--text-dim) !important;
+                font-weight: 600 !important;
+                font-size: 0.8rem !important;
+            }
+
+            .cell-title {
+                color: var(--text-heading) !important;
+                font-weight: 600 !important;
+            }
+
+            .btn-new {
+                background: var(--navy-brand) !important;
+                border: none !important;
+                border-radius: 6px !important;
+                font-weight: 600 !important;
+                font-size: 0.85rem !important;
+                color: #ffffff !important;
+            }
+
+            /* --- ESTILOS DEL MODAL Y FORMULARIO (DARK MODE SOFT) --- */
+            body .ui-dialog.custom-dialog {
+                background-color: var(--bg-card) !important;
+                border: 1px solid var(--border-subtle) !important;
+                border-radius: 12px !important;
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5) !important;
+                overflow: hidden !important;
+            }
+
+            body .ui-dialog.custom-dialog .ui-dialog-titlebar {
+                background-color: var(--bg-header) !important;
+                color: var(--text-heading) !important;
+                border-bottom: 1px solid var(--border-subtle) !important;
+                padding: 1rem 1.25rem !important;
+            }
+
+            body .ui-dialog.custom-dialog .ui-dialog-titlebar .ui-dialog-title {
+                font-weight: 600 !important;
+                font-size: 1rem !important;
+                color: var(--text-heading) !important;
+            }
+
+            body .ui-dialog.custom-dialog .ui-dialog-titlebar .ui-dialog-titlebar-icon {
+                color: var(--text-muted) !important;
+            }
+
+            body .ui-dialog.custom-dialog .ui-dialog-titlebar .ui-dialog-titlebar-icon:hover {
+                color: var(--text-heading) !important;
+                background: rgba(255, 255, 255, 0.1) !important;
+            }
+
+            body .ui-dialog.custom-dialog .ui-dialog-content {
+                background-color: var(--bg-card) !important;
+                color: var(--text-body) !important;
+                padding: 1.25rem !important;
+                border: none !important;
+            }
+
+            .dark-input label {
+                color: var(--text-muted) !important;
+                font-size: 0.725rem !important;
+                font-weight: 700 !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.05em !important;
+            }
+
+            body .dark-input .ui-inputfield {
+                background-color: var(--bg-deep) !important;
+                border: 1px solid var(--border-subtle) !important;
+                color: var(--text-heading) !important;
+                font-size: 0.875rem !important;
+                border-radius: 6px !important;
+                padding: 10px 12px !important;
+                width: 100% !important;
+                box-shadow: none !important;
+            }
+
+            body .dark-input .ui-inputfield:focus {
+                border-color: var(--navy-brand) !important;
+            }
+
+            body .dark-input .ui-inputfield::placeholder {
+                color: var(--text-dim) !important;
+            }
+        </style>
+    </ui:define>
+
+    <ui:define name="contenido-admin">
+        <div class="ops-container">
+            <p:growl id="msgs" showDetail="true" life="3000" />
+
+            <!-- PESTAÑAS DE NAVEGACIÓN -->
+            <h:form id="formTabs">
+                <div class="custom-nav-tabs">
+                    <p:commandButton value="Tipos de Equipaje" actionListener="#{gestionParametricasBean.setActiveTab(0)}" update=":mainPanel :formTabs" styleClass="nav-tab-btn #{gestionParametricasBean.activeTab == 0 ? 'active' : ''}" icon="pi pi-briefcase" />
+                    <p:commandButton value="Métodos de Pago" actionListener="#{gestionParametricasBean.setActiveTab(1)}" update=":mainPanel :formTabs" styleClass="nav-tab-btn #{gestionParametricasBean.activeTab == 1 ? 'active' : ''}" icon="pi pi-credit-card" />
+                    <p:commandButton value="Estados de Reserva" actionListener="#{gestionParametricasBean.setActiveTab(2)}" update=":mainPanel :formTabs" styleClass="nav-tab-btn #{gestionParametricasBean.activeTab == 2 ? 'active' : ''}" icon="pi pi-ticket" />
+                    <p:commandButton value="Clases de Asiento" actionListener="#{gestionParametricasBean.setActiveTab(3)}" update=":mainPanel :formTabs" styleClass="nav-tab-btn #{gestionParametricasBean.activeTab == 3 ? 'active' : ''}" icon="pi pi-th-large" />
+                    <p:commandButton value="Estados de Vuelo" actionListener="#{gestionParametricasBean.setActiveTab(4)}" update=":mainPanel :formTabs" styleClass="nav-tab-btn #{gestionParametricasBean.activeTab == 4 ? 'active' : ''}" icon="pi pi-send" />
+                    <p:commandButton value="Tipos de Turno" actionListener="#{gestionParametricasBean.setActiveTab(5)}" update=":mainPanel :formTabs" styleClass="nav-tab-btn #{gestionParametricasBean.activeTab == 5 ? 'active' : ''}" icon="pi pi-clock" />
+                </div>
+            </h:form>
+
+            <h:panelGroup id="mainPanel" layout="block">
+
+                <div class="header-container">
+                    <div>
+                        <h2>Catálogos de Operación y Reglas</h2>
+                        <span>Mantenimiento de opciones para equipaje, formas de pago, cabinas y estados del servicio</span>
+                    </div>
+                    <p:commandButton value="Nuevo Registro"
+                                     icon="pi pi-plus"
+                                     actionListener="#{gestionParametricasBean.prepararNuevoRegistro}"
+                                     process="@this"
+                                     styleClass="btn-new" />
+                </div>
+
+                <!-- 0. TIPOS DE EQUIPAJE -->
+                <h:panelGroup rendered="#{gestionParametricasBean.activeTab == 0}" layout="block">
+                    <p:dataTable value="#{gestionParametricasBean.listaTipoEquipaje}" var="e" styleClass="skyway-ops-table">
+                        <p:column headerText="ID" style="width: 80px; text-align: center;"><span class="id-tag">##{e.idTipo}</span></p:column>
+                        <p:column headerText="Tipo de Equipaje"><span class="cell-title">#{e.nombre}</span></p:column>
+                        <p:column headerText="Acciones" style="width: 120px; text-align: center;">
+                            <p:commandButton icon="pi pi-pencil" actionListener="#{gestionParametricasBean.prepararEdicionTipoEquipaje(e)}" process="@this" styleClass="ui-button-outlined ui-button-secondary me-1" />
+                            <p:commandButton icon="pi pi-trash" actionListener="#{gestionParametricasBean.eliminarEquipaje(e.idTipo)}" process="@this" update=":mainPanel :msgs" styleClass="ui-button-outlined ui-button-danger">
+                                <p:confirm header="Confirmación" message="¿Desea eliminar este registro?" icon="pi pi-exclamation-triangle" />
+                            </p:commandButton>
+                        </p:column>
+                    </p:dataTable>
+                </h:panelGroup>
+
+                <!-- 1. MÉTODOS DE PAGO -->
+                <h:panelGroup rendered="#{gestionParametricasBean.activeTab == 1}" layout="block">
+                    <p:dataTable value="#{gestionParametricasBean.listaMetodoPago}" var="mp" styleClass="skyway-ops-table">
+                        <p:column headerText="ID" style="width: 80px; text-align: center;"><span class="id-tag">##{mp.idMetodoPago}</span></p:column>
+                        <p:column headerText="Descripción"><span class="cell-title">#{mp.descripcion}</span></p:column>
+                        <p:column headerText="Acciones" style="width: 120px; text-align: center;">
+                            <p:commandButton icon="pi pi-pencil" actionListener="#{gestionParametricasBean.prepararEdicionMetodoPago(mp)}" process="@this" styleClass="ui-button-outlined ui-button-secondary me-1" />
+                            <p:commandButton icon="pi pi-trash" actionListener="#{gestionParametricasBean.eliminarMetodoPago(mp.idMetodoPago)}" process="@this" update=":mainPanel :msgs" styleClass="ui-button-outlined ui-button-danger">
+                                <p:confirm header="Confirmación" message="¿Desea eliminar este registro?" icon="pi pi-exclamation-triangle" />
+                            </p:commandButton>
+                        </p:column>
+                    </p:dataTable>
+                </h:panelGroup>
+
+                <!-- 2. ESTADOS DE RESERVA -->
+                <h:panelGroup rendered="#{gestionParametricasBean.activeTab == 2}" layout="block">
+                    <p:dataTable value="#{gestionParametricasBean.listaEstadoReserva}" var="er" styleClass="skyway-ops-table">
+                        <p:column headerText="ID" style="width: 80px; text-align: center;"><span class="id-tag">##{er.idEstadoReserva}</span></p:column>
+                        <p:column headerText="Estado de Reserva"><span class="cell-title">#{er.descripcion}</span></p:column>
+                        <p:column headerText="Acciones" style="width: 120px; text-align: center;">
+                            <p:commandButton icon="pi pi-pencil" actionListener="#{gestionParametricasBean.prepararEdicionEstadoReserva(er)}" process="@this" styleClass="ui-button-outlined ui-button-secondary me-1" />
+                            <p:commandButton icon="pi pi-trash" actionListener="#{gestionParametricasBean.eliminarEstadoReserva(er.idEstadoReserva)}" process="@this" update=":mainPanel :msgs" styleClass="ui-button-outlined ui-button-danger">
+                                <p:confirm header="Confirmación" message="¿Desea eliminar este registro?" icon="pi pi-exclamation-triangle" />
+                            </p:commandButton>
+                        </p:column>
+                    </p:dataTable>
+                </h:panelGroup>
+
+                <!-- 3. CLASES DE ASIENTO -->
+                <h:panelGroup rendered="#{gestionParametricasBean.activeTab == 3}" layout="block">
+                    <p:dataTable value="#{gestionParametricasBean.listaClaseAsiento}" var="ca" styleClass="skyway-ops-table">
+                        <p:column headerText="ID" style="width: 80px; text-align: center;"><span class="id-tag">##{ca.idClase}</span></p:column>
+                        <p:column headerText="Clase / Cabina"><span class="cell-title">#{ca.descripcion}</span></p:column>
+                        <p:column headerText="Acciones" style="width: 120px; text-align: center;">
+                            <p:commandButton icon="pi pi-pencil" actionListener="#{gestionParametricasBean.prepararEdicionClaseAsiento(ca)}" process="@this" styleClass="ui-button-outlined ui-button-secondary me-1" />
+                            <p:commandButton icon="pi pi-trash" actionListener="#{gestionParametricasBean.eliminarClaseAsiento(ca.idClase)}" process="@this" update=":mainPanel :msgs" styleClass="ui-button-outlined ui-button-danger">
+                                <p:confirm header="Confirmación" message="¿Desea eliminar este registro?" icon="pi pi-exclamation-triangle" />
+                            </p:commandButton>
+                        </p:column>
+                    </p:dataTable>
+                </h:panelGroup>
+
+                <!-- 4. ESTADOS DE VUELO -->
+                <h:panelGroup rendered="#{gestionParametricasBean.activeTab == 4}" layout="block">
+                    <p:dataTable value="#{gestionParametricasBean.listaEstadoVuelo}" var="ev" styleClass="skyway-ops-table">
+                        <p:column headerText="ID" style="width: 80px; text-align: center;"><span class="id-tag">##{ev.idEstadoVuelo}</span></p:column>
+                        <p:column headerText="Estado"><span class="cell-title">#{ev.estado}</span></p:column>
+                        <p:column headerText="Descripción">#{ev.descripcion}</p:column>
+                        <p:column headerText="Acciones" style="width: 120px; text-align: center;">
+                            <p:commandButton icon="pi pi-pencil" actionListener="#{gestionParametricasBean.prepararEdicionEstadoVuelo(ev)}" process="@this" styleClass="ui-button-outlined ui-button-secondary me-1" />
+                            <p:commandButton icon="pi pi-trash" actionListener="#{gestionParametricasBean.eliminarEstadoVuelo(ev.idEstadoVuelo)}" process="@this" update=":mainPanel :msgs" styleClass="ui-button-outlined ui-button-danger">
+                                <p:confirm header="Confirmación" message="¿Desea eliminar este registro?" icon="pi pi-exclamation-triangle" />
+                            </p:commandButton>
+                        </p:column>
+                    </p:dataTable>
+                </h:panelGroup>
+
+                <!-- 5. TIPOS DE TURNO -->
+                <h:panelGroup rendered="#{gestionParametricasBean.activeTab == 5}" layout="block">
+                    <p:dataTable value="#{gestionParametricasBean.listaTipoTurno}" var="tt" styleClass="skyway-ops-table">
+                        <p:column headerText="ID" style="width: 80px; text-align: center;"><span class="id-tag">##{tt.idTipo}</span></p:column>
+                        <p:column headerText="Nombre de Turno"><span class="cell-title">#{tt.nombre}</span></p:column>
+                        <p:column headerText="Acciones" style="width: 120px; text-align: center;">
+                            <p:commandButton icon="pi pi-pencil" actionListener="#{gestionParametricasBean.prepararEdicionTipoTurno(tt)}" process="@this" styleClass="ui-button-outlined ui-button-secondary me-1" />
+                            <p:commandButton icon="pi pi-trash" actionListener="#{gestionParametricasBean.eliminarTipoTurno(tt.idTipo)}" process="@this" update=":mainPanel :msgs" styleClass="ui-button-outlined ui-button-danger">
+                                <p:confirm header="Confirmación" message="¿Desea eliminar este registro?" icon="pi pi-exclamation-triangle" />
+                            </p:commandButton>
+                        </p:column>
+                    </p:dataTable>
+                </h:panelGroup>
+
+            </h:panelGroup>
+        </div>
+
+        <!-- DIÁLOGO MODAL DARK SOFT -->
+        <p:dialog id="dlgParametrica"
+                  header="#{gestionParametricasBean.modoEdicion ? 'Editar Registro' : 'Nuevo Registro'}"
+                  widgetVar="dlgParametrica"
+                  modal="true"
+                  width="440"
+                  appendTo="@(body)"
+                  styleClass="custom-dialog"
+                  resizable="false">
+
+            <h:form id="formDialog" styleClass="dark-input">
+                <h:inputHidden value="#{gestionParametricasBean.idEdicion}" />
+
+                <h:panelGroup rendered="#{gestionParametricasBean.activeTab == 0 or gestionParametricasBean.activeTab == 5}">
+                    <div class="mb-3">
+                        <label class="mb-2 d-block">Nombre *</label>
+                        <p:inputText value="#{gestionParametricasBean.nombreForm}" required="true" placeholder="Ej: Bodega 23kg / Turno Mañana" />
+                    </div>
+                </h:panelGroup>
+
+                <h:panelGroup rendered="#{gestionParametricasBean.activeTab == 1 or gestionParametricasBean.activeTab == 2 or gestionParametricasBean.activeTab == 3}">
+                    <div class="mb-3">
+                        <label class="mb-2 d-block">Descripción *</label>
+                        <p:inputText value="#{gestionParametricasBean.descripcionForm}" required="true" placeholder="Ej: Tarjeta de Crédito / Confirmada / Ejecutiva" />
+                    </div>
+                </h:panelGroup>
+
+                <h:panelGroup rendered="#{gestionParametricasBean.activeTab == 4}">
+                    <div class="mb-3">
+                        <label class="mb-2 d-block">Nombre / Estado *</label>
+                        <p:inputText value="#{gestionParametricasBean.nombreForm}" required="true" placeholder="Ej: Demorado" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="mb-2 d-block">Descripción *</label>
+                        <p:inputText value="#{gestionParametricasBean.descripcionForm}" required="true" placeholder="Ej: El vuelo presenta un retraso menor" />
+                    </div>
+                </h:panelGroup>
+
+                <div class="flex justify-content-end gap-2 pt-3 mt-3" style="border-top: 1px solid var(--border-subtle);">
+                    <p:commandButton value="Cancelar" type="button" onclick="PF('dlgParametrica').hide();" styleClass="ui-button-flat ui-button-secondary" />
+                    <p:commandButton value="Guardar" actionListener="#{gestionParametricasBean.guardar}" process="@form" styleClass="btn-new" icon="pi pi-check" />
+                </div>
+            </h:form>
+        </p:dialog>
+
+        <!-- CONFIRMACIÓN GLOBAL -->
+        <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" appendTo="@(body)" styleClass="custom-dialog">
+            <p:commandButton value="Cancelar" type="button" styleClass="ui-confirmdialog-no ui-button-flat ui-button-secondary" />
+            <p:commandButton value="Sí, Eliminar" type="button" styleClass="ui-confirmdialog-yes btn-new" />
+        </p:confirmDialog>
+    </ui:define>
+
+</ui:composition>
