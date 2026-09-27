@@ -1,8 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <ui:composition xmlns="http://www.w3.org/1999/xhtml"
                 xmlns:h="jakarta.faces.html"
                 xmlns:p="http://primefaces.org/ui"
-                xmlns:f="http://xmlns.jcp.org/jsf/core"
-                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
                 template="/template/main.xhtml">
 
     <ui:define name="head">
@@ -16,9 +17,9 @@
             }
 
             /* Badges de Estado del Vuelo */
-            .status-ontime { background: rgba(34, 197, 94, 0.15); color: #4ade80; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; }
-            .status-delayed { background: rgba(234, 179, 8, 0.15); color: #facc15; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; }
-            .status-cancelled { background: rgba(239, 68, 68, 0.15); color: #f87171; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; }
+            .status-ontime { background: rgba(34, 197, 94, 0.15); color: #4ade80; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; display: inline-block; }
+            .status-delayed { background: rgba(234, 179, 8, 0.15); color: #facc15; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; display: inline-block; }
+            .status-cancelled { background: rgba(239, 68, 68, 0.15); color: #f87171; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; display: inline-block; }
 
             /* CORRECCIÓN PROFUNDA DE LA TABLA OSCURA */
             .table-skyway {
@@ -63,11 +64,12 @@
         <div class="container py-5">
             <div class="text-center mb-5">
                 <h1 class="fw-bold text-white mb-2">
-                    <i class="fas fa-plane me-3" style="color:var(--accent-cyan);"></i>Estado de Vuelo en Vivo
+                    <i class="fas fa-plane me-3" style="color:var(--accent-cyan, #38bdf8);"></i>Estado de Vuelo en Vivo
                 </h1>
                 <p class="text-secondary">Monitorea las salidas, llegadas y alertas de nuestros itinerarios globales en tiempo real</p>
             </div>
 
+            <!-- FORMULARIO DE FILTROS EN TIEMPO REAL -->
             <div class="card glass-panel p-4 mb-4 shadow">
                 <h:form id="searchStatusForm">
                     <div class="row g-3 align-items-end">
@@ -75,71 +77,79 @@
                             <label class="form-label small fw-bold text-light">Número de Vuelo</label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-hashtag"></i></span>
-                                <p:inputText styleClass="form-control" placeholder="Ej: SKW-402" />
+                                <p:inputText value="#{estadoVueloBean.filtroNumeroVuelo}"
+                                             styleClass="form-control"
+                                             placeholder="Ej: SKW-402" />
                             </div>
                         </div>
                         <div class="col-md-5">
                             <label class="form-label small fw-bold text-light">Ruta / Destino</label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-globe-americas"></i></span>
-                                <p:inputText styleClass="form-control" placeholder="Ciudad de Origen o Destino (IATA)" />
+                                <p:inputText value="#{estadoVueloBean.filtroRuta}"
+                                             styleClass="form-control"
+                                             placeholder="Ciudad de Origen o Destino (IATA)" />
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <p:commandButton value="Actualizar Panel" type="button" icon="pi pi-refresh" styleClass="w-100 sky-btn py-2" />
+                            <p:commandButton value="Actualizar Panel"
+                                             actionListener="#{estadoVueloBean.buscarVuelos}"
+                                             update=":tablaVuelosForm"
+                                             icon="pi pi-refresh"
+                                             styleClass="w-100 sky-btn py-2" />
                         </div>
                     </div>
                 </h:form>
             </div>
 
-            <div class="card glass-panel p-0 shadow-lg overflow-hidden">
-                <table class="table table-dark table-borderless table-skyway align-middle">
-                    <thead>
-                    <tr>
-                        <th scope="col">Vuelo</th>
-                        <th scope="col">Origen</th>
-                        <th scope="col">Destino</th>
-                        <th scope="col">Salida Prog.</th>
-                        <th scope="col">Sala</th>
-                        <th scope="col" class="text-center">Estado</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr>
-                        <td class="fw-bold text-white"><i class="fas fa-plane-departure mercantile-icon me-2 text-secondary"></i>SKW-102</td>
-                        <td>Santiago (SCL)</td>
-                        <td>Lima (LIM)</td>
-                        <td>08:30 Hrs</td>
-                        <td>Gate 4</td>
-                        <td class="text-center"><span class="status-ontime">A Tiempo</span></td>
-                    </tr>
-                    <tr>
-                        <td class="fw-bold text-white"><i class="fas fa-plane-departure mercantile-icon me-2 text-secondary"></i>SKW-402</td>
-                        <td>Santiago (SCL)</td>
-                        <td>Los Ángeles (LAX)</td>
-                        <td>22:24 Hrs</td>
-                        <td>Gate 12</td>
-                        <td class="text-center"><span class="status-delayed">Demorado (23:10)</span></td>
-                    </tr>
-                    <tr>
-                        <td class="fw-bold text-white"><i class="fas fa-plane-departure mercantile-icon me-2 text-secondary"></i>SKW-711</td>
-                        <td>Buenos Aires (EZE)</td>
-                        <td>Santiago (SCL)</td>
-                        <td>14:15 Hrs</td>
-                        <td>--</td>
-                        <td class="text-center"><span class="status-cancelled">Cancelado</span></td>
-                    </tr>
-                    <tr>
-                        <td class="fw-bold text-white"><i class="fas fa-plane-departure mercantile-icon me-2 text-secondary"></i>SKW-223</td>
-                        <td>Santiago (SCL)</td>
-                        <td>Bogotá (BOG)</td>
-                        <td>19:40 Hrs</td>
-                        <td>Gate 8</td>
-                        <td class="text-center"><span class="status-ontime">A Tiempo</span></td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
+            <!-- TABLA DINÁMICA CONECTADA A LA BASE DE DATOS -->
+            <h:form id="tablaVuelosForm">
+                <div class="card glass-panel p-0 shadow-lg overflow-hidden">
+                    <table class="table table-dark table-borderless table-skyway align-middle">
+                        <thead>
+                        <tr>
+                            <th scope="col">Vuelo</th>
+                            <th scope="col">Origen</th>
+                            <th scope="col">Destino</th>
+                            <th scope="col">Salida Prog.</th>
+                            <th scope="col">Sala</th>
+                            <th scope="col" class="text-center">Estado</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <ui:repeat value="#{estadoVueloBean.listaVuelos}" var="v">
+                            <tr>
+                                <td class="fw-bold text-white">
+                                    <i class="fas fa-plane-departure mercantile-icon me-2 text-secondary"></i>#{v.numeroVuelo}
+                                </td>
+                                <td>
+                                    #{v.origenCiudad != null ? v.origenCiudad : 'N/A'}
+                                    <h:outputText value=" (#{v.origenIata})" rendered="#{not empty v.origenIata}" styleClass="text-info font-monospace ms-1" />
+                                </td>
+                                <td>
+                                    #{v.destinoCiudad != null ? v.destinoCiudad : 'N/A'}
+                                    <h:outputText value=" (#{v.destinoIata})" rendered="#{not empty v.destinoIata}" styleClass="text-info font-monospace ms-1" />
+                                </td>
+                                <td>#{estadoVueloBean.formatearHora(v.fechaHoraSalida)}</td>
+                                <td>#{not empty v.codigoPuerta ? 'Gate '.concat(v.codigoPuerta) : '--'}</td>
+                                <td class="text-center">
+                                    <span class="#{estadoVueloBean.obtenerEstiloEstado(v.estadoNombre)}">
+                                        #{v.estadoNombre != null ? v.estadoNombre : 'Programado'}
+                                    </span>
+                                </td>
+                            </tr>
+                        </ui:repeat>
+                        <h:panelGroup rendered="#{empty estadoVueloBean.listaVuelos}">
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    <i class="fas fa-info-circle me-2"></i>No hay vuelos activos registrados que coincidan con la búsqueda.
+                                </td>
+                            </tr>
+                        </h:panelGroup>
+                        </tbody>
+                    </table>
+                </div>
+            </h:form>
 
         </div>
     </ui:define>

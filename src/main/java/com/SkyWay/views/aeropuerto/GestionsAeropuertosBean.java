@@ -27,7 +27,7 @@ import java.io.Serializable;
 import java.text.Normalizer;
 import java.util.*;
 
-@Named("gestionAeropuertosBean")
+@Named("gestionsAeropuertosBean")
 @ViewScoped
 public class GestionsAeropuertosBean implements Serializable {
 
