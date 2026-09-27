@@ -333,36 +333,117 @@ CREATE TRIGGER trg_set_fecha_itinerario
 
 
 CREATE OR REPLACE FUNCTION fn_update_itinerario_desde_vuelo()
-RETURNS TRIGGER AS $$
+    RETURNS TRIGGER AS $$
+DECLARE
+    rec RECORD;
 BEGIN
-    -- 1. Actualizar HORA_SALIDA del Itinerario si este vuelo es el PRIMERO (ORDEN 1)
-UPDATE Itinerario i
-SET HORA_SALIDA = NEW.Fecha_Hora_Salida
-    FROM Itinerario_Vuelo iv
-WHERE iv.ID_ITINERARIO = i.ID_ITINERARIO
-  AND iv.ID_VUELO = NEW.ID_VUELO
-  AND iv.ORDEN = 1;
+    -- Recorremos todos los itinerarios afectados por este vuelo
+    FOR rec IN
+        SELECT DISTINCT iv.ID_ITINERARIO
+        FROM Itinerario_Vuelo iv
+        WHERE iv.ID_VUELO = NEW.ID_VUELO
+        LOOP
+            -- Actualizar HORA_SALIDA, HORA_LLEGADA y DURACION_TOTAL en el Itinerario
+            UPDATE Itinerario i
+            SET HORA_SALIDA = (
+                SELECT v.Fecha_Hora_Salida
+                FROM Itinerario_Vuelo iv2
+                         JOIN Vuelo v ON v.ID_VUELO = iv2.ID_VUELO
+                WHERE iv2.ID_ITINERARIO = rec.ID_ITINERARIO
+                ORDER BY iv2.ORDEN ASC
+                LIMIT 1
+            ),
+                HORA_LLEGADA = (
+                    SELECT v.Fecha_Hora_Llegada
+                    FROM Itinerario_Vuelo iv2
+                             JOIN Vuelo v ON v.ID_VUELO = iv2.ID_VUELO
+                    WHERE iv2.ID_ITINERARIO = rec.ID_ITINERARIO
+                    ORDER BY iv2.ORDEN DESC
+                    LIMIT 1
+                ),
+                DURACION_TOTAL = (
+                    (
+                        SELECT v.Fecha_Hora_Llegada
+                        FROM Itinerario_Vuelo iv2
+                                 JOIN Vuelo v ON v.ID_VUELO = iv2.ID_VUELO
+                        WHERE iv2.ID_ITINERARIO = rec.ID_ITINERARIO
+                        ORDER BY iv2.ORDEN DESC
+                        LIMIT 1
+                    ) - (
+                        SELECT v.Fecha_Hora_Salida
+                        FROM Itinerario_Vuelo iv2
+                                 JOIN Vuelo v ON v.ID_VUELO = iv2.ID_VUELO
+                        WHERE iv2.ID_ITINERARIO = rec.ID_ITINERARIO
+                        ORDER BY iv2.ORDEN ASC
+                        LIMIT 1
+                    )
+                    )
+            WHERE i.ID_ITINERARIO = rec.ID_ITINERARIO;
+        END LOOP;
 
--- 2. Actualizar HORA_LLEGADA del Itinerario si este vuelo es el ÚLTIMO
-UPDATE Itinerario i
-SET HORA_LLEGADA = NEW.Fecha_Hora_Llegada
-    FROM Itinerario_Vuelo iv
-WHERE iv.ID_ITINERARIO = i.ID_ITINERARIO
-  AND iv.ID_VUELO = NEW.ID_VUELO
-  AND iv.ORDEN = (
-    SELECT MAX(iv2.ORDEN)
-    FROM Itinerario_Vuelo iv2
-    WHERE iv2.ID_ITINERARIO = i.ID_ITINERARIO
-    );
-
-RETURN NEW;
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Re-crear el Trigger sobre Vuelo
+DROP TRIGGER IF EXISTS trg_vuelo_hacia_itinerario ON Vuelo;
 
 CREATE TRIGGER trg_vuelo_hacia_itinerario
     AFTER UPDATE OF Fecha_Hora_Salida, Fecha_Hora_Llegada ON Vuelo
     FOR EACH ROW
-    EXECUTE FUNCTION fn_update_itinerario_desde_vuelo();
+EXECUTE FUNCTION fn_update_itinerario_desde_vuelo();
+
+
+CREATE OR REPLACE FUNCTION fn_actualizar_duracion_itinerario()
+    RETURNS TRIGGER AS $$
+DECLARE
+    v_id_itinerario INT;
+    v_hora_salida   TIMESTAMP;
+    v_hora_llegada  TIMESTAMP;
+BEGIN
+    IF (TG_OP = 'DELETE') THEN
+        v_id_itinerario := OLD.ID_ITINERARIO;
+    ELSE
+        v_id_itinerario := NEW.ID_ITINERARIO;
+    END IF;
+
+    -- Obtener la hora de salida del primer vuelo (ORDEN mínimo)
+    SELECT v.Fecha_Hora_Salida
+    INTO v_hora_salida
+    FROM Itinerario_Vuelo iv
+             JOIN Vuelo v ON v.ID_VUELO = iv.ID_VUELO
+    WHERE iv.ID_ITINERARIO = v_id_itinerario
+    ORDER BY iv.ORDEN ASC
+    LIMIT 1;
+
+    -- Obtener la hora de llegada del último vuelo (ORDEN máximo)
+    SELECT v.Fecha_Hora_Llegada
+    INTO v_hora_llegada
+    FROM Itinerario_Vuelo iv
+             JOIN Vuelo v ON v.ID_VUELO = iv.ID_VUELO
+    WHERE iv.ID_ITINERARIO = v_id_itinerario
+    ORDER BY iv.ORDEN DESC
+    LIMIT 1;
+
+    -- Actualizar el itinerario
+    IF v_hora_salida IS NOT NULL AND v_hora_llegada IS NOT NULL THEN
+        UPDATE Itinerario
+        SET HORA_SALIDA    = v_hora_salida,
+            HORA_LLEGADA   = v_hora_llegada,
+            DURACION_TOTAL = (v_hora_llegada - v_hora_salida)
+        WHERE ID_ITINERARIO = v_id_itinerario;
+    END IF;
+
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_actualizar_duracion_itinerario ON Itinerario_Vuelo;
+
+CREATE TRIGGER trg_actualizar_duracion_itinerario
+    AFTER INSERT OR UPDATE OR DELETE ON Itinerario_Vuelo
+    FOR EACH ROW
+EXECUTE FUNCTION fn_actualizar_duracion_itinerario();
 
 
 

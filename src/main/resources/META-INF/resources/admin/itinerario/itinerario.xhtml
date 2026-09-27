@@ -32,31 +32,23 @@
             }
 
             function initMapaRutaMaestra(aeropuertosJson) {
-                console.group('🗺️ [RutaMaestra] Inicializando Mapa de Ruta Maestra');
+                var container = L.DomUtil.get('mapaRutaMaestra');
+                if (container !== null) {
+                    container._leaflet_id = null;
+                }
 
                 if (mapaRutaMaestra) {
-                    console.log('[RutaMaestra] Destruyendo instancia previa del mapa...');
                     mapaRutaMaestra.remove();
                     mapaRutaMaestra = null;
                 }
                 markerOrigenRuta = null; markerDestinoRuta = null; lineaRutaMaestra = null;
-                cambiarModoRuta('ORIGEN');
 
                 var aeropuertos = typeof aeropuertosJson === 'string' ? JSON.parse(aeropuertosJson) : aeropuertosJson;
-                console.log('[RutaMaestra] Datos de aeropuertos recibidos:', aeropuertos);
+                if (!aeropuertos || aeropuertos.length === 0) return;
 
-                if (!aeropuertos || aeropuertos.length === 0) {
-                    console.warn('[RutaMaestra] ⚠️ No hay aeropuertos disponibles para renderizar.');
-                    console.groupEnd();
-                    return;
-                }
-
-                mapaRutaMaestra = L.map('mapaRutaMaestra', { zoomControl: true, attributionControl: false })
-                    .setView([-20, -60], 3);
-
+                mapaRutaMaestra = L.map('mapaRutaMaestra', { zoomControl: true, attributionControl: false }).setView([-20, -60], 3);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 12 }).addTo(mapaRutaMaestra);
 
-                var contador = 0;
                 aeropuertos.forEach(function (a) {
                     coordsAeropuertos[a.codigoIata] = [a.lat, a.lng];
                     nombresAeropuertos[a.codigoIata] = a.nombreAeropuerto + ' (' + a.ciudad + ')';
@@ -66,24 +58,22 @@
                         .bindTooltip(a.codigoIata + ' - ' + a.nombreAeropuerto, { direction: 'top' });
 
                     marker.on('click', function () {
-                        console.log('📍 [RutaMaestra] Clic en aeropuerto:', a.codigoIata, a.nombreAeropuerto, 'Modo activo:', modoRutaActual);
                         if (modoRutaActual === 'ORIGEN') {
-                            console.log('  └─ Invocando rcOrigenMapa() con IATA:', a.codigoIata);
                             rcOrigenMapa([{ name: 'iata', value: a.codigoIata }]);
                             pintarMarcadorRuta(a.codigoIata, 'ORIGEN');
                             cambiarModoRuta('DESTINO');
                         } else {
-                            console.log('  └─ Invocando rcDestinoMapa() con IATA:', a.codigoIata);
                             rcDestinoMapa([{ name: 'iata', value: a.codigoIata }]);
-
                             pintarMarcadorRuta(a.codigoIata, 'DESTINO');
                         }
                     });
-                    contador++;
                 });
 
-                console.info('[RutaMaestra] ✅ Se cargaron ' + contador + ' marcadores de aeropuertos.');
-                console.groupEnd();
+                setTimeout(function() {
+                    if (mapaRutaMaestra) {
+                        mapaRutaMaestra.invalidateSize();
+                    }
+                }, 250);
             }
 
             function pintarMarcadorRuta(iata, tipo) {
@@ -841,6 +831,172 @@
                 display: flex; align-items: center; justify-content: center; flex-shrink: 0;
             }
             .paso-badge-verde { background: var(--status-green); }
+
+
+            /* --- CORRECCIÓN DE ALTAS VISIBILIDAD PARA DATEPICKER / CALENDARIO --- */
+            .ui-datepicker {
+                background-color: #0f172a !important;
+                border: 1px solid #334155 !important;
+                color: #f8fafc !important;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7) !important;
+                border-radius: 8px !important;
+            }
+
+            .ui-datepicker .ui-datepicker-header {
+                background-color: #1e293b !important;
+                color: #f8fafc !important;
+                border-bottom: 1px solid #334155 !important;
+            }
+
+            .ui-datepicker .ui-datepicker-header .ui-datepicker-title {
+                color: #38bdf8 !important;
+                font-weight: 700 !important;
+            }
+
+            .ui-datepicker .ui-datepicker-header a {
+                color: #94a3b8 !important;
+            }
+            .ui-datepicker .ui-datepicker-header a:hover {
+                color: #38bdf8 !important;
+            }
+
+            /* Días de la semana (L, M, X, J, V, S, D) */
+            .ui-datepicker table th {
+                color: #94a3b8 !important;
+                font-weight: 700 !important;
+                border-bottom: 1px solid #334155 !important;
+            }
+
+            /* Celdas de los Días */
+            .ui-datepicker table td span,
+            .ui-datepicker table td a {
+                color: #f8fafc !important;
+                text-align: center !important;
+                border-radius: 6px !important;
+                padding: 6px !important;
+                font-weight: 600 !important;
+            }
+
+            /* Hover sobre los días */
+            .ui-datepicker table td a:hover {
+                background-color: #2563eb !important;
+                color: #ffffff !important;
+            }
+
+            /* Día seleccionado / Día actual */
+            .ui-datepicker table td a.ui-state-active,
+            .ui-datepicker table td a.ui-state-highlight {
+                background-color: #38bdf8 !important;
+                color: #0b1120 !important;
+                font-weight: 800 !important;
+            }
+
+            /* --- ESTILOS DE LA LÍNEA DE TIEMPO Y PREVISUALIZACIÓN DE ITINERARIO --- */
+            .timeline-card {
+                background: #0f172a !important;
+                border: 1px solid var(--border-color) !important;
+                border-radius: 12px !important;
+                padding: 16px !important;
+                margin-bottom: 16px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                position: relative;
+                transition: transform 0.2s ease, border-color 0.2s ease;
+            }
+
+            .timeline-card:hover {
+                border-color: var(--sky-blue) !important;
+            }
+
+            .timeline-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding-bottom: 10px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+                margin-bottom: 12px;
+            }
+
+            .badge-tramo-num {
+                background: rgba(59, 130, 246, 0.15);
+                color: #60a5fa;
+                border: 1px solid rgba(59, 130, 246, 0.3);
+                font-weight: 800;
+                font-size: 0.72rem;
+                padding: 3px 8px;
+                border-radius: 6px;
+                letter-spacing: 0.05em;
+            }
+
+            .route-flight-display {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                background: rgba(30, 41, 59, 0.5);
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                border-radius: 8px;
+                padding: 12px 16px;
+                margin-bottom: 10px;
+            }
+
+            .airport-block {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .airport-block .iata-code {
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 1.2rem;
+                font-weight: 900;
+                color: #f8fafc;
+            }
+
+            .airport-block .sub-label {
+                font-size: 0.7rem;
+                color: var(--text-secondary);
+            }
+
+            .flight-path-connector {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                flex-grow: 1;
+                padding: 0 20px;
+            }
+
+            .flight-path-line {
+                width: 100%;
+                height: 2px;
+                background: linear-gradient(90deg, var(--sky-blue), var(--status-green));
+                position: relative;
+                margin: 6px 0;
+            }
+
+            .flight-path-line::after {
+                content: '✈';
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: #0f172a;
+                color: #38bdf8;
+                padding: 0 6px;
+                font-size: 0.8rem;
+            }
+
+            .transfer-connector-box {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                background: rgba(245, 158, 11, 0.1);
+                border: 1px dashed rgba(245, 158, 11, 0.4);
+                color: #f59e0b;
+                border-radius: 8px;
+                padding: 8px;
+                margin: 8px 0 16px 0;
+                font-size: 0.75rem;
+                font-weight: 700;
+            }
         </style>
 
         <div class="main-content">
@@ -921,12 +1077,12 @@
                                             <div class="ruta-display-info">
                                                 <span class="ruta-display-label">Terminal de Origen</span>
                                                 <span class="ruta-display-valor">
-                                <h:outputText value="#{itinerarioBean.aeropuertoOrigen} - #{itinerarioBean.aeropuertosMap[itinerarioBean.aeropuertoOrigen].nombreAeropuerto}"
-                                              rendered="#{not empty itinerarioBean.aeropuertoOrigen}"/>
-                                <span class="vacio" rendered="#{empty itinerarioBean.aeropuertoOrigen}">
-                                    <h:outputText value="Sin seleccionar — haz clic en el mapa"/>
-                                </span>
-                            </span>
+                                                <h:outputText value="#{itinerarioBean.aeropuertoOrigen} - #{itinerarioBean.aeropuertosMap[itinerarioBean.aeropuertoOrigen].nombreAeropuerto}"
+                                                        rendered="#{not empty itinerarioBean.aeropuertoOrigen}"/>
+                                                <span class="vacio" rendered="#{empty itinerarioBean.aeropuertoOrigen}">
+                                                    <h:outputText value="Sin seleccionar — haz clic en el mapa"/>
+                                                 </span>
+                                                 </span>
                                             </div>
                                         </div>
 
@@ -935,12 +1091,12 @@
                                             <div class="ruta-display-info">
                                                 <span class="ruta-display-label">Terminal de Destino</span>
                                                 <span class="ruta-display-valor">
-                                <h:outputText value="#{itinerarioBean.aeropuertoDestino} - #{itinerarioBean.aeropuertosMap[itinerarioBean.aeropuertoDestino].nombreAeropuerto}"
-                                              rendered="#{not empty itinerarioBean.aeropuertoDestino}"/>
-                                <span class="vacio" rendered="#{empty itinerarioBean.aeropuertoDestino}">
-                                    <h:outputText value="Sin seleccionar — haz clic en el mapa"/>
-                                </span>
-                            </span>
+                                                  <h:outputText value="#{itinerarioBean.aeropuertoDestino} - #{itinerarioBean.aeropuertosMap[itinerarioBean.aeropuertoDestino].nombreAeropuerto}"
+                                                        rendered="#{not empty itinerarioBean.aeropuertoDestino}"/>
+                                                    <span class="vacio" rendered="#{empty itinerarioBean.aeropuertoDestino}">
+                                                        <h:outputText value="Sin seleccionar — haz clic en el mapa"/>
+                                                    </span>
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
@@ -967,9 +1123,13 @@
                                 <div class="text-xs opacity-50">
                                     <i class="pi pi-info-circle mr-1"></i> Confirmar esta ruta desbloqueará el inventario de escalas y tarifas.
                                 </div>
-                                <p:commandButton value="Fijar Destinos de la Ruta" action="#{itinerarioBean.saveItinerario}"
-                                                 icon="pi pi-lock shadow-2" update="msgs @form stepTarifas panelStepLogistica"
-                                                 styleClass="btn-corp" style="background-color: var(--status-green) !important;" />
+                                <p:commandButton value="Fijar Destinos de la Ruta"
+                                                 action="#{itinerarioBean.saveItinerario}"
+                                                 icon="pi pi-lock shadow-2"
+                                                 update="msgs @form stepTarifas panelStepLogistica"
+                                                 oncomplete="setTimeout(function(){ initMapaRutaMaestra('#{itinerarioBean.aeropuertosMapaJson}'); if('#{itinerarioBean.aeropuertoOrigen}'){ pintarMarcadorRuta('#{itinerarioBean.aeropuertoOrigen}', 'ORIGEN'); } if('#{itinerarioBean.aeropuertoDestino}'){ pintarMarcadorRuta('#{itinerarioBean.aeropuertoDestino}', 'DESTINO'); } }, 300);"
+                                                 styleClass="btn-corp"
+                                                 style="background-color: var(--status-green) !important;" />
                             </div>
                         </p:panel>
                     </h:form>
@@ -981,7 +1141,7 @@
                     <p:panel styleClass="glass-panel shadow-4">
                         <div class="panel-header-custom">
                             <h3 class="section-title">
-                                <i class="pi pi-percentage" style="color: var(--sky-blue);"></i>
+                                <i class="pi pi-ticket" style="color: var(--sky-blue);"></i>
                                 Configuración Comercial de Precios por Tipo de Tarifa
                             </h3>
                             <span class="step-tag">Paso 2: Políticas de Equipaje y Beneficios</span>
@@ -989,39 +1149,58 @@
 
                         <div class="p-4">
                             <p:dataGrid value="#{itinerarioBean.tarifas}" var="tarifa" columns="3" layout="grid">
-                                <p:card styleClass="tarifa-card" style="position: relative;">
+                                <p:card styleClass="tarifa-card">
 
-                                    <h:panelGroup rendered="#{itinerarioBean.precioTarifas.containsKey(tarifa.idTarifa)}">
-                                        <span style="position:absolute; top: 12px; right: 12px; background: var(--status-green); color: black; font-size: 0.65rem; font-weight: 900; padding: 2px 6px; border-radius: 4px;">
-                                            $#{itinerarioBean.precioTarifas.get(tarifa.idTarifa)} ASIGNADO
-                                        </span>
-                                    </h:panelGroup>
+                                    <!-- Encabezado con estado comercial -->
+                                    <div class="flex justify-content-between align-items-center mb-3 pb-2 border-bottom-1 border-white-alpha-10">
+                                        <div class="flex align-items-center gap-2">
+                                            <i class="pi pi-briefcase text-blue-400"></i>
+                                            <span class="font-bold text-white text-base uppercase">#{tarifa.nombre}</span>
+                                        </div>
+                                            <h:panelGroup rendered="#{itinerarioBean.precioTarifas.containsKey(tarifa.idTarifa)}">
+                                            <span class="badge-ya-vinculado" style="font-size: 0.7rem; padding: 4px 8px;">
+                                                <i class="pi pi-check"></i> $ #{itinerarioBean.precioTarifas.get(tarifa.idTarifa)}
+                                            </span>
+                                        </h:panelGroup>
+                                    </div>
 
-                                    <f:facet name="title">
-                                        <i class="pi pi-ticket mr-2" style="color: var(--sky-blue)"></i> #{tarifa.nombre}
-                                    </f:facet>
-
+                                    <!-- Listado de Beneficios y Características -->
                                     <div class="py-2">
                                         <ui:repeat value="#{tarifa.tarifaCaracteristicas}" var="carac">
                                             <div class="feature-row">
                                                 <span class="feature-label">#{carac.caracteristica.nombre}</span>
                                                 <h:panelGroup rendered="#{carac.caracteristica.tipoDato eq 'boolean'}">
-                                                    <span class="feature-value #{carac.valorBool ? 'text-emerald-400' : 'text-red-400'}">#{carac.valorBool ? 'INCLUIDO' : 'NO DISPONIBLE'}</span>
+                                                <span class="feature-value #{carac.valorBool ? 'text-emerald-400' : 'text-red-400'}">
+                                                    #{carac.valorBool ? 'INCLUIDO' : 'NO DISPONIBLE'}
+                                                </span>
                                                 </h:panelGroup>
                                                 <h:panelGroup rendered="#{carac.caracteristica.tipoDato ne 'boolean'}">
-                                                    <span class="feature-value" style="color: var(--sky-blue)">#{carac.valor} #{carac.valorInt gt 0 ? carac.valorInt : ''}</span>
+                                                <span class="feature-value" style="color: var(--sky-blue)">
+                                                    #{carac.valor} #{carac.valorInt gt 0 ? carac.valorInt : ''}
+                                                </span>
                                                 </h:panelGroup>
                                             </div>
                                         </ui:repeat>
                                     </div>
 
+                                    <!-- Campo de Entrada de Tarifa -->
                                     <f:facet name="footer">
                                         <h:form id="formPrecioIndividual">
-                                            <div class="text-xs opacity-50 mb-1">Monto para esta categoría:</div>
+                                            <div class="text-xs opacity-60 mb-1 font-bold uppercase tracking-wider">Monto para esta categoría (CLP):</div>
                                             <div class="pricing-input-box">
-                                                <p:inputNumber id="montoLocal" binding="#{montoLocal}" symbol="$ " decimalPlaces="0" placeholder="Ingrese valor..." required="true"/>
-                                                <p:commandButton icon="pi pi-check-circle" action="#{itinerarioBean.actualizarPrecioTarifaIndividual(tarifa, montoLocal.value)}"
-                                                                 update="stepTarifas :msgs :panelStepLogistica" styleClass="ui-button-flat ui-button-plain text-emerald-400" />
+                                                <p:inputNumber id="montoLocal"
+                                                               value="#{itinerarioBean.precioTarifas[tarifa.idTarifa]}"
+                                                               symbol="$ "
+                                                               locale="es_CL"
+                                                               decimalPlaces="0"
+                                                               placeholder="Ingrese valor..."
+                                                               required="true" />
+                                                <p:commandButton icon="pi pi-save"
+                                                                 value="Guardar"
+                                                                 actionListener="#{itinerarioBean.actualizarPrecioTarifaIndividual(tarifa, component.findComponent('montoLocal').value)}"
+                                                                 update="stepTarifas :msgs :panelStepLogistica"
+                                                                 styleClass="btn-corp ui-button-sm ml-2"
+                                                                 style="padding: 6px 12px !important;" />
                                             </div>
                                         </h:form>
                                     </f:facet>
@@ -1040,8 +1219,8 @@
                                 Consolidación Logística de Conexiones y Escalas
                             </h3>
                             <span class="step-tag" style="color: var(--status-amber); background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.2);">
-                Paso 3: Plan de Vuelo Físico
-            </span>
+                                Paso 3: Plan de Vuelo Físico
+                            </span>
                         </div>
 
                         <div class="m-4 p-3 border-round-xl flex align-items-center gap-3" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color);">
@@ -1051,11 +1230,11 @@
                             <div class="text-xs">
                                 <span class="opacity-50 block uppercase font-bold tracking-wide mb-1" style="font-size: 0.65rem;">Objetivo de Servicio Comercial Seleccionado</span>
                                 <span class="text-white text-sm font-medium">
-                    Establecer tramos desde
-                    <span class="text-blue-400 font-bold font-mono">#{itinerarioBean.itinerario.aeropuertoOrigen.codigoIata}</span>
-                    hacia
-                    <span class="text-blue-400 font-bold font-mono">#{itinerarioBean.itinerario.aeropuertoDestino.codigoIata}</span>
-                </span>
+                                    Establecer tramos desde
+                                    <span class="text-blue-400 font-bold font-mono">#{itinerarioBean.itinerario.aeropuertoOrigen.codigoIata}</span>
+                                    hacia
+                                    <span class="text-blue-400 font-bold font-mono">#{itinerarioBean.itinerario.aeropuertoDestino.codigoIata}</span>
+                                </span>
                             </div>
                         </div>
 
@@ -1063,127 +1242,218 @@
                             <div class="p-col-12 p-lg-7 p-4 border-right-1 border-white-alpha-10">
                                 <h:form id="formBuscarVuelo">
 
-                                    <div class="flex align-items-center gap-2 mb-1">
-                                        <span class="paso-badge">A</span>
-                                        <h4 class="m-0 text-white font-semibold" style="font-size: 0.85rem; letter-spacing: 0.02em;">BUSCAR VUELOS DISPONIBLES</h4>
+                                    <div class="flex align-items-center justify-content-between mb-3">
+                                        <div class="flex align-items-center gap-2">
+                                            <span class="paso-badge">A</span>
+                                            <h4 class="m-0 text-white font-semibold" style="font-size: 0.9rem; letter-spacing: 0.02em;">CENTRAL DE BÚSQUEDA Y OPERACIONES DE VUELO</h4>
+                                        </div>
+                                        <p:tag severity="info" value="SISTEMA DE BÚSQUEDA OPERATIVA" style="font-size: 0.65rem; font-weight: bold;"/>
                                     </div>
+
                                     <p class="text-xs opacity-50 mb-4" style="margin-left: 30px;">
-                                        Filtra por origen, destino y fecha. Los resultados que vincules aparecerán trazados en el mapa de la derecha.
+                                        Filtre por origen, destino o fecha programada para consultar la disponibilidad de salidas y vincularlas a la matriz de itinerarios.
                                     </p>
 
+                                    <!-- PANEL DE FILTROS -->
                                     <div class="filtro-card mb-4">
                                         <div class="ui-fluid p-formgrid p-grid">
                                             <div class="p-field p-col-12 p-md-4">
-                                                <p:outputLabel value="Origen" styleClass="filtro-label" />
+                                                <p:outputLabel value="Origen Comercial" styleClass="filtro-label" />
                                                 <div class="ui-inputgroup">
                                                     <span class="ui-inputgroup-addon" style="background: #090e1a; border-color: var(--border-color);"><i class="pi pi-upload text-xs opacity-60"></i></span>
-                                                    <p:selectOneMenu value="#{itinerarioBean.aeropuertoOrigenBusqueda}" filter="true">
+                                                    <p:selectOneMenu value="#{itinerarioBean.aeropuertoOrigenBusqueda}" filter="true" filterMatchMode="contains">
                                                         <f:selectItem itemLabel="Cualquier origen" itemValue="#{null}" />
                                                         <f:selectItems value="#{itinerarioBean.aeropuertos}" var="a" itemValue="#{a.codigoIata}" itemLabel="#{a.codigoIata} - #{a.nombreAeropuerto}" />
                                                     </p:selectOneMenu>
                                                 </div>
                                             </div>
+
                                             <div class="p-field p-col-12 p-md-4">
-                                                <p:outputLabel value="Destino" styleClass="filtro-label" />
+                                                <p:outputLabel value="Destino Comercial" styleClass="filtro-label" />
                                                 <div class="ui-inputgroup">
                                                     <span class="ui-inputgroup-addon" style="background: #090e1a; border-color: var(--border-color);"><i class="pi pi-download text-xs opacity-60"></i></span>
-                                                    <p:selectOneMenu value="#{itinerarioBean.aeropuertoDestinoBusqueda}" filter="true">
+                                                    <p:selectOneMenu value="#{itinerarioBean.aeropuertoDestinoBusqueda}" filter="true" filterMatchMode="contains">
                                                         <f:selectItem itemLabel="Cualquier destino" itemValue="#{null}" />
                                                         <f:selectItems value="#{itinerarioBean.aeropuertos}" var="a" itemValue="#{a.codigoIata}" itemLabel="#{a.codigoIata} - #{a.nombreAeropuerto}" />
                                                     </p:selectOneMenu>
                                                 </div>
                                             </div>
+
                                             <div class="p-field p-col-12 p-md-4">
-                                                <p:outputLabel value="Fecha" styleClass="filtro-label" />
-                                                <p:datePicker value="#{itinerarioBean.fechaBusqueda}" placeholder="Cualquier fecha" pattern="dd/MM/yyyy" showIcon="true"/>
+                                                <p:outputLabel value="Fecha Programada" styleClass="filtro-label" />
+                                                <p:datePicker value="#{itinerarioBean.fechaBusqueda}" placeholder="Seleccionar fecha" pattern="dd/MM/yyyy" showIcon="true"/>
                                             </div>
                                         </div>
 
                                         <div class="flex justify-content-between align-items-center mt-3 pt-3 border-top-1 border-white-alpha-10">
-                                            <p:commandButton value="Limpiar filtros" action="#{itinerarioBean.limpiarFiltros}"
-                                                             update="tablaVuelos" type="button" onclick="this.form.submit()"
-                                                             styleClass="ui-button-flat btn-secondary-custom" icon="pi pi-times" />
-                                            <p:commandButton value="Buscar Vuelos" action="#{itinerarioBean.buscarVuelos}" icon="pi pi-search"
-                                                             update="tablaVuelos resultadoBusquedaInfo"
+                                            <p:commandButton value="Restablecer Filtros" action="#{itinerarioBean.limpiarFiltros}"
+                                                             update="tablaVuelos" process="@this"
+                                                             styleClass="ui-button-flat btn-secondary-custom text-xs" icon="pi pi-refresh" />
+                                            <p:commandButton value="Buscar Operaciones" action="#{itinerarioBean.buscarVuelos}" icon="pi pi-search"
+                                                             update="tablaVuelos resultadoBusquedaInfo :msgs"
                                                              styleClass="btn-corp" />
                                         </div>
                                     </div>
 
-                                    <!-- Contador de resultados, claro y visible -->
-                                    <p:outputPanel id="resultadoBusquedaInfo" layout="block" styleClass="resultado-busqueda-info mb-2">
-                                        <h:outputText value="#{itinerarioBean.vuelos.size()} vuelo(s) encontrado(s)"
-                                                      rendered="#{not empty itinerarioBean.vuelos}" />
-                                        <h:outputText value="No se encontraron vuelos con estos filtros. Intenta ampliar el rango de búsqueda."
+                                    <!-- CONTADOR Y ESTADO -->
+                                    <p:outputPanel id="resultadoBusquedaInfo" layout="block" styleClass="resultado-busqueda-info mb-3">
+                                        <h:panelGroup rendered="#{not empty itinerarioBean.vuelos}">
+                                            <i class="pi pi-check-circle text-emerald-400 mr-1"></i>
+                                            <span class="font-bold text-white">#{itinerarioBean.vuelos.size()}</span> vuelo(s) disponible(s) para vincular.
+                                        </h:panelGroup>
+                                        <h:outputText value="No se encontraron vuelos programados para los criterios ingresados."
                                                       styleClass="sin-resultados"
                                                       rendered="#{empty itinerarioBean.vuelos}" />
                                     </p:outputPanel>
 
+                                    <!-- TABLA DE VUELOS -->
                                     <p:dataTable id="tablaVuelos" value="#{itinerarioBean.vuelos}" var="vuelo" rowKey="#{vuelo.idVuelo}"
-                                                 rows="6" paginator="true" paginatorPosition="bottom" size="small"
+                                                 rows="5" paginator="true" paginatorPosition="bottom" size="small"
                                                  paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}"
-                                                 emptyMessage="No hay vuelos que coincidan con la búsqueda.">
+                                                 emptyMessage="No hay registros disponibles.">
 
-                                        <p:column style="width:2.5rem; text-align: center"><p:rowToggler /></p:column>
-
-                                        <p:column headerText="Código">
-                                            <span style="color: var(--sky-blue); font-family: 'JetBrains Mono', monospace; font-weight: 700;">#{vuelo.numeroVuelo}</span>
+                                        <p:column style="width:2.2rem; text-align: center">
+                                            <p:rowToggler />
                                         </p:column>
 
-                                        <p:column headerText="Ruta">
-                                            <span class="font-mono text-white text-sm">
-                                                #{vuelo.segmentoVuelos[0].aeropuertoOrigen.codigoIata}
-                                                <i class="pi pi-arrow-right mx-1" style="font-size:0.65rem; color:var(--text-secondary);"></i>
-                                                #{vuelo.segmentoVuelos[vuelo.segmentoVuelos.size() - 1].aeropuertoDestino.codigoIata}
+                                        <p:column headerText="Código / Avión">
+                                            <div>
+                                                <span style="color: var(--sky-blue); font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 0.9rem;">
+                                                    #{vuelo.numeroVuelo}
+                                                </span>
+                                                                            <span class="block text-500 font-medium" style="font-size: 0.72rem;">
+                                                    <i class="pi pi-send text-xs mr-1"></i>#{vuelo.avion != null ? vuelo.avion.modeloAvion.nombre : 'N/A'}
+                                                </span>
+                                            </div>
+                                        </p:column>
+
+                                        <p:column headerText="Ruta / Tipo">
+                                            <div>
+                                                <div class="font-mono text-white text-xs font-bold">
+                                                    #{vuelo.segmentoVuelos[0].aeropuertoOrigen.codigoIata}
+                                                    <i class="pi pi-arrow-right mx-1 text-blue-400" style="font-size:0.65rem;"></i>
+                                                    #{vuelo.segmentoVuelos[vuelo.segmentoVuelos.size() - 1].aeropuertoDestino.codigoIata}
+                                                </div>
+                                                <span class="escalas-tag mt-1" rendered="#{vuelo.segmentoVuelos.size() gt 1}">
+                                                    #{vuelo.segmentoVuelos.size() - 1} escala(s)
+                                                </span>
+                                                <span class="directo-tag mt-1" rendered="#{vuelo.segmentoVuelos.size() eq 1}">Directo</span>
+                                            </div>
+                                        </p:column>
+
+                                        <p:column headerText="Horarios (Salida / Llegada)">
+                                            <div class="text-xs">
+                                            <span class="text-white font-bold block">
+                                                <i class="pi pi-clock text-xs text-blue-400 mr-1"></i>
+                                                <h:outputText value="#{vuelo.fechaHoraSalida}">
+                                                    <f:convertDateTime pattern="dd/MM HH:mm"/>
+                                                </h:outputText>
                                             </span>
-                                                                        <span class="escalas-tag" rendered="#{vuelo.segmentoVuelos.size() gt 1}">
-                                                #{vuelo.segmentoVuelos.size() - 1} esc.
+                                                                        <span class="text-400 block" style="font-size: 0.7rem;">
+                                                Llegada:
+                                                <h:outputText value="#{vuelo.fechaHoraLlegada}">
+                                                    <f:convertDateTime pattern="dd/MM HH:mm"/>
+                                                </h:outputText>
                                             </span>
-                                            <span class="directo-tag" rendered="#{vuelo.segmentoVuelos.size() eq 1}">directo</span>
+                                            </div>
                                         </p:column>
 
-                                        <p:column headerText="Salida">
-                                            <h:outputText value="#{vuelo.fechaHoraSalida}" styleClass="font-semibold text-white text-sm">
-                                                <f:convertDateTime pattern="dd/MM HH:mm"/>
-                                            </h:outputText>
+                                        <p:column headerText="Comandante">
+                                            <span class="text-xs text-300 font-medium block">
+                                                #{vuelo.piloto != null ? vuelo.piloto.usuario.apellido : 'Sin Asignar'}
+                                            </span>
+                                                                        <span class="text-500 text-xs" style="font-size: 0.68rem;">
+                                                Lic: #{vuelo.piloto != null ? vuelo.piloto.licencia : 'N/A'}
+                                            </span>
                                         </p:column>
 
-                                        <p:column headerText="Llegada">
-                                            <h:outputText value="#{vuelo.fechaHoraLlegada}" styleClass="text-gray-400 text-sm">
-                                                <f:convertDateTime pattern="dd/MM HH:mm"/>
-                                            </h:outputText>
-                                        </p:column>
-
-                                        <p:column headerText="Mapa" style="width:3.5rem; text-align:center">
-                                            <p:commandButton icon="pi pi-map-marker"
-                                                             title="Ver Trayectoria en Mapa"
+                                        <p:column headerText="Mapa" style="width:3rem; text-align:center">
+                                            <p:commandButton icon="pi pi-map"
+                                                             title="Ver Ruta"
                                                              action="#{itinerarioBean.prepararMapaVuelo(vuelo)}"
                                                              oncomplete="PF('dlgMapaVuelo').show(); verMapaRutaVuelo(xhr, status, args.vueloJson);"
                                                              styleClass="ui-button-rounded ui-button-flat ui-button-info"
                                                              style="padding: 0 !important; width: 2.2rem; height: 2.2rem;" />
                                         </p:column>
 
-                                        <p:column style="width:8.5rem; text-align:center">
+                                        <p:column style="width:7.5rem; text-align:center">
                                             <h:panelGroup rendered="#{itinerarioBean.estaVinculado(vuelo)}">
-                                            <span class="badge-ya-vinculado">
-                                                <i class="pi pi-check-circle"></i> Vinculado
-                                            </span>
+                                                <span class="badge-ya-vinculado">
+                                                    <i class="pi pi-check-circle"></i> Vinculado
+                                                </span>
                                             </h:panelGroup>
                                             <p:commandButton value="Vincular" icon="pi pi-plus-circle" action="#{itinerarioBean.agregarVuelo(vuelo)}"
                                                              rendered="#{not itinerarioBean.estaVinculado(vuelo)}"
                                                              update="formVuelosAsignados:panelTimeline tablaVuelos :msgs"
-                                                             styleClass="ui-button-sm btn-corp" style="padding: 6px !important; font-size: 0.8rem !important;" />
+                                                             styleClass="ui-button-sm btn-corp" style="padding: 5px 10px !important; font-size: 0.78rem !important;" />
                                         </p:column>
 
+                                        <!-- FILA EXPANDIDA DISEÑADA COMO FICHA TÉCNICA ESTRUCTURADA -->
                                         <p:rowExpansion>
-                                            <div class="p-3 border-round" style="background: #030712; border: 1px solid var(--border-color);">
-                                                <div class="text-xs font-bold text-blue-400 mb-2 uppercase tracking-wide">Segmentos Físicos de este Servicio:</div>
-                                                <ui:repeat value="#{vuelo.segmentoVuelos}" var="s">
-                                                    <div class="flex align-items-center gap-3 py-2 text-xs border-bottom-1 border-white-alpha-10">
-                                                        <i class="pi pi-circle-fill text-blue-500" style="font-size: 0.4rem;"></i>
-                                                        <span><strong>Tramo #{s.ordenSegmento}:</strong> <span class="font-mono text-white bg-white-alpha-10 px-2 py-1 border-round">#{s.aeropuertoOrigen.codigoIata} → #{s.aeropuertoDestino.codigoIata}</span></span>
-                                                        <span class="ml-auto opacity-60"><i class="pi pi-clock mr-1"></i>Salida: #{s.horaSalida}</span>
+                                            <div class="itinerary-card mt-2 mb-2 p-3">
+                                                <div class="flex justify-content-between align-items-center mb-3 pb-2 border-bottom-1 border-white-alpha-10">
+                                                    <span class="text-xs font-bold text-white uppercase tracking-wider">
+                                                        <i class="pi pi-id-card text-blue-400 mr-2"></i>Ficha Técnica de Operación
+                                                    </span>
+                                                                                <span class="text-xs text-400">
+                                                        Empresa: <strong class="text-white">#{vuelo.aerolinea.nombre}</strong>
+                                                    </span>
+                                                </div>
+
+                                                <!-- TARJETAS DE DATOS PRINCIPALES -->
+                                                <div class="grid p-fluid mb-3">
+                                                    <div class="col-12 md:col-4">
+                                                        <div class="p-2 border-round" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color);">
+                                                            <span class="text-500 text-xs block font-bold uppercase mb-1">Aeronave</span>
+                                                            <span class="text-white text-xs font-bold font-mono block">#{vuelo.avion.modeloAvion.nombre}</span>
+                                                            <span class="text-400 text-xs">Matrícula: #{vuelo.avion.numeroDeRegistro}</span>
+                                                        </div>
                                                     </div>
-                                                </ui:repeat>
+                                                    <div class="col-12 md:col-4">
+                                                        <div class="p-2 border-round" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color);">
+                                                            <span class="text-500 text-xs block font-bold uppercase mb-1">Piloto al Mando</span>
+                                                            <span class="text-white text-xs font-bold block">#{vuelo.piloto.usuario.nombre} #{vuelo.piloto.usuario.apellido}</span>
+                                                            <span class="text-400 text-xs">RUT: #{vuelo.piloto.rut}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12 md:col-4">
+                                                        <div class="p-2 border-round" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color);">
+                                                            <span class="text-500 text-xs block font-bold uppercase mb-1">Capacidad y Estado</span>
+                                                            <span class="text-emerald-400 text-xs font-bold block">#{vuelo.avion.capacidadDePasajeros} Asientos</span>
+                                                            <span class="text-400 text-xs">Estado: #{vuelo.estadoVuelo != null ? vuelo.estadoVuelo.descripcion : 'Programado'}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- TABLA SECUNDARIA PARA SEGMENTOS FÍSICOS -->
+                                                <span class="text-xs font-bold text-blue-400 block mb-2 uppercase tracking-wider">
+                                                    <i class="pi pi-list mr-1"></i>Tramos de Vuelo Físicos:
+                                                </span>
+
+                                                <p:dataTable value="#{vuelo.segmentoVuelos}" var="s" styleClass="nested-table ui-datatable-sm">
+                                                    <p:column headerText="Tramo" style="width: 70px; text-align: center;">
+                                                        <span class="font-bold text-white bg-blue-600 px-2 py-1 border-round text-xs">#{s.ordenSegmento}°</span>
+                                                    </p:column>
+                                                    <p:column headerText="Origen">
+                                                        <span class="font-mono text-white font-bold">#{s.aeropuertoOrigen.codigoIata}</span>
+                                                        <span class="text-400 text-xs ml-1">(#{s.aeropuertoOrigen.nombreAeropuerto})</span>
+                                                    </p:column>
+                                                    <p:column headerText="Destino">
+                                                        <span class="font-mono text-white font-bold">#{s.aeropuertoDestino.codigoIata}</span>
+                                                        <span class="text-400 text-xs ml-1">(#{s.aeropuertoDestino.nombreAeropuerto})</span>
+                                                    </p:column>
+                                                    <p:column headerText="Salida / Llegada">
+                                                        <div class="text-xs text-white">
+                                                            <h:outputText value="#{s.horaSalida}">
+                                                                <f:convertDateTime pattern="dd/MM/yyyy HH:mm" type="both" timeZone="America/Santiago"/>
+                                                            </h:outputText>
+                                                            <span class="mx-2 text-400">➔</span>
+                                                            <h:outputText value="#{s.horaLlegada}">
+                                                                <f:convertDateTime pattern="dd/MM/yyyy HH:mm" type="both" timeZone="America/Santiago"/>
+                                                            </h:outputText>
+                                                        </div>
+                                                    </p:column>
+                                                </p:dataTable>
                                             </div>
                                         </p:rowExpansion>
                                     </p:dataTable>
@@ -1191,118 +1461,148 @@
                             </div>
 
                             <div class="p-col-12 p-lg-5 p-4" style="background: rgba(15, 23, 42, 0.25);">
+
                                 <h:form id="formVuelosAsignados">
-                                    <div class="flex align-items-center gap-2 mb-1">
-                                        <span class="paso-badge paso-badge-verde">B</span>
-                                        <h4 class="m-0 text-white font-semibold" style="font-size: 0.85rem; letter-spacing: 0.02em;">TU ITINERARIO ARMADO</h4>
+                                    <div class="flex align-items-center justify-content-between mb-2">
+                                        <div class="flex align-items-center gap-2">
+                                            <span class="paso-badge paso-badge-verde">B</span>
+                                            <h4 class="m-0 text-white font-semibold" style="font-size: 0.9rem; letter-spacing: 0.02em;">ITINERARIO COMERCIAL ARMADO</h4>
+                                        </div>
+                                        <p:tag severity="success" value="PREVISUALIZACIÓN EN VIVO" style="font-size: 0.65rem; font-weight: bold;"/>
                                     </div>
+
                                     <p class="text-xs opacity-50 mb-3" style="margin-left: 30px;">
-                                        Así va quedando la ruta a medida que vinculas vuelos.
+                                        Secuencia de tramos y conexiones que conforman la propuesta final de vuelo.
                                     </p>
 
-                                    <!-- Mapa en vivo: se redibuja automáticamente al vincular/quitar tramos -->
-                                    <div id="mapaItinerarioArmado" style="width:100%; height:280px; border-radius:10px; border:1px solid var(--border-color); margin-bottom: 8px;"></div>
+                                    <!-- MAPA EN VIVO RECONSTRUIDO -->
+                                    <div id="mapaItinerarioArmado" style="width:100%; height:260px; border-radius:10px; border:1px solid var(--border-color); margin-bottom: 10px;"></div>
 
                                     <div class="mapa-leyenda mb-4">
-                                        <span class="leyenda-item"><span class="leyenda-dot" style="background:#38bdf8;"></span> Origen</span>
-                                        <span class="leyenda-item"><i class="pi pi-map-marker" style="color:#f59e0b; font-size:0.8rem;"></i> Escala</span>
-                                        <span class="leyenda-item"><span class="leyenda-dot" style="background:#10b981;"></span> Destino</span>
+                                        <span class="leyenda-item"><span class="leyenda-dot" style="background:#38bdf8;"></span> Origen Inicial</span>
+                                        <span class="leyenda-item"><i class="pi pi-map-marker" style="color:#f59e0b; font-size:0.8rem;"></i> Conexión / Escala</span>
+                                        <span class="leyenda-item"><span class="leyenda-dot" style="background:#10b981;"></span> Destino Final</span>
                                     </div>
 
                                     <h:panelGroup id="panelTimeline">
 
-                                        <!-- Resumen / contador -->
+                                        <!-- RESUMEN DE VALIDACIÓN COMERCIAL -->
                                         <h:panelGroup rendered="#{not empty itinerarioBean.itinerariosAsignados}" layout="block" styleClass="resumen-secuencia mb-4">
                                             <div class="resumen-item">
                                                 <span class="resumen-numero">#{itinerarioBean.itinerariosAsignados.size()}</span>
-                                                <span class="resumen-label">Vuelo#{itinerarioBean.itinerariosAsignados.size() > 1 ? 's' : ''}</span>
+                                                <span class="resumen-label">Tramo(s)</span>
                                             </div>
                                             <div class="resumen-item">
                                                 <span class="resumen-numero">#{itinerarioBean.numeroEscalasCalculado}</span>
-                                                <span class="resumen-label">Escala#{itinerarioBean.numeroEscalasCalculado != 1 ? 's' : ''}</span>
+                                                <span class="resumen-label">Conexión(es)</span>
                                             </div>
                                             <div class="resumen-validacion #{itinerarioBean.resumenSecuencia eq 'OK' ? 'valido' : 'invalido'}">
-                                                <i class="pi #{itinerarioBean.resumenSecuencia eq 'OK' ? 'pi-check-circle' : 'pi-exclamation-triangle'}"></i>
-                                                <span>
-                                            <h:outputText value="Secuencia coherente con la ruta maestra" rendered="#{itinerarioBean.resumenSecuencia eq 'OK'}"/>
-                                            <h:outputText value="#{itinerarioBean.resumenSecuencia}" rendered="#{itinerarioBean.resumenSecuencia ne 'OK'}"/>
-                                                </span>
+                                                <i class="pi #{itinerarioBean.resumenSecuencia eq 'OK' ? 'pi-check-circle' : 'pi-exclamation-triangle'}" style="font-size: 1.1rem;"></i>
+                                                <div class="flex flex-column">
+                                                    <span class="font-bold">
+                                                        <h:outputText value="Coherencia Comercial Garantizada" rendered="#{itinerarioBean.resumenSecuencia eq 'OK'}"/>
+                                                        <h:outputText value="Incoherencia en Secuencia" rendered="#{itinerarioBean.resumenSecuencia ne 'OK'}"/>
+                                                    </span>
+                                                    <span style="font-size: 0.7rem; opacity: 0.8;">
+                                                        <h:outputText value="La ruta acoplada conecta correctamente #{itinerarioBean.aeropuertoOrigen} con #{itinerarioBean.aeropuertoDestino}" rendered="#{itinerarioBean.resumenSecuencia eq 'OK'}"/>
+                                                        <h:outputText value="#{itinerarioBean.resumenSecuencia}" rendered="#{itinerarioBean.resumenSecuencia ne 'OK'}"/>
+                                                    </span>
+                                                </div>
                                             </div>
                                         </h:panelGroup>
 
+                                        <!-- MENSAJE SI ESTÁ VACÍO -->
                                         <h:panelGroup rendered="#{empty itinerarioBean.itinerariosAsignados}">
                                             <div class="text-center py-6 opacity-40 border-round-xl" style="border: 2px dashed var(--border-color); background: rgba(0,0,0,0.15);">
-                                                <i class="pi pi-map-marker mb-3 text-xl" style="color: var(--text-secondary);"></i>
-                                                <p class="text-xs m-0">No hay tramos operativos enlazados todavía.<br/>Vincula un vuelo desde la búsqueda para verlo aparecer aquí.</p>
+                                                <i class="pi pi-map-marker mb-3 text-2xl" style="color: var(--text-secondary);"></i>
+                                                <p class="text-xs m-0">No hay tramos operativos enlazados todavía.<br/>Seleccione y vincule un vuelo desde la central de búsqueda.</p>
                                             </div>
                                         </h:panelGroup>
 
-                                        <div class="pipeline-wrapper">
+                                        <!-- TARJETAS DE CONEXIÓN DE LA LÍNEA DE TIEMPO -->
+                                        <div class="timeline-container">
                                             <ui:repeat value="#{itinerarioBean.itinerariosAsignados}" var="iv" varStatus="status">
-                                                <div class="vuelo-item shadow-4">
 
-                                                    <div class="vuelo-item-header">
+                                                <div class="timeline-card">
+                                                    <!-- ENCABEZADO TRAMO -->
+                                                    <div class="timeline-header">
                                                         <div class="flex align-items-center gap-2">
-                                <span class="text-xs font-bold px-2 py-1 border-round-md" style="background: rgba(59,130,246,0.15); color: #60a5fa;">
-                                    CONEXIÓN ##{status.index + 1}
-                                </span>
-                                                            <span class="text-white font-mono font-bold text-sm">#{iv.vuelo.numeroVuelo}</span>
+                                                            <span class="badge-tramo-num">TRAMO 0#{status.index + 1}</span>
+                                                            <span class="text-white font-mono font-bold text-sm">Vuelo #{iv.vuelo.numeroVuelo}</span>
                                                         </div>
-                                                        <div class="flex align-items-center gap-3">
-                                <span class="text-xs text-emerald-400 font-semibold flex align-items-center gap-1">
-                                    <i class="pi pi-check-circle"></i> Validado
-                                </span>
-                                                            <p:commandButton icon="pi pi-times" actionListener="#{itinerarioBean.removerVuelo(iv)}"
-                                                                             update=":formVuelosAsignados:panelTimeline :formBuscarVuelo:tablaVuelos"
-                                                                             styleClass="ui-button-flat ui-button-danger ui-button-sm btn-quitar-tramo"
-                                                                             title="Quitar este tramo" />
+                                                        <div class="flex align-items-center gap-2">
+                                                            <span class="text-xs text-400">
+                                                                <i class="pi pi-send text-blue-400 mr-1"></i>#{iv.vuelo.avion != null ? iv.vuelo.avion.modeloAvion.nombre : 'Aeronave'}
+                                                            </span>
+                                                            <p:commandButton icon="pi pi-trash" actionListener="#{itinerarioBean.removerVuelo(iv)}"
+                                                                             update=":formVuelosAsignados:panelTimeline :formBuscarVuelo:tablaVuelos :msgs"
+                                                                             styleClass="ui-button-flat ui-button-danger ui-button-sm btn-quitar-tramo ml-2"
+                                                                             title="Desvincular este tramo" />
                                                         </div>
                                                     </div>
 
-                                                    <div class="vuelo-item-body">
-                                                        <div class="flex flex-column">
-                                                            <span class="text-white font-bold font-mono text-base">#{iv.vuelo.segmentoVuelos[0].aeropuertoOrigen.codigoIata}</span>
-                                                            <span class="text-500 font-medium" style="font-size: 0.65rem;">Salida origen</span>
+                                                    <!-- DESPLIEGUE VISUAL ORIGEN -> DESTINO -->
+                                                    <div class="route-flight-display">
+                                                        <div class="airport-block">
+                                                            <span class="iata-code">#{iv.vuelo.segmentoVuelos[0].aeropuertoOrigen.codigoIata}</span>
+                                                            <span class="sub-label">Salida Programada</span>
+                                                            <span class="text-white font-bold text-xs mt-1">
+                                                                <h:outputText value="#{iv.vuelo.fechaHoraSalida}">
+                                                                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/Santiago"/>
+                                                                </h:outputText>
+                                                            </span>
                                                         </div>
 
-                                                        <div class="flex flex-column align-items-center flex-grow-1 px-3">
-                                        <span class="text-400 font-mono" style="font-size: 0.7rem; letter-spacing: 1px;">
-                                            <h:outputText value="#{iv.vuelo.segmentoVuelos.size() - 1} ESC." rendered="#{iv.vuelo.segmentoVuelos.size() gt 1}"/>
-                                            <h:outputText value="DIRECTO" rendered="#{iv.vuelo.segmentoVuelos.size() eq 1}"/>
-                                        </span>
-                                                            <div class="w-full h-1px bg-white-alpha-10 my-1 position-relative flex align-items-center justify-content-center">
-                                                                <i class="pi pi-send text-xs text-blue-400" style="transform: rotate(90deg); background: #0b1329; padding: 0 4px;"></i>
-                                                            </div>
-                                                            <span class="text-500" style="font-size: 0.65rem;"><i class="pi pi-clock mr-1"></i>Tránsito normal</span>
+                                                        <div class="flight-path-connector">
+                                                            <span class="text-xs text-blue-400 font-bold uppercase tracking-wider">
+                                                                #{iv.vuelo.segmentoVuelos.size() eq 1 ? 'Vuelo Directo' : (iv.vuelo.segmentoVuelos.size() - 1).toString().concat(' Escala(s)')}
+                                                            </span>
+                                                            <div class="flight-path-line"></div>
+                                                            <span class="sub-label">Servicio Regular</span>
                                                         </div>
 
-                                                        <div class="flex flex-column align-items-right text-right">
-                                                            <span class="text-white font-bold font-mono text-base">#{iv.vuelo.segmentoVuelos[iv.vuelo.segmentoVuelos.size() - 1].aeropuertoDestino.codigoIata}</span>
-                                                            <span class="text-500 font-medium" style="font-size: 0.65rem;">Arribo previsto</span>
+                                                        <div class="airport-block text-right">
+                                                            <span class="iata-code">#{iv.vuelo.segmentoVuelos[iv.vuelo.segmentoVuelos.size() - 1].aeropuertoDestino.codigoIata}</span>
+                                                            <span class="sub-label">Arribo Estimado</span>
+                                                            <span class="text-white font-bold text-xs mt-1">
+                                                                <h:outputText value="#{iv.vuelo.fechaHoraLlegada}">
+                                                                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/Santiago"/>
+                                                                </h:outputText>
+                                                            </span>
                                                         </div>
                                                     </div>
 
-                                                    <h:panelGroup rendered="#{not status.last}" layout="block" styleClass="conexion-indicador">
-                                                        <i class="pi pi-arrow-down"></i>
-                                                        <span>Conecta con el siguiente tramo</span>
-                                                    </h:panelGroup>
-
-                                                    <div class="flex justify-content-between text-xs opacity-60 px-1">
-                                                        <span><i class="pi pi-calendar mr-1"></i>Itinerario de Red Física</span>
-                                                        <span class="font-mono">ID: ##{iv.vuelo.idVuelo}</span>
+                                                    <!-- FOOTER DE DETALLES -->
+                                                    <div class="flex justify-content-between align-items-center text-xs opacity-60 px-1 pt-1">
+                                                        <span><i class="pi pi-user mr-1"></i>Piloto: <strong>#{iv.vuelo.piloto != null ? iv.vuelo.piloto.usuario.apellido : 'Sin Asignar'}</strong></span>
+                                                        <span class="font-mono">ID Operativo: ##{iv.vuelo.idVuelo}</span>
                                                     </div>
                                                 </div>
+
+                                                <!-- CONECTOR INTER-TRAMO (CUANDO HAY MÁS DE UN VUELO ENLAZADO) -->
+                                                <h:panelGroup rendered="#{not status.last}" layout="block" styleClass="transfer-connector-box">
+                                                    <i class="pi pi-sync"></i>
+                                                    <span>CONEXIÓN INTERMEDIA EN TERMINAL <strong>#{iv.vuelo.segmentoVuelos[iv.vuelo.segmentoVuelos.size() - 1].aeropuertoDestino.codigoIata}</strong></span>
+                                                    <i class="pi pi-arrow-down ml-2"></i>
+                                                </h:panelGroup>
+
                                             </ui:repeat>
                                         </div>
 
-                                        <div class="mt-5 pt-4 border-top-1 border-white-alpha-10">
-                                            <p:commandButton value="Publicar y Confirmar Oferta de Itinerario" action="#{itinerarioBean.guardarItinerario}"
-                                                             icon="pi pi-cloud-upload" styleClass="w-full btn-corp p-3 shadow-4 text-md"
+                                        <!-- BOTÓN DE CONFIRMACIÓN -->
+                                        <div class="mt-4 pt-3 border-top-1 border-white-alpha-10">
+                                            <p:commandButton value="Publicar y Confirmar Propuesta de Itinerario"
+                                                             action="#{itinerarioBean.guardarItinerario}"
+                                                             icon="pi pi-check-circle"
+                                                             styleClass="w-full btn-corp p-3 shadow-4 text-sm font-bold"
                                                              style="background: var(--status-green) !important;"
-                                                             disabled="#{empty itinerarioBean.itinerariosAsignados}" update=":msgs @form" />
+                                                             disabled="#{empty itinerarioBean.itinerariosAsignados}"
+                                                             update=":msgs @form" />
                                         </div>
                                     </h:panelGroup>
                                 </h:form>
+
+
                             </div>
 
                         </div>
