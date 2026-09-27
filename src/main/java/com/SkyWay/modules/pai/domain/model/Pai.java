@@ -3,6 +3,7 @@ package com.SkyWay.modules.pai.domain.model;
 import java.io.Serializable;
 
 import com.SkyWay.modules.ciudad.domain.model.Ciudad;
+import com.SkyWay.modules.continente.domain.model.Continente;
 import jakarta.persistence.*;
 import java.util.List;
 
@@ -25,9 +26,15 @@ public class Pai implements Serializable {
 
 	private String nombre;
 
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "id_continente")
+	private Continente continente;
+
 	//bi-directional many-to-one association to Ciudad
 	@OneToMany(mappedBy="pai")
 	private List<Ciudad> ciudads;
+
+
 
 	public Pai() {
 	}
@@ -54,6 +61,14 @@ public class Pai implements Serializable {
 
 	public void setCiudads(List<Ciudad> ciudads) {
 		this.ciudads = ciudads;
+	}
+
+	public Continente getContinente() {
+		return continente;
+	}
+
+	public void setContinente(Continente continente) {
+		this.continente = continente;
 	}
 
 	public Ciudad addCiudad(Ciudad ciudad) {
