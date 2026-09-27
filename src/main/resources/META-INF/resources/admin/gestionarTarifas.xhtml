@@ -1,0 +1,516 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition lang="es"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="jakarta.faces.core"
+                xmlns:h="jakarta.faces.html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                template="/admin/template.xhtml">
+
+    <ui:define name="head-admin">
+        <style type="text/css">
+            /* --- PALETA CORPORATIVA SKYWAY NAVY --- */
+            :root {
+                --bg-deep: #0b1120;
+                --bg-card: #0f172a;
+                --bg-header: #1e293b;
+                --border-subtle: #334155;
+
+                --navy-brand: #2563eb;
+                --navy-hover: #1d4ed8;
+                --text-heading: #f8fafc;
+                --text-body: #e2e8f0;
+                --text-muted: #94a3b8;
+
+                --status-active-bg: rgba(30, 58, 138, 0.4);
+                --status-active-border: #2563eb;
+                --status-active-text: #e2e8f0;
+            }
+
+            .ops-container {
+                padding: 0.75rem 0;
+                width: 100%;
+            }
+
+            .header-container {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+                border-bottom: 1px solid var(--border-subtle);
+                padding-bottom: 16px;
+            }
+
+            .header-container h2 {
+                color: var(--text-heading) !important;
+                font-size: 1.5rem !important;
+                font-weight: 700 !important;
+                margin: 0 !important;
+                letter-spacing: -0.02em;
+            }
+
+            /* --- PESTAÑAS PERSONALIZADAS SOBRIAS --- */
+            .custom-nav-tabs {
+                display: flex;
+                gap: 8px;
+                margin-bottom: 20px;
+                border-bottom: 1px solid var(--border-subtle);
+                padding-bottom: 10px;
+            }
+
+            .nav-tab-btn {
+                background: var(--bg-card) !important;
+                border: 1px solid var(--border-subtle) !important;
+                color: var(--text-muted) !important;
+                padding: 8px 18px !important;
+                border-radius: 6px !important;
+                font-weight: 600 !important;
+                font-size: 0.88rem !important;
+                cursor: pointer;
+                transition: all 0.2s ease !important;
+            }
+
+            .nav-tab-btn:hover {
+                color: var(--text-heading) !important;
+                border-color: var(--navy-brand) !important;
+            }
+
+            .nav-tab-btn.active {
+                background: var(--navy-brand) !important;
+                border-color: var(--navy-brand) !important;
+                color: #ffffff !important;
+            }
+
+            /* --- ESTILIZADO SOBRIO DE DATATABLE --- */
+            .skyway-ops-table {
+                background-color: var(--bg-card) !important;
+                border: 1px solid var(--border-subtle) !important;
+                border-radius: 8px !important;
+                overflow: hidden;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            }
+
+            .skyway-ops-table .ui-datatable-header {
+                background-color: var(--bg-header) !important;
+                padding: 14px 18px !important;
+                border-bottom: 1px solid var(--border-subtle) !important;
+            }
+
+            .skyway-ops-table thead th {
+                background-color: var(--bg-deep) !important;
+                color: var(--text-muted) !important;
+                text-transform: uppercase !important;
+                font-size: 0.72rem !important;
+                font-weight: 700 !important;
+                letter-spacing: 0.05em !important;
+                padding: 12px 16px !important;
+                border: none !important;
+                border-bottom: 1px solid var(--border-subtle) !important;
+            }
+
+            .skyway-ops-table tbody td,
+            .skyway-ops-table tbody tr {
+                background-color: var(--bg-card) !important;
+                color: var(--text-body) !important;
+                padding: 12px 16px !important;
+                border: none !important;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+                font-size: 0.88rem;
+            }
+
+            .skyway-ops-table tbody tr:hover,
+            .skyway-ops-table tbody tr:hover td {
+                background-color: var(--bg-header) !important;
+            }
+
+            .skyway-ops-table .ui-paginator {
+                background-color: var(--bg-deep) !important;
+                border: none !important;
+                border-top: 1px solid var(--border-subtle) !important;
+                padding: 10px !important;
+            }
+
+            .skyway-ops-table .ui-paginator .ui-paginator-page,
+            .skyway-ops-table .ui-paginator .ui-paginator-first,
+            .skyway-ops-table .ui-paginator .ui-paginator-prev,
+            .skyway-ops-table .ui-paginator .ui-paginator-next,
+            .skyway-ops-table .ui-paginator .ui-paginator-last {
+                background-color: var(--bg-card) !important;
+                color: var(--text-muted) !important;
+                border: 1px solid var(--border-subtle) !important;
+                border-radius: 4px !important;
+                font-weight: 600 !important;
+                padding: 3px 8px !important;
+            }
+
+            .skyway-ops-table .ui-paginator .ui-paginator-page:hover {
+                color: var(--text-heading) !important;
+                border-color: var(--navy-brand) !important;
+            }
+
+            .skyway-ops-table .ui-paginator .ui-paginator-page.ui-state-active {
+                background-color: var(--navy-brand) !important;
+                color: #ffffff !important;
+                border-color: var(--navy-brand) !important;
+            }
+
+            /* PILLS Y BADGES */
+            .feature-pill {
+                background: var(--bg-deep);
+                border: 1px solid var(--border-subtle);
+                font-size: 0.78rem;
+                padding: 4px 8px;
+                border-radius: 4px;
+                display: inline-block;
+                margin-right: 6px;
+                margin-bottom: 4px;
+            }
+
+            .btn-new {
+                background: var(--navy-brand) !important;
+                border: none !important;
+                border-radius: 6px !important;
+                font-weight: 600 !important;
+                color: #ffffff !important;
+                font-size: 0.85rem !important;
+                padding: 8px 16px !important;
+            }
+
+            .btn-new:hover {
+                background: var(--navy-hover) !important;
+            }
+
+            /* MODALES DIÁLOGO DARK */
+            .custom-dialog.ui-dialog {
+                background: var(--bg-card) !important;
+                border: 1px solid var(--border-subtle) !important;
+                border-radius: 8px !important;
+            }
+
+            .custom-dialog .ui-dialog-titlebar {
+                background: var(--bg-header) !important;
+                border-bottom: 1px solid var(--border-subtle) !important;
+                color: var(--text-heading) !important;
+            }
+
+            .custom-dialog .ui-dialog-content {
+                background: var(--bg-card) !important;
+                color: var(--text-body) !important;
+            }
+
+            .dark-input .ui-inputfield,
+            .dark-input .ui-selectonemenu {
+                background: var(--bg-deep) !important;
+                border: 1px solid var(--border-subtle) !important;
+                color: var(--text-heading) !important;
+                border-radius: 6px !important;
+                padding: 8px 12px !important;
+                width: 100% !important;
+            }
+
+            /* ==========================================================================
+               🛠 FIX FORZADO PARA SPINNER EN DIÁLOGOS OSCUROS
+               ========================================================================== */
+            .dark-input .ui-spinner {
+                width: 100% !important;
+                display: inline-flex !important;
+                background-color: #0b1120 !important;
+                border: 1px solid #334155 !important;
+                border-radius: 6px !important;
+                overflow: hidden !important;
+            }
+
+            .dark-input .ui-spinner .ui-spinner-input,
+            .dark-input .ui-spinner input {
+                background-color: #0b1120 !important;
+                color: #ffffff !important;
+                -webkit-text-fill-color: #ffffff !important;
+                font-weight: 700 !important;
+                font-size: 1rem !important;
+                padding: 6px 10px !important;
+                border: none !important;
+                box-shadow: none !important;
+                text-align: center !important;
+            }
+
+            .dark-input .ui-spinner .ui-spinner-button {
+                background: #2563eb !important;
+                border: none !important;
+                color: #ffffff !important;
+            }
+
+            .dark-input .ui-spinner .ui-spinner-button .ui-icon {
+                color: #ffffff !important;
+            }
+
+            .dark-input .ui-selectbooleancheckbox .ui-chkbox-box {
+                background-color: var(--bg-deep, #0b1120) !important;
+                border: 1px solid var(--border-subtle, #334155) !important;
+                border-radius: 4px !important;
+            }
+
+            .dark-input .ui-selectbooleancheckbox .ui-chkbox-box.ui-state-active {
+                background-color: var(--navy-brand, #2563eb) !important;
+                border-color: var(--navy-brand, #2563eb) !important;
+            }
+
+            .dark-input .ui-selectbooleancheckbox .ui-chkbox-icon {
+                color: #ffffff !important;
+            }
+        </style>
+    </ui:define>
+
+    <ui:define name="contenido-admin">
+        <div class="ops-container">
+            <p:growl id="msgs" showDetail="true" life="3000"/>
+
+            <!-- BARRA DE PESTAÑAS -->
+            <h:form id="formTabs">
+                <div class="custom-nav-tabs">
+                    <p:commandButton value="Familias Tarifarias"
+                                     actionListener="#{tarifaBean.setTabActiva(0)}"
+                                     update=":mainPanel :formTabs"
+                                     styleClass="nav-tab-btn #{tarifaBean.tabActiva == 0 ? 'active' : ''}"
+                                     icon="pi pi-tags" />
+
+                    <p:commandButton value="Catálogo de Beneficios"
+                                     actionListener="#{tarifaBean.setTabActiva(1)}"
+                                     update=":mainPanel :formTabs"
+                                     styleClass="nav-tab-btn #{tarifaBean.tabActiva == 1 ? 'active' : ''}"
+                                     icon="pi pi-sliders-h" />
+                </div>
+            </h:form>
+
+            <h:panelGroup id="mainPanel" layout="block">
+
+                <!-- PESTAÑA 1: TARIFAS COMERCIALES -->
+                <h:panelGroup rendered="#{tarifaBean.tabActiva == 0}" layout="block">
+                    <div class="header-container">
+                        <div>
+                            <h2>Familias Tarifarias</h2>
+                            <span style="color: var(--text-muted); font-size: 0.85rem;">Asigne características y valores a las tarifas</span>
+                        </div>
+                        <p:commandButton value="Nueva Tarifa"
+                                         icon="pi pi-plus"
+                                         actionListener="#{tarifaBean.prepararNuevaTarifa()}"
+                                         process="@this"
+                                         update=":formDialog:panelTarifa"
+                                         oncomplete="PF('dlgTarifa').show();"
+                                         styleClass="btn-new" />
+                    </div>
+
+                    <h:form id="formTabla">
+                        <p:dataTable id="dt-tarifas"
+                                     value="#{tarifaBean.listaTarifas}"
+                                     var="tarifa"
+                                     styleClass="skyway-ops-table"
+                                     paginator="true"
+                                     rows="10"
+                                     paginatorPosition="bottom"
+                                     emptyMessage="No hay tarifas registradas.">
+
+                            <p:column headerText="ID" style="width: 80px; text-align: center;">
+                                <span style="background: var(--bg-deep); border: 1px solid var(--border-subtle); padding: 2px 6px; border-radius: 4px; font-weight: 600; color: var(--text-heading);">
+                                    ##{tarifa.idTarifa}
+                                </span>
+                            </p:column>
+
+                            <p:column headerText="Nombre de Tarifa">
+                                <span style="font-weight: 700; color: var(--text-heading); font-size: 0.95rem;">#{tarifa.nombre}</span>
+                            </p:column>
+
+                            <p:column headerText="Beneficios Configurados">
+                                <ui:repeat value="#{tarifa.tarifaCaracteristicas}" var="tc">
+                                    <div class="feature-pill">
+                                        <span style="color: var(--text-muted);">#{tc.caracteristica.nombre}: </span>
+                                        <strong style="color: var(--text-heading);">
+                                            <h:outputText value="Sí" rendered="#{tc.caracteristica.tipoDato eq 'boolean' and tc.valorBool}" />
+                                            <h:outputText value="No" rendered="#{tc.caracteristica.tipoDato eq 'boolean' and not tc.valorBool}" />
+                                            <h:outputText value="#{tc.valorInt}" rendered="#{tc.caracteristica.tipoDato eq 'int'}" />
+                                            <h:outputText value="#{tc.valor}" rendered="#{tc.caracteristica.tipoDato eq 'text'}" />
+                                        </strong>
+                                    </div>
+                                </ui:repeat>
+                            </p:column>
+
+                            <p:column headerText="Acciones" style="width: 120px; text-align: center;">
+                                <div class="flex gap-2 justify-content-center">
+                                    <p:commandButton icon="pi pi-pencil"
+                                                     actionListener="#{tarifaBean.prepararEdicion(tarifa)}"
+                                                     process="@this"
+                                                     update=":formDialog:panelTarifa"
+                                                     oncomplete="PF('dlgTarifa').show();"
+                                                     styleClass="ui-button-outlined ui-button-secondary ui-button-sm" />
+
+                                    <p:commandButton icon="pi pi-trash"
+                                                     actionListener="#{tarifaBean.eliminarTarifa(tarifa)}"
+                                                     update=":mainPanel :msgs"
+                                                     styleClass="ui-button-outlined ui-button-danger ui-button-sm">
+                                        <p:confirm header="Confirmación" message="¿Eliminar la tarifa '#{tarifa.nombre}'?" icon="pi pi-exclamation-triangle" />
+                                    </p:commandButton>
+                                </div>
+                            </p:column>
+                        </p:dataTable>
+                    </h:form>
+                </h:panelGroup>
+
+                <!-- PESTAÑA 2: CATÁLOGOS DE BENEFICIOS -->
+                <h:panelGroup rendered="#{tarifaBean.tabActiva == 1}" layout="block">
+                    <div class="header-container">
+                        <div>
+                            <h2>Catálogo Parametrizable de Beneficios</h2>
+                            <span style="color: var(--text-muted); font-size: 0.85rem;">Defina nuevas variables globales para usarse en las tarifas</span>
+                        </div>
+                        <p:commandButton value="Nuevo Beneficio / Regla"
+                                         icon="pi pi-plus"
+                                         oncomplete="PF('dlgNuevaCaracteristica').show();"
+                                         styleClass="btn-new" />
+                    </div>
+
+                    <h:form id="formCatalogo">
+                        <p:dataTable id="dt-catalogo"
+                                     value="#{tarifaBean.listaCaracteristicasGlobales}"
+                                     var="c"
+                                     styleClass="skyway-ops-table"
+                                     paginator="true"
+                                     rows="10"
+                                     paginatorPosition="bottom"
+                                     emptyMessage="No hay beneficios definidos en el catálogo.">
+
+                            <p:column headerText="ID" style="width: 70px; text-align: center;">
+                                <span style="background: var(--bg-deep); border: 1px solid var(--border-subtle); padding: 2px 6px; border-radius: 4px; font-weight: 600;">
+                                    ##{c.idCaracteristica}
+                                </span>
+                            </p:column>
+
+                            <p:column headerText="Nombre Beneficio">
+                                <span style="font-weight: 700; color: var(--text-heading);">#{c.nombre}</span>
+                            </p:column>
+
+                            <p:column headerText="Descripción">
+                                <span style="color: var(--text-muted);">#{c.descripcion}</span>
+                            </p:column>
+
+                            <p:column headerText="Tipo de Entrada" style="width: 150px; text-align: center;">
+                                <span style="background: var(--status-active-bg); border: 1px solid var(--status-active-border); color: var(--status-active-text); padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; text-transform: uppercase; font-weight: 700;">
+                                    #{c.tipoDato}
+                                </span>
+                            </p:column>
+                        </p:dataTable>
+                    </h:form>
+                </h:panelGroup>
+
+            </h:panelGroup>
+
+            <!-- MODAL 1: CREAR / EDITAR TARIFA -->
+            <p:dialog header="#{tarifaBean.esNuevo ? 'Crear Nueva Tarifa' : 'Modificar Tarifa'}"
+                      widgetVar="dlgTarifa"
+                      modal="true"
+                      responsive="true"
+                      width="580"
+                      styleClass="custom-dialog">
+
+                <h:form id="formDialog" styleClass="dark-input">
+                    <h:panelGroup id="panelTarifa" layout="block">
+                        <div class="mb-4">
+                            <label style="display: block; color: var(--text-muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">Nombre de la Tarifa</label>
+                            <p:inputText value="#{tarifaBean.tarifaSeleccionada.nombre}" placeholder="Ej: Flex, Classic, Basic, Premium" required="true" />
+                        </div>
+
+                        <div style="border-top: 1px solid var(--border-subtle); padding-top: 12px;" class="mb-3">
+                            <span style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--navy-brand); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px;">
+                                <i class="pi pi-sliders-h" style="margin-right: 4px;"></i>Beneficios Configurables
+                            </span>
+
+                            <ui:repeat value="#{tarifaBean.tarifaSeleccionada.tarifaCaracteristicas}" var="tc">
+                                <div class="p-2 mb-2 rounded flex align-items-center justify-content-between"
+                                     style="background: var(--bg-deep); border: 1px solid var(--border-subtle);">
+
+                                    <div>
+                                        <span style="color: var(--text-heading); font-weight: 700; display: block; font-size: 0.88rem;">#{tc.caracteristica.nombre}</span>
+                                        <span style="color: var(--text-muted); font-size: 0.75rem; display: block;">#{tc.caracteristica.descripcion}</span>
+                                    </div>
+
+                                    <div style="width: 180px; text-align: right;">
+                                        <!-- Tipo Boolean -->
+                                        <p:selectBooleanCheckbox value="#{tc.valorBool}"
+                                                                 rendered="#{tc.caracteristica.tipoDato eq 'boolean'}" />
+
+                                        <!-- Tipo Int (Spinner de Horas/Cantidades) -->
+                                        <p:spinner value="#{tc.valorInt}"
+                                                   min="0"
+                                                   max="720"
+                                                   stepFactor="1"
+                                                   rendered="#{tc.caracteristica.tipoDato eq 'int'}"
+                                                   style="width: 100% !important;"
+                                                   inputStyle="background-color: #0b1120 !important; color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; font-weight: bold !important; font-size: 1rem !important; text-align: center !important;" />
+
+                                        <!-- Tipo Text -->
+                                        <p:inputText value="#{tc.valor}"
+                                                     rendered="#{tc.caracteristica.tipoDato eq 'text'}"
+                                                     placeholder="Valor..." />
+                                    </div>
+                                </div>
+                            </ui:repeat>
+                        </div>
+
+                        <div class="flex justify-content-end gap-2 pt-3" style="border-top: 1px solid var(--border-subtle);">
+                            <p:commandButton value="Cancelar" onclick="PF('dlgTarifa').hide();" type="button"
+                                             styleClass="ui-button-flat ui-button-secondary" />
+                            <p:commandButton value="Guardar Tarifa"
+                                             actionListener="#{tarifaBean.guardarTarifa()}"
+                                             update=":mainPanel :msgs"
+                                             styleClass="btn-new" />
+                        </div>
+                    </h:panelGroup>
+                </h:form>
+            </p:dialog>
+
+            <!-- MODAL 2: NUEVO BENEFICIO AL CATÁLOGO -->
+            <p:dialog header="Nuevo Beneficio / Regla Comercial"
+                      widgetVar="dlgNuevaCaracteristica"
+                      modal="true"
+                      responsive="true"
+                      width="450"
+                      styleClass="custom-dialog">
+
+                <h:form id="formNuevoBeneficio" styleClass="dark-input">
+                    <div class="mb-3">
+                        <label style="display: block; color: var(--text-muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">Nombre del Beneficio</label>
+                        <p:inputText value="#{tarifaBean.nuevaCaracteristica.nombre}" placeholder="Ej: Acceso a Salón VIP, Selección de Asiento" required="true" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label style="display: block; color: var(--text-muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">Descripción</label>
+                        <p:inputTextarea value="#{tarifaBean.nuevaCaracteristica.descripcion}" rows="2" placeholder="Detalle..." />
+                    </div>
+
+                    <div class="mb-4">
+                        <label style="display: block; color: var(--text-muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">Tipo de Selector</label>
+                        <p:selectOneMenu value="#{tarifaBean.nuevaCaracteristica.tipoDato}" required="true">
+                            <f:selectItem itemLabel="Booleano (Sí / No)" itemValue="boolean" />
+                            <f:selectItem itemLabel="Numérico (Cantidades / Enteros)" itemValue="int" />
+                            <f:selectItem itemLabel="Texto (Reglas específicas / Comentarios)" itemValue="text" />
+                        </p:selectOneMenu>
+                    </div>
+
+                    <div class="flex justify-content-end gap-2 pt-3" style="border-top: 1px solid var(--border-subtle);">
+                        <p:commandButton value="Cancelar" onclick="PF('dlgNuevaCaracteristica').hide();" type="button"
+                                         styleClass="ui-button-flat ui-button-secondary" />
+                        <p:commandButton value="Guardar Beneficio"
+                                         actionListener="#{tarifaBean.guardarNuevaCaracteristicaCatálogo()}"
+                                         update=":mainPanel :formDialog:panelTarifa :msgs"
+                                         styleClass="btn-new" />
+                    </div>
+                </h:form>
+            </p:dialog>
+
+            <!-- CONFIRM DIALOG GLOBAL -->
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" styleClass="custom-dialog">
+                <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-flat ui-button-secondary" />
+                <p:commandButton value="Sí, Eliminar" type="button" styleClass="ui-confirmdialog-yes btn-new" />
+            </p:confirmDialog>
+        </div>
+    </ui:define>
+
+</ui:composition>

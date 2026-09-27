@@ -112,7 +112,7 @@ public class ItinerarioBean implements Serializable {
 
         // 2. Cargar tarifas de catálogo
         long t3 = System.currentTimeMillis();
-        this.tarifas = tarifaService.listarTarifas();
+        this.tarifas = tarifaService.findAll();
         long t4 = System.currentTimeMillis();
         Logger.logInfo(">>> [PERF-ITINERARIO] Cargar tarifas: " + (t4 - t3) + " ms");
 
@@ -428,7 +428,7 @@ public class ItinerarioBean implements Serializable {
                 }
 
                 for (Map.Entry<Integer, BigDecimal> entry : this.precioTarifas.entrySet()) {
-                    Optional<Tarifa> tOpt = tarifaService.buscarPorId(entry.getKey());
+                    Optional<Tarifa> tOpt = tarifaService.findById(entry.getKey());
                     if (tOpt.isPresent()) {
                         ItinerarioTarifa itinerarioTarifa = new ItinerarioTarifa();
                         itinerarioTarifa.setTarifa(tOpt.get());
