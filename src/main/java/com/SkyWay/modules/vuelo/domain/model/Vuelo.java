@@ -279,8 +279,8 @@ public class Vuelo implements Serializable {
 		final StringBuffer sb = new StringBuffer("Vuelo{");
 		sb.append("idVuelo=").append(idVuelo);
 		sb.append(", numeroVuelo='").append(numeroVuelo).append('\'');
-		sb.append(", avion=").append(avion);
-		sb.append(", piloto=").append(piloto);
+		sb.append(", avion=").append(avion.getModeloAvion());
+		sb.append(", piloto=").append(piloto.getRut());
 		sb.append('}');
 		return sb.toString();
 	}

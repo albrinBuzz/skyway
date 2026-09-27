@@ -5,26 +5,27 @@
                 xmlns:p="http://primefaces.org/ui">
 
     <style type="text/css">
-        /* --- PALETA CORPORATIVA OFICIAL SKYWAY --- */
+        /* --- PALETA CORPORATIVA SERIA Y PROFESIONAL (SKYWAY NAVY) --- */
         :root {
-            --deep-space: #080e1a;
-            --midnight-blue: #0b1426;
-            --slate-glass: #1e293b;
-            --border-ui: #334155;
+            --bg-deep: #0b1120;
+            --bg-card: #0f172a;
+            --bg-header: #1e293b;
+            --border-subtle: #334155;
 
-            --cyber-cyan: #00d1ff;
-            --aviation-blue: #4c7cf3;
-            --aviation-hover: #3b68d6;
-            --glow-white: #f8fafc;
-            --text-dim: #94a3b8;
+            --navy-brand: #2563eb;
+            --navy-hover: #1d4ed8;
+            --text-heading: #f8fafc;
+            --text-body: #e2e8f0;
+            --text-muted: #94a3b8;
 
-            --status-ontime-bg: rgba(76, 124, 243, 0.12);
-            --status-ontime-border: #4c7cf3;
-            --status-ontime-text: #f8fafc;
+            --status-active-bg: rgba(30, 58, 138, 0.4);
+            --status-active-border: #2563eb;
+            --status-active-text: #e2e8f0;
         }
 
         .ops-container {
-            padding: 12px 0;
+            padding: 0.75rem 0;
+            width: 100%;
         }
 
         .header-container {
@@ -32,72 +33,72 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
-            border-bottom: 1px solid var(--slate-glass);
+            border-bottom: 1px solid var(--border-subtle);
             padding-bottom: 16px;
         }
 
         .header-container h2 {
-            color: var(--glow-white) !important;
-            font-size: 22px !important;
-            font-weight: 600 !important;
+            color: var(--text-heading) !important;
+            font-size: 1.5rem !important;
+            font-weight: 700 !important;
             margin: 0 !important;
+            letter-spacing: -0.02em;
         }
 
-        /* --- CONTENEDOR DE TABLA SOBRIO --- */
+        /* --- ESTILIZADO SOBRIO DE DATATABLE --- */
         .skyway-ops-table {
-            background-color: var(--midnight-blue) !important;
-            border: 1px solid var(--slate-glass) !important;
+            background-color: var(--bg-card) !important;
+            border: 1px solid var(--border-subtle) !important;
             border-radius: 8px !important;
             overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
         }
 
-        /* Buscador Superior */
         .skyway-ops-table .ui-datatable-header {
-            background-color: var(--midnight-blue) !important;
+            background-color: var(--bg-header) !important;
             padding: 14px 18px !important;
-            border-bottom: 1px solid var(--slate-glass) !important;
+            border-bottom: 1px solid var(--border-subtle) !important;
         }
 
-        /* Encabezado de Columnas en Deep Space */
+        /* Encabezados de Columnas */
         .skyway-ops-table thead th {
-            background-color: var(--deep-space) !important;
-            color: var(--text-dim) !important;
+            background-color: var(--bg-deep) !important;
+            color: var(--text-muted) !important;
             text-transform: uppercase !important;
-            font-size: 11px !important;
-            font-weight: 600 !important;
-            letter-spacing: 0.8px !important;
+            font-size: 0.72rem !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.05em !important;
             padding: 12px 16px !important;
             border: none !important;
-            border-bottom: 1px solid var(--slate-glass) !important;
+            border-bottom: 1px solid var(--border-subtle) !important;
         }
 
-        /* Ocultar input de filtro en cabeceras de columna */
         .skyway-ops-table thead th .ui-column-filter {
             display: none !important;
         }
 
-        /* Celdas y Filas */
+        /* Filas y Celdas */
         .skyway-ops-table tbody td,
         .skyway-ops-table tbody tr {
-            background-color: var(--midnight-blue) !important;
-            color: var(--glow-white) !important;
-            padding: 14px 16px !important;
+            background-color: var(--bg-card) !important;
+            color: var(--text-body) !important;
+            padding: 12px 16px !important;
             border: none !important;
-            border-bottom: 1px solid var(--slate-glass) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+            font-size: 0.88rem;
         }
 
-        /* Hover de Filas (Gris Slate Vidrio) */
+        /* Hover discreto de filas */
         .skyway-ops-table tbody tr:hover,
         .skyway-ops-table tbody tr:hover td {
-            background-color: var(--slate-glass) !important;
+            background-color: var(--bg-header) !important;
         }
 
-        /* --- PAGINADOR INTEGRADO A LA MARCA --- */
+        /* --- PAGINADOR SOBRIO --- */
         .skyway-ops-table .ui-paginator {
-            background-color: var(--deep-space) !important;
+            background-color: var(--bg-deep) !important;
             border: none !important;
-            border-top: 1px solid var(--slate-glass) !important;
+            border-top: 1px solid var(--border-subtle) !important;
             padding: 10px !important;
         }
 
@@ -106,66 +107,118 @@
         .skyway-ops-table .ui-paginator .ui-paginator-prev,
         .skyway-ops-table .ui-paginator .ui-paginator-next,
         .skyway-ops-table .ui-paginator .ui-paginator-last {
-            background-color: var(--midnight-blue) !important;
-            color: var(--text-dim) !important;
-            border: 1px solid var(--border-ui) !important;
+            background-color: var(--bg-card) !important;
+            color: var(--text-muted) !important;
+            border: 1px solid var(--border-subtle) !important;
             border-radius: 4px !important;
-            font-weight: 500 !important;
+            font-weight: 600 !important;
+            padding: 3px 8px !important;
         }
 
         .skyway-ops-table .ui-paginator .ui-paginator-page:hover {
-            color: var(--glow-white) !important;
-            border-color: var(--aviation-blue) !important;
+            color: var(--text-heading) !important;
+            border-color: var(--navy-brand) !important;
         }
 
-        /* Pagina activa en Aviation Blue */
         .skyway-ops-table .ui-paginator .ui-paginator-page.ui-state-active {
-            background-color: var(--aviation-blue) !important;
+            background-color: var(--navy-brand) !important;
             color: #ffffff !important;
-            border-color: var(--aviation-blue) !important;
+            border-color: var(--navy-brand) !important;
         }
 
-        /* BADGES CORPORATIVOS DE ESTADO */
+        /* BADGES CÓDIGO Y RUTA */
+        .flight-code-badge {
+            background: #1e293b;
+            border: 1px solid var(--border-subtle);
+            color: var(--text-heading);
+            font-weight: 700;
+            font-size: 0.88rem;
+            padding: 5px 10px;
+            border-radius: 6px;
+            display: inline-block;
+            letter-spacing: 0.03em;
+        }
+
+        .route-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-heading);
+        }
+
+        .route-pill .iata {
+            background: #0b1120;
+            padding: 2px 7px;
+            border-radius: 4px;
+            border: 1px solid var(--border-subtle);
+            font-size: 0.82rem;
+            color: var(--text-heading);
+        }
+
+        /* BADGE CORPORATIVO DE ESTADO */
         .status-badge {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 4px 12px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-        .status-ontime {
-            background: var(--status-ontime-bg) !important;
-            color: var(--status-ontime-text) !important;
-            border: 1px solid var(--status-ontime-border) !important;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            background: var(--status-active-bg) !important;
+            color: var(--status-active-text) !important;
+            border: 1px solid var(--status-active-border) !important;
         }
 
-        /* BUSCADOR */
+        /* BUSCADOR CORPORATIVO */
+        .search-box-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
         .search-input {
-            background: var(--deep-space) !important;
-            border: 1px solid var(--border-ui) !important;
-            color: var(--glow-white) !important;
+            background: var(--bg-deep) !important;
+            border: 1px solid var(--border-subtle) !important;
+            color: var(--text-heading) !important;
             border-radius: 6px !important;
-            padding: 6px 12px 6px 32px !important;
-            font-size: 13px !important;
-            width: 240px;
+            padding: 7px 12px 7px 36px !important;
+            font-size: 0.85rem !important;
+            width: 300px;
+            transition: border-color 0.2s ease;
         }
 
         .search-input:focus {
-            border-color: var(--aviation-blue) !important;
+            border-color: var(--navy-brand) !important;
+            outline: none !important;
             box-shadow: none !important;
         }
 
-        /* EXPANSIONES / ITINERARIOS */
+        .btn-clear-search {
+            background: transparent !important;
+            border: 1px solid var(--border-subtle) !important;
+            color: var(--text-muted) !important;
+            border-radius: 6px !important;
+            font-size: 0.8rem !important;
+            padding: 6px 12px !important;
+        }
+        .btn-clear-search:hover {
+            color: var(--text-heading) !important;
+            border-color: var(--navy-brand) !important;
+        }
+
+        /* EXPANSIONES Y SUBTABLAS */
         .skyway-ops-table .p-rowExpansion > td {
-            background: var(--deep-space) !important;
+            background: var(--bg-deep) !important;
             padding: 16px !important;
         }
 
         .itinerary-card {
-            background: var(--midnight-blue);
-            border: 1px solid var(--slate-glass);
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
             border-radius: 6px;
             padding: 16px;
         }
@@ -177,51 +230,56 @@
         }
 
         .nested-table.ui-datatable thead th {
-            background: var(--deep-space) !important;
-            border-bottom: 1px solid var(--slate-glass) !important;
+            background: var(--bg-deep) !important;
+            border-bottom: 1px solid var(--border-subtle) !important;
+            color: var(--text-muted) !important;
         }
 
         /* BOTONES DE ACCIÓN */
         .btn-new {
-            background: var(--aviation-blue) !important;
+            background: var(--navy-brand) !important;
             border: none !important;
             border-radius: 6px !important;
             font-weight: 600 !important;
             color: #ffffff !important;
-            font-size: 13px !important;
-            padding: 6px 16px !important;
+            font-size: 0.85rem !important;
+            padding: 8px 16px !important;
         }
 
         .btn-new:hover {
-            background: var(--aviation-hover) !important;
+            background: var(--navy-hover) !important;
         }
 
         .btn-turns {
-            border: 1px solid var(--border-ui) !important;
+            border: 1px solid var(--border-subtle) !important;
             background: transparent !important;
-            color: var(--glow-white) !important;
+            color: var(--text-heading) !important;
             border-radius: 4px !important;
-            font-size: 12px !important;
+            font-size: 0.8rem !important;
+            font-weight: 600 !important;
         }
 
         .btn-turns:hover {
-            background: var(--aviation-blue) !important;
-            border-color: var(--aviation-blue) !important;
+            background: var(--navy-brand) !important;
+            border-color: var(--navy-brand) !important;
             color: #ffffff !important;
         }
 
         .ui-row-toggler {
-            color: var(--text-dim) !important;
+            color: var(--text-muted) !important;
         }
         .ui-row-toggler:hover {
-            color: var(--glow-white) !important;
+            color: var(--text-heading) !important;
         }
     </style>
 
     <div class="ops-container">
         <!-- CABECERA DE OPERACIONES -->
         <div class="header-container">
-            <h2>Operaciones de Vuelo</h2>
+            <div>
+                <h2>Operaciones de Vuelo</h2>
+                <span style="color: var(--text-muted); font-size: 0.85rem;">Monitoreo y programación de la flota comercial</span>
+            </div>
             <p:button outcome="/admin/vuelo/vuelo.xhtml"
                       value="Nuevo Vuelo"
                       icon="pi pi-plus"
@@ -241,103 +299,182 @@
                          rows="10"
                          paginatorPosition="bottom"
                          rowKey="#{vuelo.idVuelo}"
-                         emptyMessage="No se encontraron vuelos programados">
+                         filteredValue="#{vueloBean.vuelosFiltrados}"
+                         globalFilterOnly="true"
+                         emptyMessage="No se encontraron registros de vuelos que coincidan con la búsqueda.">
 
-                <!-- HEADER CON BUSCADOR GLOBALES -->
+                <!-- HEADER CON BUSCADOR DE TABLA -->
                 <f:facet name="header">
-                    <div class="flex justify-content-end align-items-center">
-                        <span class="ui-input-icon-left" style="position: relative;">
-                            <i class="pi pi-search" style="color: var(--text-dim); position: absolute; left: 10px; top: 50%; transform: translateY(-50%); z-index: 1;" />
-                            <p:inputText id="globalFilter"
-                                         onkeyup="PF('wvVuelos').filter()"
-                                         placeholder="Buscar por vuelo, ruta..."
-                                         styleClass="search-input" />
-                        </span>
+                    <div class="flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div class="flex align-items-center gap-2">
+                            <i class="pi pi-list" style="color: var(--text-muted); font-size: 1rem;"></i>
+                            <span style="color: var(--text-heading); font-weight: 600; font-size: 0.9rem;">Registro General de Vuelos</span>
+                        </div>
+
+                        <div class="search-box-wrapper">
+                            <span class="ui-input-icon-left" style="position: relative;">
+                                <i class="pi pi-search" style="color: var(--text-muted); position: absolute; left: 12px; top: 50%; transform: translateY(-50%); z-index: 2;" />
+                                <p:inputText id="globalFilter"
+                                             onkeyup="PF('wvVuelos').filter()"
+                                             placeholder="Buscar por código (ej: SCL-MVD1)..."
+                                             styleClass="search-input" />
+                            </span>
+
+                            <p:commandButton value="Limpiar"
+                                             icon="pi pi-filter-slash"
+                                             onclick="document.getElementById('vueloForm:dt-vuelos:globalFilter').value=''; PF('wvVuelos').clearFilters(); return false;"
+                                             styleClass="btn-clear-search"
+                                             title="Restablecer búsqueda" />
+                        </div>
                     </div>
                 </f:facet>
 
+                <!-- DESPLEGABLE ITINERARIO -->
                 <p:column style="width:3rem; text-align: center">
                     <p:rowToggler />
                 </p:column>
 
-                <p:column headerText="Vuelo" sortBy="#{vuelo.numeroVuelo}">
-                    <h:outputText value="#{vuelo.numeroVuelo}" style="font-weight: 700; color: var(--glow-white); font-size: 14px;"/>
-                </p:column>
-
-                <p:column headerText="Salida" sortBy="#{vuelo.fechaHoraSalida}">
-                    <h:outputText value="#{vuelo.fechaHoraSalida}" style="font-weight: 500; font-size: 13px;">
-                        <f:convertDateTime pattern="dd/MM/yyyy - HH:mm 'hrs'"
-                                           type="both"
-                                           timeZone="America/Santiago" />
-                    </h:outputText>
-                </p:column>
-
-                <p:column headerText="Llegada" sortBy="#{vuelo.fechaHoraLlegada}">
-                    <h:outputText value="#{vuelo.fechaHoraLlegada}" style="font-weight: 500; font-size: 13px;">
-                        <f:convertDateTime pattern="dd/MM/yyyy - HH:mm 'hrs'"
-                                           type="both"
-                                           timeZone="America/Santiago" />
-                    </h:outputText>
-                </p:column>
-
-                <p:column headerText="Estado" style="text-align: center; width: 160px;">
-                    <span class="status-badge status-ontime">
-                        <i class="pi pi-check-circle" style="font-size: 11px"></i> #{vuelo.estadoVuelo != null ? vuelo.estadoVuelo.descripcion : 'Programado'}
+                <!-- CÓDIGO DE VUELO -->
+                <p:column headerText="Código"
+                          sortBy="#{vuelo.numeroVuelo}"
+                          filterBy="#{vuelo.numeroVuelo}"
+                          filterMatchMode="contains"
+                          style="width: 140px;">
+                    <span class="flight-code-badge">
+                        #{vuelo.numeroVuelo != null ? vuelo.numeroVuelo : 'FLT-'.concat(vuelo.idVuelo)}
                     </span>
                 </p:column>
 
-                <p:column headerText="Gestión" style="width: 140px; text-align: center">
+                <!-- TRAYECTO -->
+                <p:column headerText="Trayecto / Ruta"
+                          filterBy="#{vuelo.segmentoVuelos[0].aeropuertoOrigen.codigoIata} #{vuelo.segmentoVuelos[vuelo.segmentoVuelos.size()-1].aeropuertoDestino.codigoIata}"
+                          filterMatchMode="contains">
+                    <h:panelGroup rendered="#{not empty vuelo.segmentoVuelos}">
+                        <div class="route-pill">
+                            <span class="iata">#{vuelo.segmentoVuelos[0].aeropuertoOrigen.codigoIata}</span>
+                            <i class="pi pi-arrow-right" style="color: var(--text-muted); font-size: 0.75rem;"></i>
+                            <span class="iata">#{vuelo.segmentoVuelos[vuelo.segmentoVuelos.size()-1].aeropuertoDestino.codigoIata}</span>
+                            <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 400; margin-left: 4px;">
+                                (#{vuelo.segmentoVuelos.size()} escala#{vuelo.segmentoVuelos.size() > 1 ? 's' : ''})
+                            </span>
+                        </div>
+                    </h:panelGroup>
+                </p:column>
+
+                <!-- SALIDA -->
+                <p:column headerText="Salida Programada"
+                          sortBy="#{vuelo.fechaHoraSalida}"
+                          filterBy="#{vuelo.fechaHoraSalida}"
+                          filterMatchMode="contains">
+                    <div class="flex align-items-center gap-2">
+                        <i class="pi pi-calendar" style="color: var(--text-muted); font-size: 0.85rem;"></i>
+                        <h:outputText value="#{vuelo.fechaHoraSalida}" style="font-weight: 500; font-size: 0.85rem;">
+                            <f:convertDateTime pattern="dd/MM/yyyy - HH:mm 'hrs'"
+                                               type="both"
+                                               timeZone="America/Santiago" />
+                        </h:outputText>
+                    </div>
+                </p:column>
+
+                <!-- LLEGADA -->
+                <p:column headerText="Llegada Estimada"
+                          sortBy="#{vuelo.fechaHoraLlegada}"
+                          filterBy="#{vuelo.fechaHoraLlegada}"
+                          filterMatchMode="contains">
+                    <div class="flex align-items-center gap-2">
+                        <i class="pi pi-calendar" style="color: var(--text-muted); font-size: 0.85rem;"></i>
+                        <h:outputText value="#{vuelo.fechaHoraLlegada}" style="font-weight: 500; font-size: 0.85rem;">
+                            <f:convertDateTime pattern="dd/MM/yyyy - HH:mm 'hrs'"
+                                               type="both"
+                                               timeZone="America/Santiago" />
+                        </h:outputText>
+                    </div>
+                </p:column>
+
+                <!-- AERONAVE Y COMANDANTE -->
+                <p:column headerText="Aeronave / Comandante"
+                          filterBy="#{vuelo.avion.modeloAvion.nombre} #{vuelo.piloto.usuario.apellido}"
+                          filterMatchMode="contains">
+                    <div>
+                        <span style="font-weight: 600; color: var(--text-heading); display: block; font-size: 0.85rem;">
+                            #{vuelo.avion != null ? vuelo.avion.modeloAvion.nombre : 'N/A'}
+                        </span>
+                        <span style="color: var(--text-muted); font-size: 0.78rem;">
+                            Piloto: #{vuelo.piloto != null ? vuelo.piloto.usuario.nombre.concat(' ').concat(vuelo.piloto.usuario.apellido) : 'Sin asignar'}
+                        </span>
+                    </div>
+                </p:column>
+
+                <!-- ESTADO -->
+                <p:column headerText="Estado"
+                          sortBy="#{vuelo.estadoVuelo.descripcion}"
+                          filterBy="#{vuelo.estadoVuelo.descripcion}"
+                          filterMatchMode="contains"
+                          style="text-align: center; width: 150px;">
+                    <span class="status-badge">
+                        <i class="pi pi-check-circle" style="font-size: 10px;"></i>
+                        #{vuelo.estadoVuelo != null ? vuelo.estadoVuelo.descripcion : 'Programado'}
+                    </span>
+                </p:column>
+
+                <!-- ACCIONES -->
+                <p:column headerText="Acciones" style="width: 140px; text-align: center">
                     <div class="flex gap-2 justify-content-center">
                         <p:commandButton icon="pi pi-pencil"
                                          action="#{vueloBean.editarVuelo(vuelo)}"
-                                         styleClass="ui-button-flat ui-button-plain"
-                                         style="color: var(--text-dim);"
+                                         styleClass="ui-button-outlined ui-button-secondary ui-button-sm"
                                          title="Editar Vuelo" />
 
                         <p:commandButton value="Turnos"
-                                         icon="pi pi-calendar"
+                                         icon="pi pi-users"
                                          action="#{vueloBean.verTurnos(vuelo)}"
                                          styleClass="btn-turns ui-button-sm" />
                     </div>
                 </p:column>
 
-                <!-- SUB-DESPLEGABLE CON DETALLES Y LOGÍSTICA DE ESCALAS -->
+                <!-- SUB-TABLA DE DETALLES -->
                 <p:rowExpansion>
                     <div class="itinerary-card">
-                        <h4 style="margin:0 0 12px 0; display: flex; align-items: center; gap: 8px; color: var(--glow-white); font-size: 14px; font-weight: 600;">
-                            <i class="pi pi-map-marker" style="color: var(--text-dim)"></i>
-                            Itinerario y Escalas Logísticas
-                        </h4>
+                        <div class="flex justify-content-between align-items-center mb-3">
+                            <h4 style="margin:0; display: flex; align-items: center; gap: 8px; color: var(--text-heading); font-size: 0.9rem; font-weight: 600;">
+                                <i class="pi pi-map-marker" style="color: var(--text-muted)"></i>
+                                Detalle de Escalas e Itinerario
+                            </h4>
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">
+                                Matrícula Aeronave: <b>#{vuelo.avion.numeroDeRegistro}</b> | Capacidad: <b>#{vuelo.avion.capacidadDePasajeros} Pax</b>
+                            </span>
+                        </div>
 
                         <p:dataTable value="#{vuelo.segmentoVuelos}" var="segmento" styleClass="nested-table ui-datatable-sm">
-                            <p:column headerText="#" style="width: 40px; text-align: center; color: var(--text-dim)">
-                                #{segmento.ordenSegmento}°
+                            <p:column headerText="Tramo" style="width: 60px; text-align: center; color: var(--text-muted)">
+                                <span style="background: var(--bg-deep); border: 1px solid var(--border-subtle); padding: 2px 6px; border-radius: 4px; font-weight: 600; color: var(--text-heading);">
+                                    #{segmento.ordenSegmento}°
+                                </span>
                             </p:column>
 
                             <p:column headerText="Origen">
-                                <span style="font-weight: 700; color: var(--glow-white)">#{segmento.aeropuertoOrigen.codigoIata}</span>
-                                <h:outputText value=" - #{segmento.aeropuertoOrigen.nombreAeropuerto}" style="font-size: 12px; color: var(--text-dim); margin-left: 4px;"/>
+                                <span style="font-weight: 700; color: var(--text-heading)">#{segmento.aeropuertoOrigen.codigoIata}</span>
+                                <h:outputText value=" - #{segmento.aeropuertoOrigen.nombreAeropuerto}" style="font-size: 0.8rem; color: var(--text-muted); margin-left: 4px;"/>
                             </p:column>
 
                             <p:column style="width: 30px; text-align: center;">
-                                <i class="pi pi-arrow-right" style="color: var(--text-dim); font-size: 11px;"></i>
+                                <i class="pi pi-arrow-right" style="color: var(--text-muted); font-size: 0.75rem;"></i>
                             </p:column>
 
                             <p:column headerText="Destino">
-                                <span style="font-weight: 700; color: var(--glow-white)">#{segmento.aeropuertoDestino.codigoIata}</span>
-                                <h:outputText value=" - #{segmento.aeropuertoDestino.nombreAeropuerto}" style="font-size: 12px; color: var(--text-dim); margin-left: 4px;"/>
+                                <span style="font-weight: 700; color: var(--text-heading)">#{segmento.aeropuertoDestino.codigoIata}</span>
+                                <h:outputText value=" - #{segmento.aeropuertoDestino.nombreAeropuerto}" style="font-size: 0.8rem; color: var(--text-muted); margin-left: 4px;"/>
                             </p:column>
 
-                            <p:column headerText="Horario Operativo">
-                                <div style="font-size: 13px; font-weight: 500;">
+                            <p:column headerText="Horario Salida / Llegada">
+                                <div style="font-size: 0.82rem; font-weight: 500; color: var(--text-body);">
                                     <h:outputText value="#{segmento.horaSalida}">
-                                        <f:convertDateTime pattern="HH:mm" type="both" timeZone="America/Santiago"/>
+                                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm" type="both" timeZone="America/Santiago"/>
                                     </h:outputText>
-                                    <span style="margin: 0 6px; color: var(--text-dim)">➔</span>
+                                    <span style="margin: 0 8px; color: var(--text-muted)">➔</span>
                                     <h:outputText value="#{segmento.horaLlegada}">
-                                        <f:convertDateTime pattern="HH:mm" type="both" timeZone="America/Santiago"/>
+                                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm" type="both" timeZone="America/Santiago"/>
                                     </h:outputText>
-                                    <span style="font-size: 11px; color: var(--text-dim); margin-left: 4px;">hrs</span>
                                 </div>
                             </p:column>
                         </p:dataTable>

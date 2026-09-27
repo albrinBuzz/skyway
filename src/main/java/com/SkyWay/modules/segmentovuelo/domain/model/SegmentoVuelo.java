@@ -135,6 +135,15 @@ public class SegmentoVuelo implements Serializable {
 		this.asignacionPuertas = asignacionPuertas;
 	}
 
+	// En SegmentoVuelo.java o el Bean que usa la vista:
+	public LocalDateTime getHoraSalidaAsLocalDateTime() {
+		return horaSalida != null ? horaSalida.toLocalDateTime() : null;
+	}
+
+	public LocalDateTime getHoraLlegadaAsLocalDateTime() {
+		return horaLlegada != null ? horaLlegada.toLocalDateTime() : null;
+	}
+
 	public AsignacionPuerta addAsignacionPuerta(AsignacionPuerta asignacionPuerta) {
 		getAsignacionPuertas().add(asignacionPuerta);
 		asignacionPuerta.setSegmentoVuelo(this);

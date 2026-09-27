@@ -55,7 +55,8 @@ public class VueloServiceImpl implements VueloService {
     
     @Override
     public Vuelo save(Vuelo vuelo) {
-        return vueloRepository.save(vuelo);
+		//vueloRepository.saveAndFlush(vuelo);
+		return vueloRepository.saveAndFlush(vuelo);
     }
 
     @Override
