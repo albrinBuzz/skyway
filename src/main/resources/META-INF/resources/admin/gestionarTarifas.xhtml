@@ -4,12 +4,11 @@
                 xmlns:f="jakarta.faces.core"
                 xmlns:h="jakarta.faces.html"
                 xmlns:p="http://primefaces.org/ui"
-                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:ui="jakarta.faces.facelets"
                 template="/admin/template.xhtml">
 
     <ui:define name="head-admin">
         <style type="text/css">
-            /* --- PALETA CORPORATIVA SKYWAY NAVY --- */
             :root {
                 --bg-deep: #0b1120;
                 --bg-card: #0f172a;
@@ -18,9 +17,12 @@
 
                 --navy-brand: #2563eb;
                 --navy-hover: #1d4ed8;
-                --text-heading: #f8fafc;
-                --text-body: #e2e8f0;
-                --text-muted: #94a3b8;
+
+                /* Tonalidades de tipografía suavizadas para Dark Mode */
+                --text-heading: #e2e8f0;   /* Blanco suavizado mate (Slate 200) */
+                --text-body: #cbd5e1;      /* Texto de tabla refinado (Slate 300) */
+                --text-muted: #94a3b8;     /* Texto secundario y placeholders (Slate 400) */
+                --text-dim: #64748b;       /* Identificadores e IDs (Slate 500) */
 
                 --status-active-bg: rgba(30, 58, 138, 0.4);
                 --status-active-border: #2563eb;
@@ -30,6 +32,7 @@
             .ops-container {
                 padding: 0.75rem 0;
                 width: 100%;
+                font-family: inherit;
             }
 
             .header-container {
@@ -43,10 +46,15 @@
 
             .header-container h2 {
                 color: var(--text-heading) !important;
-                font-size: 1.5rem !important;
+                font-size: 1.35rem !important;
                 font-weight: 700 !important;
-                margin: 0 !important;
-                letter-spacing: -0.02em;
+                letter-spacing: -0.02em !important;
+                margin: 0 0 4px 0 !important;
+            }
+
+            .header-container span {
+                color: var(--text-muted) !important;
+                font-size: 0.85rem !important;
             }
 
             /* --- PESTAÑAS PERSONALIZADAS SOBRIAS --- */
@@ -62,10 +70,10 @@
                 background: var(--bg-card) !important;
                 border: 1px solid var(--border-subtle) !important;
                 color: var(--text-muted) !important;
-                padding: 8px 18px !important;
+                padding: 8px 16px !important;
                 border-radius: 6px !important;
-                font-weight: 600 !important;
-                font-size: 0.88rem !important;
+                font-weight: 500 !important;
+                font-size: 0.85rem !important;
                 cursor: pointer;
                 transition: all 0.2s ease !important;
             }
@@ -79,62 +87,68 @@
                 background: var(--navy-brand) !important;
                 border-color: var(--navy-brand) !important;
                 color: #ffffff !important;
+                font-weight: 600 !important;
             }
 
-            /* --- ESTILIZADO SOBRIO DE DATATABLE --- */
-            .skyway-ops-table {
+            /* --- REMOCIÓN DE LÍNEAS / BORDES EN LAS TABLAS --- */
+            body .skyway-ops-table {
                 background-color: var(--bg-card) !important;
                 border: 1px solid var(--border-subtle) !important;
                 border-radius: 8px !important;
-                overflow: hidden;
+                overflow: hidden !important;
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
             }
 
-            .skyway-ops-table .ui-datatable-header {
-                background-color: var(--bg-header) !important;
-                padding: 14px 18px !important;
-                border-bottom: 1px solid var(--border-subtle) !important;
+            body .skyway-ops-table .ui-datatable-tablewrapper table {
+                border-collapse: collapse !important;
             }
 
-            .skyway-ops-table thead th {
+            body .skyway-ops-table thead th {
                 background-color: var(--bg-deep) !important;
                 color: var(--text-muted) !important;
-                text-transform: uppercase !important;
-                font-size: 0.72rem !important;
+                font-size: 0.75rem !important;
                 font-weight: 700 !important;
+                text-transform: uppercase !important;
                 letter-spacing: 0.05em !important;
                 padding: 12px 16px !important;
-                border: none !important;
+                border-top: none !important;
+                border-left: none !important;
+                border-right: none !important;
                 border-bottom: 1px solid var(--border-subtle) !important;
             }
 
-            .skyway-ops-table tbody td,
-            .skyway-ops-table tbody tr {
+            body .skyway-ops-table tbody td {
                 background-color: var(--bg-card) !important;
                 color: var(--text-body) !important;
+                font-size: 0.875rem !important;
+                font-weight: 500 !important;
                 padding: 12px 16px !important;
-                border: none !important;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
-                font-size: 0.88rem;
+                border-left: none !important;
+                border-right: none !important;
+                border-top: none !important;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important;
             }
 
-            .skyway-ops-table tbody tr:hover,
-            .skyway-ops-table tbody tr:hover td {
+            body .skyway-ops-table tbody tr:hover td {
                 background-color: var(--bg-header) !important;
             }
 
-            .skyway-ops-table .ui-paginator {
+            body .skyway-ops-table tbody tr:last-child td {
+                border-bottom: none !important;
+            }
+
+            body .skyway-ops-table .ui-paginator {
                 background-color: var(--bg-deep) !important;
                 border: none !important;
                 border-top: 1px solid var(--border-subtle) !important;
                 padding: 10px !important;
             }
 
-            .skyway-ops-table .ui-paginator .ui-paginator-page,
-            .skyway-ops-table .ui-paginator .ui-paginator-first,
-            .skyway-ops-table .ui-paginator .ui-paginator-prev,
-            .skyway-ops-table .ui-paginator .ui-paginator-next,
-            .skyway-ops-table .ui-paginator .ui-paginator-last {
+            body .skyway-ops-table .ui-paginator .ui-paginator-page,
+            body .skyway-ops-table .ui-paginator .ui-paginator-first,
+            body .skyway-ops-table .ui-paginator .ui-paginator-prev,
+            body .skyway-ops-table .ui-paginator .ui-paginator-next,
+            body .skyway-ops-table .ui-paginator .ui-paginator-last {
                 background-color: var(--bg-card) !important;
                 color: var(--text-muted) !important;
                 border: 1px solid var(--border-subtle) !important;
@@ -143,12 +157,7 @@
                 padding: 3px 8px !important;
             }
 
-            .skyway-ops-table .ui-paginator .ui-paginator-page:hover {
-                color: var(--text-heading) !important;
-                border-color: var(--navy-brand) !important;
-            }
-
-            .skyway-ops-table .ui-paginator .ui-paginator-page.ui-state-active {
+            body .skyway-ops-table .ui-paginator .ui-paginator-page.ui-state-active {
                 background-color: var(--navy-brand) !important;
                 color: #ffffff !important;
                 border-color: var(--navy-brand) !important;
@@ -166,6 +175,16 @@
                 margin-bottom: 4px;
             }
 
+            .id-badge {
+                background: var(--bg-deep);
+                border: 1px solid var(--border-subtle);
+                color: var(--text-dim);
+                font-weight: 600;
+                font-size: 0.8rem;
+                padding: 2px 6px;
+                border-radius: 4px;
+            }
+
             .btn-new {
                 background: var(--navy-brand) !important;
                 border: none !important;
@@ -180,81 +199,119 @@
                 background: var(--navy-hover) !important;
             }
 
-            /* MODALES DIÁLOGO DARK */
-            .custom-dialog.ui-dialog {
-                background: var(--bg-card) !important;
+            /* --- ESTILOS DEL MODAL (DARK MODE SOFT) --- */
+            body .ui-dialog.custom-dialog {
+                background-color: var(--bg-card) !important;
                 border: 1px solid var(--border-subtle) !important;
-                border-radius: 8px !important;
+                border-radius: 12px !important;
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5) !important;
+                overflow: hidden !important;
             }
 
-            .custom-dialog .ui-dialog-titlebar {
-                background: var(--bg-header) !important;
+            body .ui-dialog.custom-dialog .ui-dialog-titlebar {
+                background-color: var(--bg-header) !important;
+                color: var(--text-heading) !important;
                 border-bottom: 1px solid var(--border-subtle) !important;
+                padding: 1rem 1.25rem !important;
+            }
+
+            body .ui-dialog.custom-dialog .ui-dialog-titlebar .ui-dialog-title {
+                font-weight: 600 !important;
+                font-size: 1rem !important;
                 color: var(--text-heading) !important;
             }
 
-            .custom-dialog .ui-dialog-content {
-                background: var(--bg-card) !important;
-                color: var(--text-body) !important;
+            body .ui-dialog.custom-dialog .ui-dialog-titlebar .ui-dialog-titlebar-icon {
+                color: var(--text-muted) !important;
             }
 
-            .dark-input .ui-inputfield,
-            .dark-input .ui-selectonemenu {
-                background: var(--bg-deep) !important;
+            body .ui-dialog.custom-dialog .ui-dialog-titlebar .ui-dialog-titlebar-icon:hover {
+                color: var(--text-heading) !important;
+                background: rgba(255, 255, 255, 0.1) !important;
+            }
+
+            body .ui-dialog.custom-dialog .ui-dialog-content {
+                background-color: var(--bg-card) !important;
+                color: var(--text-body) !important;
+                padding: 1.25rem !important;
+                border: none !important;
+            }
+
+            .dark-input label {
+                display: block;
+                color: var(--text-muted) !important;
+                font-size: 0.725rem !important;
+                font-weight: 700 !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.05em !important;
+                margin-bottom: 4px;
+            }
+
+            body .dark-input .ui-inputfield,
+            body .dark-input .ui-selectonemenu,
+            body .dark-input .ui-inputtextarea {
+                background-color: var(--bg-deep) !important;
                 border: 1px solid var(--border-subtle) !important;
                 color: var(--text-heading) !important;
+                font-size: 0.875rem !important;
                 border-radius: 6px !important;
                 padding: 8px 12px !important;
                 width: 100% !important;
+                box-shadow: none !important;
             }
 
-            /* ==========================================================================
-               🛠 FIX FORZADO PARA SPINNER EN DIÁLOGOS OSCUROS
-               ========================================================================== */
-            .dark-input .ui-spinner {
+            body .dark-input .ui-inputfield:focus,
+            body .dark-input .ui-selectonemenu:focus {
+                border-color: var(--navy-brand) !important;
+            }
+
+            body .dark-input .ui-inputfield::placeholder {
+                color: var(--text-dim) !important;
+            }
+
+            /* --- SPINNER EN DARK MODE --- */
+            body .dark-input .ui-spinner {
                 width: 100% !important;
                 display: inline-flex !important;
-                background-color: #0b1120 !important;
-                border: 1px solid #334155 !important;
+                background-color: var(--bg-deep) !important;
+                border: 1px solid var(--border-subtle) !important;
                 border-radius: 6px !important;
                 overflow: hidden !important;
             }
 
-            .dark-input .ui-spinner .ui-spinner-input,
-            .dark-input .ui-spinner input {
-                background-color: #0b1120 !important;
-                color: #ffffff !important;
-                -webkit-text-fill-color: #ffffff !important;
-                font-weight: 700 !important;
-                font-size: 1rem !important;
+            body .dark-input .ui-spinner .ui-spinner-input {
+                background-color: var(--bg-deep) !important;
+                color: var(--text-heading) !important;
+                font-weight: 600 !important;
+                font-size: 0.875rem !important;
                 padding: 6px 10px !important;
                 border: none !important;
                 box-shadow: none !important;
                 text-align: center !important;
             }
 
-            .dark-input .ui-spinner .ui-spinner-button {
-                background: #2563eb !important;
+            body .dark-input .ui-spinner .ui-spinner-button {
+                background: var(--navy-brand) !important;
                 border: none !important;
                 color: #ffffff !important;
             }
 
-            .dark-input .ui-spinner .ui-spinner-button .ui-icon {
+            body .dark-input .ui-spinner .ui-spinner-button .ui-icon {
                 color: #ffffff !important;
             }
 
-            .dark-input .ui-selectbooleancheckbox .ui-chkbox-box {
-                background-color: var(--bg-deep, #0b1120) !important;
-                border: 1px solid var(--border-subtle, #334155) !important;
+            body .dark-input .ui-selectbooleancheckbox .ui-chkbox-box {
+                background-color: var(--bg-deep) !important;
+                border: 1px solid var(--border-subtle) !important;
                 border-radius: 4px !important;
             }
 
-            .dark-input .ui-selectbooleancheckbox .ui-chkbox-box.ui-state-active {
-                background-color: var(--navy-brand, #2563eb) !important;
-                border-color: var(--navy-brand, #2563eb) !important;
+            body .dark-input .ui-selectbooleancheckbox .ui-chkbox-box.ui-state-active {
+                background-color: var(--navy-brand) !important;
+                border-color: var(--navy-brand) !important;
             }
 
-            .dark-input .ui-selectbooleancheckbox .ui-chkbox-icon {
+            body .dark-input .ui-selectbooleancheckbox .ui-chkbox-icon {
                 color: #ffffff !important;
             }
         </style>
@@ -288,7 +345,7 @@
                     <div class="header-container">
                         <div>
                             <h2>Familias Tarifarias</h2>
-                            <span style="color: var(--text-muted); font-size: 0.85rem;">Asigne características y valores a las tarifas</span>
+                            <span>Asigne características y valores a las tarifas</span>
                         </div>
                         <p:commandButton value="Nueva Tarifa"
                                          icon="pi pi-plus"
@@ -310,13 +367,11 @@
                                      emptyMessage="No hay tarifas registradas.">
 
                             <p:column headerText="ID" style="width: 80px; text-align: center;">
-                                <span style="background: var(--bg-deep); border: 1px solid var(--border-subtle); padding: 2px 6px; border-radius: 4px; font-weight: 600; color: var(--text-heading);">
-                                    ##{tarifa.idTarifa}
-                                </span>
+                                <span class="id-badge">##{tarifa.idTarifa}</span>
                             </p:column>
 
                             <p:column headerText="Nombre de Tarifa">
-                                <span style="font-weight: 700; color: var(--text-heading); font-size: 0.95rem;">#{tarifa.nombre}</span>
+                                <span style="font-weight: 600; color: var(--text-heading); font-size: 0.95rem;">#{tarifa.nombre}</span>
                             </p:column>
 
                             <p:column headerText="Beneficios Configurados">
@@ -340,12 +395,13 @@
                                                      process="@this"
                                                      update=":formDialog:panelTarifa"
                                                      oncomplete="PF('dlgTarifa').show();"
-                                                     styleClass="ui-button-outlined ui-button-secondary ui-button-sm" />
+                                                     styleClass="ui-button-outlined ui-button-secondary me-1" />
 
                                     <p:commandButton icon="pi pi-trash"
                                                      actionListener="#{tarifaBean.eliminarTarifa(tarifa)}"
+                                                     process="@this"
                                                      update=":mainPanel :msgs"
-                                                     styleClass="ui-button-outlined ui-button-danger ui-button-sm">
+                                                     styleClass="ui-button-outlined ui-button-danger">
                                         <p:confirm header="Confirmación" message="¿Eliminar la tarifa '#{tarifa.nombre}'?" icon="pi pi-exclamation-triangle" />
                                     </p:commandButton>
                                 </div>
@@ -359,7 +415,7 @@
                     <div class="header-container">
                         <div>
                             <h2>Catálogo Parametrizable de Beneficios</h2>
-                            <span style="color: var(--text-muted); font-size: 0.85rem;">Defina nuevas variables globales para usarse en las tarifas</span>
+                            <span>Defina nuevas variables globales para usarse en las tarifas</span>
                         </div>
                         <p:commandButton value="Nuevo Beneficio / Regla"
                                          icon="pi pi-plus"
@@ -377,22 +433,20 @@
                                      paginatorPosition="bottom"
                                      emptyMessage="No hay beneficios definidos en el catálogo.">
 
-                            <p:column headerText="ID" style="width: 70px; text-align: center;">
-                                <span style="background: var(--bg-deep); border: 1px solid var(--border-subtle); padding: 2px 6px; border-radius: 4px; font-weight: 600;">
-                                    ##{c.idCaracteristica}
-                                </span>
+                            <p:column headerText="ID" style="width: 80px; text-align: center;">
+                                <span class="id-badge">##{c.idCaracteristica}</span>
                             </p:column>
 
                             <p:column headerText="Nombre Beneficio">
-                                <span style="font-weight: 700; color: var(--text-heading);">#{c.nombre}</span>
+                                <span style="font-weight: 600; color: var(--text-heading);">#{c.nombre}</span>
                             </p:column>
 
                             <p:column headerText="Descripción">
-                                <span style="color: var(--text-muted);">#{c.descripcion}</span>
+                                <span style="color: var(--text-body);">#{c.descripcion}</span>
                             </p:column>
 
                             <p:column headerText="Tipo de Entrada" style="width: 150px; text-align: center;">
-                                <span style="background: var(--status-active-bg); border: 1px solid var(--status-active-border); color: var(--status-active-text); padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; text-transform: uppercase; font-weight: 700;">
+                                <span style="background: var(--status-active-bg); border: 1px solid var(--status-active-border); color: var(--status-active-text); padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; text-transform: uppercase; font-weight: 600;">
                                     #{c.tipoDato}
                                 </span>
                             </p:column>
@@ -408,12 +462,13 @@
                       modal="true"
                       responsive="true"
                       width="580"
+                      appendTo="@(body)"
                       styleClass="custom-dialog">
 
                 <h:form id="formDialog" styleClass="dark-input">
                     <h:panelGroup id="panelTarifa" layout="block">
                         <div class="mb-4">
-                            <label style="display: block; color: var(--text-muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">Nombre de la Tarifa</label>
+                            <label>Nombre de la Tarifa</label>
                             <p:inputText value="#{tarifaBean.tarifaSeleccionada.nombre}" placeholder="Ej: Flex, Classic, Basic, Premium" required="true" />
                         </div>
 
@@ -427,7 +482,7 @@
                                      style="background: var(--bg-deep); border: 1px solid var(--border-subtle);">
 
                                     <div>
-                                        <span style="color: var(--text-heading); font-weight: 700; display: block; font-size: 0.88rem;">#{tc.caracteristica.nombre}</span>
+                                        <span style="color: var(--text-heading); font-weight: 600; display: block; font-size: 0.88rem;">#{tc.caracteristica.nombre}</span>
                                         <span style="color: var(--text-muted); font-size: 0.75rem; display: block;">#{tc.caracteristica.descripcion}</span>
                                     </div>
 
@@ -441,9 +496,7 @@
                                                    min="0"
                                                    max="720"
                                                    stepFactor="1"
-                                                   rendered="#{tc.caracteristica.tipoDato eq 'int'}"
-                                                   style="width: 100% !important;"
-                                                   inputStyle="background-color: #0b1120 !important; color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; font-weight: bold !important; font-size: 1rem !important; text-align: center !important;" />
+                                                   rendered="#{tc.caracteristica.tipoDato eq 'int'}" />
 
                                         <!-- Tipo Text -->
                                         <p:inputText value="#{tc.valor}"
@@ -459,6 +512,7 @@
                                              styleClass="ui-button-flat ui-button-secondary" />
                             <p:commandButton value="Guardar Tarifa"
                                              actionListener="#{tarifaBean.guardarTarifa()}"
+                                             process="@form"
                                              update=":mainPanel :msgs"
                                              styleClass="btn-new" />
                         </div>
@@ -472,21 +526,22 @@
                       modal="true"
                       responsive="true"
                       width="450"
+                      appendTo="@(body)"
                       styleClass="custom-dialog">
 
                 <h:form id="formNuevoBeneficio" styleClass="dark-input">
                     <div class="mb-3">
-                        <label style="display: block; color: var(--text-muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">Nombre del Beneficio</label>
+                        <label>Nombre del Beneficio</label>
                         <p:inputText value="#{tarifaBean.nuevaCaracteristica.nombre}" placeholder="Ej: Acceso a Salón VIP, Selección de Asiento" required="true" />
                     </div>
 
                     <div class="mb-3">
-                        <label style="display: block; color: var(--text-muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">Descripción</label>
+                        <label>Descripción</label>
                         <p:inputTextarea value="#{tarifaBean.nuevaCaracteristica.descripcion}" rows="2" placeholder="Detalle..." />
                     </div>
 
                     <div class="mb-4">
-                        <label style="display: block; color: var(--text-muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">Tipo de Selector</label>
+                        <label>Tipo de Selector</label>
                         <p:selectOneMenu value="#{tarifaBean.nuevaCaracteristica.tipoDato}" required="true">
                             <f:selectItem itemLabel="Booleano (Sí / No)" itemValue="boolean" />
                             <f:selectItem itemLabel="Numérico (Cantidades / Enteros)" itemValue="int" />
@@ -499,6 +554,7 @@
                                          styleClass="ui-button-flat ui-button-secondary" />
                         <p:commandButton value="Guardar Beneficio"
                                          actionListener="#{tarifaBean.guardarNuevaCaracteristicaCatálogo()}"
+                                         process="@form"
                                          update=":mainPanel :formDialog:panelTarifa :msgs"
                                          styleClass="btn-new" />
                     </div>
@@ -506,7 +562,7 @@
             </p:dialog>
 
             <!-- CONFIRM DIALOG GLOBAL -->
-            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" styleClass="custom-dialog">
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" appendTo="@(body)" styleClass="custom-dialog">
                 <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-flat ui-button-secondary" />
                 <p:commandButton value="Sí, Eliminar" type="button" styleClass="ui-confirmdialog-yes btn-new" />
             </p:confirmDialog>

@@ -4,12 +4,11 @@
                 xmlns:f="jakarta.faces.core"
                 xmlns:h="jakarta.faces.html"
                 xmlns:p="http://primefaces.org/ui"
-                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:ui="jakarta.faces.facelets"
                 template="/admin/template.xhtml">
 
     <ui:define name="head-admin">
         <style type="text/css">
-            /* --- PALETA CORPORATIVA SKYWAY NAVY --- */
             :root {
                 --bg-deep: #0b1120;
                 --bg-card: #0f172a;
@@ -18,9 +17,12 @@
 
                 --navy-brand: #2563eb;
                 --navy-hover: #1d4ed8;
-                --text-heading: #f8fafc;
-                --text-body: #e2e8f0;
-                --text-muted: #94a3b8;
+
+                /* Tonalidades de tipografía suavizadas para Dark Mode */
+                --text-heading: #e2e8f0;   /* Blanco suavizado mate (Slate 200) */
+                --text-body: #cbd5e1;      /* Texto de tabla refinado (Slate 300) */
+                --text-muted: #94a3b8;     /* Texto secundario y placeholders (Slate 400) */
+                --text-dim: #64748b;       /* Identificadores e IDs (Slate 500) */
 
                 --status-active-bg: rgba(30, 58, 138, 0.4);
                 --status-active-border: #2563eb;
@@ -30,6 +32,7 @@
             .ops-container {
                 padding: 0.75rem 0;
                 width: 100%;
+                font-family: inherit;
             }
 
             .header-container {
@@ -43,66 +46,76 @@
 
             .header-container h2 {
                 color: var(--text-heading) !important;
-                font-size: 1.5rem !important;
+                font-size: 1.35rem !important;
                 font-weight: 700 !important;
-                margin: 0 !important;
-                letter-spacing: -0.02em;
+                letter-spacing: -0.02em !important;
+                margin: 0 0 4px 0 !important;
             }
 
-            /* --- ESTILIZADO SOBRIO DE DATATABLE --- */
-            .skyway-ops-table {
+            .header-container span {
+                color: var(--text-muted) !important;
+                font-size: 0.85rem !important;
+            }
+
+            /* --- REMOCIÓN DE LÍNEAS / BORDES EN LAS TABLAS --- */
+            body .skyway-ops-table {
                 background-color: var(--bg-card) !important;
                 border: 1px solid var(--border-subtle) !important;
                 border-radius: 8px !important;
-                overflow: hidden;
+                overflow: hidden !important;
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
             }
 
-            .skyway-ops-table .ui-datatable-header {
-                background-color: var(--bg-header) !important;
-                padding: 14px 18px !important;
-                border-bottom: 1px solid var(--border-subtle) !important;
+            body .skyway-ops-table .ui-datatable-tablewrapper table {
+                border-collapse: collapse !important;
             }
 
-            .skyway-ops-table thead th {
+            body .skyway-ops-table thead th {
                 background-color: var(--bg-deep) !important;
                 color: var(--text-muted) !important;
-                text-transform: uppercase !important;
-                font-size: 0.72rem !important;
+                font-size: 0.75rem !important;
                 font-weight: 700 !important;
+                text-transform: uppercase !important;
                 letter-spacing: 0.05em !important;
                 padding: 12px 16px !important;
-                border: none !important;
+                border-top: none !important;
+                border-left: none !important;
+                border-right: none !important;
                 border-bottom: 1px solid var(--border-subtle) !important;
             }
 
-            .skyway-ops-table tbody td,
-            .skyway-ops-table tbody tr {
+            body .skyway-ops-table tbody td {
                 background-color: var(--bg-card) !important;
                 color: var(--text-body) !important;
+                font-size: 0.875rem !important;
+                font-weight: 500 !important;
                 padding: 12px 16px !important;
-                border: none !important;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
-                font-size: 0.88rem;
+                border-left: none !important;
+                border-right: none !important;
+                border-top: none !important;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important;
             }
 
-            .skyway-ops-table tbody tr:hover,
-            .skyway-ops-table tbody tr:hover td {
+            body .skyway-ops-table tbody tr:hover td {
                 background-color: var(--bg-header) !important;
             }
 
-            .skyway-ops-table .ui-paginator {
+            body .skyway-ops-table tbody tr:last-child td {
+                border-bottom: none !important;
+            }
+
+            body .skyway-ops-table .ui-paginator {
                 background-color: var(--bg-deep) !important;
                 border: none !important;
                 border-top: 1px solid var(--border-subtle) !important;
                 padding: 10px !important;
             }
 
-            .skyway-ops-table .ui-paginator .ui-paginator-page,
-            .skyway-ops-table .ui-paginator .ui-paginator-first,
-            .skyway-ops-table .ui-paginator .ui-paginator-prev,
-            .skyway-ops-table .ui-paginator .ui-paginator-next,
-            .skyway-ops-table .ui-paginator .ui-paginator-last {
+            body .skyway-ops-table .ui-paginator .ui-paginator-page,
+            body .skyway-ops-table .ui-paginator .ui-paginator-first,
+            body .skyway-ops-table .ui-paginator .ui-paginator-prev,
+            body .skyway-ops-table .ui-paginator .ui-paginator-next,
+            body .skyway-ops-table .ui-paginator .ui-paginator-last {
                 background-color: var(--bg-card) !important;
                 color: var(--text-muted) !important;
                 border: 1px solid var(--border-subtle) !important;
@@ -111,7 +124,7 @@
                 padding: 3px 8px !important;
             }
 
-            .skyway-ops-table .ui-paginator .ui-paginator-page.ui-state-active {
+            body .skyway-ops-table .ui-paginator .ui-paginator-page.ui-state-active {
                 background-color: var(--navy-brand) !important;
                 color: #ffffff !important;
                 border-color: var(--navy-brand) !important;
@@ -132,8 +145,9 @@
             .rut-badge {
                 background: var(--bg-deep);
                 border: 1px solid var(--border-subtle);
-                color: var(--text-heading);
-                font-weight: 700;
+                color: var(--text-dim);
+                font-weight: 600;
+                font-size: 0.8rem;
                 padding: 4px 8px;
                 border-radius: 4px;
             }
@@ -152,41 +166,74 @@
                 background: var(--navy-hover) !important;
             }
 
-            .custom-dialog.ui-dialog {
-                background: var(--bg-card) !important;
+            /* --- ESTILOS DEL MODAL (DARK MODE SOFT) --- */
+            body .ui-dialog.custom-dialog {
+                background-color: var(--bg-card) !important;
                 border: 1px solid var(--border-subtle) !important;
-                border-radius: 8px !important;
+                border-radius: 12px !important;
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5) !important;
+                overflow: hidden !important;
             }
 
-            .custom-dialog .ui-dialog-titlebar {
-                background: var(--bg-header) !important;
+            body .ui-dialog.custom-dialog .ui-dialog-titlebar {
+                background-color: var(--bg-header) !important;
+                color: var(--text-heading) !important;
                 border-bottom: 1px solid var(--border-subtle) !important;
+                padding: 1rem 1.25rem !important;
+            }
+
+            body .ui-dialog.custom-dialog .ui-dialog-titlebar .ui-dialog-title {
+                font-weight: 600 !important;
+                font-size: 1rem !important;
                 color: var(--text-heading) !important;
             }
 
-            .custom-dialog .ui-dialog-content {
-                background: var(--bg-card) !important;
+            body .ui-dialog.custom-dialog .ui-dialog-titlebar .ui-dialog-titlebar-icon {
+                color: var(--text-muted) !important;
+            }
+
+            body .ui-dialog.custom-dialog .ui-dialog-titlebar .ui-dialog-titlebar-icon:hover {
+                color: var(--text-heading) !important;
+                background: rgba(255, 255, 255, 0.1) !important;
+            }
+
+            body .ui-dialog.custom-dialog .ui-dialog-content {
+                background-color: var(--bg-card) !important;
                 color: var(--text-body) !important;
-            }
-
-            .dark-input .ui-inputfield,
-            .dark-input .ui-selectonemenu,
-            .dark-input .ui-calendar {
-                background: var(--bg-deep) !important;
-                border: 1px solid var(--border-subtle) !important;
-                color: var(--text-heading) !important;
-                border-radius: 6px !important;
-                padding: 6px 10px !important;
-                width: 100% !important;
+                padding: 1.25rem !important;
+                border: none !important;
             }
 
             .dark-input label {
                 display: block;
-                color: var(--text-muted);
-                font-size: 0.75rem;
-                font-weight: 700;
-                text-transform: uppercase;
+                color: var(--text-muted) !important;
+                font-size: 0.725rem !important;
+                font-weight: 700 !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.05em !important;
                 margin-bottom: 4px;
+            }
+
+            body .dark-input .ui-inputfield,
+            body .dark-input .ui-selectonemenu,
+            body .dark-input .ui-calendar {
+                background-color: var(--bg-deep) !important;
+                border: 1px solid var(--border-subtle) !important;
+                color: var(--text-heading) !important;
+                font-size: 0.875rem !important;
+                border-radius: 6px !important;
+                padding: 8px 10px !important;
+                width: 100% !important;
+                box-shadow: none !important;
+            }
+
+            body .dark-input .ui-inputfield:focus,
+            body .dark-input .ui-selectonemenu:focus {
+                border-color: var(--navy-brand) !important;
+            }
+
+            body .dark-input .ui-inputfield::placeholder {
+                color: var(--text-dim) !important;
             }
 
             .profile-box {
@@ -206,7 +253,7 @@
             <div class="header-container">
                 <div>
                     <h2>Administración de Usuarios y Permisos</h2>
-                    <span style="color: var(--text-muted); font-size: 0.85rem;">Gestión de cuentas, roles y perfiles de tripulación/pasajeros</span>
+                    <span>Gestión de cuentas, roles y perfiles de tripulación/pasajeros</span>
                 </div>
                 <p:commandButton value="Nuevo Usuario"
                                  icon="pi pi-user-plus"
@@ -233,7 +280,7 @@
                     </p:column>
 
                     <p:column headerText="Nombre y Apellido">
-                        <span style="font-weight: 700; color: var(--text-heading);">#{usr.nombre} #{usr.apellido}</span>
+                        <span style="font-weight: 600; color: var(--text-heading);">#{usr.nombre} #{usr.apellido}</span>
                     </p:column>
 
                     <p:column headerText="Correo Electrónico">
@@ -257,13 +304,14 @@
                                              process="@this"
                                              update=":formDialog:panelUsuario"
                                              oncomplete="PF('dlgUsuario').show();"
-                                             styleClass="ui-button-outlined ui-button-secondary ui-button-sm"
+                                             styleClass="ui-button-outlined ui-button-secondary me-1"
                                              title="Editar Cuentas y Roles" />
 
                             <p:commandButton icon="pi pi-trash"
                                              actionListener="#{gestionUsuariosAdminBean.eliminarUsuario(usr)}"
+                                             process="@this"
                                              update=":formTabla:dt-usuarios :msgs"
-                                             styleClass="ui-button-outlined ui-button-danger ui-button-sm"
+                                             styleClass="ui-button-outlined ui-button-danger"
                                              title="Eliminar Cuenta">
                                 <p:confirm header="Confirmación" message="¿Eliminar la cuenta de '#{usr.nombre} #{usr.apellido}'?" icon="pi pi-exclamation-triangle" />
                             </p:commandButton>
@@ -272,7 +320,6 @@
                 </p:dataTable>
             </h:form>
 
-            <!-- MODAL DE GESTIÓN DE USUARIOS Y ROLES -->
             <!-- MODAL DE GESTIÓN DE USUARIOS Y ROLES (COMPACTO) -->
             <p:dialog header="#{gestionUsuariosAdminBean.esNuevo ? 'Nuevo Usuario del Sistema' : 'Modificar Usuario y Permisos'}"
                       widgetVar="dlgUsuario"
@@ -281,6 +328,7 @@
                       width="820"
                       height="580"
                       blockScroll="true"
+                      appendTo="@(body)"
                       styleClass="custom-dialog">
 
                 <h:form id="formDialog" styleClass="dark-input">
@@ -437,6 +485,7 @@
                                              styleClass="ui-button-flat ui-button-secondary" />
                             <p:commandButton value="Guardar Usuario"
                                              actionListener="#{gestionUsuariosAdminBean.guardarUsuario()}"
+                                             process="@form"
                                              update=":formTabla:dt-usuarios :msgs"
                                              styleClass="btn-new" />
                         </div>
@@ -446,7 +495,7 @@
             </p:dialog>
 
             <!-- CONFIRM DIALOG GLOBAL -->
-            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" styleClass="custom-dialog">
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" appendTo="@(body)" styleClass="custom-dialog">
                 <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-flat ui-button-secondary" />
                 <p:commandButton value="Sí, Eliminar" type="button" styleClass="ui-confirmdialog-yes btn-new" />
             </p:confirmDialog>
