@@ -1,0 +1,101 @@
+. CRUDs de Localización y Geografía
+Son tablas maestras de solo 2 o 3 campos. Al crearlas, permiten alimentar dinámicamente los desplegables de aeropuertos y nacionalidades de pasajeros.
+
+Gestión de Continentes (Continente):
+
+Campos: ID_CONTINENTE, Nombre.
+
+Uso: Clasificación de destinos para reportes comerciales y tarifas internacionales.
+
+Gestión de Países (Pais):
+
+Campos: ID_PAIS, Nombre, ID_CONTINENTE (FK).
+
+Uso: Selector dinámico al crear ciudades y nacionalidades de pasajeros.
+
+Gestión de Ciudades (Ciudad):
+
+Campos: ID_CIUDAD, Nombre, ID_PAIS (FK).
+
+Uso: Selector al dar de alta nuevos aeropuertos.
+
+2. CRUDs de Infraestructura y Operaciones de Vuelo
+Permiten parametrizar las operaciones de los aeropuertos y estados del ciclo de vida de un vuelo.
+
+Gestión de Puertas de Embarque (Puerta_Embarque):
+
+Campos: ID_PUERTA, Codigo_Puerta, Terminal, ID_AEROPUERTO (FK).
+
+Uso: Asignación de salas/gate de salida a cada vuelo.
+
+Gestión de Estados de Vuelo (Estado_Vuelo):
+
+Campos: ID_ESTADO_VUELO, Descripcion, Estado (Ej: Programado, En Puerta, En Vuelo, Aterrizado, Cancelado, Demorado).
+
+Uso: Cambiar el estado operativo del vuelo en tiempo real.
+
+Gestión de Aerolíneas (Aerolinea):
+
+Campos: ID_AEROLINEA, Nombre, Codigo (Ej: SkyWay - SKW, LATAM - LAN).
+
+Uso: Permite operar vuelos propios o vuelos en código compartido (Code-Share).
+
+3. CRUDs de Configuración de Cabina y Asientos
+Configuraciones maestras de cómo se distribuyen y categorizan los pasajeros a bordo.
+
+Clases de Asiento (Clase_asiento):
+
+Campos: ID_CLASE, Descripcion (Ej: Económica, Premium Economy, Ejecutiva, Primera Clase).
+
+Uso: Mapeo de tarifas y mapas de asientos.
+
+Configuración de Matriz de Cabina (Configuracion_Cabina):
+
+Campos: ID_MODELO (FK), ID_CLASE (FK), Fila_Inicio, Fila_Fin, Distribucion_Columnas (Ej: "3-3", "2-2-2"), Letras_Columnas.
+
+Uso: Permite al sistema saber cuántas filas y columnas genera por cada modelo de avión.
+
+4. CRUDs de Reservas, Equipajes y Finanzas
+Tablas paramétricas para las reglas de cobro y atención en mostrador/check-in.
+
+Tipos de Equipaje (Tipo_Equipaje):
+
+Campos: ID_TIPO, Nombre (Ej: Mano / Carry-On, Bodega 15kg, Bodega 23kg, Carga Especial/Deporte).
+
+Uso: Opciones a seleccionar en la facturación de pasajes.
+
+Métodos de Pago (Metodo_Pago):
+
+Campos: ID_METODO_PAGO, Descripcion (Ej: Tarjeta de Crédito, Transferencia Bancaria, PayPal, Redelcom).
+
+Uso: Registro de transacciones financieras.
+
+Estados de Reserva (Estado_reserva):
+
+Campos: ID_ESTADO_RESERVA, Descripcion (Ej: Pendiente, Confirmada, Pagada, Cancelada, Reembolsada).
+
+Uso: Flujo de aprobación del ticket del cliente.
+
+5. CRUDs de Gestión de Personal y Turnos
+Parametrización para la planificación laboral de tripulaciones y administrativos.
+
+Tipos de Turno (Tipo_Turno):
+
+Campos: ID_TIPO, Nombre (Ej: Diurno, Nocturno, Standby / Guardia, Vuelo Internacional).
+
+Uso: Clasificación de turnos de pilotos y tripulantes.
+
+Roles del Sistema (Roles):
+
+Campos: id_rol, nombre, descripcion (Ej: ADMIN, AGENTE_CHECKIN, PILOTO, TRIPULANTE).
+
+Uso: Asignación de roles en la tabla de Usuarios.
+
+💡 Recomendación de Implementación Rápida
+Puedes agrupar estos CRUDs simples usando la misma plantilla con Tabs que diseñamos para la Flota:
+
+Módulo gestionParametrosGeo.xhtml: 3 Pestañas (Continentes, Países, Ciudades).
+
+Módulo gestionParametrosOperativos.xhtml: 3 Pestañas (Puertas de Embarque, Estados de Vuelo, Aerolíneas).
+
+Módulo gestionParametrosVentas.xhtml: 3 Pestañas (Tipos de Equipaje, Métodos de Pago, Estados de Reserva).

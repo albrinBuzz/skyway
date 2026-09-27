@@ -1,0 +1,679 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition lang="es"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="jakarta.faces.core"
+                xmlns:h="jakarta.faces.html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                template="/admin/template.xhtml">
+
+    <ui:define name="head-admin">
+        <style type="text/css">
+            /* --- PALETA CORPORATIVA SKYWAY NAVY --- */
+            :root {
+                --bg-deep: #0b1120;
+                --bg-card: #0f172a;
+                --bg-header: #1e293b;
+                --border-subtle: #334155;
+
+                --navy-brand: #2563eb;
+                --navy-hover: #1d4ed8;
+                --text-heading: #f8fafc;
+                --text-body: #e2e8f0;
+                --text-muted: #94a3b8;
+
+                --status-active-bg: rgba(30, 58, 138, 0.4);
+                --status-active-border: #2563eb;
+                --status-active-text: #e2e8f0;
+            }
+
+            .ops-container {
+                padding: 0.75rem 0;
+                width: 100%;
+            }
+
+            .header-container {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+                border-bottom: 1px solid var(--border-subtle);
+                padding-bottom: 16px;
+            }
+
+            .header-container h2 {
+                color: var(--text-heading) !important;
+                font-size: 1.5rem !important;
+                font-weight: 700 !important;
+                margin: 0 !important;
+                letter-spacing: -0.02em;
+            }
+
+            /* --- PESTAÑAS PERSONALIZADAS SOBRIAS --- */
+            .custom-nav-tabs {
+                display: flex;
+                gap: 8px;
+                margin-bottom: 20px;
+                border-bottom: 1px solid var(--border-subtle);
+                padding-bottom: 10px;
+            }
+
+            .nav-tab-btn {
+                background: var(--bg-card) !important;
+                border: 1px solid var(--border-subtle) !important;
+                color: var(--text-muted) !important;
+                padding: 8px 18px !important;
+                border-radius: 6px !important;
+                font-weight: 600 !important;
+                font-size: 0.88rem !important;
+                cursor: pointer;
+                transition: all 0.2s ease !important;
+            }
+
+            .nav-tab-btn:hover {
+                color: var(--text-heading) !important;
+                border-color: var(--navy-brand) !important;
+            }
+
+            .nav-tab-btn.active {
+                background: var(--navy-brand) !important;
+                border-color: var(--navy-brand) !important;
+                color: #ffffff !important;
+            }
+
+            /* --- ESTILIZADO SOBRIO DE DATATABLE --- */
+            .skyway-ops-table {
+                background-color: var(--bg-card) !important;
+                border: 1px solid var(--border-subtle) !important;
+                border-radius: 8px !important;
+                overflow: hidden;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            }
+
+            .skyway-ops-table .ui-datatable-header {
+                background-color: var(--bg-header) !important;
+                padding: 14px 18px !important;
+                border-bottom: 1px solid var(--border-subtle) !important;
+            }
+
+            .skyway-ops-table thead th {
+                background-color: var(--bg-deep) !important;
+                color: var(--text-muted) !important;
+                text-transform: uppercase !important;
+                font-size: 0.72rem !important;
+                font-weight: 700 !important;
+                letter-spacing: 0.05em !important;
+                padding: 12px 16px !important;
+                border: none !important;
+                border-bottom: 1px solid var(--border-subtle) !important;
+            }
+
+            .skyway-ops-table tbody td,
+            .skyway-ops-table tbody tr {
+                background-color: var(--bg-card) !important;
+                color: var(--text-body) !important;
+                padding: 12px 16px !important;
+                border: none !important;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+                font-size: 0.88rem;
+            }
+
+            .skyway-ops-table tbody tr:hover,
+            .skyway-ops-table tbody tr:hover td {
+                background-color: var(--bg-header) !important;
+            }
+
+            .skyway-ops-table .ui-paginator {
+                background-color: var(--bg-deep) !important;
+                border: none !important;
+                border-top: 1px solid var(--border-subtle) !important;
+                padding: 10px !important;
+            }
+
+            .skyway-ops-table .ui-paginator .ui-paginator-page,
+            .skyway-ops-table .ui-paginator .ui-paginator-first,
+            .skyway-ops-table .ui-paginator .ui-paginator-prev,
+            .skyway-ops-table .ui-paginator .ui-paginator-next,
+            .skyway-ops-table .ui-paginator .ui-paginator-last {
+                background-color: var(--bg-card) !important;
+                color: var(--text-muted) !important;
+                border: 1px solid var(--border-subtle) !important;
+                border-radius: 4px !important;
+                font-weight: 600 !important;
+                padding: 3px 8px !important;
+            }
+
+            .skyway-ops-table .ui-paginator .ui-paginator-page:hover {
+                color: var(--text-heading) !important;
+                border-color: var(--navy-brand) !important;
+            }
+
+            .skyway-ops-table .ui-paginator .ui-paginator-page.ui-state-active {
+                background-color: var(--navy-brand) !important;
+                color: #ffffff !important;
+                border-color: var(--navy-brand) !important;
+            }
+
+            /* PILLS Y BADGES */
+            .tail-badge {
+                background: var(--bg-deep);
+                border: 1px solid var(--border-subtle);
+                color: var(--text-heading);
+                font-weight: 700;
+                padding: 3px 8px;
+                border-radius: 4px;
+            }
+
+            .btn-new {
+                background: var(--navy-brand) !important;
+                border: none !important;
+                border-radius: 6px !important;
+                font-weight: 600 !important;
+                color: #ffffff !important;
+                font-size: 0.85rem !important;
+                padding: 8px 16px !important;
+            }
+
+            .btn-new:hover {
+                background: var(--navy-hover) !important;
+            }
+
+            /* MODALES DIÁLOGO DARK */
+            .custom-dialog.ui-dialog {
+                background: var(--bg-card) !important;
+                border: 1px solid var(--border-subtle) !important;
+                border-radius: 8px !important;
+            }
+
+            .custom-dialog .ui-dialog-titlebar {
+                background: var(--bg-header) !important;
+                border-bottom: 1px solid var(--border-subtle) !important;
+                color: var(--text-heading) !important;
+            }
+
+            .custom-dialog .ui-dialog-content {
+                background: var(--bg-card) !important;
+                color: var(--text-body) !important;
+            }
+
+            .dark-input label {
+                display: block;
+                color: var(--text-muted);
+                font-size: 0.72rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                margin-bottom: 4px;
+            }
+
+            .dark-input .ui-inputfield,
+            .dark-input .ui-selectonemenu,
+            .dark-input .ui-datepicker-input {
+                background: var(--bg-deep) !important;
+                border: 1px solid var(--border-subtle) !important;
+                color: var(--text-heading) !important;
+                border-radius: 6px !important;
+                padding: 8px 12px !important;
+                width: 100% !important;
+            }
+
+            /* FIX FORZADO SPINNER */
+            .dark-input .ui-spinner {
+                width: 100% !important;
+                display: inline-flex !important;
+                background-color: #0b1120 !important;
+                border: 1px solid #334155 !important;
+                border-radius: 6px !important;
+                overflow: hidden !important;
+            }
+
+            .dark-input .ui-spinner .ui-spinner-input,
+            .dark-input .ui-spinner input {
+                background-color: #0b1120 !important;
+                color: #ffffff !important;
+                -webkit-text-fill-color: #ffffff !important;
+                font-weight: 700 !important;
+                font-size: 0.95rem !important;
+                padding: 6px 10px !important;
+                border: none !important;
+                box-shadow: none !important;
+                text-align: center !important;
+            }
+
+            .dark-input .ui-spinner .ui-spinner-button {
+                background: #2563eb !important;
+                border: none !important;
+                color: #ffffff !important;
+            }
+
+            /* ESTRUCTURA FLEX DE 2 COLUMNAS PARA EL MODAL */
+            .horizontal-form-grid {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            .form-col-6 {
+                flex: 1 1 calc(50% - 6px);
+                box-sizing: border-box;
+            }
+
+            .form-col-4 {
+                flex: 1 1 calc(33.33% - 8px);
+                box-sizing: border-box;
+            }
+
+            /* SIMULADOR FUSELAJE */
+            .fuselage-box {
+                background: var(--bg-deep);
+                border: 1px solid var(--border-subtle);
+                border-radius: 40px 40px 10px 10px;
+                padding: 20px;
+                max-height: 400px;
+                overflow-y: auto;
+            }
+
+            .seat-item {
+                width: 36px;
+                height: 36px;
+                background: var(--bg-card);
+                border: 1px solid var(--border-subtle);
+                border-radius: 6px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.68rem;
+                color: var(--text-heading);
+            }
+        </style>
+    </ui:define>
+
+    <ui:define name="contenido-admin">
+        <div class="ops-container">
+            <p:growl id="msgs" showDetail="true" life="3000"/>
+
+            <!-- BARRA DE PESTAÑAS NATIVAS SKYWAY -->
+            <h:form id="formTabs">
+                <div class="custom-nav-tabs">
+                    <p:commandButton value="Flota &amp; Aeronaves"
+                                     actionListener="#{gestionFlotaIntegradaBean.setTabActiva(0)}"
+                                     update=":mainPanel :formTabs"
+                                     styleClass="nav-tab-btn #{gestionFlotaIntegradaBean.tabActiva == 0 ? 'active' : ''}"
+                                     icon="pi pi-send" />
+
+                    <p:commandButton value="Modelos de Avión"
+                                     actionListener="#{gestionFlotaIntegradaBean.setTabActiva(1)}"
+                                     update=":mainPanel :formTabs"
+                                     styleClass="nav-tab-btn #{gestionFlotaIntegradaBean.tabActiva == 1 ? 'active' : ''}"
+                                     icon="pi pi-sliders-h" />
+
+                    <p:commandButton value="Fabricantes"
+                                     actionListener="#{gestionFlotaIntegradaBean.setTabActiva(2)}"
+                                     update=":mainPanel :formTabs"
+                                     styleClass="nav-tab-btn #{gestionFlotaIntegradaBean.tabActiva == 2 ? 'active' : ''}"
+                                     icon="pi pi-building" />
+                </div>
+            </h:form>
+
+            <h:panelGroup id="mainPanel" layout="block">
+
+                <!-- ======================================================= -->
+                <!-- PESTAÑA 1: AERONAVES (FLOTA OPERATIVA)                   -->
+                <!-- ======================================================= -->
+                <h:panelGroup rendered="#{gestionFlotaIntegradaBean.tabActiva == 0}" layout="block">
+                    <div class="header-container">
+                        <div>
+                            <h2>Flota &amp; Aeronaves</h2>
+                            <span style="color: var(--text-muted); font-size: 0.85rem;">Listado de aviones certificados en la aerolínea</span>
+                        </div>
+                        <p:commandButton value="Nueva Aeronave"
+                                         icon="pi pi-plus"
+                                         actionListener="#{gestionFlotaIntegradaBean.prepararNuevoAvion()}"
+                                         process="@this"
+                                         update=":formDialogAvion:panelAvion"
+                                         oncomplete="PF('dlgAvion').show();"
+                                         styleClass="btn-new" />
+                    </div>
+
+                    <h:form id="formTablaAviones">
+                        <p:dataTable id="dt-aviones"
+                                     value="#{gestionFlotaIntegradaBean.listaAviones}"
+                                     var="a"
+                                     styleClass="skyway-ops-table"
+                                     paginator="true"
+                                     rows="10"
+                                     paginatorPosition="bottom"
+                                     emptyMessage="No hay aeronaves registradas.">
+
+                            <p:column headerText="ID" style="width: 70px; text-align: center;">
+                                <span style="background: var(--bg-deep); border: 1px solid var(--border-subtle); padding: 2px 6px; border-radius: 4px; font-weight: 600;">
+                                    ##{a.idAvion}
+                                </span>
+                            </p:column>
+
+                            <p:column headerText="Matrícula" style="width: 120px;">
+                                <span class="tail-badge">#{a.numeroDeRegistro}</span>
+                            </p:column>
+
+                            <p:column headerText="Fabricante y Modelo">
+                                <span style="font-weight: 700; color: var(--text-heading);">#{a.modeloAvion.fabricante.nombre} #{a.modeloAvion.nombre}</span>
+                            </p:column>
+
+                            <p:column headerText="Año Fab." style="width: 90px; text-align: center;">
+                                <span>#{a.anoDeFabricacion}</span>
+                            </p:column>
+
+                            <p:column headerText="Pasajeros" style="width: 130px; text-align: center;">
+                                <span style="color: var(--navy-brand); font-weight: 700;"><i class="pi pi-users me-1"></i>#{a.capacidadDePasajeros} Pax</span>
+                            </p:column>
+
+                            <p:column headerText="Carga Bodega" style="width: 130px; text-align: center;">
+                                <span>#{a.capacidadDeCarga} Kg</span>
+                            </p:column>
+
+                            <p:column headerText="Estado" style="width: 130px; text-align: center;">
+                                <span style="background: var(--status-active-bg); border: 1px solid var(--status-active-border); color: var(--status-active-text); padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">
+                                    #{a.estadoDeMantenimiento}
+                                </span>
+                            </p:column>
+
+                            <p:column headerText="Acciones" style="width: 120px; text-align: center;">
+                                <div class="flex gap-2 justify-content-center">
+                                    <!-- BOTÓN MAPA DE ASIENTOS -->
+                                    <p:commandButton icon="pi pi-th-large"
+                                                     actionListener="#{gestionFlotaIntegradaBean.verMapaAsientos(a)}"
+                                                     process="@this"
+                                                     update=":dialogMapa"
+                                                     oncomplete="PF('dlgMapaAsientos').show();"
+                                                     styleClass="ui-button-outlined ui-button-secondary ui-button-sm"
+                                                     title="Ver Fuselaje de Asientos" />
+
+                                    <!-- BOTÓN EDITAR (CORREGIDO) -->
+                                    <p:commandButton icon="pi pi-pencil"
+                                                     actionListener="#{gestionFlotaIntegradaBean.prepararEdicionAvion(a)}"
+                                                     process="@this"
+                                                     update=":formDialogAvion:panelAvion"
+                                                     oncomplete="PF('dlgAvion').show();"
+                                                     styleClass="ui-button-outlined ui-button-secondary ui-button-sm"
+                                                     title="Editar Aeronave" />
+
+                                    <!-- BOTÓN ELIMINAR -->
+                                    <p:commandButton icon="pi pi-trash"
+                                                     actionListener="#{gestionFlotaIntegradaBean.eliminarAvion(a.idAvion)}"
+                                                     process="@this"
+                                                     update=":mainPanel :msgs"
+                                                     styleClass="ui-button-outlined ui-button-danger ui-button-sm"
+                                                     title="Eliminar">
+                                        <p:confirm header="Confirmación" message="¿Eliminar aeronave '#{a.numeroDeRegistro}'?" icon="pi pi-exclamation-triangle" />
+                                    </p:commandButton>
+                                </div>
+                            </p:column>
+                        </p:dataTable>
+                    </h:form>
+                </h:panelGroup>
+
+                <!-- ======================================================= -->
+                <!-- PESTAÑA 2: MODELOS DE AVIÓN                              -->
+                <!-- ======================================================= -->
+                <h:panelGroup rendered="#{gestionFlotaIntegradaBean.tabActiva == 1}" layout="block">
+                    <div class="header-container">
+                        <div>
+                            <h2>Modelos de Avión</h2>
+                            <span style="color: var(--text-muted); font-size: 0.85rem;">Catálogo de especificaciones técnicas por modelo</span>
+                        </div>
+                        <p:commandButton value="Nuevo Modelo"
+                                         icon="pi pi-plus"
+                                         actionListener="#{gestionFlotaIntegradaBean.prepararNuevoModelo()}"
+                                         process="@this"
+                                         update=":formDialogModelo:panelModelo"
+                                         oncomplete="PF('dlgModelo').show();"
+                                         styleClass="btn-new" />
+                    </div>
+
+                    <h:form id="formTablaModelos">
+                        <p:dataTable id="dt-modelos"
+                                     value="#{gestionFlotaIntegradaBean.listaModelos}"
+                                     var="m"
+                                     styleClass="skyway-ops-table"
+                                     paginator="true"
+                                     rows="10"
+                                     paginatorPosition="bottom"
+                                     emptyMessage="No hay modelos de avión registrados.">
+
+                            <p:column headerText="ID" style="width: 80px; text-align: center;">
+                                <span style="background: var(--bg-deep); border: 1px solid var(--border-subtle); padding: 2px 6px; border-radius: 4px; font-weight: 600;">
+                                    ##{m.idModelo}
+                                </span>
+                            </p:column>
+
+                            <p:column headerText="Nombre del Modelo">
+                                <span style="font-weight: 700; color: var(--text-heading);">#{m.nombre}</span>
+                            </p:column>
+
+                            <p:column headerText="Fabricante">
+                                <span style="color: var(--navy-brand); font-weight: 600;">#{m.fabricante.nombre}</span>
+                            </p:column>
+
+                            <p:column headerText="Acciones" style="width: 100px; text-align: center;">
+                                <p:commandButton icon="pi pi-trash"
+                                                 actionListener="#{gestionFlotaIntegradaBean.eliminarModelo(m.idModelo)}"
+                                                 update=":mainPanel :msgs"
+                                                 styleClass="ui-button-outlined ui-button-danger ui-button-sm">
+                                    <p:confirm header="Confirmación" message="¿Eliminar el modelo '#{m.nombre}'?" icon="pi pi-exclamation-triangle" />
+                                </p:commandButton>
+                            </p:column>
+                        </p:dataTable>
+                    </h:form>
+                </h:panelGroup>
+
+                <!-- ======================================================= -->
+                <!-- PESTAÑA 3: FABRICANTES                                   -->
+                <!-- ======================================================= -->
+                <h:panelGroup rendered="#{gestionFlotaIntegradaBean.tabActiva == 2}" layout="block">
+                    <div class="header-container">
+                        <div>
+                            <h2>Fabricantes Aeronáuticos</h2>
+                            <span style="color: var(--text-muted); font-size: 0.85rem;">Industrias aeronáuticas asociadas</span>
+                        </div>
+                        <p:commandButton value="Nuevo Fabricante"
+                                         icon="pi pi-plus"
+                                         actionListener="#{gestionFlotaIntegradaBean.prepararNuevoFabricante()}"
+                                         process="@this"
+                                         update=":formDialogFabricante:panelFabricante"
+                                         oncomplete="PF('dlgFabricante').show();"
+                                         styleClass="btn-new" />
+                    </div>
+
+                    <h:form id="formTablaFabricantes">
+                        <p:dataTable id="dt-fabricantes"
+                                     value="#{gestionFlotaIntegradaBean.listaFabricantes}"
+                                     var="f"
+                                     styleClass="skyway-ops-table"
+                                     paginator="true"
+                                     rows="10"
+                                     paginatorPosition="bottom"
+                                     emptyMessage="No hay fabricantes registrados.">
+
+                            <p:column headerText="ID" style="width: 80px; text-align: center;">
+                                <span style="background: var(--bg-deep); border: 1px solid var(--border-subtle); padding: 2px 6px; border-radius: 4px; font-weight: 600;">
+                                    ##{f.idFabricante}
+                                </span>
+                            </p:column>
+
+                            <p:column headerText="Nombre del Fabricante">
+                                <span style="font-weight: 700; color: var(--text-heading);">#{f.nombre}</span>
+                            </p:column>
+
+                            <p:column headerText="Acciones" style="width: 100px; text-align: center;">
+                                <p:commandButton icon="pi pi-trash"
+                                                 actionListener="#{gestionFlotaIntegradaBean.eliminarFabricante(f.idFabricante)}"
+                                                 update=":mainPanel :msgs"
+                                                 styleClass="ui-button-outlined ui-button-danger ui-button-sm">
+                                    <p:confirm header="Confirmación" message="¿Eliminar fabricante '#{f.nombre}'?" icon="pi pi-exclamation-triangle" />
+                                </p:commandButton>
+                            </p:column>
+                        </p:dataTable>
+                    </h:form>
+                </h:panelGroup>
+
+            </h:panelGroup>
+
+            <!-- ======================================================= -->
+            <!-- MODALES DIÁLOGOS DE CREACIÓN Y EDICIÓN                    -->
+            <!-- ======================================================= -->
+
+            <!-- MODAL AERONAVE HORIZONTAL (820px) -->
+            <p:dialog header="#{gestionFlotaIntegradaBean.modoEdicionAvion ? 'Modificar Aeronave - '.concat(gestionFlotaIntegradaBean.avionSeleccionado.numeroDeRegistro) : 'Registrar Nueva Aeronave'}"
+                      widgetVar="dlgAvion"
+                      modal="true"
+                      responsive="true"
+                      width="820"
+                      styleClass="custom-dialog">
+
+                <h:form id="formDialogAvion" styleClass="dark-input">
+                    <h:panelGroup id="panelAvion" layout="block">
+
+                        <div class="horizontal-form-grid mb-3">
+                            <div class="form-col-6">
+                                <label>Matrícula (Número de Registro)</label>
+                                <p:inputText value="#{gestionFlotaIntegradaBean.avionSeleccionado.numeroDeRegistro}" placeholder="Ej: CC-BBA" />
+                            </div>
+
+                            <div class="form-col-6">
+                                <label>Modelo de Avión</label>
+                                <p:selectOneMenu value="#{gestionFlotaIntegradaBean.idModeloParaAvion}">
+                                    <f:selectItem itemLabel="-- Seleccionar Modelo --" itemValue="" />
+                                    <f:selectItems value="#{gestionFlotaIntegradaBean.listaModelos}" var="m" itemLabel="#{m.fabricante.nombre} #{m.nombre}" itemValue="#{m.idModelo}" />
+                                </p:selectOneMenu>
+                            </div>
+
+                            <div class="form-col-6">
+                                <label>Año de Fabricación</label>
+                                <p:spinner value="#{gestionFlotaIntegradaBean.avionSeleccionado.anoDeFabricacion}" min="1960" max="2030" />
+                            </div>
+
+                            <div class="form-col-6">
+                                <label>Capacidad Carga (Kg)</label>
+                                <p:spinner value="#{gestionFlotaIntegradaBean.avionSeleccionado.capacidadDeCarga}" min="1000" stepFactor="500" />
+                            </div>
+
+                            <div class="form-col-6">
+                                <label>Estado de Mantenimiento</label>
+                                <p:selectOneMenu value="#{gestionFlotaIntegradaBean.avionSeleccionado.estadoDeMantenimiento}">
+                                    <f:selectItem itemLabel="Operativo" itemValue="Operativo" />
+                                    <f:selectItem itemLabel="En Servicio" itemValue="En servicio" />
+                                    <f:selectItem itemLabel="En Mantenimiento" itemValue="En mantenimiento" />
+                                    <f:selectItem itemLabel="Inactivo" itemValue="Inactivo" />
+                                </p:selectOneMenu>
+                            </div>
+
+                            <div class="form-col-6">
+                                <label>Próximo Mantenimiento</label>
+                                <p:datePicker value="#{gestionFlotaIntegradaBean.fechaMantenimientoAux}" pattern="yyyy-MM-dd" showIcon="true" />
+                            </div>
+                        </div>
+
+                        <!-- CAPACIDADES POR CLASE (TRIGGER BD) -->
+                        <div style="border-top: 1px solid var(--border-subtle); padding-top: 12px;" class="mb-3">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <label style="color: var(--navy-brand); font-size: 0.75rem; font-weight: 700;">
+                                    ASIENTOS POR CLASE (GENERACIÓN AUTOMÁTICA POR TRIGGER)
+                                </label>
+                                <h:panelGroup id="panelTotalPax">
+                                    <span style="background: var(--bg-deep); border: 1px solid var(--border-subtle); color: var(--text-heading); font-weight: 700; padding: 3px 10px; border-radius: 4px; font-size: 0.78rem;">
+                                        Total Pasajeros: #{gestionFlotaIntegradaBean.totalAsientosCalculados}
+                                    </span>
+                                </h:panelGroup>
+                            </div>
+
+                            <div class="horizontal-form-grid">
+                                <ui:repeat value="#{gestionFlotaIntegradaBean.listaClases}" var="c">
+                                    <div class="form-col-4">
+                                        <div style="background: var(--bg-deep); border: 1px solid var(--border-subtle); padding: 10px; border-radius: 6px;">
+                                            <label style="color: var(--text-heading); font-size: 0.7rem; font-weight: 700; display: block;" class="mb-1">#{c.descripcion}</label>
+                                            <p:spinner value="#{gestionFlotaIntegradaBean.capacidadesClaseMap[c.idClase]}" min="0" max="600">
+                                                <p:ajax event="change" listener="#{gestionFlotaIntegradaBean.recalcularTotalAsientos}" update=":formDialogAvion:panelTotalPax" />
+                                            </p:spinner>
+                                        </div>
+                                    </div>
+                                </ui:repeat>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-content-end gap-2 pt-3" style="border-top: 1px solid var(--border-subtle);">
+                            <p:commandButton value="Cancelar" onclick="PF('dlgAvion').hide();" type="button" styleClass="ui-button-flat ui-button-secondary" />
+                            <p:commandButton value="Guardar Aeronave" actionListener="#{gestionFlotaIntegradaBean.guardarAvion()}" update=":mainPanel :msgs" styleClass="btn-new" />
+                        </div>
+                    </h:panelGroup>
+                </h:form>
+            </p:dialog>
+
+            <!-- MODAL MODELO -->
+            <p:dialog header="Nuevo Modelo de Avión" widgetVar="dlgModelo" modal="true" width="480" styleClass="custom-dialog">
+                <h:form id="formDialogModelo" styleClass="dark-input">
+                    <h:panelGroup id="panelModelo" layout="block">
+                        <div class="mb-3">
+                            <label>Fabricante Asociado</label>
+                            <p:selectOneMenu value="#{gestionFlotaIntegradaBean.idFabricanteParaModelo}" required="true">
+                                <f:selectItem itemLabel="-- Seleccionar Fabricante --" itemValue="" />
+                                <f:selectItems value="#{gestionFlotaIntegradaBean.listaFabricantes}" var="f" itemLabel="#{f.nombre}" itemValue="#{f.idFabricante}" />
+                            </p:selectOneMenu>
+                        </div>
+                        <div class="mb-3">
+                            <label>Nombre del Modelo</label>
+                            <p:inputText value="#{gestionFlotaIntegradaBean.modeloSeleccionado.nombre}" placeholder="Ej: 787-9 Dreamliner, A320neo" required="true" />
+                        </div>
+                        <div class="flex justify-content-end gap-2 pt-3" style="border-top: 1px solid var(--border-subtle);">
+                            <p:commandButton value="Cancelar" onclick="PF('dlgModelo').hide();" type="button" styleClass="ui-button-flat ui-button-secondary" />
+                            <p:commandButton value="Guardar Modelo" actionListener="#{gestionFlotaIntegradaBean.guardarModelo()}" update=":mainPanel :msgs" styleClass="btn-new" />
+                        </div>
+                    </h:panelGroup>
+                </h:form>
+            </p:dialog>
+
+            <!-- MODAL FABRICANTE -->
+            <p:dialog header="Nuevo Fabricante Aeronáutico" widgetVar="dlgFabricante" modal="true" width="420" styleClass="custom-dialog">
+                <h:form id="formDialogFabricante" styleClass="dark-input">
+                    <h:panelGroup id="panelFabricante" layout="block">
+                        <div class="mb-3">
+                            <label>Nombre del Fabricante</label>
+                            <p:inputText value="#{gestionFlotaIntegradaBean.fabricanteSeleccionado.nombre}" placeholder="Ej: Boeing, Airbus, Embraer" required="true" />
+                        </div>
+                        <div class="flex justify-content-end gap-2 pt-3" style="border-top: 1px solid var(--border-subtle);">
+                            <p:commandButton value="Cancelar" onclick="PF('dlgFabricante').hide();" type="button" styleClass="ui-button-flat ui-button-secondary" />
+                            <p:commandButton value="Guardar Fabricante" actionListener="#{gestionFlotaIntegradaBean.guardarFabricante()}" update=":mainPanel :msgs" styleClass="btn-new" />
+                        </div>
+                    </h:panelGroup>
+                </h:form>
+            </p:dialog>
+
+            <!-- MODAL SIMULADOR FUSELAJE -->
+            <p:dialog header="Simulador de Fuselaje - #{gestionFlotaIntegradaBean.avionSeleccionado.numeroDeRegistro}" widgetVar="dlgMapaAsientos" id="dialogMapa" modal="true" width="680" styleClass="custom-dialog">
+                <div class="fuselage-box">
+                    <div style="text-align: center; color: var(--navy-brand); font-weight: 700; border-bottom: 1px dashed var(--border-subtle); padding-bottom: 8px; margin-bottom: 12px; font-size: 0.8rem;">
+                        <i class="pi pi-compass me-1"></i> CABINA DE MANDO / COCKPIT (PROA)
+                    </div>
+
+                    <ui:repeat value="#{gestionFlotaIntegradaBean.asientosPorFilaMap.entrySet().toArray()}" var="entry">
+                        <div style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 6px;">
+                            <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700; width: 30px; text-align: right;">F#{entry.key}</span>
+                            <ui:repeat value="#{entry.value}" var="st">
+                                <div class="seat-item">
+                                    <strong>#{st.numeroAsiento}</strong>
+                                    <span style="font-size: 0.55rem; color: var(--text-muted);">#{st.claseAsiento.descripcion.substring(0, 3)}</span>
+                                </div>
+                            </ui:repeat>
+                        </div>
+                    </ui:repeat>
+                </div>
+            </p:dialog>
+
+            <!-- CONFIRM DIALOG GLOBAL -->
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" styleClass="custom-dialog">
+                <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-flat ui-button-secondary" />
+                <p:commandButton value="Sí, Eliminar" type="button" styleClass="ui-confirmdialog-yes btn-new" />
+            </p:confirmDialog>
+        </div>
+    </ui:define>
+
+</ui:composition>

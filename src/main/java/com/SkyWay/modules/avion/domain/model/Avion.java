@@ -55,7 +55,7 @@ public class Avion implements Serializable {
 	private ModeloAvion modeloAvion;
 
 	//bi-directional many-to-one association to CapacidadClase
-	@OneToMany(mappedBy="avion1")
+	@OneToMany(mappedBy="avion1", fetch = FetchType.EAGER)
 	private List<CapacidadClase> capacidadClases1;
 
 
@@ -199,4 +199,18 @@ public class Avion implements Serializable {
 		return vuelo;
 	}
 
+
+	@Override
+	public String toString() {
+		return "Avion{" +
+				"idAvion=" + idAvion +
+				", anoDeFabricacion=" + anoDeFabricacion +
+				", capacidadDeCarga=" + capacidadDeCarga +
+				", capacidadDePasajeros=" + capacidadDePasajeros +
+				", estadoDeMantenimiento='" + estadoDeMantenimiento + '\'' +
+				", fechaProximoMantenimiento=" + fechaProximoMantenimiento +
+				", numeroDeRegistro='" + numeroDeRegistro + '\'' +
+				", modeloAvion=" + modeloAvion.toString() +
+				'}';
+	}
 }
