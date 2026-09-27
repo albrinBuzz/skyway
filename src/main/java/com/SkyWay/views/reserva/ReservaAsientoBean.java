@@ -56,6 +56,8 @@ public class ReservaAsientoBean implements Serializable {
     private String miSessionId;
 
     private List<FilaCabinaDTO> filasCabina = new ArrayList<>();
+
+
     @PostConstruct
     @SuppressWarnings("unchecked")
     public void init() {
@@ -106,7 +108,10 @@ public class ReservaAsientoBean implements Serializable {
         String idsParam = params.get("itinerarios");
         String idsTarifas = params.get("tarifas");
 
-        if (idsParam != null && !idsParam.isEmpty() && idsTarifas != null && !idsTarifas.isEmpty()) {
+        // -------------------------------------------------------------------------
+        // 🚦 VALIDACIÓN DE PARÁMETROS DE ENTRADA Y REDIRECCIÓN A LA RAIZ (ROOT)
+        // -------------------------------------------------------------------------
+        if (idsParam != null && !idsParam.trim().isEmpty() && idsTarifas != null && !idsTarifas.trim().isEmpty()) {
 
             String queryString = (String) sessionMap.get("ultimaBusquedaAsientosQuery");
             if (queryString != null && !queryString.isBlank()) {
@@ -130,7 +135,17 @@ public class ReservaAsientoBean implements Serializable {
             idsItinerarios = Arrays.stream(idsParam.split(",")).map(String::trim).map(Integer::parseInt).toList();
 
             for (Integer id : idsItinerarios) {
-                itinerarios.add(itinerarioService.findById(id));
+                Itinerario it = itinerarioService.findById(id);
+                if (it != null) {
+                    itinerarios.add(it);
+                }
+            }
+
+            // Si los itinerarios consultados no existen en BD, redirigir al Root
+            if (itinerarios.isEmpty()) {
+                Logger.logWarn("[ReservaAsientoBean] Los itinerarios indicados no existen en BD. Redirigiendo al Root (/)...");
+                redirigirAlRoot(externalContext);
+                return;
             }
 
             vuelos = new ArrayList<>();
@@ -141,6 +156,12 @@ public class ReservaAsientoBean implements Serializable {
             }
 
             this.cantVuelos = vuelos.size();
+
+            if (this.cantVuelos == 0) {
+                Logger.logWarn("[ReservaAsientoBean] No se encontraron vuelos asociados a los itinerarios. Redirigiendo al Root (/)...");
+                redirigirAlRoot(externalContext);
+                return;
+            }
 
             // =========================================================================
             // 🔄 RESTAURACIÓN DE ESTADO Y PASAJEROS (F5 CLEAN RECOVERY)
@@ -202,8 +223,20 @@ public class ReservaAsientoBean implements Serializable {
                     (idxVuelo + 1), cantVuelos, getRutaVueloActual(), elegidosTramoActual.size(), cantAdultos, idxAsientoSeleccion));
 
         } else {
-            Logger.logWarn("[SessionTrack] Fallo de inicialización: Faltan parámetros requeridos.");
-            addMessage(FacesMessage.SEVERITY_ERROR, "Error", "No se recibieron itinerarios.");
+            // 🏠 REDIRECCIÓN AL ROOT SI NO VIENEN LOS PARÁMETROS ITINERARIOS / TARIFAS
+            Logger.logWarn("[ReservaAsientoBean] Acceso directo sin parámetros 'itinerarios' ni 'tarifas'. Redirigiendo al Root (/)...");
+            redirigirAlRoot(externalContext);
+        }
+    }
+
+    /**
+     * Método auxiliar para redirigir limpia y directamente a la página principal / Home ("/")
+     */
+    private void redirigirAlRoot(ExternalContext externalContext) {
+        try {
+            externalContext.redirect("/");
+        } catch (IOException e) {
+            Logger.logError("[ReservaAsientoBean] Error al intentar redirigir al Root: " + e.getMessage());
         }
     }
 
