@@ -7,13 +7,248 @@
                 template="/template/main.xhtml">
 
     <ui:define name="head">
-        <title>Reserva | LATAM Style</title>
+        <title>SkyWay | Confirmación y Pago de Reserva</title>
         <h:outputStylesheet library="css" name="reserva/style.css" />
 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 
+        <style type="text/css">
+            /* ==========================================================================
+               🎨 ESTILOS CORPORATIVOS SOBRIOS Y PROFESIONALES - CHECKOUT
+               ========================================================================== */
 
+            /* Banner de Cronómetro */
+            .timer-banner {
+                background: rgba(239, 68, 68, 0.1) !important;
+                border: 1px solid rgba(239, 68, 68, 0.3) !important;
+                border-radius: 8px !important;
+            }
+            .timer-badge {
+                background: #ef4444 !important;
+                color: #ffffff !important;
+                font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+                font-size: 1.1rem !important;
+                font-weight: 700 !important;
+                border-radius: 6px !important;
+                padding: 4px 12px !important;
+            }
+
+            /* Stepper de Progreso */
+            .booking-stepper {
+                display: flex !important;
+                justify-content: space-between !important;
+                background: #101b33 !important;
+                border: 1px solid #1e3a5c !important;
+                border-radius: 8px !important;
+                padding: 12px 24px !important;
+                margin-bottom: 24px !important;
+            }
+            .booking-stepper .step {
+                color: #64748b !important;
+                font-size: 0.9rem !important;
+                font-weight: 500 !important;
+            }
+            .booking-stepper .step.active {
+                color: #3b82f6 !important;
+                font-weight: 700 !important;
+            }
+
+            /* Contenedor Principal y Tarjetas */
+            .card-latam {
+                background: #101b33 !important;
+                border: 1px solid #1e3a5c !important;
+                border-radius: 12px !important;
+                padding: 24px !important;
+            }
+            .pasajero-card {
+                background: #0d172a !important;
+                border: 1px solid #1e293b !important;
+                border-radius: 10px !important;
+                padding: 20px !important;
+            }
+
+            .pasajero-badge-num {
+                background: #3b82f6 !important;
+                color: #ffffff !important;
+                width: 32px !important;
+                height: 32px !important;
+                border-radius: 50% !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                font-weight: 700 !important;
+                font-size: 0.9rem !important;
+            }
+
+            .pasajero-section-title {
+                color: #94a3b8 !important;
+                font-size: 1rem !important;
+                font-weight: 600 !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.5px !important;
+                border-bottom: 1px solid #1e293b !important;
+                padding-bottom: 8px !important;
+            }
+
+            /* Inputs Formulario Dark */
+            .pasajero-card .ui-inputfield,
+            .pasajero-card .ui-selectonemenu {
+                background: #11263f !important;
+                border: 1px solid #1e3a5c !important;
+                color: #e6eef7 !important;
+                border-radius: 6px !important;
+                padding: 8px 12px !important;
+                width: 100% !important;
+            }
+            .pasajero-card .ui-inputfield:focus,
+            .pasajero-card .ui-selectonemenu:focus-within {
+                border-color: #3b82f6 !important;
+                box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+            }
+
+            /* Sidebar / Resumen de Reserva */
+            .sidebar-resumen {
+                background: #101b33 !important;
+                border: 1px solid #1e3a5c !important;
+                border-radius: 12px !important;
+                padding: 24px !important;
+            }
+
+            /* Sobrescribir Acordeón PrimeFaces */
+            .latam-accordion .ui-accordion-header {
+                background: #11263f !important;
+                border: 1px solid #1e3a5c !important;
+                color: #e6eef7 !important;
+                border-radius: 6px !important;
+                margin-bottom: 8px !important;
+                font-weight: 600 !important;
+            }
+            .latam-accordion .ui-accordion-header.ui-state-active {
+                background: #1e3a5c !important;
+                border-color: #3b82f6 !important;
+                color: #ffffff !important;
+            }
+            .latam-accordion .ui-accordion-content {
+                background: #0d172a !important;
+                border: 1px solid #1e3a5c !important;
+                border-top: none !important;
+                color: #cbd5e1 !important;
+                border-radius: 0 0 6px 6px !important;
+            }
+
+            /* Boleta / Caja de Precio Final Corporativa */
+            .total-box-corporate {
+                background: linear-gradient(135deg, #1e3a5c 0%, #101b33 100%) !important;
+                border: 1px solid #3b82f6 !important;
+                border-radius: 10px !important;
+                padding: 16px !important;
+                text-align: center !important;
+            }
+            .total-box-corporate .total-title {
+                color: #94a3b8 !important;
+                font-size: 0.8rem !important;
+                font-weight: 700 !important;
+                letter-spacing: 1px !important;
+            }
+            .total-box-corporate .total-amount {
+                color: #ffffff !important;
+                font-size: 2.2rem !important;
+                font-weight: 800 !important;
+            }
+
+            /* Métodos de Pago Radios */
+            .pago-option-card {
+                background: #0d172a !important;
+                border: 1px solid #1e3a5c !important;
+                border-radius: 8px !important;
+                padding: 12px 16px !important;
+                transition: all 0.2s ease !important;
+            }
+            .pago-option-card:hover {
+                border-color: #3b82f6 !important;
+            }
+
+            /* Botón Principal */
+            .btn-pay-action.ui-button {
+                background: #2563eb !important;
+                border: none !important;
+                color: #ffffff !important;
+                font-weight: 700 !important;
+                padding: 14px !important;
+                font-size: 1.05rem !important;
+                border-radius: 8px !important;
+                box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3) !important;
+            }
+            .btn-pay-action.ui-button:hover {
+                background: #1d4ed8 !important;
+            }
+
+            /* ==========================================================================
+   🛠 ESTILOS SOBRIOS PARA EL MODAL DE EXPIRACIÓN (PrimeFaces p:dialog)
+   ========================================================================== */
+            .custom-expired-modal.ui-dialog {
+                background: var(--bg-surface, #1E293B) !important;
+                border: 1px solid var(--border-color, #334155) !important;
+                border-radius: 8px !important;
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.6) !important;
+            }
+
+            /* Cabecera del Dialog */
+            .custom-expired-modal .ui-dialog-titlebar {
+                background: var(--bg-base, #0F172A) !important;
+                border-bottom: 1px solid var(--border-color, #334155) !important;
+                color: var(--text-primary, #F8FAFC) !important;
+                font-size: 1rem !important;
+                font-weight: 700 !important;
+                padding: 12px 16px !important;
+            }
+
+            /* Contenido Interno */
+            .custom-expired-modal .ui-dialog-content {
+                background: var(--bg-surface, #1E293B) !important;
+                color: var(--text-primary, #F8FAFC) !important;
+                padding: 20px !important;
+            }
+
+            /* Ícono del Reloj (Semántico Crimson Sobrio) */
+            .expired-modal-icon {
+                font-size: 2.8rem !important;
+                display: block !important;
+                color: var(--status-cancelled-text, #F87171) !important;
+            }
+
+            /* Título y Textos */
+            .expired-modal-title {
+                color: var(--text-primary, #F8FAFC) !important;
+                font-size: 1.15rem !important;
+            }
+
+            .expired-modal-text {
+                color: var(--text-muted, #94A3B8) !important;
+                font-size: 0.88rem !important;
+                max-width: 320px !important;
+                margin: 0 auto !important;
+                line-height: 1.4 !important;
+            }
+
+            /* Botón de Acción Principal Azul Corporativo */
+            .btn-expired-action {
+                background-color: var(--aviation-blue, #3B82F6) !important;
+                border: none !important;
+                color: #FFFFFF !important;
+                font-weight: 700 !important;
+                padding: 10px 16px !important;
+                font-size: 0.92rem !important;
+                border-radius: 6px !important;
+                transition: background-color 0.2s ease !important;
+            }
+
+            .btn-expired-action:hover {
+                background-color: #2563EB !important;
+                color: #FFFFFF !important;
+            }
+        </style>
     </ui:define>
 
     <ui:define name="contenido">
@@ -21,9 +256,7 @@
         <p:growl id="growl" showDetail="true" />
 
         <!-- Modal de Expiración Estilizado -->
-        <!-- Modal de Expiración Estilizado -->
-        <!-- Modal de Expiración Estilizado -->
-        <p:dialog header="⏱️ Tiempo Agotado"
+        <p:dialog header="Tiempo Agotado"
                   widgetVar="expiredDlg"
                   modal="true"
                   closable="false"
@@ -33,410 +266,332 @@
                   styleClass="custom-expired-modal">
 
             <div class="text-center p-3">
-                <i class="pi pi-clock text-warning mb-3" style="font-size: 3rem; display: block;"></i>
-                <h4 class="fw-bold mb-2">¡Tu tiempo de reserva ha expirado!</h4>
-                <p class="text-secondary mb-4" style="max-width: 320px;">
-                    El tiempo de retención temporal (10 min) se agotó. Tus asientos fueron liberados para otros pasajeros.
+                <!-- Ícono en color carmesí atenuado semántico -->
+                <i class="pi pi-clock mb-3 expired-modal-icon"></i>
+
+                <h4 class="font-weight-bold mb-2 expired-modal-title">¡Tu tiempo de reserva ha expirado!</h4>
+
+                <p class="mb-4 expired-modal-text">
+                    El tiempo de retención temporal (10 min) finalizó. Tus asientos fueron liberados para otros usuarios.
                 </p>
 
                 <h:form id="expiredForm">
                     <p:remoteCommand name="notificarExpiracionCliente"
                                      action="#{reservaBean.cancelarPorExpiracion}" />
 
-                    <!-- Redirección con URL Dinámica y Preservación de Parámetros -->
+                    <!-- Botón primario azul corporativo -->
                     <button type="button"
                             onclick="window.location.href='#{request.contextPath}#{reservaBean.urlRetornoAsientos}';"
-                            class="btn btn-warning w-100 font-weight-bold py-2">
-                        <i class="pi pi-refresh mr-1"></i> Volver a Seleccionar Asientos
+                            class="btn btn-expired-action w-100">
+                        <i class="pi pi-refresh me-1"></i> Volver a Seleccionar Asientos
                     </button>
                 </h:form>
             </div>
         </p:dialog>
 
-
         <!-- BANNER DEL CRONÓMETRO DE RETENCIÓN -->
-        <div class="container mt-3">
-            <div class="d-flex align-items-center justify-content-between p-3 rounded"
-                 style="background: rgba(220, 53, 69, 0.15); border: 1px solid var(--latam-red, #e30613);">
+        <div class="container mt-4">
+            <div class="timer-banner d-flex align-items-center justify-content-between p-3">
                 <div class="d-flex align-items-center">
-                    <i class="pi pi-clock mr-2 text-warning" style="font-size: 1.4rem;"></i>
+                    <i class="pi pi-clock mr-2 text-danger" style="font-size: 1.3rem;"></i>
                     <span class="font-weight-bold text-white">Tiempo de retención temporal de asientos:</span>
                 </div>
-                <div class="badge badge-danger p-2" style="font-size: 1.1rem; font-family: monospace;" id="timerDisplay">
+                <div class="timer-badge" id="timerDisplay">
                     00:00
                 </div>
             </div>
         </div>
 
         <div class="container mt-4">
+            <!-- STEPPER DE PROGRESO -->
             <div class="booking-stepper">
-                <span class="step">1. Vuelos</span>
-                <span class="step">2. Asientos</span>
-                <span class="step active">3. Pasajeros y Pago</span>
-                <span class="step">4. Confirmación</span>
+                <span class="step"><i class="pi pi-check me-1"></i> 1. Vuelos</span>
+                <span class="step"><i class="pi pi-check me-1"></i> 2. Asientos</span>
+                <span class="step active"><i class="pi pi-credit-card me-1"></i> 3. Pasajeros y Pago</span>
+                <span class="step"><i class="pi pi-circle me-1"></i> 4. Confirmación</span>
             </div>
 
-            <div class="latam-layout">
-                <div class="main-content">
+            <div class="row g-4">
+                <!-- SECCIÓN IZQUIERDA: FORMULARIO DE PASAJEROS -->
+                <div class="col-lg-7">
                     <h:form id="pasajerosForm">
                         <div class="card-latam">
-                            <div class="titulo mb-4" style="font-size: 1.5rem; font-weight: 800;">Información de pasajeros</div>
+                            <h3 class="text-white font-weight-bold mb-4" style="font-size: 1.35rem;">
+                                <i class="pi pi-users me-2 text-primary"></i>Información de Pasajeros
+                            </h3>
 
                             <ui:repeat value="#{reservaBean.pasajerosList}" var="pasajero" varStatus="st">
-                                <div class="pasajero-card mb-5">
-                                    <div class="d-flex align-items-center mb-4">
-                                        <div style="background:var(--latam-red); width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold;">
+                                <div class="pasajero-card mb-4">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="pasajero-badge-num me-3">
                                             #{st.index + 1}
                                         </div>
-                                        <h4 class="ml-3 mb-0" style="font-weight: 700;">Pasajero #{st.index + 1} (Adulto)</h4>
+                                        <h5 class="text-white font-weight-bold m-0">Pasajero #{st.index + 1} (Adulto)</h5>
                                     </div>
 
                                     <h:panelGroup rendered="#{st.index == 0 and reservaBean.usuario != null}">
-                                        <div class="p-3 rounded mb-4 d-flex align-items-center" style="background: rgba(0, 123, 255, 0.1); border: 1px solid var(--latam-blue);">
-                                            <i class="pi pi-user-check mr-3" style="color:var(--latam-blue); font-size:1.2rem;"></i>
-                                            <span style="font-size:0.9rem;">Autocompletado con tu cuenta: <strong>#{reservaBean.usuario.nombre} #{reservaBean.usuario.apellido}</strong></span>
+                                        <div class="p-3 rounded mb-3 d-flex align-items-center" style="background: rgba(59, 130, 246, 0.1); border: 1px solid #1e3a5c;">
+                                            <i class="pi pi-user-check text-primary me-2" style="font-size:1.1rem;"></i>
+                                            <span class="text-white-50 small">Autocompletado con tu cuenta: <strong class="text-white">#{reservaBean.usuario.nombre} #{reservaBean.usuario.apellido}</strong></span>
                                         </div>
                                     </h:panelGroup>
 
-                                    <h3 class="pasajero-section-title mb-4">
-                                        <i class="pi pi-user mr-2"></i> Información Personal
-                                    </h3>
+                                    <div class="pasajero-section-title mb-3">
+                                        <i class="pi pi-user me-2"></i> Datos Personales
+                                    </div>
 
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <p:outputLabel value="RUT" styleClass="small text-muted mb-1 d-block" />
+                                    <div class="row g-3">
+                                        <div class="col-md-6 mb-2">
+                                            <p:outputLabel value="RUT" styleClass="skyway-label" />
                                             <p:inputText value="#{pasajero.rut}" required="true" requiredMessage="El RUT es obligatorio"
-                                                         disabled="#{st.index == 0 and reservaBean.usuario != null}" styleClass="w-100" />
+                                                         disabled="#{st.index == 0 and reservaBean.usuario != null}" />
                                         </div>
-                                        <div class="col-md-6 mb-3">
-                                            <p:outputLabel value="Nombre" styleClass="small text-muted mb-1 d-block" />
+                                        <div class="col-md-6 mb-2">
+                                            <p:outputLabel value="Nombre" styleClass="skyway-label" />
                                             <p:inputText value="#{pasajero.usuario.nombre}" required="true" requiredMessage="El nombre es obligatorio"
-                                                         disabled="#{st.index == 0 and reservaBean.usuario != null}" styleClass="w-100" />
+                                                         disabled="#{st.index == 0 and reservaBean.usuario != null}" />
                                         </div>
 
-                                        <div class="col-md-6 mb-3">
-                                            <p:outputLabel value="Apellido" styleClass="small text-muted mb-1 d-block" />
+                                        <div class="col-md-6 mb-2">
+                                            <p:outputLabel value="Apellido" styleClass="skyway-label" />
                                             <p:inputText value="#{pasajero.usuario.apellido}" required="true" requiredMessage="El apellido es obligatorio"
-                                                         disabled="#{st.index == 0 and reservaBean.usuario != null}" styleClass="w-100" />
+                                                         disabled="#{st.index == 0 and reservaBean.usuario != null}" />
                                         </div>
-                                            <div class="col-md-6 mb-3">
-                                                <p:outputLabel for="fechaNac"
-                                                               value="Fecha de Nacimiento"
-                                                               styleClass="form-label-custom small text-muted mb-1 d-block font-weight-bold" />
 
-                                                <div class="ui-inputgroup custom-datepicker-group">
-                                                    <span class="ui-inputgroup-addon bg-dark-subtle border-right-0">
-                                                        <i class="pi pi-calendar text-info"></i>
-                                                    </span>
+                                        <div class="col-md-6 mb-2">
+                                            <p:outputLabel for="fechaNac" value="Fecha de Nacimiento" styleClass="skyway-label" />
+                                            <p:datePicker id="fechaNac"
+                                                          value="#{pasajero.usuario.fechaNacimiento}"
+                                                          pattern="dd/MM/yyyy"
+                                                          monthNavigator="true"
+                                                          yearNavigator="true"
+                                                          yearRange="1930:2026"
+                                                          placeholder="DD/MM/AAAA"
+                                                          required="true"
+                                                          requiredMessage="La fecha de nacimiento es obligatoria"
+                                                          disabled="#{st.index == 0 and reservaBean.usuario != null}" />
+                                        </div>
 
-                                                    <p:datePicker id="fechaNac"
-                                                                  value="#{pasajero.usuario.fechaNacimiento}"
-                                                                  pattern="dd/MM/yyyy"
-                                                                  monthNavigator="true"
-                                                                  yearNavigator="true"
-                                                                  yearRange="1930:2026"
-                                                                  showIcon="false"
-                                                                  placeholder="DD/MM/AAAA"
-                                                                  required="true"
-                                                                  requiredMessage="La fecha de nacimiento es obligatoria"
-                                                                  disabled="#{st.index == 0 and reservaBean.usuario != null}"
-                                                                  styleClass="w-100 flex-grow-1 custom-datepicker"
-                                                                  inputStyleClass="form-control-dark w-100" />
-                                               </div>
-                                            </div>
-
-                                        <div class="col-md-6 mb-3">
-                                            <p:outputLabel value="Correo" styleClass="small text-muted mb-1 d-block" />
+                                        <div class="col-md-6 mb-2">
+                                            <p:outputLabel value="Correo Electrónico" styleClass="skyway-label" />
                                             <p:inputText value="#{pasajero.usuario.correoElectronico}" required="true" requiredMessage="El correo es obligatorio"
-                                                         disabled="#{st.index == 0 and reservaBean.usuario != null}" styleClass="w-100" />
+                                                         disabled="#{st.index == 0 and reservaBean.usuario != null}" />
                                         </div>
-                                        <div class="col-md-6 mb-3">
-                                            <p:outputLabel value="Teléfono" styleClass="small text-muted mb-1 d-block" />
+                                        <div class="col-md-6 mb-2">
+                                            <p:outputLabel value="Teléfono" styleClass="skyway-label" />
                                             <p:inputMask mask="(99) 9999-9999" value="#{pasajero.usuario.telefono}" required="true" requiredMessage="El teléfono es obligatorio"
-                                                         disabled="#{st.index == 0 and reservaBean.usuario != null}" styleClass="w-100" />
+                                                         disabled="#{st.index == 0 and reservaBean.usuario != null}" />
                                         </div>
                                     </div>
 
-                                    <hr class="my-4" style="border-top: 1px solid var(--latam-border);" />
+                                    <div class="pasajero-section-title my-3">
+                                        <i class="pi pi-id-card me-2"></i> Documento y Nacionalidad
+                                    </div>
 
-                                    <h3 class="pasajero-section-title mb-4">
-                                        <i class="pi pi-id-card mr-2"></i> Documento y Nacionalidad
-                                    </h3>
-
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <p:outputLabel value="Tipo Documento" styleClass="small text-muted mb-1 d-block" />
+                                    <div class="row g-3">
+                                        <div class="col-md-6 mb-2">
+                                            <p:outputLabel value="Tipo Documento" styleClass="skyway-label" />
                                             <p:selectOneMenu value="#{pasajero.tipoDocumento}" required="true" requiredMessage="Seleccione tipo de documento"
-                                                             disabled="#{st.index == 0 and reservaBean.usuario != null}" styleClass="w-100">
-                                                <f:selectItem itemLabel="Seleccione" itemValue=""/>
+                                                             disabled="#{st.index == 0 and reservaBean.usuario != null}">
+                                                <f:selectItem itemLabel="Seleccione..." itemValue=""/>
                                                 <f:selectItem itemLabel="Pasaporte" itemValue="PASAPORTE"/>
-                                                <f:selectItem itemLabel="Cédula" itemValue="CEDULA"/>
+                                                <f:selectItem itemLabel="Cédula de Identidad" itemValue="CEDULA"/>
                                             </p:selectOneMenu>
                                         </div>
-                                        <div class="col-md-6 mb-3">
-                                            <p:outputLabel value="Número Documento" styleClass="small text-muted mb-1 d-block" />
+                                        <div class="col-md-6 mb-2">
+                                            <p:outputLabel value="Número Documento" styleClass="skyway-label" />
                                             <p:inputText value="#{pasajero.numeroDocumento}" required="true" requiredMessage="El número de documento es obligatorio"
-                                                         disabled="#{st.index == 0 and reservaBean.usuario != null}" styleClass="w-100" />
+                                                         disabled="#{st.index == 0 and reservaBean.usuario != null}" />
                                         </div>
 
-                                        <div class="col-md-6 mb-3">
-                                            <p:outputLabel value="Documento Identidad (ID)" styleClass="small text-muted mb-1 d-block" />
+                                        <div class="col-md-6 mb-2">
+                                            <p:outputLabel value="Documento Identidad (ID)" styleClass="skyway-label" />
                                             <p:inputText value="#{pasajero.usuario.documentoIdentidad}" required="true" requiredMessage="El ID de identidad es obligatorio"
-                                                         disabled="#{st.index == 0 and reservaBean.usuario != null}" styleClass="w-100" />
+                                                         disabled="#{st.index == 0 and reservaBean.usuario != null}" />
                                         </div>
-                                        <div class="col-md-6 mb-3">
-                                            <p:outputLabel value="Nacionalidad" styleClass="small text-muted mb-1 d-block" />
+                                        <div class="col-md-6 mb-2">
+                                            <p:outputLabel value="Nacionalidad" styleClass="skyway-label" />
                                             <p:inputText value="#{pasajero.nacionalidad}" required="true" requiredMessage="La nacionalidad es obligatoria"
-                                                         disabled="#{st.index == 0 and reservaBean.usuario != null}" styleClass="w-100" />
+                                                         disabled="#{st.index == 0 and reservaBean.usuario != null}" />
                                         </div>
                                     </div>
-                                    <hr style="border-top: 1px solid var(--latam-border); margin-top: 40px;" />
                                 </div>
                             </ui:repeat>
                         </div>
                     </h:form>
                 </div>
 
-                <div class="sidebar-resumen shadow-lg">
-                    <h4 class="mb-4" style="font-weight: 800; letter-spacing: -0.5px;">Detalle de tu reserva</h4>
+                <!-- SECCIÓN DERECHA: SIDEBAR Y RESUMEN DE COMPRA -->
+                <div class="col-lg-5">
+                    <div class="sidebar-resumen shadow-lg">
+                        <h4 class="text-white font-weight-bold mb-4" style="font-size: 1.25rem;">Detalle de la Reserva</h4>
 
-                    <p:accordionPanel multiple="true" widgetVar="itinerariosAccordion" styleClass="latam-accordion mb-4">
+                        <!-- ACORDEÓN DE DETALLES -->
+                        <p:accordionPanel multiple="true" widgetVar="itinerariosAccordion" styleClass="latam-accordion mb-4">
 
-                        <p:tab title="Itinerario de Vuelo">
-                            <ui:repeat value="#{reservaBean.itinerarios}" var="itinerario">
-                                <div class="vuelo-segmento mb-3">
-                                    <div class="vuelo-row pb-4">
-                                        <div class="dot-vuelo" style="background: var(--latam-red); box-shadow: 0 0 8px var(--latam-red);"></div>
-
-                                        <div class="d-flex justify-content-between align-items-start">
+                            <!-- TAB 1: ITINERARIO -->
+                            <p:tab title="Itinerario de Vuelo">
+                                <ui:repeat value="#{reservaBean.itinerarios}" var="itinerario">
+                                    <div class="vuelo-segmento mb-3 p-2 rounded" style="background: rgba(15, 23, 42, 0.4);">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
                                             <div>
-                                                <div class="d-flex align-items-center">
-                                                    <span class="iata-bold">#{itinerario.aeropuertoOrigen.codigoIata}</span>
-                                                    <span class="ml-2 city-name">#{itinerario.aeropuertoOrigen.ciudad.nombre}</span>
-                                                </div>
-                                                <div class="sub-info">
-                                                    #{itinerario.aeropuertoOrigen.nombreAeropuerto}
-                                                    <h:panelGroup rendered="#{not empty itinerario.aeropuertoOrigen.ciudad.pai}">
-                                                        <span class="text-muted"> | #{itinerario.aeropuertoOrigen.ciudad.pai.nombre}</span>
-                                                    </h:panelGroup>
-                                                </div>
+                                                <span class="badge bg-primary me-2">#{itinerario.aeropuertoOrigen.codigoIata}</span>
+                                                <span class="text-white font-weight-bold">#{itinerario.aeropuertoOrigen.ciudad.nombre}</span>
                                             </div>
-                                            <div class="text-right">
-                                                <h:outputText value="#{itinerario.horaSalida}" styleClass="time-bold">
+                                            <span class="text-white-50 font-weight-bold">
+                                                <h:outputText value="#{itinerario.horaSalida}">
                                                     <f:convertDateTime pattern="HH:mm" timeZone="America/Santiago" />
                                                 </h:outputText>
-                                                <div class="sub-info">Salida</div>
-                                            </div>
+                                            </span>
                                         </div>
-                                    </div>
 
-                                    <div class="d-flex align-items-center my-1" style="margin-left: -5px;">
-                                        <i class="pi pi-plane mx-2" style="color: var(--latam-border); font-size: 0.8rem; transform: rotate(90deg);"></i>
-                                        <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.05);"></div>
-                                        <div class="duracion-badge mx-2">
-                                            <i class="pi pi-clock"></i>
-                                            <span>#{itinerario.numeroEscalas == 0 ? 'Vuelo Directo' : itinerario.numeroEscalas += ' Escalas'}</span>
+                                        <div class="d-flex align-items-center my-2 text-muted small">
+                                            <div style="flex:1; border-top:1px dashed #334155;"></div>
+                                            <span class="mx-2"><i class="pi pi-clock me-1"></i>#{itinerario.numeroEscalas == 0 ? 'Directo' : itinerario.numeroEscalas += ' Escala(s)'}</span>
+                                            <div style="flex:1; border-top:1px dashed #334155;"></div>
                                         </div>
-                                        <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.05);"></div>
-                                    </div>
 
-                                    <div class="vuelo-row pt-4">
-                                        <div class="dot-vuelo" style="background: #1e1f24; border: 2px solid var(--latam-red);"></div>
-
-                                        <div class="d-flex justify-content-between align-items-start">
+                                        <div class="d-flex justify-content-between align-items-center">
                                             <div>
-                                                <div class="d-flex align-items-center">
-                                                    <span class="iata-bold">#{itinerario.aeropuertoDestino.codigoIata}</span>
-                                                    <span class="ml-2 city-name">#{itinerario.aeropuertoDestino.ciudad.nombre}</span>
-                                                </div>
-                                                <div class="sub-info">
-                                                    #{itinerario.aeropuertoDestino.nombreAeropuerto}
-                                                    <h:panelGroup rendered="#{not empty itinerario.aeropuertoDestino.ciudad.pai}">
-                                                        <span class="text-muted"> | #{itinerario.aeropuertoDestino.ciudad.pai.nombre}</span>
-                                                    </h:panelGroup>
-                                                </div>
+                                                <span class="badge bg-secondary me-2">#{itinerario.aeropuertoDestino.codigoIata}</span>
+                                                <span class="text-white font-weight-bold">#{itinerario.aeropuertoDestino.ciudad.nombre}</span>
                                             </div>
-                                            <div class="text-right">
-                                                <h:outputText value="#{itinerario.horaLlegada}" styleClass="time-bold">
+                                            <span class="text-white-50 font-weight-bold">
+                                                <h:outputText value="#{itinerario.horaLlegada}">
                                                     <f:convertDateTime pattern="HH:mm" timeZone="America/Santiago" />
                                                 </h:outputText>
-                                                <div class="sub-info">Llegada</div>
-                                            </div>
+                                            </span>
                                         </div>
-                                    </div>
-                                </div>
-                            </ui:repeat>
-                        </p:tab>
-
-
-                        <p:tab title="Asientos (#{reservaBean.tolerantTotalAsientos})">
-
-                            <!-- ESTADO 1: NO HAY ASIENTOS SELECCIONADOS -->
-                            <h:panelGroup rendered="#{reservaBean.tolerantTotalAsientos == 0}">
-                                <div class="text-center py-5 px-3 rounded" style="background: rgba(22, 30, 46, 0.6); border: 1px dashed #243044;">
-                                    <i class="pi pi-inbox text-muted mb-3" style="font-size: 2.5rem; display: block;"></i>
-                                    <h5 class="font-weight-bold text-white mb-2">Sin asientos seleccionados</h5>
-                                    <p class="text-muted small mb-4">No has asignado asientos para los vuelos de tu itinerario.</p>
-
-                                    <p:button value="Seleccionar Asientos Ahora"
-                                              href="#{request.contextPath}#{reservaBean.urlRetornoAsientos}"
-                                              icon="pi pi-refresh"
-                                              styleClass="ui-button-outlined ui-button-info" />
-                                </div>
-                            </h:panelGroup>
-
-                            <!-- ESTADO 2: LISTADO DE ASIENTOS CON TICKETS -->
-                            <h:panelGroup rendered="#{reservaBean.tolerantTotalAsientos > 0}">
-                                <ui:repeat value="#{reservaBean.asientosSeleccionados.entrySet().toArray()}" var="entry">
-                                    <div class="mb-4">
-                                        <div class="vuelo-header-asiento d-flex align-items-center mb-2">
-                                            <i class="pi pi-ticket mr-2 text-info"></i>
-                                            <span class="font-weight-bold">Vuelo: #{reservaBean.getVuelo(entry.key)}</span>
-                                        </div>
-
-                                        <ui:repeat value="#{entry.value}" var="asiento">
-                                            <div class="asiento-ticket mb-2 p-2 rounded d-flex align-items-center justify-content-between #{asiento.clase.equalsIgnoreCase('Ejecutiva') ? 'asiento-EJECUTIVA' :
-                                                 asiento.clase.equalsIgnoreCase('Primera Clase') ? 'asiento-PRIMERA' : 'asiento-ECONOMY'}">
-
-                                                <div class="d-flex align-items-center">
-                                                    <div class="mr-3 text-center" style="width: 45px;">
-                                                        <h:panelGroup rendered="#{asiento.clase.equalsIgnoreCase('Ejecutiva')}">
-                                                            <i class="pi pi-star-fill icon-EJECUTIVA" style="font-size: 1.4rem;"></i>
-                                                        </h:panelGroup>
-                                                        <h:panelGroup rendered="#{asiento.clase.equalsIgnoreCase('Economy')}">
-                                                            <i class="pi pi-user icon-ECONOMY" style="font-size: 1.4rem;"></i>
-                                                        </h:panelGroup>
-                                                        <h:panelGroup rendered="#{asiento.clase.equalsIgnoreCase('Primera Clase')}">
-                                                            <i class="pi pi-crown icon-PRIMERA" style="font-size: 1.4rem;"></i>
-                                                        </h:panelGroup>
-                                                        <span class="d-block asiento-numero mt-1 font-weight-bold">#{asiento.numeroAsiento}</span>
-                                                    </div>
-
-                                                    <div>
-                                                <span class="clase-caracteristica badge #{asiento.clase.equalsIgnoreCase('Ejecutiva') ? 'badge-EJECUTIVA' :
-                                                                  asiento.clase.equalsIgnoreCase('Primera Clase') ? 'badge-PRIMERA' : 'badge-ECONOMY'}">
-                                                    #{asiento.clase}
-                                                </span>
-
-                                                        <div class="small mt-1" style="font-size: 0.7rem; color: rgba(255,255,255,0.6);">
-                                                            <ui:fragment rendered="#{asiento.clase.equalsIgnoreCase('Ejecutiva')}">
-                                                                <i class="pi pi-briefcase mr-1"></i> Asiento Cama + Lounge
-                                                            </ui:fragment>
-                                                            <ui:fragment rendered="#{asiento.clase.equalsIgnoreCase('Economy')}">
-                                                                <i class="pi pi-check-circle mr-1"></i> Selección Estándar
-                                                            </ui:fragment>
-                                                            <ui:fragment rendered="#{asiento.clase.equalsIgnoreCase('Primera Clase')}">
-                                                                <i class="pi pi-shield mr-1"></i> Máxima Privacidad
-                                                            </ui:fragment>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div class="text-right">
-                                                    <div class="small text-muted" style="font-size: 0.6rem; letter-spacing: 1px;">PRECIO</div>
-                                                    <div class="font-weight-bold" style="color: white; font-size: 1.1rem;">$#{asiento.precio}</div>
-                                                </div>
-                                            </div>
-                                        </ui:repeat>
                                     </div>
                                 </ui:repeat>
-                            </h:panelGroup>
-                        </p:tab>
+                            </p:tab>
 
-                    </p:accordionPanel>
-
-                    <div class="price-breakdown pt-3">
-                        <div class="d-flex justify-content-between mb-2" style="font-size: 0.9rem;">
-                            <span class="text-muted">Valor de la tarifa</span>
-                            <span>$#{reservaBean.total}</span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-4">
-                            <span class="text-muted" style="font-size: 0.9rem;">Tasas e impuestos</span>
-                            <span class="text-success" style="font-size: 0.8rem; font-weight: 700;">INCLUIDOS</span>
-                        </div>
-
-                        <div class="total-box p-3 text-center" style="background: white; border-radius: 12px;">
-                            <div class="small font-weight-bold mb-1" style="color: #0b0c0e;">PRECIO FINAL</div>
-                            <h:outputText value="#{reservaBean.total}" style="font-size: 2.2rem; font-weight: 900; color: #0b0c0e;">
-                                <f:convertNumber type="currency" currencySymbol="$" maxFractionDigits="0" />
-                            </h:outputText>
-                        </div>
-                    </div>
-
-
-                    <div class="card-latam mt-4" style="background: #111827; border: 1px solid #1f2937; border-radius: 12px; padding: 1.5rem;">
-                        <div class="titulo mb-3 d-flex align-items-center justify-content-between" style="font-size: 1.25rem; font-weight: 700;">
-                            <span><i class="pi pi-briefcase mr-2 text-info"></i> Resumen de Equipaje</span>
-                            <span class="badge badge-info">$#{reservaBean.totalEquipaje}</span>
-                        </div>
-
-                        <h:panelGroup rendered="#{not reservaBean.tieneEquipajeAsignado}">
-                            <p class="text-muted mb-0 font-italic">No se ha añadido equipaje adicional a esta reserva.</p>
-                        </h:panelGroup>
-
-                        <h:panelGroup rendered="#{reservaBean.tieneEquipajeAsignado}">
-                            <!-- Se cambió var="eq" por var="eqPasajero" para evitar conflicto con la palabra reservada 'eq' -->
-                            <ui:repeat value="#{reservaBean.equipajePorPasajero}" var="eqPasajero">
-                                <h:panelGroup rendered="#{not empty eqPasajero.maletas}">
-                                    <div class="p-2 mb-2 rounded" style="background: rgba(15, 23, 42, 0.6); border: 1px solid #374151;">
-                                        <span class="font-weight-bold text-light d-block mb-1">Pasajero: #{eqPasajero.nombrePasajero}</span>
-                                        <ul class="mb-0 pl-3 small text-secondary">
-                                            <ui:repeat value="#{eqPasajero.maletas}" var="item">
-                                                <li>#{item.descripcion} - <strong class="text-white">$#{item.precio}</strong></li>
-                                            </ui:repeat>
-                                        </ul>
+                            <!-- TAB 2: ASIENTOS -->
+                            <p:tab title="Asientos (#{reservaBean.tolerantTotalAsientos})">
+                                <h:panelGroup rendered="#{reservaBean.tolerantTotalAsientos == 0}">
+                                    <div class="text-center py-4 px-2">
+                                        <p class="text-muted small mb-3">No has asignado asientos para tus vuelos.</p>
+                                        <p:button value="Seleccionar Asientos"
+                                                  href="#{request.contextPath}#{reservaBean.urlRetornoAsientos}"
+                                                  icon="pi pi-refresh"
+                                                  styleClass="ui-button-outlined ui-button-info btn-sm" />
                                     </div>
                                 </h:panelGroup>
-                            </ui:repeat>
-                        </h:panelGroup>
-                    </div>
 
-                    <h:form id="formPago">
-                        <div class="card-latam mb-4 p-4 rounded-3 border-dark-subtle">
-                            <h5 class="font-weight-bold mb-3 text-light">
-                                <i class="pi pi-credit-card me-2 text-info"></i>Selecciona tu método de pago
-                            </h5>
+                                <h:panelGroup rendered="#{reservaBean.tolerantTotalAsientos > 0}">
+                                    <ui:repeat value="#{reservaBean.asientosSeleccionados.entrySet().toArray()}" var="entry">
+                                        <div class="mb-3">
+                                            <div class="small font-weight-bold text-primary mb-2">
+                                                <i class="pi pi-ticket me-1"></i> Vuelo: #{reservaBean.getVuelo(entry.key)}
+                                            </div>
 
-                            <!-- Radio button maestro con Enum -->
-                            <p:selectOneRadio id="customRadio" value="#{reservaBean.metodoPagoSeleccionado}" layout="custom">
-                                <f:selectItems value="#{reservaBean.opcionesPago}"
-                                               var="opcion"
-                                               itemValue="#{opcion.metodo}"
-                                               itemLabel="#{opcion.label}" />
-                            </p:selectOneRadio>
+                                            <ui:repeat value="#{entry.value}" var="asiento">
+                                                <div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded" style="background:#11263f; border:1px solid #1e3a5c;">
+                                                    <div class="d-flex align-items-center">
+                                                        <span class="badge bg-primary me-2 font-weight-bold">#{asiento.numeroAsiento}</span>
+                                                        <span class="text-white-50 small">#{asiento.clase}</span>
+                                                    </div>
+                                                    <span class="text-white font-weight-bold">$#{asiento.precio}</span>
+                                                </div>
+                                            </ui:repeat>
+                                        </div>
+                                    </ui:repeat>
+                                </h:panelGroup>
+                            </p:tab>
+                        </p:accordionPanel>
 
-                            <!-- Opciones renderizadas dinámicamente -->
-                            <div class="d-flex flex-column gap-2">
-                                <ui:repeat value="#{reservaBean.opcionesPago}" var="opcion" varStatus="status">
-                                    <div class="d-flex align-items-center p-3 rounded border border-secondary bg-dark">
-                                        <p:radioButton id="optRadio" for=":formPago:customRadio" itemIndex="#{status.index}" />
+                        <!-- EQUIPAJE -->
+                        <div class="p-3 mb-4 rounded" style="background: #0d172a; border: 1px solid #1e3a5c;">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-white font-weight-bold small"><i class="pi pi-briefcase me-2 text-info"></i>Resumen de Equipaje</span>
+                                <span class="badge bg-info">$#{reservaBean.totalEquipaje}</span>
+                            </div>
 
-                                        <h:outputLabel for="optRadio" styleClass="ms-2 mb-0 d-flex align-items-center cursor-pointer text-light w-100">
-                                            <h:graphicImage library="assets"
-                                                            name="#{opcion.imageName}"
-                                                            alt="#{opcion.alt}"
-                                                            style="max-height: 22px; width: auto; max-width: 90px; object-fit: contain;"
-                                                            styleClass="me-2" />
-                                            <span class="pago-text">#{opcion.label}</span>
-                                        </h:outputLabel>
-                                    </div>
+                            <h:panelGroup rendered="#{not reservaBean.tieneEquipajeAsignado}">
+                                <p class="text-muted small m-0 font-italic">Sin equipaje adicional seleccionado.</p>
+                            </h:panelGroup>
+
+                            <h:panelGroup rendered="#{reservaBean.tieneEquipajeAsignado}">
+                                <ui:repeat value="#{reservaBean.equipajePorPasajero}" var="eqPasajero">
+                                    <h:panelGroup rendered="#{not empty eqPasajero.maletas}">
+                                        <div class="small text-white-50 border-top border-secondary pt-2 mt-2">
+                                            <strong class="text-white">#{eqPasajero.nombrePasajero}:</strong>
+                                            <ui:repeat value="#{eqPasajero.maletas}" var="item">
+                                                <div class="d-flex justify-content-between">
+                                                    <span>- #{item.descripcion}</span>
+                                                    <span class="text-white">$#{item.precio}</span>
+                                                </div>
+                                            </ui:repeat>
+                                        </div>
+                                    </h:panelGroup>
                                 </ui:repeat>
+                            </h:panelGroup>
+                        </div>
+
+                        <!-- DESGLOSE DE PRECIOS -->
+                        <div class="price-breakdown mb-4">
+                            <div class="d-flex justify-content-between mb-2 small">
+                                <span class="text-muted">Valor de tarifa base</span>
+                                <span class="text-white">$#{reservaBean.total}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-3 small">
+                                <span class="text-muted">Tasas e impuestos</span>
+                                <span class="text-success font-weight-bold">INCLUIDOS</span>
+                            </div>
+
+                            <div class="total-box-corporate">
+                                <div class="total-title">PRECIO FINAL</div>
+                                <div class="total-amount">
+                                    <h:outputText value="#{reservaBean.total}">
+                                        <f:convertNumber type="currency" currencySymbol="$" maxFractionDigits="0" />
+                                    </h:outputText>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Botón de Pago que invoca la estrategia -->
-                        <p:commandButton value="Proceder al Pago"
-                                         actionListener="#{reservaBean.confirmarReserva()}"
-                                         styleClass="btn-webpay-confirm mt-3 w-100 py-3 font-weight-bold"
-                                         update=":growl @form" />
-                    </h:form>
+                        <!-- MÉTODO DE PAGO Y CONFIRMACIÓN -->
+                        <h:form id="formPago">
+                            <div class="p-3 mb-3 rounded" style="background: #0d172a; border: 1px solid #1e3a5c;">
+                                <h6 class="text-white font-weight-bold mb-3">
+                                    <i class="pi pi-credit-card me-2 text-primary"></i>Método de Pago
+                                </h6>
 
-                    <!-- Pie de seguridad -->
-                    <div class="webpay-footer-lock d-flex align-items-center justify-content-center gap-2 mt-4 text-muted small">
-                        <i class="pi pi-lock text-success"></i>
-                        <span>Transacción segura y encriptada</span>
+                                <p:selectOneRadio id="customRadio" value="#{reservaBean.metodoPagoSeleccionado}" layout="custom">
+                                    <f:selectItems value="#{reservaBean.opcionesPago}"
+                                                   var="opcion"
+                                                   itemValue="#{opcion.metodo}"
+                                                   itemLabel="#{opcion.label}" />
+                                </p:selectOneRadio>
+
+                                <div class="d-flex flex-column gap-2">
+                                    <ui:repeat value="#{reservaBean.opcionesPago}" var="opcion" varStatus="status">
+                                        <div class="pago-option-card d-flex align-items-center">
+                                            <p:radioButton id="optRadio" for=":formPago:customRadio" itemIndex="#{status.index}" />
+                                            <h:outputLabel for="optRadio" styleClass="ms-2 mb-0 d-flex align-items-center cursor-pointer text-white w-100 small">
+                                                <h:graphicImage library="assets"
+                                                                name="#{opcion.imageName}"
+                                                                alt="#{opcion.alt}"
+                                                                style="max-height: 20px; width: auto; max-width: 80px; object-fit: contain;"
+                                                                styleClass="me-2" />
+                                                <span>#{opcion.label}</span>
+                                            </h:outputLabel>
+                                        </div>
+                                    </ui:repeat>
+                                </div>
+                            </div>
+
+                            <p:commandButton value="Proceder al Pago"
+                                             actionListener="#{reservaBean.confirmarReserva()}"
+                                             styleClass="btn-pay-action w-100"
+                                             update=":growl @form" />
+                        </h:form>
+
+                        <div class="text-center mt-3 text-muted small d-flex align-items-center justify-content-center gap-2">
+                            <i class="pi pi-lock text-success"></i>
+                            <span>Transacción segura y encriptada SSL</span>
+                        </div>
+
                     </div>
-
                 </div>
             </div>
         </div>
@@ -446,7 +601,6 @@
             (function () {
                 let timerInterval = null;
 
-                // 1. Lógica del Cronómetro de Retención
                 function iniciarCronometroCheckout(segundosTotales) {
                     if (timerInterval) clearInterval(timerInterval);
 
@@ -481,34 +635,23 @@
                     timerInterval = setInterval(actualizarUI, 1000);
                 }
 
-                // 2. Inicialización General al cargar el DOM
                 document.addEventListener("DOMContentLoaded", function () {
-                    // A. Arrancar reloj con tiempo retornado desde ReservaBean
                     const tiempoRestanteServer = #{reservaBean.tiempoRestanteSegundos};
                     iniciarCronometroCheckout(tiempoRestanteServer);
 
-                    // B. Colecciones EL de JSF
                     const misAsientosIds = [#{reservaBean.asientosSeleccionados.values().stream().flatMap(l -> l.stream()).map(a -> a.idAsiento).toList().toString().replaceAll("^\\[|\\]$", "")}];
                     const misVuelosIds = [#{reservaBean.itinerarios.stream().flatMap(it -> it.itinerarioVuelos.stream()).map(iv -> iv.vuelo.idVuelo).distinct().toList().toString().replaceAll("^\\[|\\]$", "")}];
 
-                    console.log("✈️ Monitoreando Vuelos:", misVuelosIds);
-                    console.log("💺 Monitoreando Asientos:", misAsientosIds);
-
-                    // C. Conexión SockJS y STOMP
                     if (typeof SockJS !== 'undefined' && typeof Stomp !== 'undefined') {
                         const socket = new SockJS('/ws-asientos');
                         const stompClient = Stomp.over(socket);
                         stompClient.debug = null;
 
                         stompClient.connect({}, function () {
-                            console.log("🟢 WebSocket activo en vista Checkout.");
-
                             misVuelosIds.forEach(function (idVuelo) {
                                 stompClient.subscribe('/topic/vuelo/' + idVuelo, function (message) {
                                     const evento = JSON.parse(message.body);
-
                                     if (evento.estado === 'libre' && misAsientosIds.includes(evento.idAsiento)) {
-                                        console.warn("⏰ Liberación externa/timeout detectada en asiento " + evento.idAsiento);
                                         if (typeof notificarExpiracionCliente === 'function') {
                                             notificarExpiracionCliente();
                                         }
@@ -518,8 +661,6 @@
                                     }
                                 });
                             });
-                        }, function (error) {
-                            console.error("🔴 Error en WebSocket Checkout:", error);
                         });
                     }
                 });

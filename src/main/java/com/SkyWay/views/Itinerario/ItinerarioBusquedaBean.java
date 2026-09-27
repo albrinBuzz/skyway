@@ -104,12 +104,10 @@ public class ItinerarioBusquedaBean implements Serializable {
             }
         }
     }
-
     public void buscarVuelosSoloIda() throws ParseException {
-
         try {
             ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-            String redirectUrl = "/home/vuelos.xhtml"
+            String redirectUrl = externalContext.getRequestContextPath() + "/home/vuelos.xhtml"
                     + "?salida=" + URLEncoder.encode(codigoIataOrigen, StandardCharsets.UTF_8)
                     + "&llegada=" + URLEncoder.encode(codigoIataDestino, StandardCharsets.UTF_8)
                     + "&fechaIda=" + fechaIda
@@ -118,24 +116,24 @@ public class ItinerarioBusquedaBean implements Serializable {
 
             externalContext.redirect(redirectUrl);
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Error al redirigir búsqueda de sólo ida", e);
         }
     }
-
 
     public void buscarVuelosIdaYVuelta() throws ParseException {
         try {
             ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-            String redirectUrl = "/home/vuelos.xhtml"
+            String redirectUrl = externalContext.getRequestContextPath() + "/home/vuelos.xhtml"
                     + "?salida=" + URLEncoder.encode(codigoIataOrigen, StandardCharsets.UTF_8)
                     + "&llegada=" + URLEncoder.encode(codigoIataDestino, StandardCharsets.UTF_8)
                     + "&fechaIda=" + fechaIda
-                    + "&fechaRegreso=" + fechaRetorno  // Asegúrate de tener returnDate en tu bean
+                    + "&fechaRegreso=" + fechaRetorno
                     + "&adultos=" + adultos
                     + "&trip=RT";
+
             externalContext.redirect(redirectUrl);
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Error al redirigir búsqueda de ida y vuelta", e);
         }
     }
 
