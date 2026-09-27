@@ -13,6 +13,7 @@ import com.SkyWay.modules.segmentovuelo.presentation.dto.SegmentoMapaProjection;
 import com.SkyWay.modules.vuelo.domain.model.Vuelo;
 import com.SkyWay.modules.vuelo.domain.repository.VueloRepository;
 import com.SkyWay.modules.vuelo.domain.service.VueloService;
+import com.SkyWay.modules.vuelo.presentation.dto.VueloEstadoProjection;
 import com.SkyWay.modules.vuelo.presentation.dto.VueloMapaDTO;
 import jakarta.persistence.PersistenceContext;
 import org.slf4j.Logger;
@@ -175,4 +176,11 @@ public class VueloServiceImpl implements VueloService {
 		return resultado;
 	}
 
+
+	@Transactional(readOnly = true)
+	public List<VueloEstadoProjection> obtenerEstadoVuelosEnVivo(String numeroVuelo, String ruta) {
+		String numClean = (numeroVuelo != null && !numeroVuelo.isBlank()) ? numeroVuelo.trim() : null;
+		String rutaClean = (ruta != null && !ruta.isBlank()) ? ruta.trim() : null;
+		return vueloRepository.buscarEstadoVuelosVivo(numClean, rutaClean);
+	}
 }
