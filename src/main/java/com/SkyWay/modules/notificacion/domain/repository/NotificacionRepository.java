@@ -13,6 +13,14 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface NotificacionRepository extends JpaRepository<Notificacion, Integer>{
 
-		//List<Notificacion> findByRut(String rut);
+    org.springframework.data.domain.Page<Notificacion> findByUsuario_RutOrderByFechaDescIdNotificacionDesc(
+            String rut, org.springframework.data.domain.Pageable pageable);
+
+    long countByUsuario_RutAndLeidoFalse(String rut);
+
+    java.util.Optional<Notificacion> findByIdNotificacionAndUsuario_Rut(Integer id, String rut);
+
+
+    //List<Notificacion> findByRut(String rut);
 	
 }

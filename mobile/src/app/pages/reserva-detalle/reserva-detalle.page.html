@@ -1,0 +1,23 @@
+<ion-header><ion-toolbar><ion-buttons slot="start"><ion-back-button defaultHref="/reservas"></ion-back-button></ion-buttons><ion-title>Tu reserva</ion-title><ion-buttons slot="end"><ion-button aria-label="Actualizar" (click)="load()" [disabled]="busy || checking"><ion-icon name="refresh-outline" slot="icon-only"></ion-icon></ion-button></ion-buttons></ion-toolbar></ion-header>
+<ion-content><main class="page"><div *ngIf="busy" class="loading"><ion-spinner></ion-spinner></div><p *ngIf="error" class="error" role="alert">{{ error }}</p>
+<ng-container *ngIf="data as d"><div class="row"><span class="eyebrow">RESERVA #{{ d.idReserva }}</span><span class="status">{{ d.estadoReserva.descripcion || 'Sin estado' }}</span></div><h1>Tu viaje, en detalle.</h1>
+<p class="muted">Reservado el {{ d.fechaReserva | date:'dd MMM yyyy' }} · {{ d.titular ? 'Eres titular' : 'Eres pasajero de esta reserva' }}</p>
+<ion-card *ngFor="let itinerary of d.itinerarios"><ion-card-content>
+<div class="route"><strong>{{ itinerary.origen?.codigoIata || '—' }}</strong><ion-icon name="airplane-outline"></ion-icon><strong>{{ itinerary.destino?.codigoIata || '—' }}</strong></div>
+<p>{{ itinerary.origen?.nombreAeropuerto }} → {{ itinerary.destino?.nombreAeropuerto }}</p>
+<p class="muted">{{ itinerary.horaSalida | date:'dd MMM yyyy · HH:mm' }} · Escalas: {{ itinerary.numeroEscalas ?? 'No especificadas' }}</p>
+<h3>Tarifa {{ itinerary.tarifa.nombre }}</h3><div class="feature"><span>Precio de tarifa</span><strong>{{ itinerary.tarifa.precio | number:'1.0-2' }}</strong></div>
+<div class="feature" *ngFor="let c of itinerary.tarifa.caracteristicas"><span>{{ c.nombre }}</span><strong>{{ featureValue(c) }}</strong></div>
+<p class="muted" *ngIf="!hasBaggage(itinerary.tarifa)">Esta tarifa no tiene una franquicia de equipaje especificada.</p>
+<section *ngFor="let c of itinerary.vuelos"><h3>Vuelo {{ c.vuelo.numeroVuelo || c.vuelo.idVuelo }}</h3><p class="muted">{{ c.vuelo.estado.descripcion || 'Estado por confirmar' }} · {{ c.vuelo.fechaHoraSalida | date:'dd MMM · HH:mm' }}</p>
+<div class="segment" *ngFor="let s of c.vuelo.segmentos"><strong>{{ s.origen?.codigoIata || '—' }} → {{ s.destino?.codigoIata || '—' }}</strong><p>{{ s.horaSalida | date:'dd MMM HH:mm' }} — {{ s.horaLlegada | date:'dd MMM HH:mm' }}</p><p class="muted">Puerta {{ s.puerta?.codigoPuerta || 'por asignar' }} · Terminal {{ s.puerta?.terminal || 'por confirmar' }}</p></div>
+<p><strong>Tu asiento: {{ c.vuelo.asiento?.numeroAsiento || 'Sin asignar' }}</strong> <span class="muted">{{ c.vuelo.asiento?.clase }}</span></p>
+<ion-button fill="outline" size="small" [routerLink]="['/reservas',id,'vuelos',c.vuelo.idVuelo,'asientos']">Ver asientos</ion-button>
+<ion-button *ngIf="d.checkin && c.vuelo.asiento" size="small" [routerLink]="['/reservas',id,'vuelos',c.vuelo.idVuelo,'pase']">Ver pase</ion-button>
+</section></ion-card-content></ion-card>
+<p class="empty" *ngIf="!d.itinerarios.length">No hay itinerarios disponibles en esta reserva.</p>
+<h2>Tu equipaje registrado</h2><ion-card><ion-card-content><div class="feature" *ngFor="let bag of d.equipajes"><div><strong>{{ bag.nombreTipo || bag.tipo }}</strong><p class="muted">{{ bag.dimensiones }}</p></div><strong>{{ bag.peso | number:'1.0-2' }} kg</strong></div><p *ngIf="!d.equipajes.length" class="muted">No tienes equipaje registrado en esta reserva.</p></ion-card-content></ion-card>
+<div class="row"><h3>Total de la reserva</h3><strong>{{ d.total === null ? 'Sin especificar' : (d.total | number:'1.0-2') }}</strong></div>
+<div *ngIf="d.checkin" class="notice"><strong>Check-in registrado</strong><br>{{ d.checkin.fechaHora | date:'dd MMM yyyy · HH:mm' }} · {{ d.checkin.metodo }}<p>Puedes abrir tu pase junto a cada vuelo.</p></div>
+<ng-container *ngIf="!d.checkin"><p class="notice">El check-in se aplica a toda la reserva y lo confirma su titular. Se requiere un asiento asignado para cada pasajero en cada vuelo.</p><ion-button expand="block" (click)="checkin()" [disabled]="checking || !d.titular || d.estadoReserva.descripcion !== 'Confirmada'"><ion-spinner *ngIf="checking"></ion-spinner><span *ngIf="!checking">Realizar check-in</span></ion-button></ng-container>
+</ng-container></main></ion-content>
