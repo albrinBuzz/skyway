@@ -370,15 +370,12 @@ public class ReservaAsientoBean implements Serializable {
             return;
         }
 
-        Logger.logInfo(String.format("[setearAsiento] Inicio - Asiento ID: %d, Nro: %s, Estado actual: %s | SessionId: %s | Pasajero Actual Idx: %d/%d",
-                asiento.getIdAsiento(), asiento.getNumeroAsiento(), asiento.getEstado(), miSessionId, idxAsientoSeleccion, cantAdultos));
 
         if ("OCUPADO".equalsIgnoreCase(asiento.getEstado())) {
-            Logger.logWarn(String.format("[setearAsiento] Asiento ID: %d ignorado porque está permanentemente OCUPADO.", asiento.getIdAsiento()));
+
         }
 
         var resultado = asientoCacheService.seleccionarOliberarAsiento(vuelo.getIdVuelo(), asiento, miSessionId);
-        Logger.logInfo(String.format("[setearAsiento] Resultado de cache para asiento %d: %s", asiento.getIdAsiento(), resultado));
 
         switch (resultado) {
             case FALLO_ASIENTO_NO_DISPONIBLE -> {
@@ -393,13 +390,13 @@ public class ReservaAsientoBean implements Serializable {
                 recargarAsientos();
                 return;
             }
-            default -> Logger.logInfo(String.format("[setearAsiento] ÉXITO en operacion sobre asiento %d.", asiento.getIdAsiento()));
+
         }
 
         boolean seLibero = (resultado == AsientoCacheService.ResultadoSeleccion.EXITO_LIBERADO);
 
         if (seLibero) {
-            Logger.logInfo(String.format("[setearAsiento] Desmarcando asiento ID: %d (Liberación)", asiento.getIdAsiento()));
+
 
             asientosSeleccionadosList.removeIf(a -> a.getIdAsiento() == asiento.getIdAsiento());
 
@@ -433,7 +430,6 @@ public class ReservaAsientoBean implements Serializable {
                         .removeIf(a -> a.getNumeroVuelo().equalsIgnoreCase(vuelo.getNumeroVuelo()));
             }
 
-            Logger.logInfo(String.format("[setearAsiento] Asignando asiento ID: %d (Selección)", asiento.getIdAsiento()));
 
             asientosSeleccionadosList.add(asiento);
 
@@ -448,8 +444,6 @@ public class ReservaAsientoBean implements Serializable {
                         .removeIf(a -> a.getNumeroVuelo().equalsIgnoreCase(vuelo.getNumeroVuelo()));
 
                 pasajeros.get(idxAsientoSeleccion).asientos.add(asientoSeleccionado);
-                Logger.logInfo(String.format("[setearAsiento] Asiento %s asignado exitosamente al Pasajero Index: %d en Vuelo %s",
-                        asiento.getNumeroAsiento(), idxAsientoSeleccion, vuelo.getNumeroVuelo()));
 
                 idxAsientoSeleccion++;
             }
@@ -462,14 +456,10 @@ public class ReservaAsientoBean implements Serializable {
 
         // Evaluación de avance/transición
         if (!seLibero && idxAsientoSeleccion >= cantAdultos) {
-            Logger.logInfo(String.format("[setearAsiento] Todos los asientos seleccionados para Vuelo %d (%d/%d).",
-                    vuelo.getIdVuelo(), idxAsientoSeleccion, cantAdultos));
 
             if (idxVuelo + 1 >= cantVuelos) {
-                Logger.logInfo("[setearAsiento] Último vuelo alcanzado. Invocando finalizarReserva().");
                 finalizarReserva();
             } else {
-                Logger.logInfo(String.format("[setearAsiento] Avanzando al siguiente vuelo. Index actual: %d, Total vuelos: %d", idxVuelo, cantVuelos));
                 siguienteVuelo();
             }
         }
@@ -644,7 +634,6 @@ public class ReservaAsientoBean implements Serializable {
             ec.getSessionMap().put("pasajeros", pasajeros);
             ec.getSessionMap().put("tarifasItinerios", tarifasItinerarios);
 
-            Logger.logInfo(String.format("[finalizarReserva] Asientos completados para SessionId: %s. Redirigiendo a /home/equipaje.xhtml", miSessionId));
 
             // Redirección hacia la pantalla de selección de equipaje
             ec.redirect("/home/equipaje.xhtml");
