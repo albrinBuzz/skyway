@@ -158,8 +158,11 @@ public class PerfilBean implements Serializable {
 		if (tarifaActual != null && !tarifaValidator.permiteCambio(tarifaActual.getTarifaCaracteristicas())) {
 			Logger.logInfo("La tarifa no permite cambios para la reserva/itinerario actual.");
 
-			FacesContext.getCurrentInstance().addMessage(null,
-					new FacesMessage(FacesMessage.SEVERITY_ERROR, "Cambio No Permitido", "Tu tarifa asignada no permite realizar cambios de asiento."));
+			FacesContext context = FacesContext.getCurrentInstance();
+			context.addMessage(null,
+					new FacesMessage(FacesMessage.SEVERITY_ERROR,
+							"Cambio No Permitido",
+							"Tu tarifa asignada no permite realizar cambios de asiento en este vuelo."));
 		} else {
 			FacesContext.getCurrentInstance().getExternalContext()
 					.redirect("/perfil/pasajero/cambioAsiento.xhtml?idVuelo=" + infoAsientoDTO.getIdVuelo()
