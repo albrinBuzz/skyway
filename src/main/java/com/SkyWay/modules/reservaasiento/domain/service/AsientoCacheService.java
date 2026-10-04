@@ -67,21 +67,19 @@ public class AsientoCacheService {
 
     public ResultadoSeleccion seleccionarOliberarAsiento(Integer idVuelo, InfoAsientoDTO asientoSolicitado, String sessionId) {
         if (asientoSolicitado == null || idVuelo == null || sessionId == null) {
-            Logger.logWarn(String.format("[seleccionarOliberarAsiento] Parámetros de entrada nulos: idVuelo=%s, asiento=%s, sessionId=%s",
-                    idVuelo, asientoSolicitado, sessionId));
+
             return ResultadoSeleccion.FALLO_ASIENTO_NO_DISPONIBLE;
         }
 
-        Logger.logInfo(String.format("[CacheService] Procesando solicitud - Vuelo: %d | Asiento ID: %d | SessionId: %s",
-                idVuelo, asientoSolicitado.getIdAsiento(), sessionId));
+
 
         Map<Integer, InfoAsientoDTO> asientosMap = mapaVuelos.get(idVuelo);
         if (asientosMap == null) {
-            Logger.logInfo(String.format("[CacheService] Vuelo %d no presente en cache. Recargando datos...", idVuelo));
+
             getAsientosVuelo(idVuelo);
             asientosMap = mapaVuelos.get(idVuelo);
             if (asientosMap == null) {
-                Logger.logWarn(String.format("[CacheService] No se pudo cargar la información del Vuelo %d en cache.", idVuelo));
+
                 return ResultadoSeleccion.FALLO_ASIENTO_NO_DISPONIBLE;
             }
         }
@@ -127,8 +125,7 @@ public class AsientoCacheService {
                 EventoAsientoPush evento = new EventoAsientoPush(
                         actualizado.getIdAsiento(), idVuelo, actualizado.getEstado(), sessionId);
 
-                Logger.logInfo(String.format("[CacheService] Difundiendo evento WebSocket /topic/vuelo/%d -> Asiento: %d, NuevoEstado: %s",
-                        idVuelo, actualizado.getIdAsiento(), actualizado.getEstado()));
+
 
                 messagingTemplate.convertAndSend("/topic/vuelo/" + idVuelo, evento);
             }

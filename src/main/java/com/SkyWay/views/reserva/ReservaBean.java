@@ -2,24 +2,20 @@ package com.SkyWay.views.reserva;
 
 
 
-import cl.transbank.webpay.webpayplus.responses.WebpayPlusTransactionCreateResponse;
 import com.SkyWay.config.pago.MetodoPagoEnum;
 import com.SkyWay.config.pago.PagoFactoryService;
 import com.SkyWay.config.pago.PasarelaPagoStrategy;
 import com.SkyWay.config.pago.SolicitudPagoDTO;
 import com.SkyWay.config.webPay.WebPayService;
-import com.SkyWay.config.webPay.entity.WebPayTransactionRequest;
-import com.SkyWay.config.webPay.entity.WebPayTransactionResponse;
+
 import com.SkyWay.modules.asiento.domain.service.AsientoService;
 import com.SkyWay.modules.asiento.presentation.dto.InfoAsientoDTO;
-import com.SkyWay.modules.equipaje.domain.model.Equipaje;
 import com.SkyWay.modules.equipaje.domain.service.EquipajeService;
 import com.SkyWay.modules.estadoreserva.domain.service.EstadoReservaService;
 import com.SkyWay.modules.itinerario.domain.model.Itinerario;
 import com.SkyWay.modules.itinerario.domain.service.ItinerarioService;
 import com.SkyWay.modules.pasajero.domain.model.Pasajero;
 import com.SkyWay.modules.pasajero.domain.service.PasajeroService;
-import com.SkyWay.modules.reserva.domain.model.Reserva;
 import com.SkyWay.modules.reserva.domain.service.ReservaService;
 import com.SkyWay.modules.reserva.presentation.dto.SolicitudReservaDTO;
 import com.SkyWay.modules.reservaasiento.domain.service.AsientoCacheService;
@@ -32,6 +28,7 @@ import com.SkyWay.modules.usuario.domain.service.UsuarioService;
 import com.SkyWay.modules.vuelo.domain.service.VueloService;
 import com.SkyWay.util.Logger;
 import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.component.UIInput;
 import jakarta.faces.component.html.HtmlInputText;
@@ -55,8 +52,8 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Named("reservaBean")
-//@RequestScoped
-@ViewScoped
+@RequestScoped
+//@ViewScoped
 public class ReservaBean implements Serializable {
 
     //private ClienteDTO cliente;
@@ -117,22 +114,22 @@ public class ReservaBean implements Serializable {
 
     private MetodoPagoEnum metodoPagoSeleccionado = MetodoPagoEnum.WEBPAY;
     private List<OpcionPagoView> opcionesPago;
-
-    // Simulamos una inyección de un servicio (puedes usar @Inject si usas CDI)
-    // @Inject
-    // private ReservaService reservaService;
     @PostConstruct
     @SuppressWarnings("unchecked")
     public void init() {
         total = 0;
+
         FacesContext context = FacesContext.getCurrentInstance();
-        if (context == null || context.getExternalContext() == null) return;
+        if (context == null || context.getExternalContext() == null) {
+            Logger.logInfo("❌ [ReservaBean] FacesContext o ExternalContext son nulos. Abortando init.");
+            return;
+        }
 
         Map<String, Object> sessionMap = context.getExternalContext().getSessionMap();
 
-
-        // Obtener usuario autenticado o ID de sesión de manera SEGURA
+        // 1. Obtener usuario e identificador de sesión
         this.usuario = (Usuario) sessionMap.get("usuario");
+
 
         if (sessionMap.containsKey("reservaSessionId")) {
             this.miSessionId = (String) sessionMap.get("reservaSessionId");
@@ -145,13 +142,28 @@ public class ReservaBean implements Serializable {
         }
 
 
-
+        // 2. Verificar itinerarios en sesión
         var idItinerarios = (List<Integer>) sessionMap.get("itinerarios");
+
+        if (idItinerarios == null || idItinerarios.isEmpty()) {
+            try {
+                Logger.logInfo("⚠️ [ReservaBean] No se encontraron itinerarios en sesión al cargar reserva.xhtml. Redirigiendo a /home/index.xhtml...");
+                context.getExternalContext().redirect(context.getExternalContext().getRequestContextPath() + "/home/index.xhtml");
+            } catch (Exception e) {
+                Logger.logInfo("❌ [ReservaBean] Error al intentar redirigir: " + e.getMessage());
+            }
+            return;
+        }
+
+        // 3. Cargar Objetos de Sesión
         this.tarifasItinerarios = (HashMap<Integer, Integer>) sessionMap.get("tarifasItinerios");
         this.pasajeros = (List<ReservaAsientoBean.Pasajero>) sessionMap.get("pasajeros");
+        this.asientosSeleccionados = (Map<Integer, List<InfoAsientoDTO>>) sessionMap.get("asientosSeleccionados");
 
+
+
+        // 4. Reconstrucción de la lista de Pasajeros de la Reserva
         pasajerosList = new ArrayList<>();
-
         if (usuario != null) {
             this.pasajero = pasajeroService.findById(usuario.getRut()).orElse(new Pasajero());
             if (pasajeros != null) {
@@ -173,42 +185,48 @@ public class ReservaBean implements Serializable {
             }
         }
 
-        if (idItinerarios == null) return;
 
-        this.asientosSeleccionados = (Map<Integer, List<InfoAsientoDTO>>) sessionMap.get("asientosSeleccionados");
-
+        // 5. Cálculo y Acumulación de Totales (Itinerarios + Asientos + Equipaje)
         for (Integer id : idItinerarios) {
             var itinerario = itinerarioService.findById(id);
             if (itinerario != null) {
                 total += itinerario.getPrecioBase();
                 itinerarios.add(itinerario);
+            } else {
+                Logger.logInfo("⚠️ [ReservaBean] No se encontró la entidad Itinerario para ID #" + id);
             }
         }
 
         if (asientosSeleccionados != null) {
             asientosSeleccionados.forEach((idVuelo, listaAsientos) -> {
                 if (listaAsientos != null) {
-                    listaAsientos.forEach(a -> total += a.getPrecio());
+                    listaAsientos.forEach(a -> {
+                        total += a.getPrecio();
+                    });
+                } else {
+                    Logger.logInfo("   ⚠️ Lista de asientos nula para Vuelo #" + idVuelo);
                 }
             });
+        } else {
+            Logger.logInfo("⚠️ [ReservaBean] No hay asientos seleccionados en la sesión.");
         }
 
+        // 6. Equipaje
         this.equipajePorPasajero = (List<EquipajePasajeroDTO>) sessionMap.get("equipajePorPasajero");
-
         if (sessionMap.containsKey("totalEquipaje")) {
             this.totalEquipaje = (Integer) sessionMap.get("totalEquipaje");
-            this.total += this.totalEquipaje; // Acumular al costo final del vuelo
+            this.total += this.totalEquipaje;
         }
 
+
+        // 7. Cargar Métodos de Pago
         opcionesPago = new ArrayList<>();
-        // Asocia cada enum con su ícono en assets y su etiqueta
         opcionesPago.add(new OpcionPagoView(MetodoPagoEnum.WEBPAY, "icons/logo_webpay.png", "Webpay Plus", "Webpay"));
-
-        //opcionesPago.add(new OpcionPagoView(MetodoPagoEnum.MERCADOPAGO, "icons/logo_mercadopago.png", "Mercado Pago", "Mercado Pago"));
-
         opcionesPago.add(new OpcionPagoView(MetodoPagoEnum.PAYPAL, "icons/logo_paypal.png", "PayPal (USD)", "PayPal"));
 
     }
+
+
 
 
     public Map<Integer, List<InfoAsientoDTO>> getAsientosSeleccionados() {
@@ -296,10 +314,20 @@ public class ReservaBean implements Serializable {
         FacesContext context = FacesContext.getCurrentInstance();
         Map<String, Object> sessionMap = context.getExternalContext().getSessionMap();
 
-        // Limpiar selección previa
-        sessionMap.remove("asientosSeleccionados");
+        // Comprobar si el tiempo expiró realmente antes de borrar de sesión
+        if (getTiempoRestanteSegundos() <= 0) {
+            sessionMap.remove("asientosSeleccionados");
+            Logger.logInfo("⚠️ Reserva cancelada automáticamente en checkout por expiración real de TTL.");
+        }
 
-        Logger.logInfo("⚠️ Reserva cancelada automáticamente en checkout por expiración de TTL.");
+        // Si la lista de asientos ya no existe o es 0, redirigir adecuadamente
+        if (getTolerantTotalAsientos() == 0) {
+            try {
+                context.getExternalContext().redirect(context.getExternalContext().getRequestContextPath() + getUrlRetornoAsientos());
+            } catch (Exception e) {
+                Logger.logInfo("Error redirigiendo tras expiración: " + e.getMessage());
+            }
+        }
     }
 
     public String getAsientoPasajero(int idAsiento,String numeroAsiento){
@@ -389,6 +417,13 @@ public class ReservaBean implements Serializable {
 
         return "/home/seleccionAsientos.xhtml" + query;
     }
+
+    public String getUrlModificarAsientosVoluntario() {
+        FacesContext context = FacesContext.getCurrentInstance();
+        String savedQuery = (String) context.getExternalContext().getSessionMap().get("ultimaBusquedaAsientosQuery");
+        return "/home/seleccionAsientos.xhtml" + (savedQuery != null && !savedQuery.isBlank() ? "?" + savedQuery : "");
+    }
+
 
 
     /**
