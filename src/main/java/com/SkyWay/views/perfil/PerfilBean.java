@@ -207,6 +207,10 @@ public class PerfilBean implements Serializable {
 	public LocalDate getFechaFinFiltro() { return fechaFinFiltro; }
 	public void setFechaFinFiltro(LocalDate fechaFinFiltro) { this.fechaFinFiltro = fechaFinFiltro; }
 
+	public Usuario getUsuario() {
+		return usuario;
+	}
+
 	public List<ItinerarioResumenDTO> getListaItinerarios() { return listaItinerarios; }
 	public List<ItinerarioResumenDTO> getListaItinerariosFiltrados() { return listaItinerariosFiltrados; }
 	public Itinerario getItinerarioDetalle() { return itinerarioDetalle; }
