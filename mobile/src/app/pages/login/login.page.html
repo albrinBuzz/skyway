@@ -1,0 +1,15 @@
+<ion-content><main class="login-wrap">
+  <div class="brand"><ion-icon name="airplane-outline"></ion-icon><span>skyway<span class="brand-dot">.</span></span></div>
+  <div class="intro"><span class="eyebrow">TU VIAJE, CONTIGO</span><h1>Tu próximo destino<br>empieza aquí.</h1><p>Todos los detalles de tu viaje, en un solo lugar.</p></div>
+  <section class="login-panel"><h2>Bienvenido a bordo</h2><p class="muted">Ingresa con tu cuenta de pasajero.</p>
+    <p *ngIf="expired" class="notice">Tu sesión venció. Ingresa nuevamente para continuar.</p>
+    <form [formGroup]="form" (ngSubmit)="login()">
+      <ion-input label="Correo electrónico" labelPlacement="stacked" type="email" autocomplete="username" inputmode="email" formControlName="correoElectronico" placeholder="tu.correo@ejemplo.cl" [maxlength]="100"></ion-input>
+      <p class="error" *ngIf="form.controls.correoElectronico.touched && form.controls.correoElectronico.invalid">Ingresa un correo válido.</p>
+      <ion-input label="Contraseña" labelPlacement="stacked" type="password" autocomplete="current-password" formControlName="contrasena" placeholder="Tu contraseña" [maxlength]="72"></ion-input>
+      <p class="error" role="alert" *ngIf="error">{{ error }}</p>
+      <ion-button type="submit" expand="block" [disabled]="busy || form.invalid"><ion-spinner *ngIf="busy" name="crescent"></ion-spinner><span *ngIf="!busy">Ingresar</span><ion-icon *ngIf="!busy" name="arrow-forward-outline" slot="end"></ion-icon></ion-button>
+    </form>
+  </section>
+  <p class="footer">SKYWAY AIRLINES <span>•</span> PORTAL DE PASAJEROS</p>
+</main></ion-content>

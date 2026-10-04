@@ -1,0 +1,16 @@
+<ion-header><ion-toolbar><ion-title>skyway.</ion-title><ion-buttons slot="end"><ion-button aria-label="Actualizar" (click)="load()" [disabled]="busy"><ion-icon name="refresh-outline" slot="icon-only"></ion-icon></ion-button><ion-button aria-label="Cerrar sesión" (click)="auth.logout()"><ion-icon slot="icon-only" name="log-out-outline"></ion-icon></ion-button></ion-buttons></ion-toolbar></ion-header>
+<ion-content><main class="page">
+  <div *ngIf="busy" class="loading"><ion-spinner></ion-spinner></div><p *ngIf="error" class="error" role="alert">{{ error }}</p>
+  <ng-container *ngIf="data as d"><span class="eyebrow">LISTO PARA DESPEGAR</span><h1>Hola, {{ d.perfil.usuario.nombre }}.</h1><p class="muted">Tu viaje, a un toque de distancia.</p>
+  <section class="hero" *ngIf="d.proximoVuelo as next; else sinVuelo">
+    <div class="row"><span class="eyebrow">TU PRÓXIMO VUELO</span><span class="status">{{ next.vuelo.estado.descripcion || 'Por confirmar' }}</span></div>
+    <div class="route"><div><strong>{{ next.vuelo.segmentos[0]?.origen?.codigoIata || '—' }}</strong><span class="muted">Origen</span></div><ion-icon name="airplane-outline"></ion-icon><div class="destination"><strong>{{ next.vuelo.segmentos[next.vuelo.segmentos.length - 1]?.destino?.codigoIata || '—' }}</strong><span class="muted">Destino</span></div></div>
+    <div class="meta"><div><span>Vuelo</span><strong>{{ next.vuelo.numeroVuelo || 'Sin número' }}</strong></div><div><span>Salida programada</span><strong>{{ next.vuelo.fechaHoraSalida | date:'dd MMM · HH:mm' }}</strong></div><div><span>Puerta</span><strong>{{ next.vuelo.segmentos[0]?.puerta?.codigoPuerta || 'Por asignar' }}</strong></div><div><span>Tu asiento</span><strong>{{ next.vuelo.asiento?.numeroAsiento || 'Sin asignar' }}</strong></div></div>
+    <ion-button expand="block" color="light" [routerLink]="['/reservas', next.idReserva]">Ver viaje y check-in<ion-icon slot="end" name="arrow-forward-outline"></ion-icon></ion-button>
+  </section>
+  <ng-template #sinVuelo><ion-card class="ion-padding"><h2>No hay vuelos próximos</h2><p class="muted">Aquí aparecerá el próximo vuelo de tus reservas.</p></ion-card></ng-template>
+  <h2 class="section-title">Todo para tu viaje</h2>
+  <ion-card button routerLink="/reservas"><ion-card-content class="row"><div><h3>Mis reservas</h3><p class="muted">Itinerarios, asientos y equipaje</p></div><ion-icon name="ticket-outline" size="large"></ion-icon></ion-card-content></ion-card>
+  <ion-card button routerLink="/notificaciones"><ion-card-content class="row"><div><h3>Notificaciones</h3><p class="muted">{{ d.notificacionesSinLeer }} sin leer</p></div><ion-icon name="notifications-outline" size="large"></ion-icon></ion-card-content></ion-card>
+  </ng-container>
+</main></ion-content>

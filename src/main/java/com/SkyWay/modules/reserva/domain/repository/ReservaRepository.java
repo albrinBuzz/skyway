@@ -14,7 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 @Repository
-public interface ReservaRepository extends JpaRepository<Reserva, Integer>{
+public interface ReservaRepository extends JpaRepository<Reserva, Integer>, MobileReservaQueries {
 
 
     // Busca todas las reservas por pasajero
