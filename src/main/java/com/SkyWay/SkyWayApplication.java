@@ -19,6 +19,7 @@ public class SkyWayApplication {
 	public static void main(String[] args) {
 
 		SpringApplication.run(SkyWayApplication.class, args);
+		Logger.logInfo("Inicio la app");
 
 	}
 }
