@@ -1,27 +1,66 @@
+version: '3.8'
+
 services:
+  # =====================================================================
+  # 1. CONTENEDOR POSTGRESQL + POSTGIS (OPCIÓN DOCKER)
+  # =====================================================================
+  postgres_db:
+    # ⚠️ Usamos la imagen oficial que SÍ incluye PostGIS habilitado
+    image: postgis/postgis:16-3.4-alpine
+    container_name: skyway_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: aerolinea_db
+      POSTGRES_USER: ${DB_USERNAME:-aerolinea_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-aerolinea_user}
+      TZ: ${TZ:-America/Santiago}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+        # 🚀 MONTAJE DIRECTO DE DUMP.SQL
+      - ./dataBase/V3/dump.sql:/docker-entrypoint-initdb.d/01_dump.sql
+    profiles:
+      - docker-db
+
+  # =====================================================================
+  # 2. BACKEND SPRING BOOT
+  # =====================================================================
   backend:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: skyway_backend
+    restart: always
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod,mobile}
-      DB_URL: ${DB_URL:?Define DB_URL en .env}
-      DB_USERNAME: ${DB_USERNAME:?Define DB_USERNAME en .env}
-      DB_PASSWORD: ${DB_PASSWORD:?Define DB_PASSWORD en .env}
-      MOBILE_JWT_SECRET: ${MOBILE_JWT_SECRET:-}
-      MOBILE_ALLOWED_ORIGINS: ${MOBILE_ALLOWED_ORIGINS:-http://localhost:8100,http://localhost,https://localhost,capacitor://localhost}
-      MOBILE_ZONE: ${MOBILE_ZONE:-America/Santiago}
-      SKYWAY_MAIL_LISTENER_ENABLED: ${SKYWAY_MAIL_LISTENER_ENABLED:-false}
+      SPRING_DATASOURCE_URL: ${DB_URL}
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      MOBILE_JWT_SECRET: ${MOBILE_JWT_SECRET}
+      MOBILE_ALLOWED_ORIGINS: ${MOBILE_ALLOWED_ORIGINS}
+      MOBILE_ZONE: ${MOBILE_ZONE}
+      SKYWAY_MAIL_LISTENER_ENABLED: ${SKYWAY_MAIL_LISTENER_ENABLED}
       PORT: 8080
-      TZ: America/Santiago
+      TZ: ${TZ}
     ports:
       - "${BACKEND_PORT:-8080}:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
+  # =====================================================================
+  # 3. FRONTEND MÓVIL (IONIC / ANGULAR)
+  # =====================================================================
   mobile:
     build:
       context: ./mobile
       dockerfile: Dockerfile
+    container_name: skyway_mobile
+    restart: always
     depends_on:
       - backend
     ports:
       - "${MOBILE_PORT:-8100}:80"
+
+volumes:
+  postgres_data:
