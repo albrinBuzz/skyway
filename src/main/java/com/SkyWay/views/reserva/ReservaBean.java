@@ -258,14 +258,14 @@ public class ReservaBean implements Serializable {
             }
         }
 
-        for (Pasajero pasajero : pasajerosList) {
+        /*for (Pasajero pasajero : pasajerosList) {
             if (pasajero.getRut() == null || pasajero.getRut().isBlank() ||
                     pasajero.getUsuario() == null || pasajero.getUsuario().getNombre() == null || pasajero.getUsuario().getNombre().isBlank()) {
                 addMessage(FacesMessage.SEVERITY_WARN, "Formulario Incompleto",
                         "Por favor, complete todos los campos obligatorios de cada pasajero.");
                 return;
             }
-        }
+        }*/
 
         // 2. VERIFICACIÓN DE DISPONIBILIDAD EN BD
         for (Map.Entry<Integer, List<InfoAsientoDTO>> entry : asientosSeleccionados.entrySet()) {
