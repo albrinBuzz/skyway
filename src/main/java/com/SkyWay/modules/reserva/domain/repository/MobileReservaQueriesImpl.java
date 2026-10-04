@@ -154,8 +154,34 @@ public class MobileReservaQueriesImpl implements MobileReservaQueries {
         return ejecutarConsulta("SELECT ri.id_reserva_itinerario, i.id_itinerario, i.hora_salida, i.hora_llegada, i.numero_escalas, i.precio_base, ao.id_aeropuerto, ao.nombre_aeropuerto, ao.codigo_iata, ad.id_aeropuerto, ad.nombre_aeropuerto, ad.codigo_iata, it.id_itinerario_tarifa, t.id_tarifa, t.nombre, it.precio FROM reserva_itinerario ri JOIN itinerario i ON i.id_itinerario=ri.id_itinerario JOIN itinerario_tarifa it ON it.id_itinerario_tarifa=ri.id_itinerario_tarifa JOIN tarifa t ON t.id_tarifa=it.id_tarifa LEFT JOIN aeropuerto ao ON ao.id_aeropuerto=i.origen_aeropuerto LEFT JOIN aeropuerto ad ON ad.id_aeropuerto=i.destino_aeropuerto WHERE ri.id_reserva=:id ORDER BY i.hora_salida NULLS LAST", "id", id);
     }
 
-    @Override public List<Object[]> mobileConexiones(int id) {
-        return ejecutarConsulta("SELECT DISTINCT iv.id_itinerario, iv.id_itinerario_vuelo, iv.orden, CAST(iv.tiempo_espera AS text), iv.tipo_conexion, v.id_vuelo, v.numero_vuelo, v.fecha_hora_salida, v.fecha_hora_llegada, v.id_avion, ev.id_estado_vuelo, ev.estado, ev.descripcion FROM reserva_itinerario ri JOIN itinerario_vuelo iv ON iv.id_itinerario=ri.id_itinerario JOIN vuelo v ON v.id_vuelo=iv.id_vuelo LEFT JOIN estado_vuelo ev ON ev.id_estado_vuelo=v.id_estado_vuelo WHERE ri.id_reserva=:id ORDER BY iv.id_itinerario, iv.orden", "id", id);
+    @Override
+    public List<Object[]> mobileConexiones(int id) {
+        String sql = """
+            SELECT DISTINCT
+                iv.id_itinerario,
+                iv.id_itinerario_vuelo,
+                iv.orden,
+                CAST(iv.tiempo_espera AS text),
+                iv.tipo_conexion,
+                v.id_vuelo,
+                v.numero_vuelo,
+                v.fecha_hora_salida,
+                v.fecha_hora_llegada,
+                v.id_avion,
+                ev.id_estado_vuelo,
+                ev.estado,
+                ev.descripcion,
+                NULLIF(BTRIM(ma.nombre), '') AS modelo_avion
+            FROM reserva_itinerario ri
+            JOIN itinerario_vuelo iv ON iv.id_itinerario = ri.id_itinerario
+            JOIN vuelo v ON v.id_vuelo = iv.id_vuelo
+            LEFT JOIN estado_vuelo ev ON ev.id_estado_vuelo = v.id_estado_vuelo
+            LEFT JOIN avion a ON a.id_avion = v.id_avion
+            LEFT JOIN modelo_avion ma ON ma.id_modelo = a.id_modelo
+            WHERE ri.id_reserva = :id
+            ORDER BY iv.id_itinerario, iv.orden
+            """;
+        return ejecutarConsulta(sql, "id", id);
     }
 
     @Override public List<Object[]> mobileSegmentos(int id) {

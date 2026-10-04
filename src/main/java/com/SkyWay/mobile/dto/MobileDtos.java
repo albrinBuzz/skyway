@@ -33,7 +33,7 @@ public final class MobileDtos {
                                   Integer idClase, String clase) {}
     public record VueloDto(Integer idVuelo, String numeroVuelo, LocalDateTime fechaHoraSalida,
                            LocalDateTime fechaHoraLlegada, Integer idAvion, EstadoVueloDto estado,
-                           List<SegmentoDto> segmentos, AsientoAsignado asiento) {}
+                           List<SegmentoDto> segmentos, AsientoAsignado asiento, String modeloAvion) {}
     public record ConexionDto(Integer idItinerarioVuelo, Integer orden, String tiempoEspera,
                               String tipoConexion, VueloDto vuelo) {}
     public record CaracteristicaDto(Integer idTarifaCaracteristica, Integer idCaracteristica,
