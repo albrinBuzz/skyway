@@ -9,7 +9,7 @@ export interface Aeropuerto { idAeropuerto: number; nombreAeropuerto: string; co
 export interface Puerta { idPuerta: number; codigoPuerta: string; terminal: string | null; idAeropuerto: number | null; }
 export interface Segmento { idSegmento: number; ordenSegmento: number | null; horaSalida: string | null; horaLlegada: string | null; origen: Aeropuerto | null; destino: Aeropuerto | null; puerta: Puerta | null; }
 export interface AsientoAsignado { idReservaAsiento: number; idAsiento: number; numeroAsiento: string; idClase: number | null; clase: string | null; }
-export interface Vuelo { idVuelo: number; numeroVuelo: string | null; fechaHoraSalida: string | null; fechaHoraLlegada: string | null; idAvion: number | null; estado: EstadoVuelo; segmentos: Segmento[]; asiento: AsientoAsignado | null; }
+export interface Vuelo { modeloAvion: string | null; idVuelo: number; numeroVuelo: string | null; fechaHoraSalida: string | null; fechaHoraLlegada: string | null; idAvion: number | null; estado: EstadoVuelo; segmentos: Segmento[]; asiento: AsientoAsignado | null; }
 export interface Conexion { idItinerarioVuelo: number; orden: number | null; tiempoEspera: string | null; tipoConexion: string | null; vuelo: Vuelo; }
 export interface Caracteristica { idTarifaCaracteristica: number; idCaracteristica: number; nombre: string; descripcion: string | null; tipoDato: 'boolean' | 'int' | 'text' | null; valor: string | null; valorBool: boolean | null; valorInt: number | null; }
 export interface Tarifa { idItinerarioTarifa: number; idTarifa: number; nombre: string; precio: number; caracteristicas: Caracteristica[]; }

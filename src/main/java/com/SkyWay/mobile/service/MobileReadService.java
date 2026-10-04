@@ -66,7 +66,7 @@ public class MobileReadService {
         for(Object[] r:reservas.mobileConexiones(id)) {
             int flight=number(r[5]);
             VueloDto v=new VueloDto(flight,text(r[6]),date(r[7]),date(r[8]),number(r[9]),
-                    new EstadoVueloDto(number(r[10]),text(r[11]),text(r[12])),segments.getOrDefault(flight,List.of()),seats.get(flight));
+                    new EstadoVueloDto(number(r[10]),text(r[11]),text(r[12])),segments.getOrDefault(flight,List.of()),seats.get(flight),text(r[13]));
             connections.computeIfAbsent(number(r[0]),k->new ArrayList<>()).add(new ConexionDto(number(r[1]),number(r[2]),text(r[3]),text(r[4]),v));
         }
         Map<Integer,List<CaracteristicaDto>> features=new HashMap<>();
