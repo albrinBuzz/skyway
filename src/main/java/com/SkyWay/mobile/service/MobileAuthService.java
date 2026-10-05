@@ -52,6 +52,36 @@ public class MobileAuthService {
         if (!pasajeros.existsById(rut))
             throw new MobileException(HttpStatus.FORBIDDEN, "SOLO_PASAJEROS", "La cuenta no corresponde a un pasajero.");
     }
+    @Transactional
+    public Perfil actualizarCorreo(String rut, ActualizarCorreoRequest request) {
+        requirePassenger(rut);
+        var usuario = usuarios.findById(rut).orElseThrow(MobileException::notFound);
+        if (usuario.getContrasena() == null || !passwords.matches(request.contrasenaActual(), usuario.getContrasena())) {
+            throw new MobileException(HttpStatus.UNAUTHORIZED, "CONTRASENA_INVALIDA", "La contraseña actual no es correcta.");
+        }
+        String correo = request.correoElectronico().trim();
+        if (usuarios.existsByCorreoElectronicoIgnoreCaseAndRutNot(correo, rut)) {
+            throw new MobileException(HttpStatus.CONFLICT, "CORREO_EN_USO", "El correo ya está asociado a otra cuenta.");
+        }
+        usuario.setCorreoElectronico(correo);
+        usuarios.save(usuario);
+        return perfil(rut);
+    }
+
+    @Transactional
+    public void cambiarContrasena(String rut, CambiarContrasenaRequest request) {
+        requirePassenger(rut);
+        var usuario = usuarios.findById(rut).orElseThrow(MobileException::notFound);
+        if (usuario.getContrasena() == null || !passwords.matches(request.contrasenaActual(), usuario.getContrasena())) {
+            throw new MobileException(HttpStatus.UNAUTHORIZED, "CONTRASENA_INVALIDA", "La contraseña actual no es correcta.");
+        }
+        if (passwords.matches(request.nuevaContrasena(), usuario.getContrasena())) {
+            throw new MobileException(HttpStatus.BAD_REQUEST, "MISMA_CONTRASENA", "La nueva contraseña debe ser distinta a la actual.");
+        }
+        usuario.setContrasena(passwords.encode(request.nuevaContrasena()));
+        usuarios.save(usuario);
+    }
+
     public Perfil perfil(String rut) {
         var pasajero = pasajeros.findById(rut).orElseThrow(() ->
                 new MobileException(HttpStatus.FORBIDDEN, "SOLO_PASAJEROS", "La cuenta no corresponde a un pasajero."));

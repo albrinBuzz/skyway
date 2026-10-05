@@ -7,8 +7,29 @@ export class AuthStore {
   private token: string | null = null;
   private expiresAt = 0;
   perfil: Perfil | null = null;
-  set(data: LoginResponse) { this.token = data.accessToken; this.expiresAt = Date.now() + data.expiresIn * 1000; this.perfil = data.perfil; }
-  get accessToken() { if (Date.now() >= this.expiresAt) this.clear(); return this.token; }
-  get authenticated() { return this.accessToken !== null; }
-  clear() { this.token = null; this.expiresAt = 0; this.perfil = null; }
+
+  set(data: LoginResponse) {
+    this.token = data.accessToken;
+    this.expiresAt = Date.now() + data.expiresIn * 1000;
+    this.perfil = data.perfil;
+  }
+
+  setPerfil(perfil: Perfil) {
+    this.perfil = perfil;
+  }
+
+  get accessToken() {
+    if (Date.now() >= this.expiresAt) this.clear();
+    return this.token;
+  }
+
+  get authenticated() {
+    return this.accessToken !== null;
+  }
+
+  clear() {
+    this.token = null;
+    this.expiresAt = 0;
+    this.perfil = null;
+  }
 }

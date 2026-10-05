@@ -24,19 +24,22 @@ public class MobileOperationsService {
     private String reason(DetalleReserva detail,VueloDto flight) {
         if(!"Confirmada".equalsIgnoreCase(detail.estadoReserva().descripcion())) return "La reserva debe estar confirmada y sin check-in.";
         if(detail.checkin()!=null) return "El check-in ya fue registrado para esta reserva.";
-        if(flight.asiento()==null) return "No hay un asiento previo del pasajero para cambiar.";
         if(!operable(flight)) return "El vuelo no está disponible para cambios.";
         LocalDateTime departure=flight.fechaHoraSalida();
         if(departure==null || !departure.isAfter(LocalDateTime.now(clock))) return "El vuelo ya salió o no tiene horario definido.";
-        var fares=detail.itinerarios().stream().filter(i->i.vuelos().stream().anyMatch(v->v.vuelo().idVuelo().equals(flight.idVuelo()))).map(ItinerarioDto::tarifa).toList();
-        if(fares.isEmpty()) return "La tarifa no está definida.";
-        for(var fare:fares) {
-            boolean allowed=fare.caracteristicas().stream().anyMatch(c->"Permite Cambios Asiento".equalsIgnoreCase(c.nombre())&&Boolean.TRUE.equals(c.valorBool()));
-            if(!allowed) return "La tarifa "+fare.nombre()+" no autoriza cambios de asiento.";
-            for(var c:fare.caracteristicas()) if("Horas Minimas Cambio Asiento".equalsIgnoreCase(c.nombre())) {
-                if(c.valorInt()==null || c.valorInt()<0) return "La anticipación mínima de la tarifa requiere revisión.";
-                if(LocalDateTime.now(clock).plusHours(c.valorInt()).isAfter(departure))
-                    return "La tarifa exige al menos "+c.valorInt()+" horas antes de la salida.";
+        // Elegir el primer asiento no es un "cambio" y no debe heredar las restricciones
+        // comerciales de cambio de asiento. Estas reglas se aplican solo cuando ya existe uno.
+        if(flight.asiento()!=null) {
+            var fares=detail.itinerarios().stream().filter(i->i.vuelos().stream().anyMatch(v->v.vuelo().idVuelo().equals(flight.idVuelo()))).map(ItinerarioDto::tarifa).toList();
+            if(fares.isEmpty()) return "La tarifa no está definida.";
+            for(var fare:fares) {
+                boolean allowed=fare.caracteristicas().stream().anyMatch(c->"Permite Cambios Asiento".equalsIgnoreCase(c.nombre())&&Boolean.TRUE.equals(c.valorBool()));
+                if(!allowed) return "La tarifa "+fare.nombre()+" no autoriza cambios de asiento.";
+                for(var c:fare.caracteristicas()) if("Horas Minimas Cambio Asiento".equalsIgnoreCase(c.nombre())) {
+                    if(c.valorInt()==null || c.valorInt()<0) return "La anticipación mínima de la tarifa requiere revisión.";
+                    if(LocalDateTime.now(clock).plusHours(c.valorInt()).isAfter(departure))
+                        return "La tarifa exige al menos "+c.valorInt()+" horas antes de la salida.";
+                }
             }
         }
         return null;
@@ -50,9 +53,11 @@ public class MobileOperationsService {
     public MapaAsientos mapa(String rut,int id,int flightId) {
         var detail=read.detalle(rut,id); var flight=vuelo(detail,flightId); String reason=reason(detail,flight);
         var seats=reservas.mobileMapa(flightId,id,rut).stream().map(r->{
-            boolean selectable=reason==null&&"libre".equals(r[5])&&r[4]!=null
-                    &&Objects.equals(number(r[2]),flight.asiento().idClase());
-            return new AsientoDto(number(r[0]),text(r[1]),number(r[2]),text(r[3]),number(r[4]),text(r[5]),selectable);
+            String rawState=text(r[5]);
+            String state="disponible".equalsIgnoreCase(rawState) ? "libre" : rawState;
+            boolean sameClass=flight.asiento()==null || Objects.equals(number(r[2]),flight.asiento().idClase());
+            boolean selectable=reason==null&&"libre".equalsIgnoreCase(state)&&r[4]!=null&&sameClass;
+            return new AsientoDto(number(r[0]),text(r[1]),number(r[2]),text(r[3]),number(r[4]),state,selectable);
         }).toList();
         return new MapaAsientos(id,flightId,reason==null,reason,flight.asiento(),seats);
     }
@@ -68,8 +73,12 @@ public class MobileOperationsService {
         if(!map.cambioPermitido()) throw MobileException.conflict(map.motivo());
         var target=map.asientos().stream().filter(a->a.idAsiento()==seatId).findFirst().orElseThrow(MobileException::notFound);
         if(!target.seleccionable()) throw MobileException.conflict("Asiento ocupado, sin precio o de una clase distinta a la contratada.");
-        if(reservas.mobileCambiarAsiento(map.asientoActual().idReservaAsiento(),id,flightId,rut,seatId)!=1)
+        if(map.asientoActual()==null) {
+            if(reservas.mobileAsignarAsiento(id,flightId,rut,seatId)!=1)
+                throw MobileException.conflict("No fue posible asignar el asiento. Actualiza el mapa e inténtalo otra vez.");
+        } else if(reservas.mobileCambiarAsiento(map.asientoActual().idReservaAsiento(),id,flightId,rut,seatId)!=1) {
             throw MobileException.conflict("La asignación cambió. Actualiza el mapa e inténtalo otra vez.");
+        }
         return mapa(rut,id,flightId);
     }
     @Transactional
