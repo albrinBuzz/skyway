@@ -18,6 +18,7 @@ public interface MobileReservaQueries {
     List<Object[]> mobileMapa(int vuelo, int reserva, String rut);
     List<Object[]> mobileNext(String rut, LocalDateTime ahora);
     void mobileLockVuelo(int id);
+    int mobileAsignarAsiento(int reserva, int vuelo, String rut, int asiento);
     int mobileCambiarAsiento(int idAsignacion, int reserva, int vuelo, String rut, int asiento);
     void mobileInsertCheckin(int reserva, LocalDateTime ahora);
     List<Object[]> mobileFaltanAsientos(int reserva, LocalDateTime ahora);

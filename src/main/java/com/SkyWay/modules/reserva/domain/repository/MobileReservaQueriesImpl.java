@@ -102,6 +102,19 @@ public class MobileReservaQueriesImpl implements MobileReservaQueries {
     }
 
     @Override
+    public int mobileAsignarAsiento(int reservaId, int vueloId, String rut, int asientoId) {
+        Query q = em.createNativeQuery("""
+            INSERT INTO reserva_asiento (id_reserva, id_vuelo, id_asiento, rut)
+            VALUES (:reserva, :vuelo, :asiento, :rut)
+        """);
+        q.setParameter("reserva", reservaId);
+        q.setParameter("vuelo", vueloId);
+        q.setParameter("asiento", asientoId);
+        q.setParameter("rut", rut);
+        return q.executeUpdate();
+    }
+
+    @Override
     public int mobileCambiarAsiento(int asignacionId, int reservaId, int vueloId, String rut, int nuevoAsientoId) {
         Query q = em.createNativeQuery("""
             UPDATE reserva_asiento 

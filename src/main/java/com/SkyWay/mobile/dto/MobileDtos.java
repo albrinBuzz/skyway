@@ -12,6 +12,15 @@ public final class MobileDtos {
     public record LoginRequest(@NotBlank @Email @Size(max=100) String correoElectronico,
                                @NotBlank @Size(max=72) String contrasena) {}
     public record CambioAsientoRequest(@NotNull @Positive Integer idAsiento) {}
+    public record ActualizarCorreoRequest(
+            @NotBlank @Email @Size(max=100) String correoElectronico,
+            @NotBlank @Size(max=72) String contrasenaActual) {}
+    public record CambiarContrasenaRequest(
+            @NotBlank @Size(max=72) String contrasenaActual,
+            @NotBlank @Size(min=8,max=72) String nuevaContrasena) {}
+    public record CrearReservaRequest(
+            @NotNull @Positive Integer idItinerario,
+            @NotNull @Positive Integer idItinerarioTarifa) {}
     public record UsuarioDto(String rut, String nombre, String apellido, String correoElectronico) {}
     public record PasajeroDto(String rut, String tipoDocumento, String numeroDocumento,
                              LocalDate fechaNacimiento, String nacionalidad) {}
@@ -25,6 +34,14 @@ public final class MobileDtos {
     public record EstadoReservaDto(Integer idEstadoReserva, String descripcion) {}
     public record EstadoVueloDto(Integer idEstadoVuelo, String estado, String descripcion) {}
     public record AeropuertoDto(Integer idAeropuerto, String nombreAeropuerto, String codigoIata) {}
+    public record AeropuertoCatalogo(Integer idAeropuerto, String codigoIata, String nombreAeropuerto, String ciudad) {}
+    public record TarifaDisponible(Integer idItinerarioTarifa, Integer idTarifa, String nombre, BigDecimal precio) {}
+    public record ItinerarioDisponible(Integer idItinerario, String origen, String destino,
+                                       String ciudadSalida, String ciudadLlegada,
+                                       LocalDateTime horaSalida, LocalDateTime horaLlegada,
+                                       Integer numeroEscalas, String duracion, Integer precioBase,
+                                       List<TarifaDisponible> tarifas) {}
+    public record ReservaCreada(Integer idReserva, String estado, BigDecimal total) {}
     public record PuertaDto(Integer idPuerta, String codigoPuerta, String terminal, Integer idAeropuerto) {}
     public record SegmentoDto(Integer idSegmento, Integer ordenSegmento, LocalDateTime horaSalida,
                               LocalDateTime horaLlegada, AeropuertoDto origen, AeropuertoDto destino,

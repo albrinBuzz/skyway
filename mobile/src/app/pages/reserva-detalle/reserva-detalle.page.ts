@@ -26,7 +26,7 @@ export class ReservaDetallePage {
     try {
       await firstValueFrom(this.api.checkin(this.id)); await this.load();
       const flight = this.vuelos.find(v => !!v.asiento);
-      if(flight) await this.router.navigate(['/reservas',this.id,'vuelos',flight.idVuelo,'pase']);
+      if(flight) await this.router.navigate(['/vuelos/reservas',this.id,'vuelos',flight.idVuelo,'pase']);
     } catch(e) { this.error = errorMessage(e); } finally { this.checking = false; }
   }
 }

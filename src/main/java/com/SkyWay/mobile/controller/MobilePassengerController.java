@@ -2,6 +2,7 @@ package com.SkyWay.mobile.controller;
 
 import com.SkyWay.mobile.dto.MobileDtos.*;
 import com.SkyWay.mobile.service.MobileOperationsService;
+import com.SkyWay.mobile.service.MobileBookingService;
 import com.SkyWay.mobile.service.MobileReadService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +11,8 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.time.LocalDate;
+import org.springframework.format.annotation.DateTimeFormat;
 
 @RestController
 @RequestMapping("/api/v1/mobile")
@@ -18,10 +21,13 @@ public class MobilePassengerController {
 
     private final MobileReadService readService;
     private final MobileOperationsService operationsService;
+    private final MobileBookingService bookingService;
 
-    public MobilePassengerController(MobileReadService readService, MobileOperationsService operationsService) {
+    public MobilePassengerController(MobileReadService readService, MobileOperationsService operationsService,
+                                     MobileBookingService bookingService) {
         this.readService = readService;
         this.operationsService = operationsService;
+        this.bookingService = bookingService;
     }
 
     // ------------------------------------------------------------------
@@ -33,7 +39,31 @@ public class MobilePassengerController {
     }
 
     // ------------------------------------------------------------------
-    // 2. GESTIÓN DE RESERVAS E ITINERARIO
+    // 2. BÚSQUEDA Y CREACIÓN DE RESERVAS DESDE INICIO
+    // ------------------------------------------------------------------
+    @GetMapping("/catalogo/aeropuertos")
+    public ResponseEntity<List<AeropuertoCatalogo>> catalogoAeropuertos(@AuthenticationPrincipal Jwt jwt) {
+        return ResponseEntity.ok(bookingService.aeropuertos(jwt.getSubject()));
+    }
+
+    @GetMapping("/busqueda/itinerarios")
+    public ResponseEntity<List<ItinerarioDisponible>> buscarItinerarios(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestParam String origen,
+            @RequestParam String destino,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha) {
+        return ResponseEntity.ok(bookingService.buscar(jwt.getSubject(), origen, destino, fecha));
+    }
+
+    @PostMapping("/reservas")
+    public ResponseEntity<ReservaCreada> crearReserva(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody CrearReservaRequest body) {
+        return ResponseEntity.ok(bookingService.crear(jwt.getSubject(), body));
+    }
+
+    // ------------------------------------------------------------------
+    // 3. GESTIÓN DE RESERVAS E ITINERARIO
     // ------------------------------------------------------------------
     @GetMapping("/reservas")
     public ResponseEntity<Pagina<ResumenReserva>> listarReservas(
@@ -67,7 +97,7 @@ public class MobilePassengerController {
     }
 
     // ------------------------------------------------------------------
-    // 3. MAPA DE ASIENTOS Y SELECCIÓN
+    // 4. MAPA DE ASIENTOS Y SELECCIÓN
     // ------------------------------------------------------------------
     @GetMapping("/reservas/{idReserva}/vuelos/{idVuelo}/asientos")
     public ResponseEntity<MapaAsientos> obtenerMapaAsientos(
@@ -87,7 +117,7 @@ public class MobilePassengerController {
     }
 
     // ------------------------------------------------------------------
-    // 4. CHECK-IN Y PASE DE ABORDAR CON QR
+    // 5. CHECK-IN Y PASE DE ABORDAR CON QR
     // ------------------------------------------------------------------
     @PostMapping("/reservas/{idReserva}/checkin")
     public ResponseEntity<CheckinDto> registrarCheckin(
@@ -105,7 +135,7 @@ public class MobilePassengerController {
     }
 
     // ------------------------------------------------------------------
-    // 5. NOTIFICACIONES
+    // 6. NOTIFICACIONES
     // ------------------------------------------------------------------
     @GetMapping("/notificaciones")
     public ResponseEntity<Pagina<NotificacionDto>> listarNotificaciones(
