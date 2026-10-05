@@ -53,6 +53,23 @@
                 color: #3b82f6 !important;
                 font-weight: 700 !important;
             }
+            .booking-stepper .step.active-clickable {
+                color: #3b82f6 !important;
+                font-weight: 600 !important;
+                text-decoration: none !important;
+                transition: all 0.2s ease !important;
+                cursor: pointer !important;
+                padding: 2px 8px !important;
+                border-radius: 4px !important;
+            }
+            .booking-stepper .step.active-clickable:hover {
+                background: rgba(59, 130, 246, 0.15) !important;
+                color: #60a5fa !important;
+            }
+            .style-icon-edit {
+                font-size: 0.75rem !important;
+                opacity: 0.8;
+            }
 
             /* Contenedor Principal y Tarjetas */
             .card-latam {
@@ -253,7 +270,7 @@
 
     <ui:define name="contenido">
 
-        <p:growl id="growl" showDetail="true" />
+        <p:growl id="growl" showDetail="true" keepAlive="true" life="6000" />
 
         <!-- Modal de Expiración Estilizado -->
         <p:dialog header="Tiempo Agotado"
@@ -266,7 +283,6 @@
                   styleClass="custom-expired-modal">
 
             <div class="text-center p-3">
-                <!-- Ícono en color carmesí atenuado semántico -->
                 <i class="pi pi-clock mb-3 expired-modal-icon"></i>
 
                 <h4 class="font-weight-bold mb-2 expired-modal-title">¡Tu tiempo de reserva ha expirado!</h4>
@@ -279,7 +295,6 @@
                     <p:remoteCommand name="notificarExpiracionCliente"
                                      action="#{reservaBean.cancelarPorExpiracion}" />
 
-                    <!-- Botón primario azul corporativo -->
                     <button type="button"
                             onclick="window.location.href='#{request.contextPath}#{reservaBean.urlRetornoAsientos}';"
                             class="btn btn-expired-action w-100">
@@ -313,10 +328,11 @@
                 <span class="step"><i class="pi pi-circle me-1"></i> 4. Confirmación</span>
             </div>
 
-            <div class="row g-4">
-                <!-- SECCIÓN IZQUIERDA: FORMULARIO DE PASAJEROS -->
-                <div class="col-lg-7">
-                    <h:form id="pasajerosForm">
+            <!-- UNIFICACIÓN EN UN SOLO FORMULARIO PRINCIPAL -->
+            <h:form id="bookingForm">
+                <div class="row g-4">
+                    <!-- SECCIÓN IZQUIERDA: FORMULARIO DE PASAJEROS -->
+                    <div class="col-lg-7">
                         <div class="card-latam">
                             <h3 class="text-white font-weight-bold mb-4" style="font-size: 1.35rem;">
                                 <i class="pi pi-users me-2 text-primary"></i>Información de Pasajeros
@@ -420,155 +436,143 @@
                                 </div>
                             </ui:repeat>
                         </div>
-                    </h:form>
-                </div>
+                    </div>
 
-                <!-- SECCIÓN DERECHA: SIDEBAR Y RESUMEN DE COMPRA -->
-                <div class="col-lg-5">
-                    <div class="sidebar-resumen shadow-lg">
-                        <h4 class="text-white font-weight-bold mb-4" style="font-size: 1.25rem;">Detalle de la Reserva</h4>
+                    <!-- SECCIÓN DERECHA: SIDEBAR Y RESUMEN DE COMPRA -->
+                    <div class="col-lg-5">
+                        <div class="sidebar-resumen shadow-lg">
+                            <h4 class="text-white font-weight-bold mb-4" style="font-size: 1.25rem;">Detalle de la Reserva</h4>
 
-                        <!-- ACORDEÓN DE DETALLES -->
-                        <p:accordionPanel multiple="true" widgetVar="itinerariosAccordion" styleClass="latam-accordion mb-4">
+                            <!-- ACORDEÓN DE DETALLES -->
+                            <p:accordionPanel multiple="true" widgetVar="itinerariosAccordion" styleClass="latam-accordion mb-4">
 
-                            <!-- TAB 1: ITINERARIO -->
-                            <p:tab title="Itinerario de Vuelo">
-                                <ui:repeat value="#{reservaBean.itinerarios}" var="itinerario">
-                                    <div class="vuelo-segmento mb-3 p-2 rounded" style="background: rgba(15, 23, 42, 0.4);">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <div>
-                                                <span class="badge bg-primary me-2">#{itinerario.aeropuertoOrigen.codigoIata}</span>
-                                                <span class="text-white font-weight-bold">#{itinerario.aeropuertoOrigen.ciudad.nombre}</span>
-                                            </div>
-                                            <span class="text-white-50 font-weight-bold">
-                                                <h:outputText value="#{itinerario.horaSalida}">
-                                                    <f:convertDateTime pattern="HH:mm" timeZone="America/Santiago" />
-                                                </h:outputText>
-                                            </span>
-                                        </div>
-
-                                        <div class="d-flex align-items-center my-2 text-muted small">
-                                            <div style="flex:1; border-top:1px dashed #334155;"></div>
-                                            <span class="mx-2"><i class="pi pi-clock me-1"></i>#{itinerario.numeroEscalas == 0 ? 'Directo' : itinerario.numeroEscalas += ' Escala(s)'}</span>
-                                            <div style="flex:1; border-top:1px dashed #334155;"></div>
-                                        </div>
-
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <span class="badge bg-secondary me-2">#{itinerario.aeropuertoDestino.codigoIata}</span>
-                                                <span class="text-white font-weight-bold">#{itinerario.aeropuertoDestino.ciudad.nombre}</span>
-                                            </div>
-                                            <span class="text-white-50 font-weight-bold">
-                                                <h:outputText value="#{itinerario.horaLlegada}">
-                                                    <f:convertDateTime pattern="HH:mm" timeZone="America/Santiago" />
-                                                </h:outputText>
-                                            </span>
-                                        </div>
-                                    </div>
-                                </ui:repeat>
-                            </p:tab>
-
-                            <!-- 1. STEPPER CON ENLACES DE NAVEGACIÓN -->
-                            <div class="booking-stepper">
-                                <span class="step"><i class="pi pi-check me-1"></i> 1. Vuelos</span>
-                                <a href="#{request.contextPath}#{reservaBean.urlRetornoAsientos}" class="step active-clickable" title="Haz clic para cambiar asientos">
-                                    <i class="pi pi-ticket me-1"></i> 2. Asientos <i class="pi pi-pencil ms-1 style-icon-edit"></i>
-                                </a>
-                                <span class="step active"><i class="pi pi-credit-card me-1"></i> 3. Pasajeros y Pago</span>
-                                <span class="step"><i class="pi pi-circle me-1"></i> 4. Confirmación</span>
-                            </div>
-
-                            <!-- 2. PESTAÑA DE ASIENTOS CON BOTÓN DE CAMBIO/MODIFICACIÓN -->
-                            <p:tab title="Asientos (#{reservaBean.tolerantTotalAsientos})">
-                                <h:panelGroup rendered="#{reservaBean.tolerantTotalAsientos == 0}">
-                                    <div class="text-center py-4 px-2">
-                                        <p class="text-muted small mb-3">No has asignado asientos para tus vuelos.</p>
-                                        <p:button value="Seleccionar Asientos"
-                                                  href="#{request.contextPath}#{reservaBean.urlRetornoAsientos}"
-                                                  icon="pi pi-plus"
-                                                  styleClass="ui-button-outlined ui-button-info btn-sm w-100" />
-                                    </div>
-                                </h:panelGroup>
-
-                                <h:panelGroup rendered="#{reservaBean.tolerantTotalAsientos > 0}">
-                                    <ui:repeat value="#{reservaBean.asientosSeleccionados.entrySet().toArray()}" var="entry">
-                                        <div class="mb-3">
-                                            <div class="small font-weight-bold text-primary mb-2">
-                                                <i class="pi pi-ticket me-1"></i> Vuelo: #{reservaBean.getVuelo(entry.key)}
-                                            </div>
-
-                                            <ui:repeat value="#{entry.value}" var="asiento">
-                                                <div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded" style="background:#11263f; border:1px solid #1e3a5c;">
-                                                    <div class="d-flex align-items-center">
-                                                        <span class="badge bg-primary me-2 font-weight-bold">#{asiento.numeroAsiento}</span>
-                                                        <span class="text-white-50 small">#{asiento.clase}</span>
-                                                    </div>
-                                                    <span class="text-white font-weight-bold">$#{asiento.precio}</span>
+                                <!-- TAB 1: ITINERARIO -->
+                                <p:tab title="Itinerario de Vuelo">
+                                    <ui:repeat value="#{reservaBean.itinerarios}" var="itinerario">
+                                        <div class="vuelo-segmento mb-3 p-2 rounded" style="background: rgba(15, 23, 42, 0.4);">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div>
+                                                    <span class="badge bg-primary me-2">#{itinerario.aeropuertoOrigen.codigoIata}</span>
+                                                    <span class="text-white font-weight-bold">#{itinerario.aeropuertoOrigen.ciudad.nombre}</span>
                                                 </div>
-                                            </ui:repeat>
+                                                <span class="text-white-50 font-weight-bold">
+                                                    <h:outputText value="#{itinerario.horaSalida}">
+                                                        <f:convertDateTime pattern="HH:mm" timeZone="America/Santiago" />
+                                                    </h:outputText>
+                                                </span>
+                                            </div>
+
+                                            <div class="d-flex align-items-center my-2 text-muted small">
+                                                <div style="flex:1; border-top:1px dashed #334155;"></div>
+                                                <span class="mx-2"><i class="pi pi-clock me-1"></i>#{itinerario.numeroEscalas == 0 ? 'Directo' : itinerario.numeroEscalas += ' Escala(s)'}</span>
+                                                <div style="flex:1; border-top:1px dashed #334155;"></div>
+                                            </div>
+
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <span class="badge bg-secondary me-2">#{itinerario.aeropuertoDestino.codigoIata}</span>
+                                                    <span class="text-white font-weight-bold">#{itinerario.aeropuertoDestino.ciudad.nombre}</span>
+                                                </div>
+                                                <span class="text-white-50 font-weight-bold">
+                                                    <h:outputText value="#{itinerario.horaLlegada}">
+                                                        <f:convertDateTime pattern="HH:mm" timeZone="America/Santiago" />
+                                                    </h:outputText>
+                                                </span>
+                                            </div>
                                         </div>
                                     </ui:repeat>
+                                </p:tab>
 
-                                    <!-- BOTÓN DE CAMBIO / MODIFICACIÓN DE ASIENTOS -->
-                                    <p:button value="Cambiar o Modificar Asientos"
-                                              href="#{request.contextPath}#{reservaBean.urlModificarAsientosVoluntario}"
-                                              icon="pi pi-pencil"
-                                              styleClass="ui-button-outlined ui-button-warning btn-sm w-100" />
-                                </h:panelGroup>
-                            </p:tab>
-                        </p:accordionPanel>
-
-                        <!-- EQUIPAJE -->
-                        <div class="p-3 mb-4 rounded" style="background: #0d172a; border: 1px solid #1e3a5c;">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="text-white font-weight-bold small"><i class="pi pi-briefcase me-2 text-info"></i>Resumen de Equipaje</span>
-                                <span class="badge bg-info">$#{reservaBean.totalEquipaje}</span>
-                            </div>
-
-                            <h:panelGroup rendered="#{not reservaBean.tieneEquipajeAsignado}">
-                                <p class="text-muted small m-0 font-italic">Sin equipaje adicional seleccionado.</p>
-                            </h:panelGroup>
-
-                            <h:panelGroup rendered="#{reservaBean.tieneEquipajeAsignado}">
-                                <ui:repeat value="#{reservaBean.equipajePorPasajero}" var="eqPasajero">
-                                    <h:panelGroup rendered="#{not empty eqPasajero.maletas}">
-                                        <div class="small text-white-50 border-top border-secondary pt-2 mt-2">
-                                            <strong class="text-white">#{eqPasajero.nombrePasajero}:</strong>
-                                            <ui:repeat value="#{eqPasajero.maletas}" var="item">
-                                                <div class="d-flex justify-content-between">
-                                                    <span>- #{item.descripcion}</span>
-                                                    <span class="text-white">$#{item.precio}</span>
-                                                </div>
-                                            </ui:repeat>
+                                <!-- TAB 2: ASIENTOS -->
+                                <p:tab title="Asientos (#{reservaBean.tolerantTotalAsientos})">
+                                    <h:panelGroup rendered="#{reservaBean.tolerantTotalAsientos == 0}">
+                                        <div class="text-center py-4 px-2">
+                                            <p class="text-muted small mb-3">No has asignado asientos para tus vuelos.</p>
+                                            <p:button value="Seleccionar Asientos"
+                                                      href="#{request.contextPath}#{reservaBean.urlRetornoAsientos}"
+                                                      icon="pi pi-plus"
+                                                      styleClass="ui-button-outlined ui-button-info btn-sm w-100" />
                                         </div>
                                     </h:panelGroup>
-                                </ui:repeat>
-                            </h:panelGroup>
-                        </div>
 
-                        <!-- DESGLOSE DE PRECIOS -->
-                        <div class="price-breakdown mb-4">
-                            <div class="d-flex justify-content-between mb-2 small">
-                                <span class="text-muted">Valor de tarifa base</span>
-                                <span class="text-white">$#{reservaBean.total}</span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-3 small">
-                                <span class="text-muted">Tasas e impuestos</span>
-                                <span class="text-success font-weight-bold">INCLUIDOS</span>
+                                    <h:panelGroup rendered="#{reservaBean.tolerantTotalAsientos > 0}">
+                                        <ui:repeat value="#{reservaBean.asientosSeleccionados.entrySet().toArray()}" var="entry">
+                                            <div class="mb-3">
+                                                <div class="small font-weight-bold text-primary mb-2">
+                                                    <i class="pi pi-ticket me-1"></i> Vuelo: #{reservaBean.getVuelo(entry.key)}
+                                                </div>
+
+                                                <ui:repeat value="#{entry.value}" var="asiento">
+                                                    <div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded" style="background:#11263f; border:1px solid #1e3a5c;">
+                                                        <div class="d-flex align-items-center">
+                                                            <span class="badge bg-primary me-2 font-weight-bold">#{asiento.numeroAsiento}</span>
+                                                            <span class="text-white-50 small">#{asiento.clase}</span>
+                                                        </div>
+                                                        <span class="text-white font-weight-bold">$#{asiento.precio}</span>
+                                                    </div>
+                                                </ui:repeat>
+                                            </div>
+                                        </ui:repeat>
+
+                                        <!-- BOTÓN DE CAMBIO / MODIFICACIÓN DE ASIENTOS -->
+                                        <p:button value="Cambiar o Modificar Asientos"
+                                                  href="#{request.contextPath}#{reservaBean.urlModificarAsientosVoluntario}"
+                                                  icon="pi pi-pencil"
+                                                  styleClass="ui-button-outlined ui-button-warning btn-sm w-100" />
+                                    </h:panelGroup>
+                                </p:tab>
+                            </p:accordionPanel>
+
+                            <!-- EQUIPAJE -->
+                            <div class="p-3 mb-4 rounded" style="background: #0d172a; border: 1px solid #1e3a5c;">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-white font-weight-bold small"><i class="pi pi-briefcase me-2 text-info"></i>Resumen de Equipaje</span>
+                                    <span class="badge bg-info">$#{reservaBean.totalEquipaje}</span>
+                                </div>
+
+                                <h:panelGroup rendered="#{not reservaBean.tieneEquipajeAsignado}">
+                                    <p class="text-muted small m-0 font-italic">Sin equipaje adicional seleccionado.</p>
+                                </h:panelGroup>
+
+                                <h:panelGroup rendered="#{reservaBean.tieneEquipajeAsignado}">
+                                    <ui:repeat value="#{reservaBean.equipajePorPasajero}" var="eqPasajero">
+                                        <h:panelGroup rendered="#{not empty eqPasajero.maletas}">
+                                            <div class="small text-white-50 border-top border-secondary pt-2 mt-2">
+                                                <strong class="text-white">#{eqPasajero.nombrePasajero}:</strong>
+                                                <ui:repeat value="#{eqPasajero.maletas}" var="item">
+                                                    <div class="d-flex justify-content-between">
+                                                        <span>- #{item.descripcion}</span>
+                                                        <span class="text-white">$#{item.precio}</span>
+                                                    </div>
+                                                </ui:repeat>
+                                            </div>
+                                        </h:panelGroup>
+                                    </ui:repeat>
+                                </h:panelGroup>
                             </div>
 
-                            <div class="total-box-corporate">
-                                <div class="total-title">PRECIO FINAL</div>
-                                <div class="total-amount">
-                                    <h:outputText value="#{reservaBean.total}">
-                                        <f:convertNumber type="currency" currencySymbol="$" maxFractionDigits="0" />
-                                    </h:outputText>
+                            <!-- DESGLOSE DE PRECIOS -->
+                            <div class="price-breakdown mb-4">
+                                <div class="d-flex justify-content-between mb-2 small">
+                                    <span class="text-muted">Valor de tarifa base</span>
+                                    <span class="text-white">$#{reservaBean.total}</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-3 small">
+                                    <span class="text-muted">Tasas e impuestos</span>
+                                    <span class="text-success font-weight-bold">INCLUIDOS</span>
+                                </div>
+
+                                <div class="total-box-corporate">
+                                    <div class="total-title">PRECIO FINAL</div>
+                                    <div class="total-amount">
+                                        <h:outputText value="#{reservaBean.total}">
+                                            <f:convertNumber type="currency" currencySymbol="$" maxFractionDigits="0" />
+                                        </h:outputText>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- MÉTODO DE PAGO Y CONFIRMACIÓN -->
-                        <h:form id="formPago">
+                            <!-- MÉTODO DE PAGO Y CONFIRMACIÓN -->
                             <div class="p-3 mb-3 rounded" style="background: #0d172a; border: 1px solid #1e3a5c;">
                                 <h6 class="text-white font-weight-bold mb-3">
                                     <i class="pi pi-credit-card me-2 text-primary"></i>Método de Pago
@@ -584,7 +588,7 @@
                                 <div class="d-flex flex-column gap-2">
                                     <ui:repeat value="#{reservaBean.opcionesPago}" var="opcion" varStatus="status">
                                         <div class="pago-option-card d-flex align-items-center">
-                                            <p:radioButton id="optRadio" for=":formPago:customRadio" itemIndex="#{status.index}" />
+                                            <p:radioButton id="optRadio" for=":bookingForm:customRadio" itemIndex="#{status.index}" />
                                             <h:outputLabel for="optRadio" styleClass="ms-2 mb-0 d-flex align-items-center cursor-pointer text-white w-100 small">
                                                 <h:graphicImage library="assets"
                                                                 name="#{opcion.imageName}"
@@ -598,27 +602,28 @@
                                 </div>
                             </div>
 
+                            <!-- BOTÓN DE PAGO UNIFICADO CON PROCESAMIENTO TOTAL DEL FORMULARIO -->
                             <p:commandButton value="Proceder al Pago"
                                              actionListener="#{reservaBean.confirmarReserva()}"
+                                             process="@form"
                                              styleClass="btn-pay-action w-100"
                                              update=":growl @form" />
-                        </h:form>
 
-                        <div class="text-center mt-3 text-muted small d-flex align-items-center justify-content-center gap-2">
-                            <i class="pi pi-lock text-success"></i>
-                            <span>Transacción segura y encriptada SSL</span>
+                            <div class="text-center mt-3 text-muted small d-flex align-items-center justify-content-center gap-2">
+                                <i class="pi pi-lock text-success"></i>
+                                <span>Transacción segura y encriptada SSL</span>
+                            </div>
+
                         </div>
-
                     </div>
                 </div>
-            </div>
+            </h:form>
         </div>
 
         <script type="text/javascript">
             //<![CDATA[
             (function () {
                 let timerInterval = null;
-                // Evaluación directa desde Java para saber si realmente hay asientos bajo retención
                 const tieneAsientosSeleccionados = #{reservaBean.tolerantTotalAsientos > 0};
                 const urlRetorno = "#{request.contextPath}#{reservaBean.urlRetornoAsientos}";
 
@@ -627,11 +632,9 @@
                         notificarExpiracionCliente();
                     }
 
-                    // Si NO seleccionó asientos, no mostramos el pop-up de asientos liberados; redirigimos automáticamente
                     if (!tieneAsientosSeleccionados) {
                         window.location.href = urlRetorno;
                     } else if (window.PF && PF('expiredDlg')) {
-                        // Si SÍ tenía asientos retenidos, mostramos el modal informativo
                         PF('expiredDlg').show();
                     }
                 }
@@ -667,7 +670,6 @@
                 document.addEventListener("DOMContentLoaded", function () {
                     const tiempoRestanteServer = #{reservaBean.tiempoRestanteSegundos};
 
-                    // Si el servidor indica que el tiempo ya expiró o es 0 desde el inicio
                     if (tiempoRestanteServer <= 0) {
                         manejarExpiracion();
                         return;
