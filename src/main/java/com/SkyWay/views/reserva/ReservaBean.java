@@ -52,8 +52,8 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Named("reservaBean")
-@RequestScoped
-//@ViewScoped
+//@RequestScoped
+@ViewScoped
 public class ReservaBean implements Serializable {
 
     //private ClienteDTO cliente;
@@ -163,16 +163,29 @@ public class ReservaBean implements Serializable {
 
 
         // 4. Reconstrucción de la lista de Pasajeros de la Reserva
+        // 4. Reconstrucción de la lista de Pasajeros de la Reserva
         pasajerosList = new ArrayList<>();
         if (usuario != null) {
             this.pasajero = pasajeroService.findById(usuario.getRut()).orElse(new Pasajero());
+
+            if (this.pasajero.getUsuario() == null) {
+                this.pasajero.setUsuario(usuario);
+            }
+
+            if (this.pasajero.getTipoDocumento() == null || this.pasajero.getTipoDocumento().isBlank()) {
+                this.pasajero.setTipoDocumento("CEDULA");
+            }
+            if (this.pasajero.getNumeroDocumento() == null || this.pasajero.getNumeroDocumento().isBlank()) {
+                this.pasajero.setNumeroDocumento(usuario.getDocumentoIdentidad() != null ? usuario.getDocumentoIdentidad() : usuario.getRut());
+            }
+
             if (pasajeros != null) {
                 for (int i = 0; i < pasajeros.size(); i++) {
                     if (i == 0) {
                         pasajerosList.add(this.pasajero);
                     } else {
                         Pasajero p = new Pasajero();
-                        p.setUsuario(new Usuario());
+                        p.setUsuario(new Usuario()); // 👈 Usuario explícito e independiente
                         pasajerosList.add(p);
                     }
                 }
@@ -180,7 +193,7 @@ public class ReservaBean implements Serializable {
         } else if (pasajeros != null) {
             for (ReservaAsientoBean.Pasajero p1 : pasajeros) {
                 Pasajero p = new Pasajero();
-                p.setUsuario(new Usuario());
+                p.setUsuario(new Usuario()); // 👈 Usuario explícito e independiente
                 pasajerosList.add(p);
             }
         }
@@ -245,6 +258,31 @@ public class ReservaBean implements Serializable {
         miSessionId = (String) FacesContext.getCurrentInstance().getExternalContext()
                 .getSessionMap().get("reservaSessionId");
 
+        Logger.logInfo("============ 🔍 DETALLE DE PASAJEROS EN SUBMIT ============");
+        Logger.logInfo("Total Pasajeros en Lista: " + (pasajerosList != null ? pasajerosList.size() : "NULL"));
+
+        if (pasajerosList != null) {
+            for (int i = 0; i < pasajerosList.size(); i++) {
+                Pasajero p = pasajerosList.get(i);
+                Usuario u = p != null ? p.getUsuario() : null;
+
+                Logger.logInfo(String.format("📋 [Pasajero %d]", i + 1));
+                Logger.logInfo(String.format("   - RUT Pasajero: '%s'", p != null ? p.getRut() : "NULL"));
+                Logger.logInfo(String.format("   - Tipo Doc: '%s' | N° Doc: '%s' | Nacionalidad: '%s'",
+                        p != null ? p.getTipoDocumento() : "NULL",
+                        p != null ? p.getNumeroDocumento() : "NULL",
+                        p != null ? p.getNacionalidad() : "NULL"));
+
+                if (u != null) {
+                    Logger.logInfo(String.format("   - Usuario -> Nombre: '%s' | Apellido: '%s' | Correo: '%s' | Tel: '%s' | DocId: '%s' | F.Nac: '%s'",
+                            u.getNombre(), u.getApellido(), u.getCorreoElectronico(), u.getTelefono(), u.getDocumentoIdentidad(), u.getFechaNacimiento()));
+                } else {
+                    Logger.logInfo("   - Usuario: NULL");
+                }
+            }
+        }
+        Logger.logInfo("==========================================================");
+
         // 1. VALIDACIÓN EN CACHÉ (TTL)
         for (Map.Entry<Integer, List<InfoAsientoDTO>> entry : asientosSeleccionados.entrySet()) {
             Integer idVuelo = entry.getKey();
@@ -258,16 +296,30 @@ public class ReservaBean implements Serializable {
             }
         }
 
-        /*for (Pasajero pasajero : pasajerosList) {
-            if (pasajero.getRut() == null || pasajero.getRut().isBlank() ||
-                    pasajero.getUsuario() == null || pasajero.getUsuario().getNombre() == null || pasajero.getUsuario().getNombre().isBlank()) {
-                addMessage(FacesMessage.SEVERITY_WARN, "Formulario Incompleto",
-                        "Por favor, complete todos los campos obligatorios de cada pasajero.");
+        // 2. VALIDACIÓN DE CAMPOS DE PASAJEROS
+        for (int i = 0; i < pasajerosList.size(); i++) {
+            Pasajero p = pasajerosList.get(i);
+            int numPasajero = i + 1;
+
+            if (p.getRut() == null || p.getRut().isBlank()) {
+                addMessage(FacesMessage.SEVERITY_WARN, "Campo Requerido", "Pasajero " + numPasajero + ": Falta el RUT.");
                 return;
             }
-        }*/
+            if (p.getUsuario() == null || p.getUsuario().getNombre() == null || p.getUsuario().getNombre().isBlank()) {
+                addMessage(FacesMessage.SEVERITY_WARN, "Campo Requerido", "Pasajero " + numPasajero + ": Falta el Nombre.");
+                return;
+            }
+            if (p.getTipoDocumento() == null || p.getTipoDocumento().isBlank()) {
+                addMessage(FacesMessage.SEVERITY_WARN, "Campo Requerido", "Pasajero " + numPasajero + ": Debe seleccionar el Tipo de Documento.");
+                return;
+            }
+            if (p.getNumeroDocumento() == null || p.getNumeroDocumento().isBlank()) {
+                addMessage(FacesMessage.SEVERITY_WARN, "Campo Requerido", "Pasajero " + numPasajero + ": Falta el Número de Documento.");
+                return;
+            }
+        }
 
-        // 2. VERIFICACIÓN DE DISPONIBILIDAD EN BD
+        // 3. VERIFICACIÓN DE DISPONIBILIDAD EN BD
         for (Map.Entry<Integer, List<InfoAsientoDTO>> entry : asientosSeleccionados.entrySet()) {
             Integer idVuelo = entry.getKey();
             for (InfoAsientoDTO asiento : entry.getValue()) {
@@ -286,8 +338,7 @@ public class ReservaBean implements Serializable {
             }
         }
 
-        // 3. PERSISTIR EN SESIÓN Y PAGAR
-        // 3. PERSISTIR EN SESIÓN Y PAGAR
+        // 4. PERSISTIR EN SESIÓN Y PAGAR
         SolicitudReservaDTO dto = new SolicitudReservaDTO(
                 this.usuario != null ? this.usuario.getRut() : null,
                 this.pasajerosList,
@@ -298,12 +349,12 @@ public class ReservaBean implements Serializable {
                 this.miSessionId
         );
 
-        // 3. Dejar el DTO en la HttpSession nativa
         FacesContext.getCurrentInstance().getExternalContext()
                 .getSessionMap().put("SOLICITUD_RESERVA_PENDIENTE", dto);
 
         pagar();
     }
+
     public void addMessage(FacesMessage.Severity severity, String summary, String detail) {
         FacesContext.getCurrentInstance().
                 addMessage(null, new FacesMessage(severity, summary, detail));
