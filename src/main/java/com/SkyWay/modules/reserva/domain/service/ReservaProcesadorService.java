@@ -1,7 +1,6 @@
 package com.SkyWay.modules.reserva.domain.service;
 
 import com.SkyWay.modules.reserva.presentation.dto.SolicitudReservaDTO;
-import com.SkyWay.views.reserva.EquipajePasajeroDTO;
 import com.SkyWay.modules.asiento.presentation.dto.InfoAsientoDTO;
 import com.SkyWay.modules.equipaje.domain.model.Equipaje;
 import com.SkyWay.modules.equipaje.domain.service.EquipajeService;
@@ -57,40 +56,51 @@ public class ReservaProcesadorService {
         }
 
         // -----------------------------------------------------------------------------------------
-        // 1. REGISTRO Y AUDITORÍA DE PASAJEROS
+        // 1. REGISTRO Y AUDITORÍA DE PASAJEROS (NORMALIZACIÓN Y PERSISTENCIA)
         // -----------------------------------------------------------------------------------------
-        Logger.logInfo("🔍 --- PASO 1: VERIFICANDO Y GUARDANDO PASAJEROS ---");
+        Logger.logInfo("🔍 --- PASO 1: VERIFICANDO Y ACTUALIZANDO PASAJEROS ---");
+        List<Pasajero> pasajerosPersistidos = new ArrayList<>();
+
         for (int i = 0; i < pasajerosList.size(); i++) {
             Pasajero p = pasajerosList.get(i);
-            Usuario usr = p.getUsuario() != null ? p.getUsuario() : new Usuario();
-            String nombreCompleto = usr.getNombre() + " " + usr.getApellido();
 
-            Logger.logInfo(String.format("👤 [PASAJERO %d/%d] RUT: '%s' | Nombre: '%s' | Correo: '%s'",
+            // Normalizar identificador si viene nulo/vacío utilizando el número de documento
+            if ((p.getRut() == null || p.getRut().isBlank()) && p.getNumeroDocumento() != null) {
+                p.setRut(p.getNumeroDocumento().trim());
+            }
+
+            Usuario usr = p.getUsuario() != null ? p.getUsuario() : new Usuario();
+            if (usr.getDocumentoIdentidad() == null || usr.getDocumentoIdentidad().isBlank()) {
+                usr.setDocumentoIdentidad(p.getNumeroDocumento());
+            }
+            usr.setRut(p.getRut());
+            p.setUsuario(usr);
+
+            String nombreCompleto = usr.getNombre() + " " + usr.getApellido();
+            Logger.logInfo(String.format("👤 [PASAJERO %d/%d] RUT/ID: '%s' | Nombre: '%s' | Correo: '%s'",
                     i + 1, pasajerosList.size(), p.getRut(), nombreCompleto, usr.getCorreoElectronico()));
 
+            // Vincular DTO de equipaje con el identificador del pasajero
             if (dto.equipajePorPasajero() != null && i < dto.equipajePorPasajero().size()) {
                 dto.equipajePorPasajero().get(i).setRutPasajero(p.getRut());
                 Logger.logInfo(String.format("   🎒 Equipaje vinculado al RUT: '%s' (Índice %d)", p.getRut(), i));
             }
 
-            usr.setRut(p.getRut());
-            p.setUsuario(usr);
-
-            boolean existe = pasajeroService.findById(p.getRut()).isPresent();
-            if (!existe) {
-                pasajeroService.save(p);
-                Logger.logInfo(String.format("   ✅ [BD] Pasajero NUEVO guardado exitosamente en BD -> RUT: '%s'", p.getRut()));
-            } else {
-                Logger.logInfo(String.format("   ℹ️ [BD] Pasajero ya existía previamente en la base de datos -> RUT: '%s'", p.getRut()));
-            }
+            // Persistir o actualizar según disponibilidad en BD
+            Pasajero pasajeroGuardado = pasajeroService.save(p);
+            pasajerosPersistidos.add(pasajeroGuardado);
+            Logger.logInfo(String.format("   ✅ [BD] Pasajero procesado en BD -> RUT: '%s'", pasajeroGuardado.getRut()));
         }
+
+        // Forzar sincronización con la base de datos para asegurar integridad de FKs
+        entityManager.flush();
 
         // -----------------------------------------------------------------------------------------
         // 2. CREACIÓN DEL ENCABEZADO DE LA RESERVA (ASIGNACIÓN DE TITULAR)
         // -----------------------------------------------------------------------------------------
         Logger.logInfo("📄 --- PASO 2: CREANDO ENCABEZADO DE RESERVA ---");
         Reserva reserva = new Reserva();
-        Pasajero titular = pasajerosList.get(0);
+        Pasajero titular = pasajerosPersistidos.get(0);
 
         Logger.logInfo(String.format("👑 [TITULAR RESERVA] Asignando Pasajero Principal (Titular) -> RUT: '%s', Nombre: '%s %s'",
                 titular.getRut(),
@@ -107,7 +117,7 @@ public class ReservaProcesadorService {
         reserva.setFechaReserva(new Timestamp(System.currentTimeMillis()));
 
         Reserva reservaGuardada = reservaService.save(reserva);
-        entityManager.flush();
+        entityManager.flush(); // Garantiza la generación del ID_RESERVA antes de los queries nativos
 
         Integer idReservaGenerado = reservaGuardada.getIdReserva();
         Logger.logInfo(String.format("💾 [BD] Encabezado 'Reserva' creado Exitosamente. ID_RESERVA: %d | Titular RUT: '%s'",
@@ -126,8 +136,8 @@ public class ReservaProcesadorService {
                     InfoAsientoDTO asiento = asientos.get(idx);
                     Integer[] asientosIds = { asiento.getIdAsiento() };
 
-                    // Búsqueda / Asignación del RUT de pasajero correspondiente
-                    String rutPasajeroAsignado = buscarRutPorAsiento(pasajerosList, idx, asiento.getIdAsiento());
+                    // Mapeo seguro del RUT por índice de pasajero
+                    String rutPasajeroAsignado = buscarRutPorAsiento(pasajerosPersistidos, idx, asiento.getIdAsiento());
 
                     try {
                         Logger.logInfo(String.format("   👉 Asiento ID: %d ('%s') -> Se asignará al Pasajero RUT: '%s' | Reserva ID: %d",
@@ -212,9 +222,6 @@ public class ReservaProcesadorService {
         return idReservaGenerado;
     }
 
-    /**
-     * Mapea un asiento a su pasajero correspondiente por índice de lista o fallback.
-     */
     private String buscarRutPorAsiento(List<Pasajero> pasajeros, int indiceAsiento, int idAsiento) {
         if (pasajeros == null || pasajeros.isEmpty()) {
             Logger.logWarn("⚠️ Lista de pasajeros vacía al mapear asiento ID: " + idAsiento);
@@ -228,7 +235,6 @@ public class ReservaProcesadorService {
             return rutEncontrado;
         }
 
-        // Fallback al primer pasajero (Titular) si el índice excede la lista
         String rutFallback = pasajeros.get(0).getRut();
         Logger.logWarn(String.format("   ⚠️ Índice de asiento [%d] fuera de rango. Usando Fallback (Titular) RUT: '%s' para Asiento ID %d",
                 indiceAsiento, rutFallback, idAsiento));

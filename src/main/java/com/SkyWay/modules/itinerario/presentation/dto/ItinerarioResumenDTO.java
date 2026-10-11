@@ -1,6 +1,5 @@
 package com.SkyWay.modules.itinerario.presentation.dto;
 
-
 import jakarta.persistence.ColumnResult;
 import jakarta.persistence.ConstructorResult;
 import jakarta.persistence.SqlResultSetMapping;
@@ -15,38 +14,42 @@ import java.util.Date;
                         @ColumnResult(name = "id_itinerario", type = Integer.class),
                         @ColumnResult(name = "codigo_iata_origen", type = String.class),
                         @ColumnResult(name = "codigo_iata_destino", type = String.class),
-                        @ColumnResult(name = "hora_salida", type = java.sql.Timestamp.class)
+                        @ColumnResult(name = "hora_salida", type = java.sql.Timestamp.class),
+                        @ColumnResult(name = "id_reserva", type = Integer.class),
+                        @ColumnResult(name = "hora_llegada", type = java.sql.Timestamp.class)
                 }
         )
 )
-
 public class ItinerarioResumenDTO {
 
-    private int idItinerario;
+    private Integer idItinerario;
     private String codigoIataOrigen;
     private String codigoIataDestino;
     private Date horaSalida;
-    private int idReserva;
+    private Integer idReserva;
+    private Date horaLlegada;
 
-    public ItinerarioResumenDTO(int idItinerario, String codigoIataOrigen, String codigoIataDestino, Date horaSalida, int idReserva) {
+    // Constructor completo
+    public ItinerarioResumenDTO(Integer idItinerario, String codigoIataOrigen, String codigoIataDestino, Date horaSalida, Integer idReserva, Date horaLlegada) {
         this.idItinerario = idItinerario;
         this.codigoIataOrigen = codigoIataOrigen;
         this.codigoIataDestino = codigoIataDestino;
         this.horaSalida = horaSalida;
         this.idReserva = idReserva;
+        this.horaLlegada = horaLlegada;
     }
 
-    // Getters y setters
-
+    // Constructor alternativo (compatibilidad de 5 parámetros)
+    public ItinerarioResumenDTO(Integer idItinerario, String codigoIataOrigen, String codigoIataDestino, Date horaSalida, Integer idReserva) {
+        this(idItinerario, codigoIataOrigen, codigoIataDestino, horaSalida, idReserva, null);
+    }
 
     // Getters y Setters
-
-
-    public int getIdItinerario() {
+    public Integer getIdItinerario() {
         return idItinerario;
     }
 
-    public void setIdItinerario(int idItinerario) {
+    public void setIdItinerario(Integer idItinerario) {
         this.idItinerario = idItinerario;
     }
 
@@ -74,22 +77,31 @@ public class ItinerarioResumenDTO {
         this.horaSalida = horaSalida;
     }
 
-    public int getIdReserva() {
+    public Integer getIdReserva() {
         return idReserva;
     }
 
-    public void setIdReserva(int idReserva) {
+    public void setIdReserva(Integer idReserva) {
         this.idReserva = idReserva;
+    }
+
+    public Date getHoraLlegada() {
+        return horaLlegada;
+    }
+
+    public void setHoraLlegada(Date horaLlegada) {
+        this.horaLlegada = horaLlegada;
     }
 
     @Override
     public String toString() {
-        final StringBuffer sb = new StringBuffer("ItinerarioResumenDTO{");
-        sb.append("idItinerario=").append(idItinerario);
-        sb.append(", codigoIataOrigen='").append(codigoIataOrigen).append('\'');
-        sb.append(", codigoIataDestino='").append(codigoIataDestino).append('\'');
-        sb.append(", horaSalida=").append(horaSalida);
-        sb.append('}');
-        return sb.toString();
+        return "ItinerarioResumenDTO{" +
+                "idItinerario=" + idItinerario +
+                ", codigoIataOrigen='" + codigoIataOrigen + '\'' +
+                ", codigoIataDestino='" + codigoIataDestino + '\'' +
+                ", horaSalida=" + horaSalida +
+                ", idReserva=" + idReserva +
+                ", horaLlegada=" + horaLlegada +
+                '}';
     }
 }

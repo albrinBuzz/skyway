@@ -83,6 +83,7 @@ public class ItinerarioServiceImpl implements ItinerarioService {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public List<ItinerarioResumenDTO> buscarConFiltroFechas(String rut, LocalDate fechaInicio, LocalDate fechaFin, int limit, int offset) {
         Timestamp tsInicio = null;
         Timestamp tsFin = null;
@@ -96,17 +97,16 @@ public class ItinerarioServiceImpl implements ItinerarioService {
 
         String sql = "SELECT * FROM fn_getItinerariosPorRutYFechas(:rut, :limit, :offset, :fechaIni, :fechaFin)";
 
-        Query query = entityManager.createNativeQuery(sql, ItinerarioResumenDTO.class);
+        // Se pasa la cadena del ResultSetMapping registrado en el DTO
+        Query query = entityManager.createNativeQuery(sql, "ItinerarioResumenDTOMapping");
         query.setParameter("rut", rut);
         query.setParameter("limit", limit);
         query.setParameter("offset", offset);
-        query.setParameter("fechaIni", tsInicio); // tipo java.sql.Timestamp
-        query.setParameter("fechaFin", tsFin);    // tipo java.sql.Timestamp
+        query.setParameter("fechaIni", tsInicio);
+        query.setParameter("fechaFin", tsFin);
 
         return (List<ItinerarioResumenDTO>) query.getResultList();
-        //return itinerarioRepository.buscarConFiltroFechas(rut, tsInicio, tsFin, limit, offset);
     }
-
 
     @Override
     public void deleteById(Integer id) {
