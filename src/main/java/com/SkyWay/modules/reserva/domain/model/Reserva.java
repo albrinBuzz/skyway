@@ -31,7 +31,12 @@ public class Reserva implements Serializable {
 	private Integer idReserva;
 
 	@Column(name="fecha_reserva")
+
 	private Timestamp fechaReserva;
+
+
+	@Column(name="CODIGO_RESERVA", length = 50, unique = true)
+	private String codigoReserva;
 
 	private BigDecimal total;
 
@@ -82,6 +87,14 @@ public class Reserva implements Serializable {
 
 	public void setFechaReserva(Timestamp fechaReserva) {
 		this.fechaReserva = fechaReserva;
+	}
+
+	public void setCodigoReserva(String codigoReserva) {
+		this.codigoReserva = codigoReserva;
+	}
+
+	public String getCodigoReserva() {
+		return codigoReserva;
 	}
 
 	public BigDecimal getTotal() {
@@ -220,11 +233,11 @@ public class Reserva implements Serializable {
 
 	@Override
 	public String toString() {
-		final StringBuffer sb = new StringBuffer("Reserva{");
-		sb.append("idReserva=").append(idReserva);
-		sb.append(", fechaReserva=").append(fechaReserva);
-		sb.append(", total=").append(total);
-		sb.append('}');
-		return sb.toString();
+		return "Reserva{" +
+				"idReserva=" + idReserva +
+				", fechaReserva=" + fechaReserva +
+				", codigoReserva='" + codigoReserva + '\'' +
+				", total=" + total +
+				'}';
 	}
 }

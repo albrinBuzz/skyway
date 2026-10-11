@@ -180,3 +180,176 @@ VALUES (v_id_rol, p_rut)
     ON CONFLICT (id_rol, rut_usuario) DO NOTHING;
 END;
 $upsert_pasajero$;
+
+
+
+CREATE OR REPLACE PROCEDURE sp_upsertPasajero(
+    p_rut VARCHAR,
+    p_nombre VARCHAR,
+    p_apellido VARCHAR,
+    p_correo VARCHAR,
+    p_telefono VARCHAR,
+    p_documento VARCHAR,
+    p_fecha_nacimiento DATE,
+    p_contrasena VARCHAR,
+    p_tipo_documento VARCHAR DEFAULT 'CEDULA',
+    p_nacionalidad VARCHAR DEFAULT 'Chilena'
+)
+LANGUAGE plpgsql
+AS $upsert_pasajero$
+DECLARE
+v_id_rol INT;
+BEGIN
+    -- 1. Insertar o actualizar Usuario (Si fue creado como acompañante, actualiza datos y contraseña)
+INSERT INTO Usuario(RUT, Nombre, Apellido, Correo_Electronico, Telefono, Documento_Identidad, Fecha_Nacimiento, Contrasena, Fecha_Registro)
+VALUES (p_rut, p_nombre, p_apellido, p_correo, p_telefono, p_documento, p_fecha_nacimiento, p_contrasena, NOW())
+    ON CONFLICT (RUT)
+    DO UPDATE SET
+    Nombre = EXCLUDED.Nombre,
+               Apellido = EXCLUDED.Apellido,
+               Correo_Electronico = EXCLUDED.Correo_Electronico,
+               Telefono = EXCLUDED.Telefono,
+               Documento_Identidad = EXCLUDED.Documento_Identidad,
+               Fecha_Nacimiento = EXCLUDED.Fecha_Nacimiento,
+               Contrasena = EXCLUDED.Contrasena,
+               Fecha_Registro = NOW();
+
+-- 2. Insertar o actualizar Pasajero con su Tipo de Documento y Nacionalidad reales
+INSERT INTO Pasajero(RUT, Tipo_Documento, Numero_Documento, Fecha_Nacimiento, Nacionalidad)
+VALUES (p_rut, p_tipo_documento, p_documento, p_fecha_nacimiento, p_nacionalidad)
+    ON CONFLICT (RUT)
+    DO UPDATE SET
+    Tipo_Documento = EXCLUDED.Tipo_Documento,
+               Numero_Documento = EXCLUDED.Numero_Documento,
+               Fecha_Nacimiento = EXCLUDED.Fecha_Nacimiento,
+               Nacionalidad = EXCLUDED.Nacionalidad;
+
+-- 3. Asignar Rol de Pasajero
+SELECT id_rol INTO v_id_rol FROM Roles WHERE LOWER(nombre) = 'pasajero' LIMIT 1;
+
+IF v_id_rol IS NOT NULL THEN
+        INSERT INTO RolUsuario(id_rol, rut_usuario)
+        VALUES (v_id_rol, p_rut)
+        ON CONFLICT (id_rol, rut_usuario) DO NOTHING;
+END IF;
+END;
+$upsert_pasajero$;
+
+
+
+
+
+CREATE OR REPLACE PROCEDURE sp_cancelarReservaPasajero(
+    p_id_reserva INT,
+    p_rut_pasajero VARCHAR,
+    p_motivo VARCHAR DEFAULT 'Cancelación por usuario',
+    p_ip_usuario VARCHAR DEFAULT '127.0.0.1'
+)
+LANGUAGE plpgsql
+AS $sp_cancelar$
+DECLARE
+v_total_reserva DECIMAL(10,2);
+    v_id_estado_cancelado INT;
+    v_estado_actual INT;
+    v_id_cancelacion INT;
+    v_pasajeros_reserva TEXT := '';
+    v_asientos_count INT := 0;
+    r_asiento RECORD;
+    r_pasajero RECORD;
+BEGIN
+    -- 1. Obtención segura del ID de estado "Cancelada"
+BEGIN
+SELECT id_estado_reserva INTO v_id_estado_cancelado
+FROM estado_reserva
+WHERE LOWER(descripcion) LIKE '%cancelad%' OR LOWER(descripcion) LIKE '%anulad%'
+    LIMIT 1;
+EXCEPTION WHEN OTHERS THEN
+        v_id_estado_cancelado := NULL;
+END;
+
+    IF v_id_estado_cancelado IS NULL THEN
+        v_id_estado_cancelado := 3; -- ID numérico fallback
+END IF;
+
+    -- 2. Validar que la reserva exista y pertenezca al usuario/pasajero
+SELECT total, estado_reserva INTO v_total_reserva, v_estado_actual
+FROM reserva
+WHERE id_reserva = p_id_reserva
+  AND (rut_pasajero = p_rut_pasajero OR id_reserva IN (
+    SELECT pr.id_reserva FROM pasajero_reserva pr WHERE pr.rut = p_rut_pasajero
+));
+
+IF v_estado_actual IS NULL THEN
+        RAISE EXCEPTION 'La reserva N° % no existe o no corresponde al pasajero con RUT %.', p_id_reserva, p_rut_pasajero;
+    ELSIF v_estado_actual = v_id_estado_cancelado THEN
+        RAISE EXCEPTION 'La reserva N° % ya fue cancelada previamente.', p_id_reserva;
+END IF;
+
+    -- 3. Registrar la Cancelación en la tabla Dominio (MOTIVO LIMPIO)
+INSERT INTO cancelacion (id_reserva, fecha, motivo, estado, monto_reembolso)
+VALUES (
+           p_id_reserva,
+           NOW(),
+           p_motivo,
+           'Pendiente',
+           v_total_reserva
+       )
+    RETURNING id_cancelacion INTO v_id_cancelacion;
+
+-- 4. Copiar los asientos a la tabla específica CANCELACION_ASIENTO
+FOR r_asiento IN
+SELECT
+    ra.id_vuelo,
+    ra.id_asiento,
+    v.numero_vuelo,
+    a.numero_asiento,
+    ca.descripcion AS clase,
+    ra.rut AS rut_ocupante
+FROM reserva_asiento ra
+         JOIN asiento a ON a.id_asiento = ra.id_asiento
+         JOIN clase_asiento ca ON ca.id_clase = a.id_clase
+         JOIN vuelo v ON v.id_vuelo = ra.id_vuelo
+WHERE ra.id_reserva = p_id_reserva
+    LOOP
+INSERT INTO cancelacion_asiento (
+    id_cancelacion, id_vuelo, id_asiento, numero_vuelo, numero_asiento, clase_asiento, rut_pasajero
+) VALUES (
+    v_id_cancelacion, r_asiento.id_vuelo, r_asiento.id_asiento, r_asiento.numero_vuelo, r_asiento.numero_asiento, r_asiento.clase, r_asiento.rut_ocupante
+    );
+
+v_asientos_count := v_asientos_count + 1;
+END LOOP;
+
+    -- 5. Recopilar lista de pasajeros para el log transversal
+FOR r_pasajero IN
+SELECT DISTINCT pr.rut, u.nombre || ' ' || u.apellido AS nombre_completo
+FROM pasajero_reserva pr
+         JOIN usuario u ON u.rut = pr.rut
+WHERE pr.id_reserva = p_id_reserva
+    LOOP
+        v_pasajeros_reserva := v_pasajeros_reserva || FORMAT('%s (%s); ', r_pasajero.nombre_completo, r_pasajero.rut);
+END LOOP;
+
+    -- 6. Registrar en Log_Auditoria (Log Transversal / Evento Global)
+INSERT INTO log_auditoria (rut_usuario, accion, tabla_afectada, id_registro_afectado, detalle, direccion_ip)
+VALUES (
+           p_rut_pasajero,
+           'CANCELACION_RESERVA',
+           'reserva',
+           p_id_reserva,
+           FORMAT('CANCELACION EXITOSA | ID_CANCELACION: %s | RESERVA: %s | MONTO: $%s | ASIENTOS_LIBERADOS_CANTIDAD: %s | SOLICITANTE: %s',
+                  v_id_cancelacion, p_id_reserva, v_total_reserva, v_asientos_count, p_rut_pasajero),
+           p_ip_usuario
+       );
+
+-- 7. ELIMINAR físicamente de Reserva_Asiento para liberar la cabina
+DELETE FROM reserva_asiento
+WHERE id_reserva = p_id_reserva;
+
+-- 8. Actualizar estado de la Reserva
+UPDATE reserva
+SET estado_reserva = v_id_estado_cancelado
+WHERE id_reserva = p_id_reserva;
+
+END;
+$sp_cancelar$;

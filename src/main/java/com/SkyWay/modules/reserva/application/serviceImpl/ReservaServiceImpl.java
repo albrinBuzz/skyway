@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,8 +15,11 @@ import com.SkyWay.modules.reserva.domain.repository.ReservaRepository;
 import com.SkyWay.modules.reserva.domain.service.ReservaService;
 import com.SkyWay.modules.reserva.presentation.dto.TicketInfo;
 import com.SkyWay.util.Logger;
+import com.SkyWay.util.PnrGenerator;
+import jakarta.faces.context.FacesContext;
 import jakarta.persistence.*;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +36,8 @@ public class ReservaServiceImpl implements ReservaService {
 
 	@Autowired
 	private ReservaRepository reservaRepository;
+	@PersistenceContext
+	private EntityManager entityManager;
 
 	@PersistenceContext
 	private EntityManager em;
@@ -185,17 +191,17 @@ public class ReservaServiceImpl implements ReservaService {
 	}
 
 	@Override
-	public List<TicketInfo> getTicket(String rut, Integer idReserva,int idItinerario) {
-
+	@SuppressWarnings("unchecked")
+	public List<TicketInfo> getTicket(String rut, Integer idReserva, int idItinerario) {
 		Query query = em.createNativeQuery(
-				"SELECT * FROM fn_getTicket(:p_rut, :p_reserva, :p_idItinerario);",
+				"SELECT * FROM fn_getticket(:p_rut, :p_reserva, :p_idItinerario);",
 				TicketInfo.class);
+
 		query.setParameter("p_rut", rut);
 		query.setParameter("p_reserva", idReserva);
 		query.setParameter("p_idItinerario", idItinerario);
-		//asientos= query.getResultList();
 
-		return query.getResultList();
+		return (List<TicketInfo>) query.getResultList();
 	}
 
 	@Override
@@ -278,6 +284,250 @@ public class ReservaServiceImpl implements ReservaService {
 
 		}
 		return "Error desconocido";
+	}
+
+
+
+	@Override
+	@Transactional
+	public void cancelarReserva(Integer idReserva, String rutPasajero, String motivo) {
+		String ipUsuario = "127.0.0.1";
+		FacesContext fc = FacesContext.getCurrentInstance();
+		if (fc != null && fc.getExternalContext() != null) {
+			HttpServletRequest request = (HttpServletRequest) fc.getExternalContext().getRequest();
+			if (request != null) {
+				ipUsuario = request.getRemoteAddr();
+			}
+		}
+
+		StoredProcedureQuery query = em.createStoredProcedureQuery("sp_cancelarReservaPasajero");
+		query.registerStoredProcedureParameter(1, Integer.class, ParameterMode.IN);
+		query.registerStoredProcedureParameter(2, String.class, ParameterMode.IN);
+		query.registerStoredProcedureParameter(3, String.class, ParameterMode.IN);
+		query.registerStoredProcedureParameter(4, String.class, ParameterMode.IN);
+
+		query.setParameter(1, idReserva);
+		query.setParameter(2, rutPasajero);
+		query.setParameter(3, motivo != null && !motivo.isBlank() ? motivo : "Cancelación voluntaria por el pasajero desde la web.");
+		query.setParameter(4, ipUsuario);
+
+		query.execute();
+	}
+
+
+	@Override
+	@Transactional
+	public void procesarCheckInWeb(Integer idReserva, Integer idItinerario) {
+		if (idReserva == null) {
+			throw new IllegalArgumentException("El ID de reserva no puede ser nulo.");
+		}
+
+		try {
+			// Inserción en la tabla Checkin utilizando la secuencia checkin_seq y la tabla de PostgreSQL
+			Query query = em.createNativeQuery(
+					"INSERT INTO checkin (id_reserva, fecha_hora, metodo, estado, codigo_boarding_pass) " +
+							"VALUES (:p_reserva, NOW(), 'Web', 'COMPLETADO', :p_code)"
+			);
+
+			String boardingPassCode = "BP-SW-" + idReserva + "-" + System.currentTimeMillis();
+
+			query.setParameter("p_reserva", idReserva);
+			query.setParameter("p_code", boardingPassCode);
+
+			query.executeUpdate();
+			Logger.logInfo("Check-In Web registrado con éxito para la reserva N°: " + idReserva);
+
+		} catch (Exception e) {
+			Logger.logError("Error al registrar Check-In Web: " + e.getMessage());
+			throw new RuntimeException("Error al procesar el Check-In Web en la base de datos.", e);
+		}
+	}
+
+
+
+	@Override
+	@Transactional(readOnly = true)
+	public Integer buscarIdPorCodigo(String codigoReserva) {
+		if (codigoReserva == null || codigoReserva.isBlank()) {
+			return null;
+		}
+
+		String codigoLimpio = codigoReserva.trim();
+
+		// 1. PRIORIDAD ALTA: Búsqueda exacta por código PNR (ej: "SKW-000002")
+		try {
+			List<Integer> resultados = entityManager.createQuery(
+							"SELECT r.idReserva FROM Reserva r WHERE UPPER(r.codigoReserva) = :codigo", Integer.class)
+					.setParameter("codigo", codigoLimpio.toUpperCase())
+					.setMaxResults(1)
+					.getResultList();
+
+			if (!resultados.isEmpty()) {
+				return resultados.get(0);
+			}
+		} catch (Exception e) {
+			Logger.logWarn("Error buscando por codigoReserva PNR: " + e.getMessage());
+		}
+
+		// 2. PRIORIDAD MEDIA: Si el usuario ingresó únicamente un ID numérico (ej: "2")
+		try {
+			Integer id = Integer.parseInt(codigoLimpio);
+			Long count = entityManager.createQuery(
+							"SELECT COUNT(r) FROM Reserva r WHERE r.idReserva = :id", Long.class)
+					.setParameter("id", id)
+					.getSingleResult();
+
+			if (count != null && count > 0) {
+				return id;
+			}
+		} catch (NumberFormatException ignored) {
+			// El valor no es numérico entero, continuamos a la búsqueda por RUT
+		}
+
+		// 3. PRIORIDAD FALLBACK: Búsqueda por RUT del Pasajero asociado
+		try {
+			List<Integer> resultadosRut = entityManager.createQuery(
+							"SELECT r.idReserva FROM Reserva r WHERE UPPER(r.pasajero.rut) = :rut ORDER BY r.fechaReserva DESC", Integer.class)
+					.setParameter("rut", codigoLimpio.toUpperCase())
+					.setMaxResults(1)
+					.getResultList();
+
+			if (!resultadosRut.isEmpty()) {
+				return resultadosRut.get(0);
+			}
+		} catch (Exception e) {
+			Logger.logError("Error buscando ID de reserva por RUT: " + e.getMessage());
+		}
+
+		Logger.logWarn("No se encontró ninguna reserva para el código/ID/RUT: " + codigoLimpio);
+		return null;
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public Integer obtenerIdItinerarioPorReserva(Integer idReserva) {
+		if (idReserva == null) {
+			return null;
+		}
+
+		try {
+			// Mapeo directo: ri.reserva.idReserva -> ri.itinerario.idItinerario
+			List<Integer> resultados = entityManager.createQuery(
+							"SELECT ri.itinerario.idItinerario FROM ReservaItinerario ri WHERE ri.reserva.idReserva = :idReserva", Integer.class)
+					.setParameter("idReserva", idReserva)
+					.setMaxResults(1)
+					.getResultList();
+
+			return resultados.isEmpty() ? null : resultados.get(0);
+		} catch (Exception e) {
+			Logger.logError("Error obteniendo itinerario de la reserva N° " + idReserva + ": " + e.getMessage());
+			return null;
+		}
+	}
+
+	@Override
+	@Transactional
+	public Reserva guardarOGenerarPnr(Integer idReserva) {
+		if (idReserva == null) return null;
+
+		Reserva reserva = entityManager.find(Reserva.class, idReserva);
+		if (reserva != null) {
+			if (reserva.getCodigoReserva() == null || reserva.getCodigoReserva().isBlank()) {
+				String nuevoPnr;
+				Long existe;
+				// Garantizar unicidad en la base de datos
+				do {
+					nuevoPnr = PnrGenerator.generarPnr();
+					existe = entityManager.createQuery(
+									"SELECT COUNT(r) FROM Reserva r WHERE r.codigoReserva = :pnr", Long.class)
+							.setParameter("pnr", nuevoPnr)
+							.getSingleResult();
+				} while (existe != null && existe > 0);
+
+				reserva.setCodigoReserva(nuevoPnr);
+				reserva = entityManager.merge(reserva);
+			}
+		}
+
+		Logger.logInfo(reserva.toString());
+		return reserva;
+	}
+
+
+	@Override
+	@Transactional(readOnly = true)
+	public Integer buscarIdPorPnrYPasajero(String pnr, String apellidoRut) {
+		if (pnr == null || pnr.isBlank() || apellidoRut == null || apellidoRut.isBlank()) {
+			return null;
+		}
+
+		try {
+			List<Integer> resultados = entityManager.createQuery(
+							"SELECT r.idReserva FROM Reserva r " +
+									"WHERE UPPER(r.codigoReserva) = :pnr " +
+									"AND (UPPER(r.pasajero.rut) = :filtro OR UPPER(r.pasajero.usuario.apellido) = :filtro)", Integer.class)
+					.setParameter("pnr", pnr.trim().toUpperCase())
+					.setParameter("filtro", apellidoRut.trim().toUpperCase())
+					.setMaxResults(1)
+					.getResultList();
+
+			return resultados.isEmpty() ? null : resultados.get(0);
+		} catch (Exception e) {
+			Logger.logError("Error validando PNR y Pasajero: " + e.getMessage());
+			return null;
+		}
+	}
+
+
+
+	@Override
+	public Date obtenerFechaSalidaVuelo(Integer idItinerario) {
+		if (idItinerario == null) {
+			return null;
+		}
+
+		try {
+			// Consulta la hora de salida del primer vuelo/segmento asociado al itinerario
+			String jpql = "SELECT itv.vuelo.fechaHoraSalida " +
+					"FROM ItinerarioVuelo itv " +
+					"WHERE itv.itinerario.idItinerario = :idItinerario " +
+					"ORDER BY itv.vuelo.fechaHoraSalida ASC";
+
+			List<Date> resultados = em.createQuery(jpql, Date.class)
+					.setParameter("idItinerario", idItinerario)
+					.setMaxResults(1)
+					.getResultList();
+
+			if (!resultados.isEmpty()) {
+				return resultados.get(0);
+			}
+
+			// Fallback Native Query en caso de que ItinerarioVuelo use la entidad Vuelo/Segmento directamente
+			String nativeSql = "SELECT COALESCE(sgm.hora_salida, vl.fecha_hora_salida) " +
+					"FROM itinerario_vuelo itv " +
+					"JOIN vuelo vl ON vl.id_vuelo = itv.id_vuelo " +
+					"LEFT JOIN segmento_vuelo sgm ON sgm.id_vuelo = vl.id_vuelo " +
+					"WHERE itv.id_itinerario = :idItinerario " +
+					"ORDER BY COALESCE(sgm.hora_salida, vl.fecha_hora_salida) ASC LIMIT 1";
+
+			List<?> nativeRes = em.createNativeQuery(nativeSql)
+					.setParameter("idItinerario", idItinerario)
+					.getResultList();
+
+			if (!nativeRes.isEmpty()) {
+				Object obj = nativeRes.get(0);
+				if (obj instanceof java.sql.Timestamp) {
+					return new Date(((java.sql.Timestamp) obj).getTime());
+				} else if (obj instanceof Date) {
+					return (Date) obj;
+				}
+			}
+
+		} catch (Exception e) {
+			Logger.logError("Error al obtener fecha de salida para el itinerario " + idItinerario + ": " + e.getMessage());
+		}
+
+		return null;
 	}
 
 }

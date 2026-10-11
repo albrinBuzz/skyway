@@ -297,8 +297,7 @@ END;
 $$ LANGUAGE plpgsql STABLE;
 
 
-
-
+-- 1. ITINERARIOS POR RUT Y FECHAS
 CREATE OR REPLACE FUNCTION fn_getItinerariosPorRutYFechas(
     prut_pasajero TEXT,
     limite INT,
@@ -311,31 +310,33 @@ RETURNS TABLE (
     codigo_iata_origen VARCHAR(255),
     codigo_iata_destino VARCHAR(255),
     hora_salida TIMESTAMP,
-	id_reserva INT
+    id_reserva INT,
+    hora_llegada TIMESTAMP
 )
 AS
 $$
 BEGIN
-    RETURN QUERY
-    SELECT
-        i.id_itinerario,
-        arp2.codigo_iata,
-        arp1.codigo_iata,
-        i.hora_salida,
-		r.id_reserva
-    FROM reserva r
+RETURN QUERY
+SELECT DISTINCT ON (r.id_reserva, i.id_itinerario)
+    i.id_itinerario,
+    arp2.codigo_iata AS codigo_iata_origen,
+    arp1.codigo_iata AS codigo_iata_destino,
+    i.hora_salida,
+    r.id_reserva,
+    i.hora_llegada
+FROM reserva r
     JOIN reserva_itinerario ri ON ri.id_reserva = r.id_reserva
     JOIN itinerario i ON i.id_itinerario = ri.id_itinerario
     JOIN aeropuerto arp1 ON arp1.id_aeropuerto = i.destino_aeropuerto
     JOIN aeropuerto arp2 ON arp2.id_aeropuerto = i.origen_aeropuerto
-    WHERE r.rut_pasajero = prut_pasajero
-      AND (pfechaIni IS NULL OR i.hora_salida >= pfechaIni)
-      AND (pfechaFin IS NULL OR i.hora_salida <= pfechaFin)
-    ORDER BY r.fecha_reserva ASC
+    LEFT JOIN reserva_asiento ra ON ra.id_reserva = r.id_reserva
+WHERE (r.rut_pasajero = prut_pasajero OR ra.rut = prut_pasajero)
+  AND (pfechaIni IS NULL OR i.hora_salida >= pfechaIni)
+  AND (pfechaFin IS NULL OR i.hora_salida <= pfechaFin)
+ORDER BY r.id_reserva, i.id_itinerario, i.hora_salida ASC
     LIMIT limite OFFSET desplazamiento;
 END;
 $$ LANGUAGE plpgsql STABLE;
-
 
 
 CREATE OR REPLACE FUNCTION fn_getAsientosPorItinerarioYReserva(
@@ -352,28 +353,49 @@ RETURNS TABLE (
 AS
 $$
 BEGIN
-    RETURN QUERY
-    SELECT
-        a.id_asiento,
-        a.numero_asiento,
-        ca.descripcion,
-        ra.id_vuelo,
-        ra.id_reserva
-    FROM reserva_itinerario ri
-    JOIN itinerario_vuelo iv ON iv.id_itinerario = ri.id_itinerario
-    JOIN reserva_asiento ra ON ra.id_reserva = ri.id_reserva AND ra.id_vuelo = iv.id_vuelo
-    JOIN asiento a ON a.id_asiento = ra.id_asiento
-    JOIN clase_asiento ca ON ca.id_clase = a.id_clase
-    WHERE ri.id_itinerario = pid_itinerario
-      AND ri.id_reserva = pid_reserva;
+    -- 1. Intentar obtener los asientos activos desde reserva_asiento
+RETURN QUERY
+SELECT
+    a.id_asiento,
+    a.numero_asiento,
+    ca.descripcion AS clase_asiento,
+    ra.id_vuelo,
+    ra.id_reserva
+FROM reserva_itinerario ri
+         JOIN itinerario_vuelo iv ON iv.id_itinerario = ri.id_itinerario
+         JOIN reserva_asiento ra ON ra.id_reserva = ri.id_reserva AND ra.id_vuelo = iv.id_vuelo
+         JOIN asiento a ON a.id_asiento = ra.id_asiento
+         JOIN clase_asiento ca ON ca.id_clase = a.id_clase
+WHERE ri.id_itinerario = pid_itinerario
+  AND ri.id_reserva = pid_reserva;
+
+-- 2. Si no hay filas (porque fue cancelada y borrada de reserva_asiento), consultar cancelacion_asiento
+IF NOT FOUND THEN
+        RETURN QUERY
+SELECT
+    ca.id_asiento,
+    ca.numero_asiento,
+    ca.clase_asiento,
+    ca.id_vuelo,
+    c.id_reserva
+FROM cancelacion c
+         JOIN cancelacion_asiento ca ON ca.id_cancelacion = c.id_cancelacion
+         JOIN reserva_itinerario ri ON ri.id_reserva = c.id_reserva
+         JOIN itinerario_vuelo iv ON iv.id_itinerario = ri.id_itinerario AND iv.id_vuelo = ca.id_vuelo
+WHERE ri.id_itinerario = pid_itinerario
+  AND c.id_reserva = pid_reserva;
+END IF;
 END;
 $$ LANGUAGE plpgsql STABLE;
 
 
 
-
-
-CREATE OR REPLACE FUNCTION fn_getTicket(p_rut_pasajero VARCHAR,  p_id_reserva integer, p_idItinerario integer)
+-- 3. TICKETS / BOARDING PASS UNIFICADO (SIN DUPLICADOS)
+CREATE OR REPLACE FUNCTION fn_getTicket(
+    p_rut_pasajero VARCHAR,
+    p_id_reserva INT,
+    p_idItinerario INT
+)
 RETURNS TABLE (
     numero_vuelo VARCHAR,
     hora_salida TIMESTAMP,
@@ -382,37 +404,92 @@ RETURNS TABLE (
     terminal VARCHAR,
     numero_asiento VARCHAR,
     clase_asiento VARCHAR,
-	nombre text
+    nombre TEXT
 )
 AS $$
 BEGIN
-    RETURN QUERY
-    SELECT
-        vl.numero_vuelo,
-        sgm.hora_salida,
-        sgm.hora_llegada,
-        prta.codigo_puerta,
-        prta.terminal,
-        ast.numero_asiento,
-        clas.descripcion,
-		us.nombre || ' ' || us.apellido
-    FROM reserva_asiento rsva
-    left JOIN reserva rsv ON rsv.id_reserva = rsva.id_reserva
-	left join itinerario_vuelo itv on itv.id_vuelo = rsva.id_vuelo
-	join pasajero p on p.rut = rsva.rut
-	join usuario us on us.rut = p.rut
-    left JOIN vuelo vl ON vl.id_vuelo = rsva.id_vuelo
-    left JOIN segmento_vuelo sgm ON sgm.id_vuelo = rsva.id_vuelo
-    left JOIN asignacion_puerta asgp ON asgp.id_segmento = sgm.id_segmento
-    left JOIN puerta_embarque prta ON prta.id_puerta = asgp.id_puerta
-    left JOIN asiento ast ON ast.id_asiento = rsva.id_asiento
-    left JOIN clase_asiento clas ON clas.id_clase = ast.id_clase
-    WHERE rsv.rut_pasajero = p_rut_pasajero and rsv.id_reserva=p_id_reserva
-	and itv.id_itinerario=p_idItinerario
-	order by  vl.fecha_hora_salida;
+RETURN QUERY
+SELECT DISTINCT ON (rsva.id_asiento, vl.id_vuelo)
+    vl.numero_vuelo,
+    sgm.hora_salida,
+    sgm.hora_llegada,
+    COALESCE(prta.codigo_puerta, 'TBD') AS codigo_puerta,
+    COALESCE(prta.terminal, 'TBD') AS terminal,
+    ast.numero_asiento,
+    clas.descripcion AS clase_asiento,
+    us.nombre || ' ' || us.apellido AS nombre
+FROM reserva_asiento rsva
+    JOIN reserva rsv ON rsv.id_reserva = rsva.id_reserva
+    JOIN itinerario_vuelo itv ON itv.id_vuelo = rsva.id_vuelo
+    JOIN pasajero p ON p.rut = rsva.rut
+    JOIN usuario us ON us.rut = p.rut
+    JOIN vuelo vl ON vl.id_vuelo = rsva.id_vuelo
+    LEFT JOIN segmento_vuelo sgm ON sgm.id_vuelo = rsva.id_vuelo
+    LEFT JOIN asignacion_puerta asgp ON asgp.id_segmento = sgm.id_segmento
+    LEFT JOIN puerta_embarque prta ON prta.id_puerta = asgp.id_puerta
+    LEFT JOIN asiento ast ON ast.id_asiento = rsva.id_asiento
+    LEFT JOIN clase_asiento clas ON clas.id_clase = ast.id_clase
+WHERE (rsv.rut_pasajero = p_rut_pasajero OR rsva.rut = p_rut_pasajero)
+  AND rsv.id_reserva = p_id_reserva
+  AND itv.id_itinerario = p_idItinerario
+ORDER BY rsva.id_asiento, vl.id_vuelo, sgm.hora_salida ASC;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql STABLE;
 
+
+
+
+CREATE OR REPLACE FUNCTION fn_getticket(
+    p_rut_pasajero CHARACTER VARYING,
+    p_id_reserva INTEGER,
+    p_iditinerario INTEGER
+)
+RETURNS TABLE(
+    codigo_pnr CHARACTER VARYING,
+    numero_vuelo CHARACTER VARYING,
+    hora_salida TIMESTAMP WITHOUT TIME ZONE,
+    hora_llegada TIMESTAMP WITHOUT TIME ZONE,
+    codigo_puerta CHARACTER VARYING,
+    terminal CHARACTER VARYING,
+    numero_asiento CHARACTER VARYING,
+    clase_asiento CHARACTER VARYING,
+    nombre TEXT,
+    codigo_qr TEXT
+)
+STABLE
+LANGUAGE plpgsql
+AS
+$$
+BEGIN
+RETURN QUERY
+SELECT DISTINCT ON (rsva.id_asiento, vl.id_vuelo)
+    rsv.codigo_reserva AS codigo_pnr,
+    vl.numero_vuelo,
+    sgm.hora_salida,
+    sgm.hora_llegada,
+    COALESCE(prta.codigo_puerta, 'TBD') AS codigo_puerta,
+    COALESCE(prta.terminal, 'TBD') AS terminal,
+    ast.numero_asiento,
+    clas.descripcion AS clase_asiento,
+    us.nombre || ' ' || us.apellido AS nombre,
+    'SKYWAY-' || rsv.codigo_reserva || '-' || vl.numero_vuelo || '-' || ast.numero_asiento || '-' || p.rut AS codigo_qr
+FROM reserva_asiento rsva
+    JOIN reserva rsv ON rsv.id_reserva = rsva.id_reserva
+    JOIN itinerario_vuelo itv ON itv.id_vuelo = rsva.id_vuelo
+    JOIN pasajero p ON p.rut = rsva.rut
+    JOIN usuario us ON us.rut = p.rut
+    JOIN vuelo vl ON vl.id_vuelo = rsva.id_vuelo
+    LEFT JOIN segmento_vuelo sgm ON sgm.id_vuelo = rsva.id_vuelo
+    LEFT JOIN asignacion_puerta asgp ON asgp.id_segmento = sgm.id_segmento
+    LEFT JOIN puerta_embarque prta ON prta.id_puerta = asgp.id_puerta
+    LEFT JOIN asiento ast ON ast.id_asiento = rsva.id_asiento
+    LEFT JOIN clase_asiento clas ON clas.id_clase = ast.id_clase
+WHERE (rsv.rut_pasajero = p_rut_pasajero OR rsva.rut = p_rut_pasajero)
+  AND rsv.id_reserva = p_id_reserva
+  AND itv.id_itinerario = p_idItinerario
+ORDER BY rsva.id_asiento, vl.id_vuelo, sgm.hora_salida ASC;
+END;
+$$;
 
 
 CREATE OR REPLACE FUNCTION fn_getVueloInfo(p_idVuelo integer)
@@ -460,27 +537,3 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-select * from vuelo;
-
-select * from fn_getVueloInfo(23);
-
--- Ejemplo:
-SELECT * FROM fn_getAsientosPorItinerarioYReserva(320, 10);
-
---SELECT * FROM fn_getTicket('12345678-9',4);
-
-SELECT * FROM fn_getItinerariosRut('12345678-9', 100, 0);
-
-SELECT * FROM fn_getItinerariosPorRutYFechas('12345678-9', 1000, 0, '2025-09-01', '2025-09-2');
-
-SELECT * FROM fn_getItinerariosPorRutYFechas('12345678-9', 10, 0, NULL, NULL);
-
-SELECT * FROM fn_getItinerariosPorRutYFechas('12345678-9', 10, 0, '2025-09-01', NULL);
-
-SELECT * FROM fnBuscarVuelo('BOG', 'PEK', '2025-09-02');
-
-SELECT * FROM fn_getItinerariosPorRutYFechas('12345678-9', 10, 0, '2025-09-01', '2025-09-30');
-
-SELECT * FROM fn_getItinerariosPorRutYFechas('12345678-9', 10, 0, NULL, NULL);
-
-SELECT * FROM fn_getItinerariosPorRutYFechas('12345678-9', 10, 0, '2025-09-01', NULL);
