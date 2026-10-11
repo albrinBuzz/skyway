@@ -47,7 +47,9 @@ DROP SEQUENCE IF EXISTS caracteristica_tarifa_seq CASCADE;
 DROP SEQUENCE IF EXISTS tarifa_caracteristica_seq CASCADE;
 DROP SEQUENCE IF EXISTS reserva_pasajero_seq CASCADE;
 DROP SEQUENCE IF EXISTS configuracion_cabina_seq CASCADE;
-
+DROP SEQUENCE IF EXISTS cancelacion_seq CASCADE;
+DROP SEQUENCE IF EXISTS log_auditoria_seq CASCADE;
+DROP SEQUENCE IF EXISTS cancelacion_asiento_seq CASCADE;
 
 -- Eliminar Tablas con CASCADE
 DROP TABLE IF EXISTS estado_vuelo CASCADE;
@@ -98,8 +100,9 @@ DROP TABLE IF EXISTS Caracteristica_Tarifa CASCADE;
 DROP TABLE IF EXISTS Tarifa_Caracteristica CASCADE;
 DROP TABLE IF EXISTS pasajero_reserva CASCADE;
 DROP TABLE IF EXISTS Configuracion_Cabina CASCADE;
-
-
+DROP TABLE IF EXISTS Cancelacion CASCADE;
+DROP TABLE IF EXISTS Log_Auditoria CASCADE;
+DROP TABLE IF EXISTS Cancelacion_Asiento CASCADE;
 
 -- SECUENCIAS INICIALES
 CREATE SEQUENCE rol_seq;
@@ -157,8 +160,9 @@ CREATE SEQUENCE itinerario_tarifa_seq
     MINVALUE 1
     NO CYCLE;
 
-
-
+CREATE SEQUENCE IF NOT EXISTS cancelacion_seq START WITH 1;
+CREATE SEQUENCE IF NOT EXISTS log_auditoria_seq START WITH 1;
+CREATE SEQUENCE IF NOT EXISTS cancelacion_asiento_seq START WITH 1;
 
 
 
@@ -544,9 +548,9 @@ CREATE TABLE Reserva (
                          Fecha_Reserva TIMESTAMP NOT NULL,
                          Estado_Reserva INT REFERENCES Estado_reserva(ID_ESTADO_RESERVA),
                          RUT_PASAJERO VARCHAR(12) REFERENCES Pasajero(RUT),
-                         Total DECIMAL(10,2)
+                         Total DECIMAL(10,2),
     --Tipo_Boleto VARCHAR(50) CHECK (Tipo_Boleto IN ('Económica', 'Ejecutiva', 'Primera Clase')),
-    --Codigo_Reserva VARCHAR(50) UNIQUE
+                         CODIGO_RESERVA VARCHAR(50) UNIQUE
 );
 
 
@@ -616,14 +620,27 @@ CREATE TABLE Pago (
                       ID_METODO_PAGO INT REFERENCES Metodo_Pago(ID_METODO_PAGO)
 );
 
-/*CREATE TABLE Cancelacion (
-    ID_CANCELACION INT PRIMARY KEY DEFAULT nextval('cancelacion_seq'),
-    ID_RESERVA INT REFERENCES Reserva(ID_RESERVA),
-    Fecha TIMESTAMP NOT NULL,
-    Motivo TEXT,
-    Estado VARCHAR(50) CHECK (Estado IN ('Pendiente', 'Procesado', 'Reembolsado')),
-    Monto_Reembolso DECIMAL(10, 2) -- Puede ser igual al monto total o un porcentaje
-);*/
+CREATE TABLE Cancelacion (
+                             ID_CANCELACION INT PRIMARY KEY DEFAULT nextval('cancelacion_seq'),
+                             ID_RESERVA INT REFERENCES Reserva(ID_RESERVA),
+                             Fecha TIMESTAMP NOT NULL,
+                             Motivo TEXT,
+                             Estado VARCHAR(50) CHECK (Estado IN ('Pendiente', 'Procesado', 'Reembolsado')),
+                             Monto_Reembolso DECIMAL(10, 2) -- Puede ser igual al monto total o un porcentaje
+);
+
+
+CREATE TABLE IF NOT EXISTS Cancelacion_Asiento (
+                                                   ID_CANCELACION_ASIENTO INT PRIMARY KEY DEFAULT nextval('cancelacion_asiento_seq'),
+                                                   ID_CANCELACION INT NOT NULL REFERENCES Cancelacion(ID_CANCELACION) ON DELETE CASCADE,
+                                                   ID_VUELO INT NOT NULL REFERENCES Vuelo(ID_VUELO),
+                                                   ID_ASIENTO INT NOT NULL REFERENCES Asiento(ID_ASIENTO),
+                                                   Numero_Vuelo VARCHAR(50),
+                                                   Numero_Asiento VARCHAR(10),
+                                                   Clase_Asiento VARCHAR(50),
+                                                   RUT_Pasajero VARCHAR(12) NOT NULL REFERENCES Pasajero(RUT),
+                                                   Fecha_Registro TIMESTAMP NOT NULL DEFAULT NOW()
+);
 
 
 CREATE TABLE Equipaje (
@@ -638,14 +655,38 @@ CREATE TABLE Equipaje (
 
 
 
+DROP TABLE IF EXISTS Checkin_Pasajero CASCADE;
+DROP TABLE IF EXISTS Checkin CASCADE;
+
+DROP SEQUENCE IF EXISTS checkin_pasajero_seq;
+DROP SEQUENCE IF EXISTS checkin_seq;
+
+-- ============================================================================
+-- 2. CREACIÓN DE SECUENCIAS
+-- ============================================================================
+CREATE SEQUENCE checkin_seq START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE checkin_pasajero_seq START WITH 1 INCREMENT BY 1;
+
 -- CHECK-IN
 CREATE TABLE Checkin (
                          ID_CHECKIN INT PRIMARY KEY DEFAULT nextval('checkin_seq'),
-                         ID_RESERVA INT REFERENCES Reserva(ID_RESERVA),
-                         Fecha_Hora TIMESTAMP,
-                         Metodo VARCHAR(50) CHECK (Metodo IN ('Web', 'App', 'Mostrador'))
+                         ID_RESERVA INT NOT NULL REFERENCES Reserva(ID_RESERVA) ON DELETE CASCADE,
+                         Fecha_Hora TIMESTAMP NOT NULL DEFAULT NOW(),
+                         Metodo VARCHAR(50) NOT NULL CHECK (Metodo IN ('Web', 'App', 'Mostrador')),
+                         Estado VARCHAR(30) NOT NULL DEFAULT 'COMPLETADO' CHECK (Estado IN ('COMPLETADO', 'PENDIENTE', 'ANULADO')),
+                         Codigo_Boarding_Pass VARCHAR(100) UNIQUE
 );
 
+
+-- Tabla para rastrear qué pasajeros hicieron Check-in dentro de la reserva
+CREATE TABLE Checkin_Pasajero (
+                                  ID_CHECKIN_PASAJERO INT PRIMARY KEY DEFAULT nextval('checkin_pasajero_seq'),
+                                  ID_CHECKIN INT NOT NULL REFERENCES Checkin(ID_CHECKIN) ON DELETE CASCADE,
+                                  RUT VARCHAR(12) NOT NULL REFERENCES Pasajero(RUT),
+                                  Declaracion_Equipaje_Aceptada BOOLEAN NOT NULL DEFAULT TRUE,
+                                  Fecha_Registro TIMESTAMP NOT NULL DEFAULT NOW(),
+                                  CONSTRAINT uq_checkin_pasajero UNIQUE (ID_CHECKIN, RUT)
+);
 
 CREATE TABLE Notificacion (
                               ID_NOTIFICACION INT PRIMARY KEY DEFAULT nextval('notificacion_seq'),
@@ -655,6 +696,20 @@ CREATE TABLE Notificacion (
                               Leido BOOLEAN DEFAULT FALSE,
                               Fecha TIMESTAMP DEFAULT NOW()
 );
+
+
+
+CREATE TABLE IF NOT EXISTS Log_Auditoria (
+                                             ID_LOG INT PRIMARY KEY DEFAULT nextval('log_auditoria_seq'),
+                                             Fecha_Hora TIMESTAMP NOT NULL DEFAULT NOW(),
+                                             Rut_Usuario VARCHAR(12),
+                                             Accion VARCHAR(100) NOT NULL, -- ej. 'CANCELACION_RESERVA', 'CAMBIO_ASIENTO'
+                                             Tabla_Afectada VARCHAR(50),
+                                             ID_Registro_Afectado INT,
+                                             Detalle TEXT,
+                                             Direccion_IP VARCHAR(45)
+);
+
 
 /*CREATE TABLE Seguimiento_Vuelo (
     ID_SEGUIMIENTO SERIAL PRIMARY KEY,
@@ -697,45 +752,46 @@ ALTER TABLE Reserva_Asiento
 ADD CONSTRAINT reserva_asiento_id_vuelo_fkey
 FOREIGN KEY (ID_VUELO) REFERENCES Vuelo(ID_VUELO) ON DELETE CASCADE;*/
 
+
 DO $$
-DECLARE
-reg RECORD;
-BEGIN
-FOR reg IN
-SELECT p.proname AS function_name,
-       CASE WHEN p.prokind = 'f' THEN 'FUNCTION'
-            WHEN p.prokind = 'p' THEN 'PROCEDURE'
-            WHEN p.prokind = 'a' THEN 'AGGREGATE'
-           END AS function_type
-FROM pg_proc p
-         JOIN pg_namespace n ON p.pronamespace = n.oid
-         JOIN pg_language l ON p.prolang = l.oid
-WHERE n.nspname = 'public'
-  -- 🎯 Filtro idéntico a las primeras 22 filas de tu imagen
-  AND l.lanname = 'plpgsql'
-  -- 🛑 Excluir cualquier función amarrada al sistema (PostGIS)
-  AND p.oid NOT IN (
-    SELECT objid
-    FROM pg_depend
-    WHERE deptype = 'e' AND classid = 'pg_proc'::regclass
-    )
-    LOOP
-BEGIN
-            RAISE NOTICE 'Eliminando componente de negocio: % (%)', reg.function_name, reg.function_type;
-EXECUTE 'DROP ' || reg.function_type || ' public.' || quote_ident(reg.function_name) || ' CASCADE';
-EXCEPTION
-            WHEN OTHERS THEN
-                RAISE NOTICE 'Saltada función protegida: %', reg.function_name;
-END;
-END LOOP;
-END $$;
+    DECLARE
+        reg RECORD;
+    BEGIN
+        FOR reg IN
+            SELECT p.proname AS function_name,
+                   CASE WHEN p.prokind = 'f' THEN 'FUNCTION'
+                        WHEN p.prokind = 'p' THEN 'PROCEDURE'
+                        WHEN p.prokind = 'a' THEN 'AGGREGATE'
+                       END AS function_type
+            FROM pg_proc p
+                     JOIN pg_namespace n ON p.pronamespace = n.oid
+                     JOIN pg_language l ON p.prolang = l.oid
+            WHERE n.nspname = 'public'
+              -- 🎯 Filtro idéntico a las primeras 22 filas de tu imagen
+              AND l.lanname = 'plpgsql'
+              -- 🛑 Excluir cualquier función amarrada al sistema (PostGIS)
+              AND p.oid NOT IN (
+                SELECT objid
+                FROM pg_depend
+                WHERE deptype = 'e' AND classid = 'pg_proc'::regclass
+            )
+            LOOP
+                BEGIN
+                    RAISE NOTICE 'Eliminando componente de negocio: % (%)', reg.function_name, reg.function_type;
+                    EXECUTE 'DROP ' || reg.function_type || ' public.' || quote_ident(reg.function_name) || ' CASCADE';
+                EXCEPTION
+                    WHEN OTHERS THEN
+                        RAISE NOTICE 'Saltada función protegida: %', reg.function_name;
+                END;
+            END LOOP;
+    END $$;
 
 
 
 CREATE OR REPLACE FUNCTION fn_insertarAsientos()
     RETURNS TRIGGER AS $$
 DECLARE
-v_id_modelo INT;
+    v_id_modelo INT;
     v_config RECORD;
     v_fila INT;
     v_letras TEXT[];
@@ -748,24 +804,24 @@ v_id_modelo INT;
     v_numero_asiento VARCHAR(10);
 BEGIN
     -- 1. Obtener el ID del modelo del avión desde la tabla Avion
-SELECT ID_MODELO INTO v_id_modelo
-FROM Avion
-WHERE ID_AVION = NEW.ID_AVION;
+    SELECT ID_MODELO INTO v_id_modelo
+    FROM Avion
+    WHERE ID_AVION = NEW.ID_AVION;
 
--- 2. Recorrer la configuración de cabina del modelo para la clase insertada
-FOR v_config IN
-SELECT Fila_Inicio, Fila_Fin, Letras_Columnas, Es_Salida_Emergencia
-FROM Configuracion_Cabina
-WHERE ID_MODELO = v_id_modelo
-  AND ID_CLASE = NEW.ID_CLASE
-ORDER BY Fila_Inicio ASC
-    LOOP
+    -- 2. Recorrer la configuración de cabina del modelo para la clase insertada
+    FOR v_config IN
+        SELECT Fila_Inicio, Fila_Fin, Letras_Columnas, Es_Salida_Emergencia
+        FROM Configuracion_Cabina
+        WHERE ID_MODELO = v_id_modelo
+          AND ID_CLASE = NEW.ID_CLASE
+        ORDER BY Fila_Inicio ASC
+        LOOP
             -- Convertir la cadena "A,B,C,D,E,F" en un arreglo de Postgres
             v_letras := string_to_array(v_config.Letras_Columnas, ',');
-v_total_letras := array_length(v_letras, 1);
+            v_total_letras := array_length(v_letras, 1);
 
             -- Recorrer cada fila del rango configurado (ej: Fila 1 a Fila 30)
-FOR v_fila IN v_config.Fila_Inicio .. v_config.Fila_Fin LOOP
+            FOR v_fila IN v_config.Fila_Inicio .. v_config.Fila_Fin LOOP
 
                     -- Recorrer las letras configuradas para esa fila
                     FOR v_idx_letra IN 1 .. v_total_letras LOOP
@@ -773,7 +829,7 @@ FOR v_fila IN v_config.Fila_Inicio .. v_config.Fila_Fin LOOP
                             -- Validar no exceder la cantidad total especificada en Capacidad_Clase
                             IF v_asientos_creados >= NEW.Cantidad THEN
                                 EXIT;
-END IF;
+                            END IF;
 
                             v_letra := trim(v_letras[v_idx_letra]);
                             v_numero_asiento := v_fila || v_letra;
@@ -785,44 +841,44 @@ END IF;
                             v_es_pasillo := (v_idx_letra = 2 OR v_idx_letra = v_total_letras - 1);
 
                             -- Insertar el asiento con todas sus coordenadas espaciales
-INSERT INTO Asiento (
-    Numero_Asiento,
-    Fila,
-    Letra,
-    ID_CLASE,
-    ID_AVION,
-    Es_Ventana,
-    Es_Pasillo,
-    Es_Emergencia
-)
-VALUES (
-           v_numero_asiento,
-           v_fila,
-           v_letra,
-           NEW.ID_CLASE,
-           NEW.ID_AVION,
-           v_es_ventana,
-           v_es_pasillo,
-           v_config.Es_Salida_Emergencia
-       );
+                            INSERT INTO Asiento (
+                                Numero_Asiento,
+                                Fila,
+                                Letra,
+                                ID_CLASE,
+                                ID_AVION,
+                                Es_Ventana,
+                                Es_Pasillo,
+                                Es_Emergencia
+                            )
+                            VALUES (
+                                       v_numero_asiento,
+                                       v_fila,
+                                       v_letra,
+                                       NEW.ID_CLASE,
+                                       NEW.ID_AVION,
+                                       v_es_ventana,
+                                       v_es_pasillo,
+                                       v_config.Es_Salida_Emergencia
+                                   );
 
-v_asientos_creados := v_asientos_creados + 1;
+                            v_asientos_creados := v_asientos_creados + 1;
 
-END LOOP;
+                        END LOOP;
 
                     IF v_asientos_creados >= NEW.Cantidad THEN
                         EXIT;
-END IF;
+                    END IF;
 
-END LOOP;
+                END LOOP;
 
             IF v_asientos_creados >= NEW.Cantidad THEN
                 EXIT;
-END IF;
+            END IF;
 
-END LOOP;
+        END LOOP;
 
-RETURN NEW;
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -831,7 +887,7 @@ DROP TRIGGER IF EXISTS trigger_insertar_asientos ON Capacidad_Clase;
 CREATE TRIGGER trigger_insertar_asientos
     AFTER INSERT ON Capacidad_Clase
     FOR EACH ROW
-    EXECUTE FUNCTION fn_insertarAsientos();
+EXECUTE FUNCTION fn_insertarAsientos();
 
 
 
@@ -854,33 +910,33 @@ ALTER TABLE Itinerario_Vuelo DISABLE TRIGGER trg_set_orden_itinerario_vuelo;*/
 
 
 CREATE OR REPLACE FUNCTION fn_set_orden_itinerario_vuelo()
-RETURNS TRIGGER AS $$
+    RETURNS TRIGGER AS $$
 DECLARE
-ultimo_orden INT;
+    ultimo_orden INT;
 BEGIN
     -- Si es UPDATE y viene NULL, rescatamos el anterior
     IF (TG_OP = 'UPDATE' AND NEW.ORDEN IS NULL) THEN
         NEW.ORDEN := OLD.ORDEN;
-END IF;
+    END IF;
 
     -- Si sigue siendo NULL (en INSERT), calculamos el siguiente
     IF NEW.ORDEN IS NULL THEN
-SELECT COALESCE(MAX(ORDEN), 0) INTO ultimo_orden
-FROM Itinerario_Vuelo
-WHERE ID_ITINERARIO = NEW.ID_ITINERARIO;
+        SELECT COALESCE(MAX(ORDEN), 0) INTO ultimo_orden
+        FROM Itinerario_Vuelo
+        WHERE ID_ITINERARIO = NEW.ID_ITINERARIO;
 
-NEW.ORDEN := ultimo_orden + 1;
-END IF;
+        NEW.ORDEN := ultimo_orden + 1;
+    END IF;
 
-RETURN NEW;
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS trg_set_orden_itinerario_vuelo ON Itinerario_Vuelo;
 CREATE TRIGGER trg_set_orden_itinerario_vuelo
     BEFORE INSERT OR UPDATE ON Itinerario_Vuelo
-                         FOR EACH ROW
-                         EXECUTE FUNCTION fn_set_orden_itinerario_vuelo();
+    FOR EACH ROW
+EXECUTE FUNCTION fn_set_orden_itinerario_vuelo();
 
 
 
@@ -888,41 +944,41 @@ CREATE TRIGGER trg_set_orden_itinerario_vuelo
 
 
 CREATE OR REPLACE FUNCTION fn_set_orden_segmento_vuelo()
-RETURNS TRIGGER AS $$
+    RETURNS TRIGGER AS $$
 DECLARE
-v_ultimo_orden INT;
+    v_ultimo_orden INT;
 BEGIN
     -- 1. Manejo para UPDATE
     IF (TG_OP = 'UPDATE') THEN
         -- Si JPA envió un NULL en el orden, rescatamos el valor que ya tenía el registro
         IF NEW.ORDEN_SEGMENTO IS NULL THEN
             NEW.ORDEN_SEGMENTO := OLD.ORDEN_SEGMENTO;
-END IF;
+        END IF;
 
         -- Si el vuelo NO cambió, ya no hay nada más que hacer, retornamos el NEW corregido
         IF (OLD.ID_VUELO = NEW.ID_VUELO) THEN
             RETURN NEW;
-END IF;
+        END IF;
 
         -- Si cambió el ID_VUELO y el orden seguía siendo el viejo,
         -- quizás quieras recalcularlo para el nuevo vuelo.
         -- En ese caso, podrías ponerlo en NULL aquí para que siga a la lógica de abajo.
         IF (OLD.ID_VUELO <> NEW.ID_VUELO AND NEW.ORDEN_SEGMENTO = OLD.ORDEN_SEGMENTO) THEN
-             NEW.ORDEN_SEGMENTO := NULL;
-END IF;
-END IF;
+            NEW.ORDEN_SEGMENTO := NULL;
+        END IF;
+    END IF;
 
     -- 2. Lógica de Asignación Automática (Solo si es NULL después de las validaciones de arriba)
     IF NEW.ORDEN_SEGMENTO IS NULL THEN
-SELECT COALESCE(MAX(ORDEN_SEGMENTO), 0)
-INTO v_ultimo_orden
-FROM Segmento_Vuelo
-WHERE ID_VUELO = NEW.ID_VUELO;
+        SELECT COALESCE(MAX(ORDEN_SEGMENTO), 0)
+        INTO v_ultimo_orden
+        FROM Segmento_Vuelo
+        WHERE ID_VUELO = NEW.ID_VUELO;
 
-NEW.ORDEN_SEGMENTO := v_ultimo_orden + 1;
-END IF;
+        NEW.ORDEN_SEGMENTO := v_ultimo_orden + 1;
+    END IF;
 
-RETURN NEW;
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -931,32 +987,32 @@ $$ LANGUAGE plpgsql;
 -- Trigger configurado para actuar antes de insertar o actualizar
 CREATE TRIGGER trg_set_orden_segmento_vuelo
     BEFORE INSERT OR UPDATE ON Segmento_Vuelo
-                         FOR EACH ROW
-                         EXECUTE FUNCTION fn_set_orden_segmento_vuelo();
+    FOR EACH ROW
+EXECUTE FUNCTION fn_set_orden_segmento_vuelo();
 
 
 
 
 
 CREATE OR REPLACE FUNCTION fn_set_numero_vuelo()
-RETURNS TRIGGER AS $$
+    RETURNS TRIGGER AS $$
 DECLARE
-codigoArp1 varchar;
+    codigoArp1 varchar;
     codigoArp2 varchar;
     numeroVueloN varchar;
 BEGIN
     -- Obtenemos los códigos IATA de origen y destino
-SELECT Codigo_IATA INTO codigoArp1 FROM aeropuerto WHERE id_aeropuerto = NEW.ID_AEROPUERTO_ORIGEN;
-SELECT Codigo_IATA INTO codigoArp2 FROM aeropuerto WHERE id_aeropuerto = NEW.ID_AEROPUERTO_DESTINO;
+    SELECT Codigo_IATA INTO codigoArp1 FROM aeropuerto WHERE id_aeropuerto = NEW.ID_AEROPUERTO_ORIGEN;
+    SELECT Codigo_IATA INTO codigoArp2 FROM aeropuerto WHERE id_aeropuerto = NEW.ID_AEROPUERTO_DESTINO;
 
 -- Construimos el número basado en el ID real del segmento
-numeroVueloN := codigoArp1 || '-' || codigoArp2 || NEW.ID_SEGMENTO::TEXT;
+    numeroVueloN := codigoArp1 || '-' || codigoArp2 || NEW.ID_SEGMENTO::TEXT;
 
-UPDATE vuelo
-SET numero_vuelo = numeroVueloN
-WHERE id_vuelo = NEW.ID_VUELO;
+    UPDATE vuelo
+    SET numero_vuelo = numeroVueloN
+    WHERE id_vuelo = NEW.ID_VUELO;
 
-RETURN NEW;
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -965,57 +1021,57 @@ DROP TRIGGER IF EXISTS trg_set_numero_vuelo ON Segmento_Vuelo;
 CREATE TRIGGER trg_set_numero_vuelo
     AFTER INSERT OR UPDATE OF ID_AEROPUERTO_ORIGEN, ID_AEROPUERTO_DESTINO ON Segmento_Vuelo
     FOR EACH ROW
-    EXECUTE FUNCTION fn_set_numero_vuelo();
+EXECUTE FUNCTION fn_set_numero_vuelo();
 
 
 
 CREATE OR REPLACE FUNCTION fn_set_fecha_itinerario()
-RETURNS TRIGGER AS $$
+    RETURNS TRIGGER AS $$
 DECLARE
-fechaSalida TIMESTAMP;
+    fechaSalida TIMESTAMP;
     fechaLlegada TIMESTAMP;
 BEGIN
     -- Si es el primer vuelo del itinerario, establecemos hora de salida y llegada
     IF NEW.ORDEN = 1 THEN
-SELECT sgv.hora_salida
-INTO fechaSalida
-FROM Segmento_Vuelo sgv
-WHERE sgv.id_vuelo = NEW.ID_VUELO
-  AND sgv.ORDEN_SEGMENTO = 1;
+        SELECT sgv.hora_salida
+        INTO fechaSalida
+        FROM Segmento_Vuelo sgv
+        WHERE sgv.id_vuelo = NEW.ID_VUELO
+          AND sgv.ORDEN_SEGMENTO = 1;
 
-SELECT sgv.hora_llegada
-INTO fechaLlegada
-FROM Segmento_Vuelo sgv
-WHERE sgv.id_vuelo = NEW.ID_VUELO
-  AND sgv.ORDEN_SEGMENTO = (
-    SELECT MAX(sgv2.ORDEN_SEGMENTO)
-    FROM Segmento_Vuelo sgv2
-    WHERE sgv2.id_vuelo = NEW.ID_VUELO
-);
+        SELECT sgv.hora_llegada
+        INTO fechaLlegada
+        FROM Segmento_Vuelo sgv
+        WHERE sgv.id_vuelo = NEW.ID_VUELO
+          AND sgv.ORDEN_SEGMENTO = (
+            SELECT MAX(sgv2.ORDEN_SEGMENTO)
+            FROM Segmento_Vuelo sgv2
+            WHERE sgv2.id_vuelo = NEW.ID_VUELO
+        );
 
-UPDATE Itinerario
-SET HORA_SALIDA = fechaSalida,
-    HORA_LLEGADA = fechaLlegada
-WHERE ID_ITINERARIO = NEW.ID_ITINERARIO;
+        UPDATE Itinerario
+        SET HORA_SALIDA = fechaSalida,
+            HORA_LLEGADA = fechaLlegada
+        WHERE ID_ITINERARIO = NEW.ID_ITINERARIO;
 
-ELSIF NEW.ORDEN > 1 THEN
+    ELSIF NEW.ORDEN > 1 THEN
         -- En vuelos posteriores (conexiones), actualizamos solo la hora de llegada
-SELECT sgv.hora_llegada
-INTO fechaLlegada
-FROM Segmento_Vuelo sgv
-WHERE sgv.id_vuelo = NEW.ID_VUELO
-  AND sgv.ORDEN_SEGMENTO = (
-    SELECT MAX(sgv2.ORDEN_SEGMENTO)
-    FROM Segmento_Vuelo sgv2
-    WHERE sgv2.id_vuelo = NEW.ID_VUELO
-);
+        SELECT sgv.hora_llegada
+        INTO fechaLlegada
+        FROM Segmento_Vuelo sgv
+        WHERE sgv.id_vuelo = NEW.ID_VUELO
+          AND sgv.ORDEN_SEGMENTO = (
+            SELECT MAX(sgv2.ORDEN_SEGMENTO)
+            FROM Segmento_Vuelo sgv2
+            WHERE sgv2.id_vuelo = NEW.ID_VUELO
+        );
 
-UPDATE Itinerario
-SET HORA_LLEGADA = fechaLlegada
-WHERE ID_ITINERARIO = NEW.ID_ITINERARIO;
-END IF;
+        UPDATE Itinerario
+        SET HORA_LLEGADA = fechaLlegada
+        WHERE ID_ITINERARIO = NEW.ID_ITINERARIO;
+    END IF;
 
-RETURN NEW;
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -1025,7 +1081,7 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trg_set_fecha_itinerario
     AFTER INSERT ON Itinerario_Vuelo
     FOR EACH ROW
-    EXECUTE FUNCTION fn_set_fecha_itinerario();
+EXECUTE FUNCTION fn_set_fecha_itinerario();
 
 
 
@@ -1034,53 +1090,53 @@ CREATE TRIGGER trg_set_fecha_itinerario
 CREATE OR REPLACE FUNCTION fn_update_itinerario_desde_vuelo()
     RETURNS TRIGGER AS $$
 DECLARE
-rec RECORD;
+    rec RECORD;
 BEGIN
     -- Recorremos todos los itinerarios afectados por este vuelo
-FOR rec IN
-SELECT DISTINCT iv.ID_ITINERARIO
-FROM Itinerario_Vuelo iv
-WHERE iv.ID_VUELO = NEW.ID_VUELO
-    LOOP
--- Actualizar HORA_SALIDA, HORA_LLEGADA y DURACION_TOTAL en el Itinerario
-UPDATE Itinerario i
-SET HORA_SALIDA = (
-    SELECT v.Fecha_Hora_Salida
-    FROM Itinerario_Vuelo iv2
-             JOIN Vuelo v ON v.ID_VUELO = iv2.ID_VUELO
-    WHERE iv2.ID_ITINERARIO = rec.ID_ITINERARIO
-    ORDER BY iv2.ORDEN ASC
-    LIMIT 1
-    ),
-    HORA_LLEGADA = (
-SELECT v.Fecha_Hora_Llegada
-FROM Itinerario_Vuelo iv2
-    JOIN Vuelo v ON v.ID_VUELO = iv2.ID_VUELO
-WHERE iv2.ID_ITINERARIO = rec.ID_ITINERARIO
-ORDER BY iv2.ORDEN DESC
-    LIMIT 1
-    ),
-    DURACION_TOTAL = (
-    (
-    SELECT v.Fecha_Hora_Llegada
-    FROM Itinerario_Vuelo iv2
-    JOIN Vuelo v ON v.ID_VUELO = iv2.ID_VUELO
-    WHERE iv2.ID_ITINERARIO = rec.ID_ITINERARIO
-    ORDER BY iv2.ORDEN DESC
-    LIMIT 1
-    ) - (
-    SELECT v.Fecha_Hora_Salida
-    FROM Itinerario_Vuelo iv2
-    JOIN Vuelo v ON v.ID_VUELO = iv2.ID_VUELO
-    WHERE iv2.ID_ITINERARIO = rec.ID_ITINERARIO
-    ORDER BY iv2.ORDEN ASC
-    LIMIT 1
-    )
-    )
-WHERE i.ID_ITINERARIO = rec.ID_ITINERARIO;
-END LOOP;
+    FOR rec IN
+        SELECT DISTINCT iv.ID_ITINERARIO
+        FROM Itinerario_Vuelo iv
+        WHERE iv.ID_VUELO = NEW.ID_VUELO
+        LOOP
+            -- Actualizar HORA_SALIDA, HORA_LLEGADA y DURACION_TOTAL en el Itinerario
+            UPDATE Itinerario i
+            SET HORA_SALIDA = (
+                SELECT v.Fecha_Hora_Salida
+                FROM Itinerario_Vuelo iv2
+                         JOIN Vuelo v ON v.ID_VUELO = iv2.ID_VUELO
+                WHERE iv2.ID_ITINERARIO = rec.ID_ITINERARIO
+                ORDER BY iv2.ORDEN ASC
+                LIMIT 1
+            ),
+                HORA_LLEGADA = (
+                    SELECT v.Fecha_Hora_Llegada
+                    FROM Itinerario_Vuelo iv2
+                             JOIN Vuelo v ON v.ID_VUELO = iv2.ID_VUELO
+                    WHERE iv2.ID_ITINERARIO = rec.ID_ITINERARIO
+                    ORDER BY iv2.ORDEN DESC
+                    LIMIT 1
+                ),
+                DURACION_TOTAL = (
+                    (
+                        SELECT v.Fecha_Hora_Llegada
+                        FROM Itinerario_Vuelo iv2
+                                 JOIN Vuelo v ON v.ID_VUELO = iv2.ID_VUELO
+                        WHERE iv2.ID_ITINERARIO = rec.ID_ITINERARIO
+                        ORDER BY iv2.ORDEN DESC
+                        LIMIT 1
+                    ) - (
+                        SELECT v.Fecha_Hora_Salida
+                        FROM Itinerario_Vuelo iv2
+                                 JOIN Vuelo v ON v.ID_VUELO = iv2.ID_VUELO
+                        WHERE iv2.ID_ITINERARIO = rec.ID_ITINERARIO
+                        ORDER BY iv2.ORDEN ASC
+                        LIMIT 1
+                    )
+                    )
+            WHERE i.ID_ITINERARIO = rec.ID_ITINERARIO;
+        END LOOP;
 
-RETURN NEW;
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -1090,50 +1146,50 @@ DROP TRIGGER IF EXISTS trg_vuelo_hacia_itinerario ON Vuelo;
 CREATE TRIGGER trg_vuelo_hacia_itinerario
     AFTER UPDATE OF Fecha_Hora_Salida, Fecha_Hora_Llegada ON Vuelo
     FOR EACH ROW
-    EXECUTE FUNCTION fn_update_itinerario_desde_vuelo();
+EXECUTE FUNCTION fn_update_itinerario_desde_vuelo();
 
 
 CREATE OR REPLACE FUNCTION fn_actualizar_duracion_itinerario()
     RETURNS TRIGGER AS $$
 DECLARE
-v_id_itinerario INT;
+    v_id_itinerario INT;
     v_hora_salida   TIMESTAMP;
     v_hora_llegada  TIMESTAMP;
 BEGIN
     IF (TG_OP = 'DELETE') THEN
         v_id_itinerario := OLD.ID_ITINERARIO;
-ELSE
+    ELSE
         v_id_itinerario := NEW.ID_ITINERARIO;
-END IF;
+    END IF;
 
     -- Obtener la hora de salida del primer vuelo (ORDEN mínimo)
-SELECT v.Fecha_Hora_Salida
-INTO v_hora_salida
-FROM Itinerario_Vuelo iv
-         JOIN Vuelo v ON v.ID_VUELO = iv.ID_VUELO
-WHERE iv.ID_ITINERARIO = v_id_itinerario
-ORDER BY iv.ORDEN ASC
+    SELECT v.Fecha_Hora_Salida
+    INTO v_hora_salida
+    FROM Itinerario_Vuelo iv
+             JOIN Vuelo v ON v.ID_VUELO = iv.ID_VUELO
+    WHERE iv.ID_ITINERARIO = v_id_itinerario
+    ORDER BY iv.ORDEN ASC
     LIMIT 1;
 
--- Obtener la hora de llegada del último vuelo (ORDEN máximo)
-SELECT v.Fecha_Hora_Llegada
-INTO v_hora_llegada
-FROM Itinerario_Vuelo iv
-         JOIN Vuelo v ON v.ID_VUELO = iv.ID_VUELO
-WHERE iv.ID_ITINERARIO = v_id_itinerario
-ORDER BY iv.ORDEN DESC
+    -- Obtener la hora de llegada del último vuelo (ORDEN máximo)
+    SELECT v.Fecha_Hora_Llegada
+    INTO v_hora_llegada
+    FROM Itinerario_Vuelo iv
+             JOIN Vuelo v ON v.ID_VUELO = iv.ID_VUELO
+    WHERE iv.ID_ITINERARIO = v_id_itinerario
+    ORDER BY iv.ORDEN DESC
     LIMIT 1;
 
--- Actualizar el itinerario
-IF v_hora_salida IS NOT NULL AND v_hora_llegada IS NOT NULL THEN
-UPDATE Itinerario
-SET HORA_SALIDA    = v_hora_salida,
-    HORA_LLEGADA   = v_hora_llegada,
-    DURACION_TOTAL = (v_hora_llegada - v_hora_salida)
-WHERE ID_ITINERARIO = v_id_itinerario;
-END IF;
+    -- Actualizar el itinerario
+    IF v_hora_salida IS NOT NULL AND v_hora_llegada IS NOT NULL THEN
+        UPDATE Itinerario
+        SET HORA_SALIDA    = v_hora_salida,
+            HORA_LLEGADA   = v_hora_llegada,
+            DURACION_TOTAL = (v_hora_llegada - v_hora_salida)
+        WHERE ID_ITINERARIO = v_id_itinerario;
+    END IF;
 
-RETURN NULL;
+    RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -1142,14 +1198,14 @@ DROP TRIGGER IF EXISTS trg_actualizar_duracion_itinerario ON Itinerario_Vuelo;
 CREATE TRIGGER trg_actualizar_duracion_itinerario
     AFTER INSERT OR UPDATE OR DELETE ON Itinerario_Vuelo
     FOR EACH ROW
-    EXECUTE FUNCTION fn_actualizar_duracion_itinerario();
+EXECUTE FUNCTION fn_actualizar_duracion_itinerario();
 
 
 
 CREATE OR REPLACE FUNCTION fn_set_fecha_vuelo()
-RETURNS TRIGGER AS $$
+    RETURNS TRIGGER AS $$
 DECLARE
-v_id_vuelo INT;
+    v_id_vuelo INT;
     v_fecha_salida TIMESTAMP;
     v_fecha_llegada TIMESTAMP;
 BEGIN
@@ -1158,33 +1214,33 @@ BEGIN
     -- Para simplificar, primero identificamos qué vuelo procesar en este hilo.
     IF (TG_OP = 'DELETE') THEN
         v_id_vuelo := OLD.ID_VUELO;
-ELSE
+    ELSE
         v_id_vuelo := NEW.ID_VUELO;
-END IF;
+    END IF;
 
     -- 2. Obtener la salida del primer segmento y la llegada del último en una sola consulta
     -- Esto es más eficiente que hacer dos SELECT por separado.
-SELECT
-    (SELECT hora_salida FROM Segmento_Vuelo WHERE id_vuelo = v_id_vuelo ORDER BY ORDEN_SEGMENTO ASC LIMIT 1),
+    SELECT
+        (SELECT hora_salida FROM Segmento_Vuelo WHERE id_vuelo = v_id_vuelo ORDER BY ORDEN_SEGMENTO ASC LIMIT 1),
         (SELECT hora_llegada FROM Segmento_Vuelo WHERE id_vuelo = v_id_vuelo ORDER BY ORDEN_SEGMENTO DESC LIMIT 1)
-INTO v_fecha_salida, v_fecha_llegada;
+    INTO v_fecha_salida, v_fecha_llegada;
 
 -- 3. Actualizar la tabla Vuelo
-UPDATE Vuelo
-SET Fecha_Hora_Salida = v_fecha_salida,
-    Fecha_Hora_Llegada = v_fecha_llegada
-WHERE ID_VUELO = v_id_vuelo;
+    UPDATE Vuelo
+    SET Fecha_Hora_Salida = v_fecha_salida,
+        Fecha_Hora_Llegada = v_fecha_llegada
+    WHERE ID_VUELO = v_id_vuelo;
 
--- 4. Caso Especial: Si hubo un UPDATE y se cambió el ID_VUELO de un segmento,
+    -- 4. Caso Especial: Si hubo un UPDATE y se cambió el ID_VUELO de un segmento,
 -- debemos recalcular también el Vuelo que perdió el segmento.
-IF (TG_OP = 'UPDATE' AND OLD.ID_VUELO <> NEW.ID_VUELO) THEN
-UPDATE Vuelo
-SET Fecha_Hora_Salida = (SELECT hora_salida FROM Segmento_Vuelo WHERE id_vuelo = OLD.ID_VUELO ORDER BY ORDEN_SEGMENTO ASC LIMIT 1),
-    Fecha_Hora_Llegada = (SELECT hora_llegada FROM Segmento_Vuelo WHERE id_vuelo = OLD.ID_VUELO ORDER BY ORDEN_SEGMENTO DESC LIMIT 1)
-WHERE ID_VUELO = OLD.ID_VUELO;
-END IF;
+    IF (TG_OP = 'UPDATE' AND OLD.ID_VUELO <> NEW.ID_VUELO) THEN
+        UPDATE Vuelo
+        SET Fecha_Hora_Salida = (SELECT hora_salida FROM Segmento_Vuelo WHERE id_vuelo = OLD.ID_VUELO ORDER BY ORDEN_SEGMENTO ASC LIMIT 1),
+            Fecha_Hora_Llegada = (SELECT hora_llegada FROM Segmento_Vuelo WHERE id_vuelo = OLD.ID_VUELO ORDER BY ORDEN_SEGMENTO DESC LIMIT 1)
+        WHERE ID_VUELO = OLD.ID_VUELO;
+    END IF;
 
-RETURN NULL; -- En triggers AFTER el valor de retorno no afecta al registro
+    RETURN NULL; -- En triggers AFTER el valor de retorno no afecta al registro
 END;
 $$ LANGUAGE plpgsql;
 
@@ -1192,53 +1248,53 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trg_set_fecha_vuelo
     AFTER INSERT OR UPDATE OR DELETE ON Segmento_Vuelo
     FOR EACH ROW
-    EXECUTE FUNCTION fn_set_fecha_vuelo();
+EXECUTE FUNCTION fn_set_fecha_vuelo();
 
 
 
 CREATE OR REPLACE FUNCTION fn_set_fecha_turno_automatico()
-RETURNS TRIGGER AS $$
+    RETURNS TRIGGER AS $$
 DECLARE
-v_hora_inicio TIMESTAMP;
+    v_hora_inicio TIMESTAMP;
     v_hora_fin TIMESTAMP;
 BEGIN
     -- 1. Obtener la hora de salida del primer segmento (Orden 1)
-SELECT hora_salida
-INTO v_hora_inicio
-FROM Segmento_Vuelo
-WHERE id_vuelo = NEW.ID_VUELO
-  AND ORDEN_SEGMENTO = 1;
+    SELECT hora_salida
+    INTO v_hora_inicio
+    FROM Segmento_Vuelo
+    WHERE id_vuelo = NEW.ID_VUELO
+      AND ORDEN_SEGMENTO = 1;
 
 -- 2. Obtener la hora de llegada del último segmento (El de mayor orden)
-SELECT hora_llegada
-INTO v_hora_fin
-FROM Segmento_Vuelo
-WHERE id_vuelo = NEW.ID_VUELO
-  AND ORDEN_SEGMENTO = (
-    SELECT MAX(sgv2.ORDEN_SEGMENTO)
-    FROM Segmento_Vuelo sgv2
-    WHERE sgv2.id_vuelo = NEW.ID_VUELO
-);
+    SELECT hora_llegada
+    INTO v_hora_fin
+    FROM Segmento_Vuelo
+    WHERE id_vuelo = NEW.ID_VUELO
+      AND ORDEN_SEGMENTO = (
+        SELECT MAX(sgv2.ORDEN_SEGMENTO)
+        FROM Segmento_Vuelo sgv2
+        WHERE sgv2.id_vuelo = NEW.ID_VUELO
+    );
 
--- 3. Actualizar los turnos asociados a este vuelo
+    -- 3. Actualizar los turnos asociados a este vuelo
 -- Solo se actualiza si se encontraron ambos extremos (inicio y fin)
-IF v_hora_inicio IS NOT NULL AND v_hora_fin IS NOT NULL THEN
-UPDATE Turno
-SET Hora_Inicio = v_hora_inicio,
-    Hora_Fin = v_hora_fin,
-    Fecha = CAST(v_hora_inicio AS DATE) -- Se asume que la fecha del turno es el día de salida
-WHERE ID_VUELO = NEW.ID_VUELO;
-END IF;
+    IF v_hora_inicio IS NOT NULL AND v_hora_fin IS NOT NULL THEN
+        UPDATE Turno
+        SET Hora_Inicio = v_hora_inicio,
+            Hora_Fin = v_hora_fin,
+            Fecha = CAST(v_hora_inicio AS DATE) -- Se asume que la fecha del turno es el día de salida
+        WHERE ID_VUELO = NEW.ID_VUELO;
+    END IF;
 
-RETURN NEW;
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
 
 CREATE TRIGGER trg_actualizar_fechas_turno
     AFTER INSERT OR UPDATE ON Segmento_Vuelo
-                        FOR EACH ROW
-                        EXECUTE FUNCTION fn_set_fecha_turno_automatico();
+    FOR EACH ROW
+EXECUTE FUNCTION fn_set_fecha_turno_automatico();
 
 
 /*ALTER TABLE Segmento_Vuelo DISABLE TRIGGER trg_set_orden_segmento_vuelo;
@@ -1271,74 +1327,74 @@ WHERE Correo_Electronico = 'juan.perez@piloto.com';
 
 
 CREATE OR REPLACE FUNCTION fn_notificacionVueloEstado()
-RETURNS TRIGGER
-LANGUAGE PLPGSQL
+    RETURNS TRIGGER
+    LANGUAGE PLPGSQL
 AS
 $$
 DECLARE
-pasajero RECORD;
+    pasajero RECORD;
     mensaje TEXT;
 BEGIN
     -- Iterar sobre cada pasajero asociado al vuelo actualizado
-FOR pasajero IN
-SELECT rsv.rut_pasajero, vl.numero_vuelo
-FROM reserva_itinerario rsvi
-         join itinerario_vuelo itv
-              on itv.id_itinerario = rsvi.id_itinerario
-         join reserva rsv on rsv.id_reserva = rsvi.id_reserva
-         join vuelo vl on vl.id_vuelo = itv.id_vuelo
-WHERE itv.id_vuelo = NEW.id_vuelo
+    FOR pasajero IN
+        SELECT rsv.rut_pasajero, vl.numero_vuelo
+        FROM reserva_itinerario rsvi
+                 join itinerario_vuelo itv
+                      on itv.id_itinerario = rsvi.id_itinerario
+                 join reserva rsv on rsv.id_reserva = rsvi.id_reserva
+                 join vuelo vl on vl.id_vuelo = itv.id_vuelo
+        WHERE itv.id_vuelo = NEW.id_vuelo
 
-    LOOP
-        -- Construir el mensaje de notificación con detalles específicos
-        mensaje := 'Estimado/a pasajero/a, su vuelo número ' || pasajero.numero_vuelo ||
-                   ' ha sido actualizado. ';
+        LOOP
+            -- Construir el mensaje de notificación con detalles específicos
+            mensaje := 'Estimado/a pasajero/a, su vuelo número ' || pasajero.numero_vuelo ||
+                       ' ha sido actualizado. ';
 
 -- Incluir información sobre la nueva hora de salida
 
-IF OLD.hora_salida IS DISTINCT FROM NEW.hora_salida THEN
-			  mensaje := mensaje || 'La nueva hora de salida es: ' || TO_CHAR(NEW.hora_salida, 'DD/MM/YYYY HH24:MI') || '. ';
+            IF OLD.hora_salida IS DISTINCT FROM NEW.hora_salida THEN
+                mensaje := mensaje || 'La nueva hora de salida es: ' || TO_CHAR(NEW.hora_salida, 'DD/MM/YYYY HH24:MI') || '. ';
 
-        /*IF NEW.fecha_hora_salida IS NOT NULL THEN
-            mensaje := mensaje || 'La nueva hora de salida es: ' || TO_CHAR(NEW.fecha_hora_salida, 'DD/MM/YYYY HH24:MI') || '. ';
-        ELSE
-            mensaje := mensaje || 'La hora de salida no ha sido modificada. ';*/
-END IF;
+                /*IF NEW.fecha_hora_salida IS NOT NULL THEN
+                    mensaje := mensaje || 'La nueva hora de salida es: ' || TO_CHAR(NEW.fecha_hora_salida, 'DD/MM/YYYY HH24:MI') || '. ';
+                ELSE
+                    mensaje := mensaje || 'La hora de salida no ha sido modificada. ';*/
+            END IF;
 
-        -- Incluir información sobre la nueva hora de llegada
-        IF OLD.hora_llegada IS DISTINCT FROM NEW.hora_llegada THEN
-            mensaje := mensaje || 'La nueva hora de llegada es: ' || TO_CHAR(NEW.hora_llegada, 'DD/MM/YYYY HH24:MI') || '. ';
-ELSE
-            --mensaje := mensaje || 'La hora de llegada no ha sido modificada. ';
-END IF;
+            -- Incluir información sobre la nueva hora de llegada
+            IF OLD.hora_llegada IS DISTINCT FROM NEW.hora_llegada THEN
+                mensaje := mensaje || 'La nueva hora de llegada es: ' || TO_CHAR(NEW.hora_llegada, 'DD/MM/YYYY HH24:MI') || '. ';
+            ELSE
+                --mensaje := mensaje || 'La hora de llegada no ha sido modificada. ';
+            END IF;
 
-        -- Añadir información adicional si está disponible
-        /*IF NEW.id_aeropuerto_salida IS NOT NULL THEN
-            mensaje := mensaje || 'Aeropuerto de salida: ' || NEW.id_aeropuerto_salida || '. ';
-        END IF;
-        IF NEW.id_aeropuerto_llegada IS NOT NULL THEN
-            mensaje := mensaje || 'Aeropuerto de llegada: ' || NEW.id_aeropuerto_llegada || '. ';
-        END IF;
-        IF NEW.precio IS NOT NULL THEN
-            mensaje := mensaje || 'Precio del boleto: $' || NEW.precio || '. ';
-        END IF;
-        IF NEW.rut_piloto IS NOT NULL THEN
+            -- Añadir información adicional si está disponible
+            /*IF NEW.id_aeropuerto_salida IS NOT NULL THEN
+                mensaje := mensaje || 'Aeropuerto de salida: ' || NEW.id_aeropuerto_salida || '. ';
+            END IF;
+            IF NEW.id_aeropuerto_llegada IS NOT NULL THEN
+                mensaje := mensaje || 'Aeropuerto de llegada: ' || NEW.id_aeropuerto_llegada || '. ';
+            END IF;
+            IF NEW.precio IS NOT NULL THEN
+                mensaje := mensaje || 'Precio del boleto: $' || NEW.precio || '. ';
+            END IF;
+            IF NEW.rut_piloto IS NOT NULL THEN
 
 
-            mensaje := mensaje || 'Piloto a cargo: ' || NEW.rut_piloto || '. ';
-        END IF;*/
+                mensaje := mensaje || 'Piloto a cargo: ' || NEW.rut_piloto || '. ';
+            END IF;*/
 
-        -- Insertar la notificación en la tabla correspondiente
-INSERT INTO notificacion(rut_destinatario, titulo, mensaje, fecha, leido)
-VALUES (
-           pasajero.rut_pasajero,
-           'Actualización de Vuelo: ' || pasajero.numero_vuelo,
-           mensaje,
-           NOW(),
-           FALSE
-       );
-END LOOP;
-RETURN NEW;
+            -- Insertar la notificación en la tabla correspondiente
+            INSERT INTO notificacion(rut_destinatario, titulo, mensaje, fecha, leido)
+            VALUES (
+                       pasajero.rut_pasajero,
+                       'Actualización de Vuelo: ' || pasajero.numero_vuelo,
+                       mensaje,
+                       NOW(),
+                       FALSE
+                   );
+        END LOOP;
+    RETURN NEW;
 END;
 $$;
 
@@ -1346,19 +1402,19 @@ $$;
 
 -- Crear el Trigger para enviar notificaciones después de actualizar un vuelo
 CREATE OR REPLACE TRIGGER tr_notificacionVueloEstado
-AFTER UPDATE ON Segmento_Vuelo
-                 FOR EACH ROW
-                 EXECUTE FUNCTION fn_notificacionVueloEstado();
+    AFTER UPDATE ON Segmento_Vuelo
+    FOR EACH ROW
+EXECUTE FUNCTION fn_notificacionVueloEstado();
 
 
 
 
 CREATE OR REPLACE FUNCTION fn_notify_new_notification()
-RETURNS TRIGGER AS
+    RETURNS TRIGGER AS
 $$
 BEGIN
     PERFORM pg_notify('nuevo_correo', NEW.id_notificacion::TEXT);
-RETURN NEW;
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -1367,9 +1423,7 @@ DROP TRIGGER IF EXISTS tr_notify_new_notificacion ON notificacion;
 CREATE TRIGGER tr_notify_new_notificacion
     AFTER INSERT ON notificacion
     FOR EACH ROW
-    EXECUTE FUNCTION fn_notify_new_notification();
-
-
+EXECUTE FUNCTION fn_notify_new_notification();
 
 
 CREATE OR REPLACE FUNCTION fnBuscarVuelo(
@@ -1377,45 +1431,45 @@ CREATE OR REPLACE FUNCTION fnBuscarVuelo(
     p_codigo_destino VARCHAR,
     p_fecha_inicio DATE
 )
-RETURNS TABLE (
-    itinerario INT,
-    origen VARCHAR,
-    destino VARCHAR,
-    ciudad_salida TEXT,
-    ciudad_llegada TEXT,
-    cant_paradas TEXT,
-    precio INT,
-    duracion TEXT,
-    hora_salida_24h TEXT,
-    hora_llegada_24h TEXT
-) AS $$
+    RETURNS TABLE (
+                      itinerario INT,
+                      origen VARCHAR,
+                      destino VARCHAR,
+                      ciudad_salida TEXT,
+                      ciudad_llegada TEXT,
+                      cant_paradas TEXT,
+                      precio INT,
+                      duracion TEXT,
+                      hora_salida_24h TEXT,
+                      hora_llegada_24h TEXT
+                  ) AS $$
 BEGIN
-RETURN QUERY
-SELECT
-    it.id_itinerario,
-    arp1.codigo_iata,
-    arp2.codigo_iata,
-    ci1.nombre || ' - ' || arp1.nombre_aeropuerto || ' (' || arp1.codigo_iata || ')' AS ciudad_salida,
-    ci2.nombre || ' - ' || arp2.nombre_aeropuerto || ' (' || arp2.codigo_iata || ')' AS ciudad_llegada,
-    CASE
-        WHEN it.numero_escalas = 0 THEN 'sin paradas'
-        WHEN it.numero_escalas = 1 THEN '1 parada'
-        ELSE it.numero_escalas::TEXT || ' paradas'
-        END AS cant_paradas,
-    it.precio_base,
-    (EXTRACT(epoch FROM (it.hora_llegada - it.hora_salida)) / 3600)::INT || ' h ' ||
-        ((EXTRACT(epoch FROM (it.hora_llegada - it.hora_salida)) % 3600) / 60)::INT || ' min' AS duracion,
-    TO_CHAR(it.hora_salida, 'HH24:MI'),
-    TO_CHAR(it.hora_llegada, 'HH24:MI')
-FROM itinerario it
-         JOIN aeropuerto arp1 ON arp1.id_aeropuerto = it.origen_aeropuerto
-         JOIN aeropuerto arp2 ON arp2.id_aeropuerto = it.destino_aeropuerto
-         JOIN ciudad ci1 ON ci1.id_ciudad = arp1.id_ciudad
-         JOIN ciudad ci2 ON ci2.id_ciudad = arp2.id_ciudad
-WHERE arp1.codigo_iata = p_codigo_origen
-  AND arp2.codigo_iata = p_codigo_destino
-  AND it.hora_salida >= p_fecha_inicio
-  AND it.hora_salida < p_fecha_inicio + INTERVAL '1 day';
+    RETURN QUERY
+        SELECT
+            it.id_itinerario,
+            arp1.codigo_iata,
+            arp2.codigo_iata,
+            ci1.nombre || ' - ' || arp1.nombre_aeropuerto || ' (' || arp1.codigo_iata || ')' AS ciudad_salida,
+            ci2.nombre || ' - ' || arp2.nombre_aeropuerto || ' (' || arp2.codigo_iata || ')' AS ciudad_llegada,
+            CASE
+                WHEN it.numero_escalas = 0 THEN 'sin paradas'
+                WHEN it.numero_escalas = 1 THEN '1 parada'
+                ELSE it.numero_escalas::TEXT || ' paradas'
+                END AS cant_paradas,
+            it.precio_base,
+            (EXTRACT(epoch FROM (it.hora_llegada - it.hora_salida)) / 3600)::INT || ' h ' ||
+            ((EXTRACT(epoch FROM (it.hora_llegada - it.hora_salida)) % 3600) / 60)::INT || ' min' AS duracion,
+            TO_CHAR(it.hora_salida, 'HH24:MI'),
+            TO_CHAR(it.hora_llegada, 'HH24:MI')
+        FROM itinerario it
+                 JOIN aeropuerto arp1 ON arp1.id_aeropuerto = it.origen_aeropuerto
+                 JOIN aeropuerto arp2 ON arp2.id_aeropuerto = it.destino_aeropuerto
+                 JOIN ciudad ci1 ON ci1.id_ciudad = arp1.id_ciudad
+                 JOIN ciudad ci2 ON ci2.id_ciudad = arp2.id_ciudad
+        WHERE arp1.codigo_iata = p_codigo_origen
+          AND arp2.codigo_iata = p_codigo_destino
+          AND it.hora_salida >= p_fecha_inicio
+          AND it.hora_salida < p_fecha_inicio + INTERVAL '1 day';
 END;
 $$ LANGUAGE plpgsql;
 
@@ -1425,45 +1479,45 @@ CREATE OR REPLACE FUNCTION FnbuscarVuelos(
     p_codigo_destino VARCHAR,
     p_fecha_inicio DATE DEFAULT NULL
 )
-RETURNS SETOF vuelo
-LANGUAGE plpgsql
+    RETURNS SETOF vuelo
+    LANGUAGE plpgsql
 AS $$
 BEGIN
-RETURN QUERY
-SELECT
-    v.*
-FROM vuelo v
+    RETURN QUERY
+        SELECT
+            v.*
+        FROM vuelo v
 
-         -- Primer segmento (origen)
-         LEFT JOIN segmento_vuelo sgmv1
-                   ON sgmv1.id_vuelo = v.id_vuelo
-                       AND sgmv1.orden_segmento = 1
+                 -- Primer segmento (origen)
+                 LEFT JOIN segmento_vuelo sgmv1
+                           ON sgmv1.id_vuelo = v.id_vuelo
+                               AND sgmv1.orden_segmento = 1
 
-    -- Último segmento (destino final)
-         JOIN (
-    SELECT DISTINCT ON (id_vuelo)
-        id_vuelo,
-        id_aeropuerto_destino
-    FROM segmento_vuelo
-    ORDER BY id_vuelo, orden_segmento DESC
-) sgmv2
-              ON sgmv2.id_vuelo = v.id_vuelo
+            -- Último segmento (destino final)
+                 JOIN (
+            SELECT DISTINCT ON (id_vuelo)
+                id_vuelo,
+                id_aeropuerto_destino
+            FROM segmento_vuelo
+            ORDER BY id_vuelo, orden_segmento DESC
+        ) sgmv2
+                      ON sgmv2.id_vuelo = v.id_vuelo
 
-         JOIN aeropuerto arp1
-              ON arp1.id_aeropuerto = sgmv1.id_aeropuerto_origen
+                 JOIN aeropuerto arp1
+                      ON arp1.id_aeropuerto = sgmv1.id_aeropuerto_origen
 
-         JOIN aeropuerto arp2
-              ON arp2.id_aeropuerto = sgmv2.id_aeropuerto_destino
+                 JOIN aeropuerto arp2
+                      ON arp2.id_aeropuerto = sgmv2.id_aeropuerto_destino
 
-WHERE arp1.codigo_iata = p_codigo_origen
-  AND arp2.codigo_iata = p_codigo_destino
-  AND (
-    p_fecha_inicio IS NULL
-        OR (
-        sgmv1.hora_salida >= p_fecha_inicio
-            AND sgmv1.hora_salida < p_fecha_inicio + INTERVAL '1 day'
-        )
-    );
+        WHERE arp1.codigo_iata = p_codigo_origen
+          AND arp2.codigo_iata = p_codigo_destino
+          AND (
+            p_fecha_inicio IS NULL
+                OR (
+                sgmv1.hora_salida >= p_fecha_inicio
+                    AND sgmv1.hora_salida < p_fecha_inicio + INTERVAL '1 day'
+                )
+            );
 END;
 $$;
 
@@ -1483,107 +1537,107 @@ order by v.id_vuelo;
 
 
 CREATE OR REPLACE FUNCTION fnDTinitinerario(p_id_itinerario INT)
-RETURNS TABLE(
-  ID_ITINERARIO INT,
-  Aeropuerto_Origen VARCHAR(100),
-  Aeropuerto_Destino VARCHAR(100),
-  DURACION_TOTAL TEXT,
-  NUMERO_ESCALAS INT,
-  ORDEN INT,
-  Salida TEXT,
-  Aeropuerto_Salida VARCHAR(100),
-  Ciudad_Salida VARCHAR(100),
-  Llegada TEXT,
-  Aeropuerto_Llegada VARCHAR(100),
-  Ciudad_Llegada VARCHAR(100),
-  Duracion TEXT,
-  Tiempo_Espera TEXT,
-  Modelo_Avion VARCHAR(100),
-  Aerolinea VARCHAR(100),
-  Vuelo VARCHAR(50),
-  Descripcion_Vuelo TEXT
-)
+    RETURNS TABLE(
+                     ID_ITINERARIO INT,
+                     Aeropuerto_Origen VARCHAR(100),
+                     Aeropuerto_Destino VARCHAR(100),
+                     DURACION_TOTAL TEXT,
+                     NUMERO_ESCALAS INT,
+                     ORDEN INT,
+                     Salida TEXT,
+                     Aeropuerto_Salida VARCHAR(100),
+                     Ciudad_Salida VARCHAR(100),
+                     Llegada TEXT,
+                     Aeropuerto_Llegada VARCHAR(100),
+                     Ciudad_Llegada VARCHAR(100),
+                     Duracion TEXT,
+                     Tiempo_Espera TEXT,
+                     Modelo_Avion VARCHAR(100),
+                     Aerolinea VARCHAR(100),
+                     Vuelo VARCHAR(50),
+                     Descripcion_Vuelo TEXT
+                 )
 AS $$
 BEGIN
-RETURN QUERY
-    WITH tramos_calculados AS (
-    SELECT
-        it.ID_ITINERARIO AS id_it_temp,
-        a3.Nombre_Aeropuerto AS At_Origen,
-        a4.Nombre_Aeropuerto AS At_Destino,
-        TO_CHAR(it.DURACION_TOTAL, 'HH24 "h" MI "min"') AS Dur_Total,
-        it.NUMERO_ESCALAS,
-        iv.ORDEN AS orden_vuelo,
-        a1.Codigo_IATA AS Iata_Salida,
-        a1.Nombre_Aeropuerto AS Ap_Salida,
-        c1.nombre AS Cd_Salida,
-        a2.Codigo_IATA AS Iata_Llegada,
-        a2.Nombre_Aeropuerto AS Ap_Llegada,
-        c2.nombre AS Cd_Llegada,
+    RETURN QUERY
+        WITH tramos_calculados AS (
+            SELECT
+                it.ID_ITINERARIO AS id_it_temp,
+                a3.Nombre_Aeropuerto AS At_Origen,
+                a4.Nombre_Aeropuerto AS At_Destino,
+                TO_CHAR(it.DURACION_TOTAL, 'HH24 "h" MI "min"') AS Dur_Total,
+                it.NUMERO_ESCALAS,
+                iv.ORDEN AS orden_vuelo,
+                a1.Codigo_IATA AS Iata_Salida,
+                a1.Nombre_Aeropuerto AS Ap_Salida,
+                c1.nombre AS Cd_Salida,
+                a2.Codigo_IATA AS Iata_Llegada,
+                a2.Nombre_Aeropuerto AS Ap_Llegada,
+                c2.nombre AS Cd_Llegada,
 
-        (sv_dest.HORA_LLEGADA - sv_orig.HORA_SALIDA) AS duracion_vuelo,
-        iv.TIEMPO_ESPERA::INTERVAL AS espera_conexion,
+                (sv_dest.HORA_LLEGADA - sv_orig.HORA_SALIDA) AS duracion_vuelo,
+                iv.TIEMPO_ESPERA::INTERVAL AS espera_conexion,
 
-        COALESCE(
-            LAG(it.HORA_SALIDA) OVER (PARTITION BY it.ID_ITINERARIO ORDER BY iv.ORDEN),
-            it.HORA_SALIDA
-        ) AS base_salida,
+                COALESCE(
+                                LAG(it.HORA_SALIDA) OVER (PARTITION BY it.ID_ITINERARIO ORDER BY iv.ORDEN),
+                                it.HORA_SALIDA
+                ) AS base_salida,
 
-        mdv.Nombre AS Mod_Avion,
-        al.Nombre AS Name_Aerolinea,
-        v.Numero_Vuelo AS Num_Vuelo
-    FROM Itinerario it
-    JOIN Itinerario_Vuelo iv ON iv.ID_ITINERARIO = it.ID_ITINERARIO
-    JOIN Vuelo v            ON v.ID_VUELO = iv.ID_VUELO
-    JOIN Avion av           ON av.ID_AVION = v.ID_AVION
-    JOIN modelo_avion mdv   ON mdv.id_modelo = av.id_modelo
-    JOIN Aerolinea al       ON al.ID_AEROLINEA = v.ID_AEROLINEA
+                mdv.Nombre AS Mod_Avion,
+                al.Nombre AS Name_Aerolinea,
+                v.Numero_Vuelo AS Num_Vuelo
+            FROM Itinerario it
+                     JOIN Itinerario_Vuelo iv ON iv.ID_ITINERARIO = it.ID_ITINERARIO
+                     JOIN Vuelo v            ON v.ID_VUELO = iv.ID_VUELO
+                     JOIN Avion av           ON av.ID_AVION = v.ID_AVION
+                     JOIN modelo_avion mdv   ON mdv.id_modelo = av.id_modelo
+                     JOIN Aerolinea al       ON al.ID_AEROLINEA = v.ID_AEROLINEA
 
-    JOIN (SELECT id_vuelo, min(orden_segmento) as p, max(orden_segmento) as u FROM segmento_vuelo GROUP BY id_vuelo) ext
-         ON ext.id_vuelo = v.id_vuelo
-    JOIN Segmento_Vuelo sv_orig ON sv_orig.ID_VUELO = v.ID_VUELO AND sv_orig.orden_segmento = ext.p
-    JOIN Segmento_Vuelo sv_dest ON sv_dest.ID_VUELO = v.ID_VUELO AND sv_dest.orden_segmento = ext.u
+                     JOIN (SELECT id_vuelo, min(orden_segmento) as p, max(orden_segmento) as u FROM segmento_vuelo GROUP BY id_vuelo) ext
+                          ON ext.id_vuelo = v.id_vuelo
+                     JOIN Segmento_Vuelo sv_orig ON sv_orig.ID_VUELO = v.ID_VUELO AND sv_orig.orden_segmento = ext.p
+                     JOIN Segmento_Vuelo sv_dest ON sv_dest.ID_VUELO = v.ID_VUELO AND sv_dest.orden_segmento = ext.u
 
-    JOIN Aeropuerto a1 ON a1.ID_AEROPUERTO = sv_orig.ID_AEROPUERTO_ORIGEN
-    JOIN Aeropuerto a2 ON a2.ID_AEROPUERTO = sv_dest.ID_AEROPUERTO_DESTINO
-    JOIN ciudad c1     ON c1.ID_CIUDAD = a1.ID_CIUDAD
-    JOIN ciudad c2     ON c2.ID_CIUDAD = a2.ID_CIUDAD
-    JOIN Aeropuerto a3 ON a3.ID_AEROPUERTO = it.ORIGEN_AEROPUERTO
-    JOIN Aeropuerto a4 ON a4.ID_AEROPUERTO = it.DESTINO_AEROPUERTO
-    WHERE it.ID_ITINERARIO = p_id_itinerario
-),
-linea_tiempo_acumulada AS (
-    SELECT
-        *,
-        CASE
-            WHEN orden_vuelo = 1 THEN base_salida
-            ELSE base_salida + SUM(duracion_vuelo + espera_conexion) OVER (PARTITION BY id_it_temp ORDER BY orden_vuelo ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) + espera_conexion
-        END AS hora_salida_real
-    FROM tramos_calculados
-)
-SELECT
-    l.id_it_temp AS ID_ITINERARIO,
-    l.At_Origen,
-    l.At_Destino,
-    l.Dur_Total,
-    l.NUMERO_ESCALAS,
-    l.orden_vuelo AS ORDEN,
-    l.Iata_Salida || ' ' || TO_CHAR(l.hora_salida_real, 'DD/MM/YYYY HH:MI AM') AS Salida,
-    l.Ap_Salida,
-    l.Cd_Salida,
-    l.Iata_Llegada || ' ' || TO_CHAR(l.hora_salida_real + l.duracion_vuelo, 'DD/MM/YYYY HH:MI AM') AS Llegada,
-    l.Ap_Llegada,
-    l.Cd_Llegada,
+                     JOIN Aeropuerto a1 ON a1.ID_AEROPUERTO = sv_orig.ID_AEROPUERTO_ORIGEN
+                     JOIN Aeropuerto a2 ON a2.ID_AEROPUERTO = sv_dest.ID_AEROPUERTO_DESTINO
+                     JOIN ciudad c1     ON c1.ID_CIUDAD = a1.ID_CIUDAD
+                     JOIN ciudad c2     ON c2.ID_CIUDAD = a2.ID_CIUDAD
+                     JOIN Aeropuerto a3 ON a3.ID_AEROPUERTO = it.ORIGEN_AEROPUERTO
+                     JOIN Aeropuerto a4 ON a4.ID_AEROPUERTO = it.DESTINO_AEROPUERTO
+            WHERE it.ID_ITINERARIO = p_id_itinerario
+        ),
+             linea_tiempo_acumulada AS (
+                 SELECT
+                     *,
+                     CASE
+                         WHEN orden_vuelo = 1 THEN base_salida
+                         ELSE base_salida + SUM(duracion_vuelo + espera_conexion) OVER (PARTITION BY id_it_temp ORDER BY orden_vuelo ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) + espera_conexion
+                         END AS hora_salida_real
+                 FROM tramos_calculados
+             )
+        SELECT
+            l.id_it_temp AS ID_ITINERARIO,
+            l.At_Origen,
+            l.At_Destino,
+            l.Dur_Total,
+            l.NUMERO_ESCALAS,
+            l.orden_vuelo AS ORDEN,
+            l.Iata_Salida || ' ' || TO_CHAR(l.hora_salida_real, 'DD/MM/YYYY HH:MI AM') AS Salida,
+            l.Ap_Salida,
+            l.Cd_Salida,
+            l.Iata_Llegada || ' ' || TO_CHAR(l.hora_salida_real + l.duracion_vuelo, 'DD/MM/YYYY HH:MI AM') AS Llegada,
+            l.Ap_Llegada,
+            l.Cd_Llegada,
 
-    EXTRACT(HOUR FROM l.duracion_vuelo) || ' h ' || EXTRACT(MINUTE FROM l.duracion_vuelo) || ' min' AS Duracion,
-    EXTRACT(HOUR FROM l.espera_conexion) || ' h ' || EXTRACT(MINUTE FROM l.espera_conexion) || ' min' AS Tiempo_Espera,
+            EXTRACT(HOUR FROM l.duracion_vuelo) || ' h ' || EXTRACT(MINUTE FROM l.duracion_vuelo) || ' min' AS Duracion,
+            EXTRACT(HOUR FROM l.espera_conexion) || ' h ' || EXTRACT(MINUTE FROM l.espera_conexion) || ' min' AS Tiempo_Espera,
 
-    l.Mod_Avion,
-    l.Name_Aerolinea,
-    l.Num_Vuelo,
-    'Vuelo ' || l.Num_Vuelo || ', ' || l.Mod_Avion || ', Operado por ' || l.Name_Aerolinea AS Descripcion_Vuelo
-FROM linea_tiempo_acumulada l
-ORDER BY l.orden_vuelo;
+            l.Mod_Avion,
+            l.Name_Aerolinea,
+            l.Num_Vuelo,
+            'Vuelo ' || l.Num_Vuelo || ', ' || l.Mod_Avion || ', Operado por ' || l.Name_Aerolinea AS Descripcion_Vuelo
+        FROM linea_tiempo_acumulada l
+        ORDER BY l.orden_vuelo;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -1593,43 +1647,43 @@ CREATE OR REPLACE FUNCTION fn_getAsientosAvion(
     IN p_idVuelo INT,
     IN p_idReserva INT DEFAULT NULL
 )
-RETURNS TABLE (
-    id_asiento INT,
-    numero_asiento VARCHAR,
-    estado TEXT,
-    precio INT,
-    clase VARCHAR,
-    fila INT,
-    letra VARCHAR,
-    es_ventana BOOLEAN,
-    es_pasillo BOOLEAN,
-    es_emergencia BOOLEAN
-) AS $$
+    RETURNS TABLE (
+                      id_asiento INT,
+                      numero_asiento VARCHAR,
+                      estado TEXT,
+                      precio INT,
+                      clase VARCHAR,
+                      fila INT,
+                      letra VARCHAR,
+                      es_ventana BOOLEAN,
+                      es_pasillo BOOLEAN,
+                      es_emergencia BOOLEAN
+                  ) AS $$
 BEGIN
-RETURN QUERY
-SELECT
-    a.id_asiento,
-    a.numero_asiento,
-    CASE
-        WHEN p_idReserva IS NOT NULL AND rsv.id_reserva = p_idReserva THEN 'seleccionado'
-        WHEN rsv.id_reserva IS NOT NULL THEN 'ocupado'
-        ELSE 'libre'
-        END AS estado,
-    psa.precio,
-    cls.descripcion AS clase,
-    a.fila,
-    a.letra,
-    a.es_ventana,
-    a.es_pasillo,
-    a.es_emergencia
-FROM vuelo vl
-         JOIN avion av ON av.id_avion = vl.id_avion
-         JOIN asiento a ON a.id_avion = av.id_avion
-         LEFT JOIN reserva_asiento rsv ON rsv.id_asiento = a.id_asiento AND rsv.id_vuelo = vl.id_vuelo
-         JOIN precio_asiento psa ON psa.id_clase = a.id_clase AND psa.id_vuelo = vl.id_vuelo
-         LEFT JOIN clase_asiento cls ON cls.id_clase = a.id_clase
-WHERE vl.id_vuelo = p_idVuelo
-ORDER BY a.fila ASC, a.letra ASC;
+    RETURN QUERY
+        SELECT
+            a.id_asiento,
+            a.numero_asiento,
+            CASE
+                WHEN p_idReserva IS NOT NULL AND rsv.id_reserva = p_idReserva THEN 'seleccionado'
+                WHEN rsv.id_reserva IS NOT NULL THEN 'ocupado'
+                ELSE 'libre'
+                END AS estado,
+            psa.precio,
+            cls.descripcion AS clase,
+            a.fila,
+            a.letra,
+            a.es_ventana,
+            a.es_pasillo,
+            a.es_emergencia
+        FROM vuelo vl
+                 JOIN avion av ON av.id_avion = vl.id_avion
+                 JOIN asiento a ON a.id_avion = av.id_avion
+                 LEFT JOIN reserva_asiento rsv ON rsv.id_asiento = a.id_asiento AND rsv.id_vuelo = vl.id_vuelo
+                 JOIN precio_asiento psa ON psa.id_clase = a.id_clase AND psa.id_vuelo = vl.id_vuelo
+                 LEFT JOIN clase_asiento cls ON cls.id_clase = a.id_clase
+        WHERE vl.id_vuelo = p_idVuelo
+        ORDER BY a.fila ASC, a.letra ASC;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -1644,35 +1698,34 @@ CREATE OR REPLACE FUNCTION fn_getItinerariosRut(
     limite INT,
     desplazamiento INT
 )
-RETURNS TABLE (
-    id_itinerario int,
-    codigo_iata_origen varchar(255),
-    codigo_iata_destino varchar(255),
-    hora_salida TIMESTAMP
-)
+    RETURNS TABLE (
+                      id_itinerario int,
+                      codigo_iata_origen varchar(255),
+                      codigo_iata_destino varchar(255),
+                      hora_salida TIMESTAMP
+                  )
 AS
 $$
 BEGIN
-RETURN QUERY
-SELECT
-    i.id_itinerario,
-    arp2.codigo_iata,
-    arp1.codigo_iata,
-    i.hora_salida
-FROM reserva r
-         JOIN reserva_itinerario ri ON ri.id_reserva = r.id_reserva
-         JOIN itinerario i ON i.id_itinerario = ri.id_itinerario
-         JOIN aeropuerto arp1 ON arp1.id_aeropuerto = i.destino_aeropuerto
-         JOIN aeropuerto arp2 ON arp2.id_aeropuerto = i.origen_aeropuerto
-WHERE r.rut_pasajero = prut_pasajero
-ORDER BY r.fecha_reserva ASC
-    LIMIT limite OFFSET desplazamiento;
+    RETURN QUERY
+        SELECT
+            i.id_itinerario,
+            arp2.codigo_iata,
+            arp1.codigo_iata,
+            i.hora_salida
+        FROM reserva r
+                 JOIN reserva_itinerario ri ON ri.id_reserva = r.id_reserva
+                 JOIN itinerario i ON i.id_itinerario = ri.id_itinerario
+                 JOIN aeropuerto arp1 ON arp1.id_aeropuerto = i.destino_aeropuerto
+                 JOIN aeropuerto arp2 ON arp2.id_aeropuerto = i.origen_aeropuerto
+        WHERE r.rut_pasajero = prut_pasajero
+        ORDER BY r.fecha_reserva ASC
+        LIMIT limite OFFSET desplazamiento;
 END;
 $$ LANGUAGE plpgsql STABLE;
 
 
-
-
+-- 1. ITINERARIOS POR RUT Y FECHAS
 CREATE OR REPLACE FUNCTION fn_getItinerariosPorRutYFechas(
     prut_pasajero TEXT,
     limite INT,
@@ -1680,187 +1733,183 @@ CREATE OR REPLACE FUNCTION fn_getItinerariosPorRutYFechas(
     pfechaIni TIMESTAMP DEFAULT NULL,
     pfechaFin TIMESTAMP DEFAULT NULL
 )
-RETURNS TABLE (
-    id_itinerario INT,
-    codigo_iata_origen VARCHAR(255),
-    codigo_iata_destino VARCHAR(255),
-    hora_salida TIMESTAMP,
-	id_reserva INT
-)
+    RETURNS TABLE (
+                      id_itinerario INT,
+                      codigo_iata_origen VARCHAR(255),
+                      codigo_iata_destino VARCHAR(255),
+                      hora_salida TIMESTAMP,
+                      id_reserva INT,
+                      hora_llegada TIMESTAMP
+                  )
 AS
 $$
 BEGIN
-RETURN QUERY
-SELECT
-    i.id_itinerario,
-    arp2.codigo_iata,
-    arp1.codigo_iata,
-    i.hora_salida,
-    r.id_reserva
-FROM reserva r
-         JOIN reserva_itinerario ri ON ri.id_reserva = r.id_reserva
-         JOIN itinerario i ON i.id_itinerario = ri.id_itinerario
-         JOIN aeropuerto arp1 ON arp1.id_aeropuerto = i.destino_aeropuerto
-         JOIN aeropuerto arp2 ON arp2.id_aeropuerto = i.origen_aeropuerto
-WHERE r.rut_pasajero = prut_pasajero
-  AND (pfechaIni IS NULL OR i.hora_salida >= pfechaIni)
-  AND (pfechaFin IS NULL OR i.hora_salida <= pfechaFin)
-ORDER BY r.fecha_reserva ASC
-    LIMIT limite OFFSET desplazamiento;
+    RETURN QUERY
+        SELECT DISTINCT ON (r.id_reserva, i.id_itinerario)
+            i.id_itinerario,
+            arp2.codigo_iata AS codigo_iata_origen,
+            arp1.codigo_iata AS codigo_iata_destino,
+            i.hora_salida,
+            r.id_reserva,
+            i.hora_llegada
+        FROM reserva r
+                 JOIN reserva_itinerario ri ON ri.id_reserva = r.id_reserva
+                 JOIN itinerario i ON i.id_itinerario = ri.id_itinerario
+                 JOIN aeropuerto arp1 ON arp1.id_aeropuerto = i.destino_aeropuerto
+                 JOIN aeropuerto arp2 ON arp2.id_aeropuerto = i.origen_aeropuerto
+                 LEFT JOIN reserva_asiento ra ON ra.id_reserva = r.id_reserva
+        WHERE (r.rut_pasajero = prut_pasajero OR ra.rut = prut_pasajero)
+          AND (pfechaIni IS NULL OR i.hora_salida >= pfechaIni)
+          AND (pfechaFin IS NULL OR i.hora_salida <= pfechaFin)
+        ORDER BY r.id_reserva, i.id_itinerario, i.hora_salida ASC
+        LIMIT limite OFFSET desplazamiento;
 END;
 $$ LANGUAGE plpgsql STABLE;
-
 
 
 CREATE OR REPLACE FUNCTION fn_getAsientosPorItinerarioYReserva(
     pid_itinerario INT,
     pid_reserva INT
 )
-RETURNS TABLE (
-    id_asiento INT,
-    numero_asiento VARCHAR,
-    clase_asiento VARCHAR,
-    id_vuelo INT,
-    id_reserva INT
-)
+    RETURNS TABLE (
+                      id_asiento INT,
+                      numero_asiento VARCHAR,
+                      clase_asiento VARCHAR,
+                      id_vuelo INT,
+                      id_reserva INT
+                  )
 AS
 $$
 BEGIN
-RETURN QUERY
-SELECT
-    a.id_asiento,
-    a.numero_asiento,
-    ca.descripcion,
-    ra.id_vuelo,
-    ra.id_reserva
-FROM reserva_itinerario ri
-         JOIN itinerario_vuelo iv ON iv.id_itinerario = ri.id_itinerario
-         JOIN reserva_asiento ra ON ra.id_reserva = ri.id_reserva AND ra.id_vuelo = iv.id_vuelo
-         JOIN asiento a ON a.id_asiento = ra.id_asiento
-         JOIN clase_asiento ca ON ca.id_clase = a.id_clase
-WHERE ri.id_itinerario = pid_itinerario
-  AND ri.id_reserva = pid_reserva;
+    -- 1. Intentar obtener los asientos activos desde reserva_asiento
+    RETURN QUERY
+        SELECT
+            a.id_asiento,
+            a.numero_asiento,
+            ca.descripcion AS clase_asiento,
+            ra.id_vuelo,
+            ra.id_reserva
+        FROM reserva_itinerario ri
+                 JOIN itinerario_vuelo iv ON iv.id_itinerario = ri.id_itinerario
+                 JOIN reserva_asiento ra ON ra.id_reserva = ri.id_reserva AND ra.id_vuelo = iv.id_vuelo
+                 JOIN asiento a ON a.id_asiento = ra.id_asiento
+                 JOIN clase_asiento ca ON ca.id_clase = a.id_clase
+        WHERE ri.id_itinerario = pid_itinerario
+          AND ri.id_reserva = pid_reserva;
+
+-- 2. Si no hay filas (porque fue cancelada y borrada de reserva_asiento), consultar cancelacion_asiento
+    IF NOT FOUND THEN
+        RETURN QUERY
+            SELECT
+                ca.id_asiento,
+                ca.numero_asiento,
+                ca.clase_asiento,
+                ca.id_vuelo,
+                c.id_reserva
+            FROM cancelacion c
+                     JOIN cancelacion_asiento ca ON ca.id_cancelacion = c.id_cancelacion
+                     JOIN reserva_itinerario ri ON ri.id_reserva = c.id_reserva
+                     JOIN itinerario_vuelo iv ON iv.id_itinerario = ri.id_itinerario AND iv.id_vuelo = ca.id_vuelo
+            WHERE ri.id_itinerario = pid_itinerario
+              AND c.id_reserva = pid_reserva;
+    END IF;
 END;
 $$ LANGUAGE plpgsql STABLE;
 
 
 
-
-
-CREATE OR REPLACE FUNCTION fn_getTicket(p_rut_pasajero VARCHAR,  p_id_reserva integer, p_idItinerario integer)
-RETURNS TABLE (
-    numero_vuelo VARCHAR,
-    hora_salida TIMESTAMP,
-    hora_llegada TIMESTAMP,
-    codigo_puerta VARCHAR,
-    terminal VARCHAR,
-    numero_asiento VARCHAR,
-    clase_asiento VARCHAR,
-	nombre text
+-- 3. TICKETS / BOARDING PASS UNIFICADO (SIN DUPLICADOS)
+CREATE OR REPLACE FUNCTION fn_getTicket(
+    p_rut_pasajero VARCHAR,
+    p_id_reserva INT,
+    p_idItinerario INT
 )
+    RETURNS TABLE (
+                      numero_vuelo VARCHAR,
+                      hora_salida TIMESTAMP,
+                      hora_llegada TIMESTAMP,
+                      codigo_puerta VARCHAR,
+                      terminal VARCHAR,
+                      numero_asiento VARCHAR,
+                      clase_asiento VARCHAR,
+                      nombre TEXT
+                  )
 AS $$
 BEGIN
-RETURN QUERY
-SELECT
-    vl.numero_vuelo,
-    sgm.hora_salida,
-    sgm.hora_llegada,
-    prta.codigo_puerta,
-    prta.terminal,
-    ast.numero_asiento,
-    clas.descripcion,
-    us.nombre || ' ' || us.apellido
-FROM reserva_asiento rsva
-         left JOIN reserva rsv ON rsv.id_reserva = rsva.id_reserva
-         left join itinerario_vuelo itv on itv.id_vuelo = rsva.id_vuelo
-         join pasajero p on p.rut = rsva.rut
-         join usuario us on us.rut = p.rut
-         left JOIN vuelo vl ON vl.id_vuelo = rsva.id_vuelo
-         left JOIN segmento_vuelo sgm ON sgm.id_vuelo = rsva.id_vuelo
-         left JOIN asignacion_puerta asgp ON asgp.id_segmento = sgm.id_segmento
-         left JOIN puerta_embarque prta ON prta.id_puerta = asgp.id_puerta
-         left JOIN asiento ast ON ast.id_asiento = rsva.id_asiento
-         left JOIN clase_asiento clas ON clas.id_clase = ast.id_clase
-WHERE rsv.rut_pasajero = p_rut_pasajero and rsv.id_reserva=p_id_reserva
-  and itv.id_itinerario=p_idItinerario
-order by  vl.fecha_hora_salida;
+    RETURN QUERY
+        SELECT DISTINCT ON (rsva.id_asiento, vl.id_vuelo)
+            vl.numero_vuelo,
+            sgm.hora_salida,
+            sgm.hora_llegada,
+            COALESCE(prta.codigo_puerta, 'TBD') AS codigo_puerta,
+            COALESCE(prta.terminal, 'TBD') AS terminal,
+            ast.numero_asiento,
+            clas.descripcion AS clase_asiento,
+            us.nombre || ' ' || us.apellido AS nombre
+        FROM reserva_asiento rsva
+                 JOIN reserva rsv ON rsv.id_reserva = rsva.id_reserva
+                 JOIN itinerario_vuelo itv ON itv.id_vuelo = rsva.id_vuelo
+                 JOIN pasajero p ON p.rut = rsva.rut
+                 JOIN usuario us ON us.rut = p.rut
+                 JOIN vuelo vl ON vl.id_vuelo = rsva.id_vuelo
+                 LEFT JOIN segmento_vuelo sgm ON sgm.id_vuelo = rsva.id_vuelo
+                 LEFT JOIN asignacion_puerta asgp ON asgp.id_segmento = sgm.id_segmento
+                 LEFT JOIN puerta_embarque prta ON prta.id_puerta = asgp.id_puerta
+                 LEFT JOIN asiento ast ON ast.id_asiento = rsva.id_asiento
+                 LEFT JOIN clase_asiento clas ON clas.id_clase = ast.id_clase
+        WHERE (rsv.rut_pasajero = p_rut_pasajero OR rsva.rut = p_rut_pasajero)
+          AND rsv.id_reserva = p_id_reserva
+          AND itv.id_itinerario = p_idItinerario
+        ORDER BY rsva.id_asiento, vl.id_vuelo, sgm.hora_salida ASC;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql STABLE;
 
 
 
 CREATE OR REPLACE FUNCTION fn_getVueloInfo(p_idVuelo integer)
-RETURNS TABLE (
-	destino varchar,
-    id_vuelo int,
-    numero_vuelo text,
-    ciudad_salida text,
-    ciudad_llegada text,
-    fecha_hora_salida TIMESTAMP,
-    fecha_hora_llegada TIMESTAMP,
-	duracion text
+    RETURNS TABLE (
+                      destino varchar,
+                      id_vuelo int,
+                      numero_vuelo text,
+                      ciudad_salida text,
+                      ciudad_llegada text,
+                      fecha_hora_salida TIMESTAMP,
+                      fecha_hora_llegada TIMESTAMP,
+                      duracion text
 
-) AS $$
+                  ) AS $$
 BEGIN
-RETURN QUERY
-SELECT
-    p1.nombre,
-    v.ID_VUELO,
-    v.Numero_Vuelo::text,
-    ci1.nombre||' - '||a1.nombre_aeropuerto||' ('||a1.codigo_iata||')' ,
-    ci2.nombre||' - '||a2.nombre_aeropuerto||' ('||a2.codigo_iata||')'  ,
-    v.Fecha_Hora_Salida,
-    v.Fecha_Hora_Llegada,
-    --(EXTRACT(EPOCH FROM (v.Fecha_Hora_Llegada - v.Fecha_Hora_Salida)) / 3600),
-    CAST(EXTRACT(HOUR FROM (v.Fecha_Hora_Llegada - v.Fecha_Hora_Salida)) AS VARCHAR) || 'h ' ||
-    CAST(EXTRACT(MINUTE FROM (v.Fecha_Hora_Llegada - v.Fecha_Hora_Salida)) AS VARCHAR) || 'm'
-FROM
-    Vuelo v
+    RETURN QUERY
+        SELECT
+            p1.nombre,
+            v.ID_VUELO,
+            v.Numero_Vuelo::text,
+            ci1.nombre||' - '||a1.nombre_aeropuerto||' ('||a1.codigo_iata||')' ,
+            ci2.nombre||' - '||a2.nombre_aeropuerto||' ('||a2.codigo_iata||')'  ,
+            v.Fecha_Hora_Salida,
+            v.Fecha_Hora_Llegada,
+            --(EXTRACT(EPOCH FROM (v.Fecha_Hora_Llegada - v.Fecha_Hora_Salida)) / 3600),
+            CAST(EXTRACT(HOUR FROM (v.Fecha_Hora_Llegada - v.Fecha_Hora_Salida)) AS VARCHAR) || 'h ' ||
+            CAST(EXTRACT(MINUTE FROM (v.Fecha_Hora_Llegada - v.Fecha_Hora_Salida)) AS VARCHAR) || 'm'
+        FROM
+            Vuelo v
 
-        JOIN segmento_vuelo sgm on sgm.id_vuelo = v.id_vuelo
+                JOIN segmento_vuelo sgm on sgm.id_vuelo = v.id_vuelo
 
-        JOIN
-    Aeropuerto a1 ON a1.id_aeropuerto = sgm.id_aeropuerto_origen
-        JOIN
-    Aeropuerto a2 ON a2.id_aeropuerto = sgm.id_aeropuerto_destino
-        JOIN
-    Ciudad ci1 ON ci1.id_ciudad = a1.id_ciudad
-        JOIN
-    Ciudad ci2 ON ci2.id_ciudad = a2.id_ciudad
-        Join pais p1 on p1.id_pais = ci2.id_pais
-where v.ID_VUELO=p_idVuelo;
---where extract(day from AGE(v.Fecha_Hora_Salida, CURRENT_TIMESTAMP))<=10;
+                JOIN
+            Aeropuerto a1 ON a1.id_aeropuerto = sgm.id_aeropuerto_origen
+                JOIN
+            Aeropuerto a2 ON a2.id_aeropuerto = sgm.id_aeropuerto_destino
+                JOIN
+            Ciudad ci1 ON ci1.id_ciudad = a1.id_ciudad
+                JOIN
+            Ciudad ci2 ON ci2.id_ciudad = a2.id_ciudad
+                Join pais p1 on p1.id_pais = ci2.id_pais
+        where v.ID_VUELO=p_idVuelo;
+    --where extract(day from AGE(v.Fecha_Hora_Salida, CURRENT_TIMESTAMP))<=10;
 
 END;
 $$ LANGUAGE plpgsql;
-
-select * from vuelo;
-
-select * from fn_getVueloInfo(23);
-
--- Ejemplo:
-SELECT * FROM fn_getAsientosPorItinerarioYReserva(320, 10);
-
---SELECT * FROM fn_getTicket('12345678-9',4);
-
-SELECT * FROM fn_getItinerariosRut('12345678-9', 100, 0);
-
-SELECT * FROM fn_getItinerariosPorRutYFechas('12345678-9', 1000, 0, '2025-09-01', '2025-09-2');
-
-SELECT * FROM fn_getItinerariosPorRutYFechas('12345678-9', 10, 0, NULL, NULL);
-
-SELECT * FROM fn_getItinerariosPorRutYFechas('12345678-9', 10, 0, '2025-09-01', NULL);
-
-SELECT * FROM fnBuscarVuelo('BOG', 'PEK', '2025-09-02');
-
-SELECT * FROM fn_getItinerariosPorRutYFechas('12345678-9', 10, 0, '2025-09-01', '2025-09-30');
-
-SELECT * FROM fn_getItinerariosPorRutYFechas('12345678-9', 10, 0, NULL, NULL);
-
-SELECT * FROM fn_getItinerariosPorRutYFechas('12345678-9', 10, 0, '2025-09-01', NULL);
-
-
-
 
 -- ==========================================
 -- 1. PROCEDIMIENTO: CONFIRMAR RESERVA
@@ -1872,10 +1921,10 @@ CREATE OR REPLACE PROCEDURE spConfirmar_reserva(
     IN p_rutPasajero TEXT,
     OUT p_resultado TEXT
 )
-LANGUAGE plpgsql
+    LANGUAGE plpgsql
 AS $confirmar_reserva$
 DECLARE
-reserva_id INT;
+    reserva_id INT;
     estado_reserva_id INT := 1;
     i INT;
     id_avion INT;
@@ -1885,45 +1934,45 @@ reserva_id INT;
     asientos_reservados TEXT := '';
 BEGIN
     -- Obtener el avión asignado al vuelo
-SELECT vl.id_avion INTO id_avion
-FROM vuelo vl
-WHERE vl.id_vuelo = p_idVuelo;
+    SELECT vl.id_avion INTO id_avion
+    FROM vuelo vl
+    WHERE vl.id_vuelo = p_idVuelo;
 
-FOR i IN 1..array_length(p_asientos, 1)
-    LOOP
-        id_asientoP := p_asientos[i];
-        asiento_en_reserva := 0;
+    FOR i IN 1..array_length(p_asientos, 1)
+        LOOP
+            id_asientoP := p_asientos[i];
+            asiento_en_reserva := 0;
 
-        -- Verificar si el asiento ya está reservado (Sin FOR UPDATE para evitar conflicto con EXCEPTION)
-SELECT 1 INTO asiento_en_reserva
-FROM reserva_asiento ra
-WHERE ra.ID_VUELO = p_idVuelo
-  AND ra.ID_ASIENTO = id_asientoP;
+            -- Verificar si el asiento ya está reservado (Sin FOR UPDATE para evitar conflicto con EXCEPTION)
+            SELECT 1 INTO asiento_en_reserva
+            FROM reserva_asiento ra
+            WHERE ra.ID_VUELO = p_idVuelo
+              AND ra.ID_ASIENTO = id_asientoP;
 
-IF asiento_en_reserva IS NOT NULL AND asiento_en_reserva > 0 THEN
-SELECT ast.numero_asiento INTO numero_asiento
-FROM asiento ast
-WHERE ast.id_asiento = id_asientoP;
+            IF asiento_en_reserva IS NOT NULL AND asiento_en_reserva > 0 THEN
+                SELECT ast.numero_asiento INTO numero_asiento
+                FROM asiento ast
+                WHERE ast.id_asiento = id_asientoP;
 
-asientos_reservados := asientos_reservados || numero_asiento || ', ';
-ELSE
-            -- Insertar en reserva_asiento
-            INSERT INTO reserva_asiento (id_reserva, id_asiento, ID_VUELO, rut)
-            VALUES (p_idReserva, id_asientoP, p_idVuelo, p_rutPasajero);
-END IF;
-END LOOP;
+                asientos_reservados := asientos_reservados || numero_asiento || ', ';
+            ELSE
+                -- Insertar en reserva_asiento
+                INSERT INTO reserva_asiento (id_reserva, id_asiento, ID_VUELO, rut)
+                VALUES (p_idReserva, id_asientoP, p_idVuelo, p_rutPasajero);
+            END IF;
+        END LOOP;
 
     IF asientos_reservados <> '' THEN
         p_resultado := 'ERROR: Asientos ya reservados: ' || LEFT(asientos_reservados, LENGTH(asientos_reservados) - 2);
-DELETE FROM reserva WHERE id_reserva = p_idReserva;
-ELSE
+        DELETE FROM reserva WHERE id_reserva = p_idReserva;
+    ELSE
         p_resultado := 'OK: Reserva realizada correctamente.';
-END IF;
+    END IF;
 EXCEPTION
     WHEN OTHERS THEN
         RAISE NOTICE 'Ocurrió un error: %', SQLERRM;
-DELETE FROM reserva WHERE id_reserva = p_idReserva;
-p_resultado := 'ERROR: No se pudo completar la reserva. ' || SQLERRM;
+        DELETE FROM reserva WHERE id_reserva = p_idReserva;
+        p_resultado := 'ERROR: No se pudo completar la reserva. ' || SQLERRM;
 END;
 $confirmar_reserva$;
 
@@ -1936,37 +1985,37 @@ CREATE OR REPLACE PROCEDURE spVerificarDisponinibilidadAsientos(
     IN p_asientos INT[],
     OUT p_resultado TEXT
 )
-LANGUAGE plpgsql
+    LANGUAGE plpgsql
 AS $verificar_asientos$
 DECLARE
-id_asientoP INT;
+    id_asientoP INT;
     asiento_en_reserva INT;
     v_numero_asiento TEXT;
     v_asientos_erroneos TEXT := '';
 BEGIN
     p_resultado := 'OK';
 
-FOR i IN 1..array_length(p_asientos, 1)
-    LOOP
-        id_asientoP := p_asientos[i];
-        asiento_en_reserva := NULL;
+    FOR i IN 1..array_length(p_asientos, 1)
+        LOOP
+            id_asientoP := p_asientos[i];
+            asiento_en_reserva := NULL;
 
-SELECT a.numero_asiento,
-       (SELECT 1 FROM reserva_asiento ra
-        WHERE ra.id_vuelo = p_idVuelo
-          AND ra.id_asiento = id_asientoP LIMIT 1)
-INTO v_numero_asiento, asiento_en_reserva
-FROM asiento a
-WHERE a.id_asiento = id_asientoP;
+            SELECT a.numero_asiento,
+                   (SELECT 1 FROM reserva_asiento ra
+                    WHERE ra.id_vuelo = p_idVuelo
+                      AND ra.id_asiento = id_asientoP LIMIT 1)
+            INTO v_numero_asiento, asiento_en_reserva
+            FROM asiento a
+            WHERE a.id_asiento = id_asientoP;
 
-IF asiento_en_reserva IS NOT NULL THEN
-            v_asientos_erroneos := v_asientos_erroneos || v_numero_asiento || ', ';
-END IF;
-END LOOP;
+            IF asiento_en_reserva IS NOT NULL THEN
+                v_asientos_erroneos := v_asientos_erroneos || v_numero_asiento || ', ';
+            END IF;
+        END LOOP;
 
     IF v_asientos_erroneos <> '' THEN
         p_resultado := 'ERROR: Asientos ya reservados: ' || LEFT(v_asientos_erroneos, LENGTH(v_asientos_erroneos) - 2);
-END IF;
+    END IF;
 EXCEPTION
     WHEN OTHERS THEN
         p_resultado := 'ERROR: Error interno: ' || SQLERRM;
@@ -1978,17 +2027,17 @@ $verificar_asientos$;
 -- 3. PROCEDIMIENTO: CAMBIAR ASIENTO
 -- ==========================================
 CREATE OR REPLACE PROCEDURE sp_cambiarAsiento(
-   IN p_id_asiento INT,
-   IN p_id_reserva INT,
-   IN p_id_asiento_org INT
+    IN p_id_asiento INT,
+    IN p_id_reserva INT,
+    IN p_id_asiento_org INT
 )
-LANGUAGE plpgsql
+    LANGUAGE plpgsql
 AS $cambiar_asiento$
 BEGIN
-UPDATE reserva_asiento
-SET id_asiento = p_id_asiento
-WHERE id_reserva = p_id_reserva
-  AND id_asiento = p_id_asiento_org;
+    UPDATE reserva_asiento
+    SET id_asiento = p_id_asiento
+    WHERE id_reserva = p_id_reserva
+      AND id_asiento = p_id_asiento_org;
 END;
 $cambiar_asiento$;
 
@@ -2006,46 +2055,217 @@ CREATE OR REPLACE PROCEDURE sp_upsertPasajero(
     p_fecha_nacimiento DATE,
     p_contrasena VARCHAR
 )
-LANGUAGE plpgsql
+    LANGUAGE plpgsql
 AS $upsert_pasajero$
 DECLARE
-v_id_rol INT;
+    v_id_rol INT;
 BEGIN
     -- 1. Insertar o actualizar usuario
-INSERT INTO Usuario(RUT, Nombre, Apellido, Correo_Electronico, Telefono, Documento_Identidad, Fecha_Nacimiento, Contrasena, Fecha_Registro)
-VALUES (p_rut, p_nombre, p_apellido, p_correo, p_telefono, p_documento, p_fecha_nacimiento, p_contrasena, NOW())
+    INSERT INTO Usuario(RUT, Nombre, Apellido, Correo_Electronico, Telefono, Documento_Identidad, Fecha_Nacimiento, Contrasena, Fecha_Registro)
+    VALUES (p_rut, p_nombre, p_apellido, p_correo, p_telefono, p_documento, p_fecha_nacimiento, p_contrasena, NOW())
     ON CONFLICT (RUT)
-    DO UPDATE SET
-    Nombre = EXCLUDED.Nombre,
-               Apellido = EXCLUDED.Apellido,
-               Correo_Electronico = EXCLUDED.Correo_Electronico,
-               Telefono = EXCLUDED.Telefono,
-               Documento_Identidad = EXCLUDED.Documento_Identidad,
-               Fecha_Nacimiento = EXCLUDED.Fecha_Nacimiento,
-               Contrasena = EXCLUDED.Contrasena,
-               Fecha_Registro = NOW();
+        DO UPDATE SET
+                      Nombre = EXCLUDED.Nombre,
+                      Apellido = EXCLUDED.Apellido,
+                      Correo_Electronico = EXCLUDED.Correo_Electronico,
+                      Telefono = EXCLUDED.Telefono,
+                      Documento_Identidad = EXCLUDED.Documento_Identidad,
+                      Fecha_Nacimiento = EXCLUDED.Fecha_Nacimiento,
+                      Contrasena = EXCLUDED.Contrasena,
+                      Fecha_Registro = NOW();
 
 -- 2. Insertar o actualizar Pasajero
-INSERT INTO Pasajero(RUT, Tipo_Documento, Numero_Documento, Fecha_Nacimiento, Nacionalidad)
-VALUES (p_rut, 'DNI', p_documento, p_fecha_nacimiento, 'Desconocida')
+    INSERT INTO Pasajero(RUT, Tipo_Documento, Numero_Documento, Fecha_Nacimiento, Nacionalidad)
+    VALUES (p_rut, 'DNI', p_documento, p_fecha_nacimiento, 'Desconocida')
     ON CONFLICT (RUT)
-    DO UPDATE SET
-    Tipo_Documento = EXCLUDED.Tipo_Documento,
-               Numero_Documento = EXCLUDED.Numero_Documento,
-               Fecha_Nacimiento = EXCLUDED.Fecha_Nacimiento,
-               Nacionalidad = EXCLUDED.Nacionalidad;
+        DO UPDATE SET
+                      Tipo_Documento = EXCLUDED.Tipo_Documento,
+                      Numero_Documento = EXCLUDED.Numero_Documento,
+                      Fecha_Nacimiento = EXCLUDED.Fecha_Nacimiento,
+                      Nacionalidad = EXCLUDED.Nacionalidad;
 
 -- 3. Obtener id del rol "Pasajero"
-SELECT id_rol INTO v_id_rol FROM Roles WHERE nombre = 'Pasajero';
+    SELECT id_rol INTO v_id_rol FROM Roles WHERE nombre = 'Pasajero';
 
 -- 4. Insertar rol si no existe
-INSERT INTO RolUsuario(id_rol, rut_usuario)
-VALUES (v_id_rol, p_rut)
+    INSERT INTO RolUsuario(id_rol, rut_usuario)
+    VALUES (v_id_rol, p_rut)
     ON CONFLICT (id_rol, rut_usuario) DO NOTHING;
 END;
 $upsert_pasajero$;
 
 
+
+CREATE OR REPLACE PROCEDURE sp_upsertPasajero(
+    p_rut VARCHAR,
+    p_nombre VARCHAR,
+    p_apellido VARCHAR,
+    p_correo VARCHAR,
+    p_telefono VARCHAR,
+    p_documento VARCHAR,
+    p_fecha_nacimiento DATE,
+    p_contrasena VARCHAR,
+    p_tipo_documento VARCHAR DEFAULT 'CEDULA',
+    p_nacionalidad VARCHAR DEFAULT 'Chilena'
+)
+    LANGUAGE plpgsql
+AS $upsert_pasajero$
+DECLARE
+    v_id_rol INT;
+BEGIN
+    -- 1. Insertar o actualizar Usuario (Si fue creado como acompañante, actualiza datos y contraseña)
+    INSERT INTO Usuario(RUT, Nombre, Apellido, Correo_Electronico, Telefono, Documento_Identidad, Fecha_Nacimiento, Contrasena, Fecha_Registro)
+    VALUES (p_rut, p_nombre, p_apellido, p_correo, p_telefono, p_documento, p_fecha_nacimiento, p_contrasena, NOW())
+    ON CONFLICT (RUT)
+        DO UPDATE SET
+                      Nombre = EXCLUDED.Nombre,
+                      Apellido = EXCLUDED.Apellido,
+                      Correo_Electronico = EXCLUDED.Correo_Electronico,
+                      Telefono = EXCLUDED.Telefono,
+                      Documento_Identidad = EXCLUDED.Documento_Identidad,
+                      Fecha_Nacimiento = EXCLUDED.Fecha_Nacimiento,
+                      Contrasena = EXCLUDED.Contrasena,
+                      Fecha_Registro = NOW();
+
+-- 2. Insertar o actualizar Pasajero con su Tipo de Documento y Nacionalidad reales
+    INSERT INTO Pasajero(RUT, Tipo_Documento, Numero_Documento, Fecha_Nacimiento, Nacionalidad)
+    VALUES (p_rut, p_tipo_documento, p_documento, p_fecha_nacimiento, p_nacionalidad)
+    ON CONFLICT (RUT)
+        DO UPDATE SET
+                      Tipo_Documento = EXCLUDED.Tipo_Documento,
+                      Numero_Documento = EXCLUDED.Numero_Documento,
+                      Fecha_Nacimiento = EXCLUDED.Fecha_Nacimiento,
+                      Nacionalidad = EXCLUDED.Nacionalidad;
+
+-- 3. Asignar Rol de Pasajero
+    SELECT id_rol INTO v_id_rol FROM Roles WHERE LOWER(nombre) = 'pasajero' LIMIT 1;
+
+    IF v_id_rol IS NOT NULL THEN
+        INSERT INTO RolUsuario(id_rol, rut_usuario)
+        VALUES (v_id_rol, p_rut)
+        ON CONFLICT (id_rol, rut_usuario) DO NOTHING;
+    END IF;
+END;
+$upsert_pasajero$;
+
+
+
+
+
+CREATE OR REPLACE PROCEDURE sp_cancelarReservaPasajero(
+    p_id_reserva INT,
+    p_rut_pasajero VARCHAR,
+    p_motivo VARCHAR DEFAULT 'Cancelación por usuario',
+    p_ip_usuario VARCHAR DEFAULT '127.0.0.1'
+)
+    LANGUAGE plpgsql
+AS $sp_cancelar$
+DECLARE
+    v_total_reserva DECIMAL(10,2);
+    v_id_estado_cancelado INT;
+    v_estado_actual INT;
+    v_id_cancelacion INT;
+    v_pasajeros_reserva TEXT := '';
+    v_asientos_count INT := 0;
+    r_asiento RECORD;
+    r_pasajero RECORD;
+BEGIN
+    -- 1. Obtención segura del ID de estado "Cancelada"
+    BEGIN
+        SELECT id_estado_reserva INTO v_id_estado_cancelado
+        FROM estado_reserva
+        WHERE LOWER(descripcion) LIKE '%cancelad%' OR LOWER(descripcion) LIKE '%anulad%'
+        LIMIT 1;
+    EXCEPTION WHEN OTHERS THEN
+        v_id_estado_cancelado := NULL;
+    END;
+
+    IF v_id_estado_cancelado IS NULL THEN
+        v_id_estado_cancelado := 3; -- ID numérico fallback
+    END IF;
+
+    -- 2. Validar que la reserva exista y pertenezca al usuario/pasajero
+    SELECT total, estado_reserva INTO v_total_reserva, v_estado_actual
+    FROM reserva
+    WHERE id_reserva = p_id_reserva
+      AND (rut_pasajero = p_rut_pasajero OR id_reserva IN (
+        SELECT pr.id_reserva FROM pasajero_reserva pr WHERE pr.rut = p_rut_pasajero
+    ));
+
+    IF v_estado_actual IS NULL THEN
+        RAISE EXCEPTION 'La reserva N° % no existe o no corresponde al pasajero con RUT %.', p_id_reserva, p_rut_pasajero;
+    ELSIF v_estado_actual = v_id_estado_cancelado THEN
+        RAISE EXCEPTION 'La reserva N° % ya fue cancelada previamente.', p_id_reserva;
+    END IF;
+
+    -- 3. Registrar la Cancelación en la tabla Dominio (MOTIVO LIMPIO)
+    INSERT INTO cancelacion (id_reserva, fecha, motivo, estado, monto_reembolso)
+    VALUES (
+               p_id_reserva,
+               NOW(),
+               p_motivo,
+               'Pendiente',
+               v_total_reserva
+           )
+    RETURNING id_cancelacion INTO v_id_cancelacion;
+
+-- 4. Copiar los asientos a la tabla específica CANCELACION_ASIENTO
+    FOR r_asiento IN
+        SELECT
+            ra.id_vuelo,
+            ra.id_asiento,
+            v.numero_vuelo,
+            a.numero_asiento,
+            ca.descripcion AS clase,
+            ra.rut AS rut_ocupante
+        FROM reserva_asiento ra
+                 JOIN asiento a ON a.id_asiento = ra.id_asiento
+                 JOIN clase_asiento ca ON ca.id_clase = a.id_clase
+                 JOIN vuelo v ON v.id_vuelo = ra.id_vuelo
+        WHERE ra.id_reserva = p_id_reserva
+        LOOP
+            INSERT INTO cancelacion_asiento (
+                id_cancelacion, id_vuelo, id_asiento, numero_vuelo, numero_asiento, clase_asiento, rut_pasajero
+            ) VALUES (
+                         v_id_cancelacion, r_asiento.id_vuelo, r_asiento.id_asiento, r_asiento.numero_vuelo, r_asiento.numero_asiento, r_asiento.clase, r_asiento.rut_ocupante
+                     );
+
+            v_asientos_count := v_asientos_count + 1;
+        END LOOP;
+
+    -- 5. Recopilar lista de pasajeros para el log transversal
+    FOR r_pasajero IN
+        SELECT DISTINCT pr.rut, u.nombre || ' ' || u.apellido AS nombre_completo
+        FROM pasajero_reserva pr
+                 JOIN usuario u ON u.rut = pr.rut
+        WHERE pr.id_reserva = p_id_reserva
+        LOOP
+            v_pasajeros_reserva := v_pasajeros_reserva || FORMAT('%s (%s); ', r_pasajero.nombre_completo, r_pasajero.rut);
+        END LOOP;
+
+    -- 6. Registrar en Log_Auditoria (Log Transversal / Evento Global)
+    INSERT INTO log_auditoria (rut_usuario, accion, tabla_afectada, id_registro_afectado, detalle, direccion_ip)
+    VALUES (
+               p_rut_pasajero,
+               'CANCELACION_RESERVA',
+               'reserva',
+               p_id_reserva,
+               FORMAT('CANCELACION EXITOSA | ID_CANCELACION: %s | RESERVA: %s | MONTO: $%s | ASIENTOS_LIBERADOS_CANTIDAD: %s | SOLICITANTE: %s',
+                      v_id_cancelacion, p_id_reserva, v_total_reserva, v_asientos_count, p_rut_pasajero),
+               p_ip_usuario
+           );
+
+-- 7. ELIMINAR físicamente de Reserva_Asiento para liberar la cabina
+    DELETE FROM reserva_asiento
+    WHERE id_reserva = p_id_reserva;
+
+-- 8. Actualizar estado de la Reserva
+    UPDATE reserva
+    SET estado_reserva = v_id_estado_cancelado
+    WHERE id_reserva = p_id_reserva;
+
+END;
+$sp_cancelar$;
 
 
 -- =========================================================================
@@ -2678,116 +2898,116 @@ SELECT setval('aeropuerto_seq', COALESCE((SELECT MAX(ID_AEROPUERTO) FROM public.
 
 
 DO $$
-DECLARE
-rec         RECORD;
-    num_puertas INT;
-    i           INT;
-    codigo_p    VARCHAR(15);
-    terminal_name VARCHAR(80);
+    DECLARE
+        rec         RECORD;
+        num_puertas INT;
+        i           INT;
+        codigo_p    VARCHAR(15);
+        terminal_name VARCHAR(80);
 
-    -- Clasificación por IATA
-    megahubs    TEXT[] := ARRAY['ATL','DXB','LHR','ORD','HND','LAX','CDG','JFK','FRA','AMS',
-                                 'PEK','PVG','DFW','CAN','SIN','ICN','DEL','BKK','HKG','MAD'];
-    hubs_grandes TEXT[] := ARRAY['GRU','MIA','BCN','FCO','MUC','SYD','YYZ','MEX','LIM','BOG',
-                                  'SCL','EZE','PTY','IST','SVO','DOH','KUL','NBO','ADD','JNB',
-                                  'CMN','LOS','DAR','SGN','KBP','RUH','TLV','KIX','TPE','CTU'];
-    hubs_regionales TEXT[] := ARRAY['MVD','LGW','BER','VIE','ZRH','BRU','CPH','ARN','LIS','HEL',
-                                     'OSL','PRG','BUD','ATH','DUB','LUX','RIX','VNO','TLL','GYD',
-                                     'TBS','ALA','KTM','CMB','AMM','AUH','MCT','BAH','KWI','JED',
-                                     'BSB','CNF','COR','UIO','VVI','HAV','SJO','SDQ','KGL','ACC',
-                                     'DKR','ABJ','LAD','EBB','HRE','LUN','CPT','DUR'];
-BEGIN
-FOR rec IN SELECT ID_AEROPUERTO, Codigo_IATA FROM Aeropuerto LOOP
+        -- Clasificación por IATA
+        megahubs    TEXT[] := ARRAY['ATL','DXB','LHR','ORD','HND','LAX','CDG','JFK','FRA','AMS',
+            'PEK','PVG','DFW','CAN','SIN','ICN','DEL','BKK','HKG','MAD'];
+        hubs_grandes TEXT[] := ARRAY['GRU','MIA','BCN','FCO','MUC','SYD','YYZ','MEX','LIM','BOG',
+            'SCL','EZE','PTY','IST','SVO','DOH','KUL','NBO','ADD','JNB',
+            'CMN','LOS','DAR','SGN','KBP','RUH','TLV','KIX','TPE','CTU'];
+        hubs_regionales TEXT[] := ARRAY['MVD','LGW','BER','VIE','ZRH','BRU','CPH','ARN','LIS','HEL',
+            'OSL','PRG','BUD','ATH','DUB','LUX','RIX','VNO','TLL','GYD',
+            'TBS','ALA','KTM','CMB','AMM','AUH','MCT','BAH','KWI','JED',
+            'BSB','CNF','COR','UIO','VVI','HAV','SJO','SDQ','KGL','ACC',
+            'DKR','ABJ','LAD','EBB','HRE','LUN','CPT','DUR'];
+    BEGIN
+        FOR rec IN SELECT ID_AEROPUERTO, Codigo_IATA FROM Aeropuerto LOOP
 
-                                                  -- Determinar número de puertas y tipo de terminales
-    IF rec.Codigo_IATA = ANY(megahubs) THEN
-            num_puertas := 12;
-ELSIF rec.Codigo_IATA = ANY(hubs_grandes) THEN
-            num_puertas := 10;
-        ELSIF rec.Codigo_IATA = ANY(hubs_regionales) THEN
-            num_puertas := 8;
-ELSE
-            -- Verificar si ya tiene puertas (aeropuertos del bloque original)
-            IF EXISTS (SELECT 1 FROM Puerta_Embarque WHERE ID_AEROPUERTO = rec.ID_AEROPUERTO) THEN
-                CONTINUE;  -- ya procesado anteriormente, saltar
-END IF;
-            num_puertas := 4;
-END IF;
+                -- Determinar número de puertas y tipo de terminales
+                IF rec.Codigo_IATA = ANY(megahubs) THEN
+                    num_puertas := 12;
+                ELSIF rec.Codigo_IATA = ANY(hubs_grandes) THEN
+                    num_puertas := 10;
+                ELSIF rec.Codigo_IATA = ANY(hubs_regionales) THEN
+                    num_puertas := 8;
+                ELSE
+                    -- Verificar si ya tiene puertas (aeropuertos del bloque original)
+                    IF EXISTS (SELECT 1 FROM Puerta_Embarque WHERE ID_AEROPUERTO = rec.ID_AEROPUERTO) THEN
+                        CONTINUE;  -- ya procesado anteriormente, saltar
+                    END IF;
+                    num_puertas := 4;
+                END IF;
 
-        -- Saltar si ya tiene puertas insertadas
-        IF EXISTS (SELECT 1 FROM Puerta_Embarque WHERE ID_AEROPUERTO = rec.ID_AEROPUERTO) THEN
-            CONTINUE;
-END IF;
+                -- Saltar si ya tiene puertas insertadas
+                IF EXISTS (SELECT 1 FROM Puerta_Embarque WHERE ID_AEROPUERTO = rec.ID_AEROPUERTO) THEN
+                    CONTINUE;
+                END IF;
 
-FOR i IN 1..num_puertas LOOP
+                FOR i IN 1..num_puertas LOOP
 
-            -- Asignación de terminal realista según clasificación y número de puerta
-            IF rec.Codigo_IATA = ANY(megahubs) THEN
-                -- Megahubs: 3 terminales
-                IF i <= 4 THEN
-                    terminal_name := 'Terminal Internacional';
-                ELSIF i <= 8 THEN
-                    terminal_name := 'Terminal Doméstica';
-ELSE
-                    terminal_name := 'Terminal Low Cost';
-END IF;
+                        -- Asignación de terminal realista según clasificación y número de puerta
+                        IF rec.Codigo_IATA = ANY(megahubs) THEN
+                            -- Megahubs: 3 terminales
+                            IF i <= 4 THEN
+                                terminal_name := 'Terminal Internacional';
+                            ELSIF i <= 8 THEN
+                                terminal_name := 'Terminal Doméstica';
+                            ELSE
+                                terminal_name := 'Terminal Low Cost';
+                            END IF;
 
-            ELSIF rec.Codigo_IATA = ANY(hubs_grandes) THEN
-                -- Hubs grandes: 2 terminales
-                IF i <= 5 THEN
-                    terminal_name := 'Terminal Internacional';
-ELSE
-                    terminal_name := 'Terminal Doméstica';
-END IF;
+                        ELSIF rec.Codigo_IATA = ANY(hubs_grandes) THEN
+                            -- Hubs grandes: 2 terminales
+                            IF i <= 5 THEN
+                                terminal_name := 'Terminal Internacional';
+                            ELSE
+                                terminal_name := 'Terminal Doméstica';
+                            END IF;
 
-            ELSIF rec.Codigo_IATA = ANY(hubs_regionales) THEN
-                -- Hubs regionales: 2 terminales
-                IF i <= 4 THEN
-                    terminal_name := 'Terminal A';
-ELSE
-                    terminal_name := 'Terminal B';
-END IF;
+                        ELSIF rec.Codigo_IATA = ANY(hubs_regionales) THEN
+                            -- Hubs regionales: 2 terminales
+                            IF i <= 4 THEN
+                                terminal_name := 'Terminal A';
+                            ELSE
+                                terminal_name := 'Terminal B';
+                            END IF;
 
-ELSE
-                terminal_name := 'Terminal Única';
-END IF;
+                        ELSE
+                            terminal_name := 'Terminal Única';
+                        END IF;
 
-            -- Código de puerta: IATA + letra de terminal + número
-            -- Megahubs: INT-A01, DOM-B05, LC-C09
-            -- Otros: A01, B05, etc.
-            IF rec.Codigo_IATA = ANY(megahubs) THEN
-                IF i <= 4 THEN
-                    codigo_p := rec.Codigo_IATA || '-A' || LPAD(i::text, 2, '0');
-                ELSIF i <= 8 THEN
-                    codigo_p := rec.Codigo_IATA || '-B' || LPAD((i-4)::text, 2, '0');
-ELSE
-                    codigo_p := rec.Codigo_IATA || '-C' || LPAD((i-8)::text, 2, '0');
-END IF;
+                        -- Código de puerta: IATA + letra de terminal + número
+                        -- Megahubs: INT-A01, DOM-B05, LC-C09
+                        -- Otros: A01, B05, etc.
+                        IF rec.Codigo_IATA = ANY(megahubs) THEN
+                            IF i <= 4 THEN
+                                codigo_p := rec.Codigo_IATA || '-A' || LPAD(i::text, 2, '0');
+                            ELSIF i <= 8 THEN
+                                codigo_p := rec.Codigo_IATA || '-B' || LPAD((i-4)::text, 2, '0');
+                            ELSE
+                                codigo_p := rec.Codigo_IATA || '-C' || LPAD((i-8)::text, 2, '0');
+                            END IF;
 
-            ELSIF rec.Codigo_IATA = ANY(hubs_grandes) THEN
-                IF i <= 5 THEN
-                    codigo_p := rec.Codigo_IATA || '-I' || LPAD(i::text, 2, '0');
-ELSE
-                    codigo_p := rec.Codigo_IATA || '-D' || LPAD((i-5)::text, 2, '0');
-END IF;
+                        ELSIF rec.Codigo_IATA = ANY(hubs_grandes) THEN
+                            IF i <= 5 THEN
+                                codigo_p := rec.Codigo_IATA || '-I' || LPAD(i::text, 2, '0');
+                            ELSE
+                                codigo_p := rec.Codigo_IATA || '-D' || LPAD((i-5)::text, 2, '0');
+                            END IF;
 
-            ELSIF rec.Codigo_IATA = ANY(hubs_regionales) THEN
-                IF i <= 4 THEN
-                    codigo_p := rec.Codigo_IATA || '-A' || LPAD(i::text, 2, '0');
-ELSE
-                    codigo_p := rec.Codigo_IATA || '-B' || LPAD((i-4)::text, 2, '0');
-END IF;
+                        ELSIF rec.Codigo_IATA = ANY(hubs_regionales) THEN
+                            IF i <= 4 THEN
+                                codigo_p := rec.Codigo_IATA || '-A' || LPAD(i::text, 2, '0');
+                            ELSE
+                                codigo_p := rec.Codigo_IATA || '-B' || LPAD((i-4)::text, 2, '0');
+                            END IF;
 
-ELSE
-                codigo_p := rec.Codigo_IATA || '-' || LPAD(i::text, 2, '0');
-END IF;
+                        ELSE
+                            codigo_p := rec.Codigo_IATA || '-' || LPAD(i::text, 2, '0');
+                        END IF;
 
-INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO)
-VALUES (codigo_p, terminal_name, rec.ID_AEROPUERTO);
+                        INSERT INTO Puerta_Embarque (Codigo_Puerta, Terminal, ID_AEROPUERTO)
+                        VALUES (codigo_p, terminal_name, rec.ID_AEROPUERTO);
 
-END LOOP;
-END LOOP;
-END $$;
+                    END LOOP;
+            END LOOP;
+    END $$;
 
 
 
@@ -3140,11 +3360,6 @@ VALUES
     ('12345678-9', 'Chilena');
 
 
-select * from aeropuerto arp
-                  join puerta_embarque prt
-                       on prt.id_aeropuerto = arp.id_aeropuerto
-where prt.id_aeropuerto is null;
-
 INSERT INTO Tarifa (Nombre) VALUES
                                 ('Básica'),
                                 ('Flexible'),
@@ -3183,42 +3398,43 @@ TRUNCATE TABLE Asignacion_Puerta, Segmento_Vuelo, Precio_Asiento, Vuelo CASCADE;
 -- POBLADO DE VUELOS OPERADOS EXCLUSIVAMENTE POR SKYWAY AIRLINES (ID_AEROLINEA = 1)
 -- =========================================================================
 INSERT INTO Vuelo (ID_VUELO, Numero_Vuelo, Fecha_Hora_Salida, Fecha_Hora_Llegada, ID_ESTADO_VUELO, ID_AVION, RUT_PILOTO, ID_AEROLINEA) VALUES
-                                                                                                                                           (nextval('vuelo_seq'), 'SW8117', '2025-08-01 14:30', '2025-08-01 17:45', 1, 1, '12345678-9', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW8118', '2025-08-01 18:55', '2025-08-01 21:30', 1, 1, '12345678-9', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW8180', '2025-08-01 22:50', '2025-08-02 07:35', 1, 2, '98765432-1', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW8989', '2025-08-02 09:55', '2025-08-02 12:50', 1, 3, '98765432-1', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW650',  '2025-08-01 07:50', '2025-08-01 10:40', 1, 1, '12345678-9', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW2482', '2025-08-01 12:00', '2025-08-01 20:15', 1, 3, '12345678-9', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW8954', '2025-08-01 22:30', '2025-08-02 01:06', 1, 1, '98765432-1', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW8120', '2025-08-02 15:00', '2025-08-02 17:30', 1, 2, '12345678-9', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW8130', '2025-08-02 19:00', '2025-08-02 21:45', 1, 1, '98765432-1', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW8140', '2025-08-02 22:30', '2025-08-03 01:30', 1, 3, '12345678-9', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW8150', '2025-08-03 03:00', '2025-08-03 06:00', 1, 2, '98765432-1', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW8160', '2025-08-03 08:00', '2025-08-03 10:30', 1, 1, '12345678-9', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW8170', '2025-08-03 11:30', '2025-08-03 14:00', 1, 3, '98765432-1', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW8185', '2025-08-03 15:00', '2025-08-03 20:30', 1, 2, '12345678-9', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW9000', '2025-08-08 06:00', '2025-08-08 13:00', 1, 1, '12345678-9', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW9001', '2025-08-08 15:00', '2025-08-08 22:00', 1, 3, '98765432-1', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW9002', '2025-08-09 06:00', '2025-08-09 10:00', 1, 2, '12345678-9', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW9100', '2025-08-03 15:00', '2025-08-03 19:30', 1, 1, '12345678-9', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW9200', '2025-08-04 08:00', '2025-08-04 11:30', 1, 1, '12345678-9', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW9201', '2025-08-04 13:00', '2025-08-04 16:00', 1, 2, '98765432-1', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW9202', '2025-08-04 18:00', '2025-08-04 21:00', 1, 3, '12345678-9', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW9900', '2025-08-01 23:55', '2025-08-02 09:30', 1, 1, '12345678-9', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW9901', '2025-08-01 09:00', '2025-08-01 15:00', 1, 2, '98765432-1', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW9902', '2025-08-01 17:00', '2025-08-01 22:00', 1, 2, '12345678-9', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW9400', '2025-08-10 08:00', '2025-08-10 15:00', 1, 2, '98765432-1', 1),
-                                                                                                                                           (nextval('vuelo_seq'), 'SW9500', '2025-08-10 17:00', '2025-08-10 23:30', 1, 2, '98765432-1', 1);
+                                                                                                                                           (1,  'SW8117', NOW() + INTERVAL '1 day 14 hours 30 min', NOW() + INTERVAL '1 day 17 hours 45 min', 1, 1, '12345678-9', 1),
+                                                                                                                                           (2,  'SW8118', NOW() + INTERVAL '1 day 18 hours 55 min', NOW() + INTERVAL '1 day 21 hours 30 min', 1, 1, '12345678-9', 1),
+                                                                                                                                           (3,  'SW8180', NOW() + INTERVAL '1 day 22 hours 50 min', NOW() + INTERVAL '2 days 07 hours 35 min', 1, 2, '98765432-1', 1),
+                                                                                                                                           (4,  'SW8989', NOW() + INTERVAL '2 days 09 hours 55 min', NOW() + INTERVAL '2 days 12 hours 50 min', 1, 3, '98765432-1', 1),
+                                                                                                                                           (5,  'SW650',  NOW() + INTERVAL '1 day 07 hours 50 min', NOW() + INTERVAL '1 day 10 hours 40 min', 1, 1, '12345678-9', 1),
+                                                                                                                                           (6,  'SW2482', NOW() + INTERVAL '1 day 12 hours',         NOW() + INTERVAL '1 day 20 hours 15 min', 1, 3, '12345678-9', 1),
+                                                                                                                                           (7,  'SW8954', NOW() + INTERVAL '1 day 22 hours 30 min', NOW() + INTERVAL '2 days 01 hour 06 min',  1, 1, '98765432-1', 1),
+                                                                                                                                           (8,  'SW8120', NOW() + INTERVAL '2 days 15 hours',        NOW() + INTERVAL '2 days 17 hours 30 min', 1, 2, '12345678-9', 1),
+                                                                                                                                           (9,  'SW8130', NOW() + INTERVAL '2 days 19 hours',        NOW() + INTERVAL '2 days 21 hours 45 min', 1, 1, '98765432-1', 1),
+                                                                                                                                           (10, 'SW8140', NOW() + INTERVAL '2 days 22 hours 30 min', NOW() + INTERVAL '3 days 01 hour 30 min',  1, 3, '12345678-9', 1),
+                                                                                                                                           (11, 'SW8150', NOW() + INTERVAL '3 days 03 hours',        NOW() + INTERVAL '3 days 06 hours',        1, 2, '98765432-1', 1),
+                                                                                                                                           (12, 'SW8160', NOW() + INTERVAL '3 days 08 hours',        NOW() + INTERVAL '3 days 10 hours 30 min', 1, 1, '12345678-9', 1),
+                                                                                                                                           (13, 'SW8170', NOW() + INTERVAL '3 days 11 hours 30 min', NOW() + INTERVAL '3 days 14 hours',        1, 3, '98765432-1', 1),
+                                                                                                                                           (14, 'SW8185', NOW() + INTERVAL '3 days 15 hours',        NOW() + INTERVAL '3 days 20 hours 30 min', 1, 2, '12345678-9', 1),
+                                                                                                                                           (15, 'SW9000', NOW() + INTERVAL '4 days 06 hours',        NOW() + INTERVAL '4 days 13 hours',        1, 1, '12345678-9', 1),
+                                                                                                                                           (16, 'SW9001', NOW() + INTERVAL '4 days 15 hours',        NOW() + INTERVAL '4 days 22 hours',        1, 3, '98765432-1', 1),
+                                                                                                                                           (17, 'SW9002', NOW() + INTERVAL '5 days 06 hours',        NOW() + INTERVAL '5 days 10 hours',        1, 2, '12345678-9', 1),
+                                                                                                                                           (18, 'SW9100', NOW() + INTERVAL '3 days 15 hours',        NOW() + INTERVAL '3 days 19 hours 30 min', 1, 1, '12345678-9', 1),
+                                                                                                                                           (19, 'SW9200', NOW() + INTERVAL '4 days 08 hours',        NOW() + INTERVAL '4 days 11 hours 30 min', 1, 1, '12345678-9', 1),
+                                                                                                                                           (20, 'SW9201', NOW() + INTERVAL '4 days 13 hours',        NOW() + INTERVAL '4 days 16 hours',        1, 2, '98765432-1', 1),
+                                                                                                                                           (21, 'SW9202', NOW() + INTERVAL '4 days 18 hours',        NOW() + INTERVAL '4 days 21 hours',        1, 3, '12345678-9', 1),
+                                                                                                                                           (22, 'SW9900', NOW() + INTERVAL '1 day 23 hours 55 min',  NOW() + INTERVAL '2 days 09 hours 30 min', 1, 1, '12345678-9', 1),
+                                                                                                                                           (23, 'SW9901', NOW() + INTERVAL '1 day 09 hours',         NOW() + INTERVAL '1 day 15 hours',         1, 2, '98765432-1', 1),
+                                                                                                                                           (24, 'SW9902', NOW() + INTERVAL '1 day 17 hours',         NOW() + INTERVAL '1 day 22 hours',         1, 2, '12345678-9', 1),
+                                                                                                                                           (25, 'SW9400', NOW() + INTERVAL '3 days 08 hours',        NOW() + INTERVAL '3 days 15 hours',        1, 2, '98765432-1', 1),
+                                                                                                                                           (26, 'SW9500', NOW() + INTERVAL '3 days 17 hours',        NOW() + INTERVAL '3 days 23 hours 30 min', 1, 2, '98765432-1', 1);
 
+SELECT setval('vuelo_seq', COALESCE((SELECT MAX(ID_VUELO) FROM Vuelo), 1), true);
 
 INSERT INTO Precio_Asiento (ID_VUELO, ID_CLASE, PRECIO)
 SELECT
     v.ID_VUELO,
     c.ID_CLASE,
     CASE
-        WHEN c.Descripcion = 'Económica' THEN 150
-        WHEN c.Descripcion = 'Ejecutiva' THEN 350
-        ELSE 700
+        WHEN c.Descripcion = 'Económica' THEN 53236
+        WHEN c.Descripcion = 'Ejecutiva' THEN 89575
+        ELSE 123658
         END as PRECIO
 FROM Vuelo v
          CROSS JOIN Clase_asiento c;
@@ -3228,93 +3444,94 @@ FROM Vuelo v
 -- =========================================================================
 
 INSERT INTO Segmento_Vuelo (ID_SEGMENTO, ID_VUELO, ID_AEROPUERTO_ORIGEN, ID_AEROPUERTO_DESTINO, HORA_SALIDA, HORA_LLEGADA) VALUES
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW8117'), 1, 2, now() + interval '1 day 14 hours 30 min', now() + interval '1 day 17 hours 45 min'), -- SCL -> MVD
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW8118'), 2, 3, now() + interval '1 day 18 hours 55 min', now() + interval '1 day 21 hours 30 min'), -- MVD -> GRU
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW8180'), 3, 4, now() + interval '1 day 22 hours 50 min', now() + interval '2 day 7 hours 35 min'),  -- GRU -> JFK
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW8989'), 4, 5, now() + interval '2 day 9 hours 55 min', now() + interval '2 day 12 hours 50 min'), -- JFK -> LAX
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW650'),  1, 6, now() + interval '1 day 7 hours 50 min', now() + interval '1 day 10 hours 40 min'), -- SCL -> LIM
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW2482'), 6, 7, now() + interval '1 day 12 hours', now() + interval '1 day 20 hours 15 min'),           -- LIM -> ATL
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW8954'), 7, 4, now() + interval '1 day 22 hours 30 min', now() + interval '2 day 1 hours 6 min'),   -- ATL -> JFK
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW8120'), 2, 1, now() + interval '2 day 15 hours', now() + interval '2 day 17 hours 30 min'),           -- MVD -> SCL
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW8130'), 3, 2, now() + interval '2 day 19 hours', now() + interval '2 day 21 hours 45 min'),           -- GRU -> MVD
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW8140'), 5, 7, now() + interval '2 day 22 hours 30 min', now() + interval '3 day 1 hours 30 min'),-- LAX -> ATL
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW8150'), 7, 2, now() + interval '3 day 3 hours', now() + interval '3 day 6 hours'),                       -- ATL -> MVD
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW8160'), 1, 2, now() + interval '3 day 8 hours', now() + interval '3 day 10 hours 30 min'),           -- SCL -> MVD
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW8170'), 2, 3, now() + interval '3 day 11 hours 30 min', now() + interval '3 day 14 hours'),          -- MVD -> GRU
+                                                                                                                               (1,  1, 1, 2, NOW() + INTERVAL '1 day 14 hours 30 min', NOW() + INTERVAL '1 day 17 hours 45 min'),
+                                                                                                                               (2,  2, 2, 3, NOW() + INTERVAL '1 day 18 hours 55 min', NOW() + INTERVAL '1 day 21 hours 30 min'),
+                                                                                                                               (3,  3, 3, 4, NOW() + INTERVAL '1 day 22 hours 50 min', NOW() + INTERVAL '2 days 07 hours 35 min'),
+                                                                                                                               (4,  4, 4, 5, NOW() + INTERVAL '2 days 09 hours 55 min', NOW() + INTERVAL '2 days 12 hours 50 min'),
+                                                                                                                               (5,  5, 1, 6, NOW() + INTERVAL '1 day 07 hours 50 min', NOW() + INTERVAL '1 day 10 hours 40 min'),
+                                                                                                                               (6,  6, 6, 7, NOW() + INTERVAL '1 day 12 hours',         NOW() + INTERVAL '1 day 20 hours 15 min'),
+                                                                                                                               (7,  7, 7, 4, NOW() + INTERVAL '1 day 22 hours 30 min', NOW() + INTERVAL '2 days 01 hour 06 min'),
+                                                                                                                               (8,  8, 2, 1, NOW() + INTERVAL '2 days 15 hours',        NOW() + INTERVAL '2 days 17 hours 30 min'),
+                                                                                                                               (9,  9, 3, 2, NOW() + INTERVAL '2 days 19 hours',        NOW() + INTERVAL '2 days 21 hours 45 min'),
+                                                                                                                               (10, 10, 5, 7, NOW() + INTERVAL '2 days 22 hours 30 min', NOW() + INTERVAL '3 days 01 hour 30 min'),
+                                                                                                                               (11, 11, 7, 2, NOW() + INTERVAL '3 days 03 hours',        NOW() + INTERVAL '3 days 06 hours'),
+                                                                                                                               (12, 12, 1, 2, NOW() + INTERVAL '3 days 08 hours',        NOW() + INTERVAL '3 days 10 hours 30 min'),
+                                                                                                                               (13, 13, 2, 3, NOW() + INTERVAL '3 days 11 hours 30 min', NOW() + INTERVAL '3 days 14 hours'),
 
-                                                                                                                               -- Multi-segmento para el vuelo de largo alcance SW8185 (El trigger manejará el orden 1, 2 y 3 correlativamente)
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW8185'), 3, 8, now() + interval '3 day 15 hours', now() + interval '3 day 18 hours 30 min'),          -- Tramo 1: GRU -> BOG
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW8185'), 8, 9, now() + interval '3 day 19 hours 15 min', now() + interval '3 day 21 hours 45 min'),-- Tramo 2: BOG -> MIA
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW8185'), 9, 4, now() + interval '3 day 22 hours 30 min', now() + interval '4 day 1 hours'),           -- Tramo 3: MIA -> JFK
+-- Multi-segmento SW8185
+                                                                                                                               (14, 14, 3, 8, NOW() + INTERVAL '3 days 15 hours',        NOW() + INTERVAL '3 days 18 hours 30 min'),
+                                                                                                                               (15, 14, 8, 9, NOW() + INTERVAL '3 days 19 hours 15 min', NOW() + INTERVAL '3 days 21 hours 45 min'),
+                                                                                                                               (16, 14, 9, 4, NOW() + INTERVAL '3 days 22 hours 30 min', NOW() + INTERVAL '4 days 01 hour'),
 
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW9000'), 5, 7, now() + interval '8 day 6 hours', now() + interval '8 day 13 hours'),                      -- LAX -> ATL
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW9001'), 7, 6, now() + interval '8 day 15 hours', now() + interval '8 day 22 hours'),                     -- ATL -> LIM
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW9002'), 6, 1, now() + interval '9 day 6 hours', now() + interval '9 day 10 hours'),                      -- LIM -> SCL
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW9100'), 9, 1, now() + interval '3 day 15 hours', now() + interval '3 day 19 hours 30 min'),          -- MIA -> SCL
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW9200'), 3, 8, now() + interval '4 day 8 hours', now() + interval '4 day 11 hours 30 min'),           -- GRU -> BOG
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW9201'), 8, 9, now() + interval '4 day 13 hours', now() + interval '4 day 16 hours'),                      -- BOG -> MIA
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW9202'), 9, 4, now() + interval '4 day 18 hours', now() + interval '4 day 21 hours'),                      -- MIA -> JFK
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW9900'), 1, 4, now() + interval '1 day 23 hours 55 min', now() + interval '2 day 9 hours 30 min'),     -- SCL -> JFK
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW9901'), 1, 8, now() + interval '1 day 9 hours', now() + interval '1 day 15 hours'),                  -- SCL -> BOG
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW9902'), 8, 4, now() + interval '1 day 17 hours', now() + interval '1 day 22 hours'),                  -- BOG -> JFK
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW9400'), 5, 9, now() + interval '3 day 8 hours', now() + interval '3 day 15 hours'),                  -- LAX -> MIA
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW9500'), 9, 1, now() + interval '3 day 17 hours', now() + interval '3 day 23 hours 30 min');            -- MIA -> SCL
+                                                                                                                               (17, 15, 5, 7, NOW() + INTERVAL '4 days 06 hours',        NOW() + INTERVAL '4 days 13 hours'),
+                                                                                                                               (18, 16, 7, 6, NOW() + INTERVAL '4 days 15 hours',        NOW() + INTERVAL '4 days 22 hours'),
+                                                                                                                               (19, 17, 6, 1, NOW() + INTERVAL '5 days 06 hours',        NOW() + INTERVAL '5 days 10 hours'),
+                                                                                                                               (20, 18, 9, 1, NOW() + INTERVAL '3 days 15 hours',        NOW() + INTERVAL '3 days 19 hours 30 min'),
+                                                                                                                               (21, 19, 3, 8, NOW() + INTERVAL '4 days 08 hours',        NOW() + INTERVAL '4 days 11 hours 30 min'),
+                                                                                                                               (22, 20, 8, 9, NOW() + INTERVAL '4 days 13 hours',        NOW() + INTERVAL '4 days 16 hours'),
+                                                                                                                               (23, 21, 9, 4, NOW() + INTERVAL '4 days 18 hours',        NOW() + INTERVAL '4 days 21 hours'),
+                                                                                                                               (24, 22, 1, 4, NOW() + INTERVAL '1 day 23 hours 55 min',  NOW() + INTERVAL '2 days 09 hours 30 min'),
+                                                                                                                               (25, 23, 1, 8, NOW() + INTERVAL '1 day 09 hours',         NOW() + INTERVAL '1 day 15 hours'),
+                                                                                                                               (26, 24, 8, 4, NOW() + INTERVAL '1 day 17 hours',         NOW() + INTERVAL '1 day 22 hours'),
+                                                                                                                               (27, 25, 5, 9, NOW() + INTERVAL '3 days 08 hours',        NOW() + INTERVAL '3 days 15 hours'),
+                                                                                                                               (28, 26, 9, 1, NOW() + INTERVAL '3 days 17 hours',        NOW() + INTERVAL '3 days 23 hours 30 min');
 
+SELECT setval('segmento_vuelo_seq', COALESCE((SELECT MAX(ID_SEGMENTO) FROM Segmento_Vuelo), 1), true);
 
 INSERT INTO Asignacion_Puerta (ID_SEGMENTO, ID_PUERTA) VALUES
-                                                           -- SW8117 SCL -> MVD usa la puerta SCL-01
-                                                           ((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8117' AND sg.ORDEN_SEGMENTO = 1),
-                                                            (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'SCL-01')),
+-- SW8117 SCL -> MVD usa la puerta SCL-01
+((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8117' AND sg.ORDEN_SEGMENTO = 1),
+ (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'SCL-01')),
 
-                                                           -- SW8118 MVD -> GRU usa la puerta MVD-02
-                                                           ((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8118' AND sg.ORDEN_SEGMENTO = 1),
-                                                            (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'MVD-02')),
+-- SW8118 MVD -> GRU usa la puerta MVD-02
+((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8118' AND sg.ORDEN_SEGMENTO = 1),
+ (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'MVD-02')),
 
-                                                           -- SW8180 GRU -> JFK usa la puerta GRU-01
-                                                           ((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8180' AND sg.ORDEN_SEGMENTO = 1),
-                                                            (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'GRU-01')),
+-- SW8180 GRU -> JFK usa la puerta GRU-01
+((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8180' AND sg.ORDEN_SEGMENTO = 1),
+ (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'GRU-01')),
 
-                                                           -- SW8989 JFK -> LAX usa la puerta JFK-03
-                                                           ((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8989' AND sg.ORDEN_SEGMENTO = 1),
-                                                            (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'JFK-03')),
+-- SW8989 JFK -> LAX usa la puerta JFK-03
+((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8989' AND sg.ORDEN_SEGMENTO = 1),
+ (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'JFK-03')),
 
-                                                           -- SW650 SCL -> LIM usa la puerta SCL-02
-                                                           ((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW650' AND sg.ORDEN_SEGMENTO = 1),
-                                                            (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'SCL-02')),
+-- SW650 SCL -> LIM usa la puerta SCL-02
+((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW650' AND sg.ORDEN_SEGMENTO = 1),
+ (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'SCL-02')),
 
-                                                           -- SW2482 LIM -> ATL usa la puerta LIM-02
-                                                           ((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW2482' AND sg.ORDEN_SEGMENTO = 1),
-                                                            (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'LIM-02')),
+-- SW2482 LIM -> ATL usa la puerta LIM-02
+((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW2482' AND sg.ORDEN_SEGMENTO = 1),
+ (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'LIM-02')),
 
-                                                           -- SW8954 ATL -> JFK usa la puerta ATL-01
-                                                           ((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8954' AND sg.ORDEN_SEGMENTO = 1),
-                                                            (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'ATL-01')),
+-- SW8954 ATL -> JFK usa la puerta ATL-01
+((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8954' AND sg.ORDEN_SEGMENTO = 1),
+ (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'ATL-01')),
 
-                                                           -- SW8160 SCL -> MVD usa la puerta SCL-03
-                                                           ((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8160' AND sg.ORDEN_SEGMENTO = 1),
-                                                            (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'SCL-03')),
+-- SW8160 SCL -> MVD usa la puerta SCL-03
+((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8160' AND sg.ORDEN_SEGMENTO = 1),
+ (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'SCL-03')),
 
-                                                           -- SW8170 MVD -> GRU usa la puerta MVD-01
-                                                           ((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8170' AND sg.ORDEN_SEGMENTO = 1),
-                                                            (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'MVD-01')),
+-- SW8170 MVD -> GRU usa la puerta MVD-01
+((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8170' AND sg.ORDEN_SEGMENTO = 1),
+ (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'MVD-01')),
 
-                                                           -- SW8185 tramo multi-segmento (BOG -> MIA) usa la puerta BOG-01
-                                                           ((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8185' AND sg.ORDEN_SEGMENTO = 2),
-                                                            (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'BOG-01')),
+-- SW8185 tramo multi-segmento (BOG -> MIA) usa la puerta BOG-01
+((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8185' AND sg.ORDEN_SEGMENTO = 2),
+ (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'BOG-01')),
 
-                                                           -- SW9400 LAX -> MIA usa la puerta LAX-04
-                                                           ((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW9400' AND sg.ORDEN_SEGMENTO = 1),
-                                                            (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'LAX-04')),
+-- SW9400 LAX -> MIA usa la puerta LAX-04
+((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW9400' AND sg.ORDEN_SEGMENTO = 1),
+ (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'LAX-04')),
 
-                                                           -- SW9500 MIA -> SCL usa la puerta MIA-02
-                                                           ((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW9500' AND sg.ORDEN_SEGMENTO = 1),
-                                                            (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'MIA-02'));
+-- SW9500 MIA -> SCL usa la puerta MIA-02
+((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW9500' AND sg.ORDEN_SEGMENTO = 1),
+ (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'MIA-02'));
 
 
 
 -- 10. Itinerarios (IDs hardcoded)
 INSERT INTO Itinerario ( ORIGEN_AEROPUERTO, DESTINO_AEROPUERTO, DURACION_TOTAL, NUMERO_ESCALAS,Precio_Base) VALUES
-                                                                                                                (1, 5, '1 day 22:20:00'::interval, 3,850000), -- Itinerario 1: SCL -> MVD -> GRU -> JFK -> LAX
+                                                                                                                (1, 5, '1 day 22:20:00'::interval, 3,874231), -- Itinerario 1: SCL -> MVD -> GRU -> JFK -> LAX
                                                                                                                 (1, 6, '03:50:00'::interval, 0,210000),       -- Itinerario 2: SCL -> LIM (directo)
                                                                                                                 (1, 4, '17:16:00'::interval, 2,350000),       -- Itinerario 3: SCL -> LIM -> ATL -> JFK
                                                                                                                 (1, 4, '1 day 03:30:00'::interval, 2,450000), -- Itinerario 4: SCL -> MVD -> GRU -> JFK
@@ -3339,78 +3556,93 @@ VALUES (
            '2025-08-11 05:00',
            INTERVAL '21 hours',
            1,
-           650  -- Precio base estimado
+           1120540
        );
 
 
 INSERT INTO Itinerario_Vuelo (ID_ITINERARIO, ID_VUELO, ORDEN, TIEMPO_ESPERA, TIPO_CONEXION) VALUES
-                                                                                                -- Itinerario 1: SCL -> MVD -> GRU -> JFK -> LAX
-                                                                                                (1, 1, 1, '1 hour 10 minutes'::interval, 'Escala en Montevideo'),    -- Vuelo 1: SCL -> MVD
-                                                                                                --(1, 1, 2, '1 hour 20 minutes'::interval, 'Cambio de avión en GRU'),  -- Vuelo 2: MVD -> GRU
-                                                                                                (1, 3, 3, '2 hour 20 minutes'::interval, 'Cambio de avión en JFK'),  -- Vuelo 3: GRU -> JFK
-                                                                                                (1, 4, 4, '0'::interval, 'Vuelo Final'),                             -- Vuelo 4: JFK -> LAX
+-- Itinerario 1: SCL -> MVD -> GRU -> JFK -> LAX
+(1, 1, 1, '1 hour 10 minutes'::interval, 'Escala en Montevideo'),    -- Vuelo 1: SCL -> MVD
+--(1, 1, 2, '1 hour 20 minutes'::interval, 'Cambio de avión en GRU'),  -- Vuelo 2: MVD -> GRU
+(1, 3, 3, '2 hour 20 minutes'::interval, 'Cambio de avión en JFK'),  -- Vuelo 3: GRU -> JFK
+(1, 4, 4, '0'::interval, 'Vuelo Final'),                             -- Vuelo 4: JFK -> LAX
 
-                                                                                                -- Itinerario 2: SCL -> LIM (directo)
-                                                                                                (2, 5, 1, '0'::interval, 'Vuelo directo SCL a LIM'),
+-- Itinerario 2: SCL -> LIM (directo)
+(2, 5, 1, '0'::interval, 'Vuelo directo SCL a LIM'),
 
-                                                                                                -- Itinerario 3: SCL -> LIM -> ATL -> JFK
-                                                                                                (3, 5, 1, '1 hour 20 minutes'::interval, 'Cambio de avión en Lima (LIM)'), -- Vuelo 5: SCL -> LIM
-                                                                                                (3, 6, 2, '2 hours 15 minutes'::interval, 'Cambio de avión en Atlanta (ATL)'), -- Vuelo 6: LIM -> ATL
-                                                                                                (3, 7, 3, '0'::interval, 'Vuelo final hacia JFK'),                         -- Vuelo 7: ATL -> JFK
+-- Itinerario 3: SCL -> LIM -> ATL -> JFK
+(3, 5, 1, '1 hour 20 minutes'::interval, 'Cambio de avión en Lima (LIM)'), -- Vuelo 5: SCL -> LIM
+(3, 6, 2, '2 hours 15 minutes'::interval, 'Cambio de avión en Atlanta (ATL)'), -- Vuelo 6: LIM -> ATL
+(3, 7, 3, '0'::interval, 'Vuelo final hacia JFK'),                         -- Vuelo 7: ATL -> JFK
 
-                                                                                                -- Itinerario 4: SCL -> MVD -> GRU -> JFK
-                                                                                                (4, 12, 1, '2 hours 0 minutes'::interval, 'Escala en Montevideo'), -- Vuelo 12: SCL -> MVD
-                                                                                                (4, 13, 2, '1 hour 30 minutes'::interval, 'Escala en GRU'),        -- Vuelo 13: MVD -> GRU
-                                                                                                (4, 14, 3, '0'::interval, 'Escala en Bogotá, Miami antes de JFK'),  -- Vuelo 14: GRU -> JFK
+-- Itinerario 4: SCL -> MVD -> GRU -> JFK
+(4, 12, 1, '2 hours 0 minutes'::interval, 'Escala en Montevideo'), -- Vuelo 12: SCL -> MVD
+(4, 13, 2, '1 hour 30 minutes'::interval, 'Escala en GRU'),        -- Vuelo 13: MVD -> GRU
+(4, 14, 3, '0'::interval, 'Escala en Bogotá, Miami antes de JFK'),  -- Vuelo 14: GRU -> JFK
 
-                                                                                                -- Itinerario 5: SCL -> LIM -> ATL
-                                                                                                (5, 5, 1, '1 hour 20 minutes'::interval, 'Escala en Lima'),        -- Vuelo 5: SCL -> LIM
-                                                                                                (5, 6, 2, '0'::interval, 'Vuelo final'),                           -- Vuelo 6: LIM -> ATL
+-- Itinerario 5: SCL -> LIM -> ATL
+(5, 5, 1, '1 hour 20 minutes'::interval, 'Escala en Lima'),        -- Vuelo 5: SCL -> LIM
+(5, 6, 2, '0'::interval, 'Vuelo final'),                           -- Vuelo 6: LIM -> ATL
 
-                                                                                                -- Itinerario 6: GRU -> JFK (directo)
-                                                                                                (6, 14, 1, '0'::interval, 'Vuelo directo GRU a JFK'),
+-- Itinerario 6: GRU -> JFK (directo)
+(6, 14, 1, '0'::interval, 'Vuelo directo GRU a JFK'),
 
-                                                                                                -- Itinerario 7: GRU -> LAX -> ATL -> LIM -> SCL (directo)
-                                                                                                (7, 15, 1, '2 hours'::interval, 'Escala en Atlanta'),
-                                                                                                (7, 16, 2, '8 hours'::interval, 'Escala en Lima'),
-                                                                                                (7, 17, 3, NULL, 'Destino Final'),
+-- Itinerario 7: GRU -> LAX -> ATL -> LIM -> SCL (directo)
+(7, 15, 1, '2 hours'::interval, 'Escala en Atlanta'),
+(7, 16, 2, '8 hours'::interval, 'Escala en Lima'),
+(7, 17, 3, NULL, 'Destino Final'),
 
-                                                                                                -- Vuelo directo desde Miami hasta Santiago
-                                                                                                (8, 18, 1, '0'::interval, 'Vuelo directo MIA -> SCL'),
+-- Vuelo directo desde Miami hasta Santiago
+(8, 18, 1, '0'::interval, 'Vuelo directo MIA -> SCL'),
 
-                                                                                                (9, 19, 1, '1 hour 30 minutes'::interval, 'Escala en Bogotá (BOG)'), -- GRU -> BOG
-                                                                                                (9, 20, 2, '2 hours'::interval, 'Escala en Miami (MIA)'),           -- BOG -> MIA
-                                                                                                (9, 21, 3, '0'::interval, 'Vuelo final a Nueva York (JFK)'),        -- MIA -> JFK
+(9, 19, 1, '1 hour 30 minutes'::interval, 'Escala en Bogotá (BOG)'), -- GRU -> BOG
+(9, 20, 2, '2 hours'::interval, 'Escala en Miami (MIA)'),           -- BOG -> MIA
+(9, 21, 3, '0'::interval, 'Vuelo final a Nueva York (JFK)'),        -- MIA -> JFK
 
-                                                                                                -- Vuelo directo desde Bogotá a Miami
-                                                                                                (10, 19, 1, '0'::interval, 'Vuelo directo BOG a MIA'),
+-- Vuelo directo desde Bogotá a Miami
+(10, 19, 1, '0'::interval, 'Vuelo directo BOG a MIA'),
 
-                                                                                                -- Itinerario 11: Vuelo directo SCL -> JFK
-                                                                                                (11, 22, 1, '0'::interval, 'Vuelo directo SCL -> JFK'),
+-- Itinerario 11: Vuelo directo SCL -> JFK
+(11, 22, 1, '0'::interval, 'Vuelo directo SCL -> JFK'),
 
-                                                                                                -- Itinerario 12: SCL -> BOG -> JFK
-                                                                                                (12, 23, 1, '2 hours'::interval, 'Escala en Bogotá'),
-                                                                                                (12, 24, 2, '0'::interval, 'Vuelo final');
+-- Itinerario 12: SCL -> BOG -> JFK
+(12, 23, 1, '2 hours'::interval, 'Escala en Bogotá'),
+(12, 24, 2, '0'::interval, 'Vuelo final');
 
 INSERT INTO Itinerario_Vuelo (ID_ITINERARIO,ID_VUELO,ORDEN,TIEMPO_ESPERA,TIPO_CONEXION)
 VALUES
     (13, 25, 1, INTERVAL '2 hours', 'Escala'), -- LA9400: LAX → MIA
     (13, 26, 2, INTERVAL '0', 'Final');        -- LA9500: MIA → SCL
 
+SELECT setval('itinerario_seq', COALESCE((SELECT MAX(ID_ITINERARIO) FROM Itinerario), 1), true);
+
 INSERT INTO Itinerario_Tarifa (ID_ITINERARIO, ID_TARIFA, Precio) VALUES
-                                                                     (1, 1, 850000.00), (1, 2, 950000.00), (1, 3, 1050000.00),
-                                                                     (2, 1, 210000.00), (2, 2, 250000.00), (2, 3, 280000.00),
-                                                                     (3, 1, 350000.00), (3, 2, 400000.00), (3, 3, 450000.00),
-                                                                     (4, 1, 450000.00), (4, 2, 510000.00), (4, 3, 570000.00),
-                                                                     (5, 1, 750000.00), (5, 2, 810000.00), (5, 3, 900000.00),
-                                                                     (6, 1, 650000.00), (6, 2, 700000.00), (6, 3, 750000.00),
-                                                                     (7, 1, 930000.00), (7, 2, 1000000.00), (7, 3, 1080000.00),
-                                                                     (8, 1, 550000.00), (8, 2, 600000.00), (8, 3, 650000.00),
-                                                                     (9, 1, 570000.00), (9, 2, 620000.00), (9, 3, 670000.00),
-                                                                     (10,1, 450000.00), (10,2, 480000.00), (10,3, 520000.00),
-                                                                     (11,1, 690000.00), (11,2, 730000.00), (11,3, 770000.00),
-                                                                     (12,1, 460000.00), (12,2, 490000.00), (12,3, 530000.00),
-                                                                     (13,1, 650000.00), (13,2, 690000.00), (13,3, 730000.00);
+-- Itinerario 1
+(1, 1, 35000.00), (1, 2, 42000.00), (1, 3, 56000.00),
+-- Itinerario 2
+(2, 1, 21000.00), (2, 2, 28000.00), (2, 3, 45000.00),
+-- Itinerario 3
+(3, 1, 35000.00), (3, 2, 42000.00), (3, 3, 56000.00),
+-- Itinerario 4
+(4, 1, 45000.00), (4, 2, 51000.00), (4, 3, 56000.00),
+-- Itinerario 5
+(5, 1, 40000.00), (5, 2, 48000.00), (5, 3, 56000.00),
+-- Itinerario 6
+(6, 1, 38000.00), (6, 2, 45000.00), (6, 3, 56000.00),
+-- Itinerario 7
+(7, 1, 42000.00), (7, 2, 49000.00), (7, 3, 56000.00),
+-- Itinerario 8
+(8, 1, 25000.00), (8, 2, 32000.00), (8, 3, 56000.00),
+-- Itinerario 9
+(9, 1, 37000.00), (9, 2, 44000.00), (9, 3, 56000.00),
+-- Itinerario 10
+(10,1, 20000.00), (10,2, 28000.00), (10,3, 56000.00),
+-- Itinerario 11
+(11,1, 39000.00), (11,2, 46000.00), (11,3, 56000.00),
+-- Itinerario 12
+(12,1, 28000.00), (12,2, 35000.00), (12,3, 56000.00),
+-- Itinerario 13
+(13,1, 31000.00), (13,2, 39000.00), (13,3, 56000.00);
 
 
 INSERT INTO Turno (ID_VUELO, Fecha, Hora_Inicio, Hora_Fin, ID_TIPO_TURNO) VALUES (1, CURRENT_DATE, '2025-12-10 08:00:00', '2025-12-10 12:00:00', 1);
@@ -3445,21 +3677,21 @@ INSERT INTO Turno (ID_VUELO, Fecha, Hora_Inicio, Hora_Fin, ID_TIPO_TURNO) VALUES
 
 
 -- Crear reservas para tres pasajeros en el Itinerario 10
-INSERT INTO Reserva (Fecha_Reserva, Estado_Reserva, RUT_PASAJERO, Total) VALUES
-                                                                             ('2025-08-04 10:00', 1, '87654321-2', 530000.00), -- Lucía
-                                                                             ('2025-08-04 10:05', 1, '76543210-3', 530000.00), -- Juan
-                                                                             ('2025-08-04 10:10', 1, '65432109-4', 530000.00); -- Ana
+/*INSERT INTO Reserva (Fecha_Reserva, Estado_Reserva, RUT_PASAJERO, Total) VALUES
+                                 ('2025-08-04 10:00', 1, '87654321-2', 530000.00), -- Lucía
+                                 ('2025-08-04 10:05', 1, '76543210-3', 530000.00), -- Juan
+                                 ('2025-08-04 10:10', 1, '65432109-4', 530000.00); -- Ana
 
 -- Asociar reservas con el Itinerario 10 (GRU → JFK)
 INSERT INTO reserva_itinerario (id_reserva, id_itinerario, id_itinerario_tarifa)
 VALUES (1, 10, 1), -- Aquí 1 es el id_tarifa que corresponde a 'Básica' o el que corresponda
        (2, 10, 1),
-       (3, 10, 1);
+       (3, 10, 1);]*/
 
 
 
-/*-- Ejemplo de asignación de asientos (asumiendo IDs de asiento disponibles)
-INSERT INTO Reserva_Asiento (ID_RESERVA, ID_VUELO, ID_ASIENTO) VALUES
+-- Ejemplo de asignación de asientos (asumiendo IDs de asiento disponibles)
+/*INSERT INTO Reserva_Asiento (ID_RESERVA, ID_VUELO, ID_ASIENTO) VALUES
 -- Lucía
 (1, 19, 2032), -- GRU -> BOG
 (1, 20, 2034), -- BOG -> MIA
@@ -3477,8 +3709,6 @@ INSERT INTO Reserva_Asiento (ID_RESERVA, ID_VUELO, ID_ASIENTO) VALUES
 
 
 
-
-
 SELECT
     c1.nombre || '-' || aprt1.nombre_aeropuerto || ' ' || aprt1.codigo_iata AS origen,
     c2.nombre || '-' || aprt2.nombre_aeropuerto || ' ' || aprt2.codigo_iata AS destino,
@@ -3492,3 +3722,7 @@ FROM itinerario it
 WHERE it.hora_salida >= NOW()
   AND it.hora_salida < NOW() + INTERVAL '7 days'
 ORDER BY it.hora_salida ASC;
+
+
+--update reserva
+--set codigo_reserva=''

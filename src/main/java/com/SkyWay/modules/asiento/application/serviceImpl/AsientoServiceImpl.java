@@ -110,17 +110,17 @@ public class AsientoServiceImpl implements AsientoService {
 	}
 
 	@Override
-	public List<InfoAsientoReservaDTO> getAsientosReservados(Integer idReserva, Integer idItinerario) {
-		  List<InfoAsientoReservaDTO>asientos;
+	@SuppressWarnings("unchecked")
+	public List<InfoAsientoReservaDTO> getAsientosReservados(Integer idItinerario, Integer idReserva) {
 		Query query = em.createNativeQuery(
 				"SELECT * FROM fn_getAsientosPorItinerarioYReserva(:p_itinerario, :p_reserva);",
 				InfoAsientoReservaDTO.class);
-		query.setParameter("p_itinerario", idReserva);
-		query.setParameter("p_reserva", idItinerario);
 
-		asientos= query.getResultList();
+		// ¡Atención! Orden exacto esperado por la función SQL
+		query.setParameter("p_itinerario", idItinerario);
+		query.setParameter("p_reserva", idReserva);
 
-		return asientos;
+		return (List<InfoAsientoReservaDTO>) query.getResultList();
 	}
 
 	@Override

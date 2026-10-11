@@ -43,5 +43,26 @@ public class TarifaCaracteristicaValidator {
         return true;
     }
 
+    /**
+     * Valida si una tarifa permite la cancelación o anulación de la reserva.
+     *
+     * @param tarifaCaracteristicas lista de características de la tarifa con su valor
+     * @return true si permite cancelación/devolución, false si no
+     */
+    public boolean permiteCancelacion(List<TarifaCaracteristica> tarifaCaracteristicas) {
+        if (tarifaCaracteristicas == null) return false;
+
+        for (TarifaCaracteristica carac : tarifaCaracteristicas) {
+            if (carac.getCaracteristica() != null &&
+                    ("Permite Cancelacion".equalsIgnoreCase(carac.getCaracteristica().getNombre()) ||
+                            "Permite Anulacion".equalsIgnoreCase(carac.getCaracteristica().getNombre()))) {
+
+                if (carac.getValorBool() != null) {
+                    return carac.getValorBool();
+                }
+            }
+        }
+        return false; // Por defecto no permite cancelación si no está configurada la regla
+    }
     // Puedes agregar más métodos según las reglas de negocio para otras características
 }

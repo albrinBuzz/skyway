@@ -1090,11 +1090,6 @@ VALUES
     ('12345678-9', 'Chilena');
 
 
-select * from aeropuerto arp
-                  join puerta_embarque prt
-                       on prt.id_aeropuerto = arp.id_aeropuerto
-where prt.id_aeropuerto is null;
-
 INSERT INTO Tarifa (Nombre) VALUES
                                 ('Básica'),
                                 ('Flexible'),
@@ -1133,42 +1128,43 @@ TRUNCATE TABLE Asignacion_Puerta, Segmento_Vuelo, Precio_Asiento, Vuelo CASCADE;
 -- POBLADO DE VUELOS OPERADOS EXCLUSIVAMENTE POR SKYWAY AIRLINES (ID_AEROLINEA = 1)
 -- =========================================================================
 INSERT INTO Vuelo (ID_VUELO, Numero_Vuelo, Fecha_Hora_Salida, Fecha_Hora_Llegada, ID_ESTADO_VUELO, ID_AVION, RUT_PILOTO, ID_AEROLINEA) VALUES
-   (nextval('vuelo_seq'), 'SW8117', '2025-08-01 14:30', '2025-08-01 17:45', 1, 1, '12345678-9', 1),
-   (nextval('vuelo_seq'), 'SW8118', '2025-08-01 18:55', '2025-08-01 21:30', 1, 1, '12345678-9', 1),
-   (nextval('vuelo_seq'), 'SW8180', '2025-08-01 22:50', '2025-08-02 07:35', 1, 2, '98765432-1', 1),
-   (nextval('vuelo_seq'), 'SW8989', '2025-08-02 09:55', '2025-08-02 12:50', 1, 3, '98765432-1', 1),
-   (nextval('vuelo_seq'), 'SW650',  '2025-08-01 07:50', '2025-08-01 10:40', 1, 1, '12345678-9', 1),
-   (nextval('vuelo_seq'), 'SW2482', '2025-08-01 12:00', '2025-08-01 20:15', 1, 3, '12345678-9', 1),
-   (nextval('vuelo_seq'), 'SW8954', '2025-08-01 22:30', '2025-08-02 01:06', 1, 1, '98765432-1', 1),
-   (nextval('vuelo_seq'), 'SW8120', '2025-08-02 15:00', '2025-08-02 17:30', 1, 2, '12345678-9', 1),
-   (nextval('vuelo_seq'), 'SW8130', '2025-08-02 19:00', '2025-08-02 21:45', 1, 1, '98765432-1', 1),
-   (nextval('vuelo_seq'), 'SW8140', '2025-08-02 22:30', '2025-08-03 01:30', 1, 3, '12345678-9', 1),
-   (nextval('vuelo_seq'), 'SW8150', '2025-08-03 03:00', '2025-08-03 06:00', 1, 2, '98765432-1', 1),
-   (nextval('vuelo_seq'), 'SW8160', '2025-08-03 08:00', '2025-08-03 10:30', 1, 1, '12345678-9', 1),
-   (nextval('vuelo_seq'), 'SW8170', '2025-08-03 11:30', '2025-08-03 14:00', 1, 3, '98765432-1', 1),
-   (nextval('vuelo_seq'), 'SW8185', '2025-08-03 15:00', '2025-08-03 20:30', 1, 2, '12345678-9', 1),
-   (nextval('vuelo_seq'), 'SW9000', '2025-08-08 06:00', '2025-08-08 13:00', 1, 1, '12345678-9', 1),
-   (nextval('vuelo_seq'), 'SW9001', '2025-08-08 15:00', '2025-08-08 22:00', 1, 3, '98765432-1', 1),
-   (nextval('vuelo_seq'), 'SW9002', '2025-08-09 06:00', '2025-08-09 10:00', 1, 2, '12345678-9', 1),
-   (nextval('vuelo_seq'), 'SW9100', '2025-08-03 15:00', '2025-08-03 19:30', 1, 1, '12345678-9', 1),
-   (nextval('vuelo_seq'), 'SW9200', '2025-08-04 08:00', '2025-08-04 11:30', 1, 1, '12345678-9', 1),
-   (nextval('vuelo_seq'), 'SW9201', '2025-08-04 13:00', '2025-08-04 16:00', 1, 2, '98765432-1', 1),
-   (nextval('vuelo_seq'), 'SW9202', '2025-08-04 18:00', '2025-08-04 21:00', 1, 3, '12345678-9', 1),
-   (nextval('vuelo_seq'), 'SW9900', '2025-08-01 23:55', '2025-08-02 09:30', 1, 1, '12345678-9', 1),
-   (nextval('vuelo_seq'), 'SW9901', '2025-08-01 09:00', '2025-08-01 15:00', 1, 2, '98765432-1', 1),
-   (nextval('vuelo_seq'), 'SW9902', '2025-08-01 17:00', '2025-08-01 22:00', 1, 2, '12345678-9', 1),
-   (nextval('vuelo_seq'), 'SW9400', '2025-08-10 08:00', '2025-08-10 15:00', 1, 2, '98765432-1', 1),
-   (nextval('vuelo_seq'), 'SW9500', '2025-08-10 17:00', '2025-08-10 23:30', 1, 2, '98765432-1', 1);
+(1,  'SW8117', NOW() + INTERVAL '1 day 14 hours 30 min', NOW() + INTERVAL '1 day 17 hours 45 min', 1, 1, '12345678-9', 1),
+(2,  'SW8118', NOW() + INTERVAL '1 day 18 hours 55 min', NOW() + INTERVAL '1 day 21 hours 30 min', 1, 1, '12345678-9', 1),
+(3,  'SW8180', NOW() + INTERVAL '1 day 22 hours 50 min', NOW() + INTERVAL '2 days 07 hours 35 min', 1, 2, '98765432-1', 1),
+(4,  'SW8989', NOW() + INTERVAL '2 days 09 hours 55 min', NOW() + INTERVAL '2 days 12 hours 50 min', 1, 3, '98765432-1', 1),
+(5,  'SW650',  NOW() + INTERVAL '1 day 07 hours 50 min', NOW() + INTERVAL '1 day 10 hours 40 min', 1, 1, '12345678-9', 1),
+(6,  'SW2482', NOW() + INTERVAL '1 day 12 hours',         NOW() + INTERVAL '1 day 20 hours 15 min', 1, 3, '12345678-9', 1),
+(7,  'SW8954', NOW() + INTERVAL '1 day 22 hours 30 min', NOW() + INTERVAL '2 days 01 hour 06 min',  1, 1, '98765432-1', 1),
+(8,  'SW8120', NOW() + INTERVAL '2 days 15 hours',        NOW() + INTERVAL '2 days 17 hours 30 min', 1, 2, '12345678-9', 1),
+(9,  'SW8130', NOW() + INTERVAL '2 days 19 hours',        NOW() + INTERVAL '2 days 21 hours 45 min', 1, 1, '98765432-1', 1),
+(10, 'SW8140', NOW() + INTERVAL '2 days 22 hours 30 min', NOW() + INTERVAL '3 days 01 hour 30 min',  1, 3, '12345678-9', 1),
+(11, 'SW8150', NOW() + INTERVAL '3 days 03 hours',        NOW() + INTERVAL '3 days 06 hours',        1, 2, '98765432-1', 1),
+(12, 'SW8160', NOW() + INTERVAL '3 days 08 hours',        NOW() + INTERVAL '3 days 10 hours 30 min', 1, 1, '12345678-9', 1),
+(13, 'SW8170', NOW() + INTERVAL '3 days 11 hours 30 min', NOW() + INTERVAL '3 days 14 hours',        1, 3, '98765432-1', 1),
+(14, 'SW8185', NOW() + INTERVAL '3 days 15 hours',        NOW() + INTERVAL '3 days 20 hours 30 min', 1, 2, '12345678-9', 1),
+(15, 'SW9000', NOW() + INTERVAL '4 days 06 hours',        NOW() + INTERVAL '4 days 13 hours',        1, 1, '12345678-9', 1),
+(16, 'SW9001', NOW() + INTERVAL '4 days 15 hours',        NOW() + INTERVAL '4 days 22 hours',        1, 3, '98765432-1', 1),
+(17, 'SW9002', NOW() + INTERVAL '5 days 06 hours',        NOW() + INTERVAL '5 days 10 hours',        1, 2, '12345678-9', 1),
+(18, 'SW9100', NOW() + INTERVAL '3 days 15 hours',        NOW() + INTERVAL '3 days 19 hours 30 min', 1, 1, '12345678-9', 1),
+(19, 'SW9200', NOW() + INTERVAL '4 days 08 hours',        NOW() + INTERVAL '4 days 11 hours 30 min', 1, 1, '12345678-9', 1),
+(20, 'SW9201', NOW() + INTERVAL '4 days 13 hours',        NOW() + INTERVAL '4 days 16 hours',        1, 2, '98765432-1', 1),
+(21, 'SW9202', NOW() + INTERVAL '4 days 18 hours',        NOW() + INTERVAL '4 days 21 hours',        1, 3, '12345678-9', 1),
+(22, 'SW9900', NOW() + INTERVAL '1 day 23 hours 55 min',  NOW() + INTERVAL '2 days 09 hours 30 min', 1, 1, '12345678-9', 1),
+(23, 'SW9901', NOW() + INTERVAL '1 day 09 hours',         NOW() + INTERVAL '1 day 15 hours',         1, 2, '98765432-1', 1),
+(24, 'SW9902', NOW() + INTERVAL '1 day 17 hours',         NOW() + INTERVAL '1 day 22 hours',         1, 2, '12345678-9', 1),
+(25, 'SW9400', NOW() + INTERVAL '3 days 08 hours',        NOW() + INTERVAL '3 days 15 hours',        1, 2, '98765432-1', 1),
+(26, 'SW9500', NOW() + INTERVAL '3 days 17 hours',        NOW() + INTERVAL '3 days 23 hours 30 min', 1, 2, '98765432-1', 1);
 
+SELECT setval('vuelo_seq', COALESCE((SELECT MAX(ID_VUELO) FROM Vuelo), 1), true);
 
 INSERT INTO Precio_Asiento (ID_VUELO, ID_CLASE, PRECIO)
 SELECT
     v.ID_VUELO,
     c.ID_CLASE,
     CASE
-        WHEN c.Descripcion = 'Económica' THEN 150
-        WHEN c.Descripcion = 'Ejecutiva' THEN 350
-        ELSE 700
+        WHEN c.Descripcion = 'Económica' THEN 53236
+        WHEN c.Descripcion = 'Ejecutiva' THEN 89575
+        ELSE 123658
         END as PRECIO
 FROM Vuelo v
          CROSS JOIN Clase_asiento c;
@@ -1178,107 +1174,108 @@ FROM Vuelo v
 -- =========================================================================
 
 INSERT INTO Segmento_Vuelo (ID_SEGMENTO, ID_VUELO, ID_AEROPUERTO_ORIGEN, ID_AEROPUERTO_DESTINO, HORA_SALIDA, HORA_LLEGADA) VALUES
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW8117'), 1, 2, now() + interval '1 day 14 hours 30 min', now() + interval '1 day 17 hours 45 min'), -- SCL -> MVD
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW8118'), 2, 3, now() + interval '1 day 18 hours 55 min', now() + interval '1 day 21 hours 30 min'), -- MVD -> GRU
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW8180'), 3, 4, now() + interval '1 day 22 hours 50 min', now() + interval '2 day 7 hours 35 min'),  -- GRU -> JFK
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW8989'), 4, 5, now() + interval '2 day 9 hours 55 min', now() + interval '2 day 12 hours 50 min'), -- JFK -> LAX
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW650'),  1, 6, now() + interval '1 day 7 hours 50 min', now() + interval '1 day 10 hours 40 min'), -- SCL -> LIM
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW2482'), 6, 7, now() + interval '1 day 12 hours', now() + interval '1 day 20 hours 15 min'),           -- LIM -> ATL
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW8954'), 7, 4, now() + interval '1 day 22 hours 30 min', now() + interval '2 day 1 hours 6 min'),   -- ATL -> JFK
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW8120'), 2, 1, now() + interval '2 day 15 hours', now() + interval '2 day 17 hours 30 min'),           -- MVD -> SCL
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW8130'), 3, 2, now() + interval '2 day 19 hours', now() + interval '2 day 21 hours 45 min'),           -- GRU -> MVD
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW8140'), 5, 7, now() + interval '2 day 22 hours 30 min', now() + interval '3 day 1 hours 30 min'),-- LAX -> ATL
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW8150'), 7, 2, now() + interval '3 day 3 hours', now() + interval '3 day 6 hours'),                       -- ATL -> MVD
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW8160'), 1, 2, now() + interval '3 day 8 hours', now() + interval '3 day 10 hours 30 min'),           -- SCL -> MVD
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW8170'), 2, 3, now() + interval '3 day 11 hours 30 min', now() + interval '3 day 14 hours'),          -- MVD -> GRU
+(1,  1, 1, 2, NOW() + INTERVAL '1 day 14 hours 30 min', NOW() + INTERVAL '1 day 17 hours 45 min'),
+(2,  2, 2, 3, NOW() + INTERVAL '1 day 18 hours 55 min', NOW() + INTERVAL '1 day 21 hours 30 min'),
+(3,  3, 3, 4, NOW() + INTERVAL '1 day 22 hours 50 min', NOW() + INTERVAL '2 days 07 hours 35 min'),
+(4,  4, 4, 5, NOW() + INTERVAL '2 days 09 hours 55 min', NOW() + INTERVAL '2 days 12 hours 50 min'),
+(5,  5, 1, 6, NOW() + INTERVAL '1 day 07 hours 50 min', NOW() + INTERVAL '1 day 10 hours 40 min'),
+(6,  6, 6, 7, NOW() + INTERVAL '1 day 12 hours',         NOW() + INTERVAL '1 day 20 hours 15 min'),
+(7,  7, 7, 4, NOW() + INTERVAL '1 day 22 hours 30 min', NOW() + INTERVAL '2 days 01 hour 06 min'),
+(8,  8, 2, 1, NOW() + INTERVAL '2 days 15 hours',        NOW() + INTERVAL '2 days 17 hours 30 min'),
+(9,  9, 3, 2, NOW() + INTERVAL '2 days 19 hours',        NOW() + INTERVAL '2 days 21 hours 45 min'),
+(10, 10, 5, 7, NOW() + INTERVAL '2 days 22 hours 30 min', NOW() + INTERVAL '3 days 01 hour 30 min'),
+(11, 11, 7, 2, NOW() + INTERVAL '3 days 03 hours',        NOW() + INTERVAL '3 days 06 hours'),
+(12, 12, 1, 2, NOW() + INTERVAL '3 days 08 hours',        NOW() + INTERVAL '3 days 10 hours 30 min'),
+(13, 13, 2, 3, NOW() + INTERVAL '3 days 11 hours 30 min', NOW() + INTERVAL '3 days 14 hours'),
 
-                                                                                                                               -- Multi-segmento para el vuelo de largo alcance SW8185 (El trigger manejará el orden 1, 2 y 3 correlativamente)
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW8185'), 3, 8, now() + interval '3 day 15 hours', now() + interval '3 day 18 hours 30 min'),          -- Tramo 1: GRU -> BOG
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW8185'), 8, 9, now() + interval '3 day 19 hours 15 min', now() + interval '3 day 21 hours 45 min'),-- Tramo 2: BOG -> MIA
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW8185'), 9, 4, now() + interval '3 day 22 hours 30 min', now() + interval '4 day 1 hours'),           -- Tramo 3: MIA -> JFK
+-- Multi-segmento SW8185
+(14, 14, 3, 8, NOW() + INTERVAL '3 days 15 hours',        NOW() + INTERVAL '3 days 18 hours 30 min'),
+(15, 14, 8, 9, NOW() + INTERVAL '3 days 19 hours 15 min', NOW() + INTERVAL '3 days 21 hours 45 min'),
+(16, 14, 9, 4, NOW() + INTERVAL '3 days 22 hours 30 min', NOW() + INTERVAL '4 days 01 hour'),
 
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW9000'), 5, 7, now() + interval '8 day 6 hours', now() + interval '8 day 13 hours'),                      -- LAX -> ATL
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW9001'), 7, 6, now() + interval '8 day 15 hours', now() + interval '8 day 22 hours'),                     -- ATL -> LIM
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW9002'), 6, 1, now() + interval '9 day 6 hours', now() + interval '9 day 10 hours'),                      -- LIM -> SCL
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW9100'), 9, 1, now() + interval '3 day 15 hours', now() + interval '3 day 19 hours 30 min'),          -- MIA -> SCL
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW9200'), 3, 8, now() + interval '4 day 8 hours', now() + interval '4 day 11 hours 30 min'),           -- GRU -> BOG
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW9201'), 8, 9, now() + interval '4 day 13 hours', now() + interval '4 day 16 hours'),                      -- BOG -> MIA
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW9202'), 9, 4, now() + interval '4 day 18 hours', now() + interval '4 day 21 hours'),                      -- MIA -> JFK
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW9900'), 1, 4, now() + interval '1 day 23 hours 55 min', now() + interval '2 day 9 hours 30 min'),     -- SCL -> JFK
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW9901'), 1, 8, now() + interval '1 day 9 hours', now() + interval '1 day 15 hours'),                  -- SCL -> BOG
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW9902'), 8, 4, now() + interval '1 day 17 hours', now() + interval '1 day 22 hours'),                  -- BOG -> JFK
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW9400'), 5, 9, now() + interval '3 day 8 hours', now() + interval '3 day 15 hours'),                  -- LAX -> MIA
-                                                                                                                               (nextval('segmento_vuelo_seq'), (SELECT ID_VUELO FROM Vuelo WHERE Numero_Vuelo = 'SW9500'), 9, 1, now() + interval '3 day 17 hours', now() + interval '3 day 23 hours 30 min');            -- MIA -> SCL
+(17, 15, 5, 7, NOW() + INTERVAL '4 days 06 hours',        NOW() + INTERVAL '4 days 13 hours'),
+(18, 16, 7, 6, NOW() + INTERVAL '4 days 15 hours',        NOW() + INTERVAL '4 days 22 hours'),
+(19, 17, 6, 1, NOW() + INTERVAL '5 days 06 hours',        NOW() + INTERVAL '5 days 10 hours'),
+(20, 18, 9, 1, NOW() + INTERVAL '3 days 15 hours',        NOW() + INTERVAL '3 days 19 hours 30 min'),
+(21, 19, 3, 8, NOW() + INTERVAL '4 days 08 hours',        NOW() + INTERVAL '4 days 11 hours 30 min'),
+(22, 20, 8, 9, NOW() + INTERVAL '4 days 13 hours',        NOW() + INTERVAL '4 days 16 hours'),
+(23, 21, 9, 4, NOW() + INTERVAL '4 days 18 hours',        NOW() + INTERVAL '4 days 21 hours'),
+(24, 22, 1, 4, NOW() + INTERVAL '1 day 23 hours 55 min',  NOW() + INTERVAL '2 days 09 hours 30 min'),
+(25, 23, 1, 8, NOW() + INTERVAL '1 day 09 hours',         NOW() + INTERVAL '1 day 15 hours'),
+(26, 24, 8, 4, NOW() + INTERVAL '1 day 17 hours',         NOW() + INTERVAL '1 day 22 hours'),
+(27, 25, 5, 9, NOW() + INTERVAL '3 days 08 hours',        NOW() + INTERVAL '3 days 15 hours'),
+(28, 26, 9, 1, NOW() + INTERVAL '3 days 17 hours',        NOW() + INTERVAL '3 days 23 hours 30 min');
 
+SELECT setval('segmento_vuelo_seq', COALESCE((SELECT MAX(ID_SEGMENTO) FROM Segmento_Vuelo), 1), true);
 
 INSERT INTO Asignacion_Puerta (ID_SEGMENTO, ID_PUERTA) VALUES
-                                                           -- SW8117 SCL -> MVD usa la puerta SCL-01
-                                                           ((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8117' AND sg.ORDEN_SEGMENTO = 1),
-                                                            (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'SCL-01')),
+-- SW8117 SCL -> MVD usa la puerta SCL-01
+((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8117' AND sg.ORDEN_SEGMENTO = 1),
+(SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'SCL-01')),
 
-                                                           -- SW8118 MVD -> GRU usa la puerta MVD-02
-                                                           ((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8118' AND sg.ORDEN_SEGMENTO = 1),
-                                                            (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'MVD-02')),
+-- SW8118 MVD -> GRU usa la puerta MVD-02
+((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8118' AND sg.ORDEN_SEGMENTO = 1),
+(SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'MVD-02')),
 
-                                                           -- SW8180 GRU -> JFK usa la puerta GRU-01
-                                                           ((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8180' AND sg.ORDEN_SEGMENTO = 1),
-                                                            (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'GRU-01')),
+-- SW8180 GRU -> JFK usa la puerta GRU-01
+((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8180' AND sg.ORDEN_SEGMENTO = 1),
+(SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'GRU-01')),
 
-                                                           -- SW8989 JFK -> LAX usa la puerta JFK-03
-                                                           ((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8989' AND sg.ORDEN_SEGMENTO = 1),
-                                                            (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'JFK-03')),
+-- SW8989 JFK -> LAX usa la puerta JFK-03
+((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8989' AND sg.ORDEN_SEGMENTO = 1),
+(SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'JFK-03')),
 
-                                                           -- SW650 SCL -> LIM usa la puerta SCL-02
-                                                           ((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW650' AND sg.ORDEN_SEGMENTO = 1),
-                                                            (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'SCL-02')),
+-- SW650 SCL -> LIM usa la puerta SCL-02
+((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW650' AND sg.ORDEN_SEGMENTO = 1),
+(SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'SCL-02')),
 
-                                                           -- SW2482 LIM -> ATL usa la puerta LIM-02
-                                                           ((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW2482' AND sg.ORDEN_SEGMENTO = 1),
-                                                            (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'LIM-02')),
+-- SW2482 LIM -> ATL usa la puerta LIM-02
+((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW2482' AND sg.ORDEN_SEGMENTO = 1),
+(SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'LIM-02')),
 
-                                                           -- SW8954 ATL -> JFK usa la puerta ATL-01
-                                                           ((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8954' AND sg.ORDEN_SEGMENTO = 1),
-                                                            (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'ATL-01')),
+-- SW8954 ATL -> JFK usa la puerta ATL-01
+((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8954' AND sg.ORDEN_SEGMENTO = 1),
+(SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'ATL-01')),
 
-                                                           -- SW8160 SCL -> MVD usa la puerta SCL-03
-                                                           ((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8160' AND sg.ORDEN_SEGMENTO = 1),
-                                                            (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'SCL-03')),
+-- SW8160 SCL -> MVD usa la puerta SCL-03
+((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8160' AND sg.ORDEN_SEGMENTO = 1),
+(SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'SCL-03')),
 
-                                                           -- SW8170 MVD -> GRU usa la puerta MVD-01
-                                                           ((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8170' AND sg.ORDEN_SEGMENTO = 1),
-                                                            (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'MVD-01')),
+-- SW8170 MVD -> GRU usa la puerta MVD-01
+((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8170' AND sg.ORDEN_SEGMENTO = 1),
+(SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'MVD-01')),
 
-                                                           -- SW8185 tramo multi-segmento (BOG -> MIA) usa la puerta BOG-01
-                                                           ((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8185' AND sg.ORDEN_SEGMENTO = 2),
-                                                            (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'BOG-01')),
+-- SW8185 tramo multi-segmento (BOG -> MIA) usa la puerta BOG-01
+((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8185' AND sg.ORDEN_SEGMENTO = 2),
+(SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'BOG-01')),
 
-                                                           -- SW9400 LAX -> MIA usa la puerta LAX-04
-                                                           ((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW9400' AND sg.ORDEN_SEGMENTO = 1),
-                                                            (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'LAX-04')),
+-- SW9400 LAX -> MIA usa la puerta LAX-04
+((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW9400' AND sg.ORDEN_SEGMENTO = 1),
+(SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'LAX-04')),
 
-                                                           -- SW9500 MIA -> SCL usa la puerta MIA-02
-                                                           ((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW9500' AND sg.ORDEN_SEGMENTO = 1),
-                                                            (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'MIA-02'));
+-- SW9500 MIA -> SCL usa la puerta MIA-02
+((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW9500' AND sg.ORDEN_SEGMENTO = 1),
+(SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'MIA-02'));
 
 
 
 -- 10. Itinerarios (IDs hardcoded)
 INSERT INTO Itinerario ( ORIGEN_AEROPUERTO, DESTINO_AEROPUERTO, DURACION_TOTAL, NUMERO_ESCALAS,Precio_Base) VALUES
-                                                                                                                (1, 5, '1 day 22:20:00'::interval, 3,850000), -- Itinerario 1: SCL -> MVD -> GRU -> JFK -> LAX
-                                                                                                                (1, 6, '03:50:00'::interval, 0,210000),       -- Itinerario 2: SCL -> LIM (directo)
-                                                                                                                (1, 4, '17:16:00'::interval, 2,350000),       -- Itinerario 3: SCL -> LIM -> ATL -> JFK
-                                                                                                                (1, 4, '1 day 03:30:00'::interval, 2,450000), -- Itinerario 4: SCL -> MVD -> GRU -> JFK
-                                                                                                                (1, 7, '12:00:00'::interval, 1,750000),       -- Itinerario 5: SCL -> LIM -> ATL
-                                                                                                                (3, 4, '5:30:00'::interval, 0,650000),        -- Itinerario 6: GRU -> JFK (directo)
-                                                                                                                (5, 1, '1 day 04:00:00'::interval, 2,930000), -- LAX -> ATL -> LIM -> SCL
-                                                                                                                (9, 1, '7 hours 00 minutes'::interval, 0,550000), -- Itinerario 8: MIA -> SCL (directo)
-                                                                                                                (3, 4, '13:00:00'::interval, 2,570000), -- GRU -> JFK con 2 escalas (en BOG, MIA)
-                                                                                                                ( 8, 9, '03:00:00'::interval, 0,450000),
+(1, 5, '1 day 22:20:00'::interval, 3,874231), -- Itinerario 1: SCL -> MVD -> GRU -> JFK -> LAX
+(1, 6, '03:50:00'::interval, 0,210000),       -- Itinerario 2: SCL -> LIM (directo)
+(1, 4, '17:16:00'::interval, 2,350000),       -- Itinerario 3: SCL -> LIM -> ATL -> JFK
+(1, 4, '1 day 03:30:00'::interval, 2,450000), -- Itinerario 4: SCL -> MVD -> GRU -> JFK
+(1, 7, '12:00:00'::interval, 1,750000),       -- Itinerario 5: SCL -> LIM -> ATL
+(3, 4, '5:30:00'::interval, 0,650000),        -- Itinerario 6: GRU -> JFK (directo)
+(5, 1, '1 day 04:00:00'::interval, 2,930000), -- LAX -> ATL -> LIM -> SCL
+(9, 1, '7 hours 00 minutes'::interval, 0,550000), -- Itinerario 8: MIA -> SCL (directo)
+(3, 4, '13:00:00'::interval, 2,570000), -- GRU -> JFK con 2 escalas (en BOG, MIA)
+( 8, 9, '03:00:00'::interval, 0,450000),
 -- Itinerario 11: Vuelo directo SCL -> JFK
-                                                                                                                ( 1, 4, '09:35:00'::interval, 0, 690000),
+( 1, 4, '09:35:00'::interval, 0, 690000),
 
 -- Itinerario 12: SCL -> BOG -> JFK
-                                                                                                                ( 1, 4, '13:00:00'::interval, 1, 460000);
+( 1, 4, '13:00:00'::interval, 1, 460000);
 
 INSERT INTO Itinerario (ORIGEN_AEROPUERTO,DESTINO_AEROPUERTO,HORA_SALIDA,HORA_LLEGADA,DURACION_TOTAL,NUMERO_ESCALAS, Precio_Base
 )
@@ -1289,78 +1286,93 @@ VALUES (
            '2025-08-11 05:00',
            INTERVAL '21 hours',
            1,
-           650  -- Precio base estimado
+           1120540
        );
 
 
 INSERT INTO Itinerario_Vuelo (ID_ITINERARIO, ID_VUELO, ORDEN, TIEMPO_ESPERA, TIPO_CONEXION) VALUES
-                                                                                                -- Itinerario 1: SCL -> MVD -> GRU -> JFK -> LAX
-                                                                                                (1, 1, 1, '1 hour 10 minutes'::interval, 'Escala en Montevideo'),    -- Vuelo 1: SCL -> MVD
-                                                                                                --(1, 1, 2, '1 hour 20 minutes'::interval, 'Cambio de avión en GRU'),  -- Vuelo 2: MVD -> GRU
-                                                                                                (1, 3, 3, '2 hour 20 minutes'::interval, 'Cambio de avión en JFK'),  -- Vuelo 3: GRU -> JFK
-                                                                                                (1, 4, 4, '0'::interval, 'Vuelo Final'),                             -- Vuelo 4: JFK -> LAX
+-- Itinerario 1: SCL -> MVD -> GRU -> JFK -> LAX
+(1, 1, 1, '1 hour 10 minutes'::interval, 'Escala en Montevideo'),    -- Vuelo 1: SCL -> MVD
+--(1, 1, 2, '1 hour 20 minutes'::interval, 'Cambio de avión en GRU'),  -- Vuelo 2: MVD -> GRU
+(1, 3, 3, '2 hour 20 minutes'::interval, 'Cambio de avión en JFK'),  -- Vuelo 3: GRU -> JFK
+(1, 4, 4, '0'::interval, 'Vuelo Final'),                             -- Vuelo 4: JFK -> LAX
 
-                                                                                                -- Itinerario 2: SCL -> LIM (directo)
-                                                                                                (2, 5, 1, '0'::interval, 'Vuelo directo SCL a LIM'),
+-- Itinerario 2: SCL -> LIM (directo)
+(2, 5, 1, '0'::interval, 'Vuelo directo SCL a LIM'),
 
-                                                                                                -- Itinerario 3: SCL -> LIM -> ATL -> JFK
-                                                                                                (3, 5, 1, '1 hour 20 minutes'::interval, 'Cambio de avión en Lima (LIM)'), -- Vuelo 5: SCL -> LIM
-                                                                                                (3, 6, 2, '2 hours 15 minutes'::interval, 'Cambio de avión en Atlanta (ATL)'), -- Vuelo 6: LIM -> ATL
-                                                                                                (3, 7, 3, '0'::interval, 'Vuelo final hacia JFK'),                         -- Vuelo 7: ATL -> JFK
+-- Itinerario 3: SCL -> LIM -> ATL -> JFK
+(3, 5, 1, '1 hour 20 minutes'::interval, 'Cambio de avión en Lima (LIM)'), -- Vuelo 5: SCL -> LIM
+(3, 6, 2, '2 hours 15 minutes'::interval, 'Cambio de avión en Atlanta (ATL)'), -- Vuelo 6: LIM -> ATL
+(3, 7, 3, '0'::interval, 'Vuelo final hacia JFK'),                         -- Vuelo 7: ATL -> JFK
 
-                                                                                                -- Itinerario 4: SCL -> MVD -> GRU -> JFK
-                                                                                                (4, 12, 1, '2 hours 0 minutes'::interval, 'Escala en Montevideo'), -- Vuelo 12: SCL -> MVD
-                                                                                                (4, 13, 2, '1 hour 30 minutes'::interval, 'Escala en GRU'),        -- Vuelo 13: MVD -> GRU
-                                                                                                (4, 14, 3, '0'::interval, 'Escala en Bogotá, Miami antes de JFK'),  -- Vuelo 14: GRU -> JFK
+-- Itinerario 4: SCL -> MVD -> GRU -> JFK
+(4, 12, 1, '2 hours 0 minutes'::interval, 'Escala en Montevideo'), -- Vuelo 12: SCL -> MVD
+(4, 13, 2, '1 hour 30 minutes'::interval, 'Escala en GRU'),        -- Vuelo 13: MVD -> GRU
+(4, 14, 3, '0'::interval, 'Escala en Bogotá, Miami antes de JFK'),  -- Vuelo 14: GRU -> JFK
 
-                                                                                                -- Itinerario 5: SCL -> LIM -> ATL
-                                                                                                (5, 5, 1, '1 hour 20 minutes'::interval, 'Escala en Lima'),        -- Vuelo 5: SCL -> LIM
-                                                                                                (5, 6, 2, '0'::interval, 'Vuelo final'),                           -- Vuelo 6: LIM -> ATL
+-- Itinerario 5: SCL -> LIM -> ATL
+(5, 5, 1, '1 hour 20 minutes'::interval, 'Escala en Lima'),        -- Vuelo 5: SCL -> LIM
+(5, 6, 2, '0'::interval, 'Vuelo final'),                           -- Vuelo 6: LIM -> ATL
 
-                                                                                                -- Itinerario 6: GRU -> JFK (directo)
-                                                                                                (6, 14, 1, '0'::interval, 'Vuelo directo GRU a JFK'),
+-- Itinerario 6: GRU -> JFK (directo)
+(6, 14, 1, '0'::interval, 'Vuelo directo GRU a JFK'),
 
-                                                                                                -- Itinerario 7: GRU -> LAX -> ATL -> LIM -> SCL (directo)
-                                                                                                (7, 15, 1, '2 hours'::interval, 'Escala en Atlanta'),
-                                                                                                (7, 16, 2, '8 hours'::interval, 'Escala en Lima'),
-                                                                                                (7, 17, 3, NULL, 'Destino Final'),
+-- Itinerario 7: GRU -> LAX -> ATL -> LIM -> SCL (directo)
+(7, 15, 1, '2 hours'::interval, 'Escala en Atlanta'),
+(7, 16, 2, '8 hours'::interval, 'Escala en Lima'),
+(7, 17, 3, NULL, 'Destino Final'),
 
-                                                                                                -- Vuelo directo desde Miami hasta Santiago
-                                                                                                (8, 18, 1, '0'::interval, 'Vuelo directo MIA -> SCL'),
+-- Vuelo directo desde Miami hasta Santiago
+(8, 18, 1, '0'::interval, 'Vuelo directo MIA -> SCL'),
 
-                                                                                                (9, 19, 1, '1 hour 30 minutes'::interval, 'Escala en Bogotá (BOG)'), -- GRU -> BOG
-                                                                                                (9, 20, 2, '2 hours'::interval, 'Escala en Miami (MIA)'),           -- BOG -> MIA
-                                                                                                (9, 21, 3, '0'::interval, 'Vuelo final a Nueva York (JFK)'),        -- MIA -> JFK
+(9, 19, 1, '1 hour 30 minutes'::interval, 'Escala en Bogotá (BOG)'), -- GRU -> BOG
+(9, 20, 2, '2 hours'::interval, 'Escala en Miami (MIA)'),           -- BOG -> MIA
+(9, 21, 3, '0'::interval, 'Vuelo final a Nueva York (JFK)'),        -- MIA -> JFK
 
-                                                                                                -- Vuelo directo desde Bogotá a Miami
-                                                                                                (10, 19, 1, '0'::interval, 'Vuelo directo BOG a MIA'),
+-- Vuelo directo desde Bogotá a Miami
+(10, 19, 1, '0'::interval, 'Vuelo directo BOG a MIA'),
 
-                                                                                                -- Itinerario 11: Vuelo directo SCL -> JFK
-                                                                                                (11, 22, 1, '0'::interval, 'Vuelo directo SCL -> JFK'),
+-- Itinerario 11: Vuelo directo SCL -> JFK
+(11, 22, 1, '0'::interval, 'Vuelo directo SCL -> JFK'),
 
-                                                                                                -- Itinerario 12: SCL -> BOG -> JFK
-                                                                                                (12, 23, 1, '2 hours'::interval, 'Escala en Bogotá'),
-                                                                                                (12, 24, 2, '0'::interval, 'Vuelo final');
+-- Itinerario 12: SCL -> BOG -> JFK
+(12, 23, 1, '2 hours'::interval, 'Escala en Bogotá'),
+(12, 24, 2, '0'::interval, 'Vuelo final');
 
 INSERT INTO Itinerario_Vuelo (ID_ITINERARIO,ID_VUELO,ORDEN,TIEMPO_ESPERA,TIPO_CONEXION)
 VALUES
     (13, 25, 1, INTERVAL '2 hours', 'Escala'), -- LA9400: LAX → MIA
     (13, 26, 2, INTERVAL '0', 'Final');        -- LA9500: MIA → SCL
 
+SELECT setval('itinerario_seq', COALESCE((SELECT MAX(ID_ITINERARIO) FROM Itinerario), 1), true);
+
 INSERT INTO Itinerario_Tarifa (ID_ITINERARIO, ID_TARIFA, Precio) VALUES
-                                                                     (1, 1, 850000.00), (1, 2, 950000.00), (1, 3, 1050000.00),
-                                                                     (2, 1, 210000.00), (2, 2, 250000.00), (2, 3, 280000.00),
-                                                                     (3, 1, 350000.00), (3, 2, 400000.00), (3, 3, 450000.00),
-                                                                     (4, 1, 450000.00), (4, 2, 510000.00), (4, 3, 570000.00),
-                                                                     (5, 1, 750000.00), (5, 2, 810000.00), (5, 3, 900000.00),
-                                                                     (6, 1, 650000.00), (6, 2, 700000.00), (6, 3, 750000.00),
-                                                                     (7, 1, 930000.00), (7, 2, 1000000.00), (7, 3, 1080000.00),
-                                                                     (8, 1, 550000.00), (8, 2, 600000.00), (8, 3, 650000.00),
-                                                                     (9, 1, 570000.00), (9, 2, 620000.00), (9, 3, 670000.00),
-                                                                     (10,1, 450000.00), (10,2, 480000.00), (10,3, 520000.00),
-                                                                     (11,1, 690000.00), (11,2, 730000.00), (11,3, 770000.00),
-                                                                     (12,1, 460000.00), (12,2, 490000.00), (12,3, 530000.00),
-                                                                     (13,1, 650000.00), (13,2, 690000.00), (13,3, 730000.00);
+-- Itinerario 1
+(1, 1, 35000.00), (1, 2, 42000.00), (1, 3, 56000.00),
+-- Itinerario 2
+(2, 1, 21000.00), (2, 2, 28000.00), (2, 3, 45000.00),
+-- Itinerario 3
+(3, 1, 35000.00), (3, 2, 42000.00), (3, 3, 56000.00),
+-- Itinerario 4
+(4, 1, 45000.00), (4, 2, 51000.00), (4, 3, 56000.00),
+-- Itinerario 5
+(5, 1, 40000.00), (5, 2, 48000.00), (5, 3, 56000.00),
+-- Itinerario 6
+(6, 1, 38000.00), (6, 2, 45000.00), (6, 3, 56000.00),
+-- Itinerario 7
+(7, 1, 42000.00), (7, 2, 49000.00), (7, 3, 56000.00),
+-- Itinerario 8
+(8, 1, 25000.00), (8, 2, 32000.00), (8, 3, 56000.00),
+-- Itinerario 9
+(9, 1, 37000.00), (9, 2, 44000.00), (9, 3, 56000.00),
+-- Itinerario 10
+(10,1, 20000.00), (10,2, 28000.00), (10,3, 56000.00),
+-- Itinerario 11
+(11,1, 39000.00), (11,2, 46000.00), (11,3, 56000.00),
+-- Itinerario 12
+(12,1, 28000.00), (12,2, 35000.00), (12,3, 56000.00),
+-- Itinerario 13
+(13,1, 31000.00), (13,2, 39000.00), (13,3, 56000.00);
 
 
 INSERT INTO Turno (ID_VUELO, Fecha, Hora_Inicio, Hora_Fin, ID_TIPO_TURNO) VALUES (1, CURRENT_DATE, '2025-12-10 08:00:00', '2025-12-10 12:00:00', 1);
@@ -1395,21 +1407,21 @@ INSERT INTO Turno (ID_VUELO, Fecha, Hora_Inicio, Hora_Fin, ID_TIPO_TURNO) VALUES
 
 
 -- Crear reservas para tres pasajeros en el Itinerario 10
-INSERT INTO Reserva (Fecha_Reserva, Estado_Reserva, RUT_PASAJERO, Total) VALUES
-                                                                             ('2025-08-04 10:00', 1, '87654321-2', 530000.00), -- Lucía
-                                                                             ('2025-08-04 10:05', 1, '76543210-3', 530000.00), -- Juan
-                                                                             ('2025-08-04 10:10', 1, '65432109-4', 530000.00); -- Ana
+/*INSERT INTO Reserva (Fecha_Reserva, Estado_Reserva, RUT_PASAJERO, Total) VALUES
+                                 ('2025-08-04 10:00', 1, '87654321-2', 530000.00), -- Lucía
+                                 ('2025-08-04 10:05', 1, '76543210-3', 530000.00), -- Juan
+                                 ('2025-08-04 10:10', 1, '65432109-4', 530000.00); -- Ana
 
 -- Asociar reservas con el Itinerario 10 (GRU → JFK)
 INSERT INTO reserva_itinerario (id_reserva, id_itinerario, id_itinerario_tarifa)
 VALUES (1, 10, 1), -- Aquí 1 es el id_tarifa que corresponde a 'Básica' o el que corresponda
        (2, 10, 1),
-       (3, 10, 1);
+       (3, 10, 1);]*/
 
 
 
-/*-- Ejemplo de asignación de asientos (asumiendo IDs de asiento disponibles)
-INSERT INTO Reserva_Asiento (ID_RESERVA, ID_VUELO, ID_ASIENTO) VALUES
+-- Ejemplo de asignación de asientos (asumiendo IDs de asiento disponibles)
+/*INSERT INTO Reserva_Asiento (ID_RESERVA, ID_VUELO, ID_ASIENTO) VALUES
 -- Lucía
 (1, 19, 2032), -- GRU -> BOG
 (1, 20, 2034), -- BOG -> MIA
@@ -1424,101 +1436,6 @@ INSERT INTO Reserva_Asiento (ID_RESERVA, ID_VUELO, ID_ASIENTO) VALUES
 (3, 19, 2056),
 (3, 20, 2047),
 (3, 21, 1766);*/
-
-
-
-
-select
-    it.ID_ITINERARIO,
-    ci1.nombre || ' - ' || arp1.nombre_aeropuerto || ' (' || arp1.codigo_iata || ')' as salida,
-    ci2.nombre || ' - ' || arp2.nombre_aeropuerto || ' (' || arp2.codigo_iata || ')' as destino,
-    it.NUMERO_ESCALAS as PARADAS,
-    TO_CHAR(it.precio_base, '"CLP$"999G999G999') AS  PRECIO,
-    IT.DURACION_TOTAL
-
-
-
-
-from itinerario it
-         join itinerario_vuelo itv
-              on itv.id_itinerario = it.id_itinerario
-         JOIN Itinerario_Vuelo iv ON iv.ID_ITINERARIO = it.ID_ITINERARIO
-         JOIN Vuelo v ON v.ID_VUELO = iv.ID_VUELO
-         join aeropuerto arp1
-              on arp1.id_aeropuerto = it.origen_aeropuerto
-         join aeropuerto arp2
-              on arp2.id_aeropuerto = it.destino_aeropuerto
-         join ciudad ci1
-              on ci1.id_ciudad = arp1.id_ciudad
-         join ciudad ci2
-              on ci2.id_ciudad = arp2.id_ciudad
-group by it.id_itinerario, ci1.nombre || ' - ' || arp1.nombre_aeropuerto || ' (' || arp1.codigo_iata || ')',
-         ci2.nombre || ' - ' || arp2.nombre_aeropuerto || ' (' || arp2.codigo_iata || ')',
-         arp1.id_aeropuerto,
-         arp2.id_aeropuerto ,it.origen_aeropuerto,
-         it.destino_aeropuerto
-order by it.ID_ITINERARIO;
-
-
-
-
--- Obtener todos los roles de Juan Pérez
-SELECT *
-FROM Usuario u
-         JOIN RolUsuario rls ON u.RUT = rls.rut_usuario
-         JOIN Roles rlu ON rls.id_rol = rlu.id_rol
-WHERE u.correo_electronico = 'juan.perez@piloto.com';
-
-
--- Verificar los roles de Juan Pérez en la tabla RolUsuario
-SELECT rls.rut_usuario, rlu.nombre AS Rol
-FROM RolUsuario rls
-         JOIN Roles rlu ON rls.id_rol = rlu.id_rol
-WHERE rls.rut_usuario = '12345678-9';
-
-
--- Verificar los roles de Juan Pérez
-SELECT *
-FROM RolUsuario
-WHERE rut_usuario = '12345678-9';
-
-SELECT * FROM pg_class c WHERE c.relkind = 'S' order BY c.relname;
-
-
-SELECT  sequence_name
-FROM information_schema.sequences
-ORDER BY sequence_name;
-
-select * from vuelo;
-select * from aeropuerto;
-
-select * from ciudad;
-
-SELECT MAX(id_vuelo) FROM vuelo;
-
-select * from asiento;
-
-select * from precio_asiento;
-
-select * from segmento_vuelo;
-
-select * from itinerario;
-
-select * from itinerario_vuelo;
-
-select * from asignacion_puerta;
-
-SELECT
-    v.Numero_Vuelo,
-    sg.ID_SEGMENTO,
-    sg.ORDEN_SEGMENTO,
-    a1.Codigo_IATA as Origen,
-    a2.Codigo_IATA as Destino
-FROM Segmento_Vuelo sg
-         JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO
-         JOIN Aeropuerto a1 ON sg.ID_AEROPUERTO_ORIGEN = a1.ID_AEROPUERTO
-         JOIN Aeropuerto a2 ON sg.ID_AEROPUERTO_DESTINO = a2.ID_AEROPUERTO
-ORDER BY v.Numero_Vuelo, sg.ORDEN_SEGMENTO;
 
 
 
