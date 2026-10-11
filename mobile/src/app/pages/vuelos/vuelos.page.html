@@ -1,0 +1,104 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Vuelos</ion-title>
+    <ion-buttons slot="end">
+      <ion-button aria-label="Actualizar" (click)="load()" [disabled]="busy">
+        <ion-icon name="refresh-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <main class="page vuelos-page">
+    <span class="eyebrow">TUS VIAJES</span>
+    <h1>Todo lo que necesitas para volar.</h1>
+    <p class="muted">Consulta tu próximo vuelo o entra a cualquiera de tus reservas activas.</p>
+
+    <ion-segment [value]="seccion" (ionChange)="cambiarSeccion($event.detail.value)">
+      <ion-segment-button value="proximo">Próximo vuelo</ion-segment-button>
+      <ion-segment-button value="reservas">Mis reservas</ion-segment-button>
+    </ion-segment>
+
+    <div *ngIf="busy" class="loading"><ion-spinner></ion-spinner></div>
+    <p *ngIf="error" class="error" role="alert">{{ error }}</p>
+
+    <ng-container *ngIf="!busy && inicio as d">
+      <section *ngIf="seccion === 'proximo'">
+        <section class="hero" *ngIf="d.proximoVuelo as next; else sinVuelo">
+          <div class="row">
+            <span class="eyebrow">TU PRÓXIMO VUELO</span>
+            <span class="status">{{ next.vuelo.estado.descripcion || 'Por confirmar' }}</span>
+          </div>
+
+          <div class="route">
+            <div>
+              <strong>{{ next.vuelo.segmentos[0]?.origen?.codigoIata || '—' }}</strong>
+              <span class="muted">Origen</span>
+            </div>
+            <ion-icon name="airplane-outline"></ion-icon>
+            <div class="destination">
+              <strong>{{ next.vuelo.segmentos[next.vuelo.segmentos.length - 1]?.destino?.codigoIata || '—' }}</strong>
+              <span class="muted">Destino</span>
+            </div>
+          </div>
+
+          <div class="meta">
+            <div><span>Vuelo</span><strong>{{ next.vuelo.numeroVuelo || 'Sin número' }}</strong></div>
+            <div><span>Salida</span><strong>{{ next.vuelo.fechaHoraSalida | date:'dd MMM · HH:mm' }}</strong></div>
+            <div><span>Puerta</span><strong>{{ next.vuelo.segmentos[0]?.puerta?.codigoPuerta || 'Por asignar' }}</strong></div>
+            <div><span>Asiento</span><strong>{{ next.vuelo.asiento?.numeroAsiento || 'Sin asignar' }}</strong></div>
+            <div><span>Avión</span><strong>{{ next.vuelo.modeloAvion || 'Por confirmar' }}</strong></div>
+            <div><span>Reserva</span><strong>#{{ next.idReserva }}</strong></div>
+          </div>
+
+          <ion-button expand="block" color="light" [routerLink]="['/vuelos/reservas', next.idReserva]">
+            Ver viaje completo
+            <ion-icon name="arrow-forward-outline" slot="end"></ion-icon>
+          </ion-button>
+        </section>
+
+        <ng-template #sinVuelo>
+          <ion-card class="ion-padding empty-card">
+            <ion-icon name="airplane-outline"></ion-icon>
+            <h2>No hay vuelos próximos</h2>
+            <p class="muted">Cuando tengas una reserva activa, tu vuelo más cercano aparecerá aquí.</p>
+            <ion-button routerLink="/inicio" fill="outline">Buscar un vuelo</ion-button>
+          </ion-card>
+        </ng-template>
+      </section>
+
+      <section *ngIf="seccion === 'reservas' && reservas as result" class="reservas-section">
+        <ion-card *ngFor="let r of result.contenido" button [routerLink]="['/vuelos/reservas', r.idReserva]">
+          <ion-card-content>
+            <div class="row">
+              <span class="eyebrow">RESERVA #{{ r.idReserva }}</span>
+              <span class="status">{{ r.estadoReserva.descripcion || 'Sin estado' }}</span>
+            </div>
+            <div class="route compact-route">
+              <strong>{{ r.codigoIataOrigen || '—' }}</strong>
+              <ion-icon name="airplane-outline"></ion-icon>
+              <strong>{{ r.codigoIataDestino || '—' }}</strong>
+            </div>
+            <div class="row reservation-footer">
+              <span>{{ r.proximaSalida ? (r.proximaSalida | date:'dd MMM yyyy · HH:mm') : 'Horario no disponible' }}</span>
+              <ion-icon name="arrow-forward-outline"></ion-icon>
+            </div>
+          </ion-card-content>
+        </ion-card>
+
+        <div class="empty" *ngIf="!result.contenido.length">
+          <h2>No tienes reservas activas</h2>
+          <p>Busca un vuelo desde Inicio para crear una nueva reserva.</p>
+          <ion-button routerLink="/inicio">Reservar vuelo</ion-button>
+        </div>
+
+        <nav class="pagination" aria-label="Paginación de reservas" *ngIf="result.totalPaginas > 1">
+          <ion-button fill="clear" [disabled]="page === 0 || busy" (click)="load(page - 1)">Anterior</ion-button>
+          <span>{{ page + 1 }} / {{ result.totalPaginas }}</span>
+          <ion-button fill="clear" [disabled]="page + 1 >= result.totalPaginas || busy" (click)="load(page + 1)">Siguiente</ion-button>
+        </nav>
+      </section>
+    </ng-container>
+  </main>
+</ion-content>

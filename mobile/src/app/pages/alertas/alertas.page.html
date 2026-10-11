@@ -1,0 +1,61 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Alertas</ion-title>
+    <ion-buttons slot="end">
+      <ion-button aria-label="Actualizar" (click)="load()" [disabled]="busy">
+        <ion-icon name="refresh-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <main class="page alertas-page">
+    <span class="eyebrow">AL DÍA CON TU VIAJE</span>
+    <h1>Alertas de tus vuelos.</h1>
+    <p class="muted">Aquí recibirás cambios de horario, cancelaciones, cambios operacionales y otras novedades importantes.</p>
+
+    <ion-segment [value]="filtro" (ionChange)="cambiarFiltro($event.detail.value)">
+      <ion-segment-button value="todas">Todas</ion-segment-button>
+      <ion-segment-button value="nuevas">Nuevas</ion-segment-button>
+    </ion-segment>
+
+    <div *ngIf="busy" class="loading"><ion-spinner></ion-spinner></div>
+    <p *ngIf="error" class="error" role="alert">{{ error }}</p>
+
+    <ng-container *ngIf="data as result">
+      <ion-card *ngFor="let n of visibles" [class.unread-card]="!n.leido">
+        <ion-card-content>
+          <div class="row">
+            <span class="eyebrow">{{ n.fecha | date:'dd MMM yyyy · HH:mm' }}</span>
+            <span class="status" *ngIf="!n.leido">Nueva</span>
+          </div>
+          <h2>{{ n.titulo || 'Alerta de viaje' }}</h2>
+          <p class="message">{{ n.mensaje }}</p>
+          <ion-button
+            fill="clear"
+            size="small"
+            *ngIf="!n.leido"
+            [disabled]="saving.has(n.idNotificacion)"
+            (click)="leer(n)"
+          >
+            Marcar como leída
+          </ion-button>
+          <p class="muted" *ngIf="n.leido">Leída</p>
+        </ion-card-content>
+      </ion-card>
+
+      <div class="empty" *ngIf="!visibles.length">
+        <ion-icon name="notifications-outline"></ion-icon>
+        <h2>{{ filtro === 'nuevas' ? 'No tienes alertas nuevas' : 'No tienes alertas por ahora' }}</h2>
+        <p>Las novedades importantes de tus vuelos aparecerán aquí.</p>
+      </div>
+
+      <nav class="pagination" *ngIf="result.totalPaginas > 1" aria-label="Paginación de alertas">
+        <ion-button fill="clear" [disabled]="page === 0 || busy" (click)="load(page - 1)">Anterior</ion-button>
+        <span>{{ page + 1 }} / {{ result.totalPaginas }}</span>
+        <ion-button fill="clear" [disabled]="page + 1 >= result.totalPaginas || busy" (click)="load(page + 1)">Siguiente</ion-button>
+      </nav>
+    </ng-container>
+  </main>
+</ion-content>
