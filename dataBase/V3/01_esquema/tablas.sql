@@ -47,7 +47,9 @@ DROP SEQUENCE IF EXISTS caracteristica_tarifa_seq CASCADE;
 DROP SEQUENCE IF EXISTS tarifa_caracteristica_seq CASCADE;
 DROP SEQUENCE IF EXISTS reserva_pasajero_seq CASCADE;
 DROP SEQUENCE IF EXISTS configuracion_cabina_seq CASCADE;
-
+DROP SEQUENCE IF EXISTS cancelacion_seq CASCADE;
+DROP SEQUENCE IF EXISTS log_auditoria_seq CASCADE;
+DROP SEQUENCE IF EXISTS cancelacion_asiento_seq CASCADE;
 
 -- Eliminar Tablas con CASCADE
 DROP TABLE IF EXISTS estado_vuelo CASCADE;
@@ -98,8 +100,9 @@ DROP TABLE IF EXISTS Caracteristica_Tarifa CASCADE;
 DROP TABLE IF EXISTS Tarifa_Caracteristica CASCADE;
 DROP TABLE IF EXISTS pasajero_reserva CASCADE;
 DROP TABLE IF EXISTS Configuracion_Cabina CASCADE;
-
-
+DROP TABLE IF EXISTS Cancelacion CASCADE;
+DROP TABLE IF EXISTS Log_Auditoria CASCADE;
+DROP TABLE IF EXISTS Cancelacion_Asiento CASCADE;
 
 -- SECUENCIAS INICIALES
 CREATE SEQUENCE rol_seq;
@@ -157,10 +160,21 @@ CREATE SEQUENCE itinerario_tarifa_seq
     MINVALUE 1
     NO CYCLE;
 
+CREATE SEQUENCE IF NOT EXISTS cancelacion_seq START WITH 1;
+CREATE SEQUENCE IF NOT EXISTS log_auditoria_seq START WITH 1;
+CREATE SEQUENCE IF NOT EXISTS cancelacion_asiento_seq START WITH 1;
 
+DROP TABLE IF EXISTS Checkin_Pasajero CASCADE;
+DROP TABLE IF EXISTS Checkin CASCADE;
 
+DROP SEQUENCE IF EXISTS checkin_pasajero_seq;
+DROP SEQUENCE IF EXISTS checkin_seq;
 
-
+-- ============================================================================
+-- 2. CREACIÓN DE SECUENCIAS
+-- ============================================================================
+CREATE SEQUENCE checkin_seq START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE checkin_pasajero_seq START WITH 1 INCREMENT BY 1;
 
 
 
@@ -364,31 +378,31 @@ CREATE TABLE Capacidad_Clase (
 
 
 CREATE TABLE Configuracion_Cabina (
-      ID_CONFIGURACION INT PRIMARY KEY DEFAULT nextval('configuracion_cabina_seq'),
-      ID_MODELO INT REFERENCES Modelo_Avion(ID_MODELO) ON DELETE CASCADE,
-      ID_CLASE INT REFERENCES Clase_asiento(ID_CLASE) ON DELETE CASCADE,
-      Fila_Inicio INT NOT NULL,                     -- Ej: Fila 1
-      Fila_Fin INT NOT NULL,                        -- Ej: Fila 5
-      Distribucion_Columnas VARCHAR(20) NOT NULL,   -- Ej: "2-2" (Ejecutiva), "3-3" (Pasillo único), "3-3-3" (Doble pasillo)
-      Letras_Columnas VARCHAR(30) NOT NULL,         -- Ej: "A,B,C,D,E,F" o "A,B,C,D,E,F,G,H,J"
-      Es_Salida_Emergencia BOOLEAN DEFAULT FALSE,
-      CONSTRAINT unique_modelo_filas UNIQUE (ID_MODELO, Fila_Inicio, Fila_Fin)
+                                      ID_CONFIGURACION INT PRIMARY KEY DEFAULT nextval('configuracion_cabina_seq'),
+                                      ID_MODELO INT REFERENCES Modelo_Avion(ID_MODELO) ON DELETE CASCADE,
+                                      ID_CLASE INT REFERENCES Clase_asiento(ID_CLASE) ON DELETE CASCADE,
+                                      Fila_Inicio INT NOT NULL,                     -- Ej: Fila 1
+                                      Fila_Fin INT NOT NULL,                        -- Ej: Fila 5
+                                      Distribucion_Columnas VARCHAR(20) NOT NULL,   -- Ej: "2-2" (Ejecutiva), "3-3" (Pasillo único), "3-3-3" (Doble pasillo)
+                                      Letras_Columnas VARCHAR(30) NOT NULL,         -- Ej: "A,B,C,D,E,F" o "A,B,C,D,E,F,G,H,J"
+                                      Es_Salida_Emergencia BOOLEAN DEFAULT FALSE,
+                                      CONSTRAINT unique_modelo_filas UNIQUE (ID_MODELO, Fila_Inicio, Fila_Fin)
 );
 
 -- =============================================================================
 -- 4. TABLA ASIENTO (EXTENDIDA CON COORDENADAS ESPACIALES)
 -- =============================================================================
 CREATE TABLE Asiento (
-     ID_ASIENTO INT PRIMARY KEY DEFAULT nextval('asiento_seq'),
-     Numero_Asiento VARCHAR(10) NOT NULL,         -- Ej: "12A"
-     Fila INT NOT NULL,                           -- Ej: 12
-     Letra VARCHAR(2) NOT NULL,                   -- Ej: "A"
-     ID_CLASE INT REFERENCES Clase_asiento(ID_CLASE),
-     ID_AVION INT REFERENCES Avion(ID_AVION) ON DELETE CASCADE,
-     Es_Ventana BOOLEAN DEFAULT FALSE,
-     Es_Pasillo BOOLEAN DEFAULT FALSE,
-     Es_Emergencia BOOLEAN DEFAULT FALSE,
-     CONSTRAINT unique_avion_numero_asiento UNIQUE (ID_AVION, Numero_Asiento)
+                         ID_ASIENTO INT PRIMARY KEY DEFAULT nextval('asiento_seq'),
+                         Numero_Asiento VARCHAR(10) NOT NULL,         -- Ej: "12A"
+                         Fila INT NOT NULL,                           -- Ej: 12
+                         Letra VARCHAR(2) NOT NULL,                   -- Ej: "A"
+                         ID_CLASE INT REFERENCES Clase_asiento(ID_CLASE),
+                         ID_AVION INT REFERENCES Avion(ID_AVION) ON DELETE CASCADE,
+                         Es_Ventana BOOLEAN DEFAULT FALSE,
+                         Es_Pasillo BOOLEAN DEFAULT FALSE,
+                         Es_Emergencia BOOLEAN DEFAULT FALSE,
+                         CONSTRAINT unique_avion_numero_asiento UNIQUE (ID_AVION, Numero_Asiento)
 );
 --ALTER TABLE Asiento
 --ADD CONSTRAINT unique_asiento_avion UNIQUE (Numero_Asiento, ID_AVION);
@@ -544,9 +558,9 @@ CREATE TABLE Reserva (
                          Fecha_Reserva TIMESTAMP NOT NULL,
                          Estado_Reserva INT REFERENCES Estado_reserva(ID_ESTADO_RESERVA),
                          RUT_PASAJERO VARCHAR(12) REFERENCES Pasajero(RUT),
-                         Total DECIMAL(10,2)
+                         Total DECIMAL(10,2),
     --Tipo_Boleto VARCHAR(50) CHECK (Tipo_Boleto IN ('Económica', 'Ejecutiva', 'Primera Clase')),
-    --Codigo_Reserva VARCHAR(50) UNIQUE
+                          CODIGO_RESERVA VARCHAR(50) UNIQUE
 );
 
 
@@ -616,14 +630,27 @@ CREATE TABLE Pago (
                       ID_METODO_PAGO INT REFERENCES Metodo_Pago(ID_METODO_PAGO)
 );
 
-/*CREATE TABLE Cancelacion (
-    ID_CANCELACION INT PRIMARY KEY DEFAULT nextval('cancelacion_seq'),
-    ID_RESERVA INT REFERENCES Reserva(ID_RESERVA),
-    Fecha TIMESTAMP NOT NULL,
-    Motivo TEXT,
-    Estado VARCHAR(50) CHECK (Estado IN ('Pendiente', 'Procesado', 'Reembolsado')),
-    Monto_Reembolso DECIMAL(10, 2) -- Puede ser igual al monto total o un porcentaje
-);*/
+CREATE TABLE Cancelacion (
+                             ID_CANCELACION INT PRIMARY KEY DEFAULT nextval('cancelacion_seq'),
+                             ID_RESERVA INT REFERENCES Reserva(ID_RESERVA),
+                             Fecha TIMESTAMP NOT NULL,
+                             Motivo TEXT,
+                             Estado VARCHAR(50) CHECK (Estado IN ('Pendiente', 'Procesado', 'Reembolsado')),
+                             Monto_Reembolso DECIMAL(10, 2) -- Puede ser igual al monto total o un porcentaje
+);
+
+
+CREATE TABLE IF NOT EXISTS Cancelacion_Asiento (
+    ID_CANCELACION_ASIENTO INT PRIMARY KEY DEFAULT nextval('cancelacion_asiento_seq'),
+    ID_CANCELACION INT NOT NULL REFERENCES Cancelacion(ID_CANCELACION) ON DELETE CASCADE,
+    ID_VUELO INT NOT NULL REFERENCES Vuelo(ID_VUELO),
+    ID_ASIENTO INT NOT NULL REFERENCES Asiento(ID_ASIENTO),
+    Numero_Vuelo VARCHAR(50),
+    Numero_Asiento VARCHAR(10),
+    Clase_Asiento VARCHAR(50),
+    RUT_Pasajero VARCHAR(12) NOT NULL REFERENCES Pasajero(RUT),
+    Fecha_Registro TIMESTAMP NOT NULL DEFAULT NOW()
+);
 
 
 CREATE TABLE Equipaje (
@@ -641,11 +668,23 @@ CREATE TABLE Equipaje (
 -- CHECK-IN
 CREATE TABLE Checkin (
                          ID_CHECKIN INT PRIMARY KEY DEFAULT nextval('checkin_seq'),
-                         ID_RESERVA INT REFERENCES Reserva(ID_RESERVA),
-                         Fecha_Hora TIMESTAMP,
-                         Metodo VARCHAR(50) CHECK (Metodo IN ('Web', 'App', 'Mostrador'))
+                         ID_RESERVA INT NOT NULL REFERENCES Reserva(ID_RESERVA) ON DELETE CASCADE,
+                         Fecha_Hora TIMESTAMP NOT NULL DEFAULT NOW(),
+                         Metodo VARCHAR(50) NOT NULL CHECK (Metodo IN ('Web', 'App', 'Mostrador')),
+                         Estado VARCHAR(30) NOT NULL DEFAULT 'COMPLETADO' CHECK (Estado IN ('COMPLETADO', 'PENDIENTE', 'ANULADO')),
+                         Codigo_Boarding_Pass VARCHAR(100) UNIQUE
 );
 
+
+-- Tabla para rastrear qué pasajeros hicieron Check-in dentro de la reserva
+CREATE TABLE Checkin_Pasajero (
+          ID_CHECKIN_PASAJERO INT PRIMARY KEY DEFAULT nextval('checkin_pasajero_seq'),
+          ID_CHECKIN INT NOT NULL REFERENCES Checkin(ID_CHECKIN) ON DELETE CASCADE,
+          RUT VARCHAR(12) NOT NULL REFERENCES Pasajero(RUT),
+          Declaracion_Equipaje_Aceptada BOOLEAN NOT NULL DEFAULT TRUE,
+          Fecha_Registro TIMESTAMP NOT NULL DEFAULT NOW(),
+          CONSTRAINT uq_checkin_pasajero UNIQUE (ID_CHECKIN, RUT)
+);
 
 CREATE TABLE Notificacion (
                               ID_NOTIFICACION INT PRIMARY KEY DEFAULT nextval('notificacion_seq'),
@@ -655,6 +694,20 @@ CREATE TABLE Notificacion (
                               Leido BOOLEAN DEFAULT FALSE,
                               Fecha TIMESTAMP DEFAULT NOW()
 );
+
+
+
+CREATE TABLE IF NOT EXISTS Log_Auditoria (
+     ID_LOG INT PRIMARY KEY DEFAULT nextval('log_auditoria_seq'),
+     Fecha_Hora TIMESTAMP NOT NULL DEFAULT NOW(),
+     Rut_Usuario VARCHAR(12),
+     Accion VARCHAR(100) NOT NULL, -- ej. 'CANCELACION_RESERVA', 'CAMBIO_ASIENTO'
+     Tabla_Afectada VARCHAR(50),
+     ID_Registro_Afectado INT,
+     Detalle TEXT,
+     Direccion_IP VARCHAR(45)
+);
+
 
 /*CREATE TABLE Seguimiento_Vuelo (
     ID_SEGUIMIENTO SERIAL PRIMARY KEY,

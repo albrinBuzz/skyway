@@ -1,123 +1,252 @@
-<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition lang="es"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="jakarta.faces.core"
                 xmlns:h="jakarta.faces.html"
                 xmlns:p="http://primefaces.org/ui"
-                xmlns:f="http://xmlns.jcp.org/jsf/core"
-                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:ui="jakarta.faces.facelets"
                 template="/template/main.xhtml">
 
     <ui:define name="head">
+        <title>Check-In Web - SkyWay</title>
         <style type="text/css">
-            .glass-card {
-                background: rgba(30, 41, 59, 0.7);
-                backdrop-filter: blur(10px);
-                -webkit-backdrop-filter: blur(10px);
-                border: 1px solid rgba(255, 255, 255, 0.05);
-                border-radius: 16px;
-                color: #e2e8f0;
-            }
-            .ticket-badge {
-                background: rgba(56, 189, 248, 0.1);
-                color: #38bdf8;
-                border: 1px solid rgba(56, 189, 248, 0.2);
-                padding: 4px 12px;
-                border-radius: 20px;
-                font-size: 0.85rem;
-            }
+            .checkin-container { max-width: 900px; margin: 30px auto; padding: 0 15px; }
+            .checkin-card { background: #101B33 !important; border: 1px solid #1E3A5C !important; border-radius: 12px !important; padding: 24px !important; color: #E6EEF7 !important; }
+            .stepper-header { display: flex; justify-content: space-between; margin-bottom: 24px; position: relative; }
+            .stepper-header::before { content: ''; position: absolute; top: 18px; left: 10%; right: 10%; height: 2px; background: #1E3A5C; z-index: 1; }
+            .step-item { position: relative; z-index: 2; background: #101B33; padding: 0 12px; text-align: center; }
+            .step-number { width: 36px; height: 36px; border-radius: 50%; background: #11263F; border: 2px solid #1E3A5C; color: #94A3B8; display: flex; align-items: center; justify-content: center; margin: 0 auto 6px auto; font-weight: 700; }
+            .step-item.active .step-number { background: #2563EB; border-color: #60A5FA; color: #FFFFFF; box-shadow: 0 0 10px rgba(37, 99, 235, 0.5); }
+            .step-item.completed .step-number { background: #166534; border-color: #22C55E; color: #FFFFFF; }
+            .step-label { font-size: 0.8rem; color: #94A3B8; }
+            .step-item.active .step-label { color: #FFFFFF; font-weight: 700; }
+            .security-box, .search-box-panel { background: #0D172A; border: 1px solid #1E293B; border-radius: 8px; padding: 16px; }
+            .boarding-card-preview { background: #11263F; border: 1px solid #1E3A5C; border-radius: 10px; padding: 20px; }
+            .time-rule-badge { background: rgba(37, 99, 235, 0.1); border: 1px solid #2563EB; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; }
         </style>
+
+        <script type="text/javascript">
+            //<![CDATA[
+            function imprimirPasabordo() { window.print(); }
+            //]]>
+        </script>
     </ui:define>
 
     <ui:define name="contenido">
-        <div class="container py-5">
-            <div class="text-center mb-5">
-                <h1 class="fw-bold text-white mb-2"><i class="fas fa-luggage-cart me-3 text-info"></i>Check-In Digital</h1>
-                <p class="text-secondary">Gestiona tu equipaje, selecciona tu asiento y obtén tu tarjeta de embarque de forma inmediata</p>
-            </div>
+        <p:growl id="globalGrowl" showDetail="true" keepAlive="true" life="5000" />
 
-            <div class="row g-4 justify-content-center">
-                <div class="col-lg-5">
-                    <div class="card glass-card p-4 h-100 shadow-lg">
-                        <h4 class="fw-bold text-white mb-4"><i class="fas fa-search me-2 text-primary"></i>Buscar Reserva</h4>
-                        <h:form id="checkinForm">
-                            <div class="mb-3">
-                                <label class="form-label small fw-bold text-light">Código de Reserva (PNR)</label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="fas fa-ticket-alt"></i></span>
-                                    <p:inputText styleClass="form-control" placeholder="Ej: SKW98A" maxlength="6" style="text-transform: uppercase;"/>
-                                </div>
-                            </div>
+        <f:metadata>
+            <f:viewParam name="idReserva" value="#{checkInView.idReserva}" />
+            <f:viewParam name="idItinerario" value="#{checkInView.idItinerario}" />
+            <f:viewAction action="#{checkInView.cargarDatosCheckIn}" />
+        </f:metadata>
 
-                            <div class="mb-4">
-                                <label class="form-label small fw-bold text-light">Apellido del Pasajero</label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="fas fa-user"></i></span>
-                                    <p:inputText styleClass="form-control" placeholder="Ej: Román"/>
-                                </div>
-                            </div>
+        <div class="checkin-container skyway-theme">
 
-                            <p:commandButton value="Buscar Vuelo" type="button" styleClass="w-100 sky-btn"
-                                             icon="pi pi-search" onclick="PF('mockGrowl').renderMessage({severity: 'info', summary: 'Búsqueda Simulada', detail: 'Cargando datos del itinerario activo.'})"/>
-                        </h:form>
+            <header class="mb-4">
+                <h2 class="text-white font-weight-bold"><i class="pi pi-desktop text-primary me-2"></i>Check-In Online</h2>
+                <p class="text-muted">Confirma tus datos, acepta las normas de seguridad e imprime tu tarjeta de embarque.</p>
+            </header>
+
+            <div class="checkin-card">
+
+                <!-- BANNER REGIONAL DE REGLAS DE TIEMPO DE CHECK-IN -->
+                <div class="time-rule-badge d-flex align-items-center gap-3">
+                    <i class="pi pi-clock text-primary" style="font-size: 1.5rem;"></i>
+                    <div class="small">
+                        <strong class="text-white d-block">Ventana de Tiempo para Check-In Web:</strong>
+                        <span class="text-white-50">El Check-In Online se habilita <strong class="text-white">48 horas antes</strong> y cierra estrictamente <strong class="text-white">1 hora antes</strong> de la salida programada del vuelo.</span>
                     </div>
                 </div>
 
-                <div class="col-lg-7">
-                    <div class="card glass-card p-4 shadow-lg">
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h4 class="fw-bold text-white m-0"><i class="fas fa-plane-arrival me-2 text-success"></i>Próximo Vuelo Activo</h4>
-                            <span class="ticket-badge">Check-in Disponible</span>
-                        </div>
-
-                        <div class="p-3 rounded-3 mb-4" style="background: rgba(15, 23, 42, 0.6); border: 1px dashed rgba(255,255,255,0.15);">
-                            <div class="row align-items-center text-center text-md-start">
-                                <div class="col-md-4">
-                                    <h2 class="fw-bold text-info m-0">SCL</h2>
-                                    <small class="text-secondary">Santiago, Chile</small>
-                                </div>
-                                <div class="col-md-4 text-center my-3 my-md-0">
-                                    <i class="fas fa-long-arrow-alt-right fa-2x text-secondary"></i>
-                                    <div class="small text-muted mt-1">Vuelo SKY-402</div>
-                                </div>
-                                <div class="col-md-4 text-md-end">
-                                    <h2 class="fw-bold text-info m-0">LAX</h2>
-                                    <small class="text-secondary">Los Ángeles, USA</small>
-                                </div>
-                            </div>
-
-                            <hr class="border-secondary my-3" />
-
-                            <div class="row text-center text-md-start g-3">
-                                <div class="col-6 col-md-3">
-                                    <div class="small text-secondary">Fecha</div>
-                                    <div class="fw-bold text-white">25 Mayo, 2026</div>
-                                </div>
-                                <div class="col-6 col-md-3">
-                                    <div class="small text-secondary">Embarque</div>
-                                    <div class="fw-bold text-white">21:15 Hrs</div>
-                                </div>
-                                <div class="col-6 col-md-3">
-                                    <div class="small text-secondary">Asiento</div>
-                                    <div class="fw-bold text-warning">12A (Ventana)</div>
-                                </div>
-                                <div class="col-6 col-md-3">
-                                    <div class="small text-secondary">Pasajero</div>
-                                    <div class="fw-bold text-white">Cristóbal Román</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row g-2">
-                            <div class="col-md-6">
-                                <p:commandButton value="Cambiar / Elegir Asiento" type="button" icon="pi pi-user" styleClass="w-100 btn btn-cancel-custom py-2" />
-                            </div>
-                            <div class="col-md-6">
-                                <p:commandButton value="Emitir Tarjeta de Embarque" type="button" icon="pi pi-id-card" styleClass="w-100 sky-btn py-2" />
-                            </div>
-                        </div>
+                <!-- ENCABEZADO DE PASOS (STEPPER) -->
+                <div class="stepper-header">
+                    <div class="step-item #{checkInView.pasoActual == 1 ? 'active' : (checkInView.pasoActual &gt; 1 ? 'completed' : '')}">
+                        <div class="step-number"><i class="pi #{checkInView.pasoActual &gt; 1 ? 'pi-check' : 'pi-user'}"></i></div>
+                        <div class="step-label">1. Pasajeros</div>
+                    </div>
+                    <div class="step-item #{checkInView.pasoActual == 2 ? 'active' : (checkInView.pasoActual &gt; 2 ? 'completed' : '')}">
+                        <div class="step-number"><i class="pi #{checkInView.pasoActual &gt; 2 ? 'pi-check' : 'pi-shield'}"></i></div>
+                        <div class="step-label">2. Declaración Seguridad</div>
+                    </div>
+                    <div class="step-item #{checkInView.pasoActual == 3 ? 'active' : ''}">
+                        <div class="step-number"><i class="pi pi-ticket"></i></div>
+                        <div class="step-label">3. Tarjeta Embarque</div>
                     </div>
                 </div>
+
+                <h:form id="formCheckIn">
+
+                    <!-- PASO 0: BÚSQUEDA MANUAL DE RESERVA -->
+                    <h:panelGroup rendered="#{checkInView.pasoActual == 0}" layout="block">
+                        <h5 class="text-white font-weight-bold mb-3"><i class="pi pi-search me-2 text-primary"></i>Buscar tu Reserva</h5>
+                        <p class="text-white-50 small mb-4">Ingresa tu código/número de reserva y apellido o RUT para buscar tus vuelos asignados.</p>
+
+                        <div class="search-box-panel mb-4">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-white-50 small">Código o N° de Reserva:</label>
+                                    <p:inputText id="txtCodigoReserva" value="#{checkInView.codigoReservaBuscado}" placeholder="Ej: FP4CTZ o 1" styleClass="w-100" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-white-50 small">Apellido o RUT del Pasajero:</label>
+                                    <p:inputText id="txtApellidoRut" value="#{checkInView.apellidoORutBuscado}" placeholder="Ej: Martínez o 12345678-9" styleClass="w-100" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <p:commandButton value="Buscar Reserva" icon="pi pi-search" actionListener="#{checkInView.buscarReservaManual}" update="@form :globalGrowl" process="@form" styleClass="btn-skyway-primary" />
+                        </div>
+                    </h:panelGroup>
+
+                    <!-- PASO 1: CONFIRMACIÓN DE PASAJEROS Y ASIENTOS -->
+                    <h:panelGroup rendered="#{checkInView.pasoActual == 1}" layout="block">
+                        <h5 class="text-white font-weight-bold mb-3">Paso 1: Confirmación de Pasajeros y Asignación</h5>
+
+                        <!-- BANNER DE BLOQUEO 1: AÚN NO DISPONIBLE (Faltan más de 48 horas) -->
+                        <h:panelGroup rendered="#{checkInView.estadoVentanaCheckIn == 'NO_DISPONIBLE_AUN'}" layout="block"
+                                      styleClass="alert mb-4 d-flex align-items-center gap-3"
+                                      style="background: rgba(245, 158, 11, 0.15); border: 1px solid #f59e0b; color: #fef08a; border-radius: 8px; padding: 16px;">
+                            <i class="pi pi-exclamation-triangle" style="font-size: 1.8rem; color: #f59e0b;"></i>
+                            <div>
+                                <strong class="d-block text-warning" style="font-size: 1rem;">Check-In Online No Disponible Aún</strong>
+                                <span class="small text-white-50">
+                                El Check-In Online se habilita <strong class="text-white">48 horas antes del despegue</strong>.
+                                Fecha y hora de salida programada:
+                                <strong class="text-warning">
+                                    <h:outputText value="#{checkInView.fechaSalidaVuelo}">
+                                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/Santiago"/>
+                                    </h:outputText>
+                                </strong>
+                            </span>
+                            </div>
+                        </h:panelGroup>
+
+                        <!-- BANNER DE BLOQUEO 2: CERRADO (Falta menos de 1 hora) -->
+                        <h:panelGroup rendered="#{checkInView.estadoVentanaCheckIn == 'CERRADO'}" layout="block"
+                                      styleClass="alert mb-4 d-flex align-items-center gap-3"
+                                      style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #fca5a5; border-radius: 8px; padding: 16px;">
+                            <i class="pi pi-times-circle" style="font-size: 1.8rem; color: #ef4444;"></i>
+                            <div>
+                                <strong class="d-block text-danger" style="font-size: 1rem;">Check-In Web Cerrado</strong>
+                                <span class="small text-white-50">
+                                El tiempo límite para realizar el Check-In Web (menos de 60 minutos antes de la salida) ha expirado.
+                                Por favor dirígete directamente a los mostradores de la aerolínea en el aeropuerto.
+                            </span>
+                            </div>
+                        </h:panelGroup>
+
+                        <!-- TABLA DE ASIENTOS -->
+                        <p:dataTable value="#{checkInView.listaAsientos}" var="asiento" lazy="false" styleClass="skyway-datatable mb-4">
+                            <p:column headerText="Pasajero / Asiento">
+                                <h:outputText value="Pasajero Asignado - Asiento #{asiento.numeroAsiento}" />
+                            </p:column>
+                            <p:column headerText="Asiento">
+                                <span class="badge bg-primary">#{asiento.numeroAsiento}</span>
+                            </p:column>
+                            <p:column headerText="Clase">
+                                <h:outputText value="#{asiento.claseAsiento}" />
+                            </p:column>
+                            <p:column headerText="Estado">
+                                <h:panelGroup rendered="#{checkInView.checkInExitoso}">
+                                    <span class="badge bg-success"><i class="pi pi-check-circle me-1"></i>Confirmado</span>
+                                </h:panelGroup>
+                                <h:panelGroup rendered="#{not checkInView.checkInExitoso}">
+                                    <span class="badge bg-warning text-dark"><i class="pi pi-clock me-1"></i>Pendiente Check-In</span>
+                                </h:panelGroup>
+                            </p:column>
+                        </p:dataTable>
+
+                        <!-- BOTONES CON DESHABILITACIÓN ACTIVA -->
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h:panelGroup rendered="#{not empty checkInView.codigoReservaBuscado}">
+                                <p:commandButton value="Buscar otra reserva"
+                                                 icon="pi pi-arrow-left"
+                                                 actionListener="#{checkInView.pasoAnterior}"
+                                                 update="@form"
+                                                 styleClass="btn-skyway-outlined" />
+                            </h:panelGroup>
+                            <h:panelGroup rendered="#{empty checkInView.codigoReservaBuscado}">
+                                <div></div>
+                            </h:panelGroup>
+
+                            <!-- BOTÓN DESHABILITADO SI EL CHECK-IN NO ESTÁ DENTRO DE LA VENTANA PERMITIDA -->
+                            <p:commandButton value="Continuar a Declaración de Seguridad"
+                                             action="#{checkInView.siguientePaso}"
+                                             disabled="#{not checkInView.checkInHabilitado}"
+                                             update="@form :globalGrowl"
+                                             process="@form"
+                                             styleClass="btn-skyway-primary" />
+                        </div>
+                    </h:panelGroup>
+
+                    <!-- PASO 2: DECLARACIÓN JURADA DE SEGURIDAD -->
+                    <h:panelGroup rendered="#{checkInView.pasoActual == 2}" layout="block">
+                        <h5 class="text-white font-weight-bold mb-3">Paso 2: Regulaciones de Equipaje y Mercancías Peligrosas</h5>
+
+                        <div class="security-box mb-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="pi pi-exclamation-triangle text-warning me-2" style="font-size: 1.5rem;"></i>
+                                <strong class="text-white">Artículos Prohibidos en Equipaje de Mano y Bodega</strong>
+                            </div>
+                            <p class="small text-white-50 mb-2">Por regulaciones aeronáuticas internacionales (DGAC / IATA), está estrictamente prohibido transportar en el avión:</p>
+                            <ul class="small text-white-50 mb-3" style="padding-left: 20px;">
+                                <li>Baterías de litio sueltas o cargadores portátiles (Powerbanks) en equipaje facturado.</li>
+                                <li>Líquidos inflamables, gases comprimidos, aerosoles no personales o explosivos.</li>
+                                <li>Objetos punzocortantes o armas de cualquier tipo en cabina.</li>
+                            </ul>
+
+                            <div class="p-3 rounded" style="background:#11263F; border: 1px solid #1E3A5C;">
+                                <p:selectBooleanCheckbox id="chkSeguridad" value="#{checkInView.aceptoDeclaracionSeguridad}" itemLabel="Declaro formalmente que he leído las regulaciones y que mi equipaje no contiene mercancías ni elementos peligrosos prohibidos." />
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <p:commandButton value="Volver" icon="pi pi-arrow-left" actionListener="#{checkInView.pasoAnterior}" update="@form" styleClass="btn-skyway-outlined" />
+                            <p:commandButton value="Confirmar Check-In y Emitir Pasabordo" icon="pi pi-check-circle" actionListener="#{checkInView.siguientePaso}" update="@form :globalGrowl" styleClass="btn-skyway-primary" />
+                        </div>
+                    </h:panelGroup>
+
+                    <!-- PASO 3: CONFIRMACIÓN Y TARJETA DE EMBARQUE -->
+                    <h:panelGroup rendered="#{checkInView.pasoActual == 3}" layout="block">
+                        <div class="text-center mb-4">
+                            <i class="pi pi-check-circle text-success mb-2" style="font-size: 3rem;"></i>
+                            <h4 class="text-white font-weight-bold">¡Check-In Completado con Éxito!</h4>
+                            <p class="text-white-50 small">Tus asientos han sido confirmados. Preséntate en la puerta de embarque con tu tarjeta digital o impresa.</p>
+                        </div>
+
+                        <div class="boarding-card-preview mb-4">
+                            <ui:repeat value="#{checkInView.listaTicketsBoardingPass}" var="ticket">
+                                <div class="d-flex justify-content-between align-items-center p-3 mb-2 rounded" style="background:#0D172A; border:1px solid #1E293B;">
+                                    <div>
+                                        <span class="text-muted small d-block">PASAJERO</span>
+                                        <strong class="text-white">#{ticket.nombre}</strong>
+                                    </div>
+                                    <div>
+                                        <span class="text-muted small d-block">VUELO</span>
+                                        <strong class="text-primary">#{ticket.numeroVuelo}</strong>
+                                    </div>
+                                    <div>
+                                        <span class="text-muted small d-block">ASIENTO</span>
+                                        <span class="badge bg-primary">#{ticket.numeroAsiento}</span>
+                                    </div>
+                                    <div>
+                                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&amp;data=#{ticket.codigoQr}" alt="QR Checkin" style="width:55px; height:55px;" />
+                                    </div>
+                                </div>
+                            </ui:repeat>
+                        </div>
+
+                        <div class="d-flex justify-content-center gap-3">
+                            <p:commandButton value="Imprimir / Descargar Tarjetas de Embarque" icon="pi pi-print" type="button" onclick="imprimirPasabordo()" styleClass="btn-skyway-primary" />
+                            <p:button value="Volver a Mis Reservas" outcome="/perfil/pasajero/index.xhtml" icon="pi pi-home" styleClass="btn-skyway-outlined" />
+                        </div>
+                    </h:panelGroup>
+
+                </h:form>
             </div>
         </div>
-
-        <p:growl id="mockGrowl" widgetVar="mockGrowl" showDetail="true"/>
     </ui:define>
+
 </ui:composition>

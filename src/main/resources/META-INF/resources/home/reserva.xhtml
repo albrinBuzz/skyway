@@ -202,8 +202,8 @@
             }
 
             /* ==========================================================================
-   🛠 ESTILOS SOBRIOS PARA EL MODAL DE EXPIRACIÓN (PrimeFaces p:dialog)
-   ========================================================================== */
+               🛠 ESTILOS SOBRIOS PARA EL MODAL DE EXPIRACIÓN (PrimeFaces p:dialog)
+               ========================================================================== */
             .custom-expired-modal.ui-dialog {
                 background: var(--bg-surface, #1E293B) !important;
                 border: 1px solid var(--border-color, #334155) !important;
@@ -265,6 +265,120 @@
                 background-color: #2563EB !important;
                 color: #FFFFFF !important;
             }
+
+
+
+            /* ==========================================================================
+   🌑 ESTILOS DARK THEME PARA DESPLEGABLES (p:selectOneMenu) Y CALENDARIO (p:datePicker)
+   ========================================================================== */
+
+            /* 1. Panel emergente / desplegable de p:selectOneMenu */
+            body .ui-selectonemenu-panel {
+                background-color: #0d172a !important;
+                border: 1px solid #1e3a5c !important;
+                border-radius: 8px !important;
+                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6) !important;
+                color: #e6eef7 !important;
+            }
+
+            body .ui-selectonemenu-panel .ui-selectonemenu-items {
+                background-color: #0d172a !important;
+                padding: 4px !important;
+            }
+
+            body .ui-selectonemenu-panel .ui-selectonemenu-item {
+                background-color: transparent !important;
+                color: #cbd5e1 !important;
+                border-radius: 4px !important;
+                padding: 8px 12px !important;
+                margin-bottom: 2px !important;
+            }
+
+            /* Hover y Selección de Ítems */
+            body .ui-selectonemenu-panel .ui-selectonemenu-item:hover,
+            body .ui-selectonemenu-panel .ui-selectonemenu-item.ui-state-highlight {
+                background-color: #1e3a5c !important;
+                color: #ffffff !important;
+            }
+
+            /* Input de filtro dentro del SelectOneMenu (para la Búsqueda de Nacionalidad) */
+            body .ui-selectonemenu-panel .ui-selectonemenu-filter-container {
+                background-color: #0d172a !important;
+                padding: 8px !important;
+                border-bottom: 1px solid #1e3a5c !important;
+            }
+
+            body .ui-selectonemenu-panel .ui-selectonemenu-filter {
+                background-color: #11263f !important;
+                border: 1px solid #1e3a5c !important;
+                color: #e6eef7 !important;
+                border-radius: 6px !important;
+                padding: 6px 10px !important;
+            }
+
+            body .ui-selectonemenu-panel .ui-selectonemenu-filter-container .ui-icon {
+                color: #94a3b8 !important;
+            }
+
+            /* 2. Panel Emergente del Calendario (p:datePicker / p:calendar) */
+            body .ui-datepicker,
+            body .ui-datepicker-inline {
+                background-color: #0d172a !important;
+                border: 1px solid #1e3a5c !important;
+                border-radius: 8px !important;
+                color: #e6eef7 !important;
+                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6) !important;
+            }
+
+            /* Encabezado del Calendario (Mes/Año y Flechas de Navegación) */
+            body .ui-datepicker .ui-datepicker-header {
+                background-color: #101b33 !important;
+                border-bottom: 1px solid #1e3a5c !important;
+                color: #ffffff !important;
+            }
+
+            body .ui-datepicker .ui-datepicker-header .ui-datepicker-title select {
+                background-color: #11263f !important;
+                border: 1px solid #1e3a5c !important;
+                color: #ffffff !important;
+                border-radius: 4px !important;
+                padding: 2px 6px !important;
+            }
+
+            body .ui-datepicker .ui-datepicker-header .ui-datepicker-prev,
+            body .ui-datepicker .ui-datepicker-header .ui-datepicker-next {
+                color: #3b82f6 !important;
+            }
+
+            /* Días de la semana (L, M, M, J, V, S, D) */
+            body .ui-datepicker table th {
+                color: #64748b !important;
+                font-weight: 600 !important;
+            }
+
+            /* Celda de Días y Números */
+            body .ui-datepicker table td > a,
+            body .ui-datepicker table td > span {
+                color: #cbd5e1 !important;
+                background-color: transparent !important;
+                border-radius: 6px !important;
+                text-align: center !important;
+            }
+
+            /* Hover en Días */
+            body .ui-datepicker table td > a:hover {
+                background-color: #1e3a5c !important;
+                color: #ffffff !important;
+            }
+
+            /* Día Seleccionado / Día Actual */
+            body .ui-datepicker table td > a.ui-state-active,
+            body .ui-datepicker table td > a.ui-state-highlight {
+                background-color: #3b82f6 !important;
+                color: #ffffff !important;
+                font-weight: 700 !important;
+            }
+
         </style>
     </ui:define>
 
@@ -416,21 +530,94 @@
                                                 <f:selectItem itemLabel="Cédula de Identidad" itemValue="CEDULA"/>
                                             </p:selectOneMenu>
                                         </div>
-                                        <div class="col-md-6 mb-2">
-                                            <p:outputLabel value="Número Documento" styleClass="skyway-label" />
+                                        <div class="col-md-4 mb-2">
+                                            <p:outputLabel value="Número de Documento / ID" styleClass="skyway-label" />
                                             <p:inputText value="#{pasajero.numeroDocumento}" required="true" requiredMessage="El número de documento es obligatorio"
+                                                         placeholder="Ej: 12345678-9 o A1234567"
                                                          disabled="#{st.index == 0 and reservaBean.usuario != null}" />
                                         </div>
 
-                                        <div class="col-md-6 mb-2">
-                                            <p:outputLabel value="Documento Identidad (ID)" styleClass="skyway-label" />
-                                            <p:inputText value="#{pasajero.usuario.documentoIdentidad}" required="true" requiredMessage="El ID de identidad es obligatorio"
-                                                         disabled="#{st.index == 0 and reservaBean.usuario != null}" />
-                                        </div>
+                                        <!-- DROPDOWN DE NACIONALIDAD ESTANDARIZADA -->
                                         <div class="col-md-6 mb-2">
                                             <p:outputLabel value="Nacionalidad" styleClass="skyway-label" />
-                                            <p:inputText value="#{pasajero.nacionalidad}" required="true" requiredMessage="La nacionalidad es obligatoria"
-                                                         disabled="#{st.index == 0 and reservaBean.usuario != null}" />
+                                            <p:selectOneMenu value="#{pasajero.nacionalidad}" required="true" requiredMessage="Seleccione una nacionalidad"
+                                                             filter="true" filterMatchMode="contains"
+                                                             disabled="#{st.index == 0 and reservaBean.usuario != null}">
+                                                <f:selectItem itemLabel="Seleccione..." itemValue=""/>
+
+                                                <!-- América del Sur -->
+                                                <f:selectItem itemLabel="Chilena" itemValue="Chilena"/>
+                                                <f:selectItem itemLabel="Argentina" itemValue="Argentina"/>
+                                                <f:selectItem itemLabel="Peruana" itemValue="Peruana"/>
+                                                <f:selectItem itemLabel="Colombiana" itemValue="Colombiana"/>
+                                                <f:selectItem itemLabel="Brasilera" itemValue="Brasilera"/>
+                                                <f:selectItem itemLabel="Uruguaya" itemValue="Uruguaya"/>
+                                                <f:selectItem itemLabel="Boliviana" itemValue="Boliviana"/>
+                                                <f:selectItem itemLabel="Ecuatoriana" itemValue="Ecuatoriana"/>
+                                                <f:selectItem itemLabel="Venezolana" itemValue="Venezolana"/>
+                                                <f:selectItem itemLabel="Paraguaya" itemValue="Paraguaya"/>
+                                                <f:selectItem itemLabel="Guyanesa" itemValue="Guyanesa"/>
+                                                <f:selectItem itemLabel="Surinamesa" itemValue="Surinamesa"/>
+
+                                                <!-- Centroamérica y Caribe -->
+                                                <f:selectItem itemLabel="Cubana" itemValue="Cubana"/>
+                                                <f:selectItem itemLabel="Dominicana" itemValue="Dominicana"/>
+                                                <f:selectItem itemLabel="Haitiana" itemValue="Haitiana"/>
+                                                <f:selectItem itemLabel="Costarricense" itemValue="Costarricense"/>
+                                                <f:selectItem itemLabel="Guatemalteca" itemValue="Guatemalteca"/>
+                                                <f:selectItem itemLabel="Hondureña" itemValue="Hondureña"/>
+                                                <f:selectItem itemLabel="Nicaragüense" itemValue="Nicaragüense"/>
+                                                <f:selectItem itemLabel="Panameña" itemValue="Panameña"/>
+                                                <f:selectItem itemLabel="Salvadoreña" itemValue="Salvadoreña"/>
+                                                <f:selectItem itemLabel="Jamaicana" itemValue="Jamaicana"/>
+
+                                                <!-- Norteamérica -->
+                                                <f:selectItem itemLabel="Estadounidense" itemValue="Estadounidense"/>
+                                                <f:selectItem itemLabel="Mexicana" itemValue="Mexicana"/>
+                                                <f:selectItem itemLabel="Canadiense" itemValue="Canadiense"/>
+
+                                                <!-- Europa -->
+                                                <f:selectItem itemLabel="Española" itemValue="Española"/>
+                                                <f:selectItem itemLabel="Alemana" itemValue="Alemana"/>
+                                                <f:selectItem itemLabel="Británica" itemValue="Británica"/>
+                                                <f:selectItem itemLabel="Francesa" itemValue="Francesa"/>
+                                                <f:selectItem itemLabel="Italiana" itemValue="Italiana"/>
+                                                <f:selectItem itemLabel="Portuguesa" itemValue="Portuguesa"/>
+                                                <f:selectItem itemLabel="Neerlandesa" itemValue="Neerlandesa"/>
+                                                <f:selectItem itemLabel="Belga" itemValue="Belga"/>
+                                                <f:selectItem itemLabel="Suiza" itemValue="Suiza"/>
+                                                <f:selectItem itemLabel="Austriaca" itemValue="Austriaca"/>
+                                                <f:selectItem itemLabel="Griega" itemValue="Griega"/>
+                                                <f:selectItem itemLabel="Irlandesa" itemValue="Irlandesa"/>
+                                                <f:selectItem itemLabel="Sueca" itemValue="Sueca"/>
+                                                <f:selectItem itemLabel="Noruega" itemValue="Noruega"/>
+                                                <f:selectItem itemLabel="Danesa" itemValue="Danesa"/>
+                                                <f:selectItem itemLabel="Finlandesa" itemValue="Finlandesa"/>
+                                                <f:selectItem itemLabel="Polaca" itemValue="Polaca"/>
+                                                <f:selectItem itemLabel="Rusa" itemValue="Rusa"/>
+                                                <f:selectItem itemLabel="Ucraniana" itemValue="Ucraniana"/>
+                                                <f:selectItem itemLabel="Turca" itemValue="Turca"/>
+
+                                                <!-- Asia / Medio Oriente -->
+                                                <f:selectItem itemLabel="Japonesa" itemValue="Japonesa"/>
+                                                <f:selectItem itemLabel="China" itemValue="China"/>
+                                                <f:selectItem itemLabel="Surcoreana" itemValue="Surcoreana"/>
+                                                <f:selectItem itemLabel="India" itemValue="India"/>
+                                                <f:selectItem itemLabel="Filipina" itemValue="Filipina"/>
+                                                <f:selectItem itemLabel="Israelí" itemValue="Israelí"/>
+                                                <f:selectItem itemLabel="Libanesa" itemValue="Libanesa"/>
+                                                <f:selectItem itemLabel="Emiratí" itemValue="Emiratí"/>
+                                                <f:selectItem itemLabel="Qatarí" itemValue="Qatarí"/>
+
+                                                <!-- África y Oceanía -->
+                                                <f:selectItem itemLabel="Sudafricana" itemValue="Sudafricana"/>
+                                                <f:selectItem itemLabel="Egipcia" itemValue="Egipcia"/>
+                                                <f:selectItem itemLabel="Marroquí" itemValue="Marroquí"/>
+                                                <f:selectItem itemLabel="Australiana" itemValue="Australiana"/>
+                                                <f:selectItem itemLabel="Neozelandesa" itemValue="Neozelandesa"/>
+
+                                                <f:selectItem itemLabel="Otra" itemValue="Otra"/>
+                                            </p:selectOneMenu>
                                         </div>
                                     </div>
                                 </div>
@@ -541,7 +728,7 @@
                                                 <strong class="text-white">#{eqPasajero.nombrePasajero}:</strong>
                                                 <ui:repeat value="#{eqPasajero.maletas}" var="item">
                                                     <div class="d-flex justify-content-between">
-                                                        <span>- #{item.descripcion}</span>
+                                                        <span>#{item.descripcion}</span>
                                                         <span class="text-white">$#{item.precio}</span>
                                                     </div>
                                                 </ui:repeat>

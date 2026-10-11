@@ -27,7 +27,7 @@ public interface UsuarioService extends UserDetailsService{
 	public Usuario findByNombre(String nombre);
 	
 	public Usuario buscarPorCorreo(String correo);
-
+	public void crearPasajeroConDetalle(Usuario usuario, String tipoDocumento, String nacionalidad);
 
 	public void crearPasajero(Usuario usuario);
 

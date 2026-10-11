@@ -1,10 +1,6 @@
 package com.SkyWay.views;
 
-
-
-
 import com.SkyWay.modules.usuario.domain.model.Usuario;
-import com.SkyWay.modules.rolusuario.domain.service.RolService;
 import com.SkyWay.modules.usuario.domain.service.UsuarioService;
 import com.SkyWay.util.Logger;
 import jakarta.enterprise.context.RequestScoped;
@@ -30,15 +26,14 @@ public class UsuarioBean implements Serializable {
 
     @Autowired
     private UsuarioService usuarioService;
-    @Autowired
-    private RolService rolService;
-
 
     private Usuario usuario;
     private String confirmarContrasena;
+    private String tipoDocumento = "CEDULA";
+    private String nacionalidad = "Chilena";
 
     public UsuarioBean() {
-        usuario = new Usuario(); // Inicializar el objeto Usuario
+        usuario = new Usuario();
     }
 
     public Usuario getUsuario() {
@@ -57,85 +52,64 @@ public class UsuarioBean implements Serializable {
         this.confirmarContrasena = confirmarContrasena;
     }
 
+    public String getTipoDocumento() {
+        return tipoDocumento;
+    }
+
+    public void setTipoDocumento(String tipoDocumento) {
+        this.tipoDocumento = tipoDocumento;
+    }
+
+    public String getNacionalidad() {
+        return nacionalidad;
+    }
+
+    public void setNacionalidad(String nacionalidad) {
+        this.nacionalidad = nacionalidad;
+    }
+
     @Transactional
     public void registrar() {
-        Logger.logInfo("registrando");
-        // Validación de las contraseñas
+        Logger.logInfo("Iniciando proceso de registro para RUT: " + usuario.getRut());
+
         if (!usuario.getContrasena().equals(confirmarContrasena)) {
             FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Las contraseñas no coinciden."));
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error de Validación", "Las contraseñas no coinciden."));
             return;
         }
 
         try {
-            var usuarioBuscar=usuarioService.findByRut(usuario.getRut());
-
-            if (usuarioBuscar.isPresent()){
-                Logger.logInfo("usuario presente");
-                usuarioService.crearPasajero(usuario);
-                // Mensaje de éxito con detalles
-                FacesContext.getCurrentInstance().addMessage(null,
-                        new FacesMessage("Usuario registrado correctamente"));
-
-                // Limpiar los campos del formulario
-                usuario = new Usuario();
-                return ;
-            }
-
             if (isCorreoExistente(usuario.getCorreoElectronico())) {
-                Logger.logInfo("correo existente");
                 FacesContext.getCurrentInstance().addMessage(null,
-                        new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "El correo electrónico ya está registrado."));
+                        new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "El correo electrónico ya se encuentra registrado."));
                 return;
             }
 
-            // Asignar un rol al usuario (puede ser un valor por defecto)
-            Logger.logInfo("corregir, setear el rol al usuario");
-            //Optional<Rol> rol = rolService.getRoleById(1); // Ejemplo: rol de usuario regular
-            //usuario.setRol(rol.get());
+            // Ejecución del Upsert que maneja acompañantes previos
+            usuarioService.crearPasajeroConDetalle(usuario, tipoDocumento, nacionalidad);
 
-            // Guardar el usuario en la base de datos
-            //entityManager.persist(usuario);
-            usuarioService.crearPasajero(usuario);
-            // Mensaje de éxito con detalles
             FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_INFO, "¡Registro exitoso!", "Tu cuenta ha sido creada correctamente."));
+                    new FacesMessage(FacesMessage.SEVERITY_INFO, "¡Registro Exitoso!", "Tu cuenta ha sido registrada correctamente."));
 
-            // Limpiar los campos del formulario
+            // Limpieza del formulario
             usuario = new Usuario();
-
-            // Redirigir a la página de inicio de sesión
-            return;
+            confirmarContrasena = "";
 
         } catch (Exception e) {
-            Logger.logInfo(e.getMessage());
-            // Manejo de excepciones
+            Logger.logError("Error al registrar usuario: " + e.getMessage());
             FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Hubo un problema al registrar el usuario."));
-            return;
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Hubo un problema al procesar el registro."));
         }
     }
 
-    private boolean isCorreoExistente(String correoElectronico) {
+    private boolean isCorreoExistente(String correo) {
         try {
-            long count = entityManager.createQuery("SELECT COUNT(u) FROM Usuario u WHERE u.correoElectronico = :correo", Long.class)
-                    .setParameter("correo", correoElectronico)
+            long count = entityManager.createQuery("SELECT COUNT(u) FROM Usuario u WHERE u.correoElectronico = :correo AND u.contrasena IS NOT NULL", Long.class)
+                    .setParameter("correo", correo)
                     .getSingleResult();
             return count > 0;
         } catch (Exception e) {
             return false;
         }
-    }
-
-    public boolean isValidRut(String rut) {
-        return rut != null && !rut.isEmpty();
-    }
-    public void prueba() {
-        System.out.println("Funciona!");
-    }
-
-    public boolean isEdadValida(Date fechaNacimiento) {
-        long edad = (new Date().getTime() - fechaNacimiento.getTime()) / (1000L * 60 * 60 * 24 * 365);
-        return edad >= 18;
     }
 }

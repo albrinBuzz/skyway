@@ -220,6 +220,37 @@ public class UsuarioServiceImpl implements UsuarioService{
 
 	}
 
+	@Override
+	public void crearPasajeroConDetalle(Usuario usuario, String tipoDocumento, String nacionalidad) {
+		String passEncriptada = passwordEncoder.encode(usuario.getContrasena());
+
+		StoredProcedureQuery procedureQuery = em.createStoredProcedureQuery("sp_upsertPasajero");
+
+		procedureQuery.registerStoredProcedureParameter(1, String.class, ParameterMode.IN);
+		procedureQuery.registerStoredProcedureParameter(2, String.class, ParameterMode.IN);
+		procedureQuery.registerStoredProcedureParameter(3, String.class, ParameterMode.IN);
+		procedureQuery.registerStoredProcedureParameter(4, String.class, ParameterMode.IN);
+		procedureQuery.registerStoredProcedureParameter(5, String.class, ParameterMode.IN);
+		procedureQuery.registerStoredProcedureParameter(6, String.class, ParameterMode.IN);
+		procedureQuery.registerStoredProcedureParameter(7, Date.class, ParameterMode.IN);
+		procedureQuery.registerStoredProcedureParameter(8, String.class, ParameterMode.IN);
+		procedureQuery.registerStoredProcedureParameter(9, String.class, ParameterMode.IN);
+		procedureQuery.registerStoredProcedureParameter(10, String.class, ParameterMode.IN);
+
+		procedureQuery.setParameter(1, usuario.getRut());
+		procedureQuery.setParameter(2, usuario.getNombre());
+		procedureQuery.setParameter(3, usuario.getApellido());
+		procedureQuery.setParameter(4, usuario.getCorreoElectronico());
+		procedureQuery.setParameter(5, usuario.getTelefono());
+		procedureQuery.setParameter(6, usuario.getDocumentoIdentidad());
+		procedureQuery.setParameter(7, usuario.getFechaNacimiento());
+		procedureQuery.setParameter(8, passEncriptada);
+		procedureQuery.setParameter(9, tipoDocumento);
+		procedureQuery.setParameter(10, nacionalidad);
+
+		procedureQuery.execute();
+	}
+
 
 	public Usuario usuarioFactory(String correo) {
 		// Preparar la consulta para el procedimiento almacenado
