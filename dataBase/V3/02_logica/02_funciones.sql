@@ -439,6 +439,7 @@ $$ LANGUAGE plpgsql STABLE;
 
 
 
+
 CREATE OR REPLACE FUNCTION fn_getticket(
     p_rut_pasajero CHARACTER VARYING,
     p_id_reserva INTEGER,

@@ -1,30 +1,8 @@
 package com.SkyWay.modules.reserva.presentation.dto;
 
-import jakarta.persistence.ColumnResult;
-import jakarta.persistence.ConstructorResult;
-import jakarta.persistence.SqlResultSetMapping;
-
 import java.io.Serializable;
 import java.sql.Timestamp;
 
-@SqlResultSetMapping(
-        name = "TicketInfoMapping",
-        classes = @ConstructorResult(
-                targetClass = TicketInfo.class,
-                columns = {
-                        @ColumnResult(name = "codigo_pnr", type = String.class),
-                        @ColumnResult(name = "numero_vuelo", type = String.class),
-                        @ColumnResult(name = "hora_salida", type = Timestamp.class),
-                        @ColumnResult(name = "hora_llegada", type = Timestamp.class),
-                        @ColumnResult(name = "codigo_puerta", type = String.class),
-                        @ColumnResult(name = "terminal", type = String.class),
-                        @ColumnResult(name = "numero_asiento", type = String.class),
-                        @ColumnResult(name = "clase_asiento", type = String.class),
-                        @ColumnResult(name = "nombre", type = String.class),
-                        @ColumnResult(name = "codigo_qr", type = String.class)
-                }
-        )
-)
 public class TicketInfo implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -41,6 +19,7 @@ public class TicketInfo implements Serializable {
 
     public TicketInfo() {}
 
+    // Constructor que invoca automáticamente Hibernate por reflexión
     public TicketInfo(String codigoPnr, String numeroVuelo, Timestamp horaSalida, Timestamp horaLlegada,
                       String codigoPuerta, String terminal, String numeroAsiento,
                       String claseAsiento, String nombre, String codigoQr) {
