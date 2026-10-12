@@ -164,17 +164,7 @@ CREATE SEQUENCE IF NOT EXISTS cancelacion_seq START WITH 1;
 CREATE SEQUENCE IF NOT EXISTS log_auditoria_seq START WITH 1;
 CREATE SEQUENCE IF NOT EXISTS cancelacion_asiento_seq START WITH 1;
 
-DROP TABLE IF EXISTS Checkin_Pasajero CASCADE;
-DROP TABLE IF EXISTS Checkin CASCADE;
 
-DROP SEQUENCE IF EXISTS checkin_pasajero_seq;
-DROP SEQUENCE IF EXISTS checkin_seq;
-
--- ============================================================================
--- 2. CREACIÓN DE SECUENCIAS
--- ============================================================================
-CREATE SEQUENCE checkin_seq START WITH 1 INCREMENT BY 1;
-CREATE SEQUENCE checkin_pasajero_seq START WITH 1 INCREMENT BY 1;
 
 
 
@@ -664,6 +654,18 @@ CREATE TABLE Equipaje (
 );
 
 
+
+DROP TABLE IF EXISTS Checkin_Pasajero CASCADE;
+DROP TABLE IF EXISTS Checkin CASCADE;
+
+DROP SEQUENCE IF EXISTS checkin_pasajero_seq;
+DROP SEQUENCE IF EXISTS checkin_seq;
+
+-- ============================================================================
+-- 2. CREACIÓN DE SECUENCIAS
+-- ============================================================================
+CREATE SEQUENCE checkin_seq START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE checkin_pasajero_seq START WITH 1 INCREMENT BY 1;
 
 -- CHECK-IN
 CREATE TABLE Checkin (
@@ -1864,61 +1866,6 @@ $$ LANGUAGE plpgsql STABLE;
 
 
 
-
-
-CREATE OR REPLACE FUNCTION fn_getticket(
-    p_rut_pasajero CHARACTER VARYING,
-    p_id_reserva INTEGER,
-    p_iditinerario INTEGER
-)
-    RETURNS TABLE(
-                     codigo_pnr CHARACTER VARYING,
-                     numero_vuelo CHARACTER VARYING,
-                     hora_salida TIMESTAMP WITHOUT TIME ZONE,
-                     hora_llegada TIMESTAMP WITHOUT TIME ZONE,
-                     codigo_puerta CHARACTER VARYING,
-                     terminal CHARACTER VARYING,
-                     numero_asiento CHARACTER VARYING,
-                     clase_asiento CHARACTER VARYING,
-                     nombre TEXT,
-                     codigo_qr TEXT
-                 )
-    STABLE
-    LANGUAGE plpgsql
-AS
-$$
-BEGIN
-    RETURN QUERY
-        SELECT DISTINCT ON (rsva.id_asiento, vl.id_vuelo)
-            rsv.codigo_reserva AS codigo_pnr,
-            vl.numero_vuelo,
-            sgm.hora_salida,
-            sgm.hora_llegada,
-            COALESCE(prta.codigo_puerta, 'TBD') AS codigo_puerta,
-            COALESCE(prta.terminal, 'TBD') AS terminal,
-            ast.numero_asiento,
-            clas.descripcion AS clase_asiento,
-            us.nombre || ' ' || us.apellido AS nombre,
-            'SKYWAY-' || rsv.codigo_reserva || '-' || vl.numero_vuelo || '-' || ast.numero_asiento || '-' || p.rut AS codigo_qr
-        FROM reserva_asiento rsva
-                 JOIN reserva rsv ON rsv.id_reserva = rsva.id_reserva
-                 JOIN itinerario_vuelo itv ON itv.id_vuelo = rsva.id_vuelo
-                 JOIN pasajero p ON p.rut = rsva.rut
-                 JOIN usuario us ON us.rut = p.rut
-                 JOIN vuelo vl ON vl.id_vuelo = rsva.id_vuelo
-                 LEFT JOIN segmento_vuelo sgm ON sgm.id_vuelo = rsva.id_vuelo
-                 LEFT JOIN asignacion_puerta asgp ON asgp.id_segmento = sgm.id_segmento
-                 LEFT JOIN puerta_embarque prta ON prta.id_puerta = asgp.id_puerta
-                 LEFT JOIN asiento ast ON ast.id_asiento = rsva.id_asiento
-                 LEFT JOIN clase_asiento clas ON clas.id_clase = ast.id_clase
-        WHERE (rsv.rut_pasajero = p_rut_pasajero OR rsva.rut = p_rut_pasajero)
-          AND rsv.id_reserva = p_id_reserva
-          AND itv.id_itinerario = p_idItinerario
-        ORDER BY rsva.id_asiento, vl.id_vuelo, sgm.hora_salida ASC;
-END;
-$$;
-
-
 CREATE OR REPLACE FUNCTION fn_getVueloInfo(p_idVuelo integer)
     RETURNS TABLE (
                       destino varchar,
@@ -2319,6 +2266,7 @@ BEGIN
 
 END;
 $sp_cancelar$;
+
 
 -- =========================================================================
 -- 1. MAESTRO DE CONTINENTES
@@ -3774,3 +3722,7 @@ FROM itinerario it
 WHERE it.hora_salida >= NOW()
   AND it.hora_salida < NOW() + INTERVAL '7 days'
 ORDER BY it.hora_salida ASC;
+
+
+--update reserva
+--set codigo_reserva=''
