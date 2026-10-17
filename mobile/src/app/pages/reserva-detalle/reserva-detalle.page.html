@@ -11,9 +11,27 @@
 <p class="muted" *ngIf="!hasBaggage(itinerary.tarifa)">Esta tarifa no tiene una franquicia de equipaje especificada.</p>
 <section *ngFor="let c of itinerary.vuelos"><h3>Vuelo {{ c.vuelo.numeroVuelo || c.vuelo.idVuelo }}</h3><p class="muted">{{ c.vuelo.estado.descripcion || 'Estado por confirmar' }} · {{ c.vuelo.fechaHoraSalida | date:'dd MMM · HH:mm' }}</p>
 <div class="segment" *ngFor="let s of c.vuelo.segmentos"><strong>{{ s.origen?.codigoIata || '—' }} → {{ s.destino?.codigoIata || '—' }}</strong><p>{{ s.horaSalida | date:'dd MMM HH:mm' }} — {{ s.horaLlegada | date:'dd MMM HH:mm' }}</p><p class="muted">Puerta {{ s.puerta?.codigoPuerta || 'por asignar' }} · Terminal {{ s.puerta?.terminal || 'por confirmar' }}</p></div>
-<p><strong>Tu asiento: {{ c.vuelo.asiento?.numeroAsiento || 'Sin asignar' }}</strong> <span class="muted">{{ c.vuelo.asiento?.clase }}</span></p>
-<ion-button fill="outline" size="small" [routerLink]="['/vuelos/reservas',id,'vuelos',c.vuelo.idVuelo,'asientos']">{{ c.vuelo.asiento ? 'Cambiar asiento' : 'Elegir asiento' }}</ion-button>
-<ion-button *ngIf="d.checkin && c.vuelo.asiento" size="small" [routerLink]="['/vuelos/reservas',id,'vuelos',c.vuelo.idVuelo,'pase']">Ver pase</ion-button>
+<section class="companions" aria-label="Pasajeros y tickets del vuelo">
+  <h4>Tickets de los pasajeros</h4>
+  <p class="muted">Cada pasajero tiene su propio ticket y asiento. Selecciona a quién deseas consultar.</p>
+  <p *ngIf="ticketErrors[c.vuelo.idVuelo]" class="error" role="alert">No fue posible cargar los pasajeros: {{ ticketErrors[c.vuelo.idVuelo] }}</p>
+  <ion-card class="passenger-ticket" *ngFor="let persona of personas(c.vuelo.idVuelo)">
+    <ion-card-content>
+      <div class="row">
+        <div>
+          <strong>{{ persona.nombre }} {{ persona.apellido }}</strong>
+          <p class="muted">{{ persona.titular ? 'Titular de la reserva' : 'Pasajero acompañante' }}</p>
+        </div>
+        <span class="status">{{ persona.asiento?.numeroAsiento || 'Sin asiento' }}</span>
+      </div>
+      <p class="muted" *ngIf="persona.asiento?.clase">Clase: {{ persona.asiento?.clase }}</p>
+      <ion-button size="small" [routerLink]="['/vuelos/reservas', id, 'vuelos', c.vuelo.idVuelo, 'tickets', persona.rut]">
+        Ver ticket <ion-icon name="ticket-outline" slot="end"></ion-icon>
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
+  <p *ngIf="!personas(c.vuelo.idVuelo).length && !ticketErrors[c.vuelo.idVuelo]" class="muted">No hay pasajeros registrados para este vuelo.</p>
+</section>
 </section></ion-card-content></ion-card>
 <p class="empty" *ngIf="!d.itinerarios.length">No hay itinerarios disponibles en esta reserva.</p>
 <h2>Tu equipaje registrado</h2><ion-card><ion-card-content><div class="feature" *ngFor="let bag of d.equipajes"><div><strong>{{ bag.nombreTipo || bag.tipo }}</strong><p class="muted">{{ bag.dimensiones }}</p></div><strong>{{ bag.peso | number:'1.0-2' }} kg</strong></div><p *ngIf="!d.equipajes.length" class="muted">No tienes equipaje registrado en esta reserva.</p></ion-card-content></ion-card>
