@@ -10,6 +10,7 @@ public class FilaCabinaDTO implements Serializable {
     private int numeroFila;
     private String clase;
     private boolean esEmergencia;
+    private boolean esPrimerFilaDeClase; // 👈 Campo necesario
     private List<BloqueAsientosDTO> bloques = new ArrayList<>();
 
     public FilaCabinaDTO() {}
@@ -28,6 +29,9 @@ public class FilaCabinaDTO implements Serializable {
 
     public boolean isEsEmergencia() { return esEmergencia; }
     public void setEsEmergencia(boolean esEmergencia) { this.esEmergencia = esEmergencia; }
+
+    public boolean isEsPrimerFilaDeClase() { return esPrimerFilaDeClase; } // 👈 Getter para EL
+    public void setEsPrimerFilaDeClase(boolean esPrimerFilaDeClase) { this.esPrimerFilaDeClase = esPrimerFilaDeClase; }
 
     public List<BloqueAsientosDTO> getBloques() { return bloques; }
     public void setBloques(List<BloqueAsientosDTO> bloques) { this.bloques = bloques; }
