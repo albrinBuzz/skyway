@@ -22,7 +22,7 @@ public class AsientoCacheService {
     private AsientoService asientoService;
 
     // Tiempo máximo de retención temporal antes de liberar el asiento (10 minutos)
-    private static final long TIEMPO_EXPIRACION_MS = 2 * 60 * 1000L;
+    private static final long TIEMPO_EXPIRACION_MS = 5 * 60 * 1000L;
 
     //private static final long TIEMPO_EXPIRACION_MS = 25000;
 

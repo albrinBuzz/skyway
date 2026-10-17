@@ -1117,15 +1117,28 @@
                     </div>
 
                     <f:facet name="footer">
-                        <p:commandButton value="Imprimir Ticket / Descargar PDF"
-                                         icon="pi pi-print"
-                                         type="button"
-                                         onclick="ejecutarImpresionTicket()"
-                                         styleClass="btn-skyway-primary" />
-                        <p:commandButton value="Cerrar"
-                                         onclick="PF('dlgDetalleTicket').hide()"
-                                         type="button"
-                                         styleClass="btn-skyway-outlined" />
+                        <div class="d-flex justify-content-end align-items-center gap-2">
+                            <!-- Descarga 1: Resumen de Reserva -->
+                            <p:commandButton value="Descargar Resumen (PDF)"
+                                             icon="pi pi-file-pdf"
+                                             styleClass="btn-skyway-outlined"
+                                             ajax="false">
+                                <p:fileDownload value="#{perfilPasajeroView.descargarComprobantePdf()}" />
+                            </p:commandButton>
+
+                            <!-- Descarga 2: Tarjetas de Embarque -->
+                            <p:commandButton value="Descargar Tarjetas de Embarque (PDF)"
+                                             icon="pi pi-ticket"
+                                             styleClass="btn-skyway-primary"
+                                             ajax="false">
+                                <p:fileDownload value="#{perfilPasajeroView.descargarBoardingPassesPdf()}" />
+                            </p:commandButton>
+
+                            <p:commandButton value="Cerrar"
+                                             onclick="PF('dlgDetalleTicket').hide()"
+                                             type="button"
+                                             styleClass="btn-skyway-outlined" />
+                        </div>
                     </f:facet>
                 </p:dialog>
             </h:form>

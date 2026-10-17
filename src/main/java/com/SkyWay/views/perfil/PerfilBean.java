@@ -10,6 +10,7 @@ import com.SkyWay.modules.itinerario.domain.model.Itinerario;
 import com.SkyWay.modules.itinerario.domain.service.ItinerarioService;
 import com.SkyWay.modules.itinerario.presentation.dto.ItinerarioResumenDTO;
 import com.SkyWay.modules.reserva.domain.model.Reserva;
+import com.SkyWay.modules.reserva.domain.service.ETicketPdfGeneratorService;
 import com.SkyWay.modules.reserva.domain.service.ReservaService;
 import com.SkyWay.modules.reserva.presentation.dto.TicketInfo;
 import com.SkyWay.modules.reservaitinerario.domain.model.ReservaItinerario;
@@ -28,8 +29,11 @@ import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
 import jakarta.servlet.http.HttpSession;
 
+import org.primefaces.model.DefaultStreamedContent;
+import org.primefaces.model.StreamedContent;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.time.Duration;
@@ -51,6 +55,8 @@ public class PerfilBean implements Serializable {
 	@Autowired private TarifaCaracteristicaValidator tarifaValidator;
 	@Autowired private VueloService vueloService;
 	@Autowired private EquipajeService equipajeService;
+	@Autowired private ETicketPdfGeneratorService eTicketPdfGeneratorService;
+
 
 	private List<ItinerarioResumenDTO> listaItinerarios;
 	private List<ItinerarioResumenDTO> listaItinerariosFiltrados;
@@ -248,10 +254,6 @@ public class PerfilBean implements Serializable {
 						+ "&idReserva=" + infoAsientoDTO.getIdReserva());
 	}
 
-	public void getTicket(ItinerarioResumenDTO itinerario) {
-		if (itinerario == null || usuario == null) return;
-		ticketInfos = reservaService.getTicket(usuario.getRut(), itinerario.getIdReserva(), itinerario.getIdItinerario());
-	}
 
 	public String getNumeroVuelo(int idVuelo) {
 		return numeroVueloCache.computeIfAbsent(idVuelo, id ->
@@ -409,6 +411,114 @@ public class PerfilBean implements Serializable {
 		);
 	}
 
+	public StreamedContent descargarComprobantePdf() {
+		Logger.logInfo("📄 [PDF RESUMEN] Solicitando descarga para idReservaSeleccionada: " + this.idReservaSeleccionada);
+		return descargarComprobantePdf(this.idReservaSeleccionada);
+	}
+
+	public StreamedContent descargarBoardingPassesPdf() {
+		Logger.logInfo("🎟️ [PDF BOARDING PASSES] Solicitando descarga para idReservaSeleccionada: " + this.idReservaSeleccionada);
+		return descargarBoardingPassesPdf(this.idReservaSeleccionada);
+	}
+
+
+	/**
+	 * Descarga nativa del PDF 1: Resumen de Reserva e Itinerario (con trazas de log)
+	 */
+	public StreamedContent descargarComprobantePdf(Integer idReserva) {
+		Logger.logInfo("📄 [PDF RESUMEN] Solicitando descarga para idReserva: " + idReserva);
+
+		if (idReserva == null) {
+			Logger.logWarn("⚠️ [PDF RESUMEN] idReserva recibido es NULL. Se cancela la descarga.");
+			return null;
+		}
+
+		try {
+			Optional<Reserva> optReserva = reservaService.findById(idReserva);
+			if (optReserva.isEmpty()) {
+				Logger.logWarn("⚠️ [PDF RESUMEN] No se encontró la entidad Reserva para ID: " + idReserva);
+				return null;
+			}
+
+			Reserva reserva = optReserva.get();
+			Logger.logInfo("📄 [PDF RESUMEN] Generando bytes de PDF para PNR: " + reserva.getCodigoReserva());
+
+			byte[] pdfBytes = eTicketPdfGeneratorService.generarPdfResumenReserva(reserva);
+
+			if (pdfBytes == null || pdfBytes.length == 0) {
+				Logger.logError("❌ [PDF RESUMEN] Los bytes del PDF generados están vacíos o nulos.");
+				return null;
+			}
+
+			Logger.logInfo("✅ [PDF RESUMEN] PDF generado correctamente (" + pdfBytes.length + " bytes). Iniciando descarga StreamedContent...");
+
+			return DefaultStreamedContent.builder()
+					.name("Resumen_Reserva_SkyWay_" + reserva.getCodigoReserva() + ".pdf")
+					.contentType("application/pdf")
+					.stream(() -> new ByteArrayInputStream(pdfBytes))
+					.build();
+
+		} catch (Exception e) {
+			Logger.logError("❌ [PDF RESUMEN] Excepción inesperada al descargar comprobante: " + e.getMessage());
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+
+
+	/**
+	 * Descarga nativa del PDF 2: Tarjetas de Embarque / Boarding Passes (con trazas de log)
+	 */
+	public StreamedContent descargarBoardingPassesPdf(Integer idReserva) {
+		Logger.logInfo("🎟️ [PDF BOARDING PASSES] Solicitando descarga para idReserva: " + idReserva);
+
+		if (idReserva == null) {
+			Logger.logWarn("⚠️ [PDF BOARDING PASSES] idReserva recibido es NULL. Se cancela la descarga.");
+			return null;
+		}
+
+		try {
+			Optional<Reserva> optReserva = reservaService.findById(idReserva);
+			if (optReserva.isEmpty()) {
+				Logger.logWarn("⚠️ [PDF BOARDING PASSES] No se encontró la entidad Reserva para ID: " + idReserva);
+				return null;
+			}
+
+			Reserva reserva = optReserva.get();
+			Logger.logInfo("🎟️ [PDF BOARDING PASSES] Generando tarjetas de embarque para PNR: " + reserva.getCodigoReserva());
+
+			byte[] pdfBytes = eTicketPdfGeneratorService.generarPdfBoardingPasses(reserva);
+
+			if (pdfBytes == null || pdfBytes.length == 0) {
+				Logger.logError("❌ [PDF BOARDING PASSES] Los bytes del PDF generados están vacíos o nulos.");
+				return null;
+			}
+
+			Logger.logInfo("✅ [PDF BOARDING PASSES] PDF generado correctamente (" + pdfBytes.length + " bytes). Iniciando descarga StreamedContent...");
+
+			return DefaultStreamedContent.builder()
+					.name("Tarjetas_Embarque_SkyWay_" + reserva.getCodigoReserva() + ".pdf")
+					.contentType("application/pdf")
+					.stream(() -> new ByteArrayInputStream(pdfBytes))
+					.build();
+
+		} catch (Exception e) {
+			Logger.logError("❌ [PDF BOARDING PASSES] Excepción inesperada al descargar pases de abordar: " + e.getMessage());
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public void getTicket(ItinerarioResumenDTO itinerario) {
+		if (itinerario == null || usuario == null) return;
+		this.itinerarioSeleccionado = itinerario;
+		this.idReservaSeleccionada = itinerario.getIdReserva();
+		ticketInfos = reservaService.getTicket(usuario.getRut(), itinerario.getIdReserva(), itinerario.getIdItinerario());
+	}
+
+	private Integer idReservaSeleccionada;
+
 	// Getters y Setters
 	public LocalDate getFechaInicioFiltro() { return fechaInicioFiltro; }
 	public void setFechaInicioFiltro(LocalDate fechaInicioFiltro) { this.fechaInicioFiltro = fechaInicioFiltro; }
@@ -427,6 +537,9 @@ public class PerfilBean implements Serializable {
 	public List<TicketInfo> getTicketInfos() { return ticketInfos; }
 	public Tarifa getTarifaActual() { return tarifaActual; }
 	public List<TarifaCaracteristica> getTarifaCaracteristicas() { return tarifaCaracteristicas; }
+
+	public Integer getIdReservaSeleccionada() { return idReservaSeleccionada; }
+	public void setIdReservaSeleccionada(Integer idReservaSeleccionada) { this.idReservaSeleccionada = idReservaSeleccionada; }
 
 	public String getMotivoCancelacion() { return motivoCancelacion; }
 	public void setMotivoCancelacion(String motivoCancelacion) { this.motivoCancelacion = motivoCancelacion; }
