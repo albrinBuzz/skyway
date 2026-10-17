@@ -16,7 +16,9 @@ import {
   Perfil,
   ReservaCreada,
   ResumenReserva,
-  Vuelo
+  Vuelo,
+  PasajeroTicket,
+  VistaTicket
 } from './models';
 
 @Injectable({ providedIn: 'root' })
@@ -90,6 +92,25 @@ export class ApiService {
 
   pase(id: number, vuelo: number) {
     return this.http.get<PaseAbordar>(`${this.base}/reservas/${id}/vuelos/${vuelo}/pase-abordar`);
+  }
+
+  /** Personas efectivamente vinculadas a la reserva y al vuelo. */
+  ticketsReserva(idReserva: number, idVuelo: number) {
+    return this.http.get<PasajeroTicket[]>(`${this.base}/reservas/${idReserva}/vuelos/${idVuelo}/tickets`);
+  }
+
+  /** Ticket particular. El RUT es el identificador de un pasajero de ESTA reserva. */
+  vistaTicket(idReserva: number, idVuelo: number, rut: string) {
+    return this.http.get<VistaTicket>(`${this.base}/reservas/${idReserva}/vuelos/${idVuelo}/tickets/${encodeURIComponent(rut)}/vista`);
+  }
+
+  /** Mapa y cambio de asiento de un acompañante autorizados exclusivamente en el backend. */
+  asientosPasajero(idReserva: number, idVuelo: number, rut: string) {
+    return this.http.get<MapaAsientos>(`${this.base}/reservas/${idReserva}/vuelos/${idVuelo}/tickets/${encodeURIComponent(rut)}/asientos`);
+  }
+
+  cambiarAsientoPasajero(idReserva: number, idVuelo: number, rut: string, idAsiento: number) {
+    return this.http.put<MapaAsientos>(`${this.base}/reservas/${idReserva}/vuelos/${idVuelo}/tickets/${encodeURIComponent(rut)}/asiento`, { idAsiento });
   }
 
   notificaciones(pagina = 0) {

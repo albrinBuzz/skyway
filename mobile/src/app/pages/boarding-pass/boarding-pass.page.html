@@ -1,9 +1,68 @@
-<ion-header><ion-toolbar><ion-buttons slot="start"><ion-back-button [defaultHref]="'/vuelos/reservas/' + id"></ion-back-button></ion-buttons><ion-title>Pase de abordar</ion-title><ion-buttons slot="end"><ion-button aria-label="Actualizar pase" (click)="load()" [disabled]="busy"><ion-icon name="refresh-outline" slot="icon-only"></ion-icon></ion-button></ion-buttons></ion-toolbar></ion-header>
-<ion-content><main class="page"><div *ngIf="busy" class="loading"><ion-spinner></ion-spinner></div><p *ngIf="error" class="error" role="alert">{{ error }}</p>
-<article class="boarding" *ngIf="data as p"><div class="boarding-head"><div class="row"><strong>skyway.</strong><span class="eyebrow">BOARDING PASS</span></div><div class="route"><strong>{{ p.vuelo.segmentos[0]?.origen?.codigoIata || '—' }}</strong><ion-icon name="airplane-outline"></ion-icon><strong>{{ p.vuelo.segmentos[p.vuelo.segmentos.length - 1]?.destino?.codigoIata || '—' }}</strong></div><p>{{ p.vuelo.fechaHoraSalida | date:'EEEE dd MMMM yyyy' }}</p></div>
-<div class="boarding-body"><span class="eyebrow">PASAJERO</span><h2>{{ p.pasajero.nombre }} {{ p.pasajero.apellido }}</h2>
-<div class="meta"><div><span>Vuelo</span><strong>{{ p.vuelo.numeroVuelo || p.vuelo.idVuelo }}</strong></div><div><span>Asiento</span><strong class="seat-number">{{ p.vuelo.asiento?.numeroAsiento }}</strong></div><div><span>Salida programada</span><strong>{{ p.vuelo.fechaHoraSalida | date:'HH:mm' }}</strong></div><div><span>Estado</span><strong>{{ p.vuelo.estado.descripcion || 'Por confirmar' }}</strong></div></div>
-<div class="segment" *ngFor="let s of p.vuelo.segmentos"><strong>{{ s.origen?.codigoIata }} → {{ s.destino?.codigoIata }}</strong><p>Puerta {{ s.puerta?.codigoPuerta || 'por asignar' }} · Terminal {{ s.puerta?.terminal || 'por confirmar' }}</p></div>
-<div class="qr"><img *ngIf="qr" [src]="qr" alt="Código QR de simulación del pase de abordar" width="230" height="230"><strong>SIMULACIÓN ACADÉMICA</strong><p>No válido para embarcar</p><span class="muted">Reserva #{{ p.checkin.idReserva }} · Check-in #{{ p.checkin.idCheckin }}</span></div>
-</div></article><p class="muted" *ngIf="data">Consulta nuevamente el pase para ver las últimas asignaciones de puerta.</p>
-</main></ion-content>
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start"><ion-back-button [defaultHref]="'/vuelos/reservas/' + id"></ion-back-button></ion-buttons>
+    <ion-title>Ticket del pasajero</ion-title>
+    <ion-buttons slot="end"><ion-button aria-label="Actualizar ticket" (click)="load()" [disabled]="busy"><ion-icon name="refresh-outline" slot="icon-only"></ion-icon></ion-button></ion-buttons>
+  </ion-toolbar>
+</ion-header>
+<ion-content>
+  <main class="page">
+    <div *ngIf="busy" class="loading"><ion-spinner></ion-spinner></div>
+    <p *ngIf="error" class="error" role="alert">{{ error }}</p>
+    <ng-container *ngIf="data as p">
+      <article class="boarding">
+        <div class="boarding-head">
+          <div class="row"><strong>skyway.</strong><span class="eyebrow">TICKET DEL PASAJERO</span></div>
+          <div class="route">
+            <strong>{{ p.vuelo.segmentos[0]?.origen?.codigoIata || '—' }}</strong>
+            <ion-icon name="airplane-outline"></ion-icon>
+            <strong>{{ p.vuelo.segmentos[p.vuelo.segmentos.length - 1]?.destino?.codigoIata || '—' }}</strong>
+          </div>
+          <p>{{ p.vuelo.fechaHoraSalida | date:'EEEE dd MMMM yyyy' }}</p>
+        </div>
+        <div class="boarding-body">
+          <span class="eyebrow">PASAJERO</span>
+          <h2>{{ p.pasajero.nombre }} {{ p.pasajero.apellido }}</h2>
+          <div class="meta">
+            <div><span>Vuelo</span><strong>{{ p.vuelo.numeroVuelo || p.vuelo.idVuelo }}</strong></div>
+            <div *ngIf="p.codigoPnr"><span>Localizador PNR</span><strong>{{ p.codigoPnr }}</strong></div>
+            <div><span>Asiento</span><strong class="seat-number">{{ p.vuelo.asiento?.numeroAsiento || 'Sin asignar' }}</strong></div>
+            <div><span>Clase</span><strong>{{ p.vuelo.asiento?.clase || 'Por confirmar' }}</strong></div>
+            <div><span>Estado</span><strong>{{ p.vuelo.estado.descripcion || 'Por confirmar' }}</strong></div>
+            <div><span>Salida</span><strong>{{ p.vuelo.fechaHoraSalida | date:'dd MMM · HH:mm' }}</strong></div>
+            <div><span>Llegada</span><strong>{{ p.vuelo.fechaHoraLlegada | date:'dd MMM · HH:mm' }}</strong></div>
+            <div><span>Avión</span><strong>{{ p.vuelo.modeloAvion || 'Por confirmar' }}</strong></div>
+            <div><span>Check-in</span><strong>{{ p.checkin ? 'Realizado' : 'Pendiente' }}</strong></div>
+          </div>
+          <div class="segment" *ngFor="let s of p.vuelo.segmentos">
+            <strong>{{ s.origen?.codigoIata || '—' }} → {{ s.destino?.codigoIata || '—' }}</strong>
+            <p>Salida: {{ s.horaSalida | date:'dd MMM · HH:mm' }} · Llegada: {{ s.horaLlegada | date:'dd MMM · HH:mm' }}</p>
+            <p class="muted">Puerta {{ s.puerta?.codigoPuerta || 'por asignar' }} · Terminal {{ s.puerta?.terminal || 'por confirmar' }}</p>
+          </div>
+          <section class="ticket-baggage">
+            <h3>Equipaje del pasajero</h3>
+            <div class="feature" *ngFor="let bag of p.equipajes">
+              <div><strong>{{ bag.nombreTipo || bag.tipo }}</strong><p class="muted">{{ bag.dimensiones }}</p></div>
+              <strong>{{ bag.peso | number:'1.0-2' }} kg</strong>
+            </div>
+            <p class="muted" *ngIf="!p.equipajes.length">No hay equipaje registrado para este pasajero.</p>
+          </section>
+          <ion-button *ngIf="rut" expand="block" fill="outline" [routerLink]="['/vuelos/reservas', id, 'vuelos', vuelo, 'tickets', rut, 'asientos']">
+            {{ p.vuelo.asiento ? 'Consultar o cambiar asiento' : 'Consultar mapa de asientos' }}
+            <ion-icon name="airplane-outline" slot="end"></ion-icon>
+          </ion-button>
+          <div *ngIf="qr; else sinPase" class="qr">
+            <img [src]="qr" alt="Código QR de simulación del pase de abordar" width="230" height="230" />
+            <strong>SIMULACIÓN ACADÉMICA</strong>
+            <p>No válido para embarcar</p>
+            <span class="muted">Reserva #{{ id }} · Check-in #{{ p.checkin?.idCheckin }}</span>
+          </div>
+          <ng-template #sinPase>
+            <p class="ticket-pending">El pase con QR se habilita al completar el check-in y tener asiento asignado. Puedes consultar los datos del ticket mientras tanto.</p>
+          </ng-template>
+        </div>
+      </article>
+      <p class="muted ticket-note">La información corresponde exclusivamente a este pasajero y vuelo.</p>
+    </ng-container>
+  </main>
+</ion-content>

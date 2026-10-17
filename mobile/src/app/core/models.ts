@@ -237,3 +237,24 @@ export interface ReservaCreada {
   estado: string;
   total: number;
 }
+
+
+// Varios pasajeros pueden viajar en una misma reserva; cada uno tiene su propio asiento y pase.
+export interface PasajeroTicket {
+  rut: string;
+  nombre: string;
+  apellido: string;
+  titular: boolean;
+  asiento: AsientoAsignado | null;
+}
+
+/** El backend valida JWT + pertenencia a la reserva antes de entregar estos datos. */
+export interface VistaTicket {
+  pasajero: Usuario;
+  vuelo: Vuelo;
+  checkin: Checkin | null;
+  equipajes: Equipaje[];
+  qrContenido: string | null;
+  simulacion: boolean;
+  codigoPnr: string | null;
+}
