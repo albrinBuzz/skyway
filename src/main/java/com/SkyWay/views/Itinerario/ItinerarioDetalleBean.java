@@ -10,21 +10,13 @@ import com.SkyWay.modules.tarifaItinerario.domain.model.ItinerarioTarifa;
 import com.SkyWay.modules.tarifaItinerario.domain.service.ItinerarioTarifaService;
 import com.SkyWay.util.Logger;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.context.annotation.Scope;
+
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.ExternalContext;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
-import org.springframework.context.annotation.ScopedProxyMode;
-import org.springframework.stereotype.Component;
-import org.springframework.context.annotation.Scope;
-//import org.omnifaces.cdi.ViewScoped;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope; 
-import org.springframework.context.annotation.ScopedProxyMode;
-import org.springframework.stereotype.Component;
 
 import org.primefaces.PrimeFaces;
 import org.primefaces.event.SelectEvent;
@@ -37,7 +29,6 @@ import java.util.*;
 
 @Component
 @Named("itinerarioDetalleBean")
-//@Scope(value = "view", proxyMode = ScopedProxyMode.TARGET_CLASS)
 @ViewScoped
 public class ItinerarioDetalleBean implements Serializable {
 
@@ -72,11 +63,10 @@ public class ItinerarioDetalleBean implements Serializable {
     public void init() {
         FacesContext fc = FacesContext.getCurrentInstance();
 
-        // 🔒 Evita el NullPointerException cuando Spring evalúa el Bean al arrancar la App
         if (fc == null || fc.getExternalContext() == null) {
             return;
         }
-        boolean busquedaValida=true;
+        boolean busquedaValida = true;
 
         try {
             ExternalContext externalContext = fc.getExternalContext();
@@ -93,58 +83,54 @@ public class ItinerarioDetalleBean implements Serializable {
 
             if (salida == null || llegada == null || fechaIdaStr == null || salida.isBlank() || llegada.isBlank()) {
                 addMessage(FacesMessage.SEVERITY_ERROR, "Parámetros incompletos", "Debes completar origen, destino y fecha.");
-                //return;
                 busquedaValida = false;
             }
 
-            if (salida.equalsIgnoreCase(llegada)) {
+            if (salida != null && salida.equalsIgnoreCase(llegada)) {
                 addMessage(FacesMessage.SEVERITY_WARN, "Destino inválido", "El destino no puede ser igual al origen.");
-                //return;
                 busquedaValida = false;
             }
 
-            this.fechaIda = LocalDate.parse(fechaIdaStr);
-            if (fechaIda.isBefore(LocalDate.now())) {
-                addMessage(FacesMessage.SEVERITY_ERROR, "Fecha inválida", "La fecha de ida no puede estar en el pasado.");
-                //return;
-                busquedaValida = false;
+            if (fechaIdaStr != null) {
+                this.fechaIda = LocalDate.parse(fechaIdaStr);
+                if (fechaIda.isBefore(LocalDate.now())) {
+                    addMessage(FacesMessage.SEVERITY_ERROR, "Fecha inválida", "La fecha de ida no puede estar en el pasado.");
+                    busquedaValida = false;
+                }
             }
 
             if ("RT".equals(tipoViaje) && fechaRegresoStr != null) {
                 this.fechaRegreso = LocalDate.parse(fechaRegresoStr);
                 if (fechaRegreso.isBefore(fechaIda)) {
                     addMessage(FacesMessage.SEVERITY_ERROR, "Fechas inválidas", "La fecha de regreso no puede ser antes que la de ida.");
-                    //return;
                     busquedaValida = false;
                 }
             }
 
-            this.tipoVuelo = "RT".equals(tipoViaje) ? " Vuelos Ida" : "Solo Ida";
+            this.tipoVuelo = "RT".equals(tipoViaje) ? "Vuelos Ida" : "Solo Ida";
 
             if (busquedaValida) {
-
-
-            vuelosIda = itinerarioService.buscarItinerarios(salida, llegada, fechaIda.toString());
-            if (vuelosIda != null) {
-                vuelosIda.sort(Comparator.comparing(ItinerarioDTO::getHoraLlegada24h));
-            }
-
-            if ("RT".equals(tipoViaje) && fechaRegreso != null) {
-                vuelosRegreso = itinerarioService.buscarItinerarios(llegada, salida, fechaRegreso.toString());
-                if (vuelosRegreso != null) {
-                    vuelosRegreso.sort(Comparator.comparing(ItinerarioDTO::getHoraLlegada24h));
+                vuelosIda = itinerarioService.buscarItinerarios(salida, llegada, fechaIda.toString());
+                if (vuelosIda != null) {
+                    vuelosIda.sort(Comparator.comparing(ItinerarioDTO::getHoraLlegada24h));
                 }
-            }
 
-            if ((vuelosIda == null || vuelosIda.isEmpty()) &&
-                    ("RT".equals(tipoViaje) && (vuelosRegreso == null || vuelosRegreso.isEmpty()))) {
-                addMessage(FacesMessage.SEVERITY_WARN, "Sin resultados", "No se encontraron vuelos en las fechas seleccionadas.");
-            }
+                if ("RT".equals(tipoViaje) && fechaRegreso != null) {
+                    vuelosRegreso = itinerarioService.buscarItinerarios(llegada, salida, fechaRegreso.toString());
+                    if (vuelosRegreso != null) {
+                        vuelosRegreso.sort(Comparator.comparing(ItinerarioDTO::getHoraLlegada24h));
+                    }
+                }
 
-            vuelosSeleccionados = new ArrayList<>();
-            itinerariosTarifas = new HashMap<>();
-            total = 0;
-        }
+                if ((vuelosIda == null || vuelosIda.isEmpty()) &&
+                        ("RT".equals(tipoViaje) && (vuelosRegreso == null || vuelosRegreso.isEmpty()))) {
+                    addMessage(FacesMessage.SEVERITY_WARN, "Sin resultados", "No se encontraron vuelos en las fechas seleccionadas.");
+                }
+
+                vuelosSeleccionados = new ArrayList<>();
+                itinerariosTarifas = new HashMap<>();
+                total = 0;
+            }
 
         } catch (Exception e) {
             addMessage(FacesMessage.SEVERITY_ERROR, "Error", "Hubo un problema al cargar los vuelos.");
@@ -153,8 +139,9 @@ public class ItinerarioDetalleBean implements Serializable {
     }
 
     private void addMessage(FacesMessage.Severity severity, String summary, String detail) {
-        FacesContext.getCurrentInstance().
-                addMessage(null, new FacesMessage(severity, summary, detail));
+        if (FacesContext.getCurrentInstance() != null) {
+            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(severity, summary, detail));
+        }
     }
 
     public void showParadas(Integer idItinerario) {
@@ -185,7 +172,7 @@ public class ItinerarioDetalleBean implements Serializable {
         this.vuelosSeleccionados.add(vuelo);
         this.itinerariosTarifas.put(vuelo.getItinerario(), tarifa.getIdTarifa());
 
-        if (tipoViaje.equals("RT")) {
+        if ("RT".equals(tipoViaje)) {
             this.vuelosIda = vuelosRegreso;
             this.tipoVuelo = "Vuelos Regreso";
             if (vuelosSeleccionados.size() >= 2) {
@@ -249,11 +236,11 @@ public class ItinerarioDetalleBean implements Serializable {
     public Integer getItinerario() { return itinerario; }
     public void setItinerario(Integer itinerario) { this.itinerario = itinerario; }
     public List<ItinerarioDetalleDTO> getParadasVuelo() { return paradasVuelo; }
-    public String getDetallesDeParadas() { return "Detalles de paradas: " + selectedVuelo.getCantParadas(); }
-    public String getDuracion() { return selectedVuelo.getDuracion(); }
-    public Integer getPrecio() { return selectedVuelo.getPrecio(); }
-    public String getHoraSalida() { return selectedVuelo.getHoraSalida24h(); }
-    public String getHoraLlegada() { return selectedVuelo.getHoraLlegada24h(); }
+    public String getDetallesDeParadas() { return "Detalles de paradas: " + (selectedVuelo != null ? selectedVuelo.getCantParadas() : ""); }
+    public String getDuracion() { return selectedVuelo != null ? selectedVuelo.getDuracion() : ""; }
+    public Integer getPrecio() { return selectedVuelo != null ? selectedVuelo.getPrecio() : 0; }
+    public String getHoraSalida() { return selectedVuelo != null ? selectedVuelo.getHoraSalida24h() : ""; }
+    public String getHoraLlegada() { return selectedVuelo != null ? selectedVuelo.getHoraLlegada24h() : ""; }
     public String getSalida() { return salida; }
     public void setSalida(String salida) { this.salida = salida; }
     public String getLlegada() { return llegada; }

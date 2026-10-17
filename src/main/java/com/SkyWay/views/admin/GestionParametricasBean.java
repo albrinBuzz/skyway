@@ -8,7 +8,7 @@ import com.SkyWay.modules.estadovuelo.domain.model.EstadoVuelo;
 import com.SkyWay.modules.estadovuelo.domain.repository.EstadoVueloRepository;
 import com.SkyWay.modules.metodopago.domain.model.MetodoPago;
 
-import com.SkyWay.modules.metodopago.domain.model.MetodoPagoRepository;
+import com.SkyWay.modules.metodopago.domain.repository.MetodoPagoRepository;
 import com.SkyWay.modules.tipoequipaje.domain.model.TipoEquipaje;
 import com.SkyWay.modules.tipoequipaje.domain.repository.TipoEquipajeRepository;
 import com.SkyWay.modules.tipoturno.domain.model.TipoTurno;
