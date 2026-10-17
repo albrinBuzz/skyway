@@ -390,55 +390,6 @@ $$ LANGUAGE plpgsql STABLE;
 
 
 
--- 3. TICKETS / BOARDING PASS UNIFICADO (SIN DUPLICADOS)
-CREATE OR REPLACE FUNCTION fn_getTicket(
-    p_rut_pasajero VARCHAR,
-    p_id_reserva INT,
-    p_idItinerario INT
-)
-RETURNS TABLE (
-    numero_vuelo VARCHAR,
-    hora_salida TIMESTAMP,
-    hora_llegada TIMESTAMP,
-    codigo_puerta VARCHAR,
-    terminal VARCHAR,
-    numero_asiento VARCHAR,
-    clase_asiento VARCHAR,
-    nombre TEXT
-)
-AS $$
-BEGIN
-RETURN QUERY
-SELECT DISTINCT ON (rsva.id_asiento, vl.id_vuelo)
-    vl.numero_vuelo,
-    sgm.hora_salida,
-    sgm.hora_llegada,
-    COALESCE(prta.codigo_puerta, 'TBD') AS codigo_puerta,
-    COALESCE(prta.terminal, 'TBD') AS terminal,
-    ast.numero_asiento,
-    clas.descripcion AS clase_asiento,
-    us.nombre || ' ' || us.apellido AS nombre
-FROM reserva_asiento rsva
-    JOIN reserva rsv ON rsv.id_reserva = rsva.id_reserva
-    JOIN itinerario_vuelo itv ON itv.id_vuelo = rsva.id_vuelo
-    JOIN pasajero p ON p.rut = rsva.rut
-    JOIN usuario us ON us.rut = p.rut
-    JOIN vuelo vl ON vl.id_vuelo = rsva.id_vuelo
-    LEFT JOIN segmento_vuelo sgm ON sgm.id_vuelo = rsva.id_vuelo
-    LEFT JOIN asignacion_puerta asgp ON asgp.id_segmento = sgm.id_segmento
-    LEFT JOIN puerta_embarque prta ON prta.id_puerta = asgp.id_puerta
-    LEFT JOIN asiento ast ON ast.id_asiento = rsva.id_asiento
-    LEFT JOIN clase_asiento clas ON clas.id_clase = ast.id_clase
-WHERE (rsv.rut_pasajero = p_rut_pasajero OR rsva.rut = p_rut_pasajero)
-  AND rsv.id_reserva = p_id_reserva
-  AND itv.id_itinerario = p_idItinerario
-ORDER BY rsva.id_asiento, vl.id_vuelo, sgm.hora_salida ASC;
-END;
-$$ LANGUAGE plpgsql STABLE;
-
-
-
-
 CREATE OR REPLACE FUNCTION fn_getticket(
     p_rut_pasajero CHARACTER VARYING,
     p_id_reserva INTEGER,

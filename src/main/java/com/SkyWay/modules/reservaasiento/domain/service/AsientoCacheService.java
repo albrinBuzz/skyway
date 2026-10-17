@@ -22,7 +22,7 @@ public class AsientoCacheService {
     private AsientoService asientoService;
 
     // Tiempo máximo de retención temporal antes de liberar el asiento (10 minutos)
-    private static final long TIEMPO_EXPIRACION_MS = 10 * 60 * 1000L;
+    private static final long TIEMPO_EXPIRACION_MS = 2 * 60 * 1000L;
 
     //private static final long TIEMPO_EXPIRACION_MS = 25000;
 
@@ -151,14 +151,17 @@ public class AsientoCacheService {
     @Scheduled(fixedRate = 3000)
     public void liberarAsientosExpirados() {
         if (tiempoSeleccionMap.isEmpty()) return;
-
         long ahora = System.currentTimeMillis();
 
-        tiempoSeleccionMap.forEach((idAsiento, timestamp) -> {
-            if (ahora - timestamp > TIEMPO_EXPIRACION_MS) {
-                liberarAsientoEspecificoPorTimeout(idAsiento);
-            }
-        });
+        // Filtrar IDs vencidos primero
+        List<Integer> aLiberar = tiempoSeleccionMap.entrySet().stream()
+                .filter(e -> (ahora - e.getValue()) > TIEMPO_EXPIRACION_MS)
+                .map(Map.Entry::getKey)
+                .toList();
+
+        for (Integer idAsiento : aLiberar) {
+            liberarAsientoEspecificoPorTimeout(idAsiento);
+        }
     }
 
     private void liberarAsientoEspecificoPorTimeout(Integer idAsiento) {

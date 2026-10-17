@@ -50,6 +50,7 @@ import java.math.RoundingMode;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Pattern;
 
 @Named("reservaBean")
 //@RequestScoped
@@ -114,6 +115,16 @@ public class ReservaBean implements Serializable {
 
     private MetodoPagoEnum metodoPagoSeleccionado = MetodoPagoEnum.WEBPAY;
     private List<OpcionPagoView> opcionesPago;
+
+    // Expresiones Regulares para Validaciones Rigurosas
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@(.+)$");
+    private static final Pattern PASAPORTE_PATTERN = Pattern.compile("^[A-Za-z0-9]{6,15}$");
+    private static final Pattern CEDULA_PATTERN = Pattern.compile("^[0-9]{7,8}-[0-9Kk]{1}$");
+
+    // FLAG DE MODOS: Se activa/desactiva mediante application.properties o switch manual en UI
+    @Value("${app.modo-desarrollo:true}")
+    private boolean modoDesarrollo;
+
     @PostConstruct
     @SuppressWarnings("unchecked")
     public void init() {
@@ -258,6 +269,21 @@ public class ReservaBean implements Serializable {
         miSessionId = (String) FacesContext.getCurrentInstance().getExternalContext()
                 .getSessionMap().get("reservaSessionId");
 
+
+        if (getTiempoRestanteSegundos() <= 0) {
+            addMessage(FacesMessage.SEVERITY_ERROR, "Tiempo Agotado",
+                    "Tu tiempo de retención temporal de asientos ha expirado. Selecciona tus asientos nuevamente.");
+
+            // Limpiar sesión y redirigir tras un breve retraso
+            FacesContext context = FacesContext.getCurrentInstance();
+            context.getExternalContext().getSessionMap().remove("asientosSeleccionados");
+
+            PrimeFaces.current().executeScript("setTimeout(function(){ window.location.href='"
+                    + context.getExternalContext().getRequestContextPath() + getUrlRetornoAsientos() + "'; }, 2000);");
+            return;
+        }
+
+
         Logger.logInfo("============ 🔍 DETALLE DE PASAJEROS EN SUBMIT ============");
         Logger.logInfo("Total Pasajeros en Lista: " + (pasajerosList != null ? pasajerosList.size() : "NULL"));
 
@@ -297,26 +323,12 @@ public class ReservaBean implements Serializable {
         }
 
         // 2. VALIDACIÓN DE CAMPOS DE PASAJEROS
-        for (int i = 0; i < pasajerosList.size(); i++) {
-            Pasajero p = pasajerosList.get(i);
-            int numPasajero = i + 1;
-
-            if (p.getRut() == null || p.getRut().isBlank()) {
-                addMessage(FacesMessage.SEVERITY_WARN, "Campo Requerido", "Pasajero " + numPasajero + ": Falta el RUT.");
-                return;
+        if (!modoDesarrollo) {
+            if (!validarPasajerosProfesional()) {
+                return; // Se detiene el proceso si falla alguna validación estricta
             }
-            if (p.getUsuario() == null || p.getUsuario().getNombre() == null || p.getUsuario().getNombre().isBlank()) {
-                addMessage(FacesMessage.SEVERITY_WARN, "Campo Requerido", "Pasajero " + numPasajero + ": Falta el Nombre.");
-                return;
-            }
-            if (p.getTipoDocumento() == null || p.getTipoDocumento().isBlank()) {
-                addMessage(FacesMessage.SEVERITY_WARN, "Campo Requerido", "Pasajero " + numPasajero + ": Debe seleccionar el Tipo de Documento.");
-                return;
-            }
-            if (p.getNumeroDocumento() == null || p.getNumeroDocumento().isBlank()) {
-                addMessage(FacesMessage.SEVERITY_WARN, "Campo Requerido", "Pasajero " + numPasajero + ": Falta el Número de Documento.");
-                return;
-            }
+        } else {
+            addMessage(FacesMessage.SEVERITY_INFO, "Modo Desarrollo Activo", "Validaciones estrictas de pasajeros omitidas para agilizar pruebas.");
         }
 
         // 3. VERIFICACIÓN DE DISPONIBILIDAD EN BD
@@ -363,20 +375,44 @@ public class ReservaBean implements Serializable {
 
     public void cancelarPorExpiracion() {
         FacesContext context = FacesContext.getCurrentInstance();
+        if (context == null || context.getExternalContext() == null) return;
+
         Map<String, Object> sessionMap = context.getExternalContext().getSessionMap();
 
-        // Comprobar si el tiempo expiró realmente antes de borrar de sesión
+        // Comprobar si el tiempo expiró o si la reserva ya no tiene datos válidos
         if (getTiempoRestanteSegundos() <= 0) {
-            sessionMap.remove("asientosSeleccionados");
-            Logger.logInfo("⚠️ Reserva cancelada automáticamente en checkout por expiración real de TTL.");
-        }
+            // Verificar si tenía una búsqueda previa activa antes de limpiar
+            String savedQuery = (String) sessionMap.get("ultimaBusquedaAsientosQuery");
+            boolean teniaBusquedaActiva = (savedQuery != null && !savedQuery.isBlank());
 
-        // Si la lista de asientos ya no existe o es 0, redirigir adecuadamente
-        if (getTolerantTotalAsientos() == 0) {
+            // 1. Limpiar objetos de sesión obsoletos
+            sessionMap.remove("asientosSeleccionados");
+            sessionMap.remove("itinerarios");
+            sessionMap.remove("tarifasItinerios");
+            sessionMap.remove("pasajeros");
+            sessionMap.remove("equipajePorPasajero");
+            sessionMap.remove("SOLICITUD_RESERVA_PENDIENTE");
+            sessionMap.remove("ultimaBusquedaAsientosQuery");
+
+            Logger.logWarn("⚠️ [ReservaBean] Sesión/asientos expirados o reserva inexistente. Redirigiendo...");
+
             try {
-                context.getExternalContext().redirect(context.getExternalContext().getRequestContextPath() + getUrlRetornoAsientos());
+                String destino;
+
+                // LÓGICA CLAVE: Si conservaba el query de búsqueda, fue un timeout de pago -> Volver a Asientos.
+                // Si ya no existe búsqueda (reserva pagada y limpiada), volver al Home.
+                if (teniaBusquedaActiva) {
+                    destino = context.getExternalContext().getRequestContextPath()
+                            + "/home/seleccionAsientos.xhtml?" + savedQuery + "&expired=true";
+                } else {
+                    destino = context.getExternalContext().getRequestContextPath() + "/home/index.xhtml";
+                }
+
+                // 2. Redirección limpia y cancelación del ciclo de vida de JSF
+                context.getExternalContext().redirect(destino);
+                context.responseComplete();
             } catch (Exception e) {
-                Logger.logInfo("Error redirigiendo tras expiración: " + e.getMessage());
+                Logger.logError("❌ Error al redirigir tras expiración: " + e.getMessage());
             }
         }
     }
@@ -395,6 +431,76 @@ public class ReservaBean implements Serializable {
         return "";
     }
 
+
+    /**
+     * Validador estricto y profesional para la lista de pasajeros
+     */
+    private boolean validarPasajerosProfesional() {
+        for (int i = 0; i < pasajerosList.size(); i++) {
+            Pasajero p = pasajerosList.get(i);
+            int num = i + 1;
+            Usuario u = p.getUsuario();
+
+            if (p.getRut() == null || !validarRutChileno(p.getRut())) {
+                addMessage(FacesMessage.SEVERITY_WARN, "RUT Inválido", "Pasajero " + num + ": El RUT ingresado no es válido.");
+                return false;
+            }
+
+            if (u == null || u.getNombre() == null || u.getNombre().trim().length() < 2) {
+                addMessage(FacesMessage.SEVERITY_WARN, "Nombre Inválido", "Pasajero " + num + ": Ingrese un nombre válido.");
+                return false;
+            }
+
+            if (u.getApellido() == null || u.getApellido().trim().length() < 2) {
+                addMessage(FacesMessage.SEVERITY_WARN, "Apellido Inválido", "Pasajero " + num + ": Ingrese un apellido válido.");
+                return false;
+            }
+
+            if (u.getCorreoElectronico() == null || !EMAIL_PATTERN.matcher(u.getCorreoElectronico()).matches()) {
+                addMessage(FacesMessage.SEVERITY_WARN, "Correo Inválido", "Pasajero " + num + ": Ingrese un correo electrónico válido.");
+                return false;
+            }
+
+            if (p.getTipoDocumento() == null || p.getTipoDocumento().isBlank()) {
+                addMessage(FacesMessage.SEVERITY_WARN, "Documento Requerido", "Pasajero " + num + ": Debe seleccionar tipo de documento.");
+                return false;
+            }
+
+            if (p.getNumeroDocumento() == null || p.getNumeroDocumento().isBlank()) {
+                addMessage(FacesMessage.SEVERITY_WARN, "Documento Requerido", "Pasajero " + num + ": Ingrese el número de documento.");
+                return false;
+            }
+
+            if ("PASAPORTE".equalsIgnoreCase(p.getTipoDocumento()) && !PASAPORTE_PATTERN.matcher(p.getNumeroDocumento()).matches()) {
+                addMessage(FacesMessage.SEVERITY_WARN, "Pasaporte Inválido", "Pasajero " + num + ": Formato de pasaporte incorrecto (6-15 caracteres alfanuméricos).");
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Algoritmo Módulo 11 para la verificación del RUT Chileno
+     */
+    private boolean validarRutChileno(String rut) {
+        if (rut == null) return false;
+        String rutLimpio = rut.replace(".", "").replace("-", "").toUpperCase().trim();
+        if (rutLimpio.length() < 8) return false;
+
+        try {
+            char dv = rutLimpio.charAt(rutLimpio.length() - 1);
+            int numRut = Integer.parseInt(rutLimpio.substring(0, rutLimpio.length() - 1));
+
+            int m = 0, s = 1;
+            for (; numRut != 0; numRut /= 10) {
+                s = (s + numRut % 10 * (9 - m++ % 6)) % 11;
+            }
+            char dvEsperado = (char) (s != 0 ? s + 47 : 75);
+            return dv == dvEsperado;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
 
     public void pagar() {
         try {
