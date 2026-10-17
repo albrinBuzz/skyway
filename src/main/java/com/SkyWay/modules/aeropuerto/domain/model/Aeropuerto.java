@@ -40,7 +40,7 @@ public class Aeropuerto implements Serializable {
 	private Point posicion;
 
 	//bi-directional many-to-one association to Ciudad
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name="id_ciudad")
 	private Ciudad ciudad;
 

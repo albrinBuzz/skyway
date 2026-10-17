@@ -26,7 +26,6 @@
                 box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
             }
 
-            /* Sobrescribir componentes genéricos de PrimeFaces para quitar fondos blancos */
             .success-card .ui-panelgrid,
             .success-card .ui-panelgrid-cell,
             .success-card .ui-widget-content,
@@ -53,7 +52,7 @@
                 color: #CBD5E1;
             }
 
-            /* Reemplazo Oscuro para el Detalle de Transacción */
+            /* Detalle de Transacción */
             .transaction-details-box {
                 background: #0B132B !important;
                 border: 1px solid #1E293B !important;
@@ -94,6 +93,21 @@
                 gap: 12px;
                 margin-top: 24px;
             }
+
+            /* Botón Descargar PDF personalizado */
+            .btn-download-pdf {
+                background-color: transparent !important;
+                border: 1px solid #3B82F6 !important;
+                color: #60A5FA !important;
+                font-weight: 600 !important;
+                transition: all 0.2s ease !important;
+            }
+
+            .btn-download-pdf:hover {
+                background-color: #2563EB !important;
+                color: #FFFFFF !important;
+                border-color: #2563EB !important;
+            }
         </style>
     </ui:define>
 
@@ -108,7 +122,7 @@
                         <i class="pi pi-check" style="font-size: 1.8rem; color: #4ADE80;"></i>
                     </div>
                     <h2 class="text-white font-weight-bold m-0" style="font-size: 1.6rem;">¡Reserva Confirmada!</h2>
-                    <span class="text-white-50 small">Tu pago mediante Webpay se ha procesado con éxito.</span>
+                    <span class="text-white-50 small">Tu pago se ha procesado con éxito.</span>
                 </div>
 
                 <!-- CÓDIGO DE RESERVA (PNR) -->
@@ -134,13 +148,13 @@
                                 Si realizaste esta reserva como invitado o no tienes una cuenta en SkyWay,
                                 <strong class="text-white">este código PNR es tu clave de acceso indispensable</strong>.
                                 Lo necesitarás junto a tu RUT o Apellido para realizar el <strong>Check-In Online</strong>,
-                                seleccionar asientos y descargar tus tarjetas de embarque.
+                                y descargar tus tarjetas de embarque.
                             </p>
                         </div>
                     </div>
                 </div>
 
-                <!-- SECCIÓN DETALLE DE LA TRANSACCIÓN (ESTILO OSCURO INTEGRADO) -->
+                <!-- SECCIÓN DETALLE DE LA TRANSACCIÓN -->
                 <div class="mb-4">
                     <h4 class="text-white font-weight-bold mb-3" style="font-size: 0.95rem;">
                         <i class="pi pi-receipt me-1" style="color: #3B82F6;"></i> Detalle de la Transacción
@@ -184,24 +198,29 @@
                     </div>
                 </div>
 
-                <!-- BOTONES DE ACCIÓN -->
-                <div class="action-buttons-grid">
-                    <p:commandButton value="Imprimir PDF"
-                                     icon="pi pi-print"
-                                     styleClass="ui-button-outlined ui-button-secondary py-2" />
+                <!-- BOTONES DE ACCIÓN (CON DESCARGA DE PDF CONFIGURADA) -->
+                <h:form id="formAcciones">
+                    <div class="action-buttons-grid">
+                        <p:commandButton value="Descargar PDF"
+                                         icon="pi pi-download"
+                                         ajax="false"
+                                         styleClass="btn-download-pdf py-2">
+                            <p:fileDownload value="#{pagoExitosoController.descargarComprobantePdf()}" />
+                        </p:commandButton>
 
-                    <p:button value="Ir a Check-In"
-                              outcome="/home/checkin.xhtml"
-                              icon="pi pi-desktop"
-                              styleClass="ui-button-success py-2"
-                              style="background-color: #16A34A !important; border-color: #16A34A !important;" />
+                        <p:button value="Ir a Check-In"
+                                  outcome="/home/checkin.xhtml"
+                                  icon="pi pi-desktop"
+                                  styleClass="ui-button-success py-2"
+                                  style="background-color: #16A34A !important; border-color: #16A34A !important;" />
 
-                    <p:button value="Ir a Mis Reservas"
-                              outcome="/perfil/pasajero/index.xhtml"
-                              icon="pi pi-arrow-right"
-                              styleClass="ui-button-primary py-2"
-                              style="background-color: #2563EB !important; border-color: #2563EB !important;" />
-                </div>
+                        <p:button value="Ir a Mis Reservas"
+                                  outcome="/perfil/pasajero/index.xhtml"
+                                  icon="pi pi-arrow-right"
+                                  styleClass="ui-button-primary py-2"
+                                  style="background-color: #2563EB !important; border-color: #2563EB !important;" />
+                    </div>
+                </h:form>
 
             </div>
         </div>
