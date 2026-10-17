@@ -10,7 +10,7 @@ import java.util.List;
 
 /**
  * The persistent class for the ciudad database table.
- * 
+ *
  */
 @Entity
 @NamedQuery(name="Ciudad.findAll", query="SELECT c FROM Ciudad c")
@@ -30,7 +30,7 @@ public class Ciudad implements Serializable {
 	private List<Aeropuerto> aeropuertos;
 
 	//bi-directional many-to-one association to Pai
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name="id_pais")
 	private Pai pai;
 

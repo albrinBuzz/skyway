@@ -175,19 +175,25 @@ public class ReservaAsientoBean implements Serializable {
             // 1. Crear la lista base de Pasajeros
             pasajeros = new ArrayList<>(cantAdultos);
             for (int i = 0; i < cantAdultos; i++) {
-                pasajeros.add(new Pasajero("Pasajero " + (i + 1)));
+                Pasajero p = new Pasajero("Pasajero " + (i + 1));
+                // Inicializar la lista con elementos nulos del tamaño de cantVuelos
+                for (int vIdx = 0; vIdx < cantVuelos; vIdx++) {
+                    p.asientos.add(null);
+                }
+                pasajeros.add(p);
             }
 
             // 2. Determinar en qué tramo se quedó el usuario antes del F5
             int vueloIncompletoIndex = 0;
-            for (int i = 0; i < cantVuelos; i++) {
-                Vuelo v = vuelos.get(i);
-                List<InfoAsientoDTO> elegidos = asientosSeleccionados.getOrDefault(v.getIdVuelo(), Collections.emptyList());
-                if (elegidos.size() < cantAdultos) {
-                    vueloIncompletoIndex = i;
-                    break;
-                } else {
-                    vueloIncompletoIndex = i;
+            for (int vIdx = 0; vIdx < vuelos.size(); vIdx++) {
+                Vuelo v = vuelos.get(vIdx);
+                List<InfoAsientoDTO> seleccionadosEnVuelo = asientosSeleccionados.getOrDefault(v.getIdVuelo(), Collections.emptyList());
+
+                for (int pIdx = 0; pIdx < seleccionadosEnVuelo.size() && pIdx < cantAdultos; pIdx++) {
+                    InfoAsientoDTO a = seleccionadosEnVuelo.get(pIdx);
+                    pasajeros.get(pIdx).asientos.set(vIdx, new AsientoSeleccionado(
+                            a.getIdAsiento(), a.getNumeroAsiento(), a.getClase(), v.getNumeroVuelo(), a.getPrecio()
+                    ));
                 }
             }
 
@@ -256,6 +262,7 @@ public class ReservaAsientoBean implements Serializable {
         construirFilasCabina();
 
     }
+
     private void construirFilasCabina() {
         this.filasCabina = new ArrayList<>();
 
@@ -264,26 +271,21 @@ public class ReservaAsientoBean implements Serializable {
             return;
         }
 
-        // 1. Agrupar por número de fila en un Map ordenado por número de fila
         Map<Integer, List<InfoAsientoDTO>> mapaFilas = new TreeMap<>();
         for (InfoAsientoDTO a : this.asientos) {
             int numFila = (a.getFila() != null && a.getFila() > 0) ? a.getFila() : extraerFilaDeNumero(a.getNumeroAsiento());
-
-            // Si el DTO no trae la letra asignada, la extraemos dinámicamente del número ("14A" -> "A")
             if (a.getLetra() == null || a.getLetra().trim().isEmpty()) {
                 a.setLetra(extraerLetraDeNumero(a.getNumeroAsiento()));
             }
-
             mapaFilas.computeIfAbsent(numFila, k -> new ArrayList<>()).add(a);
         }
 
+        String ultimaClaseProcesada = "";
 
-        // 2. Procesar cada fila
         for (Map.Entry<Integer, List<InfoAsientoDTO>> entry : mapaFilas.entrySet()) {
             int numFila = entry.getKey();
             List<InfoAsientoDTO> asientosFila = entry.getValue();
 
-            // **PASO CRUCIAL 1**: Ordenar los asientos alfabéticamente por letra (A, B, C, D, E, F...)
             asientosFila.sort(Comparator.comparing(InfoAsientoDTO::getLetra));
 
             boolean esEmergencia = asientosFila.stream().anyMatch(a -> Boolean.TRUE.equals(a.getEsEmergencia()));
@@ -291,9 +293,13 @@ public class ReservaAsientoBean implements Serializable {
 
             FilaCabinaDTO filaDTO = new FilaCabinaDTO(numFila, claseFila, esEmergencia);
 
-            // **PASO CRUCIAL 2**: Algoritmo Fallback de Pasillos si la BD no los marca
-            boolean usaPasilloBD = asientosFila.stream().anyMatch(a -> Boolean.TRUE.equals(a.getEsPasillo()));
+            // Marca el divisor solo si cambió la clase de asiento respecto a la fila anterior
+            if (!claseFila.equalsIgnoreCase(ultimaClaseProcesada)) {
+                filaDTO.setEsPrimerFilaDeClase(true);
+                ultimaClaseProcesada = claseFila;
+            }
 
+            boolean usaPasilloBD = asientosFila.stream().anyMatch(a -> Boolean.TRUE.equals(a.getEsPasillo()));
             BloqueAsientosDTO bloqueActual = new BloqueAsientosDTO();
             int totalAsientosFila = asientosFila.size();
 
@@ -304,24 +310,28 @@ public class ReservaAsientoBean implements Serializable {
                 boolean romperBloque = false;
 
                 if (usaPasilloBD) {
-                    // Si la BD especifica esPasillo, respetamos esa bandera
+                    // Respetar bandera de BD si existe
                     romperBloque = Boolean.TRUE.equals(asiento.getEsPasillo()) && i < totalAsientosFila - 1;
                 } else {
-                    // FALLBACK AUTOMÁTICO según la cantidad de asientos en la fila:
+                    // FALLBACK AUTOMÁTICO DE PASILLOS POR TAMAÑO DE FILA
                     if (totalAsientosFila == 10) {
-                        // Configuración Avión Ancho 3-4-3
+                        // Configuración 3-4-3 (ej. Boeing 747) -> Corta tras el 3er y 7mo asiento (índices 2 y 6)
                         romperBloque = (i == 2 || i == 6) && i < totalAsientosFila - 1;
+                    } else if (totalAsientosFila == 9) {
+                        // 👈 ¡AGREGAR ESTE BLOQUE! Configuración 3-3-3 (Airbus A350 / B787)
+                        // Corta tras el 3er y 6to asiento (índices 2 y 5) -> [A,B,C] PASILLO [D,E,F] PASILLO [J,K,L]
+                        romperBloque = (i == 2 || i == 5) && i < totalAsientosFila - 1;
                     } else if (totalAsientosFila == 7 || totalAsientosFila == 8) {
-                        // Configuración 2-3-2 o 2-4-2
+                        // Configuración 2-3-2 o 2-4-2 (ej. A330) -> Corta tras el 2do y 5to/6to
                         romperBloque = (i == 1 || i == 4) && i < totalAsientosFila - 1;
                     } else if (totalAsientosFila == 6) {
-                        // Económica 3-3 (ej: A-B-C | D-E-F)
+                        // Configuración 3-3 (ej. A320) -> Corta tras el 3er asiento (índice 2)
                         romperBloque = (i == 2) && i < totalAsientosFila - 1;
                     } else if (totalAsientosFila == 4) {
-                        // Primera Clase / Ejecutiva 2-2 (ej: A-C | D-F)
+                        // Configuración 2-2 -> Corta tras el 2do asiento (índice 1)
                         romperBloque = (i == 1) && i < totalAsientosFila - 1;
                     } else if (totalAsientosFila == 3) {
-                        // Primera Clase VIP / Embraer 1-2 (ej: A | C-D)
+                        // Configuración 1-2 -> Corta tras el 1er asiento (índice 0)
                         romperBloque = (i == 0) && i < totalAsientosFila - 1;
                     }
                 }
@@ -336,11 +346,9 @@ public class ReservaAsientoBean implements Serializable {
                 filaDTO.getBloques().add(bloqueActual);
             }
 
-
             this.filasCabina.add(filaDTO);
         }
     }
-
     // Método auxiliar para extraer la letra ("14A" -> "A")
     private String extraerLetraDeNumero(String numeroAsiento) {
         if (numeroAsiento == null) return "";
@@ -364,72 +372,49 @@ public class ReservaAsientoBean implements Serializable {
 
 
 
+    // =========================================================================
+// MÉTODOS DE ACCIÓN RESTRUCTURADOS
+// =========================================================================
     public void setearAsiento(InfoAsientoDTO asiento) {
-        if (asiento == null) {
-            Logger.logWarn("[setearAsiento] Se intentó procesar un asiento nulo.");
-            return;
-        }
-
-
-        if ("OCUPADO".equalsIgnoreCase(asiento.getEstado())) {
-
-        }
+        if (asiento == null) return;
 
         var resultado = asientoCacheService.seleccionarOliberarAsiento(vuelo.getIdVuelo(), asiento, miSessionId);
 
         switch (resultado) {
             case FALLO_ASIENTO_NO_DISPONIBLE -> {
-                Logger.logWarn(String.format("[setearAsiento] FALLO: Asiento %d no disponible. Recargando asientos.", asiento.getIdAsiento()));
                 addMessage(FacesMessage.SEVERITY_WARN, "Aviso", "El asiento ya no está disponible.");
                 recargarAsientos();
                 return;
             }
             case FALLO_BLOQUEADO_POR_OTRO -> {
-                Logger.logWarn(String.format("[setearAsiento] BLOQUEO: Asiento %d ocupado temporalmente por otro usuario.", asiento.getIdAsiento()));
-                addMessage(FacesMessage.SEVERITY_WARN, "Aviso", "Otro pasajero está reservando este asiento ahora mismo. Prueba otro.");
+                addMessage(FacesMessage.SEVERITY_WARN, "Aviso", "Otro pasajero está reservando este asiento ahora mismo.");
                 recargarAsientos();
                 return;
             }
-
         }
 
         boolean seLibero = (resultado == AsientoCacheService.ResultadoSeleccion.EXITO_LIBERADO);
 
         if (seLibero) {
-
-
             asientosSeleccionadosList.removeIf(a -> a.getIdAsiento() == asiento.getIdAsiento());
 
             if (idxAsientoSeleccion > 0) {
                 int idxPasajeroAnterior = idxAsientoSeleccion - 1;
-
-                // Quitar badge específico del vuelo y asiento actual
-                boolean removido = pasajeros.get(idxPasajeroAnterior).asientos
-                        .removeIf(a -> a.getIdAsiento() == asiento.getIdAsiento() && a.getNumeroVuelo().equalsIgnoreCase(vuelo.getNumeroVuelo()));
-
-                if (removido) {
-                    idxAsientoSeleccion--;
-                    Logger.logInfo(String.format("[setearAsiento] Asiento removido del Pasajero Index: %d. Nuevo idxAsientoSeleccion: %d",
-                            idxPasajeroAnterior, idxAsientoSeleccion));
-                }
+                // Liberar el slot del tramo actual (idxVuelo)
+                pasajeros.get(idxPasajeroAnterior).asientos.set(idxVuelo, null);
+                idxAsientoSeleccion--;
             }
         } else {
-            // 🔒 REGLA DE SUSTITUCIÓN: Si la cuota del tramo actual está llena, liberamos el asiento previo del tramo
+            // Regla de sustitución cuando el tramo se llena
             if (idxAsientoSeleccion >= cantAdultos && !asientosSeleccionadosList.isEmpty()) {
                 InfoAsientoDTO asientoAnterior = asientosSeleccionadosList.remove(asientosSeleccionadosList.size() - 1);
-
-                // Liberar en cache
                 asientoCacheService.seleccionarOliberarAsiento(vuelo.getIdVuelo(), asientoAnterior, miSessionId);
 
                 if (idxAsientoSeleccion > 0) {
                     idxAsientoSeleccion--;
                 }
-
-                // Limpiar badge del pasajero para este tramo antes de reasignar
-                pasajeros.get(idxAsientoSeleccion).asientos
-                        .removeIf(a -> a.getNumeroVuelo().equalsIgnoreCase(vuelo.getNumeroVuelo()));
+                pasajeros.get(idxAsientoSeleccion).asientos.set(idxVuelo, null);
             }
-
 
             asientosSeleccionadosList.add(asiento);
 
@@ -439,24 +424,19 @@ public class ReservaAsientoBean implements Serializable {
             );
 
             if (idxAsientoSeleccion < cantAdultos) {
-                // Remover cualquier selección vieja en este mismo vuelo para este pasajero
-                pasajeros.get(idxAsientoSeleccion).asientos
-                        .removeIf(a -> a.getNumeroVuelo().equalsIgnoreCase(vuelo.getNumeroVuelo()));
-
-                pasajeros.get(idxAsientoSeleccion).asientos.add(asientoSeleccionado);
-
+                // Guardar en la posición fija del tramo activo (idxVuelo)
+                pasajeros.get(idxAsientoSeleccion).asientos.set(idxVuelo, asientoSeleccionado);
                 idxAsientoSeleccion++;
             }
         }
 
-        // Actualización de mapa y sesión JSF
+        // Actualizar el mapa global en sesión
         asientosSeleccionados.put(vuelo.getIdVuelo(), new ArrayList<>(asientosSeleccionadosList));
         FacesContext.getCurrentInstance().getExternalContext()
                 .getSessionMap().put("asientosSeleccionados", asientosSeleccionados);
 
-        // Evaluación de avance/transición
+        // Auto-avance de tramo si se completaron los asientos requeridos
         if (!seLibero && idxAsientoSeleccion >= cantAdultos) {
-
             if (idxVuelo + 1 >= cantVuelos) {
                 finalizarReserva();
             } else {
@@ -513,8 +493,8 @@ public class ReservaAsientoBean implements Serializable {
         return null;
     }
 
-    public String irASeleccionEquipaje() throws IOException {
-        // Validar que todos los pasajeros tengan asiento en todos los tramos
+    // Redirección limpia para la Opción 1 de JSF (Evita el IllegalStateException)
+    public String irASeleccionEquipaje() {
         for (Vuelo v : vuelos) {
             List<InfoAsientoDTO> elegidos = asientosSeleccionados.getOrDefault(v.getIdVuelo(), Collections.emptyList());
             if (elegidos.size() < cantAdultos) {
@@ -523,16 +503,13 @@ public class ReservaAsientoBean implements Serializable {
             }
         }
 
-        // Guardar en la sesión HTTP los asientos e itinerarios confirmados
         FacesContext fc = FacesContext.getCurrentInstance();
-        ExternalContext ec = FacesContext.getCurrentInstance().getExternalContext();
         Map<String, Object> sessionMap = fc.getExternalContext().getSessionMap();
         sessionMap.put("asientosSeleccionados", this.asientosSeleccionados);
         sessionMap.put("pasajeros", this.pasajeros);
         sessionMap.put("itinerarios", this.idsItinerarios);
         sessionMap.put("tarifasItinerios", this.tarifasItinerarios);
 
-        ec.redirect("/home/equipaje.xhtml?faces-redirect=true");
         return "/home/equipaje.xhtml?faces-redirect=true";
     }
 
@@ -562,7 +539,7 @@ public class ReservaAsientoBean implements Serializable {
             this.vuelo = vuelos.get(idxVuelo);
             cargarDatosVueloActual();
 
-            // Sincronizar puntero de la UI con la cantidad guardada en este tramo específico
+            // Sincronizar el puntero con la cantidad asignada en este tramo
             List<InfoAsientoDTO> guardadosEnEsteTramo = asientosSeleccionados.getOrDefault(vuelo.getIdVuelo(), Collections.emptyList());
             this.idxAsientoSeleccion = Math.min(guardadosEnEsteTramo.size(), cantAdultos);
 
@@ -572,12 +549,13 @@ public class ReservaAsientoBean implements Serializable {
 
             long segundosRestantes = getTiempoRestanteSegundos();
 
+            // Se ejecuta el JS de cambio de canal y cronómetro.
+            // NOTA: Se elimina PrimeFaces.current().ajax().update("seatForm") de aquí.
             PrimeFaces.current().executeScript(
                     "cambiarCanalWebSocket('" + vuelo.getIdVuelo() + "'); " +
                             "flashCambioVuelo(); " +
                             "iniciarCronometroUI(" + segundosRestantes + ");"
             );
-            PrimeFaces.current().ajax().update("seatForm");
         } else {
             finalizarReserva();
         }
@@ -589,7 +567,6 @@ public class ReservaAsientoBean implements Serializable {
             this.vuelo = vuelos.get(idxVuelo);
             cargarDatosVueloActual();
 
-            // Sincronizar puntero de la UI con la cantidad guardada en este tramo específico
             List<InfoAsientoDTO> guardadosEnEsteTramo = asientosSeleccionados.getOrDefault(vuelo.getIdVuelo(), Collections.emptyList());
             this.idxAsientoSeleccion = Math.min(guardadosEnEsteTramo.size(), cantAdultos);
 
@@ -604,7 +581,6 @@ public class ReservaAsientoBean implements Serializable {
                             "flashCambioVuelo(); " +
                             "iniciarCronometroUI(" + segundosRestantes + ");"
             );
-            PrimeFaces.current().ajax().update("seatForm");
         }
     }
 
@@ -733,6 +709,50 @@ public class ReservaAsientoBean implements Serializable {
 
     public void recargarAsientos() {
         this.asientos = asientoCacheService.getAsientosVuelo(vuelo.getIdVuelo());
+    }
+
+
+    // =========================================================
+// MÉTODOS DE CONTEXTO DETALLADO DEL VUELO
+// =========================================================
+
+    public String getOrigenDetallado() {
+        if (vuelo == null || vuelo.getSegmentoVuelos() == null || vuelo.getSegmentoVuelos().isEmpty()) return "";
+        var origen = vuelo.getSegmentoVuelos().get(0).getAeropuertoOrigen();
+        if (origen == null) return "";
+        String ciudad = (origen.getCiudad() != null) ? origen.getCiudad().getNombre() : "";
+        String pais = (origen.getCiudad() != null && origen.getCiudad().getPai() != null) ? origen.getCiudad().getPai().getNombre() : "";
+        return String.format("%s (%s)", ciudad, pais);
+    }
+
+    public String getDestinoDetallado() {
+        if (vuelo == null || vuelo.getSegmentoVuelos() == null || vuelo.getSegmentoVuelos().isEmpty()) return "";
+        var segmentos = vuelo.getSegmentoVuelos();
+        var destino = segmentos.get(segmentos.size() - 1).getAeropuertoDestino();
+        if (destino == null) return "";
+        String ciudad = (destino.getCiudad() != null) ? destino.getCiudad().getNombre() : "";
+        String pais = (destino.getCiudad() != null && destino.getCiudad().getPai() != null) ? destino.getCiudad().getPai().getNombre() : "";
+        return String.format("%s (%s)", ciudad, pais);
+    }
+
+    public String getModeloAvion() {
+        if (vuelo == null || vuelo.getAvion() == null) return "Aeronave Comercial";
+        return vuelo.getAvion().getModeloAvion() != null ? vuelo.getAvion().getModeloAvion().getNombre() : "Aeronave Comercial";
+    }
+
+    public String getDuracionEstimada() {
+        if (vuelo == null || vuelo.getFechaHoraSalida() == null || vuelo.getFechaHoraLlegada() == null) return "N/A";
+        long diffMs = vuelo.getFechaHoraLlegada().getTime() - vuelo.getFechaHoraSalida().getTime();
+        if (diffMs <= 0) return "N/A";
+        long horas = diffMs / (1000 * 60 * 60);
+        long minutos = (diffMs / (1000 * 60)) % 60;
+        return String.format("%dh %02dmin", horas, minutos);
+    }
+
+    public String getPuertasEmbarque() {
+        if (vuelo == null || vuelo.getSegmentoVuelos() == null || vuelo.getSegmentoVuelos().isEmpty()) return "Por asignar";
+        String puertas = vuelo.getSegmentoVuelos().get(0).getPuertasEmbarque();
+        return (puertas != null && !puertas.trim().isEmpty()) ? puertas.trim() : "Por asignar";
     }
 
     // --- Getters y Setters ---

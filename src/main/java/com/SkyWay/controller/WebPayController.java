@@ -24,7 +24,6 @@ public class WebPayController {
     @Autowired private WebPayService webPayService;
     @Autowired private ReservaProcesadorService procesarReservaUseCase;
 
-
     private final PagoFactoryService pagoFactoryService;
 
     public WebPayController(PagoFactoryService pagoFactoryService) {
@@ -37,25 +36,28 @@ public class WebPayController {
             @RequestParam(value = "TBK_TOKEN", required = false) Optional<String> tbkToken,
             HttpServletRequest request) {
 
+        Logger.logInfo("================================================================================");
+        Logger.logInfo("🌐 [WEBPAY-CONTROLLER] Iniciando confirmación de retorno desde Transbank / WebPay");
+        Logger.logInfo("================================================================================");
+
         // El usuario canceló la compra en la pasarela
         if (tbkToken.isPresent()) {
+            Logger.logWarn("⚠️ El usuario canceló la compra en la pasarela WebPay (TBK_TOKEN presente)");
             return new RedirectView("/home/errorPago.xhtml?reason=CANCELLED");
         }
-
-
-
 
         if (tokenWs.isPresent() && !tokenWs.get().isBlank()) {
 
             String token = tokenWs.get();
+            Logger.logInfo("🔑 Token de WebPay recibido: " + token);
             boolean pagoAutorizado = webPayService.confirmarPagoWebPay(token);
 
-            //PasarelaPagoStrategy webpayStrategy = pagoFactoryService.obtenerEstrategia(MetodoPagoEnum.WEBPAY);
-            //boolean pagoAprobado = webpayStrategy.confirmarPago(String.valueOf(tokenWs));
-
             if (!pagoAutorizado) {
+                Logger.logError("❌ WebPay no autorizó la transacción para el token: " + token);
                 return new RedirectView("/home/errorPago.xhtml?reason=REJECTED");
             }
+
+            Logger.logInfo("✅ [WEBPAY] Pago APROBADO en Transbank");
 
             HttpSession session = request.getSession(false);
             SolicitudReservaDTO dto = (session != null) ? (SolicitudReservaDTO) session.getAttribute("SOLICITUD_RESERVA_PENDIENTE") : null;
@@ -66,8 +68,15 @@ public class WebPayController {
             }
 
             try {
-                Integer idReserva = procesarReservaUseCase.ejecutarPersistenciaReserva(dto);
+                // ID_METODO_PAGO = 1 (Tarjeta Visa / WebPay según la tabla Metodo_Pago)
+                int idMetodoPagoWebPay = 1;
+                Logger.logInfo("💾 Persistiendo reserva con ID Método de Pago WEBPAY (" + idMetodoPagoWebPay + ")...");
+
+                Integer idReserva = procesarReservaUseCase.ejecutarPersistenciaReserva(dto, idMetodoPagoWebPay);
+
                 session.removeAttribute("SOLICITUD_RESERVA_PENDIENTE");
+                Logger.logInfo("🎉 [WEBPAY-CONTROLLER] Reserva ID: " + idReserva + " procesada con éxito. Redirigiendo a pago-exitoso.xhtml");
+
                 return new RedirectView("/home/pago-exitoso.xhtml?idReserva=" + idReserva);
             } catch (Exception e) {
                 Logger.logError("💥 Error al escribir la reserva: " + e.getMessage());
@@ -75,6 +84,7 @@ public class WebPayController {
             }
         }
 
+        Logger.logError("❌ Token de WebPay inválido o ausente en la petición");
         return new RedirectView("/home/errorPago.xhtml?reason=INVALID_TOKEN");
     }
 }

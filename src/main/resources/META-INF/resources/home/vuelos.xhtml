@@ -2,67 +2,74 @@
                 xmlns:f="jakarta.faces.core"
                 xmlns:h="jakarta.faces.html"
                 xmlns:p="http://primefaces.org/ui"
-                xmlns:fs="http://xmlns.jcp.org/jsf/core"
                 xmlns:ui="http://java.sun.com/jsf/facelets"
                 template="/template/main.xhtml">
 
     <ui:define name="head">
-        <title>Vuelos | SkyWay</title>
+        <title>Vuelos | SkyWay Corporate</title>
         <h:outputStylesheet library="css" name="vuelos/estilos-vuelos.css" />
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
         <style type="text/css">
-            /* ======= PALETA EXECUTIVE CORPORATE (SIN CYAN/NEON) ======= */
+            /* ======= PALETA SKYWAY DEEP CORPORATE NAVY ======= */
             :root {
-                --bg-base: #0b1320;
-                --bg-surface: #111a2e;
-                --bg-card: #17243b;
-                --bg-elevated: #1e2e4a;
-                --border-ui: #233554;
-                --border-subtle: #1c2b45;
+                --bg-base: #0F172A;
+                --bg-surface: #1E293B;
+                --bg-elevated: #334155;
+                --border-color: #334155;
 
-                --brand-blue: #3b82f6;
-                --brand-blue-hover: #2563eb;
-                --steel-blue: #64748b;
+                --aviation-blue: #3B82F6;
+                --steel-blue: #60A5FA;
+                --slate-accent: #475569;
 
-                --text-main: #f8fafc;
-                --text-sub: #94a3b8;
-                --text-disabled: #475569;
+                --text-primary: #F8FAFC;
+                --text-secondary: #CBD5E1;
+                --text-muted: #94A3B8;
 
-                /* Indicadores Neutros para Tarifas */
-                --tarifa-light: #475569;    /* Gris Pizarra */
-                --tarifa-standard: #3b82f6; /* Azul Corporativo */
-                --tarifa-full: #6d28d9;     /* Morado Sobrio */
+                --status-ontime-bg: rgba(16, 185, 129, 0.15);
+                --status-ontime-text: #34D399;
+
+                --tarifa-light: #64748B;
+                --tarifa-standard: #3B82F6;
+                --tarifa-full: #8B5CF6;
             }
 
-            body { background-color: var(--bg-base) !important; }
+            body {
+                background-color: var(--bg-base) !important;
+                color: var(--text-primary) !important;
+                font-family: 'Segoe UI', system-ui, -apple-system, sans-serif !important;
+            }
 
             .flex-container {
                 background-color: var(--bg-base) !important;
                 padding: 30px 40px !important;
+                max-width: 1320px;
+                margin: 0 auto;
             }
 
-            /* Header Informativo */
+            /* Header de Selección */
             .tipo-vuelo-container {
                 display: flex;
                 align-items: center;
-                gap: 16px;
+                justify-content: space-between;
                 margin-bottom: 24px;
-                padding-bottom: 16px;
-                border-bottom: 1px solid var(--border-ui);
+                padding: 16px 24px;
+                background: var(--bg-surface);
+                border: 1px solid var(--border-color);
+                border-radius: 8px;
             }
 
             .icono-tipo-vuelo {
-                background: var(--bg-surface);
-                border: 1px solid var(--border-subtle);
-                width: 44px;
-                height: 44px;
+                background: rgba(59, 130, 246, 0.12);
+                border: 1px solid rgba(59, 130, 246, 0.25);
+                width: 42px;
+                height: 42px;
                 border-radius: 8px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                color: var(--brand-blue);
+                color: var(--steel-blue);
                 font-size: 1.2rem;
             }
 
@@ -70,98 +77,111 @@
                 font-size: 0.72rem;
                 text-transform: uppercase;
                 letter-spacing: 0.8px;
-                color: var(--text-sub);
+                color: var(--text-muted);
                 display: block;
-                font-weight: 600;
+                font-weight: 700;
             }
 
             .tipo-vuelo-text {
-                font-size: 1.35rem;
+                font-size: 1.3rem;
                 font-weight: 700;
-                color: var(--text-main);
+                color: var(--text-primary);
             }
 
-            /* ======= TABLA DE VUELOS CORPORATIVA ======= */
+            /* ======= TABLA DE VUELOS SOBRIA ======= */
             .vuelo-tabla-custom.ui-datatable {
                 background: transparent !important;
-                border: 1px solid var(--border-ui) !important;
+                border: 1px solid var(--border-color) !important;
                 border-radius: 8px;
                 overflow: hidden;
             }
 
             .vuelo-tabla-custom thead th {
                 background-color: var(--bg-surface) !important;
-                color: var(--text-sub) !important;
+                color: var(--text-muted) !important;
                 font-size: 0.75rem;
                 font-weight: 700;
                 text-transform: uppercase;
-                letter-spacing: 0.5px;
+                letter-spacing: 0.8px;
                 border: none !important;
-                border-bottom: 1px solid var(--border-ui) !important;
+                border-bottom: 1px solid var(--border-color) !important;
                 padding: 16px 20px !important;
             }
 
             .vuelo-tabla-custom tbody td {
                 background-color: var(--bg-surface) !important;
-                color: var(--text-main) !important;
+                color: var(--text-primary) !important;
                 border: none !important;
-                border-bottom: 1px solid var(--border-ui) !important;
+                border-bottom: 1px solid var(--border-color) !important;
                 padding: 20px !important;
+                vertical-align: middle;
             }
 
             .vuelo-tabla-custom tbody tr:hover td {
-                background-color: var(--bg-card) !important;
+                background-color: var(--bg-elevated) !important;
             }
 
             .vuelo-tabla-custom .ui-datatable-data tr.ui-expanded-row-content td {
-                background-color: #080f1d !important;
-                padding: 28px !important;
-                border-bottom: 1px solid var(--border-ui) !important;
+                background-color: #0A0F1D !important;
+                padding: 24px !important;
             }
 
-            /* Detalle de Horarios */
-            .flight-time { font-size: 1.35rem; font-weight: 700; color: var(--text-main); }
-            .flight-iata { font-size: 1rem; font-weight: 700; color: var(--brand-blue); margin-left: 6px; }
-            .flight-city { display: block; font-size: 0.82rem; color: var(--text-sub); margin-top: 4px; }
-            .price-display { font-size: 1.35rem; font-weight: 700; color: var(--text-main); }
+            .flight-time { font-size: 1.3rem; font-weight: 700; color: var(--text-primary); }
+            .flight-iata { font-size: 1rem; font-weight: 800; color: var(--steel-blue); margin-left: 6px; }
+            .flight-city { display: block; font-size: 0.82rem; color: var(--text-muted); margin-top: 3px; }
+            .price-display { font-size: 1.35rem; font-weight: 700; color: #FFFFFF; }
 
-            /* Conector visual de ruta */
+            .vuelo-badge-code {
+                background: rgba(255,255,255,0.04);
+                border: 1px solid var(--border-color);
+                color: var(--text-secondary);
+                padding: 4px 10px;
+                border-radius: 6px;
+                font-size: 0.78rem;
+                font-weight: 600;
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+            }
+
             .route-connector {
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                gap: 10px;
-                margin: 6px 0;
+                gap: 8px;
+                margin: 4px 0;
             }
 
             .route-line {
                 height: 1px;
-                background: var(--border-subtle);
+                background: var(--border-color);
                 flex-grow: 1;
             }
 
-            .stop-badge, .direct-badge {
-                background-color: var(--bg-card);
-                color: var(--text-sub);
-                font-size: 0.78rem;
-                font-weight: 500;
-                padding: 4px 12px;
+            .action-link-icon {
+                color: var(--steel-blue);
+                background: rgba(96, 165, 250, 0.1);
+                border: 1px solid rgba(96, 165, 250, 0.2);
+                padding: 4px 8px;
                 border-radius: 4px;
-                border: 1px solid var(--border-subtle);
-                display: inline-flex;
-                align-items: center;
+                transition: all 0.2s ease;
             }
 
-            /* ======= TARJETAS DE TARIFAS SOBRIAS ======= */
+            .action-link-icon:hover {
+                background: var(--aviation-blue);
+                color: #FFFFFF;
+            }
+
+            /* ======= TARIFAS GRID (ESTILO LATAM SOBRIO) ======= */
             .tarifas-grid {
                 display: grid;
                 grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-                gap: 20px;
+                gap: 16px;
             }
 
             .card-latam {
-                background: var(--bg-card);
-                border: 1px solid var(--border-subtle);
+                background: var(--bg-surface);
+                border: 1px solid var(--border-color);
                 border-radius: 8px;
                 display: flex;
                 flex-direction: column;
@@ -172,21 +192,23 @@
             }
 
             .card-latam:hover {
-                border-color: var(--brand-blue);
+                border-color: var(--aviation-blue);
             }
 
-            /* Borde superior sutil */
             .tarifa-badge-indicator {
-                height: 3px;
+                height: 4px;
                 width: 100%;
             }
 
             .tarifa-header {
-                padding: 18px 20px 12px 20px;
-                border-bottom: 1px solid var(--border-ui);
+                padding: 16px 20px;
+                border-bottom: 1px solid var(--border-color);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
             }
 
-            .tarifa-name { font-size: 1.1rem; font-weight: 700; color: var(--text-main); }
+            .tarifa-name { font-size: 1.1rem; font-weight: 700; color: var(--text-primary); }
 
             .beneficio-list {
                 padding: 18px 20px;
@@ -195,165 +217,223 @@
                 gap: 10px;
             }
 
-            .beneficio-item { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
-            .icon-yes { color: var(--brand-blue); }
-            .icon-no { color: var(--text-disabled); }
-            .text-yes { color: var(--text-main); font-weight: 500; }
-            .text-no { color: var(--text-disabled); }
+            .beneficio-item { display: flex; align-items: flex-start; gap: 8px; font-size: 0.83rem; }
+            .icon-yes { color: var(--status-ontime-text); font-size: 0.95rem; }
+            .icon-no { color: var(--text-muted); font-size: 0.95rem; opacity: 0.5; }
+            .text-yes { color: var(--text-secondary); font-weight: 500; }
+            .text-no { color: var(--text-muted); text-decoration: line-through; }
 
             .tarifa-bottom-section {
-                padding: 18px 20px;
+                padding: 16px 20px;
                 background-color: rgba(0, 0, 0, 0.2);
-                border-top: 1px solid var(--border-ui);
+                border-top: 1px solid var(--border-color);
                 text-align: center;
             }
 
-            .price-label { font-size: 0.72rem; color: var(--text-sub); text-transform: uppercase; display: block; margin-bottom: 4px; }
-            .price-value { font-size: 1.35rem; font-weight: 700; color: var(--text-main); display: block; margin-bottom: 14px; }
-
             .btn-elegir {
-                background: var(--brand-blue) !important;
-                border: none !important;
-                color: #ffffff !important;
+                background: transparent !important;
+                border: 1px solid var(--aviation-blue) !important;
+                color: var(--steel-blue) !important;
                 font-size: 0.88rem !important;
-                font-weight: 600 !important;
+                font-weight: 700 !important;
                 padding: 10px !important;
                 border-radius: 6px !important;
                 width: 100%;
+                transition: all 0.2s ease !important;
             }
 
-            .btn-elegir:hover { background: var(--brand-blue-hover) !important; }
+            .btn-elegir:hover {
+                background: var(--aviation-blue) !important;
+                color: #FFFFFF !important;
+            }
 
             /* =========================================================
-               SIDEBAR CORPORATIVO - COLORES SOBRIOS
+               SIDEBAR DE ITINERARIO (ESTILO TIMELINE VERTICAL LATAM)
                ========================================================= */
-            .sidebar-latam-style {
-                background-color: var(--bg-surface) !important;
-                border-left: 1px solid var(--border-ui) !important;
-                color: var(--text-main) !important;
+            body .ui-sidebar.sidebar-latam-style,
+            body .ui-sidebar.sidebar-latam-style .ui-sidebar-content,
+            body .ui-sidebar.sidebar-latam-style .ui-scrollpanel,
+            body .ui-sidebar.sidebar-latam-style .ui-scrollpanel-content,
+            body .ui-sidebar.sidebar-latam-style .ui-widget-content {
+                background-color: #0B1120 !important;
+                background: #0B1120 !important;
+                border-left: 1px solid var(--border-color) !important;
+                color: var(--text-primary) !important;
+                padding: 0 !important;
             }
 
-            .sidebar-latam-style .ui-scrollpanel,
-            .sidebar-latam-style .ui-scrollpanel-content,
-            .sidebar-latam-style .ui-widget-content {
-                background: transparent !important;
-                background-color: transparent !important;
-                border: none !important;
-                color: var(--text-main) !important;
+            body .ui-sidebar.sidebar-latam-style .ui-sidebar-close {
+                color: var(--text-muted) !important;
+                margin-top: 14px !important;
+                margin-right: 16px !important;
             }
 
-            .latam-header {
+            .latam-sidebar-header {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                padding: 20px 24px !important;
+                background: var(--bg-surface) !important;
+                border-bottom: 1px solid var(--border-color) !important;
+            }
+
+            .latam-sidebar-title {
+                font-size: 1.15rem !important;
+                font-weight: 700 !important;
+                color: var(--text-primary) !important;
+                margin: 0 !important;
+                display: flex !important;
+                align-items: center !important;
+                gap: 10px !important;
+            }
+
+            /* ESTRUCTURA TIMELINE LATAM */
+            .latam-timeline-wrapper {
+                padding: 24px 28px !important;
+            }
+
+            .latam-timeline-item {
+                display: grid;
+                grid-template-columns: 24px 1fr;
+                gap: 16px;
+                position: relative;
+            }
+
+            /* Línea Vertical Central Conectora */
+            .latam-timeline-axis {
                 display: flex;
-                justify-content: space-between;
+                flex-direction: column;
                 align-items: center;
-                padding: 20px 24px;
-                border-bottom: 1px solid var(--border-ui);
-            }
-
-            .latam-header-title {
-                font-size: 1.2rem;
-                font-weight: 700;
-                color: var(--text-main);
-            }
-
-            /* Timeline Vertical Sobrio */
-            .latam-timeline {
                 position: relative;
-                padding: 20px 24px 20px 30px;
             }
 
-            .latam-leg {
-                position: relative;
-                padding-left: 28px;
-                margin-bottom: 30px;
-            }
-
-            .latam-leg::before {
-                content: '';
-                position: absolute;
-                left: 6px;
-                top: 10px;
-                bottom: -25px;
-                width: 2px;
-                background: var(--border-ui);
-                z-index: 1;
-            }
-
-            .latam-leg:last-child::before { display: none; }
-
-            .node-point {
-                position: absolute;
-                left: 0;
+            .latam-node-origin {
                 width: 14px;
                 height: 14px;
+                border: 2px solid var(--steel-blue);
                 border-radius: 50%;
-                background: var(--bg-surface);
-                border: 3px solid var(--brand-blue);
+                background: #0B1120;
                 z-index: 2;
+                margin-top: 4px;
             }
 
-            .node-departure { top: 2px; }
-            .node-arrival { bottom: 2px; border-color: var(--steel-blue); }
+            .latam-node-destination {
+                color: var(--status-ontime-text);
+                font-size: 1rem;
+                z-index: 2;
+                margin-top: 2px;
+            }
 
-            .latam-flight-info {
+            .latam-axis-line {
+                width: 2px;
+                background: var(--border-color);
+                flex-grow: 1;
+                margin: 4px 0;
+            }
+
+            .latam-timeline-content {
+                padding-bottom: 24px;
+            }
+
+            .latam-point-row {
                 display: flex;
                 justify-content: space-between;
                 align-items: flex-start;
-                margin-bottom: 10px;
             }
 
-            .latam-airport-title { font-size: 1rem; font-weight: 700; color: var(--text-main); }
-            .latam-airport-title span { color: var(--text-main); font-weight: 700; }
-            .latam-airport-name { font-size: 0.8rem; color: var(--text-sub); margin-top: 2px; }
+            .latam-point-iata {
+                font-size: 1.15rem;
+                font-weight: 800;
+                color: var(--text-primary);
+            }
 
-            /* Corrección del color de hora y fecha para evitar cian brillante */
-            .latam-time { font-size: 0.95rem; font-weight: 600; color: var(--text-main); text-align: right; }
-            .latam-date { font-size: 0.8rem; color: var(--text-sub); display: block; font-weight: 400; }
+            .latam-point-time {
+                font-size: 1.15rem;
+                font-weight: 800;
+                color: var(--text-primary);
+                margin-left: 8px;
+            }
 
-            .latam-meta-box {
-                background: var(--bg-card);
-                border: 1px solid var(--border-ui);
-                border-radius: 8px;
-                padding: 14px 16px;
+            .latam-point-airport {
+                font-size: 0.82rem;
+                color: var(--text-muted);
+                margin-top: 2px;
+            }
+
+            .latam-flight-info-box {
+                background: rgba(30, 41, 59, 0.6);
+                border: 1px solid var(--border-color);
+                border-radius: 6px;
+                padding: 12px 14px;
                 margin: 14px 0;
+                font-size: 0.82rem;
+            }
+
+            .latam-flight-number {
+                font-weight: 700;
+                color: var(--steel-blue);
+                display: block;
+                margin-bottom: 4px;
             }
 
             .latam-meta-row {
-                display: flex;
-                justify-content: space-between;
-                font-size: 0.82rem;
-                color: var(--text-sub);
-                margin-bottom: 6px;
+                color: var(--text-muted);
+                margin-top: 2px;
             }
-
-            .latam-meta-row:last-child { margin-bottom: 0; }
-            .latam-meta-row b { color: var(--text-main); }
 
             .latam-amenities {
                 display: flex;
-                gap: 14px;
-                margin-top: 10px;
-                padding-top: 10px;
-                border-top: 1px dashed var(--border-ui);
-                color: var(--text-sub);
+                gap: 12px;
+                margin-top: 8px;
+                color: var(--text-muted);
                 font-size: 0.85rem;
             }
 
-            .latam-connection-badge {
-                margin: 20px 0 20px -8px;
-                background: var(--bg-card);
-                border: 1px dashed var(--border-ui);
-                border-radius: 8px;
-                padding: 12px 18px;
-                display: flex;
+            .latam-layover-pill {
+                background: rgba(51, 65, 85, 0.4);
+                border: 1px dashed var(--slate-accent);
+                border-radius: 20px;
+                padding: 8px 16px;
+                display: inline-flex;
                 align-items: center;
-                gap: 12px;
-                font-size: 0.83rem;
-                color: var(--text-main);
-                z-index: 3;
+                gap: 10px;
+                color: var(--text-secondary);
+                font-size: 0.82rem;
+                margin: 12px 0 20px 0;
             }
 
-            .latam-connection-badge i { color: var(--brand-blue); font-size: 1rem; }
+            /* OVERLAY INFO MAPA */
+            .map-info-overlay {
+                position: absolute;
+                bottom: 20px;
+                left: 20px;
+                right: 20px;
+                background: rgba(15, 23, 42, 0.9);
+                border: 1px solid var(--border-color);
+                border-radius: 8px;
+                padding: 12px 16px;
+                z-index: 1000;
+                display: flex;
+                justify-content: space-around;
+                backdrop-filter: blur(4px);
+            }
+
+            .map-info-item {
+                text-align: center;
+            }
+
+            .map-info-label {
+                font-size: 0.7rem;
+                text-transform: uppercase;
+                color: var(--text-muted);
+                display: block;
+            }
+
+            .map-info-val {
+                font-size: 0.9rem;
+                font-weight: 700;
+                color: var(--steel-blue);
+            }
         </style>
     </ui:define>
 
@@ -362,229 +442,287 @@
 
         <h:form id="vueloForm">
             <div class="flex-container">
-                <div class="flex-left">
 
-                    <div class="tipo-vuelo-container">
+                <!-- ENCABEZADO DE SELECCIÓN -->
+                <div class="tipo-vuelo-container">
+                    <div class="d-flex align-items-center gap-3">
                         <div class="icono-tipo-vuelo">
                             <i class="pi pi-send"></i>
                         </div>
                         <div>
-                            <span class="tipo-vuelo-label">Itinerarios seleccionados</span>
+                            <span class="tipo-vuelo-label">Itinerarios disponibles</span>
                             <h:outputText id="tipoVuelo" value="#{itinerarioDetalleBean.tipoVuelo}" styleClass="tipo-vuelo-text"/>
                         </div>
                     </div>
+                    <div class="text-right d-none d-md-block">
+                        <span class="tipo-vuelo-label">Moneda de Consulta</span>
+                        <span class="badge bg-dark border border-secondary text-light font-weight-normal" style="font-size:0.82rem; padding: 6px 12px;">CLP (Pesos Chilenos)</span>
+                    </div>
+                </div>
 
-                    <p:dataTable id="tablaVuelos" widgetVar="tablaVuelosWidget"
-                                 value="#{itinerarioDetalleBean.vuelosIda}"
-                                 var="vuelo" paginator="true" rows="5"
-                                 lazy="false"
-                                 rowKey="#{vuelo.itinerario}"
-                                 selectionMode="single"
-                                 selection="#{itinerarioDetalleBean.selectedVuelo}"
-                                 styleClass="vuelo-tabla-custom">
+                <!-- TABLA PRINCIPAL DE SELECCIÓN -->
+                <p:dataTable id="tablaVuelos" widgetVar="tablaVuelosWidget"
+                             value="#{itinerarioDetalleBean.vuelosIda}"
+                             var="vuelo" paginator="true" rows="6"
+                             lazy="false"
+                             rowKey="#{vuelo.itinerario}"
+                             selectionMode="single"
+                             selection="#{itinerarioDetalleBean.selectedVuelo}"
+                             styleClass="vuelo-tabla-custom">
 
-                        <p:ajax event="rowSelect" oncomplete="rowExpansion(PF('tablaVuelosWidget'));" />
+                    <p:ajax event="rowSelect" oncomplete="rowExpansion(PF('tablaVuelosWidget'));" />
 
-                        <p:column style="width: 3rem;" styleClass="text-center">
-                            <p:rowToggler />
-                        </p:column>
+                    <p:column style="width: 3rem;" styleClass="text-center">
+                        <p:rowToggler />
+                    </p:column>
 
-                        <p:column headerText="Salida" style="width: 25%;">
-                            <div class="flex align-items-baseline">
-                                <h:outputText value="#{vuelo.horaSalida24h}" styleClass="flight-time" />
-                                <h:outputText value="#{vuelo.origen}" styleClass="flight-iata" />
+
+                    <!-- SALIDA CON TIMESTAMP -->
+                    <p:column headerText="Salida" style="width: 23%;">
+                        <div class="d-flex align-items-baseline">
+                            <h:outputText value="#{vuelo.horaSalida24h}" styleClass="flight-time" />
+                            <h:outputText value="#{vuelo.origen}" styleClass="flight-iata" />
+                        </div>
+                        <h:outputText value="#{vuelo.ciudadSalida}" styleClass="flight-city" />
+                    </p:column>
+
+                    <!-- DURACIÓN Y ESCALAS -->
+                    <p:column headerText="Duración / Escalas" styleClass="text-center" style="width: 21%;">
+                        <div class="duration-line-container">
+                            <h:outputText value="#{vuelo.duracion}" style="font-size: 0.82rem; color: var(--text-muted); font-weight: 600;"/>
+                            <div class="route-connector">
+                                <div class="route-line"></div>
+                                <i class="pi pi-plane" style="color: var(--steel-blue); font-size: 0.85rem; transform: rotate(90deg);"></i>
+                                <div class="route-line"></div>
                             </div>
-                            <h:outputText value="#{vuelo.ciudadSalida}" styleClass="flight-city" />
-                        </p:column>
 
-                        <p:column headerText="Duración" styleClass="text-center" style="width: 25%;">
-                            <div class="duration-line-container">
-                                <h:outputText value="#{vuelo.duracion}" style="font-size: 0.78rem; color: var(--text-sub); font-weight: 600;"/>
-                                <div class="route-connector">
-                                    <div class="route-line"></div>
-                                    <i class="pi pi-plane" style="color: var(--text-sub); font-size: 0.8rem; transform: rotate(90deg);"></i>
-                                    <div class="route-line"></div>
-                                </div>
-
-                                <h:panelGroup rendered="#{vuelo.cantParadas ne 'sin paradas'}">
-                                    <span class="stop-badge">
+                            <h:panelGroup rendered="#{vuelo.cantParadas ne 'sin paradas'}">
+                                <div class="d-flex align-items-center justify-content-center gap-2 mt-1">
+                                    <span class="badge bg-dark border border-secondary text-light">
                                         #{vuelo.cantParadas}
-                                        <p:commandLink action="#{itinerarioDetalleBean.showParadas(vuelo.itinerario)}"
-                                                       update=":vueloForm:sidebarParadas"
-                                                       oncomplete="PF('sidebarParadas').show();"
-                                                       style="color: var(--brand-blue); margin-left: 8px;"
-                                                       title="Detalle del itinerario">
-                                            <i class="pi pi-info-circle"/>
-                                        </p:commandLink>
-
-                                        <p:commandLink action="#{itinerarioDetalleBean.showMapa(vuelo.itinerario)}"
-                                                       update="@none"
-                                                       process="@this"
-                                                       oncomplete="PF('sidebarMapa').show();"
-                                                       style="color: var(--brand-blue); margin-left: 8px;"
-                                                       title="Ruta geográfica">
-                                            <i class="pi pi-map"/>
-                                        </p:commandLink>
                                     </span>
-                                </h:panelGroup>
 
-                                <h:outputText value="Directo"
-                                              rendered="#{vuelo.cantParadas eq 'sin paradas'}"
-                                              styleClass="direct-badge" />
-                            </div>
-                        </p:column>
+                                    <p:commandLink action="#{itinerarioDetalleBean.showParadas(vuelo.itinerario)}"
+                                                   update=":vueloForm:sidebarParadas"
+                                                   oncomplete="PF('sidebarParadas').show();"
+                                                   styleClass="action-link-icon"
+                                                   title="Ver itinerario detallado estilo LATAM">
+                                        <i class="pi pi-list"/>
+                                    </p:commandLink>
 
-                        <p:column headerText="Llegada" style="width: 25%;">
-                            <div class="flex align-items-baseline">
-                                <h:outputText value="#{vuelo.horaLlegada24h}" styleClass="flight-time" />
-                                <h:outputText value="#{vuelo.destino}" styleClass="flight-iata" />
-                            </div>
-                            <h:outputText value="#{vuelo.ciudadLlegada}" styleClass="flight-city" />
-                        </p:column>
-
-                        <p:column headerText="Desde" styleClass="text-right" style="width: 20%;">
-                            <h:outputText value="#{vuelo.precio}" styleClass="price-display">
-                                <f:convertNumber type="currency" currencySymbol="CLP " maxFractionDigits="0" />
-                            </h:outputText>
-                            <span style="display: block; font-size: 0.75rem; color: var(--text-sub); margin-top:2px;">Por persona</span>
-                        </p:column>
-
-                        <p:rowExpansion>
-                            <div class="expansion-container">
-                                <div style="text-align:center; margin-bottom: 20px; color: var(--text-sub); font-size: 0.88rem;">
-                                    Tarifas disponibles para el tramo a <b style="color: var(--text-main);">#{vuelo.destino}</b>
-                                </div>
-
-                                <div class="tarifas-grid">
-                                    <ui:repeat value="#{itinerarioDetalleBean.getTarifasItinerario(vuelo.itinerario)}" var="tarifa">
-                                        <div class="card-latam">
-                                            <div class="tarifa-badge-indicator"
-                                                 style="background-color: #{tarifa.nombre.contains('Básica') || tarifa.nombre.contains('Light') ? 'var(--tarifa-light)' : (tarifa.nombre.contains('Flexible') || tarifa.nombre.contains('Standard') ? 'var(--tarifa-standard)' : 'var(--tarifa-full)')};">
-                                            </div>
-
-                                            <div class="tarifa-header">
-                                                <span class="tarifa-name">#{tarifa.nombre}</span>
-                                            </div>
-
-                                            <div class="beneficio-list">
-                                                <ui:repeat value="#{tarifa.caracteristicas}" var="carac">
-                                                    <div class="beneficio-item">
-                                                        <i class="#{carac.valorBool ? 'pi pi-check icon-yes' : 'pi pi-minus icon-no'}"></i>
-                                                        <span class="#{carac.valorBool ? 'text-yes' : 'text-no'}">
-                                                            <h:outputText value="#{carac.nombre}" />
-                                                            <h:panelGroup rendered="#{carac.tipoDato ne 'boolean'}">
-                                                                : <h:outputText value="#{carac.valor}#{carac.valorInt}" style="font-weight:600; color: var(--text-main);"/>
-                                                            </h:panelGroup>
-                                                        </span>
-                                                    </div>
-                                                </ui:repeat>
-                                            </div>
-
-                                            <div class="tarifa-bottom-section">
-                                                <span class="price-label">Precio Final</span>
-                                                <h:outputText value="#{tarifa.precio}" styleClass="price-value">
-                                                    <f:convertNumber type="currency" currencySymbol="CLP " maxFractionDigits="0" />
-                                                </h:outputText>
-
-                                                <p:commandButton value="Elegir"
-                                                                 action="#{itinerarioDetalleBean.selectVuelo(vuelo, tarifa)}"
-                                                                 update="vueloForm"
-                                                                 styleClass="btn-elegir" />
-                                            </div>
-                                        </div>
-                                    </ui:repeat>
-                                </div>
-                            </div>
-                        </p:rowExpansion>
-                    </p:dataTable>
-                </div>
-            </div>
-
-            <!-- SIDEBAR LIMPIO CON COLORES SOBRIOS -->
-            <p:sidebar widgetVar="sidebarParadas" position="right" id="sidebarParadas"
-                       width="540" showEffect="slideIn" hideEffect="slideOut"
-                       styleClass="sidebar-latam-style">
-
-                <div class="latam-header">
-                    <span class="latam-header-title">Itinerario de vuelo</span>
-                </div>
-
-                <p:scrollPanel style="width:100%; height:calc(100vh - 80px);" mode="native">
-                    <div class="latam-timeline">
-                        <ui:repeat value="#{itinerarioDetalleBean.paradasVuelo}" var="p" varStatus="st">
-
-                            <div class="latam-leg">
-                                <div class="node-point node-departure"></div>
-                                <div class="latam-flight-info">
-                                    <div>
-                                        <div class="latam-airport-title">Salida: <span style="color:var(--brand-blue)">#{p.aeropuertoSalida}</span></div>
-                                        <div class="latam-airport-name">Aeropuerto de Salida</div>
-                                    </div>
-                                    <div class="latam-time">
-                                        #{p.salida}
-                                    </div>
-                                </div>
-
-                                <div class="latam-meta-box">
-                                    <div class="latam-meta-row">
-                                        <span>Vuelo: <b>#{p.vuelo}</b></span>
-                                        <span>Duración: <b>#{p.duracion}</b></span>
-                                    </div>
-                                    <div class="latam-meta-row">
-                                        <span>Operado por: <b>#{p.aerolinea}</b></span>
-                                    </div>
-                                    <div class="latam-meta-row">
-                                        <span>Aeronave: <b>#{p.modeloAvion}</b></span>
-                                    </div>
-
-                                    <div class="latam-amenities">
-                                        <i class="pi pi-wifi" title="Wi-Fi a bordo"></i>
-                                        <i class="pi pi-desktop" title="Entretenimiento individual"></i>
-                                        <i class="pi pi-bolt" title="Toma corriente"></i>
-                                        <i class="pi pi-shopping-bag" title="Servicio de snack/comida"></i>
-                                    </div>
-                                </div>
-
-                                <div class="node-point node-arrival"></div>
-                                <div class="latam-flight-info">
-                                    <div>
-                                        <div class="latam-airport-title">Llegada: <span style="color:var(--brand-blue)">#{p.aeropuertoLlegada}</span></div>
-                                        <div class="latam-airport-name">Aeropuerto de Llegada</div>
-                                    </div>
-                                    <div class="latam-time">
-                                        #{p.llegada}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <h:panelGroup rendered="#{!st.last}">
-                                <div class="latam-connection-badge">
-                                    <i class="pi pi-sync"></i>
-                                    <div>
-                                        <b>Cambio de avión / Escala en #{p.aeropuertoLlegada}</b>
-                                        <div style="font-size: 0.78rem; color: var(--text-sub);">Tiempo de espera: #{p.tiempoEspera}</div>
-                                    </div>
+                                    <p:commandLink action="#{itinerarioDetalleBean.showMapa(vuelo.itinerario)}"
+                                                   update="@none"
+                                                   process="@this"
+                                                   oncomplete="PF('sidebarMapa').show();"
+                                                   styleClass="action-link-icon"
+                                                   title="Ver mapa de ruta interactivo">
+                                        <i class="pi pi-map"/>
+                                    </p:commandLink>
                                 </div>
                             </h:panelGroup>
+
+                            <h:outputText value="Directo"
+                                          rendered="#{vuelo.cantParadas eq 'sin paradas'}"
+                                          styleClass="badge bg-success bg-opacity-10 text-success border border-success mt-1" style="font-size:0.75rem;" />
+                        </div>
+                    </p:column>
+
+                    <!-- LLEGADA CON TIMESTAMP -->
+                    <p:column headerText="Llegada" style="width: 23%;">
+                        <div class="d-flex align-items-baseline">
+                            <h:outputText value="#{vuelo.horaLlegada24h}" styleClass="flight-time" />
+                            <h:outputText value="#{vuelo.destino}" styleClass="flight-iata" />
+                        </div>
+                        <h:outputText value="#{vuelo.ciudadLlegada}" styleClass="flight-city" />
+                    </p:column>
+
+                    <!-- PRECIO BASE -->
+                    <p:column headerText="Desde" styleClass="text-right" style="width: 18%;">
+                        <h:outputText value="#{vuelo.precio}" styleClass="price-display">
+                            <f:convertNumber type="currency" currencySymbol="CLP " maxFractionDigits="0" />
+                        </h:outputText>
+                        <span style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-top:2px;">Por pasajero</span>
+                    </p:column>
+
+                    <!-- EXPANSION ROW: TARIFAS DESPLEGABLES -->
+                    <p:rowExpansion>
+                        <div class="expansion-container">
+                            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary">
+                                <span class="text-white font-weight-bold" style="font-size: 0.95rem;">
+                                    <i class="pi pi-tag me-2 text-primary"></i>Tarifas disponibles para el tramo #{vuelo.origen} → #{vuelo.destino}
+                                </span>
+                            </div>
+
+                            <div class="tarifas-grid">
+                                <ui:repeat value="#{itinerarioDetalleBean.getTarifasItinerario(vuelo.itinerario)}" var="tarifa">
+                                    <div class="card-latam">
+                                        <div class="tarifa-badge-indicator"
+                                             style="background-color: #{tarifa.nombre.contains('Básica') || tarifa.nombre.contains('Light') ? 'var(--tarifa-light)' : (tarifa.nombre.contains('Flexible') || tarifa.nombre.contains('Standard') ? 'var(--tarifa-standard)' : 'var(--tarifa-full)')};">
+                                        </div>
+
+                                        <div class="tarifa-header">
+                                            <span class="tarifa-name">#{tarifa.nombre}</span>
+                                        </div>
+
+                                        <div class="beneficio-list">
+                                            <ui:repeat value="#{tarifa.caracteristicas}" var="carac">
+                                                <div class="beneficio-item">
+                                                    <!-- Renderiza ícono verde si es texto o si su valor booleano es verdadero -->
+                                                    <i class="#{(carac.tipoDato ne 'boolean' or carac.valorBool) ? 'pi pi-check-circle icon-yes' : 'pi pi-minus-circle icon-no'}"></i>
+
+                                                    <span class="#{(carac.tipoDato ne 'boolean' or carac.valorBool) ? 'text-yes' : 'text-no'}">
+                                                        <h:outputText value="#{carac.nombre}" />
+                                                        <h:panelGroup rendered="#{carac.tipoDato ne 'boolean'}">
+                                                            : <b><h:outputText value="#{carac.valor}"/></b>
+                                                        </h:panelGroup>
+                                                    </span>
+                                                </div>
+                                            </ui:repeat>
+                                        </div>
+
+                                        <div class="tarifa-bottom-section">
+                                            <span class="price-label" style="font-size:0.75rem; color: var(--text-muted); display:block;">Precio Final</span>
+                                            <h:outputText value="#{tarifa.precio}" styleClass="price-value" style="font-size:1.35rem; font-weight:700; color:#FFF; display:block; margin-bottom:10px;">
+                                                <f:convertNumber type="currency" currencySymbol="CLP " maxFractionDigits="0" />
+                                            </h:outputText>
+
+                                            <p:commandButton value="Elegir"
+                                                             action="#{itinerarioDetalleBean.selectVuelo(vuelo, tarifa)}"
+                                                             update="vueloForm"
+                                                             styleClass="btn-elegir" />
+                                        </div>
+                                    </div>
+                                </ui:repeat>
+                            </div>
+                        </div>
+                    </p:rowExpansion>
+                </p:dataTable>
+            </div>
+
+            <!-- SIDEBAR: TIMELINE LATAM SOBRIO Y DIRECCIONADO -->
+            <p:sidebar widgetVar="sidebarParadas" position="right" id="sidebarParadas"
+                       width="520" showEffect="slideIn" hideEffect="slideOut"
+                       styleClass="sidebar-latam-style">
+
+                <div class="latam-sidebar-header">
+                    <h5 class="latam-sidebar-title">
+                        <i class="pi pi-clock text-primary"></i> Itinerario de vuelo
+                    </h5>
+                </div>
+
+                <p:scrollPanel style="width:100%; height:calc(100vh - 75px);" mode="native">
+                    <div class="latam-timeline-wrapper">
+                        <ui:repeat value="#{itinerarioDetalleBean.paradasVuelo}" var="p" varStatus="st">
+
+                            <!-- ITEM DE SALIDA / TRAMO -->
+                            <div class="latam-timeline-item">
+                                <div class="latam-timeline-axis">
+                                    <div class="latam-node-origin"></div>
+                                    <div class="latam-axis-line"></div>
+                                </div>
+                                <div class="latam-timeline-content">
+                                    <div class="latam-point-row">
+                                        <div>
+                                            <span class="latam-point-iata">#{p.aeropuertoSalida}</span>
+                                            <span class="latam-point-time">#{p.salida}</span>
+                                        </div>
+                                    </div>
+                                    <div class="latam-point-airport">#{p.ciudadSalida}</div>
+
+                                    <!-- CAJA DE INFORMACIÓN DEL VUELO -->
+                                    <div class="latam-flight-info-box">
+                                        <span class="latam-flight-number">
+                                            <i class="pi pi-send me-1"></i>#{p.vuelo} · #{p.aerolinea}
+                                        </span>
+                                        <div class="latam-meta-row">Duración del tramo: <b>#{p.duracion}</b></div>
+                                        <div class="latam-meta-row">Aeronave: <b>#{p.modeloAvion}</b></div>
+
+                                        <div class="latam-amenities">
+                                            <span title="Wi-Fi de alta velocidad"><i class="pi pi-wifi me-1"></i>Wi-Fi</span>
+                                            <span title="Entretenimiento"><i class="pi pi-desktop me-1"></i>Pantalla</span>
+                                            <span title="Enchufe universal"><i class="pi pi-bolt me-1"></i>Energía</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ITEM DE LLEGADA DEL TRAMO -->
+                            <div class="latam-timeline-item">
+                                <div class="latam-timeline-axis">
+                                    <i class="pi pi-map-marker latam-node-destination"></i>
+                                    <h:panelGroup rendered="#{!st.last}">
+                                        <div class="latam-axis-line"></div>
+                                    </h:panelGroup>
+                                </div>
+                                <div class="latam-timeline-content">
+                                    <div class="latam-point-row">
+                                        <div>
+                                            <span class="latam-point-iata" style="color: var(--status-ontime-text);">#{p.aeropuertoLlegada}</span>
+                                            <span class="latam-point-time" style="color: var(--status-ontime-text);">#{p.llegada}</span>
+                                        </div>
+                                    </div>
+                                    <div class="latam-point-airport">#{p.ciudadLlegada}</div>
+
+                                    <!-- ESCALA / CAMBIO DE AVIÓN -->
+                                    <h:panelGroup rendered="#{!st.last}">
+                                        <div class="latam-layover-pill">
+                                            <i class="pi pi-sync text-warning"></i>
+                                            <span>Cambio de avión en <b>#{p.aeropuertoLlegada}</b> (Espera: <b>#{p.tiempoEspera}</b>)</span>
+                                        </div>
+                                    </h:panelGroup>
+                                </div>
+                            </div>
 
                         </ui:repeat>
                     </div>
                 </p:scrollPanel>
             </p:sidebar>
 
+            <!-- SIDEBAR: MAPA CON OVERLAY DE DATOS DE RUTA -->
             <p:sidebar widgetVar="sidebarMapa" position="right" id="sidebarMapa"
-                       width="520" showEffect="slideIn" hideEffect="slideOut"
+                       width="580" showEffect="slideIn" hideEffect="slideOut"
                        styleClass="sidebar-latam-style">
-                <div class="latam-header">
-                    <span class="latam-header-title">Ruta Geográfica</span>
+                <div class="latam-sidebar-header">
+                    <h5 class="latam-sidebar-title">
+                        <i class="pi pi-map text-primary"></i> Trayecto Geográfico de Ruta
+                    </h5>
                 </div>
-                <div id="mapaRuta" style="width:100%; height:calc(100vh - 100px); border-radius:8px;"></div>
+                <div style="position: relative; width:100%; height:calc(100vh - 75px);">
+                    <div id="mapaRuta" style="width:100%; height:100%; background:#0F172A;"></div>
+
+                    <!-- PANEL FLOTANTE ENRIQUECIDO DE INFORMACIÓN DE RUTA -->
+                    <div class="map-info-overlay">
+                        <div class="map-info-item">
+                            <span class="map-info-label">Puntos de Conexión</span>
+                            <span class="map-info-val" id="mapPuntosCount">--</span>
+                        </div>
+                        <div class="map-info-item">
+                            <span class="map-info-label">Distancia Estimada</span>
+                            <span class="map-info-val" id="mapDistanciaTotal">-- km</span>
+                        </div>
+                        <div class="map-info-item">
+                            <span class="map-info-label">Estado de Ruta</span>
+                            <span class="map-info-val" style="color: var(--status-ontime-text);"><i class="pi pi-check-circle me-1"></i>Monitoreada</span>
+                        </div>
+                    </div>
+                </div>
             </p:sidebar>
 
         </h:form>
 
         <script type="text/javascript">
             var mapaRutaVuelo = null;
+
+            function calcularDistanciaKm(lat1, lon1, lat2, lon2) {
+                var R = 6371; // Radio de la Tierra en km
+                var dLat = (lat2 - lat1) * Math.PI / 180;
+                var dLon = (lon2 - lon1) * Math.PI / 180;
+                var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                    Math.sin(dLon/2) * Math.sin(dLon/2);
+                var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                return Math.round(R * c);
+            }
 
             function renderRutaVuelo(puntos) {
                 if (mapaRutaVuelo) {
@@ -595,39 +733,47 @@
 
                 mapaRutaVuelo = L.map('mapaRuta', { zoomControl: true, attributionControl: false });
 
-             
-
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '© OpenStreetMap contributors',
                     maxZoom: 19
                 }).addTo(mapaRutaVuelo);
 
                 var latlngs = [];
+                var distanciaTotal = 0;
+
                 var iconos = {
-                    ORIGEN:  L.divIcon({ className: 'marker-origen',  html: '<i class="pi pi-circle-fill" style="color:#3b82f6; font-size: 1rem;"></i>' }),
-                    ESCALA:  L.divIcon({ className: 'marker-escala',  html: '<i class="pi pi-map-marker" style="color:#64748b; font-size: 1rem;"></i>' }),
-                    DESTINO: L.divIcon({ className: 'marker-destino', html: '<i class="pi pi-flag-fill" style="color:#f8fafc; font-size: 1rem;"></i>' })
+                    ORIGEN:  L.divIcon({ className: 'marker-origen',  html: '<i class="pi pi-circle-fill" style="color:#3B82F6; font-size: 1.1rem;"></i>' }),
+                    ESCALA:  L.divIcon({ className: 'marker-escala',  html: '<i class="pi pi-map-marker" style="color:#FBBF24; font-size: 1.2rem;"></i>' }),
+                    DESTINO: L.divIcon({ className: 'marker-destino', html: '<i class="pi pi-flag-fill" style="color:#34D399; font-size: 1.2rem;"></i>' })
                 };
 
-                puntos.forEach(function (p) {
+                puntos.forEach(function (p, index) {
                     var ll = [p.lat, p.lng];
                     latlngs.push(ll);
-                    L.marker(ll, { icon: iconos[p.tipo] })
+
+                    if (index > 0) {
+                        distanciaTotal += calcularDistanciaKm(puntos[index-1].lat, puntos[index-1].lng, p.lat, p.lng);
+                    }
+
+                    L.marker(ll, { icon: iconos[p.tipo] || iconos.ORIGEN })
                         .addTo(mapaRutaVuelo)
-                        .bindPopup('<b style="color:#0f172a;">' + p.codigoIata + '</b> - ' + p.nombreAeropuerto);
+                        .bindPopup('<div style="color:#0F172A; font-family:sans-serif;"><b>' + p.codigoIata + '</b><br/><span style="font-size:12px; color:#475569;">' + p.nombreAeropuerto + '</span></div>');
                 });
 
-                L.polyline(latlngs, { color: '#3b82f6', weight: 2, dashArray: '5, 5', opacity: 0.8 }).addTo(mapaRutaVuelo);
+                L.polyline(latlngs, { color: '#60A5FA', weight: 2.5, dashArray: '6, 6', opacity: 0.85 }).addTo(mapaRutaVuelo);
+
+                // Actualizar overlay de información de ruta
+                document.getElementById('mapPuntosCount').innerText = puntos.length + ' Nodos';
+                document.getElementById('mapDistanciaTotal').innerText = distanciaTotal.toLocaleString('es-CL') + ' km';
 
                 setTimeout(function () {
                     mapaRutaVuelo.invalidateSize();
-                    mapaRutaVuelo.fitBounds(L.latLngBounds(latlngs), { padding: [30, 30] });
+                    mapaRutaVuelo.fitBounds(L.latLngBounds(latlngs), { padding: [50, 50] });
                 }, 350);
             }
 
             function rowExpansion(dataTable) {
                 var $this = dataTable;
-                $this.tbody.children('tr').css('cursor', 'pointer')
+                $this.tbody.children('tr').css('cursor', 'pointer');
                 $this.tbody.off('click.datatable-expansion', '> tr')
                     .on('click.datatable-expansion', '> tr', null, function() {
                         if (typeof $this.collapseAllRows === 'function') {

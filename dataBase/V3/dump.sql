@@ -164,7 +164,17 @@ CREATE SEQUENCE IF NOT EXISTS cancelacion_seq START WITH 1;
 CREATE SEQUENCE IF NOT EXISTS log_auditoria_seq START WITH 1;
 CREATE SEQUENCE IF NOT EXISTS cancelacion_asiento_seq START WITH 1;
 
+DROP TABLE IF EXISTS Checkin_Pasajero CASCADE;
+DROP TABLE IF EXISTS Checkin CASCADE;
 
+DROP SEQUENCE IF EXISTS checkin_pasajero_seq;
+DROP SEQUENCE IF EXISTS checkin_seq;
+
+-- ============================================================================
+-- 2. CREACIÓN DE SECUENCIAS
+-- ============================================================================
+CREATE SEQUENCE checkin_seq START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE checkin_pasajero_seq START WITH 1 INCREMENT BY 1;
 
 
 
@@ -371,7 +381,7 @@ CREATE TABLE Configuracion_Cabina (
                                       ID_CONFIGURACION INT PRIMARY KEY DEFAULT nextval('configuracion_cabina_seq'),
                                       ID_MODELO INT REFERENCES Modelo_Avion(ID_MODELO) ON DELETE CASCADE,
                                       ID_CLASE INT REFERENCES Clase_asiento(ID_CLASE) ON DELETE CASCADE,
-                                      Fila_Inicio INT NOT NULL,                     -- Ej: Fila 1
+                                      Fila_Inicio INT NOT NULL,                     -- Ecantidadj: Fila 1
                                       Fila_Fin INT NOT NULL,                        -- Ej: Fila 5
                                       Distribucion_Columnas VARCHAR(20) NOT NULL,   -- Ej: "2-2" (Ejecutiva), "3-3" (Pasillo único), "3-3-3" (Doble pasillo)
                                       Letras_Columnas VARCHAR(30) NOT NULL,         -- Ej: "A,B,C,D,E,F" o "A,B,C,D,E,F,G,H,J"
@@ -655,18 +665,6 @@ CREATE TABLE Equipaje (
 
 
 
-DROP TABLE IF EXISTS Checkin_Pasajero CASCADE;
-DROP TABLE IF EXISTS Checkin CASCADE;
-
-DROP SEQUENCE IF EXISTS checkin_pasajero_seq;
-DROP SEQUENCE IF EXISTS checkin_seq;
-
--- ============================================================================
--- 2. CREACIÓN DE SECUENCIAS
--- ============================================================================
-CREATE SEQUENCE checkin_seq START WITH 1 INCREMENT BY 1;
-CREATE SEQUENCE checkin_pasajero_seq START WITH 1 INCREMENT BY 1;
-
 -- CHECK-IN
 CREATE TABLE Checkin (
                          ID_CHECKIN INT PRIMARY KEY DEFAULT nextval('checkin_seq'),
@@ -751,6 +749,7 @@ FOREIGN KEY (ID_VUELO) REFERENCES Vuelo(ID_VUELO) ON DELETE CASCADE;
 ALTER TABLE Reserva_Asiento
 ADD CONSTRAINT reserva_asiento_id_vuelo_fkey
 FOREIGN KEY (ID_VUELO) REFERENCES Vuelo(ID_VUELO) ON DELETE CASCADE;*/
+
 
 
 DO $$
@@ -1425,7 +1424,6 @@ CREATE TRIGGER tr_notify_new_notificacion
     FOR EACH ROW
 EXECUTE FUNCTION fn_notify_new_notification();
 
-
 CREATE OR REPLACE FUNCTION fnBuscarVuelo(
     p_codigo_origen VARCHAR,
     p_codigo_destino VARCHAR,
@@ -1818,26 +1816,31 @@ $$ LANGUAGE plpgsql STABLE;
 
 
 
--- 3. TICKETS / BOARDING PASS UNIFICADO (SIN DUPLICADOS)
-CREATE OR REPLACE FUNCTION fn_getTicket(
-    p_rut_pasajero VARCHAR,
-    p_id_reserva INT,
-    p_idItinerario INT
+CREATE OR REPLACE FUNCTION fn_getticket(
+    p_rut_pasajero CHARACTER VARYING,
+    p_id_reserva INTEGER,
+    p_iditinerario INTEGER
 )
-    RETURNS TABLE (
-                      numero_vuelo VARCHAR,
-                      hora_salida TIMESTAMP,
-                      hora_llegada TIMESTAMP,
-                      codigo_puerta VARCHAR,
-                      terminal VARCHAR,
-                      numero_asiento VARCHAR,
-                      clase_asiento VARCHAR,
-                      nombre TEXT
-                  )
-AS $$
+    RETURNS TABLE(
+                     codigo_pnr CHARACTER VARYING,
+                     numero_vuelo CHARACTER VARYING,
+                     hora_salida TIMESTAMP WITHOUT TIME ZONE,
+                     hora_llegada TIMESTAMP WITHOUT TIME ZONE,
+                     codigo_puerta CHARACTER VARYING,
+                     terminal CHARACTER VARYING,
+                     numero_asiento CHARACTER VARYING,
+                     clase_asiento CHARACTER VARYING,
+                     nombre TEXT,
+                     codigo_qr TEXT
+                 )
+    STABLE
+    LANGUAGE plpgsql
+AS
+$$
 BEGIN
     RETURN QUERY
         SELECT DISTINCT ON (rsva.id_asiento, vl.id_vuelo)
+            rsv.codigo_reserva AS codigo_pnr,
             vl.numero_vuelo,
             sgm.hora_salida,
             sgm.hora_llegada,
@@ -1845,7 +1848,8 @@ BEGIN
             COALESCE(prta.terminal, 'TBD') AS terminal,
             ast.numero_asiento,
             clas.descripcion AS clase_asiento,
-            us.nombre || ' ' || us.apellido AS nombre
+            us.nombre || ' ' || us.apellido AS nombre,
+            'SKYWAY-' || rsv.codigo_reserva || '-' || vl.numero_vuelo || '-' || ast.numero_asiento || '-' || p.rut AS codigo_qr
         FROM reserva_asiento rsva
                  JOIN reserva rsv ON rsv.id_reserva = rsva.id_reserva
                  JOIN itinerario_vuelo itv ON itv.id_vuelo = rsva.id_vuelo
@@ -1862,8 +1866,7 @@ BEGIN
           AND itv.id_itinerario = p_idItinerario
         ORDER BY rsva.id_asiento, vl.id_vuelo, sgm.hora_salida ASC;
 END;
-$$ LANGUAGE plpgsql STABLE;
-
+$$;
 
 
 CREATE OR REPLACE FUNCTION fn_getVueloInfo(p_idVuelo integer)
@@ -2266,7 +2269,6 @@ BEGIN
 
 END;
 $sp_cancelar$;
-
 
 -- =========================================================================
 -- 1. MAESTRO DE CONTINENTES
@@ -3077,17 +3079,20 @@ INSERT INTO Modelo_Avion (Nombre, ID_FABRICANTE) VALUES
 -- 4. CONFIGURACIÓN ESPACIAL DE CABINAS POR MODELO (REALISTA)
 -- =============================================================================
 
--- -----------------------------------------------------------------------------
--- AIRBUS A320 (Fusilaje Estrecho | Total: 180 asientos -> 12 Ejecutiva + 168 Económica)
--- -----------------------------------------------------------------------------
-INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
-                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'), 1, 3, '2-2', 'A,C,D,F', FALSE),
-                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 4, 11, '3-3', 'A,B,C,D,E,F', FALSE),
-                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 12, 13, '3-3', 'A,B,C,D,E,F', TRUE),
-                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 14, 31, '3-3', 'A,B,C,D,E,F', FALSE);
+
 
 -- -----------------------------------------------------------------------------
--- BOEING 747-400 (Fusilaje Ancho | Total: 380 asientos -> 12 Primera + 56 Ejecutiva + 312 Económica)
+-- AIRBUS A320 (Total: 146 asientos -> 8 Primera + 12 Ejecutiva + 126 Económica)
+-- -----------------------------------------------------------------------------
+INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Primera Clase'), 1, 2, '2-2', 'A,C,D,F', FALSE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'),     3, 5, '2-2', 'A,C,D,F', FALSE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     6, 11, '3-3', 'A,B,C,D,E,F', FALSE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     12, 13, '3-3', 'A,B,C,D,E,F', TRUE),
+                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     14, 26, '3-3', 'A,B,C,D,E,F', FALSE);
+
+-- -----------------------------------------------------------------------------
+-- BOEING 747-400 (Total: 380 asientos -> 12 Primera + 56 Ejecutiva + 312 Económica)
 -- -----------------------------------------------------------------------------
 INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
                                                                                                                                                 ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 747'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Primera Clase'), 1, 3, '1-2-1', 'A,D,G,K', FALSE),
@@ -3096,16 +3101,21 @@ INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Di
                                                                                                                                                 ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 747'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     14, 43, '3-4-3', 'A,B,C,D,E,F,G,H,J,K', FALSE);
 
 -- -----------------------------------------------------------------------------
--- AIRBUS A350-900 (Fusilaje Ancho | Total: 310 asientos -> 16 Primera + 48 Ejecutiva + 246 Económica)
+-- AIRBUS A350-900 (Total: 310 asientos -> 16 Primera + 48 Ejecutiva + 246 Económica)
 -- -----------------------------------------------------------------------------
-INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
-                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Primera Clase'), 1, 4, '1-2-1', 'A,D,G,K', FALSE),
-                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'),     5, 12, '2-2-2', 'A,C,D,G,H,K', FALSE),
-                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     14, 14, '3-3-3', 'A,B,C,D,E,F,J,K,L', TRUE),
-                                                                                                                                                ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     15, 40, '3-3-3', 'A,B,C,D,E,F,J,K,L', FALSE);
 
+INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
+-- Primera Clase (1-2-1): Pasillos entre A - D y G - K
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Primera Clase'), 1, 4, '1-2-1', 'A,D,G,K', FALSE),
+
+-- Ejecutiva (2-2-2): Pasillos entre C - D y G - H
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'),     5, 12, '2-2-2', 'A,C,D,G,H,K', FALSE),
+
+-- Económica (3-3-3): Pasillos entre C - D y F - J
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     14, 14, '3-3-3', 'A,B,C,D,E,F,J,K,L', TRUE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     15, 40, '3-3-3', 'A,B,C,D,E,F,J,K,L', FALSE);
 -- -----------------------------------------------------------------------------
--- BOEING 787-9 (Fusilaje Ancho | Total: 220 asientos -> 12 Primera + 36 Ejecutiva + 172 Económica)
+-- BOEING 787-9 (Total: 219 asientos -> 12 Primera + 36 Ejecutiva + 171 Económica)
 -- -----------------------------------------------------------------------------
 INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
                                                                                                                                                 ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 787'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Primera Clase'), 1, 3, '1-2-1', 'A,D,G,K', FALSE),
@@ -3114,7 +3124,7 @@ INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Di
                                                                                                                                                 ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 787'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     11, 28, '3-3-3', 'A,B,C,D,E,F,J,K,L', FALSE);
 
 -- -----------------------------------------------------------------------------
--- EMBRAER E195 (Regional | Total: 120 asientos -> 12 Ejecutiva + 108 Económica)
+-- EMBRAER E195 (Total: 120 asientos -> 12 Ejecutiva + 108 Económica)
 -- -----------------------------------------------------------------------------
 INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
                                                                                                                                                 ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Embraer E195'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'), 1, 4, '1-2', 'A,C,D', FALSE),
@@ -3123,7 +3133,7 @@ INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Di
                                                                                                                                                 ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Embraer E195'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 14, 30, '2-2', 'A,B,C,D', FALSE);
 
 -- -----------------------------------------------------------------------------
--- BOEING 777-300ER (Fusilaje Ancho Grande | Total: 450 asientos -> 16 Primera + 70 Ejecutiva + 364 Económica)
+-- BOEING 777-300ER (Total: 450 asientos -> 16 Primera + 70 Ejecutiva + 364 Económica)
 -- -----------------------------------------------------------------------------
 INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
                                                                                                                                                 ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 777'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Primera Clase'), 1, 4, '1-2-1', 'A,D,G,K', FALSE),
@@ -3132,7 +3142,7 @@ INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Di
                                                                                                                                                 ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 777'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     16, 50, '3-4-3', 'A,B,C,D,E,F,G,H,J,K', FALSE);
 
 -- -----------------------------------------------------------------------------
--- AIRBUS A380-800 (Superjumbo | Total: 650 asientos -> 20 Primera + 96 Ejecutiva + 534 Económica)
+-- AIRBUS A380-800 (Total: 650 asientos -> 20 Primera + 96 Ejecutiva + 534 Económica)
 -- -----------------------------------------------------------------------------
 INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
                                                                                                                                                 ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A380'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Primera Clase'), 1, 5, '1-2-1', 'A,E,F,K', FALSE),
@@ -3141,7 +3151,7 @@ INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Di
                                                                                                                                                 ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A380'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     23, 74, '3-4-3', 'A,B,C,D,E,F,G,H,J,K', FALSE);
 
 -- -----------------------------------------------------------------------------
--- AIRBUS A330-300 (Fusilaje Ancho Medio | Total: 250 asientos -> 8 Primera + 36 Ejecutiva + 206 Económica)
+-- AIRBUS A330-300 (Total: 250 asientos -> 8 Primera + 36 Ejecutiva + 206 Económica)
 -- -----------------------------------------------------------------------------
 INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
                                                                                                                                                 ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A330'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Primera Clase'), 1, 2, '1-2-1', 'A,D,G,K', FALSE),
@@ -3150,22 +3160,24 @@ INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Di
                                                                                                                                                 ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A330'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     10, 34, '2-4-2', 'A,C,D,E,F,G,H,K', FALSE);
 
 -- -----------------------------------------------------------------------------
--- BOEING 757-200 (Fusilaje Estrecho Largo | Total: 190 asientos -> 16 Ejecutiva + 174 Económica)
+-- BOEING 757-200 (Total: 190 asientos -> 16 Ejecutiva + 174 Económica)
 -- -----------------------------------------------------------------------------
 INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
                                                                                                                                                 ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 757'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'), 1, 4, '2-2', 'A,C,D,F', FALSE),
                                                                                                                                                 ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 757'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 5, 14, '3-3', 'A,B,C,D,E,F', FALSE),
                                                                                                                                                 ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 757'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 15, 16, '3-3', 'A,B,C,D,E,F', TRUE),
                                                                                                                                                 ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 757'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 17, 33, '3-3', 'A,B,C,D,E,F', FALSE);
-
 -- =============================================================================
 -- 5. UNIDADES FÍSICAS DE AVIONES
 -- =============================================================================
+-- =============================================================================
+-- 5. UNIDADES FÍSICAS DE AVIONES (CAPACIDADES TOTALES CORREGIDAS)
+-- =============================================================================
 INSERT INTO Avion (Numero_de_Registro, ID_MODELO, Ano_de_Fabricacion, Capacidad_de_Pasajeros, Capacidad_de_Carga, Estado_de_Mantenimiento, Fecha_Proximo_Mantenimiento) VALUES
-                                                                                                                                                                            ('DEF456', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'),  2018, 180, 15000, 'En mantenimiento', NULL),
+                                                                                                                                                                            ('DEF456', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'),  2018, 146, 15000, 'En mantenimiento', NULL), -- Corregido a 146
                                                                                                                                                                             ('GHI789', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 747'),   2005, 380, 45000, 'Operativo', NULL),
                                                                                                                                                                             ('JKL012', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'),  2019, 310, 40000, 'Operativo', NULL),
-                                                                                                                                                                            ('MNO345', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 787'),   2020, 220, 35000, 'En servicio', NULL),
+                                                                                                                                                                            ('MNO345', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 787'),   2020, 219, 35000, 'En servicio', NULL),     -- Corregido a 219
                                                                                                                                                                             ('PQR678', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Embraer E195'), 2016, 120, 12000, 'Operativo', NULL),
                                                                                                                                                                             ('XYZ123', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 777'),   2014, 450, 50000, 'En servicio', NULL),
                                                                                                                                                                             ('LMN987', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A380'),  2018, 650, 75000, 'Operativo', NULL),
@@ -3173,16 +3185,16 @@ INSERT INTO Avion (Numero_de_Registro, ID_MODELO, Ano_de_Fabricacion, Capacidad_
                                                                                                                                                                             ('WXY543', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 757'),   2003, 190, 22000, 'Operativo', NULL);
 
 -- =============================================================================
--- 6. CAPACIDAD OPERATIVA POR CLASE
+-- 6. CAPACIDAD OPERATIVA POR CLASE (UNIFICADO Y REVISADO)
 -- =============================================================================
 INSERT INTO Capacidad_Clase (ID_AVION, ID_CLASE, Cantidad)
 SELECT avion.ID_AVION, clase.ID_CLASE, capacidad
 FROM (
          VALUES
-             ('DEF456', 'Ejecutiva', 12),     ('DEF456', 'Económica', 168),
+             ('DEF456', 'Primera Clase', 8),  ('DEF456', 'Ejecutiva', 12),  ('DEF456', 'Económica', 126),
              ('GHI789', 'Primera Clase', 12), ('GHI789', 'Ejecutiva', 56),  ('GHI789', 'Económica', 312),
              ('JKL012', 'Primera Clase', 16), ('JKL012', 'Ejecutiva', 48),  ('JKL012', 'Económica', 246),
-             ('MNO345', 'Primera Clase', 12), ('MNO345', 'Ejecutiva', 36),  ('MNO345', 'Económica', 172),
+             ('MNO345', 'Primera Clase', 12), ('MNO345', 'Ejecutiva', 36),  ('MNO345', 'Económica', 171), -- Corregido a 171
              ('PQR678', 'Ejecutiva', 12),     ('PQR678', 'Económica', 108),
              ('XYZ123', 'Primera Clase', 16), ('XYZ123', 'Ejecutiva', 70),  ('XYZ123', 'Económica', 364),
              ('LMN987', 'Primera Clase', 20), ('LMN987', 'Ejecutiva', 96),  ('LMN987', 'Económica', 534),
@@ -3191,7 +3203,6 @@ FROM (
      ) AS datos(numero_registro, descripcion_clase, capacidad)
          JOIN Avion avion ON avion.Numero_de_Registro = datos.numero_registro
          JOIN Clase_asiento clase ON clase.Descripcion = datos.descripcion_clase;
-
 
 -- Insertar datos en la tabla Estado_Vuelo
 INSERT INTO Estado_Vuelo (Descripcion, Estado) VALUES
@@ -3216,9 +3227,7 @@ INSERT INTO Estado_reserva (Descripcion) VALUES
 -- Insertar los tipos de método de pago
 -- Insertar métodos de pago
 INSERT INTO Metodo_Pago (Descripcion) VALUES
-                                          ('Tarjeta Visa'),
-                                          ('MasterCard'),
-                                          ('Transferencia'),
+                                          ('Webpay'),
                                           ('PayPal');
 
 
@@ -3248,7 +3257,7 @@ VALUES
 -- El 'id_rol' para 'admin' es 1.
 -- Posteriormente, se asigna el rol 'admin' al usuario en la tabla RolUsuario.
 INSERT INTO Usuario (RUT, Nombre, Apellido, Correo_Electronico, Telefono, Documento_Identidad, Fecha_Nacimiento, Contrasena, Fecha_Registro)
-VALUES ('123456789-0', 'Juan', 'Pérez', 'juan.perez@correo.com', '123456789', '987654321', '1985-05-15', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW());
+VALUES ('123456789-0', 'Juan', 'Pérez', 'admin@skyway.com', '123456789', '987654321', '1985-05-15', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW());
 
 -- Asignar el rol 'admin' al usuario en la tabla RolUsuario
 -- ===========================================================
@@ -3360,38 +3369,42 @@ VALUES
     ('12345678-9', 'Chilena');
 
 
-INSERT INTO Tarifa (Nombre) VALUES
-                                ('Básica'),
-                                ('Flexible'),
-                                ('Premium');
+-- 1. Limpieza de Tablas Intermedias
+TRUNCATE TABLE Tarifa_Caracteristica CASCADE;
+TRUNCATE TABLE Caracteristica_Tarifa CASCADE;
+TRUNCATE TABLE Tarifa CASCADE;
 
--- Características
-INSERT INTO Caracteristica_Tarifa (Nombre, Descripcion, Tipo_Dato) VALUES
-                                                                       ('Permite Cambios Asiento', 'Permite cambiar los asiento luego de la compra', 'boolean'),
-                                                                       ('Horas Minimas Cambio Asiento', 'Horas mínimas antes del vuelo para cambiar', 'int'),
-                                                                       ('Permite Cancelacion', 'Permite cancelar la reserva', 'boolean');
+-- 2. Tarifas
+INSERT INTO Tarifa (ID_TARIFA, Nombre) VALUES
+                                           (1, 'Básica'),
+                                           (2, 'Flexible'),
+                                           (3, 'Premium');
 
--- Tarifa Básica
-INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool) VALUES
-                                                                                 (1, 1, FALSE),
-                                                                                 (1, 3, TRUE);
+-- 3. Características (Redacción profesional y accesible)
+INSERT INTO Caracteristica_Tarifa (ID_CARACTERISTICA, Nombre, Descripcion, Tipo_Dato) VALUES
+                                                                                          (1, 'Permite cambio de asiento', 'Permite cambiar los asientos luego de la compra', 'boolean'),
+                                                                                          (2, 'Plazo límite para cambio de asiento', 'Horas previas al vuelo para realizar cambios de asiento', 'text'),
+                                                                                          (3, 'Permite cancelación de reserva', 'Permite cancelar la reserva', 'boolean');
 
--- Tarifa Flexible
-INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool) VALUES
-                                                                                 (2, 1, TRUE),
-                                                                                 (2, 3, TRUE);
-INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Int) VALUES
-    (2, 2, 48);
+-- 4. Tarifa Básica (Sin cambio de asiento, sí cancelación)
+INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool, Valor) VALUES
+                                                                                        (1, 1, FALSE, NULL),
+                                                                                        (1, 3, TRUE, NULL);
 
--- Tarifa Premium
-INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool) VALUES
-                                                                                 (3, 1, TRUE),
-                                                                                 (3, 3, TRUE);
-INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Int) VALUES
-    (3, 2, 24);
+-- 5. Tarifa Flexible (Permite cambio hasta 48h antes)
+INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool, Valor) VALUES
+                                                                                        (2, 1, TRUE, NULL),
+                                                                                        (2, 2, TRUE, 'hasta 48h antes del vuelo'),
+                                                                                        (2, 3, TRUE, NULL);
 
--- Insertar vuelos
-TRUNCATE TABLE Asignacion_Puerta, Segmento_Vuelo, Precio_Asiento, Vuelo CASCADE;
+-- 6. Tarifa Premium (Permite cambio hasta 24h antes)
+INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool, Valor) VALUES
+                                                                                        (3, 1, TRUE, NULL),
+                                                                                        (3, 2, TRUE, 'hasta 24h antes del vuelo'),
+                                                                                        (3, 3, TRUE, NULL);
+
+
+
 
 -- Insertar vuelos con los RUTs de los pilotos correctos y estados de vuelo
 -- =========================================================================
@@ -3713,7 +3726,8 @@ SELECT
     c1.nombre || '-' || aprt1.nombre_aeropuerto || ' ' || aprt1.codigo_iata AS origen,
     c2.nombre || '-' || aprt2.nombre_aeropuerto || ' ' || aprt2.codigo_iata AS destino,
     it.hora_salida,
-    it.hora_llegada
+    it.hora_llegada,
+    it.NUMERO_ESCALAS
 FROM itinerario it
          JOIN aeropuerto aprt1 ON aprt1.id_aeropuerto = it.origen_aeropuerto
          JOIN aeropuerto aprt2 ON aprt2.id_aeropuerto = it.destino_aeropuerto
@@ -3724,5 +3738,4 @@ WHERE it.hora_salida >= NOW()
 ORDER BY it.hora_salida ASC;
 
 
---update reserva
---set codigo_reserva=''
+

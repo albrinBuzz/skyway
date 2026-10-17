@@ -37,8 +37,13 @@ public class PayPalController {
             @RequestParam(value = "token", required = false) Optional<String> tokenPayPal,
             HttpServletRequest request) {
 
+        Logger.logInfo("================================================================================");
+        Logger.logInfo("🌐 [PAYPAL-CONTROLLER] Iniciando confirmación de retorno desde PayPal");
+        Logger.logInfo("================================================================================");
+
         if (tokenPayPal.isPresent() && !tokenPayPal.get().isBlank()) {
             String token = tokenPayPal.get();
+            Logger.logInfo("🔑 Token de PayPal recibido: " + token);
 
             // Usamos la estrategia mediante el Factory
             PasarelaPagoStrategy payPalStrategy = pagoFactoryService.obtenerEstrategia(MetodoPagoEnum.PAYPAL);
@@ -48,6 +53,8 @@ public class PayPalController {
                 Logger.logError("❌ PayPal no autorizó o falló la captura del pago para el token: " + token);
                 return new RedirectView("/home/errorPago.xhtml?reason=REJECTED");
             }
+
+            Logger.logInfo("✅ [PAYPAL] Pago AUTORIZADO exitosamente en la pasarela");
 
             // Recuperar DTO guardado en la sesión
             HttpSession session = request.getSession(false);
@@ -61,9 +68,15 @@ public class PayPalController {
             }
 
             try {
-                // Persistir reserva en la BD
-                Integer idReserva = procesarReservaUseCase.ejecutarPersistenciaReserva(dto);
+                // ID_METODO_PAGO = 4 (PayPal según la tabla Metodo_Pago)
+                int idMetodoPagoPayPal = 2;
+                Logger.logInfo("💾 Persistiendo reserva con ID Método de Pago PAYPAL (" + idMetodoPagoPayPal + ")...");
+
+                Integer idReserva = procesarReservaUseCase.ejecutarPersistenciaReserva(dto, idMetodoPagoPayPal);
+
                 session.removeAttribute("SOLICITUD_RESERVA_PENDIENTE");
+                Logger.logInfo("🎉 [PAYPAL-CONTROLLER] Reserva ID: " + idReserva + " procesada con éxito. Redirigiendo a pago-exitoso.xhtml");
+
                 return new RedirectView("/home/pago-exitoso.xhtml?idReserva=" + idReserva);
             } catch (Exception e) {
                 Logger.logError("💥 Error al escribir la reserva tras pago con PayPal: " + e.getMessage());
@@ -71,6 +84,7 @@ public class PayPalController {
             }
         }
 
+        Logger.logError("❌ Token de PayPal inválido o ausente en la petición");
         return new RedirectView("/home/errorPago.xhtml?reason=INVALID_TOKEN");
     }
 
@@ -79,7 +93,7 @@ public class PayPalController {
      */
     @GetMapping("/paypal/cancel")
     public RedirectView cancelarPayPal() {
-        Logger.logInfo("El usuario canceló la compra en la pasarela de PayPal.");
+        Logger.logInfo("⚠️ El usuario canceló la compra en la pasarela de PayPal.");
         return new RedirectView("/home/errorPago.xhtml?reason=CANCELLED");
     }
 }
