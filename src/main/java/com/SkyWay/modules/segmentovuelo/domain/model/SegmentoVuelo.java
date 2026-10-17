@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 import com.SkyWay.modules.aeropuerto.domain.model.Aeropuerto;
 import com.SkyWay.modules.asignacionpuerta.domain.model.AsignacionPuerta;
+import com.SkyWay.modules.puertaembarque.domain.model.PuertaEmbarque;
 import com.SkyWay.modules.segmentovuelo.infrastructure.validator.DurationConverter;
 import com.SkyWay.modules.vuelo.domain.model.Vuelo;
 import com.SkyWay.util.Logger;
@@ -183,19 +184,87 @@ public class SegmentoVuelo implements Serializable {
 		this.vuelo = vuelo;
 	}
 
-	public String getPuertas(){
-		StringBuilder puertas=new StringBuilder();
+	public String getPuertasEmbarque() {
+		Logger.logInfo("================ 🚪 EVALUANDO PUERTAS DE EMBARQUE ================");
 
-		Logger.logInfo("puertas "+asignacionPuertas);
+		if (vuelo == null) {
+			Logger.logWarn("⚠️ [getPuertasEmbarque] Objeto 'vuelo' es NULL.");
+			return "Por asignar";
+		}
 
-		asignacionPuertas.forEach(asignacionPuerta -> {
-			Logger.logInfo(asignacionPuerta.getPuertaEmbarque().getCodigoPuerta());
+		Logger.logInfo("✈️ [getPuertasEmbarque] Vuelo ID: " + vuelo.getIdVuelo() + " | Número Vuelo: " + vuelo.getNumeroVuelo());
 
-			String codigoPuerta = asignacionPuerta.getPuertaEmbarque().getCodigoPuerta();
-			puertas.append(codigoPuerta).append(" ");
+		List<SegmentoVuelo> segmentos = vuelo.getSegmentoVuelos();
+		if (segmentos == null || segmentos.isEmpty()) {
+			Logger.logWarn("⚠️ [getPuertasEmbarque] La lista 'segmentoVuelos' es NULL o está vacía.");
+			return "Por asignar";
+		}
 
-		});
-		return puertas.toString();
+		Logger.logInfo("📦 [getPuertasEmbarque] Cantidad de segmentos encontrados: " + segmentos.size());
+
+		SegmentoVuelo primerSegmento = segmentos.get(0);
+		if (primerSegmento == null) {
+			Logger.logWarn("⚠️ [getPuertasEmbarque] El primer segmento (índice 0) es NULL.");
+			return "Por asignar";
+		}
+
+		Logger.logInfo("📍 [getPuertasEmbarque] Segmento ID: " + primerSegmento.getIdSegmento()
+				+ " | Origen: " + (primerSegmento.getAeropuertoOrigen() != null ? primerSegmento.getAeropuertoOrigen().getCodigoIata() : "NULL")
+				+ " -> Destino: " + (primerSegmento.getAeropuertoDestino() != null ? primerSegmento.getAeropuertoDestino().getCodigoIata() : "NULL"));
+
+		List<AsignacionPuerta> asignaciones = primerSegmento.getAsignacionPuertas();
+		if (asignaciones == null) {
+			Logger.logWarn("⚠️ [getPuertasEmbarque] La lista 'asignacionPuertas' en el primer segmento es NULL.");
+			return "Por asignar";
+		}
+
+		if (asignaciones.isEmpty()) {
+			Logger.logWarn("⚠️ [getPuertasEmbarque] La lista 'asignacionPuertas' en el primer segmento está VACÍA (size = 0).");
+			return "Por asignar";
+		}
+
+		Logger.logInfo("🔑 [getPuertasEmbarque] Asignaciones de puerta encontradas: " + asignaciones.size());
+
+		StringBuilder infoPuertas = new StringBuilder();
+
+		for (int i = 0; i < asignaciones.size(); i++) {
+			AsignacionPuerta ap = asignaciones.get(i);
+			if (ap == null) {
+				Logger.logWarn("⚠️ [getPuertasEmbarque] Elemento AsignacionPuerta índice " + i + " es NULL.");
+				continue;
+			}
+
+			PuertaEmbarque puerta = ap.getPuertaEmbarque();
+			if (puerta == null) {
+				Logger.logWarn("⚠️ [getPuertasEmbarque] AsignacionPuerta ID " + ap.getIdAsignacion() + " no tiene asociada una 'PuertaEmbarque' (es NULL).");
+				continue;
+			}
+
+			String terminal = (puerta.getTerminal() != null && !puerta.getTerminal().isBlank())
+					? "T" + puerta.getTerminal().trim() + " - "
+					: "";
+			String codigo = (puerta.getCodigoPuerta() != null)
+					? puerta.getCodigoPuerta().trim()
+					: "";
+
+			Logger.logInfo("✨ [getPuertasEmbarque] Puerta hallada -> ID: " + puerta.getIdPuerta()
+					+ " | Código: '" + codigo + "' | Terminal: '" + puerta.getTerminal() + "'");
+
+			if (!codigo.isBlank()) {
+				if (infoPuertas.length() > 0) {
+					infoPuertas.append(", ");
+				}
+				infoPuertas.append(terminal).append("Puerta ").append(codigo);
+			} else {
+				Logger.logWarn("⚠️ [getPuertasEmbarque] Puerta ID " + puerta.getIdPuerta() + " tiene 'codigoPuerta' blanco o nulo.");
+			}
+		}
+
+		String resultado = infoPuertas.length() > 0 ? infoPuertas.toString() : "Por asignar";
+		Logger.logInfo("✅ [getPuertasEmbarque] Resultado final a retornar: '" + resultado + "'");
+		Logger.logInfo("====================================================================");
+
+		return resultado;
 	}
 
 	@Override

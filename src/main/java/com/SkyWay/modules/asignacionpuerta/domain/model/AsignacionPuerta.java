@@ -28,7 +28,7 @@ public class AsignacionPuerta implements Serializable {
 	private Timestamp horaAsignacion;
 
 	//bi-directional many-to-one association to PuertaEmbarque
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name="id_puerta")
 	private PuertaEmbarque puertaEmbarque;
 
