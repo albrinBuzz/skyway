@@ -4,6 +4,7 @@ import com.SkyWay.mobile.dto.MobileDtos.*;
 import com.SkyWay.mobile.service.MobileOperationsService;
 import com.SkyWay.mobile.service.MobileBookingService;
 import com.SkyWay.mobile.service.MobileReadService;
+import com.SkyWay.mobile.service.MobileGroupTicketsService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -16,18 +17,19 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 @RestController
 @RequestMapping("/api/v1/mobile")
-@CrossOrigin(origins = "*")
 public class MobilePassengerController {
 
     private final MobileReadService readService;
     private final MobileOperationsService operationsService;
     private final MobileBookingService bookingService;
+    private final MobileGroupTicketsService groupTicketsService;
 
     public MobilePassengerController(MobileReadService readService, MobileOperationsService operationsService,
-                                     MobileBookingService bookingService) {
+                                     MobileBookingService bookingService, MobileGroupTicketsService groupTicketsService) {
         this.readService = readService;
         this.operationsService = operationsService;
         this.bookingService = bookingService;
+        this.groupTicketsService = groupTicketsService;
     }
 
     // ------------------------------------------------------------------
@@ -135,7 +137,49 @@ public class MobilePassengerController {
     }
 
     // ------------------------------------------------------------------
-    // 6. NOTIFICACIONES
+    // 6. TICKETS INDIVIDUALES DE PASAJEROS DE LA RESERVA
+    // ------------------------------------------------------------------
+    // La identidad solicitante procede exclusivamente del JWT.
+    // El servicio verifica pertenencia a reserva, vuelo y titularidad para terceros.
+    @GetMapping("/reservas/{idReserva}/vuelos/{idVuelo}/tickets")
+    public ResponseEntity<List<MobileGroupTicketsService.PasajeroTicket>> listarTickets(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable("idReserva") int idReserva,
+            @PathVariable("idVuelo") int idVuelo) {
+        return ResponseEntity.ok(groupTicketsService.listar(jwt.getSubject(), idReserva, idVuelo));
+    }
+
+    @GetMapping("/reservas/{idReserva}/vuelos/{idVuelo}/tickets/{rut}/vista")
+    public ResponseEntity<MobileGroupTicketsService.VistaTicket> vistaTicket(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable("idReserva") int idReserva,
+            @PathVariable("idVuelo") int idVuelo,
+            @PathVariable("rut") String rut) {
+        return ResponseEntity.ok(groupTicketsService.vista(jwt.getSubject(), idReserva, idVuelo, rut));
+    }
+
+    @GetMapping("/reservas/{idReserva}/vuelos/{idVuelo}/tickets/{rut}/asientos")
+    public ResponseEntity<MapaAsientos> mapaPasajero(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable("idReserva") int idReserva,
+            @PathVariable("idVuelo") int idVuelo,
+            @PathVariable("rut") String rut) {
+        return ResponseEntity.ok(groupTicketsService.mapa(jwt.getSubject(), idReserva, idVuelo, rut));
+    }
+
+    @PutMapping("/reservas/{idReserva}/vuelos/{idVuelo}/tickets/{rut}/asiento")
+    public ResponseEntity<MapaAsientos> cambiarAsientoPasajero(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable("idReserva") int idReserva,
+            @PathVariable("idVuelo") int idVuelo,
+            @PathVariable("rut") String rut,
+            @Valid @RequestBody CambioAsientoRequest body) {
+        return ResponseEntity.ok(groupTicketsService.cambiarAsiento(
+                jwt.getSubject(), idReserva, idVuelo, rut, body.idAsiento()));
+    }
+
+    // ------------------------------------------------------------------
+    // 7. NOTIFICACIONES
     // ------------------------------------------------------------------
     @GetMapping("/notificaciones")
     public ResponseEntity<Pagina<NotificacionDto>> listarNotificaciones(
