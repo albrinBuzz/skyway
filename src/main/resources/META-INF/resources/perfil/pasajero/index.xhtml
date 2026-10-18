@@ -236,24 +236,28 @@
             }
 
             .feature-pill {
-                background: #11263F;
-                border: 1px solid #1E3A5C;
-                padding: 8px 14px;
-                border-radius: 6px;
-                margin: 4px;
-                display: inline-block;
+                display: inline-flex;
+                align-items: center;
+                padding: 0.4rem 0.8rem;
+                border-radius: 20px;
                 font-size: 0.85rem;
+                font-weight: 500;
+                color: #fff;
+                background-color: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.1);
             }
 
-            .feature-pill.allowed {
-                border-color: #22C55E;
-                color: #86EFAC;
+            .feature-pill.allowed i {
+                color: #28a745;
             }
 
             .feature-pill.denied {
-                border-color: #EF4444;
-                color: #FCA5A5;
-                opacity: 0.8;
+                border-color: rgba(220, 53, 69, 0.4);
+                background-color: rgba(220, 53, 69, 0.15);
+            }
+
+            .feature-pill.denied i {
+                color: #dc3545;
             }
 
             .btn-skyway-accent.ui-button {
@@ -896,16 +900,45 @@
 
                                     <div class="mb-2">
                                         <span class="text-white-50 small d-block mb-3">Características y Reglas Incluidas:</span>
+
                                         <h:panelGroup rendered="#{not empty perfilPasajeroView.tarifaCaracteristicas}">
-                                            <ui:repeat value="#{perfilPasajeroView.tarifaCaracteristicas}" var="carac">
-                                                <div class="feature-pill #{carac.valorBool ? 'allowed' : 'denied'}">
-                                                    <i class="pi #{carac.valorBool ? 'pi-check-circle' : 'pi-times-circle'} me-1"></i>
-                                                    #{carac.caracteristica.nombre}: <strong>#{carac.valor}</strong>
-                                                </div>
-                                            </ui:repeat>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                <ui:repeat value="#{perfilPasajeroView.tarifaCaracteristicas}" var="carac">
+
+                                                    <!-- 1. CASO TIPO DE DATO: BOOLEAN -->
+                                                    <h:panelGroup rendered="#{carac.caracteristica.tipoDato eq 'boolean'}">
+                                                        <div class="feature-pill #{carac.valorBool ? 'allowed' : 'denied'}">
+                                                            <i class="pi #{carac.valorBool ? 'pi-check-circle' : 'pi-times-circle'} me-1"></i>
+                                                            #{carac.caracteristica.nombre}:
+                                                            <strong>#{carac.valorBool ? 'Sí' : 'No'}</strong>
+                                                        </div>
+                                                    </h:panelGroup>
+
+                                                    <!-- 2. CASO TIPO DE DATO: INT (Horas límites) -->
+                                                    <h:panelGroup rendered="#{carac.caracteristica.tipoDato eq 'int'}">
+                                                        <div class="feature-pill #{carac.valorInt != null ? 'allowed' : 'denied'}">
+                                                            <i class="pi #{carac.valorInt != null ? 'pi-clock' : 'pi-times-circle'} me-1"></i>
+                                                            #{carac.caracteristica.nombre}:
+                                                            <strong>#{carac.valorInt != null ? 'Hasta '.concat(carac.valorInt).concat('h antes del vuelo') : 'No permitido'}</strong>
+                                                        </div>
+                                                    </h:panelGroup>
+
+                                                    <!-- 3. CASO TIPO DE DATO: TEXT -->
+                                                    <h:panelGroup rendered="#{carac.caracteristica.tipoDato eq 'text'}">
+                                                        <div class="feature-pill allowed">
+                                                            <i class="pi pi-info-circle me-1"></i>
+                                                            #{carac.caracteristica.nombre}:
+                                                            <strong>#{carac.valor}</strong>
+                                                        </div>
+                                                    </h:panelGroup>
+
+                                                </ui:repeat>
+                                            </div>
                                         </h:panelGroup>
+
+                                        <!-- FALLBACK SI NO HAY CARACTERÍSTICAS CARGADAS EN EL BEAN -->
                                         <h:panelGroup rendered="#{empty perfilPasajeroView.tarifaCaracteristicas}">
-                                            <div class="d-flex align-items-center gap-2">
+                                            <div class="d-flex flex-wrap align-items-center gap-2">
                                                 <div class="feature-pill denied">
                                                     <i class="pi pi-times-circle me-1"></i> Permite Cambios Asiento: <strong>No</strong>
                                                 </div>

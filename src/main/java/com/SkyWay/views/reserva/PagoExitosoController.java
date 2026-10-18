@@ -4,6 +4,7 @@ import com.SkyWay.modules.reserva.domain.model.Reserva;
 import com.SkyWay.modules.reserva.domain.service.ETicketPdfGeneratorService;
 import com.SkyWay.modules.reserva.domain.service.EmailReservaService;
 import com.SkyWay.modules.reserva.domain.service.ReservaService;
+import com.SkyWay.modules.reservaasiento.domain.service.AsientoCacheService;
 import com.SkyWay.util.Logger;
 
 import jakarta.annotation.PostConstruct;
@@ -27,6 +28,8 @@ public class PagoExitosoController implements Serializable {
     @Autowired private ReservaService reservaService;
     @Autowired private EmailReservaService emailReservaService;
     @Autowired private ETicketPdfGeneratorService eTicketPdfGeneratorService;
+    @Autowired private AsientoCacheService asientoCacheService;
+
 
     private Reserva reserva;
     private String pnr;
@@ -47,6 +50,25 @@ public class PagoExitosoController implements Serializable {
                 if (this.reserva != null) {
                     this.pnr = this.reserva.getCodigoReserva();
                     emailReservaService.enviarComprobanteReservaAsync(this.reserva);
+
+                    // 1. Limpiar la memoria del CacheService (WebSockets / RAM)
+                    String sessionId = facesContext.getExternalContext().getSessionId(false);
+                    if (sessionId != null) {
+                        asientoCacheService.liberarTodosLosAsientosDeSesion(sessionId);
+                    }
+
+                    // 🧹 2. PURGA COMPLETA DE LA SESIÓN DE JSF (MANDATORIO PARA PERMITIR NUEVAS COMPRAS)
+                    Map<String, Object> sessionMap = facesContext.getExternalContext().getSessionMap();
+                    sessionMap.remove("asientosSeleccionados");
+                    sessionMap.remove("itinerarios");
+                    sessionMap.remove("tarifasItinerios");
+                    sessionMap.remove("pasajeros");
+                    sessionMap.remove("equipajePorPasajero");
+                    sessionMap.remove("totalEquipaje");
+                    sessionMap.remove("SOLICITUD_RESERVA_PENDIENTE");
+                    sessionMap.remove("ultimaBusquedaAsientosQuery");
+
+                    Logger.logInfo("🧹 [PagoExitosoController] Sesión de compra de JSF limpiada exitosamente para futuras reservas.");
                 }
             } catch (Exception e) {
                 Logger.logError("Error al cargar comprobante: " + e.getMessage());
