@@ -17,7 +17,7 @@ public class TarifaCaracteristicaValidator {
      */
     public boolean permiteCambio(List<TarifaCaracteristica> tarifaCaracteristicas) {
         for (TarifaCaracteristica carac : tarifaCaracteristicas) {
-            if ("Permite Cambios Asiento".equalsIgnoreCase(carac.getCaracteristica().getNombre())) {
+            if ("Permite cambio de asiento".equalsIgnoreCase(carac.getCaracteristica().getNombre())) {
                 Logger.logInfo(carac.getValorBool().toString());
                 Logger.logInfo(carac.getCaracteristica().getNombre());
                 return carac.getValorBool();
@@ -34,12 +34,35 @@ public class TarifaCaracteristicaValidator {
      */
     public boolean cumpleHorasMinimasCambio(List<TarifaCaracteristica> tarifaCaracteristicas, int horasAntesDeVuelo) {
         for (TarifaCaracteristica carac : tarifaCaracteristicas) {
-            if ("Horas Minimas Cambio".equalsIgnoreCase(carac.getCaracteristica().getNombre())) {
-                int horasMinimas = Integer.parseInt(carac.getValor());
-                return horasAntesDeVuelo >= horasMinimas;
+            if (carac.getCaracteristica() != null &&
+                    "Plazo límite para cambio de asiento".equalsIgnoreCase(carac.getCaracteristica().getNombre())) {
+
+                Integer horasMinimas = null;
+
+                // 1. Intentar leer prioritariamente de la columna Valor_Int
+                if (carac.getValorInt() != null) {
+                    horasMinimas = carac.getValorInt();
+                }
+                // 2. Fallback de seguridad: Si viene en el campo texto 'Valor', extraer únicamente los números
+                else if (carac.getValor() != null && !carac.getValor().isBlank()) {
+                    try {
+                        String soloDigitos = carac.getValor().replaceAll("[^0-9]", "");
+                        if (!soloDigitos.isEmpty()) {
+                            horasMinimas = Integer.parseInt(soloDigitos);
+                        }
+                    } catch (NumberFormatException e) {
+                        Logger.logError("Error al interpretar valor en texto: " + carac.getValor());
+                    }
+                }
+
+                // 3. Evaluar la condición de horas
+                if (horasMinimas != null) {
+                    return horasAntesDeVuelo >= horasMinimas;
+                }
             }
         }
-        // Si no está configurado, asumimos que no hay restricción
+
+        // Si la característica no está configurada para la tarifa, no hay restricción
         return true;
     }
 
