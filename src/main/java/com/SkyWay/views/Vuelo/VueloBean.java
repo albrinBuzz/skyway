@@ -8,6 +8,7 @@ import com.SkyWay.modules.aeropuerto.presentation.dto.AeropuertoMapaProjection;
 import com.SkyWay.modules.asignacionpuerta.domain.model.AsignacionPuerta;
 import com.SkyWay.modules.asignacionpuerta.domain.service.AsignacionPuertaService;
 import com.SkyWay.modules.avion.domain.model.Avion;
+import com.SkyWay.modules.avion.domain.repository.AvionRepository;
 import com.SkyWay.modules.avion.domain.service.AvionService;
 import com.SkyWay.modules.capacidadclase.domain.model.CapacidadClase;
 import com.SkyWay.modules.capacidadclase.domain.service.CapacidadClaseService;
@@ -16,6 +17,7 @@ import com.SkyWay.modules.claseasiento.domain.service.ClaseAsientoService;
 import com.SkyWay.modules.estadovuelo.domain.model.EstadoVuelo;
 import com.SkyWay.modules.estadovuelo.domain.service.EstadoVueloService;
 import com.SkyWay.modules.piloto.domain.model.Piloto;
+import com.SkyWay.modules.piloto.domain.repository.PilotoRepositoy;
 import com.SkyWay.modules.piloto.domain.service.PiloService;
 import com.SkyWay.modules.precioasiento.domain.model.PrecioAsiento;
 import com.SkyWay.modules.precioasiento.domain.service.PrecioAsientoService;
@@ -49,6 +51,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Named
 @ViewScoped
@@ -67,6 +70,7 @@ public class VueloBean implements Serializable {
     private SegmentoVuelo segmentoActual = new SegmentoVuelo();
     private List<SegmentoVuelo> segmentos = new ArrayList<>();
     private Map<SegmentoVuelo, PuertaEmbarque> asignacionesPuertasTemp = new HashMap<>();
+    private Map<Integer, Integer> tarifasHistoricas = new HashMap<>();
 
     private List<Avion> avions;
     private List<Aerolinea> aerolineas;
@@ -88,6 +92,11 @@ public class VueloBean implements Serializable {
     @Autowired private PuertaEmbarqueService puertaService;
     @Autowired private TurnoService turnoService;
     @Autowired private TipoTurnoService tipoTurnoService;
+    @Autowired
+    private PilotoRepositoy pilotoRepository;
+
+    @Autowired
+    private AvionRepository avionRepository;
 
     private List<Aeropuerto> listaAeropuertos;
     private List<Avion> listaAviones;
@@ -165,22 +174,47 @@ public class VueloBean implements Serializable {
             this.aeropuertosMapaJson = "[]";
         }
     }
-
     private void cargarTarifasYCapacidades(Integer idAvion, Integer idVuelo) {
+        // 2. Acumular/Actualizar los precios ingresados actualmente en el historial global
+        if (preciosAsientos != null) {
+            for (ClaseAsientoPrecioDto dto : preciosAsientos) {
+                if (dto.getPrecio() > 0) {
+                    this.tarifasHistoricas.put(dto.getClaseAsiento(), dto.getPrecio());
+                }
+            }
+        }
+
+        // 3. Limpiar la lista actual de la vista y cargar las capacidades del nuevo avión
         preciosAsientos = new ArrayList<>();
         List<CapacidadClase> capacidades = capacidadClaseService.findByAvionId(idAvion);
+
         for (CapacidadClase cap : capacidades) {
             ClaseAsientoPrecioDto dto = new ClaseAsientoPrecioDto();
-            dto.setClaseAsiento(cap.getClaseAsiento1().getIdClase());
+            int idClase = cap.getClaseAsiento1().getIdClase();
+
+            dto.setClaseAsiento(idClase);
             dto.setClase(cap.getClaseAsiento1().getDescripcion());
             dto.setCantidad(cap.getCantidad());
 
-            if (idVuelo != null) {
-                precioAsientoService.findByVueloAndClase(idVuelo, cap.getClaseAsiento1().getIdClase())
-                        .ifPresentOrElse(pa -> dto.setPrecio(pa.getPrecio()), () -> dto.setPrecio(0));
+            // 4. Buscar la tarifa según prioridad:
+            // A) Historial acumulado en memoria del Bean (Cubre si cambió de avión y volvió)
+            // B) Si no está en historial pero el vuelo ya existe en BD
+            // C) 0 por defecto si es una clase nunca configurada
+            if (this.tarifasHistoricas.containsKey(idClase)) {
+                dto.setPrecio(this.tarifasHistoricas.get(idClase));
+            } else if (idVuelo != null) {
+                precioAsientoService.findByVueloAndClase(idVuelo, idClase)
+                        .ifPresentOrElse(
+                                pa -> {
+                                    dto.setPrecio(pa.getPrecio());
+                                    this.tarifasHistoricas.put(idClase, pa.getPrecio()); // Guardar también en el historial
+                                },
+                                () -> dto.setPrecio(0)
+                        );
             } else {
                 dto.setPrecio(0);
             }
+
             preciosAsientos.add(dto);
         }
     }
@@ -208,6 +242,8 @@ public class VueloBean implements Serializable {
                 addMessage(FacesMessage.SEVERITY_WARN, "Validación", "Debe seleccionar una Puerta de Embarque.");
                 return;
             }
+
+
 
             // Determinar el número de orden del segmento actual
             int ordenActual = (segmentoActual.getOrdenSegmento() != null && segmentoActual.getOrdenSegmento() > 0)
@@ -249,6 +285,8 @@ public class VueloBean implements Serializable {
                 segmentos.add(segmentoActual);
             }
 
+            actualizarDisponibilidadRecursos();
+
             openNewSegmento();
             reiniciarSeleccionMapa();
             addMessage(FacesMessage.SEVERITY_INFO, "Escala Guardada", "El tramo se ha procesado correctamente.");
@@ -266,7 +304,7 @@ public class VueloBean implements Serializable {
                 return;
             }
 
-            if (segmentos.isEmpty()) {
+            if (segmentos == null || segmentos.isEmpty()) {
                 addMessage(FacesMessage.SEVERITY_WARN, "Ruta Incompleta", "Debe agregar al menos un tramo/escala en el Paso 3 antes de confirmar.");
                 return;
             }
@@ -276,21 +314,78 @@ public class VueloBean implements Serializable {
                 return;
             }
 
-            boolean error = false;
             for (ClaseAsientoPrecioDto dto : preciosAsientos) {
-                if (dto.getPrecio() <= 0) {
-                    addMessage(FacesMessage.SEVERITY_WARN, "Tarifa Requerida", "Ingrese un precio mayor a $0 para la clase: " + dto.getClase());
-                    error = true;
+                if (dto.getPrecio() <=20000) {
+                    addMessage(FacesMessage.SEVERITY_WARN, "Tarifa Requerida", "Ingrese un precio mayor a $20.000 para la clase: " + dto.getClase());
                     return;
                 }
             }
 
-            Piloto p = pilotoService.findByRut(pilotoId).orElseThrow(() -> new RuntimeException("Piloto no encontrado"));
+            // =========================================================================
+            // 1. OBTENER ENTIDADES
+            // =========================================================================
+            Piloto p = pilotoService.findByRut(pilotoId)
+                    .orElseThrow(() -> new RuntimeException("Piloto no encontrado"));
             Aerolinea a = aerolineaService.findById(Integer.parseInt(aerolineaId));
             Avion av = aviones.get(avionId);
 
+            if (av == null) {
+                av = avionService.findById(Integer.parseInt(avionId)).get();
+            }
+
+            // =========================================================================
+            // 2. VALIDACIÓN DE ESTADO DE MANTENIMIENTO DEL AVIÓN
+            // =========================================================================
             if (av.getEstadoDeMantenimiento() != null && av.getEstadoDeMantenimiento().equalsIgnoreCase("EN MANTENIMIENTO")) {
-                addMessage(FacesMessage.SEVERITY_ERROR, "Aeronave No Disponible", "El avión seleccionado se encuentra en mantenimiento.");
+                addMessage(FacesMessage.SEVERITY_ERROR, "Aeronave No Disponible", "El avión seleccionado (" + av.getNumeroDeRegistro() + ") se encuentra en mantenimiento.");
+                return;
+            }
+
+            // =========================================================================
+            // 3. CÁLCULO DE RANGO GLOBAL DE FECHAS DE LA RUTA (INICIO Y FIN)
+            // =========================================================================
+            // El inicio del vuelo es la salida del 1er segmento y el fin es la llegada del último
+            SegmentoVuelo primerSegmento = segmentos.get(0);
+            SegmentoVuelo ultimoSegmento = segmentos.get(segmentos.size() - 1);
+
+            Timestamp fechaHoraSalidaGlobal = new Timestamp(primerSegmento.getHoraSalida().getTime());
+            Timestamp fechaHoraLlegadaGlobal = new Timestamp(ultimoSegmento.getHoraLlegada().getTime());
+
+            Integer idVueloActual = (this.vuelo != null) ? this.vuelo.getIdVuelo() : null;
+
+            // =========================================================================
+            // 4. VALIDACIÓN DE CONFLICTO DE HORARIO PARA EL PILOTO
+            // =========================================================================
+            boolean conflictoPiloto = vueloService.existeConflictoPiloto(
+                    p.getRut(),
+                    fechaHoraSalidaGlobal,
+                    fechaHoraLlegadaGlobal,
+                    idVueloActual
+            );
+
+            if (conflictoPiloto) {
+                addMessage(FacesMessage.SEVERITY_ERROR,
+                        "Conflicto de Agenda - Piloto",
+                        "El comandante " + p.getUsuario().getNombre() + " " + p.getUsuario().getApellido() +
+                                " ya tiene asignado otro vuelo en el rango horaria de este itinerario.");
+                return;
+            }
+
+            // =========================================================================
+            // 5. VALIDACIÓN DE CONFLICTO DE HORARIO PARA LA AERONAVE
+            // =========================================================================
+            boolean conflictoAvion = vueloService.existeConflictoAvion(
+                    av.getIdAvion(),
+                    fechaHoraSalidaGlobal,
+                    fechaHoraLlegadaGlobal,
+                    idVueloActual
+            );
+
+            if (conflictoAvion) {
+                addMessage(FacesMessage.SEVERITY_ERROR,
+                        "Conflicto de Agenda - Aeronave",
+                        "La aeronave " + av.getModeloAvion().getNombre() + " [" + av.getNumeroDeRegistro() + "]" +
+                                " ya se encuentra programada para otro vuelo en este mismo rango de fechas.");
                 return;
             }
 
@@ -371,6 +466,7 @@ public class VueloBean implements Serializable {
             }
             segmentos.remove(segmento);
             asignacionesPuertasTemp.remove(segmento);
+            actualizarDisponibilidadRecursos();
             addMessage(FacesMessage.SEVERITY_INFO, "Escala Removida", "El tramo se ha eliminado de la lista.");
         }
     }
@@ -390,8 +486,8 @@ public class VueloBean implements Serializable {
 
         boolean error = false;
         for (ClaseAsientoPrecioDto dto : preciosAsientos) {
-            if (dto.getPrecio() <= 0) {
-                addMessage(FacesMessage.SEVERITY_WARN, "Tarifa Requerida", "Ingrese un precio mayor a $0 para la clase: " + dto.getClase());
+            if (dto.getPrecio() <= 20000) {
+                addMessage(FacesMessage.SEVERITY_WARN, "Tarifa Requerida", "Ingrese un precio mayor a $20.000 para la clase: " + dto.getClase());
                 error = true;
             }
         }
@@ -547,6 +643,110 @@ public class VueloBean implements Serializable {
     public void addMessage(FacesMessage.Severity severity, String summary, String detail) {
         FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(severity, summary, detail));
     }
+
+    // Devuelve el nombre formateado para el origen (ej. "SCL - Arturo Merino Benítez (Santiago)")
+    public String getNombreAeropuertoOrigenCompleto() {
+        if (this.aeropuertoOrigen == null || this.aeropuertoOrigen.isEmpty()) return "Sin Seleccionar";
+        Aeropuerto a = aeropuertos.get(this.aeropuertoOrigen);
+        if (a != null) {
+            String ciudadNombre = (a.getCiudad() != null) ? a.getCiudad().getNombre() : "";
+            return a.getCodigoIata() + " - " + a.getNombreAeropuerto() + (!ciudadNombre.isEmpty() ? " (" + ciudadNombre + ")" : "");
+        }
+        return this.aeropuertoOrigen;
+    }
+
+    // Devuelve el nombre formateado para el destino (ej. "GRU - Guarulhos (São Paulo)")
+    public String getNombreAeropuertoDestinoCompleto() {
+        if (this.aeropuertoDestino == null || this.aeropuertoDestino.isEmpty()) return "Sin Seleccionar";
+        Aeropuerto a = aeropuertos.get(this.aeropuertoDestino);
+        if (a != null) {
+            String ciudadNombre = (a.getCiudad() != null) ? a.getCiudad().getNombre() : "";
+            return a.getCodigoIata() + " - " + a.getNombreAeropuerto() + (!ciudadNombre.isEmpty() ? " (" + ciudadNombre + ")" : "");
+        }
+        return this.aeropuertoDestino;
+    }
+
+    // Valida que el Paso 1 (Línea aérea, Avión y Piloto) esté completo
+    public boolean isPaso1Completo() {
+
+        boolean estado=aerolineaId != null && !aerolineaId.trim().isEmpty() &&
+                avionId != null && !avionId.trim().isEmpty() &&
+                pilotoId != null && !pilotoId.trim().isEmpty();
+        return estado;
+    }
+
+    // Valida que el Paso 2 (Tarifas guardadas) esté completo
+    public boolean isPaso2Completo() {
+        if (!isPaso1Completo()) {
+            return false;
+        }
+        if (preciosAsientos == null || preciosAsientos.isEmpty()) {
+            return false;
+        }
+        // Verifica que todas las clases configuradas tengan un precio mayor a 0
+        return preciosAsientos.stream().allMatch(p -> p.getPrecio() > 0);
+    }
+
+    public void actualizarDisponibilidadRecursos() {
+        if (segmentos == null || segmentos.isEmpty()) {
+            // Si no hay tramos, mostramos la lista completa estándar
+            this.listaPilotos = pilotoService.findAll();
+            this.avions = avionService.findAll();
+            return;
+        }
+
+        SegmentoVuelo primerSegmento = segmentos.get(0);
+        SegmentoVuelo ultimoSegmento = segmentos.get(segmentos.size() - 1);
+
+        if (primerSegmento.getHoraSalida() == null || ultimoSegmento.getHoraLlegada() == null) {
+            return;
+        }
+
+        Timestamp salidaGlobal = new Timestamp(primerSegmento.getHoraSalida().getTime());
+        Timestamp llegadaGlobal = new Timestamp(ultimoSegmento.getHoraLlegada().getTime());
+        Integer idVueloActual = (this.vuelo != null) ? this.vuelo.getIdVuelo() : null;
+
+        // 1. Obtener listas de recursos disponibles en el rango de la ruta
+        List<Piloto> pilotosLibres = pilotoRepository.findPilotosDisponiblesEnRango(salidaGlobal, llegadaGlobal, idVueloActual);
+        List<Avion> avionesLibres = avionRepository.findAvionesDisponiblesEnRango(salidaGlobal, llegadaGlobal, idVueloActual);
+
+        // 2. Advertencia NO destructiva para el Piloto (MANTIENE LA SELECCIÓN)
+        if (this.pilotoId != null && !this.pilotoId.trim().isEmpty()) {
+            boolean pilotoDisponible = pilotosLibres.stream()
+                    .anyMatch(p -> p.getRut().equalsIgnoreCase(this.pilotoId));
+
+            if (!pilotoDisponible) {
+                // ⚠️ NO BORRAMOS pilotoId. Solo mostramos un aviso preventivo para que el usuario lo cambie.
+                addMessage(FacesMessage.SEVERITY_WARN, "Conflicto de Horario",
+                        "El comandante seleccionado no tiene disponibilidad para este rango de fechas. Por favor, elija un piloto alternativo en el Paso 1.");
+            }
+        }
+
+        // 3. Advertencia NO destructiva para la Aeronave (MANTIENE SELECCIÓN Y TARIFAS)
+        if (this.avionId != null && !this.avionId.trim().isEmpty()) {
+            int idAvionSel = Integer.parseInt(this.avionId);
+            boolean avionDisponible = avionesLibres.stream()
+                    .anyMatch(a -> a.getIdAvion().equals(idAvionSel));
+
+            if (!avionDisponible) {
+                // ⚠️ NO BORRAMOS avionId NI LIMPIAMOS preciosAsientos.
+                addMessage(FacesMessage.SEVERITY_WARN, "Conflicto de Aeronave",
+                        "La aeronave seleccionada ya está programada para otro vuelo en este horario. Seleccione otro avión en el Paso 1 para resolverlo.");
+            }
+        }
+
+        // 4. Actualizar la lista de los desplegables para que, si el usuario decide cambiar,
+        // le aparezcan únicamente los disponibles o la lista filtrada.
+        this.listaPilotos = pilotosLibres;
+        this.avions = avionesLibres;
+
+        // Si el avión o piloto actual no estaba libre, lo agregamos temporalmente a la lista del combo
+        // para que la pantalla NO pierda la etiqueta visible actual ni rompa la opción seleccionada.
+        if (this.avionSeleccionado != null && !this.avions.contains(this.avionSeleccionado)) {
+            this.avions.add(0, this.avionSeleccionado);
+        }
+    }
+
 
     // Getters y Setters
     public String getNumeroVuelo() { return numeroVuelo; }

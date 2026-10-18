@@ -1,5 +1,6 @@
 package com.SkyWay.modules.vuelo.domain.repository;
 
+import java.sql.Timestamp;
 import java.util.List;
 
 import com.SkyWay.modules.piloto.domain.model.Piloto;
@@ -71,6 +72,33 @@ public interface VueloRepository extends JpaRepository<Vuelo, Integer>{
 	List<VueloEstadoProjection> buscarEstadoVuelosVivo(
 			@Param("numeroVuelo") String numeroVuelo,
 			@Param("ruta") String ruta
+	);
+
+
+
+	@Query("SELECT COUNT(v) > 0 FROM Vuelo v " +
+			"WHERE v.piloto.rut = :rutPiloto " +
+			"AND (:idVueloActual IS NULL OR v.idVuelo <> :idVueloActual) " +
+			"AND v.fechaHoraSalida < :fechaLlegada " +
+			"AND v.fechaHoraLlegada > :fechaSalida")
+	boolean existeConflictoPiloto(
+			@Param("rutPiloto") String rutPiloto,
+			@Param("fechaSalida") Timestamp fechaSalida,
+			@Param("fechaLlegada") Timestamp fechaLlegada,
+			@Param("idVueloActual") Integer idVueloActual
+	);
+
+	// Comprueba si la aeronave está asignada a otro vuelo que se solape en fechas
+	@Query("SELECT COUNT(v) > 0 FROM Vuelo v " +
+			"WHERE v.avion.idAvion = :idAvion " +
+			"AND (:idVueloActual IS NULL OR v.idVuelo <> :idVueloActual) " +
+			"AND v.fechaHoraSalida < :fechaLlegada " +
+			"AND v.fechaHoraLlegada > :fechaSalida")
+	boolean existeConflictoAvion(
+			@Param("idAvion") Integer idAvion,
+			@Param("fechaSalida") Timestamp fechaSalida,
+			@Param("fechaLlegada") Timestamp fechaLlegada,
+			@Param("idVueloActual") Integer idVueloActual
 	);
 	
 }

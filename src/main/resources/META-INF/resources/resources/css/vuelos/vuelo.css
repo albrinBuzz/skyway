@@ -1,0 +1,571 @@
+/* ==========================================================================
+   ✈️ SKYWAY AIRLINES - MÓDULO DE GESTIÓN DE VUELOS Y RUTAS (BALANCED COLOR)
+   ========================================================================== */
+
+:root {
+    --bg-deep: #0b1120;
+    --bg-card: #0f172a;
+    --bg-header: #1e293b;
+    --border-subtle: #334155;
+
+    --navy-brand: #2563eb;
+    --navy-hover: #1d4ed8;
+    --text-heading: #f8fafc;
+    --text-body: #e2e8f0;
+    --text-muted: #94a3b8;
+
+    /* Acentos Operativos */
+    --accent-origen: #38bdf8;
+    --accent-destino: #34d399;
+    --accent-gate: #fbbf24;
+}
+
+body, .ui-widget-content, .p-grid {
+    background-color: var(--bg-deep) !important;
+    color: var(--text-body) !important;
+}
+
+.main-config-container {
+    width: 100%;
+    padding: 0.75rem 0;
+}
+
+.view-title {
+    color: var(--text-heading) !important;
+    font-weight: 700;
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
+}
+
+/* --------------------------------------------------------------------------
+   INDICADOR PASO A PASO
+   -------------------------------------------------------------------------- */
+.step-wrapper {
+    display: flex;
+    gap: 1.25rem;
+    margin-bottom: 1.75rem;
+    position: relative;
+}
+
+.step-wrapper:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 17px;
+    top: 42px;
+    bottom: -1.75rem;
+    width: 2px;
+    background: var(--border-subtle);
+}
+
+.step-number {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--navy-brand);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1rem;
+    flex-shrink: 0;
+    z-index: 2;
+}
+
+.step-content {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+/* --------------------------------------------------------------------------
+   TARJETAS Y FORMULARIOS BASE
+   -------------------------------------------------------------------------- */
+.glass-card {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-subtle) !important;
+    border-radius: 10px !important;
+    padding: 1.25rem 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.card-header-label {
+    color: var(--text-heading);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.82rem;
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ui-inputfield, .ui-selectonemenu {
+    background: var(--bg-deep) !important;
+    border: 1px solid var(--border-subtle) !important;
+    color: var(--text-heading) !important;
+    border-radius: 6px !important;
+}
+
+.ui-selectonemenu-label {
+    color: var(--text-heading) !important;
+    font-size: 0.88rem !important;
+}
+
+.ui-outputlabel {
+    color: var(--text-muted) !important;
+    font-size: 0.82rem;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+    display: block;
+}
+
+.ui-selectonemenu-panel {
+    background-color: var(--bg-card) !important;
+    border: 1px solid var(--border-subtle) !important;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4) !important;
+    border-radius: 6px !important;
+}
+
+.ui-selectonemenu-panel .ui-selectonemenu-items {
+    background-color: var(--bg-card) !important;
+    padding: 4px !important;
+}
+
+.ui-selectonemenu-panel .ui-selectonemenu-item {
+    color: var(--text-body) !important;
+    background-color: transparent !important;
+    padding: 8px 12px !important;
+    border-radius: 4px !important;
+    font-size: 0.85rem !important;
+}
+
+.ui-selectonemenu-panel .ui-selectonemenu-item.ui-state-highlight,
+.ui-selectonemenu-panel .ui-selectonemenu-item:hover {
+    background-color: var(--navy-brand) !important;
+    color: #ffffff !important;
+}
+
+.ui-datepicker {
+    background-color: #0f172a !important;
+    border: 1px solid rgba(56, 189, 248, 0.3) !important;
+    color: #ffffff !important;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.8) !important;
+}
+
+.ui-datepicker header, .ui-datepicker .ui-datepicker-header {
+    background: #1e293b !important;
+    color: #ffffff !important;
+    border-bottom: 1px solid var(--border-subtle) !important;
+}
+
+.ui-datepicker table th {
+    color: var(--accent-origen) !important;
+}
+
+.ui-datepicker table td a, .ui-datepicker table td span {
+    color: #f8fafc !important;
+    text-align: center !important;
+    border-radius: 4px !important;
+}
+
+.ui-datepicker table td a.ui-state-active, .ui-datepicker table td a.ui-state-highlight {
+    background: var(--accent-origen) !important;
+    color: #000000 !important;
+    font-weight: bold !important;
+}
+
+.pricing-container {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding: 0.25rem 0;
+}
+
+.pricing-badge {
+    background: var(--bg-deep);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 1rem;
+    flex: 1;
+    min-width: 200px;
+}
+
+.btn-primary-custom {
+    background: var(--navy-brand) !important;
+    border: none !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
+    padding: 0.6rem 1.4rem !important;
+    font-size: 0.88rem !important;
+}
+
+.btn-primary-custom:hover {
+    background: var(--navy-hover) !important;
+}
+
+.btn-confirm-vuelo {
+    background: var(--navy-brand) !important;
+    border: none !important;
+    color: #ffffff !important;
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    border-radius: 6px !important;
+    padding: 0.85rem 2rem !important;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3) !important;
+}
+
+.btn-confirm-vuelo:hover {
+    background: var(--navy-hover) !important;
+}
+
+.btn-secondary-custom {
+    background: transparent !important;
+    border: 1px solid var(--border-subtle) !important;
+    color: var(--text-muted) !important;
+    border-radius: 6px !important;
+}
+
+.btn-secondary-custom:hover {
+    color: var(--text-heading) !important;
+    border-color: var(--navy-brand) !important;
+}
+
+/* --------------------------------------------------------------------------
+   ✈️ TABLERO DE TRAMOS Y RUTA (Paso 3 - Color Optimizado)
+   -------------------------------------------------------------------------- */
+.flight-segment-card {
+    background: #0f172a !important;
+    border: 1px solid #1e2d4a !important;
+    border-left: 4px solid var(--accent-origen) !important; /* Lado activo cian */
+    border-radius: 8px !important;
+    padding: 1.25rem 1.5rem !important;
+    margin-bottom: 1rem !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+    transition: all 0.2s ease !important;
+}
+
+.flight-segment-card:hover {
+    border-color: rgba(56, 189, 248, 0.4) !important;
+    box-shadow: 0 6px 20px rgba(56, 189, 248, 0.08) !important;
+}
+
+.segment-header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #1e293b;
+    margin-bottom: 1rem;
+}
+
+.segment-badge-number {
+    background: rgba(56, 189, 248, 0.12) !important;
+    color: var(--accent-origen) !important;
+    border: 1px solid rgba(56, 189, 248, 0.3) !important;
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+    padding: 3px 10px !important;
+    border-radius: 4px !important;
+    letter-spacing: 0.03em !important;
+    text-transform: uppercase !important;
+}
+
+.segment-id-text {
+    color: #64748b !important;
+    font-size: 0.8rem !important;
+}
+
+/* Tablero Central de Ruta */
+.flight-route-display {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+    background: #080d1a !important;
+    border: 1px solid #1e293b !important;
+    border-radius: 8px !important;
+    padding: 1.25rem !important;
+}
+
+.airport-block {
+    display: flex;
+    flex-direction: column;
+}
+
+.airport-block.text-end {
+    text-align: right;
+}
+
+/* Códigos IATA con Colores Diferenciados */
+.iata-code-corporate {
+    font-size: 1.8rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.04em !important;
+    color: var(--accent-origen) !important; /* Cian para Origen */
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+}
+
+.airport-block.text-end .iata-code-corporate {
+    color: var(--accent-destino) !important; /* Esmeralda para Destino */
+}
+
+.airport-full-name {
+    font-size: 0.88rem !important;
+    font-weight: 600 !important;
+    color: #e2e8f0 !important;
+    margin-top: 2px !important;
+}
+
+.airport-location-sub {
+    font-size: 0.78rem !important;
+    color: #94a3b8 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    margin-top: 2px !important;
+}
+
+.airport-location-sub i {
+    color: var(--accent-origen) !important;
+}
+
+.airport-block.text-end .airport-location-sub {
+    justify-content: flex-end !important;
+}
+
+.airport-block.text-end .airport-location-sub i {
+    color: var(--accent-destino) !important;
+}
+
+/* Conector de Trayecto con Avión Destaque */
+.flight-path-connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 10px;
+}
+
+.flight-path-line {
+    width: 110px;
+    height: 2px;
+    background: repeating-linear-gradient(90deg, #38bdf8, #38bdf8 6px, transparent 6px, transparent 12px) !important;
+    margin: 8px 0;
+    opacity: 0.8;
+}
+
+.flight-path-icon {
+    background: #1e293b !important;
+    color: var(--accent-origen) !important;
+    border: 1px solid rgba(56, 189, 248, 0.4) !important;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* Tiles Operativos / Inferiores */
+.ops-info-tile {
+    background: #080d1a !important;
+    border: 1px solid #1e293b !important;
+    border-radius: 6px !important;
+    padding: 10px 14px !important;
+}
+
+.ops-tile-label {
+    font-size: 0.7rem !important;
+    font-weight: 700 !important;
+    color: #64748b !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase !important;
+    display: block !important;
+    margin-bottom: 4px !important;
+}
+
+.ops-tile-label i {
+    color: #94a3b8;
+}
+
+.ops-tile-value {
+    font-size: 0.92rem !important;
+    font-weight: 700 !important;
+    color: #f8fafc !important;
+}
+
+.ops-tile-value.text-gate {
+    color: var(--accent-gate) !important; /* Ámbar para la Puerta de Embarque */
+}
+
+.ops-tile-value.text-salida {
+    color: var(--accent-origen) !important; /* Cian para la Salida */
+}
+
+.ops-tile-value.text-llegada {
+    color: var(--accent-destino) !important; /* Verde para la Llegada */
+}
+
+/* --------------------------------------------------------------------------
+   🛈 MODAL DIÁLOGO DE ESCALAS (dlgNuevoSegmento)
+   -------------------------------------------------------------------------- */
+.custom-dialog .ui-dialog-titlebar {
+    background: var(--bg-header) !important;
+    color: var(--text-heading) !important;
+    border-bottom: 1px solid var(--border-subtle) !important;
+}
+
+.custom-dialog .ui-dialog-content {
+    background-color: #0d172a !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+}
+
+.segment-mode-bar {
+    display: flex;
+    background: #090d16;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    padding: 4px;
+    gap: 4px;
+}
+
+.segment-mode-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    background: transparent;
+    border: none;
+    color: #64748b;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.segment-mode-btn.modo-origen.activo {
+    background: #1e293b;
+    color: var(--accent-origen);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.segment-mode-btn.modo-destino.activo {
+    background: #1e293b;
+    color: var(--accent-destino);
+    border: 1px solid rgba(52, 211, 153, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.flight-strip-card {
+    background: #111c30;
+    border: 1px solid #1e2d4a;
+    border-radius: 8px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 64px;
+    position: relative;
+    overflow: hidden;
+}
+
+.flight-strip-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+}
+
+.flight-strip-card.card-origen::before { background: var(--accent-origen); }
+.flight-strip-card.card-destino::before { background: var(--accent-destino); }
+
+.strip-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.strip-label.origen { color: var(--accent-origen); }
+.strip-label.destino { color: var(--accent-destino); }
+
+.strip-iata-badge {
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-right: 6px;
+    font-family: monospace;
+}
+
+.strip-iata-badge.origen {
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--accent-origen);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.strip-iata-badge.destino {
+    background: rgba(52, 211, 153, 0.15);
+    color: var(--accent-destino);
+    border: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+.strip-airport-name {
+    color: #f1f5f9;
+    font-size: 0.88rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 260px;
+}
+
+#mapaSelectorAeropuertos {
+    background-color: #0b1120 !important;
+    border: 1px solid #1e293b !important;
+    border-radius: 8px !important;
+}
+
+.leaflet-popup-content-wrapper, .leaflet-popup-tip {
+    background: #0f172a !important;
+    color: #f8fafc !important;
+    border: 1px solid #334155 !important;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.7) !important;
+}
+
+.dialog-scroll-body {
+    max-height: 60vh;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.dialog-footer-fijo {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-subtle);
+}
+
+/* Estado deshabilitado para el flujo secuencial de pasos */
+.step-disabled {
+    opacity: 0.45;
+    pointer-events: none;
+    user-select: none;
+    filter: grayscale(0.2);
+    transition: all 0.3s ease;
+}

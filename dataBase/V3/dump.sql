@@ -381,7 +381,7 @@ CREATE TABLE Configuracion_Cabina (
                                       ID_CONFIGURACION INT PRIMARY KEY DEFAULT nextval('configuracion_cabina_seq'),
                                       ID_MODELO INT REFERENCES Modelo_Avion(ID_MODELO) ON DELETE CASCADE,
                                       ID_CLASE INT REFERENCES Clase_asiento(ID_CLASE) ON DELETE CASCADE,
-                                      Fila_Inicio INT NOT NULL,                     -- Ecantidadj: Fila 1
+                                      Fila_Inicio INT NOT NULL,                     -- Ej: Fila 1
                                       Fila_Fin INT NOT NULL,                        -- Ej: Fila 5
                                       Distribucion_Columnas VARCHAR(20) NOT NULL,   -- Ej: "2-2" (Ejecutiva), "3-3" (Pasillo único), "3-3-3" (Doble pasillo)
                                       Letras_Columnas VARCHAR(30) NOT NULL,         -- Ej: "A,B,C,D,E,F" o "A,B,C,D,E,F,G,H,J"
@@ -749,8 +749,6 @@ FOREIGN KEY (ID_VUELO) REFERENCES Vuelo(ID_VUELO) ON DELETE CASCADE;
 ALTER TABLE Reserva_Asiento
 ADD CONSTRAINT reserva_asiento_id_vuelo_fkey
 FOREIGN KEY (ID_VUELO) REFERENCES Vuelo(ID_VUELO) ON DELETE CASCADE;*/
-
-
 
 DO $$
     DECLARE
@@ -3370,38 +3368,41 @@ VALUES
 
 
 -- 1. Limpieza de Tablas Intermedias
-TRUNCATE TABLE Tarifa_Caracteristica CASCADE;
-TRUNCATE TABLE Caracteristica_Tarifa CASCADE;
-TRUNCATE TABLE Tarifa CASCADE;
+-- =============================================================================
+-- SCRIPT DE POBLADO: TARIFAS Y CARACTERÍSTICAS (SkyWay)
+-- =============================================================================
 
--- 2. Tarifas
+-- 1. Insertar Tarifas
 INSERT INTO Tarifa (ID_TARIFA, Nombre) VALUES
                                            (1, 'Básica'),
                                            (2, 'Flexible'),
                                            (3, 'Premium');
 
--- 3. Características (Redacción profesional y accesible)
+-- 2. Insertar Definición de Características
 INSERT INTO Caracteristica_Tarifa (ID_CARACTERISTICA, Nombre, Descripcion, Tipo_Dato) VALUES
                                                                                           (1, 'Permite cambio de asiento', 'Permite cambiar los asientos luego de la compra', 'boolean'),
-                                                                                          (2, 'Plazo límite para cambio de asiento', 'Horas previas al vuelo para realizar cambios de asiento', 'text'),
+                                                                                          (2, 'Plazo límite para cambio de asiento', 'Horas previas al vuelo para realizar cambios de asiento', 'int'),
                                                                                           (3, 'Permite cancelación de reserva', 'Permite cancelar la reserva', 'boolean');
 
--- 4. Tarifa Básica (Sin cambio de asiento, sí cancelación)
-INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool, Valor) VALUES
-                                                                                        (1, 1, FALSE, NULL),
-                                                                                        (1, 3, TRUE, NULL);
+-- 3. Configuración para Tarifa Básica
+-- (Sin cambio de asiento, sí permite cancelación)
+INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool, Valor_Int, Valor) VALUES
+                                                                                                   (1, 1, FALSE, NULL, NULL),
+                                                                                                   (1, 3, TRUE,  NULL, NULL);
 
--- 5. Tarifa Flexible (Permite cambio hasta 48h antes)
-INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool, Valor) VALUES
-                                                                                        (2, 1, TRUE, NULL),
-                                                                                        (2, 2, TRUE, 'hasta 48h antes del vuelo'),
-                                                                                        (2, 3, TRUE, NULL);
+-- 4. Configuración para Tarifa Flexible
+-- (Permite cambio hasta 48 horas antes, sí permite cancelación)
+INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool, Valor_Int, Valor) VALUES
+                                                                                                   (2, 1, TRUE, NULL, NULL),
+                                                                                                   (2, 2, NULL, 48,   NULL),
+                                                                                                   (2, 3, TRUE, NULL, NULL);
 
--- 6. Tarifa Premium (Permite cambio hasta 24h antes)
-INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool, Valor) VALUES
-                                                                                        (3, 1, TRUE, NULL),
-                                                                                        (3, 2, TRUE, 'hasta 24h antes del vuelo'),
-                                                                                        (3, 3, TRUE, NULL);
+-- 5. Configuración para Tarifa Premium
+-- (Permite cambio hasta 24 horas antes, sí permite cancelación)
+INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool, Valor_Int, Valor) VALUES
+                                                                                                   (3, 1, TRUE, NULL, NULL),
+                                                                                                   (3, 2, NULL, 24,   NULL),
+                                                                                                   (3, 3, TRUE, NULL, NULL);
 
 
 
@@ -3726,8 +3727,7 @@ SELECT
     c1.nombre || '-' || aprt1.nombre_aeropuerto || ' ' || aprt1.codigo_iata AS origen,
     c2.nombre || '-' || aprt2.nombre_aeropuerto || ' ' || aprt2.codigo_iata AS destino,
     it.hora_salida,
-    it.hora_llegada,
-    it.NUMERO_ESCALAS
+    it.hora_llegada
 FROM itinerario it
          JOIN aeropuerto aprt1 ON aprt1.id_aeropuerto = it.origen_aeropuerto
          JOIN aeropuerto aprt2 ON aprt2.id_aeropuerto = it.destino_aeropuerto
@@ -3736,6 +3736,3 @@ FROM itinerario it
 WHERE it.hora_salida >= NOW()
   AND it.hora_salida < NOW() + INTERVAL '7 days'
 ORDER BY it.hora_salida ASC;
-
-
-
