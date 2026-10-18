@@ -1098,38 +1098,41 @@ VALUES
 
 
 -- 1. Limpieza de Tablas Intermedias
-TRUNCATE TABLE Tarifa_Caracteristica CASCADE;
-TRUNCATE TABLE Caracteristica_Tarifa CASCADE;
-TRUNCATE TABLE Tarifa CASCADE;
+-- =============================================================================
+-- SCRIPT DE POBLADO: TARIFAS Y CARACTERÍSTICAS (SkyWay)
+-- =============================================================================
 
--- 2. Tarifas
+-- 1. Insertar Tarifas
 INSERT INTO Tarifa (ID_TARIFA, Nombre) VALUES
                                            (1, 'Básica'),
                                            (2, 'Flexible'),
                                            (3, 'Premium');
 
--- 3. Características (Redacción profesional y accesible)
+-- 2. Insertar Definición de Características
 INSERT INTO Caracteristica_Tarifa (ID_CARACTERISTICA, Nombre, Descripcion, Tipo_Dato) VALUES
 (1, 'Permite cambio de asiento', 'Permite cambiar los asientos luego de la compra', 'boolean'),
-(2, 'Plazo límite para cambio de asiento', 'Horas previas al vuelo para realizar cambios de asiento', 'text'),
+(2, 'Plazo límite para cambio de asiento', 'Horas previas al vuelo para realizar cambios de asiento', 'int'),
 (3, 'Permite cancelación de reserva', 'Permite cancelar la reserva', 'boolean');
 
--- 4. Tarifa Básica (Sin cambio de asiento, sí cancelación)
-INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool, Valor) VALUES
-(1, 1, FALSE, NULL),
-(1, 3, TRUE, NULL);
+-- 3. Configuración para Tarifa Básica
+-- (Sin cambio de asiento, sí permite cancelación)
+INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool, Valor_Int, Valor) VALUES
+(1, 1, FALSE, NULL, NULL),
+(1, 3, TRUE,  NULL, NULL);
 
--- 5. Tarifa Flexible (Permite cambio hasta 48h antes)
-INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool, Valor) VALUES
-(2, 1, TRUE, NULL),
-(2, 2, TRUE, 'hasta 48h antes del vuelo'),
-(2, 3, TRUE, NULL);
+-- 4. Configuración para Tarifa Flexible
+-- (Permite cambio hasta 48 horas antes, sí permite cancelación)
+INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool, Valor_Int, Valor) VALUES
+(2, 1, TRUE, NULL, NULL),
+(2, 2, NULL, 48,   NULL),
+(2, 3, TRUE, NULL, NULL);
 
--- 6. Tarifa Premium (Permite cambio hasta 24h antes)
-INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool, Valor) VALUES
-(3, 1, TRUE, NULL),
-(3, 2, TRUE, 'hasta 24h antes del vuelo'),
-(3, 3, TRUE, NULL);
+-- 5. Configuración para Tarifa Premium
+-- (Permite cambio hasta 24 horas antes, sí permite cancelación)
+INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool, Valor_Int, Valor) VALUES
+(3, 1, TRUE, NULL, NULL),
+(3, 2, NULL, 24,   NULL),
+(3, 3, TRUE, NULL, NULL);
 
 
 
