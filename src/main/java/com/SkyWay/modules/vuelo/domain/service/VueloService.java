@@ -1,5 +1,7 @@
 package com.SkyWay.modules.vuelo.domain.service;
 
+
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 
@@ -46,5 +48,10 @@ public interface VueloService {
 	public List<VueloMapaDTO> construirGeometriaVuelos(List<Vuelo> vuelos);
 
 	List<VueloEstadoProjection> obtenerEstadoVuelosEnVivo(String numeroVuelo, String ruta);
+
+	boolean existeConflictoPiloto(String rutPiloto, Timestamp salida, Timestamp llegada, Integer idVueloActual);
+
+	boolean existeConflictoAvion(Integer idAvion, Timestamp salida, Timestamp llegada, Integer idVueloActual);
+
 
 }
