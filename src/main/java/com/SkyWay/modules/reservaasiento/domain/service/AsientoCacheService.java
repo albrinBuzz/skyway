@@ -22,7 +22,7 @@ public class AsientoCacheService {
     private AsientoService asientoService;
 
     // Tiempo máximo de retención temporal antes de liberar el asiento (10 minutos)
-    private static final long TIEMPO_EXPIRACION_MS = 2 * 60 * 1000L;
+    private static final long TIEMPO_EXPIRACION_MS = 10 * 60 * 1000L;
 
     //private static final long TIEMPO_EXPIRACION_MS = 25000;
 
@@ -134,15 +134,61 @@ public class AsientoCacheService {
         return resultado[0];
     }
     public boolean validarPertenenciaYSeleccion(Integer idVuelo, Integer idAsiento, String sessionId) {
-        if (idVuelo == null || idAsiento == null || sessionId == null) return false;
+        // 1. Validar parámetros nulos
+        if (idVuelo == null || idAsiento == null || sessionId == null) {
+            Logger.logWarn(String.format(
+                    "⚠️ [TTL-Validación FAIL] Parámetros nulos recibidos -> idVuelo: %s, idAsiento: %s, sessionId: %s",
+                    idVuelo, idAsiento, sessionId
+            ));
+            return false;
+        }
+
+        // 2. Validar existencia del vuelo en la caché RAM
         Map<Integer, InfoAsientoDTO> asientosMap = mapaVuelos.get(idVuelo);
-        if (asientosMap == null) return false;
+        if (asientosMap == null) {
+            Logger.logWarn(String.format(
+                    "⚠️ [TTL-Validación FAIL] Vuelo #%d no existe en la caché 'mapaVuelos'. (Asiento solicitante: %d)",
+                    idVuelo, idAsiento
+            ));
+            return false;
+        }
 
+        // 3. Validar existencia del asiento en el mapa del vuelo
         InfoAsientoDTO asiento = asientosMap.get(idAsiento);
-        if (asiento == null) return false;
+        if (asiento == null) {
+            Logger.logWarn(String.format(
+                    "⚠️ [TTL-Validación FAIL] Asiento ID %d no fue encontrado en la caché del Vuelo #%d",
+                    idAsiento, idVuelo
+            ));
+            return false;
+        }
 
-        return "SELECCIONADO".equalsIgnoreCase(asiento.getEstado())
-                && sessionId.equals(asiento.getReservadoPor());
+        // 4. Validar estado del asiento
+        boolean estadoValido = "SELECCIONADO".equalsIgnoreCase(asiento.getEstado());
+        if (!estadoValido) {
+            Logger.logWarn(String.format(
+                    "⚠️ [TTL-Validación FAIL] Asiento ID %d (Vuelo #%d) no está 'SELECCIONADO'. Estado actual: '%s'",
+                    idAsiento, idVuelo, asiento.getEstado()
+            ));
+            return false;
+        }
+
+        // 5. Validar pertenencia del sessionId
+        boolean esDuenio = sessionId.equals(asiento.getReservadoPor());
+        if (!esDuenio) {
+            Logger.logWarn(String.format(
+                    "⚠️ [TTL-Validación FAIL] Discrepancia de SessionId en Asiento ID %d (Vuelo #%d) -> Esperado en Caché: '%s' | Recibido de la Vista: '%s'",
+                    idAsiento, idVuelo, asiento.getReservadoPor(), sessionId
+            ));
+            return false;
+        }
+
+        // ✅ Validación exitosa
+        Logger.logInfo(String.format(
+                "✅ [TTL-Validación OK] Asiento ID %d verificado con éxito para SessionId: %s (Vuelo #%d)",
+                idAsiento, sessionId, idVuelo
+        ));
+        return true;
     }
 
     /**
@@ -239,4 +285,64 @@ public class AsientoCacheService {
         EXITO_SELECCIONADO, EXITO_LIBERADO,
         FALLO_ASIENTO_NO_DISPONIBLE, FALLO_BLOQUEADO_POR_OTRO
     }
+
+
+
+    /**
+     * Liberación completa de todos los asientos bloqueados temporalmente por una sesión específica.
+     * Invocar al completar la compra, cancelar la reserva o al iniciar una nueva búsqueda de vuelo.
+     */
+    public void liberarTodosLosAsientosDeSesion(String sessionId) {
+        if (sessionId == null || sessionId.isBlank()) return;
+
+        for (Map.Entry<Integer, Map<Integer, InfoAsientoDTO>> entryVuelo : mapaVuelos.entrySet()) {
+            Integer idVuelo = entryVuelo.getKey();
+            Map<Integer, InfoAsientoDTO> asientosMap = entryVuelo.getValue();
+
+            asientosMap.forEach((idAsiento, asiento) -> {
+                if ("SELECCIONADO".equalsIgnoreCase(asiento.getEstado()) && sessionId.equals(asiento.getReservadoPor())) {
+                    asiento.setEstado("libre");
+                    asiento.setReservadoPor(null);
+                    tiempoSeleccionMap.remove(idAsiento);
+
+                    Logger.logInfo(String.format("🧹 [Sesion-Limpia] Asiento ID %d del Vuelo #%d liberado para SessionId: %s",
+                            idAsiento, idVuelo, sessionId));
+
+                    EventoAsientoPush evento = new EventoAsientoPush(idAsiento, idVuelo, "libre", null);
+                    messagingTemplate.convertAndSend("/topic/vuelo/" + idVuelo, evento);
+                }
+            });
+        }
+    }
+
+    /**
+     * Retorna el tiempo restante del temporizador del usuario filtrado SOLO para el vuelo especificado.
+     * Esto evita que reservas/selecciones previas de otros vuelos afecten el TTL actual.
+     */
+    public long getTiempoRestanteMsParaSesionYVuelo(String sessionId, Integer idVueloEspecifico) {
+        if (sessionId == null || idVueloEspecifico == null) return -1;
+
+        Map<Integer, InfoAsientoDTO> asientosMap = mapaVuelos.get(idVueloEspecifico);
+        if (asientosMap == null) return -1;
+
+        long ahora = System.currentTimeMillis();
+        long menorTiempoRestante = Long.MAX_VALUE;
+        boolean tieneAsientos = false;
+
+        for (Map.Entry<Integer, InfoAsientoDTO> entry : asientosMap.entrySet()) {
+            InfoAsientoDTO asiento = entry.getValue();
+            if ("SELECCIONADO".equalsIgnoreCase(asiento.getEstado()) && sessionId.equals(asiento.getReservadoPor())) {
+                Long timestamp = tiempoSeleccionMap.get(entry.getKey());
+                if (timestamp != null) {
+                    long restante = TIEMPO_EXPIRACION_MS - (ahora - timestamp);
+                    if (restante < menorTiempoRestante) {
+                        menorTiempoRestante = restante;
+                        tieneAsientos = true;
+                    }
+                }
+            }
+        }
+        return tieneAsientos ? Math.max(0, menorTiempoRestante) : -1;
+    }
+
 }

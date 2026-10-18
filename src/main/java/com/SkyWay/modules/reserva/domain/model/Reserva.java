@@ -2,6 +2,7 @@ package com.SkyWay.modules.reserva.domain.model;
 
 import java.io.Serializable;
 
+import com.SkyWay.modules.PasajeroReserva.domain.model.PasajeroReserva;
 import com.SkyWay.modules.checkin.domain.model.Checkin;
 import com.SkyWay.modules.equipaje.domain.model.Equipaje;
 import com.SkyWay.modules.estadoreserva.domain.model.EstadoReserva;
@@ -70,6 +71,9 @@ public class Reserva implements Serializable {
 	@OneToMany(mappedBy="reserva",fetch = FetchType.EAGER)
 	private List<ReservaItinerario> reservaItinerarios;
 
+	@OneToMany(mappedBy="reserva", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+	private List<PasajeroReserva> pasajerosReserva;
+
 	public Reserva() {
 	}
 
@@ -105,6 +109,14 @@ public class Reserva implements Serializable {
 		this.total = total;
 	}
 
+	public List<PasajeroReserva> getPasajerosReserva() {
+		return this.pasajerosReserva;
+	}
+
+	public void setPasajerosReserva(List<PasajeroReserva> pasajerosReserva) {
+		this.pasajerosReserva = pasajerosReserva;
+	}
+
 	public List<Checkin> getCheckins() {
 		return this.checkins;
 	}
@@ -112,6 +124,8 @@ public class Reserva implements Serializable {
 	public void setCheckins(List<Checkin> checkins) {
 		this.checkins = checkins;
 	}
+
+
 
 	public Checkin addCheckin(Checkin checkin) {
 		getCheckins().add(checkin);

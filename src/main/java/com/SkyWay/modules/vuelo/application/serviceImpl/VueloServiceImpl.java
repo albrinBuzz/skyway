@@ -1,5 +1,6 @@
 package com.SkyWay.modules.vuelo.application.serviceImpl;
 
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -183,4 +184,16 @@ public class VueloServiceImpl implements VueloService {
 		String rutaClean = (ruta != null && !ruta.isBlank()) ? ruta.trim() : null;
 		return vueloRepository.buscarEstadoVuelosVivo(numClean, rutaClean);
 	}
+
+	@Override
+	public boolean existeConflictoPiloto(String rutPiloto, Timestamp salida, Timestamp llegada, Integer idVueloActual) {
+		return vueloRepository.existeConflictoPiloto(rutPiloto, salida, llegada, idVueloActual);
+	}
+
+	@Override
+	public boolean existeConflictoAvion(Integer idAvion, Timestamp salida, Timestamp llegada, Integer idVueloActual) {
+		return vueloRepository.existeConflictoAvion(idAvion, salida, llegada, idVueloActual);
+	}
+
+
 }
