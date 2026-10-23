@@ -48,6 +48,10 @@ export interface Aeropuerto {
   idAeropuerto: number;
   nombreAeropuerto: string;
   codigoIata: string;
+  ciudad?: string | null;
+  pais?: string | null;
+  latitud?: number | null;
+  longitud?: number | null;
 }
 
 export interface AeropuertoCatalogo extends Aeropuerto {
