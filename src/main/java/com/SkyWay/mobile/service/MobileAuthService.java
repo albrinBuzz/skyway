@@ -26,10 +26,10 @@ public class MobileAuthService {
     private final String dummyHash;
     public MobileAuthService(UsuarioRepository usuarios, PasajeroRepository pasajeros,
             PasswordEncoder passwords, JwtEncoder tokens, Clock clock,
-            @Value("${skyway.mobile.token-seconds:900}") long ttl) {
+            @Value("${skyway.mobile.token-seconds:7200}") long ttl) {
         this.usuarios = usuarios; this.pasajeros = pasajeros; this.passwords = passwords;
         this.tokens = tokens; this.clock = clock;
-        if (ttl < 60 || ttl > 3600) throw new IllegalArgumentException("token-seconds debe estar entre 60 y 3600.");
+        if (ttl < 60 || ttl > 86400) throw new IllegalArgumentException("token-seconds debe estar entre 60 y 86400.");
         this.ttl = ttl;
         this.dummyHash = passwords.encode(UUID.randomUUID().toString());
     }
