@@ -1,4 +1,5 @@
 import { Component, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../core/api.service';
 import { Aeropuerto, DetalleReserva, Inicio, Itinerario, Pagina, ResumenReserva } from '../../core/models';
@@ -26,6 +27,7 @@ const COORDENADAS_FALLBACK: Record<string, { lat: number; lon: number; ciudad: s
 })
 export class VuelosPage {
   private readonly api = inject(ApiService);
+  private readonly router = inject(Router);
 
   seccion: 'proximo' | 'reservas' = 'proximo';
   inicio: Inicio | null = null;
@@ -51,6 +53,17 @@ export class VuelosPage {
     if (value === 'proximo' || value === 'reservas') this.seccion = value;
   }
 
+  irADetalleReserva(idReserva: number, event?: Event) {
+    event?.stopPropagation();
+    void this.router.navigate(['/vuelos/reservas', idReserva]);
+  }
+
+  abrirMapaDesdeCard(event: Event, r: ResumenReserva) {
+    event.preventDefault();
+    event.stopPropagation();
+    void this.abrirMapaReserva(r.idReserva, null, r);
+  }
+
   async load(page = this.page) {
     const generation = ++this.generation;
     this.busy = true;
@@ -65,6 +78,22 @@ export class VuelosPage {
       if (generation !== this.generation) return;
       this.inicio = inicio;
       this.reservas = reservas;
+
+      // Pre-cargar en segundo plano los detalles en memoria mientras el token está vigente
+      for (const r of reservas.contenido) {
+        if (!this.detalleReservaCache.has(r.idReserva)) {
+          this.api.reserva(r.idReserva).subscribe({
+            next: d => this.detalleReservaCache.set(r.idReserva, d),
+            error: () => {}
+          });
+        }
+      }
+      if (inicio.proximoVuelo && !this.detalleReservaCache.has(inicio.proximoVuelo.idReserva)) {
+        this.api.reserva(inicio.proximoVuelo.idReserva).subscribe({
+          next: d => this.detalleReservaCache.set(inicio.proximoVuelo!.idReserva, d),
+          error: () => {}
+        });
+      }
     } catch (e) {
       if (generation === this.generation) this.error = errorMessage(e);
     } finally {
@@ -72,7 +101,7 @@ export class VuelosPage {
     }
   }
 
-  async abrirMapaReserva(idReserva: number, idVuelo?: number | null) {
+  async abrirMapaReserva(idReserva: number, idVuelo?: number | null, resumenFallback?: ResumenReserva) {
     this.cargandoRutaMapa = true;
     try {
       let detalle = this.detalleReservaCache.get(idReserva);
@@ -84,8 +113,9 @@ export class VuelosPage {
       this.rutaSeleccionada = this.procesarRutaVuelo(detalle, idVuelo);
       this.mostrarModalGlobo = true;
     } catch (e) {
-      console.error('Error al obtener ruta de reserva:', e);
-      this.error = 'No se pudo cargar la ruta del vuelo.';
+      console.warn('Error al obtener ruta de reserva, recurriendo a fallback resiliente:', e);
+      this.rutaSeleccionada = this.construirRutaFallback(idReserva, idVuelo, resumenFallback);
+      this.mostrarModalGlobo = true;
     } finally {
       this.cargandoRutaMapa = false;
     }
@@ -289,5 +319,95 @@ export class VuelosPage {
     if (horas === 0) return `~${minutos}m`;
     if (minutos === 0) return `~${horas}h`;
     return `~${horas}h ${minutos}m`;
+  }
+
+  private construirRutaFallback(
+    idReserva: number,
+    idVuelo?: number | null,
+    resumenFallback?: ResumenReserva
+  ): RutaVuelo3D {
+    if (this.inicio?.proximoVuelo && this.inicio.proximoVuelo.idReserva === idReserva) {
+      const pv = this.inicio.proximoVuelo;
+      const dummyDetalle: DetalleReserva = {
+        idReserva,
+        fechaReserva: '',
+        estadoReserva: { idEstadoReserva: null, descripcion: null },
+        total: null,
+        titular: true,
+        checkin: null,
+        equipajes: [],
+        itinerarios: [{
+          idReservaItinerario: 0,
+          idItinerario: 0,
+          horaSalida: pv.vuelo.fechaHoraSalida,
+          horaLlegada: pv.vuelo.fechaHoraLlegada,
+          numeroEscalas: pv.vuelo.segmentos?.length ? Math.max(0, pv.vuelo.segmentos.length - 1) : 0,
+          precioBase: null,
+          origen: pv.vuelo.segmentos?.[0]?.origen ?? null,
+          destino: pv.vuelo.segmentos?.[pv.vuelo.segmentos.length - 1]?.destino ?? null,
+          tarifa: { idItinerarioTarifa: 0, idTarifa: 0, nombre: '', precio: 0, caracteristicas: [] },
+          vuelos: [{
+            idItinerarioVuelo: 0,
+            orden: 1,
+            tiempoEspera: null,
+            tipoConexion: null,
+            vuelo: pv.vuelo
+          }]
+        }]
+      };
+      return this.procesarRutaVuelo(dummyDetalle, idVuelo);
+    }
+
+    const res = resumenFallback || this.reservas?.contenido.find(r => r.idReserva === idReserva);
+    const origIata = (res?.codigoIataOrigen || 'SCL').trim().toUpperCase();
+    const destIata = (res?.codigoIataDestino || 'LIM').trim().toUpperCase();
+
+    const origCoord = COORDENADAS_FALLBACK[origIata] || { lat: -33.3928, lon: -70.7858, ciudad: origIata, pais: 'Chile' };
+    const destCoord = COORDENADAS_FALLBACK[destIata] || { lat: -12.0219, lon: -77.1143, ciudad: destIata, pais: 'Perú' };
+
+    const origParada: ParadaRuta = {
+      codigoIata: origIata,
+      nombreAeropuerto: `Aeropuerto ${origCoord.ciudad}`,
+      ciudad: origCoord.ciudad,
+      pais: origCoord.pais,
+      latitud: origCoord.lat,
+      longitud: origCoord.lon,
+      tipo: 'origen',
+      colorHex: '#ff4d4d'
+    };
+
+    const destParada: ParadaRuta = {
+      codigoIata: destIata,
+      nombreAeropuerto: `Aeropuerto ${destCoord.ciudad}`,
+      ciudad: destCoord.ciudad,
+      pais: destCoord.pais,
+      latitud: destCoord.lat,
+      longitud: destCoord.lon,
+      tipo: 'destino',
+      colorHex: '#3ddc84'
+    };
+
+    const dKm = this.calcularHaversineKm(origParada.latitud, origParada.longitud, destParada.latitud, destParada.longitud);
+    const tramo: TramoRuta = {
+      origen: origParada,
+      destino: destParada,
+      distanciaKm: dKm
+    };
+
+    return {
+      idReserva,
+      codigoOrigen: origIata,
+      codigoDestino: destIata,
+      ciudadOrigen: origCoord.ciudad,
+      ciudadDestino: destCoord.ciudad,
+      paisOrigen: origCoord.pais,
+      paisDestino: destCoord.pais,
+      paradas: [origParada, destParada],
+      tramos: [tramo],
+      distanciaKm: dKm,
+      duracionTotal: '~3h',
+      numEscalas: 0,
+      nombresEscalas: []
+    };
   }
 }

@@ -94,7 +94,7 @@
       </section>
 
       <section *ngIf="seccion === 'reservas' && reservas as result" class="reservas-section">
-        <ion-card *ngFor="let r of result.contenido" button [routerLink]="['/vuelos/reservas', r.idReserva]">
+        <ion-card *ngFor="let r of result.contenido" class="reserva-card-clickable" (click)="irADetalleReserva(r.idReserva, $event)">
           <ion-card-content>
             <div class="row">
               <span class="eyebrow">RESERVA #{{ r.idReserva }}</span>
@@ -111,7 +111,7 @@
                 <button
                   type="button"
                   class="btn-reserva-mapa"
-                  (click)="$event.stopPropagation(); abrirMapaReserva(r.idReserva)"
+                  (click)="abrirMapaDesdeCard($event, r)"
                   aria-label="Ver ruta 3D de esta reserva"
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
