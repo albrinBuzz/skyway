@@ -43,13 +43,38 @@
             </div>
           </div>
 
-          <div class="meta">
-            <div><span>Vuelo</span><strong>{{ next.vuelo.numeroVuelo || 'Sin número' }}</strong></div>
-            <div><span>Salida</span><strong>{{ next.vuelo.fechaHoraSalida | date:'dd MMM · HH:mm' }}</strong></div>
-            <div><span>Puerta</span><strong>{{ next.vuelo.segmentos[0]?.puerta?.codigoPuerta || 'Por asignar' }}</strong></div>
-            <div><span>Asiento</span><strong>{{ next.vuelo.asiento?.numeroAsiento || 'Sin asignar' }}</strong></div>
-            <div><span>Avión</span><strong>{{ next.vuelo.modeloAvion || 'Por confirmar' }}</strong></div>
-            <div><span>Reserva</span><strong>#{{ next.idReserva }}</strong></div>
+          <div class="hero-details-container">
+            <div class="meta">
+              <div><span>Vuelo</span><strong>{{ next.vuelo.numeroVuelo || 'Sin número' }}</strong></div>
+              <div><span>Salida</span><strong>{{ next.vuelo.fechaHoraSalida | date:'dd MMM · HH:mm' }}</strong></div>
+              <div><span>Puerta</span><strong>{{ next.vuelo.segmentos[0]?.puerta?.codigoPuerta || 'Por asignar' }}</strong></div>
+              <div><span>Asiento</span><strong>{{ next.vuelo.asiento?.numeroAsiento || 'Sin asignar' }}</strong></div>
+              <div><span>Avión</span><strong>{{ next.vuelo.modeloAvion || 'Por confirmar' }}</strong></div>
+              <div><span>Reserva</span><strong>#{{ next.idReserva }}</strong></div>
+            </div>
+
+            <!-- Botón del Cuadro Rojo: Globo 3D Interactivo -->
+            <button
+              type="button"
+              class="globe-trigger-card"
+              (click)="abrirMapaReserva(next.idReserva, next.vuelo.idVuelo)"
+              aria-label="Ver ruta de vuelo en globo 3D interactivo"
+            >
+              <div class="globe-preview-sphere">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="2" y1="12" x2="22" y2="12"/>
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                </svg>
+                <span class="globe-ping"></span>
+              </div>
+              <div class="globe-trigger-info">
+                <span class="globe-tag">3D INTERACTIVO</span>
+                <strong class="globe-title">Ver ruta 3D</strong>
+                <span class="globe-sub">Mapa interactivo</span>
+              </div>
+              <ion-icon name="chevron-forward-outline" class="globe-arrow"></ion-icon>
+            </button>
           </div>
 
           <ion-button expand="block" color="light" [routerLink]="['/vuelos/reservas', next.idReserva]">
@@ -82,7 +107,22 @@
             </div>
             <div class="row reservation-footer">
               <span>{{ r.proximaSalida ? (r.proximaSalida | date:'dd MMM yyyy · HH:mm') : 'Horario no disponible' }}</span>
-              <ion-icon name="arrow-forward-outline"></ion-icon>
+              <div class="footer-actions">
+                <button
+                  type="button"
+                  class="btn-reserva-mapa"
+                  (click)="$event.stopPropagation(); abrirMapaReserva(r.idReserva)"
+                  aria-label="Ver ruta 3D de esta reserva"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="2" y1="12" x2="22" y2="12"/>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                  </svg>
+                  <span>Ruta 3D</span>
+                </button>
+                <ion-icon name="arrow-forward-outline"></ion-icon>
+              </div>
             </div>
           </ion-card-content>
         </ion-card>
@@ -101,4 +141,11 @@
       </section>
     </ng-container>
   </main>
+
+  <!-- Modal Interactivo Globo 3D a Pantalla Completa -->
+  <ion-modal [isOpen]="mostrarModalGlobo" (didDismiss)="cerrarModalGlobo()" cssClass="modal-globo-3d">
+    <ng-template>
+      <app-globo-mapa [ruta]="rutaSeleccionada" (cerrar)="cerrarModalGlobo()"></app-globo-mapa>
+    </ng-template>
+  </ion-modal>
 </ion-content>

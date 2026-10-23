@@ -4,9 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
 import { VuelosPage } from './vuelos.page';
+import { GloboMapaComponent } from './globo-mapa/globo-mapa.component';
 
 @NgModule({
-  declarations: [VuelosPage],
+  declarations: [VuelosPage, GloboMapaComponent],
   imports: [CommonModule, FormsModule, IonicModule, RouterModule.forChild([{ path: '', component: VuelosPage }])]
 })
 export class VuelosPageModule {}

@@ -33,7 +33,8 @@ public final class MobileDtos {
     }
     public record EstadoReservaDto(Integer idEstadoReserva, String descripcion) {}
     public record EstadoVueloDto(Integer idEstadoVuelo, String estado, String descripcion) {}
-    public record AeropuertoDto(Integer idAeropuerto, String nombreAeropuerto, String codigoIata) {}
+    public record AeropuertoDto(Integer idAeropuerto, String nombreAeropuerto, String codigoIata,
+                                String ciudad, String pais, Double latitud, Double longitud) {}
     public record AeropuertoCatalogo(Integer idAeropuerto, String codigoIata, String nombreAeropuerto, String ciudad) {}
     public record TarifaDisponible(Integer idItinerarioTarifa, Integer idTarifa, String nombre, BigDecimal precio) {}
     public record ItinerarioDisponible(Integer idItinerario, String origen, String destino,

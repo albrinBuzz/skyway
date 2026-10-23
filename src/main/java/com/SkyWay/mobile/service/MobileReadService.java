@@ -31,8 +31,11 @@ public class MobileReadService {
         if (o == null) return null;
         return o instanceof Timestamp t ? t.toLocalDateTime() : (LocalDateTime)o;
     }
+    public static Double decimal(Object o) {
+        return o == null ? null : ((Number)o).doubleValue();
+    }
     private static AeropuertoDto airport(Object[] r,int start) {
-        return r[start] == null ? null : new AeropuertoDto(number(r[start]),text(r[start+1]),text(r[start+2]));
+        return r[start] == null ? null : new AeropuertoDto(number(r[start]),text(r[start+1]),text(r[start+2]),text(r[start+3]),text(r[start+4]),decimal(r[start+5]),decimal(r[start+6]));
     }
     public static void pagination(int page,int size) {
         if(page<0 || page>100000 || size<1 || size>100)
@@ -53,9 +56,9 @@ public class MobileReadService {
         Object[] booking=reservas.mobileReserva(rut,id,false);
         Map<Integer,List<SegmentoDto>> segments=new HashMap<>();
         for(Object[] r:reservas.mobileSegmentos(id)) {
-            PuertaDto gate=r[11]==null?null:new PuertaDto(number(r[11]),text(r[12]),text(r[13]),number(r[14]));
+            PuertaDto gate=r[19]==null?null:new PuertaDto(number(r[19]),text(r[20]),text(r[21]),number(r[22]));
             segments.computeIfAbsent(number(r[0]),k->new ArrayList<>()).add(new SegmentoDto(
-                    number(r[1]),number(r[2]),date(r[3]),date(r[4]),airport(r,5),airport(r,8),gate));
+                    number(r[1]),number(r[2]),date(r[3]),date(r[4]),airport(r,5),airport(r,12),gate));
         }
         Map<Integer,AsientoAsignado> seats=new HashMap<>();
         for(Object[] r:reservas.mobileAsignados(id,rut)) {
@@ -73,8 +76,8 @@ public class MobileReadService {
         for(Object[] r:reservas.mobileCaracteristicas(id)) features.computeIfAbsent(number(r[0]),k->new ArrayList<>()).add(
                 new CaracteristicaDto(number(r[1]),number(r[2]),text(r[3]),text(r[4]),text(r[5]),text(r[6]),(Boolean)r[7],number(r[8])));
         var itineraries=reservas.mobileItinerarios(id).stream().map(r->new ItinerarioDto(
-                number(r[0]),number(r[1]),date(r[2]),date(r[3]),number(r[4]),number(r[5]),airport(r,6),airport(r,9),
-                new TarifaDto(number(r[12]),number(r[13]),text(r[14]),(BigDecimal)r[15],features.getOrDefault(number(r[13]),List.of())),
+                number(r[0]),number(r[1]),date(r[2]),date(r[3]),number(r[4]),number(r[5]),airport(r,6),airport(r,13),
+                new TarifaDto(number(r[20]),number(r[21]),text(r[22]),(BigDecimal)r[23],features.getOrDefault(number(r[21]),List.of())),
                 connections.getOrDefault(number(r[1]),List.of()))).toList();
         var bags=reservas.mobileEquipajes(id,rut).stream().map(r->new EquipajeDto(number(r[0]),(BigDecimal)r[1],text(r[2]),text(r[3]),number(r[4]),text(r[5]))).toList();
         return new DetalleReserva(number(booking[0]),date(booking[1]),new EstadoReservaDto(number(booking[2]),text(booking[3])),
