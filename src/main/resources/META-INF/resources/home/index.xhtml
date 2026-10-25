@@ -16,61 +16,6 @@
                 crossorigin="">
         </script>
 
-        <script type="text/javascript">
-            <![CDATA[
-            document.addEventListener("DOMContentLoaded", function () {
-                var map = L.map("leafletMap").setView([20, 0], 2);
-
-                L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-                    attribution: "© <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors"
-                }).addTo(map);
-
-                var locations = [
-                    { name: "Nueva York, EE.UU.", lat: 40.7128, lng: -74.0060 },
-                    { name: "Madrid, España", lat: 40.4168, lng: -3.7038 },
-                    { name: "Río de Janeiro, Brasil", lat: -22.9068, lng: -43.1729 }
-                ];
-
-                locations.forEach(function (loc) {
-                    L.marker([loc.lat, loc.lng])
-                        .addTo(map)
-                        .bindPopup("<b>" + loc.name + "</b><br><a href='#formOneWay' class='text-primary'>Buscar Vuelos</a>");
-                });
-
-                setTimeout(function () {
-                    map.invalidateSize();
-                }, 200);
-            });
-
-            // Función interactiva para el modal del Blog
-            function abrirBlogModal(titulo, categoria, tiempo, imagen, contenido) {
-                document.getElementById("modalBlogTitulo").innerText = titulo;
-                document.getElementById("modalBlogCategoria").innerText = categoria;
-                document.getElementById("modalBlogTiempo").innerText = tiempo;
-                document.getElementById("modalBlogImagen").src = imagen;
-                document.getElementById("modalBlogTexto").innerText = contenido;
-                var blogModal = new bootstrap.Modal(document.getElementById('blogArticleModal'));
-                blogModal.show();
-            }
-            ]]>
-
-
-            window.addEventListener("pageshow", function (event) {
-                if (event.persisted || (window.performance &amp;&amp; window.performance.navigation.type === 2)) {
-                    // Unbind o reset de PrimeFaces Ajax Status
-                    if (window.PrimeFaces) {
-                        PrimeFaces.widgets = PrimeFaces.widgets || {};
-                        // Desbloquea todos los botones con indicador de carga
-                        document.querySelectorAll('.ui-state-disabled, .ui-button-loading').forEach(function (btn) {
-                            btn.classList.remove('ui-state-disabled', 'ui-button-loading');
-                            btn.removeAttribute('disabled');
-                        });
-                    }
-                }
-            });
-        </script>
-
-
 
         <style type="text/css">
             /* ==========================================================================
@@ -90,7 +35,8 @@
             .skyway-label {
                 color: #94a3b8 !important;
                 font-weight: 500 !important;
-                margin-bottom: 8px !important;
+                margin-bottom: 6px !important;
+                font-size: 0.9rem !important;
             }
 
             /* Tabs Superiores */
@@ -100,6 +46,8 @@
                 color: #94a3b8 !important;
                 border: 1px solid #1e3a5c !important;
                 border-bottom: none !important;
+                font-size: 0.9rem !important;
+                padding: 10px 16px !important;
             }
             .skyway-tabs .nav-link.active {
                 background: #101b33 !important;
@@ -108,16 +56,15 @@
             }
 
             /* ==========================================================================
-               🛠 REGLAS DE CORRECCIÓN DE INPUTS Y FECHAS
+               INPUTS Y SELECTORES BASE
                ========================================================================== */
-            /* Normalización de contenedores PrimeFaces */
             .skyway-custom-input.ui-autocomplete,
             .skyway-custom-input.ui-selectonemenu,
             .skyway-custom-input.ui-calendar,
             .skyway-custom-input.ui-datepicker {
                 display: flex !important;
                 width: 100% !important;
-                height: 46px !important;
+                min-height: 46px !important;
                 background: #11263f !important;
                 border: 1px solid #1e3a5c !important;
                 border-radius: 6px !important;
@@ -125,34 +72,42 @@
                 position: relative !important;
             }
 
-            /* Inputs de texto internos */
+            .skyway-custom-input .ui-selectonemenu-label {
+                background: transparent !important;
+                color: #e6eef7 !important;
+                padding: 10px 12px !important;
+                font-size: 0.9rem !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+            }
+
             .skyway-custom-input .ui-inputfield,
             .skyway-custom-input input {
                 background: #11263f !important;
                 color: #e6eef7 !important;
                 border: none !important;
                 height: 100% !important;
-                padding: 10px 14px !important;
-                font-size: 14px !important;
+                padding: 10px 12px !important;
+                font-size: 0.9rem !important;
                 width: 100% !important;
                 box-sizing: border-box !important;
                 border-radius: 6px !important;
                 box-shadow: none !important;
             }
 
-            /* Placeholder */
             .skyway-custom-input input::placeholder {
                 color: #64748b !important;
             }
 
-            /* Botón Dropdown de Autocomplete y Triggers */
             .skyway-custom-input .ui-autocomplete-dropdown,
             .skyway-custom-input .ui-datepicker-trigger.ui-button,
             .skyway-custom-input .ui-selectonemenu-trigger {
                 background: #1e3a5c !important;
                 border: none !important;
                 color: #4aa3ff !important;
-                width: 42px !important;
+                width: 40px !important;
+                min-width: 40px !important;
                 height: 100% !important;
                 display: flex !important;
                 align-items: center !important;
@@ -160,69 +115,158 @@
                 border-radius: 0 5px 5px 0 !important;
             }
 
-            .skyway-custom-input .ui-selectonemenu-label {
-                background: transparent !important;
-                color: #e6eef7 !important;
-                line-height: 24px !important;
-                padding: 10px 14px !important;
-            }
-
-            /* Focus */
-            .skyway-custom-input:focus-within {
-                border-color: #4aa3ff !important;
-                box-shadow: 0 0 6px rgba(74, 163, 255, 0.4) !important;
-            }
-
             /* ==========================================================================
-               PANELES FLOTANTES Y CALENDARIO
+               🛠 FIX CRÍTICO MÓVIL: CORRECCIÓN DE DESPLEGABLES Y CALENDARIO
                ========================================================================== */
-            .ui-autocomplete-panel, .ui-selectonemenu-panel, .ui-datepicker {
-                background: #101b33 !important;
-                border: 1px solid #1e3a5c !important;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
-            }
-            .ui-autocomplete-item, .ui-selectonemenu-item {
-                color: #e6eef7 !important;
-                padding: 10px 14px !important;
-            }
-            .ui-state-highlight, .ui-autocomplete-item:hover, .ui-selectonemenu-item:hover {
-                background: #3b82f6 !important;
-                color: white !important;
+
+            /* 1. Limitar alto y ancho del panel desplegable de aeropuertos */
+            .ui-autocomplete-panel,
+            .ui-selectonemenu-panel {
+                background: #0f172a !important;
+                border: 1px solid #3b82f6 !important;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8) !important;
+                max-height: 240px !important; /* Evita que ocupe toda la pantalla */
+                overflow-y: auto !important;
+                max-width: 90vw !important;
+                border-radius: 8px !important;
+                z-index: 9999 !important;
             }
 
-            .ui-datepicker .ui-datepicker-header { background: #11263f !important; border-bottom: 1px solid #1e3a5c !important; color: white !important; }
-            .ui-datepicker-calendar td a { color: #e6eef7 !important; }
-            .ui-datepicker-calendar td.ui-datepicker-current-day a { background: #3b82f6 !important; border-radius: 4px; }
+            .ui-autocomplete-items .ui-autocomplete-item,
+            .ui-selectonemenu-items .ui-selectonemenu-item {
+                color: #f8fafc !important;
+                padding: 10px 12px !important;
+                font-size: 0.85rem !important;
+                border-bottom: 1px solid #1e293b !important;
+                white-space: normal !important; /* Permite salto de línea si el nombre es muy largo */
+            }
 
-            /* Botón de búsqueda inferior */
-            .skyway-btn.ui-button {
-                background: #3b82f6 !important;
+            .ui-autocomplete-items .ui-autocomplete-item.ui-state-highlight,
+            .ui-autocomplete-items .ui-autocomplete-item:hover,
+            .ui-selectonemenu-items .ui-selectonemenu-item:hover {
+                background: #2563eb !important;
+                color: #ffffff !important;
+            }
+
+            /* 2. Centrar y arreglar el tamaño del DatePicker / Calendario */
+            .ui-datepicker {
+                background: #0d172a !important;
+                border: 1px solid #3b82f6 !important;
+                border-radius: 12px !important;
+                padding: 12px 8px !important;
+                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.85) !important;
+                width: 90vw !important;
+                max-width: 330px !important;
+                box-sizing: border-box !important;
+                z-index: 9999 !important;
+                overflow: hidden !important; /* Evita que el círculo o contenido sobresalga */
+            }
+
+            .ui-datepicker .ui-datepicker-header {
+                background: #1e293b !important;
                 border: none !important;
-                color: white !important;
-                padding: 12px 40px !important;
+                border-radius: 8px !important;
+                color: #f8fafc !important;
+                padding: 6px 10px !important;
+                margin-bottom: 8px !important;
+            }
+
+            .ui-datepicker .ui-datepicker-header .ui-datepicker-title {
+                font-size: 0.95rem !important;
+                font-weight: 700 !important;
+                color: #ffffff !important;
+            }
+
+            .ui-datepicker .ui-datepicker-prev,
+            .ui-datepicker .ui-datepicker-next {
+                top: 8px !important;
+                color: #60a5fa !important;
+            }
+
+            .ui-datepicker table {
+                width: 100% !important;
+                margin: 0 !important;
+                border-collapse: collapse !important;
+                table-layout: fixed !important; /* Fuerza a que las 7 columnas tengan exactamente el mismo ancho */
+            }
+
+            .ui-datepicker th {
+                color: #60a5fa !important;
+                font-size: 0.78rem !important;
                 font-weight: 600 !important;
-                border-radius: 6px !important;
+                padding: 4px 0 !important;
+                text-align: center !important;
+            }
+
+            .ui-datepicker td {
+                padding: 2px !important;
+                text-align: center !important;
+            }
+
+            .ui-datepicker td a,
+            .ui-datepicker td span {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                width: 32px !important;
+                height: 32px !important;
+                margin: 0 auto !important;
+                color: #f8fafc !important;
+                font-size: 0.85rem !important;
+                border-radius: 50% !important;
+                text-decoration: none !important;
+                box-sizing: border-box !important;
+            }
+
+            /* Día Seleccionado dentro del círculo */
+            .ui-datepicker td.ui-datepicker-current-day a,
+            .ui-datepicker td a.ui-state-active,
+            .ui-datepicker td a.ui-state-highlight {
+                background: #2563eb !important;
+                color: #ffffff !important;
+                font-weight: 700 !important;
+                border: none !important;
+                box-shadow: 0 0 8px rgba(37, 99, 235, 0.6) !important;
+            }
+
+            .ui-datepicker td a:hover {
+                background: #334155 !important;
+            }
+
+            @media (max-width: 768px) {
+                .container.py-4 {
+                    padding-top: 1rem !important;
+                    padding-bottom: 1rem !important;
+                }
+                .skyway-card {
+                    padding: 1rem !important;
+                }
+                .skyway-title {
+                    font-size: 1.3rem !important;
+                }
+
+                /* Centrar el calendario flotante en teléfonos */
+                .ui-datepicker {
+                    left: 50% !important;
+                    transform: translateX(-50%) !important; /* Centra el panel horizontalmente respecto a la pantalla */
+                }
             }
         </style>
-
     </ui:define>
 
     <ui:define name="contenido">
 
         <!-- ========================================================= -->
-        <!-- ✈️ SECCIÓN 1: BÚSQUEDA DE VUELOS                           -->
+        <!-- ✈️ SECCIÓN 1: BÚSQUEDA DE VUELOS (RESPONSIVA)              -->
         <!-- ========================================================= -->
-        <!-- ========================================================= -->
-        <!-- ✈️ SECCIÓN 1: BÚSQUEDA DE VUELOS                           -->
-        <!-- ========================================================= -->
-        <div class="container py-5">
-            <div class="card skyway-card shadow-lg p-4 rounded-3">
+        <div class="container py-4">
+            <div class="card skyway-card shadow-lg p-3 p-md-4 rounded-3">
 
-                <h2 class="text-center mb-4 skyway-title">
+                <h2 class="text-center mb-3 skyway-title">
                     <i class="pi pi-send me-2"></i>Buscar Vuelos
                 </h2>
 
-                <ul class="nav nav-tabs skyway-tabs" id="searchTabs" role="tablist">
+                <ul class="nav nav-tabs skyway-tabs nav-fill" id="searchTabs" role="tablist">
                     <li class="nav-item" role="presentation">
                         <a class="nav-link active" id="one-way-tab" data-bs-toggle="tab" href="#one-way" role="tab" aria-controls="one-way" aria-selected="true">
                             <i class="pi pi-arrow-right me-1"></i> Solo Ida
@@ -235,14 +279,14 @@
                     </li>
                 </ul>
 
-                <div class="tab-content mt-4" id="searchTabsContent">
+                <div class="tab-content mt-3" id="searchTabsContent">
 
                     <!-- ================= TAB 1: SOLO IDA ================= -->
                     <div class="tab-pane fade show active" id="one-way" role="tabpanel" aria-labelledby="one-way-tab">
                         <h:form id="formOneWay">
 
-                            <div class="row mb-4">
-                                <div class="col-md-6 mb-3 d-flex flex-column">
+                            <div class="row g-3">
+                                <div class="col-12 col-md-6 d-flex flex-column">
                                     <h:outputLabel for="aeropuertoSalida" styleClass="skyway-label" value="Aeropuerto de salida" />
                                     <p:autoComplete id="aeropuertoSalida"
                                                     value="#{itinerarioBusquedaBean.codigoIataOrigen}"
@@ -252,13 +296,13 @@
                                                     itemValue="#{a.codigoIata}"
                                                     dropdown="true"
                                                     forceSelection="true"
-                                                    placeholder="Buscar ciudad o código IATA..."
+                                                    placeholder="Origen o código IATA..."
                                                     styleClass="skyway-custom-input"
                                                     required="true"
                                                     requiredMessage="Debe seleccionar un aeropuerto de salida" />
                                 </div>
 
-                                <div class="col-md-6 mb-3 d-flex flex-column">
+                                <div class="col-12 col-md-6 d-flex flex-column">
                                     <h:outputLabel for="aeropuertoLlegada" styleClass="skyway-label" value="Aeropuerto de llegada" />
                                     <p:autoComplete id="aeropuertoLlegada"
                                                     value="#{itinerarioBusquedaBean.codigoIataDestino}"
@@ -268,28 +312,28 @@
                                                     itemValue="#{a.codigoIata}"
                                                     dropdown="true"
                                                     forceSelection="true"
-                                                    placeholder="Buscar aeropuerto de destino..."
+                                                    placeholder="Destino o código IATA..."
                                                     styleClass="skyway-custom-input"
                                                     required="true"
                                                     requiredMessage="Debe seleccionar un aeropuerto de llegada" />
                                 </div>
-                            </div>
 
-                            <div class="row mb-4">
-                                <div class="col-md-6 mb-3 d-flex flex-column">
+                                <div class="col-12 col-md-6 d-flex flex-column">
                                     <h:outputLabel for="fechaSalida" styleClass="skyway-label" value="Fecha de salida" />
+                                    <!-- Propiedad touchUI="true" agregada para selección nativa en móviles -->
                                     <p:datePicker id="fechaSalida"
                                                   value="#{itinerarioBusquedaBean.fechaIda}"
                                                   mindate="#{java.time.LocalDate.now()}"
                                                   pattern="dd/MM/yyyy"
+                                                  showIcon="true"
                                                   styleClass="skyway-custom-input"
-                                                  placeholder="Seleccione fecha de salida..."
+                                                  placeholder="Seleccione fecha..."
                                                   required="true"
                                                   requiredMessage="Debe seleccionar la fecha de salida"/>
                                 </div>
 
-                                <div class="col-md-6 mb-3 d-flex flex-column">
-                                    <h:outputLabel for="adultos" styleClass="skyway-label" value="Pasajeros (Adultos)" />
+                                <div class="col-12 col-md-6 d-flex flex-column">
+                                    <h:outputLabel for="adultos" styleClass="skyway-label" value="Pasajeros" />
                                     <p:selectOneMenu id="adultos"
                                                      value="#{itinerarioBusquedaBean.adultos}"
                                                      required="true"
@@ -300,12 +344,8 @@
                                         <f:selectItem itemLabel="3 Pasajeros" itemValue="3" />
                                         <f:selectItem itemLabel="4 Pasajeros" itemValue="4" />
                                         <f:selectItem itemLabel="5 Pasajeros" itemValue="5" />
-                                        <f:selectItem itemLabel="6 Pasajeros" itemValue="6" />
-                                        <f:selectItem itemLabel="7 Pasajeros" itemValue="7" />
-                                        <f:selectItem itemLabel="8 Pasajeros" itemValue="8" />
-                                        <f:selectItem itemLabel="9 Pasajeros" itemValue="9" />
                                     </p:selectOneMenu>
-                                    <h:message for="adultos" styleClass="text-danger mt-1 d-block" />
+                                    <h:message for="adultos" styleClass="text-danger mt-1 d-block small" />
                                 </div>
                             </div>
 
@@ -323,8 +363,8 @@
                     <div class="tab-pane fade" id="round-trip" role="tabpanel" aria-labelledby="round-trip-tab">
                         <h:form id="formRoundTrip">
 
-                            <div class="row mb-4">
-                                <div class="col-md-6 mb-3 d-flex flex-column">
+                            <div class="row g-3">
+                                <div class="col-12 col-md-6 d-flex flex-column">
                                     <h:outputLabel for="origenRT" styleClass="skyway-label" value="Aeropuerto de salida" />
                                     <p:autoComplete id="origenRT"
                                                     value="#{itinerarioBusquedaBean.codigoIataOrigen}"
@@ -334,13 +374,13 @@
                                                     itemValue="#{a.codigoIata}"
                                                     dropdown="true"
                                                     forceSelection="true"
-                                                    placeholder="Buscar ciudad o código IATA..."
+                                                    placeholder="Origen o código IATA..."
                                                     styleClass="skyway-custom-input"
                                                     required="true"
                                                     requiredMessage="Debe seleccionar un aeropuerto de salida" />
                                 </div>
 
-                                <div class="col-md-6 mb-3 d-flex flex-column">
+                                <div class="col-12 col-md-6 d-flex flex-column">
                                     <h:outputLabel for="destinoRT" styleClass="skyway-label" value="Aeropuerto de llegada" />
                                     <p:autoComplete id="destinoRT"
                                                     value="#{itinerarioBusquedaBean.codigoIataDestino}"
@@ -350,40 +390,42 @@
                                                     itemValue="#{a.codigoIata}"
                                                     dropdown="true"
                                                     forceSelection="true"
-                                                    placeholder="Buscar aeropuerto de destino..."
+                                                    placeholder="Destino o código IATA..."
                                                     styleClass="skyway-custom-input"
                                                     required="true"
                                                     requiredMessage="Debe seleccionar un aeropuerto de llegada" />
                                 </div>
-                            </div>
 
-                            <div class="row mb-4">
-                                <div class="col-md-4 mb-3 d-flex flex-column">
+                                <div class="col-12 col-md-4 d-flex flex-column">
                                     <h:outputLabel for="fechaIdaRT" styleClass="skyway-label" value="Fecha de salida" />
                                     <p:datePicker id="fechaIdaRT"
                                                   value="#{itinerarioBusquedaBean.fechaIda}"
                                                   mindate="#{java.time.LocalDate.now()}"
                                                   pattern="dd/MM/yyyy"
+                                                  touchUI="true"
+                                                  showIcon="true"
                                                   styleClass="skyway-custom-input"
-                                                  placeholder="Fecha de salida..."
+                                                  placeholder="Fecha salida..."
                                                   required="true"
                                                   requiredMessage="Debe seleccionar la fecha de salida" />
                                 </div>
 
-                                <div class="col-md-4 mb-3 d-flex flex-column">
+                                <div class="col-12 col-md-4 d-flex flex-column">
                                     <h:outputLabel for="fechaRetornoRT" styleClass="skyway-label" value="Fecha de regreso" />
                                     <p:datePicker id="fechaRetornoRT"
                                                   value="#{itinerarioBusquedaBean.fechaRetorno}"
                                                   mindate="#{itinerarioBusquedaBean.fechaIda != null ? itinerarioBusquedaBean.fechaIda : java.time.LocalDate.now()}"
                                                   pattern="dd/MM/yyyy"
+                                                  touchUI="true"
+                                                  showIcon="true"
                                                   styleClass="skyway-custom-input"
-                                                  placeholder="Fecha de regreso..."
+                                                  placeholder="Fecha regreso..."
                                                   required="true"
                                                   requiredMessage="Debe seleccionar la fecha de regreso" />
                                 </div>
 
-                                <div class="col-md-4 mb-3 d-flex flex-column">
-                                    <h:outputLabel for="adultosRT" styleClass="skyway-label" value="Pasajeros (Adultos)" />
+                                <div class="col-12 col-md-4 d-flex flex-column">
+                                    <h:outputLabel for="adultosRT" styleClass="skyway-label" value="Pasajeros" />
                                     <p:selectOneMenu id="adultosRT"
                                                      value="#{itinerarioBusquedaBean.adultos}"
                                                      required="true"
@@ -394,12 +436,8 @@
                                         <f:selectItem itemLabel="3 Pasajeros" itemValue="3" />
                                         <f:selectItem itemLabel="4 Pasajeros" itemValue="4" />
                                         <f:selectItem itemLabel="5 Pasajeros" itemValue="5" />
-                                        <f:selectItem itemLabel="6 Pasajeros" itemValue="6" />
-                                        <f:selectItem itemLabel="7 Pasajeros" itemValue="7" />
-                                        <f:selectItem itemLabel="8 Pasajeros" itemValue="8" />
-                                        <f:selectItem itemLabel="9 Pasajeros" itemValue="9" />
                                     </p:selectOneMenu>
-                                    <h:message for="adultosRT" styleClass="text-danger mt-1 d-block" />
+                                    <h:message for="adultosRT" styleClass="text-danger mt-1 d-block small" />
                                 </div>
                             </div>
 
@@ -421,377 +459,155 @@
         <!-- 🌟 SECCIÓN 2: POR QUÉ VOLAR EN SKYWAY                     -->
         <!-- ========================================================= -->
         <div class="container my-5">
-            <div class="text-center mb-5">
-                <span class="badge bg-primary px-3 py-2 text-uppercase mb-2">Plataforma Digital de Vuelos</span>
+            <div class="text-center mb-4">
+                <span class="badge bg-primary px-3 py-2 text-uppercase mb-2">Plataforma Digital</span>
                 <h2 class="display-6 fw-bold text-white">¿Por qué reservar en SkyWay?</h2>
-                <p class="lead" style="color:#94a3b8;">Ofrecemos un proceso de reserva web rápido, claro y seguro.</p>
+                <p class="lead" style="color:#94a3b8; font-size:1rem;">Proceso de reserva web rápido, claro y seguro.</p>
             </div>
 
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="feature-card h-100 d-flex flex-column justify-content-between">
-                        <div>
-                            <div class="mb-3 d-inline-block p-3 rounded-circle" style="background: rgba(59, 130, 246, 0.1);">
-                                <i class="pi pi-shield text-primary" style="font-size: 2rem;"></i>
-                            </div>
-                            <h4 class="text-white fw-bold mb-3">Compra Segura</h4>
-                            <p style="color:#94a3b8;">Validación de datos en tiempo real y flujo de compra protegido para resguardar la información de tus pasajeros.</p>
+            <div class="row g-3">
+                <div class="col-12 col-md-4">
+                    <div class="p-3 rounded-3 skyway-card h-100">
+                        <div class="mb-2 d-inline-block p-2 rounded-circle" style="background: rgba(59, 130, 246, 0.1);">
+                            <i class="pi pi-shield text-primary fs-3"></i>
                         </div>
-                        <ul class="list-unstyled text-white-50 mt-3 small">
-                            <li><i class="pi pi-check text-success me-2"></i>Confirmación inmediata de reserva</li>
-                            <li><i class="pi pi-check text-success me-2"></i>Comprobante digital</li>
-                        </ul>
+                        <h5 class="text-white fw-bold mb-2">Compra Segura</h5>
+                        <p style="color:#94a3b8; font-size:0.88rem;">Validación de datos en tiempo real y flujo de compra protegido.</p>
                     </div>
                 </div>
 
-                <div class="col-md-4">
-                    <div class="feature-card h-100 d-flex flex-column justify-content-between">
-                        <div>
-                            <div class="mb-3 d-inline-block p-3 rounded-circle" style="background: rgba(59, 130, 246, 0.1);">
-                                <i class="pi pi-percentage text-primary" style="font-size: 2rem;"></i>
-                            </div>
-                            <h4 class="text-white fw-bold mb-3">Tarifas Transparentes</h4>
-                            <p style="color:#94a3b8;">Desglose detallado de costos en pesos chilenos (CLP) desde la búsqueda inicial hasta el pago final.</p>
+                <div class="col-12 col-md-4">
+                    <div class="p-3 rounded-3 skyway-card h-100">
+                        <div class="mb-2 d-inline-block p-2 rounded-circle" style="background: rgba(59, 130, 246, 0.1);">
+                            <i class="pi pi-percentage text-primary fs-3"></i>
                         </div>
-                        <ul class="list-unstyled text-white-50 mt-3 small">
-                            <li><i class="pi pi-check text-success me-2"></i>Precios claros por pasajero</li>
-                            <li><i class="pi pi-check text-success me-2"></i>Sin comisiones adicionales ocultas</li>
-                        </ul>
+                        <h5 class="text-white fw-bold mb-2">Tarifas Transparentes</h5>
+                        <p style="color:#94a3b8; font-size:0.88rem;">Desglose claro en pesos chilenos sin cargos ocultos.</p>
                     </div>
                 </div>
 
-                <div class="col-md-4">
-                    <div class="feature-card h-100 d-flex flex-column justify-content-between">
-                        <div>
-                            <div class="mb-3 d-inline-block p-3 rounded-circle" style="background: rgba(59, 130, 246, 0.1);">
-                                <i class="pi pi-desktop text-primary" style="font-size: 2rem;"></i>
-                            </div>
-                            <h4 class="text-white fw-bold mb-3">Gestión 100% Web</h4>
-                            <p style="color:#94a3b8;">Accede a tus consultas y selecciona tus itinerarios directamente desde nuestra plataforma web de forma intuitiva.</p>
+                <div class="col-12 col-md-4">
+                    <div class="p-3 rounded-3 skyway-card h-100">
+                        <div class="mb-2 d-inline-block p-2 rounded-circle" style="background: rgba(59, 130, 246, 0.1);">
+                            <i class="pi pi-desktop text-primary fs-3"></i>
                         </div>
-                        <ul class="list-unstyled text-white-50 mt-3 small">
-                            <li><i class="pi pi-check text-success me-2"></i>Búsqueda directa por código IATA</li>
-                            <li><i class="pi pi-check text-success me-2"></i>Interfaz optimizada y clara</li>
-                        </ul>
+                        <h5 class="text-white fw-bold mb-2">Gestión 100% Web</h5>
+                        <p style="color:#94a3b8; font-size:0.88rem;">Acceso y selección directa por código IATA.</p>
                     </div>
                 </div>
             </div>
         </div>
 
-
         <!-- ========================================================= -->
-        <!-- 📖 SECCIÓN 3: BLOG INTERACTIVO Y GUÍAS DE VIAJE           -->
+        <!-- 📖 SECCIÓN 3: BLOG INTERACTIVO                           -->
         <!-- ========================================================= -->
         <div class="container my-5">
-            <div class="d-flex justify-content-between align-items-end mb-4">
-                <div>
-                    <span class="text-primary fw-bold">Guías y Recomendaciones</span>
-                    <h3 class="text-white fw-bold m-0" style="font-size:2.2rem;">Blog de Viajes</h3>
-                </div>
-                <span class="text-white-50 small d-none d-md-block">Haz clic en cualquier artículo para ver los detalles</span>
+            <div class="mb-3">
+                <span class="text-primary fw-bold">Guías y Recomendaciones</span>
+                <h3 class="text-white fw-bold m-0 fs-3">Blog de Viajes</h3>
             </div>
 
-            <div class="row g-4">
-                <!-- Artículo 1 -->
-                <div class="col-md-4">
-                    <div class="blog-card h-100 d-flex flex-column">
-                        <div class="position-relative">
-                            <h:graphicImage value="#{resource['assets/icons/premium_photo-1661954654458-c673671d4a08.jpeg']}" alt="Guía Viaje" styleClass="w-100" />
-                            <span class="badge bg-primary position-absolute top-0 start-0 m-3">Consejos</span>
+            <div class="row g-3">
+                <div class="col-12 col-md-4">
+                    <div class="p-3 rounded-3 skyway-card h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <span class="badge bg-primary mb-2">Consejos</span>
+                            <h5 class="text-white fw-bold mb-2">Planifica tu itinerario de vuelo</h5>
+                            <p style="color:#94a3b8; font-size:0.88rem;">
+                                Recomendaciones para antelación en reservas y horarios.
+                            </p>
                         </div>
-                        <div class="p-4 d-flex flex-column justify-content-between flex-grow-1">
-                            <div>
-                                <div class="d-flex align-items-center gap-3 text-white-50 mb-2 small">
-                                    <span><i class="pi pi-calendar me-1"></i>12 Ene 2025</span>
-                                    <span><i class="pi pi-clock me-1"></i>5 min lectura</span>
-                                </div>
-                                <h5 class="text-white fw-bold mb-2">Consejos para planificar tu itinerario de vuelo</h5>
-                                <p style="color:#94a3b8; font-size:0.92rem;">
-                                    Recomendaciones útiles sobre antelación en las reservas, elección de fechas y gestión de horarios.
-                                </p>
-                            </div>
-                            <div class="pt-3 border-top border-secondary mt-3">
-                                <button type="button" class="btn btn-sm btn-outline-primary w-100 fw-bold"
-                                        onclick="abrirBlogModal('Consejos para planificar tu itinerario de vuelo', 'Consejos', '5 min', '#{resource['assets/icons/premium_photo-1661954654458-c673671d4a08.jpeg']}', 'Para encontrar disponibilidad en tus itinerarios preferidos, te recomendamos buscar con tiempo de anticipación y revisar las distintas combinaciones de fechas disponibles.')">
-                                    <i class="pi pi-book me-1"></i> Leer Artículo Completo
-                                </button>
-                            </div>
-                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-primary w-100 mt-2"
+                                onclick="abrirBlogModal('Planifica tu itinerario', 'Consejos', '5 min', '#{resource['assets/icons/premium_photo-1661954654458-c673671d4a08.jpeg']}', 'Te recomendamos buscar con tiempo de anticipación para mejores precios.')">
+                            Leer Artículo
+                        </button>
                     </div>
                 </div>
 
-                <!-- Artículo 2 -->
-                <div class="col-md-4">
-                    <div class="blog-card h-100 d-flex flex-column">
-                        <div class="position-relative">
-                            <h:graphicImage value="#{resource['assets/icons/rio-de-janeiro-1963744_640.jpg']}" alt="Ecoturismo" styleClass="w-100" />
-                            <span class="badge bg-success position-absolute top-0 start-0 m-3">Destinos</span>
+                <div class="col-12 col-md-4">
+                    <div class="p-3 rounded-3 skyway-card h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <span class="badge bg-success mb-2">Destinos</span>
+                            <h5 class="text-white fw-bold mb-2">Atractivos de Sudamérica</h5>
+                            <p style="color:#94a3b8; font-size:0.88rem;">
+                                Un vistazo a las mejores ciudades culturales y paisajes.
+                            </p>
                         </div>
-                        <div class="p-4 d-flex flex-column justify-content-between flex-grow-1">
-                            <div>
-                                <div class="d-flex align-items-center gap-3 text-white-50 mb-2 small">
-                                    <span><i class="pi pi-calendar me-1"></i>08 Feb 2025</span>
-                                    <span><i class="pi pi-clock me-1"></i>4 min lectura</span>
-                                </div>
-                                <h5 class="text-white fw-bold mb-2">Descubre los atractivos turísticos de Sudamérica</h5>
-                                <p style="color:#94a3b8; font-size:0.92rem;">
-                                    Una mirada rápida a las principales ciudades culturales y paisajes naturales de la región.
-                                </p>
-                            </div>
-                            <div class="pt-3 border-top border-secondary mt-3">
-                                <button type="button" class="btn btn-sm btn-outline-primary w-100 fw-bold"
-                                        onclick="abrirBlogModal('Descubre los atractivos turísticos de Sudamérica', 'Destinos', '4 min', '#{resource['assets/icons/rio-de-janeiro-1963744_640.jpg']}', 'Sudamérica ofrece una diversidad geográfica increíble. Revisa nuestras rutas sugeridas para conectar con las principales capitales de la región.')">
-                                    <i class="pi pi-book me-1"></i> Leer Artículo Completo
-                                </button>
-                            </div>
-                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-primary w-100 mt-2"
+                                onclick="abrirBlogModal('Atractivos de Sudamérica', 'Destinos', '4 min', '#{resource['assets/icons/rio-de-janeiro-1963744_640.jpg']}', 'Sudamérica ofrece una diversidad geográfica increíble.')">
+                            Leer Artículo
+                        </button>
                     </div>
                 </div>
 
-                <!-- Artículo 3 -->
-                <div class="col-md-4">
-                    <div class="blog-card h-100 d-flex flex-column">
-                        <div class="position-relative">
-                            <h:graphicImage value="#{resource['assets/icons/pexels-abhishek-verma-209130-670261.jpg']}" alt="Planificación" styleClass="w-100" />
-                            <span class="badge bg-warning text-dark position-absolute top-0 start-0 m-3">Guías</span>
+                <div class="col-12 col-md-4">
+                    <div class="p-3 rounded-3 skyway-card h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <span class="badge bg-warning text-dark mb-2">Guías</span>
+                            <h5 class="text-white fw-bold mb-2">Preparativos para tu viaje</h5>
+                            <p style="color:#94a3b8; font-size:0.88rem;">
+                                Lista de verificación de documentos y equipaje permitido.
+                            </p>
                         </div>
-                        <div class="p-4 d-flex flex-column justify-content-between flex-grow-1">
-                            <div>
-                                <div class="d-flex align-items-center gap-3 text-white-50 mb-2 small">
-                                    <span><i class="pi pi-calendar me-1"></i>20 Feb 2025</span>
-                                    <span><i class="pi pi-clock me-1"></i>6 min lectura</span>
-                                </div>
-                                <h5 class="text-white fw-bold mb-2">Preparativos generales para tu viaje</h5>
-                                <p style="color:#94a3b8; font-size:0.92rem;">
-                                    Lista de verificación de documentos, equipaje permitido e información relevante para el aeropuerto.
-                                </p>
-                            </div>
-                            <div class="pt-3 border-top border-secondary mt-3">
-                                <button type="button" class="btn btn-sm btn-outline-primary w-100 fw-bold"
-                                        onclick="abrirBlogModal('Preparativos generales para tu viaje', 'Guías', '6 min', '#{resource['assets/icons/pexels-abhishek-verma-209130-670261.jpg']}', 'Recuerda verificar que tus documentos de identificación estén vigentes antes de tu fecha de viaje y llegar con anticipación al aeropuerto.')">
-                                    <i class="pi pi-book me-1"></i> Leer Artículo Completo
-                                </button>
-                            </div>
-                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-primary w-100 mt-2"
+                                onclick="abrirBlogModal('Preparativos para tu viaje', 'Guías', '6 min', '#{resource['assets/icons/pexels-abhishek-verma-209130-670261.jpg']}', 'Verifica que tus documentos estén vigentes antes de viajar.')">
+                            Leer Artículo
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
 
-
         <!-- ========================================================= -->
-        <!-- 🎯 SECCIÓN 4: OFERTAS Y DESTINOS (RELEGADAS AL 2º PLANO)  -->
-        <!-- ========================================================= -->
-        <div class="secondary-section my-5">
-            <div class="container">
-
-                <div class="row align-items-center mb-4">
-                    <div class="col-md-8">
-                        <h4 class="text-white fw-bold m-0"><i class="pi pi-tag me-2 text-primary"></i>Rutas Sugeridas y Ofertas</h4>
-                        <p class="text-white-50 m-0">Precios promocionales disponibles según las fechas seleccionadas.</p>
-                    </div>
-                </div>
-
-                <div class="row g-3 mb-5">
-                    <div class="col-md-4">
-                        <div class="p-3 rounded-3" style="background:#101b33; border: 1px solid #1e3a5c;">
-                            <div class="d-flex justify-content-between">
-                                <span class="badge bg-primary">30% OFF</span>
-                                <span class="text-white-50 small">Solo ida</span>
-                            </div>
-                            <h6 class="text-white fw-bold mt-2 mb-1">Santiago ➔ Rio de Janeiro</h6>
-                            <small style="color:#94a3b8;">Tarifa promocional</small>
-                            <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top border-secondary">
-                                <span class="text-primary fw-bold">$89.900 CLP</span>
-                                <a href="#formOneWay" class="btn btn-sm btn-outline-primary">Ver fechas</a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <div class="p-3 rounded-3" style="background:#101b33; border: 1px solid #1e3a5c;">
-                            <div class="d-flex justify-content-between">
-                                <span class="badge bg-primary">Destacado</span>
-                                <span class="text-white-50 small">Ida y vuelta</span>
-                            </div>
-                            <h6 class="text-white fw-bold mt-2 mb-1">Santiago ➔ Madrid</h6>
-                            <small style="color:#94a3b8;">Ruta internacional</small>
-                            <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top border-secondary">
-                                <span class="text-primary fw-bold">$540.000 CLP</span>
-                                <a href="#formRoundTrip" class="btn btn-sm btn-outline-primary">Ver fechas</a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <div class="p-3 rounded-3" style="background:#101b33; border: 1px solid #1e3a5c;">
-                            <div class="d-flex justify-content-between">
-                                <span class="badge bg-success">Promoción</span>
-                                <span class="text-white-50 small">Solo ida</span>
-                            </div>
-                            <h6 class="text-white fw-bold mt-2 mb-1">Santiago ➔ Nueva York</h6>
-                            <small style="color:#94a3b8;">Tarifa Promo</small>
-                            <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top border-secondary">
-                                <span class="text-primary fw-bold">$310.000 CLP</span>
-                                <a href="#formOneWay" class="btn btn-sm btn-outline-primary">Ver fechas</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Destinos Frecuentes -->
-                <h4 class="text-white fw-bold mb-3"><i class="pi pi-map-marker me-2 text-primary"></i>Destinos Disponibles</h4>
-                <div class="row g-3">
-                    <div class="col-6 col-md-3">
-                        <div class="card bg-dark text-white border-secondary overflow-hidden">
-                            <h:graphicImage value="#{resource['assets/icons/premium_photo-1661954654458-c673671d4a08.jpeg']}" style="height: 120px; object-fit: cover;" />
-                            <div class="card-img-overlay bg-dark bg-opacity-50 d-flex flex-column justify-content-end p-2">
-                                <h6 class="fw-bold m-0">Nueva York</h6>
-                                <small class="text-white-50">EE.UU.</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div class="card bg-dark text-white border-secondary overflow-hidden">
-                            <h:graphicImage value="#{resource['assets/icons/pexels-abhishek-verma-209130-670261.jpg']}" style="height: 120px; object-fit: cover;" />
-                            <div class="card-img-overlay bg-dark bg-opacity-50 d-flex flex-column justify-content-end p-2">
-                                <h6 class="fw-bold m-0">Madrid</h6>
-                                <small class="text-white-50">España</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div class="card bg-dark text-white border-secondary overflow-hidden">
-                            <h:graphicImage value="#{resource['assets/icons/rio-de-janeiro-1963744_640.jpg']}" style="height: 120px; object-fit: cover;" />
-                            <div class="card-img-overlay bg-dark bg-opacity-50 d-flex flex-column justify-content-end p-2">
-                                <h6 class="fw-bold m-0">Río de Janeiro</h6>
-                                <small class="text-white-50">Brasil</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div class="card bg-dark text-white border-secondary overflow-hidden">
-                            <h:graphicImage value="#{resource['assets/icons/pexels-apasaric-2506923.jpg']}" style="height: 120px; object-fit: cover;" />
-                            <div class="card-img-overlay bg-dark bg-opacity-50 d-flex flex-column justify-content-end p-2">
-                                <h6 class="fw-bold m-0">Tokio</h6>
-                                <small class="text-white-50">Japón</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-
-        <!-- ========================================================= -->
-        <!-- 🗺️ MAPA INTERACTIVO Y METODOS DE PAGO                     -->
+        <!-- 🗺️ MAPA INTERACTIVO Y PAGO                                 -->
         <!-- ========================================================= -->
         <div class="container my-5">
-            <div class="row align-items-center g-4">
-                <div class="col-lg-7">
-                    <h3 class="text-white fw-bold mb-3"><i class="pi pi-globe me-2 text-primary"></i>Red de Rutas Registradas</h3>
-                    <div id="leafletMap" style="height: 350px; border:1px solid #1e3a5c; border-radius:12px;"></div>
+            <div class="row g-4">
+                <div class="col-12 col-lg-7">
+                    <h4 class="text-white fw-bold mb-3"><i class="pi pi-globe me-2 text-primary"></i>Red de Rutas</h4>
+                    <div id="leafletMap" style="height: 280px; border:1px solid #1e3a5c; border-radius:12px;"></div>
                 </div>
-                <div class="col-lg-5">
-                    <div class="p-4 rounded-3 skyway-card">
-                        <h4 class="text-white fw-bold mb-3"><i class="pi pi-credit-card me-2 text-primary"></i>Métodos de Pago Soportados</h4>
-                        <p class="text-white-50 small">Opciones simuladas de pago para la plataforma.</p>
-
+                <div class="col-12 col-lg-5">
+                    <div class="p-3 rounded-3 skyway-card">
+                        <h4 class="text-white fw-bold mb-3"><i class="pi pi-credit-card me-2 text-primary"></i>Métodos de Pago</h4>
                         <div class="row g-2 text-center">
                             <div class="col-6">
                                 <div class="p-2 border border-secondary rounded text-white">
-                                    <i class="pi pi-credit-card text-primary d-block fs-4"></i>
+                                    <i class="pi pi-credit-card text-primary d-block fs-5"></i>
                                     <small>Tarjetas Crédito/Débito</small>
                                 </div>
                             </div>
                             <div class="col-6">
                                 <div class="p-2 border border-secondary rounded text-white">
-                                    <i class="pi pi-shield text-primary d-block fs-4"></i>
+                                    <i class="pi pi-shield text-primary d-block fs-5"></i>
                                     <small>Pasarela Web</small>
                                 </div>
                             </div>
-                            <div class="col-6">
-                                <div class="p-2 border border-secondary rounded text-white">
-                                    <i class="pi pi-wallet text-primary d-block fs-4"></i>
-                                    <small>Transferencia Bancaria</small>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="p-2 border border-secondary rounded text-white">
-                                    <i class="pi pi-check-circle text-primary d-block fs-4"></i>
-                                    <small>Pago Seguro</small>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-
         <!-- ========================================================= -->
-        <!-- ❓ PREGUNTAS FRECUENTES (FAQ)                            -->
-        <!-- ========================================================= -->
-        <div class="container my-5">
-            <h3 class="text-center text-white fw-bold mb-4">Preguntas Frecuentes</h3>
-            <div class="accordion" id="faqAccordion">
-
-                <div class="accordion-item mb-2" style="background:#101b33; border:1px solid #1e2a44; border-radius:8px; overflow:hidden;">
-                    <h2 class="accordion-header" id="faqHeadingOne">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                data-bs-target="#faqCollapseOne" aria-expanded="false" aria-controls="faqCollapseOne"
-                                style="background:#101b33; color:#e2e8f0; font-weight:600;">
-                            <i class="pi pi-question-circle me-2 text-primary"></i>¿Cómo puedo buscar y consultar un vuelo?
-                        </button>
-                    </h2>
-                    <div id="faqCollapseOne" class="accordion-collapse collapse" aria-labelledby="faqHeadingOne" data-bs-parent="#faqAccordion">
-                        <div class="accordion-body" style="color:#94a3b8; background:#0a1224;">
-                            Ingresa al buscador superior, selecciona el tipo de viaje (Solo Ida o Ida y Vuelta), elige los aeropuertos de origen y destino, la fecha y haz clic en "Buscar Vuelos".
-                        </div>
-                    </div>
-                </div>
-
-                <div class="accordion-item mb-2" style="background:#101b33; border:1px solid #1e2a44; border-radius:8px; overflow:hidden;">
-                    <h2 class="accordion-header" id="faqHeadingTwo">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                data-bs-target="#faqCollapseTwo" aria-expanded="false" aria-controls="faqCollapseTwo"
-                                style="background:#101b33; color:#e2e8f0; font-weight:600;">
-                            <i class="pi pi-question-circle me-2 text-primary"></i>¿Qué información incluye la consulta de itinerario?
-                        </button>
-                    </h2>
-                    <div id="faqCollapseTwo" class="accordion-collapse collapse" aria-labelledby="faqHeadingTwo" data-bs-parent="#faqAccordion">
-                        <div class="accordion-body" style="color:#94a3b8; background:#0a1224;">
-                            Muestra la hora de salida, hora de llegada, número de vuelo, aeropuertos involucrados y la tarifa base disponible por pasajero.
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-
-        <!-- ========================================================= -->
-        <!-- 💬 MODAL INTERACTIVO PARA LECTURA DEL BLOG               -->
+        <!-- 💬 MODAL INTERACTIVO PARA BLOG                             -->
         <!-- ========================================================= -->
         <div class="modal fade" id="blogArticleModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content" style="background:#101b33; border:1px solid #1e3a5c; color:#e6eef7;">
                     <div class="modal-header border-bottom border-secondary">
                         <div>
                             <span class="badge bg-primary" id="modalBlogCategoria">Categoría</span>
-                            <small class="ms-2 text-white-50" id="modalBlogTiempo">Lectura</small>
-                            <h4 class="modal-title fw-bold text-white mt-1" id="modalBlogTitulo">Título del Artículo</h4>
+                            <h5 class="modal-title fw-bold text-white mt-1" id="modalBlogTitulo">Título</h5>
                         </div>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <img id="modalBlogImagen" src="" class="img-fluid rounded-3 mb-3 w-100" style="max-height: 280px; object-fit: cover;" alt="Blog" />
-                        <p id="modalBlogTexto" style="color:#94a3b8; line-height: 1.7; font-size:1.05rem;"></p>
+                        <img id="modalBlogImagen" src="" class="img-fluid rounded-3 mb-3 w-100" style="max-height: 200px; object-fit: cover;" alt="Blog" />
+                        <p id="modalBlogTexto" style="color:#94a3b8; line-height: 1.5; font-size:0.95rem;"></p>
                     </div>
                     <div class="modal-footer border-top border-secondary">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                        <a href="#formOneWay" class="btn btn-primary" data-bs-dismiss="modal">Ir al Buscador</a>
+                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                     </div>
                 </div>
             </div>

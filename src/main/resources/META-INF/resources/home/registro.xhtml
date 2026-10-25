@@ -11,7 +11,7 @@
         <title>SkyWay | Registro de Usuario</title>
         <style type="text/css">
             /* ==========================================================================
-               🎨 ESTILOS DARK THEME CORPORATIVO SKYWAY - REGISTRO TUNED
+               🎨 ESTILOS DARK THEME CORPORATIVO SKYWAY - REGISTRO PREMIUM
                ========================================================================== */
             :root {
                 --sky-bg-dark: #090E1A;
@@ -27,21 +27,22 @@
 
             .register-container {
                 max-width: 880px;
-                margin: 40px auto;
+                margin: 30px auto;
                 background: var(--sky-card-bg) !important;
                 border: 1px solid var(--sky-border) !important;
                 border-radius: 16px !important;
-                padding: 36px !important;
+                padding: 32px !important;
                 box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5) !important;
+                box-sizing: border-box !important;
             }
 
             .register-title {
                 color: var(--text-heading) !important;
-                font-size: 1.5rem !important;
+                font-size: 1.4rem !important;
                 font-weight: 800 !important;
-                margin-bottom: 24px !important;
+                margin-bottom: 20px !important;
                 border-bottom: 1px solid var(--sky-border) !important;
-                padding-bottom: 14px !important;
+                padding-bottom: 12px !important;
                 display: flex;
                 align-items: center;
                 gap: 10px;
@@ -53,15 +54,15 @@
                 font-weight: 800 !important;
                 text-transform: uppercase !important;
                 letter-spacing: 0.05em !important;
-                margin-top: 22px !important;
-                margin-bottom: 14px !important;
+                margin-top: 20px !important;
+                margin-bottom: 12px !important;
                 display: flex;
                 align-items: center;
                 gap: 6px;
             }
 
             .skyway-field-group {
-                margin-bottom: 16px;
+                margin-bottom: 14px;
             }
 
             .skyway-label {
@@ -74,15 +75,23 @@
                 margin-bottom: 6px !important;
             }
 
+            /* Normalización general de inputs */
             .register-container .ui-inputfield,
             .register-container .ui-selectonemenu {
                 background: var(--sky-input-bg) !important;
                 border: 1px solid var(--sky-border) !important;
                 color: var(--text-heading) !important;
                 border-radius: 8px !important;
-                padding: 10px 14px !important;
+                padding: 10px 12px !important;
                 width: 100% !important;
                 font-size: 0.88rem !important;
+                box-sizing: border-box !important;
+            }
+
+            .register-container .ui-selectonemenu .ui-selectonemenu-label {
+                color: var(--text-heading) !important;
+                padding: 0 !important;
+                line-height: 22px !important;
             }
 
             .register-container .ui-inputfield:focus,
@@ -98,7 +107,7 @@
                 color: #FFFFFF !important;
                 font-weight: 800 !important;
                 padding: 14px !important;
-                font-size: 1rem !important;
+                font-size: 0.98rem !important;
                 border-radius: 10px !important;
                 box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35) !important;
                 transition: transform 0.2s ease, box-shadow 0.2s ease !important;
@@ -110,42 +119,88 @@
             }
 
             /* ==========================================================================
-               🛠️ CALENDARIO POPUP TUNED (DATEPICKER)
+               🛠️ FIX DEFINITIVO: POPUP CALENDARIO SIN SELECTS QUE SE CIERREN
                ========================================================================== */
             body .ui-datepicker {
                 background-color: #0F172A !important;
-                border: 1px solid rgba(56, 189, 248, 0.3) !important;
-                border-radius: 12px !important;
+                border: 1px solid #38BDF8 !important;
+                border-radius: 16px !important;
                 color: #F8FAFC !important;
-                padding: 12px !important;
-                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7) !important;
+                padding: 14px !important;
+                box-shadow: 0 20px 45px rgba(0, 0, 0, 0.9) !important;
+                max-width: 340px !important;
+                width: 92vw !important;
+                box-sizing: border-box !important;
+                z-index: 99999 !important;
             }
 
             body .ui-datepicker .ui-datepicker-header {
                 background-color: #090E1A !important;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-                padding: 8px !important;
-                border-radius: 8px !important;
+                border: 1px solid rgba(255, 255, 255, 0.1) !important;
+                padding: 8px 12px !important;
+                border-radius: 10px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                margin-bottom: 10px !important;
             }
 
-            body .ui-datepicker .ui-datepicker-title select {
-                background-color: #1E293B !important;
+            /* Estilo del Título Táctil para cambiar de Año/Mes */
+            body .ui-datepicker .ui-datepicker-title {
                 color: #38BDF8 !important;
-                border: 1px solid rgba(56, 189, 248, 0.3) !important;
+                font-weight: 800 !important;
+                font-size: 0.95rem !important;
+                cursor: pointer !important;
+                padding: 4px 8px !important;
                 border-radius: 6px !important;
-                padding: 3px 6px !important;
-                font-weight: 700 !important;
+                transition: background 0.2s !important;
+            }
+
+            body .ui-datepicker .ui-datepicker-title:hover {
+                background: rgba(56, 189, 248, 0.15) !important;
+            }
+
+            /* Botones de Navegación de Mes/Año (Flechas) */
+            body .ui-datepicker .ui-datepicker-prev,
+            body .ui-datepicker .ui-datepicker-next {
+                color: #38BDF8 !important;
+                cursor: pointer !important;
+            }
+
+            /* Vista de Malla de Días, Meses y Años */
+            body .ui-datepicker table {
+                width: 100% !important;
+                margin: 8px 0 0 0 !important;
+                border-collapse: collapse !important;
+                table-layout: fixed !important;
             }
 
             body .ui-datepicker table th {
                 color: #38BDF8 !important;
                 font-weight: 800 !important;
+                font-size: 0.8rem !important;
+                padding: 6px 0 !important;
+                text-align: center !important;
             }
 
-            body .ui-datepicker table td a {
-                color: #CBD5E1 !important;
-                border-radius: 6px !important;
+            body .ui-datepicker table td {
+                padding: 3px !important;
                 text-align: center !important;
+            }
+
+            body .ui-datepicker table td a,
+            body .ui-datepicker table td span {
+                color: #CBD5E1 !important;
+                border-radius: 50% !important;
+                text-align: center !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                width: 32px !important;
+                height: 32px !important;
+                margin: 0 auto !important;
+                font-size: 0.85rem !important;
+                text-decoration: none !important;
             }
 
             body .ui-datepicker table td a:hover {
@@ -153,27 +208,88 @@
                 color: #FFFFFF !important;
             }
 
-            body .ui-datepicker table td a.ui-state-active {
+            body .ui-datepicker table td a.ui-state-active,
+            body .ui-datepicker table td a.ui-state-highlight {
                 background-color: #38BDF8 !important;
                 color: #0F172A !important;
                 font-weight: 800 !important;
+                box-shadow: 0 0 10px rgba(56, 189, 248, 0.5) !important;
             }
 
-            /* SELECTONEMENU POPUP */
+            /* Vista de Selección de Meses y Décadas/Años */
+            body .ui-datepicker .ui-monthpicker .ui-monthpicker-month,
+            body .ui-datepicker .ui-yearpicker .ui-yearpicker-year {
+                color: #CBD5E1 !important;
+                padding: 10px !important;
+                border-radius: 8px !important;
+                font-weight: 700 !important;
+            }
+
+            body .ui-datepicker .ui-monthpicker .ui-monthpicker-month:hover,
+            body .ui-datepicker .ui-yearpicker .ui-yearpicker-year:hover {
+                background-color: #2563EB !important;
+                color: #FFFFFF !important;
+            }
+
+            /* Botones Inferiores (Hoy / Limpiar) */
+            body .ui-datepicker .ui-datepicker-buttonpane {
+                background: transparent !important;
+                border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+                margin-top: 12px !important;
+                padding-top: 10px !important;
+                display: flex !important;
+                justify-content: space-between !important;
+            }
+
+            body .ui-datepicker .ui-datepicker-buttonpane button {
+                background: #1E293B !important;
+                color: #38BDF8 !important;
+                border: 1px solid rgba(56, 189, 248, 0.3) !important;
+                border-radius: 8px !important;
+                font-weight: 700 !important;
+                padding: 8px 16px !important;
+                font-size: 0.82rem !important;
+            }
+
+            /* POPUP DE SELECTONEMENU Y NACIONALIDADES */
             body .ui-selectonemenu-panel {
                 background-color: #0F172A !important;
                 border: 1px solid rgba(255, 255, 255, 0.15) !important;
                 border-radius: 8px !important;
+                max-width: 90vw !important;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.8) !important;
+                z-index: 99999 !important;
             }
 
-            body .ui-selectonemenu-panel .ui-selectonemenu-item {
+            body .ui-selectonemenu-panel .ui-selectonemenu-items .ui-selectonemenu-item {
                 color: #CBD5E1 !important;
+                padding: 8px 12px !important;
+                font-size: 0.85rem !important;
+                white-space: normal !important;
             }
 
-            body .ui-selectonemenu-panel .ui-selectonemenu-item:hover,
-            body .ui-selectonemenu-panel .ui-selectonemenu-item.ui-state-highlight {
+            body .ui-selectonemenu-panel .ui-selectonemenu-items .ui-selectonemenu-item:hover,
+            body .ui-selectonemenu-panel .ui-selectonemenu-items .ui-selectonemenu-item.ui-state-highlight {
                 background-color: #2563EB !important;
                 color: #FFFFFF !important;
+            }
+
+            @media (max-width: 768px) {
+                .register-container {
+                    padding: 18px 16px !important;
+                    margin: 15px auto !important;
+                    border-radius: 12px !important;
+                }
+
+                .register-title {
+                    font-size: 1.2rem !important;
+                }
+
+                /* Centrado del Calendario en dispositivos móviles */
+                body .ui-datepicker {
+                    left: 50% !important;
+                    transform: translateX(-50%) !important;
+                }
             }
         </style>
     </ui:define>
@@ -181,7 +297,7 @@
     <ui:define name="contenido">
         <p:growl id="growl" showDetail="true" keepAlive="true" life="5000" />
 
-        <div class="container">
+        <div class="container px-2 px-md-3">
             <div class="register-container">
                 <div class="register-title">
                     <i class="pi pi-user-plus text-blue-400"></i>
@@ -195,9 +311,9 @@
                         <i class="pi pi-id-card"></i> Información Personal y Acceso
                     </div>
 
-                    <div class="row g-3">
+                    <div class="row g-2 g-md-3">
                         <!-- RUT -->
-                        <div class="col-md-6 skyway-field-group">
+                        <div class="col-12 col-md-6 skyway-field-group">
                             <p:outputLabel for="rutUsuario" value="RUT / Identificador de Cuenta" styleClass="skyway-label"/>
                             <p:inputText id="rutUsuario" value="#{usuarioBean.usuario.rut}" required="true"
                                          requiredMessage="El RUT es obligatorio"
@@ -205,7 +321,7 @@
                         </div>
 
                         <!-- Nombre -->
-                        <div class="col-md-6 skyway-field-group">
+                        <div class="col-12 col-md-6 skyway-field-group">
                             <p:outputLabel for="nombre" value="Nombre" styleClass="skyway-label"/>
                             <p:inputText id="nombre" value="#{usuarioBean.usuario.nombre}" required="true"
                                          requiredMessage="El nombre es obligatorio"
@@ -213,33 +329,42 @@
                         </div>
 
                         <!-- Apellido -->
-                        <div class="col-md-6 skyway-field-group">
+                        <div class="col-12 col-md-6 skyway-field-group">
                             <p:outputLabel for="apellido" value="Apellido" styleClass="skyway-label"/>
                             <p:inputText id="apellido" value="#{usuarioBean.usuario.apellido}" required="true"
                                          requiredMessage="El apellido es obligatorio"
                                          placeholder="Ej: Román"/>
                         </div>
 
-                        <!-- Fecha Nacimiento (DatePicker Tuned con Mayoría de Edad) -->
-                        <div class="col-md-6 skyway-field-group">
+                        <!-- Fecha Nacimiento (Navegación Táctil Nativa PrimeFaces por Clic en Título) -->
+                        <div class="col-12 col-md-6 skyway-field-group">
                             <p:outputLabel for="fechaNacimiento" value="Fecha de Nacimiento" styleClass="skyway-label"/>
                             <p:datePicker id="fechaNacimiento"
                                           value="#{usuarioBean.usuario.fechaNacimiento}"
                                           pattern="dd/MM/yyyy"
                                           mask="true"
+                                          maxdate="#{usuarioBean.fechaMaxMayorEdad}"
+                                          mindate="01/01/1925"
+                                          showIcon="true"
+                                          showButtonBar="true"
                                           monthNavigator="true"
                                           yearNavigator="true"
                                           yearRange="c-100:c-18"
-                                          maxdate="#{usuarioBean.fechaMaxMayorEdad}"
-                                          showIcon="true"
-                                          showButtonBar="true"
-                                          placeholder="DD/MM/AAAA"
+                                          touchUI="true"
+                                          appendTo="@(body)"
+                                          readonlyInput="false"
+                                          styleClass="skyway-custom-input"
+                                          placeholder="DD/MM/AAAA (Ej: 15/05/1978)"
                                           required="true"
-                                          requiredMessage="La fecha de nacimiento es obligatoria"/>
+                                          requiredMessage="La fecha de nacimiento es obligatoria"
+                                          converterMessage="La fecha ingresada no existe o tiene un formato incorrecto (DD/MM/AAAA)">
+                                <f:convertDateTime pattern="dd/MM/yyyy" />
+                            </p:datePicker>
+                            <p:message for="fechaNacimiento" styleClass="text-danger small mt-1" />
                         </div>
 
                         <!-- Correo Electrónico -->
-                        <div class="col-md-6 skyway-field-group">
+                        <div class="col-12 col-md-6 skyway-field-group">
                             <p:outputLabel for="correoElectronico" value="Correo Electrónico" styleClass="skyway-label"/>
                             <p:inputText id="correoElectronico" value="#{usuarioBean.usuario.correoElectronico}" required="true"
                                          requiredMessage="El correo electrónico es obligatorio"
@@ -247,7 +372,7 @@
                         </div>
 
                         <!-- Teléfono Móvil (Chile) -->
-                        <div class="col-md-6 skyway-field-group">
+                        <div class="col-12 col-md-6 skyway-field-group">
                             <p:outputLabel for="telefono" value="Teléfono Móvil (Chile)" styleClass="skyway-label"/>
                             <p:inputMask id="telefono" mask="+56 9 9999 9999" value="#{usuarioBean.usuario.telefono}"
                                          required="true" requiredMessage="El teléfono es obligatorio"
@@ -260,9 +385,9 @@
                         <i class="pi pi-globe"></i> Documento de Viaje y Nacionalidad
                     </div>
 
-                    <div class="row g-3">
+                    <div class="row g-2 g-md-3">
                         <!-- Tipo de Documento -->
-                        <div class="col-md-4 skyway-field-group">
+                        <div class="col-12 col-md-4 skyway-field-group">
                             <p:outputLabel for="tipoDocumento" value="Tipo Documento" styleClass="skyway-label"/>
                             <p:selectOneMenu id="tipoDocumento" value="#{usuarioBean.tipoDocumento}" required="true"
                                              requiredMessage="Seleccione el tipo de documento">
@@ -274,7 +399,7 @@
                         </div>
 
                         <!-- Número de Documento / Pasaporte -->
-                        <div class="col-md-4 skyway-field-group">
+                        <div class="col-12 col-md-4 skyway-field-group">
                             <p:outputLabel for="documentoIdentidad" value="Número de Documento" styleClass="skyway-label"/>
                             <p:inputText id="documentoIdentidad" value="#{usuarioBean.usuario.documentoIdentidad}" required="true"
                                          requiredMessage="El número de documento es obligatorio"
@@ -282,7 +407,7 @@
                         </div>
 
                         <!-- Nacionalidad -->
-                        <div class="col-md-4 skyway-field-group">
+                        <div class="col-12 col-md-4 skyway-field-group">
                             <p:outputLabel for="nacionalidad" value="Nacionalidad" styleClass="skyway-label"/>
                             <p:selectOneMenu id="nacionalidad" value="#{usuarioBean.nacionalidad}" required="true"
                                              filter="true" filterMatchMode="contains"
@@ -310,15 +435,15 @@
                         <i class="pi pi-lock"></i> Seguridad y Acceso
                     </div>
 
-                    <div class="row g-3">
-                        <div class="col-md-6 skyway-field-group">
+                    <div class="row g-2 g-md-3">
+                        <div class="col-12 col-md-6 skyway-field-group">
                             <p:outputLabel for="contrasena" value="Contraseña" styleClass="skyway-label"/>
                             <p:password id="contrasena" value="#{usuarioBean.usuario.contrasena}" required="true"
                                         toggleMask="true" requiredMessage="La contraseña es obligatoria"
                                         placeholder="••••••••"/>
                         </div>
 
-                        <div class="col-md-6 skyway-field-group">
+                        <div class="col-12 col-md-6 skyway-field-group">
                             <p:outputLabel for="confirmarContrasena" value="Confirmar Contraseña" styleClass="skyway-label"/>
                             <p:password id="confirmarContrasena" value="#{usuarioBean.confirmarContrasena}" required="true"
                                         toggleMask="true" requiredMessage="Confirma tu contraseña"
