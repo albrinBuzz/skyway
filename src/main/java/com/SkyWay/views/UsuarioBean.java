@@ -27,6 +27,7 @@ import org.springframework.security.web.context.SecurityContextRepository;
 
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.Period;
 import java.time.ZoneId;
 import java.util.Date;
 
@@ -89,10 +90,29 @@ public class UsuarioBean implements Serializable {
     @Transactional
     public void registrar() {
         Logger.logInfo("Iniciando proceso de registro para RUT: " + usuario.getRut());
+        Date fechaNacDate = usuario.getFechaNacimiento();
 
         if (!usuario.getContrasena().equals(confirmarContrasena)) {
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error de Validación", "Las contraseñas no coinciden."));
+            return;
+        }
+
+        LocalDate fechaNac = fechaNacDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate hoy = LocalDate.now();
+
+        // 1. Validar que la fecha sea coherente (ej: no menor a 1925)
+        if (fechaNac.getYear() < 1925) {
+            FacesContext.getCurrentInstance().addMessage("registroForm:fechaNacimiento",
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fecha inválida", "Año de nacimiento no válido."));
+            return;
+        }
+
+        // 2. Validar Mayoría de Edad (18 años exactos)
+        int edad = Period.between(fechaNac, hoy).getYears();
+        if (edad < 18) {
+            FacesContext.getCurrentInstance().addMessage("registroForm:fechaNacimiento",
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Restricción de edad", "Debes tener al menos 18 años para registrarte en SkyWay."));
             return;
         }
 

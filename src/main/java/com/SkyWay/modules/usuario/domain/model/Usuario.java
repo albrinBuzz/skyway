@@ -8,6 +8,8 @@ import java.util.List;
 import com.SkyWay.modules.rolusuario.domain.model.Role;
 import com.SkyWay.modules.rolusuario.domain.model.Rolusuario;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Past;
 
 
 /**
@@ -38,6 +40,8 @@ public class Usuario implements Serializable {
 	@Column(name = "Documento_Identidad", nullable = false, length = 20, unique = true)
 	private String documentoIdentidad;
 
+	@NotNull(message = "La fecha de nacimiento es obligatoria")
+	@Past(message = "La fecha de nacimiento debe ser una fecha pasada")
 	@Column(name = "Fecha_Nacimiento", nullable = false)
 	@Temporal(TemporalType.DATE)
 	private Date fechaNacimiento;
