@@ -93,6 +93,15 @@ export class ApiService {
     }
   }
 
+  hasExplicitServerMode(): boolean {
+    try {
+      const saved = localStorage.getItem(SERVER_MODE_KEY);
+      return saved === 'azure' || saved === 'mipc' || saved === 'otro' || Boolean(this.customOrigin);
+    } catch {
+      return Boolean(this.customOrigin);
+    }
+  }
+
   getServerMode(): 'azure' | 'mipc' | 'otro' {
     try {
       const saved = localStorage.getItem(SERVER_MODE_KEY);
@@ -103,7 +112,7 @@ export class ApiService {
       // Ignorar fallo de almacenamiento
     }
 
-    const current = (this.getServerHost() || '').toLowerCase();
+    const current = (this.customOrigin || '').toLowerCase();
     if (current.includes('azurewebsites.net')) return 'azure';
     if (
       current.includes('192.168.') ||
@@ -113,7 +122,10 @@ export class ApiService {
     ) {
       return 'mipc';
     }
-    return 'azure';
+    if (current) {
+      return 'otro';
+    }
+    return Capacitor.isNativePlatform() ? 'azure' : 'mipc';
   }
 
   setServerMode(mode: 'azure' | 'mipc' | 'otro'): void {
@@ -154,8 +166,15 @@ export class ApiService {
 
   getServerHost(): string {
     if (this.customOrigin) return this.customOrigin;
-    const mode = this.getServerMode();
-    if (mode === 'otro') {
+
+    let savedMode: string | null = null;
+    try {
+      savedMode = localStorage.getItem(SERVER_MODE_KEY);
+    } catch {
+      savedMode = null;
+    }
+
+    if (savedMode === 'otro') {
       const savedOtro = this.getSavedHostForMode('otro');
       const normalized = this.normalizeOrigin(savedOtro);
       if (normalized) {
@@ -164,11 +183,14 @@ export class ApiService {
       }
       return '';
     }
-    if (mode === 'mipc') {
+    if (savedMode === 'mipc') {
       const savedMipc = this.getSavedHostForMode('mipc') || DEFAULT_MIPC_HOST;
-      const normalized = this.normalizeOrigin(savedMipc) || DEFAULT_MIPC_HOST;
-      return normalized;
+      return this.normalizeOrigin(savedMipc) || DEFAULT_MIPC_HOST;
     }
+    if (savedMode === 'azure') {
+      return AZURE_CLOUD_HOST;
+    }
+
     if (Capacitor.isNativePlatform()) return DEFAULT_NATIVE_HOST;
     const envBase = environment.apiUrl.replace(/\/$/, '');
     if (/^https?:\/\//i.test(envBase)) {

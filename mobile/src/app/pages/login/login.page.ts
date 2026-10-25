@@ -307,30 +307,35 @@ export class LoginPage {
     const data = this.form.getRawValue();
     const serverVal = (data.servidor || '').trim();
 
-    if (this.modoServidor === 'otro') {
-      if (!serverVal) {
-        this.error = 'Debes ingresar la IP o URL del servidor en el modo "IP Amigo / Otra".';
-        this.mostrarServidor = true;
-        return;
+    if (this.mostrarServidor || this.api.hasExplicitServerMode()) {
+      if (this.modoServidor === 'otro') {
+        if (!serverVal) {
+          this.error = 'Debes ingresar la IP o URL del servidor en el modo "IP Amigo / Otra".';
+          this.mostrarServidor = true;
+          return;
+        }
+        const normalized = this.api.normalizeOrigin(serverVal);
+        if (!normalized) {
+          this.error = 'La dirección del servidor no es válida. Usa el formato 192.168.1.50:8080 o https://...';
+          this.mostrarServidor = true;
+          return;
+        }
+        this.api.setServerMode('otro');
+        this.api.setServerHost(normalized);
+        this.api.setSavedHostForMode('otro', normalized);
+        this.form.controls.servidor.setValue(normalized);
+      } else if (this.modoServidor === 'mipc') {
+        const target = serverVal || this.defaultMipcHost;
+        const normalized = this.api.normalizeOrigin(target) || this.defaultMipcHost;
+        this.api.setServerMode('mipc');
+        this.api.setServerHost(normalized);
+        this.api.setSavedHostForMode('mipc', normalized);
+        this.form.controls.servidor.setValue(normalized);
+      } else if (this.modoServidor === 'azure') {
+        this.api.setServerMode('azure');
+        this.api.setServerHost(this.azureHost);
+        this.form.controls.servidor.setValue(this.azureHost);
       }
-      const normalized = this.api.normalizeOrigin(serverVal);
-      if (!normalized) {
-        this.error = 'La dirección del servidor no es válida. Usa el formato 192.168.1.50:8080 o https://...';
-        this.mostrarServidor = true;
-        return;
-      }
-      this.api.setServerHost(normalized);
-      this.api.setSavedHostForMode('otro', normalized);
-      this.form.controls.servidor.setValue(normalized);
-    } else if (this.modoServidor === 'mipc') {
-      const target = serverVal || this.defaultMipcHost;
-      const normalized = this.api.normalizeOrigin(target) || this.defaultMipcHost;
-      this.api.setServerHost(normalized);
-      this.api.setSavedHostForMode('mipc', normalized);
-      this.form.controls.servidor.setValue(normalized);
-    } else if (this.modoServidor === 'azure') {
-      this.api.setServerHost(this.azureHost);
-      this.form.controls.servidor.setValue(this.azureHost);
     }
 
     this.busy = true;
