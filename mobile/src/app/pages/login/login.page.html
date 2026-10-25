@@ -5,7 +5,7 @@
       <ion-icon name="airplane-outline"></ion-icon>
 
       <span>
-        skyway<span class="brand-dot">.</span>
+        skyway<span class="brand-dot" (click)="onBrandDotTap()">.</span>
       </span>
     </div>
 
@@ -106,14 +106,8 @@
 
         </ion-button>
 
-        <div class="server-config">
-          <button type="button" class="server-toggle" (click)="toggleServidor()">
-            <ion-icon name="server-outline"></ion-icon>
-            <span>Servidor: {{ servidorActual }}</span>
-            <ion-icon [name]="mostrarServidor ? 'chevron-up-outline' : 'create-outline'"></ion-icon>
-          </button>
-
-          <div class="server-box" *ngIf="mostrarServidor">
+        <div class="server-config" *ngIf="mostrarServidor">
+          <div class="server-box">
             <ion-input
                     label="IP o URL del servidor Backend"
                     labelPlacement="stacked"
@@ -122,10 +116,10 @@
                     placeholder="Ej: 192.168.1.50:8080"
             ></ion-input>
             <p class="server-hint">
-              Si pruebas en tu propia red Wi-Fi, ingresa la IPv4 local de tu PC (puerto 8080).
+              Actual: {{ servidorActual }}
             </p>
             <ion-button type="button" size="small" fill="outline" expand="block" (click)="guardarServidor()">
-              Guardar IP del servidor
+              Guardar IP y ocultar
             </ion-button>
           </div>
         </div>

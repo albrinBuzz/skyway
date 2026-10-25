@@ -18,24 +18,49 @@ export class LoginPage {
     contrasena: ['', [Validators.required, Validators.maxLength(72)]]
   });
   busy = false; error = ''; mostrarServidor = false;
+  private dotClicks = 0;
+  private dotTimer: ReturnType<typeof setTimeout> | null = null;
+
   get expired() { return this.route.snapshot.queryParamMap.get('expired') === '1'; }
   get servidorActual() { return this.api.getServerHost() || 'Proxy local (/api/v1/mobile)'; }
+
   ionViewWillEnter() {
     this.form.controls.servidor.setValue(this.api.getServerHost());
+    this.mostrarServidor = false;
+    this.dotClicks = 0;
     if (this.store.authenticated) void this.router.navigateByUrl('/home', { replaceUrl: true });
   }
-  toggleServidor() { this.mostrarServidor = !this.mostrarServidor; }
+
+  onBrandDotTap() {
+    this.dotClicks++;
+    if (this.dotTimer) clearTimeout(this.dotTimer);
+    if (this.dotClicks >= 5) {
+      this.dotClicks = 0;
+      this.mostrarServidor = !this.mostrarServidor;
+      if (this.mostrarServidor) {
+        this.form.controls.servidor.setValue(this.api.getServerHost());
+      }
+      return;
+    }
+    this.dotTimer = setTimeout(() => {
+      this.dotClicks = 0;
+    }, 2000);
+  }
+
   guardarServidor() {
     this.api.setServerHost(this.form.controls.servidor.value);
     this.form.controls.servidor.setValue(this.api.getServerHost());
     this.mostrarServidor = false;
   }
+
   async login() {
     if (this.form.invalid || this.busy) { this.form.markAllAsTouched(); return; }
     this.busy = true; this.error = '';
     try {
       const data = this.form.getRawValue();
-      this.api.setServerHost(data.servidor);
+      if (this.mostrarServidor) {
+        this.api.setServerHost(data.servidor);
+      }
       await firstValueFrom(this.auth.login(data.correoElectronico.trim(), data.contrasena));
       this.form.controls.contrasena.reset();
       const next = this.route.snapshot.queryParamMap.get('returnUrl');
