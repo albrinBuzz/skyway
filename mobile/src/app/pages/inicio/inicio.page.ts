@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
+import { Capacitor } from '@capacitor/core';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../core/api.service';
 import { AeropuertoCatalogo, ItinerarioDisponible, TarifaDisponible } from '../../core/models';
@@ -10,7 +11,7 @@ import { errorMessage } from '../../core/ui';
  * Desarrollo local: http://localhost:8080
  * Para celulares reales o producción, cambiar por URL accesible desde el dispositivo.
  */
-const URL_WEB_SKYWAY = 'http://localhost:8080';
+const URL_WEB_SKYWAY = Capacitor.isNativePlatform() ? 'http://192.168.100.7:8080' : 'http://localhost:8080';
 
 @Component({
   selector: 'app-inicio',
