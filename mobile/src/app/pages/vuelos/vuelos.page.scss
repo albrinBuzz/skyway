@@ -10,24 +10,20 @@ $danger: #b83449;
 $line: #e3e9f3;
 $bg-tint: #eef3ff;
 
-:host {
-  display: block;
-}
-
 ion-content {
   --padding-top: 0;
-  --padding-bottom: 0;
+  --padding-bottom: calc(32px + env(safe-area-inset-bottom));
   --padding-start: 0;
   --padding-end: 0;
 }
 
 .vuelos-page {
-  padding: 16px 14px 36px;
+  padding: 16px 14px calc(96px + env(safe-area-inset-bottom));
   box-sizing: border-box;
   width: 100%;
   max-width: 640px;
   margin: 0 auto;
-  overflow-x: hidden;
+  overflow-x: clip;
   font-size: 0.9rem;
   line-height: 1.5;
   color: $ink;
@@ -1047,7 +1043,7 @@ ion-content {
 
 /* Tablets y pantallas mayores (>= 480px) */
 @media (min-width: 480px) {
-  .vuelos-page { padding: 20px 18px 44px; }
+  .vuelos-page { padding: 20px 18px calc(96px + env(safe-area-inset-bottom)); }
   .reserva-meta-grid { grid-template-columns: 1.3fr 1fr; }
   .hero-meta { grid-template-columns: 1fr 1fr; }
   .reserva-actions {

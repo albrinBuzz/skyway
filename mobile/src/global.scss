@@ -28,7 +28,7 @@ body {
   font-size: 14.5px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 ion-toolbar {
@@ -83,12 +83,16 @@ ion-tab-button {
   min-height: 46px;
 }
 
+ion-content {
+  --padding-bottom: calc(28px + env(safe-area-inset-bottom));
+}
+
 .page {
   max-width: 760px;
   margin: auto;
-  padding: 16px 12px 30px;
+  padding: 16px 12px calc(96px + env(safe-area-inset-bottom));
   box-sizing: border-box;
-  overflow-x: hidden;
+  overflow-x: clip;
   width: 100%;
 }
 

@@ -14,6 +14,7 @@ import {
   checkmarkCircle,
   checkmarkCircleOutline,
   chevronForwardOutline,
+  closeCircleOutline,
   closeOutline,
   informationCircle,
   informationCircleOutline,
@@ -26,7 +27,8 @@ import {
   sparklesOutline,
   swapHorizontalOutline,
   time,
-  timeOutline
+  timeOutline,
+  trashOutline
 } from 'ionicons/icons';
 import { ApiService } from '../../core/api.service';
 import { AeropuertoCatalogo, ItinerarioDisponible, TarifaDisponible } from '../../core/models';
@@ -43,6 +45,7 @@ addIcons({
   checkmarkCircle,
   checkmarkCircleOutline,
   chevronForwardOutline,
+  closeCircleOutline,
   closeOutline,
   informationCircle,
   informationCircleOutline,
@@ -55,7 +58,8 @@ addIcons({
   sparklesOutline,
   swapHorizontalOutline,
   time,
-  timeOutline
+  timeOutline,
+  trashOutline
 });
 
 const CLP = new Intl.NumberFormat('es-CL', { maximumFractionDigits: 0 });
@@ -89,6 +93,54 @@ export class InicioPage {
     destino: ['', [Validators.required, Validators.pattern(/^[A-Za-z]{3}$/)]],
     fecha: [this.hoy, Validators.required]
   });
+
+  get tieneSeleccionOBusqueda(): boolean {
+    return Boolean(
+      this.form.controls.origen.value ||
+      this.form.controls.destino.value ||
+      this.resultados.length ||
+      this.busquedaRealizada ||
+      this.error
+    );
+  }
+
+  limpiarBusqueda(): void {
+    this.form.patchValue({ origen: '', destino: '' });
+    this.form.markAsPristine();
+    this.form.markAsUntouched();
+    this.form.controls.origen.markAsPristine();
+    this.form.controls.origen.markAsUntouched();
+    this.form.controls.destino.markAsPristine();
+    this.form.controls.destino.markAsUntouched();
+    this.resultados = [];
+    this.busquedaRealizada = false;
+    this.error = '';
+    this.codigoSeleccionado = '';
+  }
+
+  limpiarCampo(campo: 'origen' | 'destino', event?: Event): void {
+    event?.stopPropagation();
+    event?.preventDefault();
+    this.form.controls[campo].setValue('');
+    this.form.controls[campo].markAsUntouched();
+    this.form.controls[campo].markAsPristine();
+    this.form.markAsUntouched();
+    this.form.markAsPristine();
+    if (this.campoSelector === campo) {
+      this.codigoSeleccionado = '';
+    }
+    this.resultados = [];
+    this.busquedaRealizada = false;
+    this.error = '';
+  }
+
+  quitarSeleccionModal(): void {
+    if (this.campoSelector) {
+      this.limpiarCampo(this.campoSelector);
+    }
+    this.codigoSeleccionado = '';
+    this.cerrarSelector();
+  }
 
   ionViewWillEnter() {
     if (!this.aeropuertos.length && !this.cargandoCatalogo) void this.cargarAeropuertos();
@@ -298,6 +350,10 @@ export class InicioPage {
   intercambiar() {
     const { origen, destino } = this.form.getRawValue();
     this.form.patchValue({ origen: destino, destino: origen });
+    if (this.resultados.length || this.busquedaRealizada) {
+      this.resultados = [];
+      this.busquedaRealizada = false;
+    }
   }
 
   async buscar() {

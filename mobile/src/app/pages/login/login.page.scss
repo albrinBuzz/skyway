@@ -26,7 +26,7 @@ ion-content {
   justify-content: center;
   box-sizing: border-box;
   width: 100%;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* Brillo radial sutil decorativo en la esquina superior */
@@ -332,14 +332,48 @@ ion-content {
 .server-box-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 6px;
   font-size: 13px;
   font-weight: 800;
   color: $navy;
 
-  ion-icon {
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+
+    ion-icon {
+      font-size: 18px;
+      color: $blue;
+      flex: 0 0 auto;
+    }
+
+    strong {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .server-close-btn {
+    border: none;
+    background: transparent;
+    color: $soft-ink;
     font-size: 18px;
-    color: $blue;
+    padding: 4px;
+    margin: -4px;
+    cursor: pointer;
+    border-radius: 6px;
+    display: grid;
+    place-items: center;
+    transition: all .15s ease;
+
+    &:hover {
+      background: #e4ecf7;
+      color: $navy;
+    }
   }
 }
 
@@ -399,6 +433,50 @@ ion-content {
   }
 }
 
+.mipc-quick-presets {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.quick-ip-chip {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 4px;
+  border-radius: 8px;
+  border: 1.5px solid #d0dcee;
+  background: #edf3fc;
+  color: $ink;
+  font-size: 10.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  ion-icon {
+    font-size: 13px;
+    color: $blue;
+  }
+
+  span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &.is-active {
+    background: linear-gradient(135deg, $navy 0%, $blue 100%);
+    color: #ffffff;
+    border-color: $blue;
+
+    ion-icon {
+      color: $mint;
+    }
+  }
+}
+
 .server-input {
   --background: #ffffff;
   --padding-start: 10px;
@@ -420,12 +498,76 @@ ion-content {
   }
 }
 
-.server-save-btn {
+.server-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
   margin-top: 8px;
-  font-weight: 750;
+}
+
+.server-test-btn {
+  margin: 0;
+  font-weight: 700;
   --border-radius: 10px;
+  --color: #2449d8;
+  --border-color: #2449d8;
   min-height: 38px;
-  font-size: 12.5px;
+  font-size: 11.5px;
+
+  ion-icon {
+    font-size: 15px;
+  }
+}
+
+.server-save-btn {
+  margin: 0;
+  font-weight: 700;
+  --border-radius: 10px;
+  --background: #172844;
+  --color: #ffffff;
+  min-height: 38px;
+  font-size: 11.5px;
+
+  ion-icon {
+    font-size: 15px;
+  }
+}
+
+.connection-status-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 650;
+  line-height: 1.3;
+
+  ion-icon {
+    font-size: 16px;
+    flex: 0 0 auto;
+  }
+
+  &.is-ok {
+    background: #e6f7f2;
+    color: #0b6a4f;
+    border: 1px solid #a3e5d0;
+
+    ion-icon {
+      color: #128463;
+    }
+  }
+
+  &.is-fail {
+    background: #fdebee;
+    color: #9c1c30;
+    border: 1px solid #f6b5bf;
+
+    ion-icon {
+      color: #b83449;
+    }
+  }
 }
 
 /* Footer de la pantalla */
@@ -474,4 +616,50 @@ ion-content {
   .login-panel { padding: 16px 12px; }
   .intro h1 { font-size: 20px; }
   .panel-header h2 { font-size: 16.5px; }
+
+  /* En pantallas angostas (320px) envolver presets, IPs y botones de servidor limpiamente */
+  .server-presets {
+    gap: 4px;
+  }
+
+  .preset-chip {
+    padding: 6px 2px;
+    font-size: 10px;
+
+    span {
+      white-space: normal;
+      line-height: 1.15;
+      word-break: break-word;
+    }
+  }
+
+  .mipc-quick-presets {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .quick-ip-chip {
+    width: 100%;
+    justify-content: flex-start;
+    padding: 7px 8px;
+    font-size: 11px;
+
+    span {
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+    }
+  }
+
+  .server-actions {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .server-test-btn,
+  .server-save-btn {
+    width: 100%;
+    min-height: 40px;
+    font-size: 12px;
+  }
 }

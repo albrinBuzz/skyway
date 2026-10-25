@@ -1,6 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Capacitor } from '@capacitor/core';
+import { Observable, of } from 'rxjs';
+import { catchError, map, timeout } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import {
   AeropuertoCatalogo,
@@ -22,9 +24,15 @@ import {
   VistaTicket
 } from './models';
 
-const SERVER_HOST_KEY = 'skyway_server_host';
-export const DEFAULT_NATIVE_HOST = 'http://192.168.100.7:8080';
 export const AZURE_CLOUD_HOST = 'https://skyway-gde6a6aza3abb8a6.brazilsouth-01.azurewebsites.net';
+export const DEFAULT_MIPC_HOST = 'http://10.227.14.199:8080';
+export const HOME_MIPC_HOST = 'http://192.168.100.7:8080';
+export const DEFAULT_NATIVE_HOST = AZURE_CLOUD_HOST;
+
+const SERVER_HOST_KEY = 'skyway_server_host';
+const SERVER_MODE_KEY = 'skyway_server_mode';
+const SERVER_HOST_MIPC_KEY = 'skyway_host_mipc';
+const SERVER_HOST_OTRO_KEY = 'skyway_host_otro';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -40,13 +48,24 @@ export class ApiService {
     }
   }
 
-  private normalizeOrigin(raw: string): string | null {
+  public normalizeOrigin(raw: string): string | null {
     if (!raw || typeof raw !== 'string') return null;
-    const trimmed = raw.trim().replace(/\/+$/, '').replace(/\/api\/v1\/mobile$/i, '');
-    if (!trimmed) return null;
+    const cleaned = raw.trim();
+    if (!cleaned) return null;
 
-    // Rechazar esquemas de URL peligrosos de forma inmediata
-    if (/^(?:javascript|data|file|vbscript|blob):/i.test(trimmed)) {
+    // Rechazar esquemas de URL peligrosos o no soportados
+    if (/^(?:javascript|data|file|vbscript|blob|about):/i.test(cleaned)) {
+      return null;
+    }
+
+    // Si incluye cualquier esquema con '://', debe ser exclusivamente http o https
+    if (/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(cleaned) && !/^https?:\/\//i.test(cleaned)) {
+      return null;
+    }
+
+    // Quitar trailing slashes y sufijo de API móvil
+    const trimmed = cleaned.replace(/\/+$/, '').replace(/\/api\/v1\/mobile$/i, '');
+    if (!trimmed || /^https?:\/\/?$/i.test(trimmed) || /^https?:$/i.test(trimmed)) {
       return null;
     }
 
@@ -61,7 +80,11 @@ export class ApiService {
       if (!parsed.hostname || parsed.username || parsed.password) {
         return null;
       }
-      if (!parsed.port && /^\d+\.\d+\.\d+\.\d+$/.test(parsed.hostname)) {
+      // Rechazar hostnames con espacios o terminaciones inválidas
+      if (parsed.hostname.includes(' ') || parsed.hostname.startsWith('.') || parsed.hostname.endsWith('.')) {
+        return null;
+      }
+      if (!parsed.port && (/^\d+\.\d+\.\d+\.\d+$/.test(parsed.hostname) || parsed.hostname === 'localhost')) {
         parsed.port = '8080';
       }
       return parsed.origin;
@@ -70,8 +93,82 @@ export class ApiService {
     }
   }
 
+  getServerMode(): 'azure' | 'mipc' | 'otro' {
+    try {
+      const saved = localStorage.getItem(SERVER_MODE_KEY);
+      if (saved === 'azure' || saved === 'mipc' || saved === 'otro') {
+        return saved;
+      }
+    } catch {
+      // Ignorar fallo de almacenamiento
+    }
+
+    const current = (this.getServerHost() || '').toLowerCase();
+    if (current.includes('azurewebsites.net')) return 'azure';
+    if (
+      current.includes('192.168.') ||
+      current.includes('10.') ||
+      current.includes('localhost') ||
+      current.includes('127.0.0.1')
+    ) {
+      return 'mipc';
+    }
+    return 'azure';
+  }
+
+  setServerMode(mode: 'azure' | 'mipc' | 'otro'): void {
+    try {
+      localStorage.setItem(SERVER_MODE_KEY, mode);
+    } catch {
+      // Ignorar fallo de almacenamiento
+    }
+  }
+
+  getSavedHostForMode(mode: 'azure' | 'mipc' | 'otro'): string {
+    if (mode === 'azure') return AZURE_CLOUD_HOST;
+    try {
+      if (mode === 'mipc') {
+        return localStorage.getItem(SERVER_HOST_MIPC_KEY) || DEFAULT_MIPC_HOST;
+      }
+      if (mode === 'otro') {
+        return localStorage.getItem(SERVER_HOST_OTRO_KEY) || '';
+      }
+    } catch {
+      // Fallback
+    }
+    return mode === 'mipc' ? DEFAULT_MIPC_HOST : '';
+  }
+
+  setSavedHostForMode(mode: 'azure' | 'mipc' | 'otro', rawHost: string): void {
+    try {
+      const normalized = this.normalizeOrigin(rawHost) || (rawHost ?? '').trim();
+      if (mode === 'mipc') {
+        localStorage.setItem(SERVER_HOST_MIPC_KEY, normalized);
+      } else if (mode === 'otro') {
+        localStorage.setItem(SERVER_HOST_OTRO_KEY, normalized);
+      }
+    } catch {
+      // Ignorar fallo de almacenamiento
+    }
+  }
+
   getServerHost(): string {
     if (this.customOrigin) return this.customOrigin;
+    const mode = this.getServerMode();
+    if (mode === 'otro') {
+      const savedOtro = this.getSavedHostForMode('otro');
+      const normalized = this.normalizeOrigin(savedOtro);
+      if (normalized) {
+        this.customOrigin = normalized;
+        return normalized;
+      }
+      return '';
+    }
+    if (mode === 'mipc') {
+      const savedMipc = this.getSavedHostForMode('mipc') || DEFAULT_MIPC_HOST;
+      const normalized = this.normalizeOrigin(savedMipc) || DEFAULT_MIPC_HOST;
+      return normalized;
+    }
     if (Capacitor.isNativePlatform()) return DEFAULT_NATIVE_HOST;
     const envBase = environment.apiUrl.replace(/\/$/, '');
     if (/^https?:\/\//i.test(envBase)) {
@@ -92,6 +189,40 @@ export class ApiService {
     } catch {
       // Ignorar si el almacenamiento local no está disponible
     }
+  }
+
+  probarConexion(rawHost?: string): Observable<{ ok: boolean; host: string; mensaje: string }> {
+    const target = rawHost ? this.normalizeOrigin(rawHost) : this.getServerHost();
+    if (!target) {
+      return of({ ok: false, host: '', mensaje: 'URL inválida o no configurada' });
+    }
+    const testUrl = `${target}/api/v1/mobile/auth/login`;
+    return this.http.post(testUrl, {}, { observe: 'response' }).pipe(
+      timeout(4500),
+      map(() => ({
+        ok: true,
+        host: target,
+        mensaje: 'Conexión exitosa con el servidor SkyWay'
+      })),
+      catchError((err) => {
+        if (err && typeof err.status === 'number' && err.status > 0) {
+          // Si el servidor HTTP respondió (400, 401, 403, 405), el backend está vivo y alcanzable
+          return of({
+            ok: true,
+            host: target,
+            mensaje: `Conexión confirmada (HTTP ${err.status})`
+          });
+        }
+        const isTimeout = err?.name === 'TimeoutError';
+        return of({
+          ok: false,
+          host: target,
+          mensaje: isTimeout
+            ? 'Tiempo de espera agotado (4.5s). Servidor no responde.'
+            : 'No se pudo conectar al servidor. Verifica la IP o red Wi-Fi.'
+        });
+      })
+    );
   }
 
   getWebBaseUrl(): string {

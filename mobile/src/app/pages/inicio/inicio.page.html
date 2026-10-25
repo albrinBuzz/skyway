@@ -41,10 +41,21 @@
         <span class="sec-icon">
           <ion-icon name="search-outline" aria-hidden="true"></ion-icon>
         </span>
-        <div>
+        <div class="sec-head-info">
           <h2>Configura tu itinerario</h2>
           <p>Selecciona tu ciudad de origen, tu destino y la fecha de tu viaje.</p>
         </div>
+        <button
+          *ngIf="tieneSeleccionOBusqueda"
+          type="button"
+          class="btn-limpiar-destinos header-clear-btn"
+          (click)="limpiarBusqueda()"
+          aria-label="Limpiar destinos y reiniciar búsqueda"
+          title="Limpiar destinos"
+        >
+          <ion-icon name="trash-outline" aria-hidden="true"></ion-icon>
+          <span>Limpiar destinos</span>
+        </button>
       </div>
 
       <form [formGroup]="form" (ngSubmit)="buscar()" novalidate>
@@ -52,10 +63,23 @@
         <div class="airports-selection-box">
           <!-- Origen -->
           <div class="airport-card-picker" [class.is-empty]="!form.controls.origen.value">
-            <span class="picker-label" id="origen-label">
-              <ion-icon name="location-outline" aria-hidden="true"></ion-icon>
-              Sales de (Origen)
-            </span>
+            <div class="picker-head-row">
+              <span class="picker-label" id="origen-label">
+                <ion-icon name="location-outline" aria-hidden="true"></ion-icon>
+                Sales de (Origen)
+              </span>
+              <button
+                *ngIf="form.controls.origen.value"
+                type="button"
+                class="clear-airport-btn"
+                (click)="limpiarCampo('origen', $event)"
+                aria-label="Quitar aeropuerto de origen"
+                title="Quitar origen"
+              >
+                <ion-icon name="close-circle-outline" aria-hidden="true"></ion-icon>
+                <span>Quitar</span>
+              </button>
+            </div>
             <button
               type="button"
               class="airport-touch-btn"
@@ -95,10 +119,23 @@
 
           <!-- Destino -->
           <div class="airport-card-picker" [class.is-empty]="!form.controls.destino.value">
-            <span class="picker-label" id="destino-label">
-              <ion-icon name="location-outline" aria-hidden="true"></ion-icon>
-              Llegas a (Destino)
-            </span>
+            <div class="picker-head-row">
+              <span class="picker-label" id="destino-label">
+                <ion-icon name="location-outline" aria-hidden="true"></ion-icon>
+                Llegas a (Destino)
+              </span>
+              <button
+                *ngIf="form.controls.destino.value"
+                type="button"
+                class="clear-airport-btn"
+                (click)="limpiarCampo('destino', $event)"
+                aria-label="Quitar aeropuerto de destino"
+                title="Quitar destino"
+              >
+                <ion-icon name="close-circle-outline" aria-hidden="true"></ion-icon>
+                <span>Quitar</span>
+              </button>
+            </div>
             <button
               type="button"
               class="airport-touch-btn"
@@ -165,6 +202,17 @@
             Buscar vuelos disponibles
           </ng-container>
         </ion-button>
+
+        <button
+          *ngIf="tieneSeleccionOBusqueda"
+          type="button"
+          class="btn-limpiar-destinos form-clear-btn"
+          (click)="limpiarBusqueda()"
+          aria-label="Limpiar destinos seleccionados y reiniciar búsqueda"
+        >
+          <ion-icon name="trash-outline" aria-hidden="true"></ion-icon>
+          <span>Limpiar destinos</span>
+        </button>
       </form>
     </section>
 
@@ -340,6 +388,15 @@
         No hay itinerarios programados entre las ciudades seleccionadas para esa fecha.
         Prueba cambiando el día de salida o buscando opciones en aeropuertos cercanos.
       </p>
+      <button
+        type="button"
+        class="btn-limpiar-destinos empty-state-clear-btn"
+        (click)="limpiarBusqueda()"
+        aria-label="Reiniciar búsqueda y limpiar destinos"
+      >
+        <ion-icon name="refresh-outline" aria-hidden="true"></ion-icon>
+        <span>Reiniciar búsqueda</span>
+      </button>
     </div>
 
   </main>
@@ -377,8 +434,20 @@
       </ion-header>
 
       <ion-content class="airport-modal-content">
-        <div class="airport-modal-counter">
-          <span>{{ aeropuertosFiltrados.length }} {{ aeropuertosFiltrados.length === 1 ? 'aeropuerto disponible' : 'aeropuertos disponibles' }}</span>
+        <div class="airport-modal-header-bar">
+          <div class="airport-modal-counter">
+            <span>{{ aeropuertosFiltrados.length }} {{ aeropuertosFiltrados.length === 1 ? 'aeropuerto disponible' : 'aeropuertos disponibles' }}</span>
+          </div>
+          <button
+            *ngIf="codigoSeleccionado"
+            type="button"
+            class="modal-clear-btn"
+            (click)="quitarSeleccionModal()"
+            aria-label="Quitar selección actual de aeropuerto"
+          >
+            <ion-icon name="close-circle-outline" aria-hidden="true"></ion-icon>
+            <span>Quitar selección actual ({{ codigoSeleccionado }})</span>
+          </button>
         </div>
 
         <ion-radio-group

@@ -124,8 +124,18 @@
         <div class="server-config" *ngIf="mostrarServidor">
           <div class="server-box">
             <div class="server-box-header">
-              <ion-icon name="server-outline" aria-hidden="true"></ion-icon>
-              <strong>Conexión de Servidor Backend</strong>
+              <div class="header-title">
+                <ion-icon name="server-outline" aria-hidden="true"></ion-icon>
+                <strong>Conexión de Servidor Backend</strong>
+              </div>
+              <button
+                type="button"
+                class="server-close-btn"
+                (click)="cerrarServidor()"
+                aria-label="Cerrar panel de servidor"
+              >
+                <ion-icon name="close-outline" aria-hidden="true"></ion-icon>
+              </button>
             </div>
             <p class="server-explanation">
               Elige a qué entorno conectar la aplicación o ingresa la IP local de otro PC:
@@ -135,7 +145,7 @@
               <button
                 type="button"
                 class="preset-chip"
-                [class.is-active]="modoServidorActual === 'azure'"
+                [class.is-active]="modoServidor === 'azure'"
                 (click)="seleccionarPresetServidor('azure')"
               >
                 <ion-icon name="cloud-outline" aria-hidden="true"></ion-icon>
@@ -145,7 +155,7 @@
               <button
                 type="button"
                 class="preset-chip"
-                [class.is-active]="modoServidorActual === 'mipc'"
+                [class.is-active]="modoServidor === 'mipc'"
                 (click)="seleccionarPresetServidor('mipc')"
               >
                 <ion-icon name="desktop-outline" aria-hidden="true"></ion-icon>
@@ -155,11 +165,33 @@
               <button
                 type="button"
                 class="preset-chip"
-                [class.is-active]="modoServidorActual === 'otro'"
+                [class.is-active]="modoServidor === 'otro'"
                 (click)="seleccionarPresetServidor('otro')"
               >
                 <ion-icon name="globe-outline" aria-hidden="true"></ion-icon>
                 <span>IP Amigo / Otra</span>
+              </button>
+            </div>
+
+            <!-- Sub-presets para Mi PC Local -->
+            <div class="mipc-quick-presets" *ngIf="modoServidor === 'mipc'">
+              <button
+                type="button"
+                class="quick-ip-chip"
+                [class.is-active]="form.controls.servidor.value === defaultMipcHost"
+                (click)="seleccionarSubPresetMipc(defaultMipcHost)"
+              >
+                <ion-icon name="wifi-outline" aria-hidden="true"></ion-icon>
+                <span>Red actual (10.227.14.199)</span>
+              </button>
+              <button
+                type="button"
+                class="quick-ip-chip"
+                [class.is-active]="form.controls.servidor.value === homeMipcHost"
+                (click)="seleccionarSubPresetMipc(homeMipcHost)"
+              >
+                <ion-icon name="home-outline" aria-hidden="true"></ion-icon>
+                <span>Wi-Fi Casa (192.168.100.7)</span>
               </button>
             </div>
 
@@ -168,23 +200,53 @@
               labelPlacement="stacked"
               type="url"
               formControlName="servidor"
+              (ionInput)="onServidorInput()"
               placeholder="Ej: 192.168.1.50:8080"
               class="server-input"
             ></ion-input>
+
             <p class="server-hint">
               <strong>Activo:</strong> {{ servidorActual }}
             </p>
-            <ion-button
-              type="button"
-              size="small"
-              fill="outline"
-              expand="block"
-              class="server-save-btn"
-              (click)="guardarServidor()"
+
+            <!-- Botones Probar conexión y Guardar -->
+            <div class="server-actions">
+              <ion-button
+                type="button"
+                size="small"
+                fill="outline"
+                class="server-test-btn"
+                [disabled]="probandoConexion"
+                (click)="probarConexion()"
+              >
+                <ion-spinner *ngIf="probandoConexion" name="dots"></ion-spinner>
+                <ion-icon *ngIf="!probandoConexion" name="refresh-outline" slot="start" aria-hidden="true"></ion-icon>
+                <span *ngIf="!probandoConexion">Probar conexión</span>
+                <span *ngIf="probandoConexion">Probando...</span>
+              </ion-button>
+              <ion-button
+                type="button"
+                size="small"
+                fill="solid"
+                class="server-save-btn"
+                (click)="guardarServidor()"
+              >
+                <ion-icon name="checkmark-circle" slot="start" aria-hidden="true"></ion-icon>
+                Guardar y ocultar
+              </ion-button>
+            </div>
+
+            <!-- Badge de estado de conexión -->
+            <div
+              *ngIf="estadoConexion"
+              class="connection-status-badge"
+              [class.is-ok]="estadoConexion.ok"
+              [class.is-fail]="!estadoConexion.ok"
+              role="status"
             >
-              <ion-icon name="checkmark-circle" slot="start" aria-hidden="true"></ion-icon>
-              Guardar conexión y ocultar
-            </ion-button>
+              <ion-icon [name]="estadoConexion.ok ? 'checkmark-circle' : 'alert-circle'" aria-hidden="true"></ion-icon>
+              <span>{{ estadoConexion.mensaje }}</span>
+            </div>
           </div>
         </div>
 

@@ -11,7 +11,7 @@ $line: #e3e9f3;
 $bg-tint: #eef3ff;
 
 .alertas-page {
-  padding: 14px 12px 32px;
+  padding: 14px 12px calc(96px + env(safe-area-inset-bottom));
   font-size: 14.5px;
   line-height: 1.5;
   color: $ink;
@@ -19,7 +19,7 @@ $bg-tint: #eef3ff;
   width: 100%;
   margin: 0 auto;
   box-sizing: border-box;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 .loading {
@@ -470,7 +470,7 @@ $bg-tint: #eef3ff;
 
 /* ---------- Responsive (<= 360px / 320px) ---------- */
 @media (max-width: 360px) {
-  .alertas-page { padding: 10px 8px 26px; }
+  .alertas-page { padding: 10px 8px calc(96px + env(safe-area-inset-bottom)); }
   .hero-card { padding: 14px 12px; }
   .hero-number { font-size: 20px; }
   .filter-pill { min-height: 38px; padding: 5px 10px; font-size: 12.5px; }
@@ -481,7 +481,7 @@ $bg-tint: #eef3ff;
 }
 
 @media (min-width: 560px) {
-  .alertas-page { padding: 22px 18px 40px; }
+  .alertas-page { padding: 22px 18px calc(96px + env(safe-area-inset-bottom)); }
   .hero-meta { grid-template-columns: 1fr 1fr; }
   .hero-number { font-size: 26px; }
 }
