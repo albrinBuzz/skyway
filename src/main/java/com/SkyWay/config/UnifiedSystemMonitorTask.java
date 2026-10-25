@@ -185,7 +185,7 @@ public class UnifiedSystemMonitorTask {
             payload.put("active_profile", activeProfile);
             payload.put("java_vendor", JavaVersion.getJavaVersion().toString());
 
-            messagingTemplate.convertAndSend("/topic/metrics", payload);
+            //messagingTemplate.convertAndSend("/topic/metrics", payload);
 
         } catch (Exception e) {
             Logger.logInfo("⚠️ Error recopilando métricas: " + e.getMessage());

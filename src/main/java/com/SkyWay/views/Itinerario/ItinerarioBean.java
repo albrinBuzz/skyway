@@ -32,8 +32,9 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.*;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.SkyWay.modules.vuelo.presentation.dto.VueloMapaDTO;
+import tools.jackson.databind.ObjectMapper;
 
 @Component
 @Named("itinerarioBean")

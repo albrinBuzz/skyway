@@ -9,7 +9,7 @@ import com.SkyWay.modules.tarifa.presentation.dto.TarifaDTO;
 import com.SkyWay.modules.tarifaItinerario.domain.model.ItinerarioTarifa;
 import com.SkyWay.modules.tarifaItinerario.domain.service.ItinerarioTarifaService;
 import com.SkyWay.util.Logger;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
@@ -22,6 +22,7 @@ import org.primefaces.PrimeFaces;
 import org.primefaces.event.SelectEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.Serializable;
 import java.time.LocalDate;

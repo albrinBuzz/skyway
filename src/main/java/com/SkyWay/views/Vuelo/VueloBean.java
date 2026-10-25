@@ -31,7 +31,7 @@ import com.SkyWay.modules.turno.domain.service.TurnoService;
 import com.SkyWay.modules.vuelo.domain.model.Vuelo;
 import com.SkyWay.modules.vuelo.domain.service.VueloService;
 import com.SkyWay.util.Logger;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
@@ -44,6 +44,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -76,6 +77,7 @@ public class VueloBean implements Serializable {
     private List<Aerolinea> aerolineas;
     private List<Vuelo> vuelos;
 
+
     @PersistenceContext
     private EntityManager entityManager;
     @Autowired private VueloService vueloService;
@@ -94,6 +96,7 @@ public class VueloBean implements Serializable {
     @Autowired private TipoTurnoService tipoTurnoService;
     @Autowired
     private PilotoRepositoy pilotoRepository;
+
 
     @Autowired
     private AvionRepository avionRepository;
