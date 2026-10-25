@@ -106,6 +106,30 @@
 
         </ion-button>
 
+        <div class="server-config">
+          <button type="button" class="server-toggle" (click)="toggleServidor()">
+            <ion-icon name="server-outline"></ion-icon>
+            <span>Servidor: {{ servidorActual }}</span>
+            <ion-icon [name]="mostrarServidor ? 'chevron-up-outline' : 'create-outline'"></ion-icon>
+          </button>
+
+          <div class="server-box" *ngIf="mostrarServidor">
+            <ion-input
+                    label="IP o URL del servidor Backend"
+                    labelPlacement="stacked"
+                    type="url"
+                    formControlName="servidor"
+                    placeholder="Ej: 192.168.1.50:8080"
+            ></ion-input>
+            <p class="server-hint">
+              Si pruebas en tu propia red Wi-Fi, ingresa la IPv4 local de tu PC (puerto 8080).
+            </p>
+            <ion-button type="button" size="small" fill="outline" expand="block" (click)="guardarServidor()">
+              Guardar IP del servidor
+            </ion-button>
+          </div>
+        </div>
+
       </form>
 
     </section>

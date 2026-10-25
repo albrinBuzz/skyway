@@ -183,7 +183,7 @@ export class InicioPage {
    * No crea reservas ni registra pagos desde la aplicación Ionic.
    */
   urlCompraWeb(itinerario: ItinerarioDisponible, tarifa: TarifaDisponible): string {
-    const url = new URL('/home/seleccionAsientos.xhtml', URL_WEB_SKYWAY);
+    const url = new URL('/home/seleccionAsientos.xhtml', this.api.getWebBaseUrl());
     url.searchParams.set('itinerarios', String(itinerario.idItinerario));
     url.searchParams.set('tarifas', String(tarifa.idTarifa));
     url.searchParams.set('adultos', '1');
@@ -195,7 +195,7 @@ export class InicioPage {
    * búsqueda y permite escoger allí la tarifa y completar la reserva.
    */
   urlResultadosWeb(itinerario: ItinerarioDisponible): string {
-    const url = new URL('/home/vuelos.xhtml', URL_WEB_SKYWAY);
+    const url = new URL('/home/vuelos.xhtml', this.api.getWebBaseUrl());
     const { fecha } = this.form.getRawValue();
     url.searchParams.set('salida', itinerario.origen);
     url.searchParams.set('llegada', itinerario.destino);

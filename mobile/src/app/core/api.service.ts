@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Capacitor } from '@capacitor/core';
 import { environment } from '../../environments/environment';
 import {
   AeropuertoCatalogo,
@@ -21,10 +22,70 @@ import {
   VistaTicket
 } from './models';
 
+const SERVER_HOST_KEY = 'skyway_server_host';
+const DEFAULT_NATIVE_HOST = 'http://192.168.100.7:8080';
+
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private readonly http = inject(HttpClient);
-  private readonly base = environment.apiUrl.replace(/\/$/, '');
+  private customOrigin: string | null = this.loadSavedOrigin();
+
+  private loadSavedOrigin(): string | null {
+    try {
+      return localStorage.getItem(SERVER_HOST_KEY);
+    } catch {
+      return null;
+    }
+  }
+
+  private normalizeOrigin(raw: string): string | null {
+    const trimmed = raw.trim().replace(/\/+$/, '').replace(/\/api\/v1\/mobile$/i, '');
+    if (!trimmed) return null;
+    const withProtocol = /^https?:\/\//i.test(trimmed) ? trimmed : `http://${trimmed}`;
+    try {
+      const parsed = new URL(withProtocol);
+      if (!parsed.port && /^\d+\.\d+\.\d+\.\d+$/.test(parsed.hostname)) {
+        parsed.port = '8080';
+      }
+      return parsed.origin;
+    } catch {
+      return withProtocol;
+    }
+  }
+
+  getServerHost(): string {
+    if (this.customOrigin) return this.customOrigin;
+    if (Capacitor.isNativePlatform()) return DEFAULT_NATIVE_HOST;
+    const envBase = environment.apiUrl.replace(/\/$/, '');
+    if (/^https?:\/\//i.test(envBase)) {
+      return envBase.replace(/\/api\/v1\/mobile$/i, '');
+    }
+    return '';
+  }
+
+  setServerHost(rawHost: string): void {
+    const normalized = this.normalizeOrigin(rawHost);
+    this.customOrigin = normalized;
+    try {
+      if (normalized) {
+        localStorage.setItem(SERVER_HOST_KEY, normalized);
+      } else {
+        localStorage.removeItem(SERVER_HOST_KEY);
+      }
+    } catch {
+      // Ignorar si el almacenamiento local no está disponible
+    }
+  }
+
+  getWebBaseUrl(): string {
+    return this.getServerHost() || 'http://localhost:8080';
+  }
+
+  private get base(): string {
+    const host = this.getServerHost();
+    if (host) return `${host}/api/v1/mobile`;
+    return environment.apiUrl.replace(/\/$/, '');
+  }
 
   login(correoElectronico: string, contrasena: string) {
     return this.http.post<LoginResponse>(`${this.base}/auth/login`, { correoElectronico, contrasena });
