@@ -1,31 +1,36 @@
 /* =============================================================
-   1. PALETA CORPORATIVA SKYWAY (SOBRIA & ELEGANTE)
+   1. PALETA CORPORATIVA SKYWAY (DARK THEME SOBRIO & ELEGANTE)
    ============================================================= */
 :root {
-    /* Superficies y Neutros */
-    --deep-space: #080e1a;
-    --midnight-blue: #0b1426;
-    --slate-glass: #1e293b;
+    --deep-space: #080E1A;
+    --midnight-blue: #101B33;
+    --dark-panel: #0D172A;
+    --slate-glass: #1E3A5C;
     --border-ui: #334155;
 
-    /* Acentos Corporativos */
-    --aviation-blue: #4c7cf3;
-    --aviation-hover: #3b68d6;
-    --text-primary: #f8fafc;
-    --text-dim: #94a3b8;
+    --aviation-blue: #2563EB;
+    --aviation-hover: #1D4ED8;
+    --text-primary: #FFFFFF;
+    --text-dim: #94A3B8;
 
-    /* Estados Operativos Moderados */
-    --status-ontime: #0d9488;
-    --status-delayed: #d97706;
-    --status-cancelled: #dc2626;
+    --status-ontime: #166534;
+    --status-delayed: #D97706;
+    --status-cancelled: #DC2626;
+}
+
+body {
+    background-color: var(--deep-space) !important;
+    color: var(--text-primary) !important;
 }
 
 .skyway-container {
-    padding: 1.5rem;
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 0 15px;
 }
 
 /* =============================================================
-   2. CABECERA Y TARJETAS (FILTROS)
+   2. CABECERA Y FILTROS DE BÚSQUEDA
    ============================================================= */
 .page-header {
     margin-bottom: 1.5rem;
@@ -66,7 +71,7 @@
     font-weight: 600;
     display: block;
     margin-bottom: 0.35rem;
-    color: var(--text-primary);
+    color: var(--text-dim);
 }
 
 .quick-filters {
@@ -77,13 +82,14 @@
 }
 
 /* =============================================================
-   3. PRIMEFACES OVERRIDES (INPUTS, PAGINADOR Y TABLA)
+   3. OVERRIDES GENERALES Y ANULACIÓN DE FONDO BLANCO EN PRIMEFACES
    ============================================================= */
 .ui-inputfield,
-.ui-datepicker input {
+.ui-datepicker input,
+.ui-inputtextarea {
     background-color: var(--deep-space) !important;
     color: var(--text-primary) !important;
-    border: 1px solid var(--border-ui) !important;
+    border: 1px solid var(--slate-glass) !important;
 }
 
 .ui-inputfield.ui-state-focus,
@@ -94,38 +100,38 @@
 .ui-datepicker {
     background-color: var(--midnight-blue) !important;
     color: var(--text-primary) !important;
-    border: 1px solid var(--border-ui) !important;
+    border: 1px solid var(--slate-glass) !important;
 }
 
-.ui-datepicker table td a.ui-state-active {
-    background-color: var(--aviation-blue) !important;
-}
-
-/* Encabezado y Tabla en Azul Oscuro Mate */
+/* TABLA PRINCIPAL Y SECUNDARIAS */
 .skyway-datatable .ui-datatable-header,
 .skyway-datatable th {
-    background-color: var(--deep-space) !important;
-    color: var(--text-dim) !important;
-    border-bottom: 2px solid var(--slate-glass) !important;
-    border-top: none !important;
+    background: #11263F !important;
+    color: #E6EEF7 !important;
+    border: 1px solid var(--slate-glass) !important;
     font-weight: 600 !important;
     text-transform: uppercase !important;
-    letter-spacing: 0.5px !important;
 }
 
-.skyway-datatable td {
-    background-color: var(--midnight-blue) !important;
-    color: var(--text-primary) !important;
-    border-color: var(--slate-glass) !important;
+.skyway-datatable table,
+.skyway-datatable .ui-datatable-data,
+.skyway-datatable .ui-datatable-data > tr,
+.skyway-datatable .ui-datatable-data > tr > td {
+    background-color: #0D172A !important;
+    background: #0D172A !important;
+    color: #CBD5E1 !important;
+    border: 1px solid #1E293B !important;
 }
 
-.skyway-datatable tr:hover td {
-    background-color: rgba(30, 41, 59, 0.5) !important;
+.skyway-datatable .ui-datatable-data > tr:hover,
+.skyway-datatable .ui-datatable-data > tr:hover > td {
+    background-color: rgba(30, 41, 59, 0.8) !important;
+    background: rgba(30, 41, 59, 0.8) !important;
 }
 
 .skyway-datatable .ui-paginator {
     background-color: var(--midnight-blue) !important;
-    border-color: var(--slate-glass) !important;
+    border: 1px solid var(--slate-glass) !important;
 }
 
 .skyway-datatable .ui-paginator .ui-paginator-page,
@@ -141,425 +147,656 @@
 .skyway-datatable .ui-paginator .ui-paginator-page.ui-state-active {
     background-color: var(--aviation-blue) !important;
     color: var(--text-primary) !important;
-    border-color: var(--aviation-blue) !important;
 }
 
 .col-route { min-width: 140px; }
 .col-date { color: var(--text-primary); }
 .col-center { text-align: center; }
-.col-actions { text-align: center; width: 220px; }
+.col-actions { text-align: center; }
 
 .iata-code {
-    font-weight: 700;
-    font-size: 1.05em;
+    font-weight: 800;
+    font-size: 1.1em;
     color: var(--text-primary);
 }
 
 .route-icon {
     margin: 0 8px;
-    font-size: 0.8em;
-    color: var(--aviation-blue);
+    color: #3B82F6;
 }
 
 .action-buttons-wrapper {
     display: flex;
-    gap: 5px;
+    gap: 6px;
     justify-content: center;
+    flex-wrap: wrap;
 }
 
 /* =============================================================
    4. BOTONES PERSONALIZADOS
    ============================================================= */
-.btn-skyway-primary {
-    background-color: var(--aviation-blue) !important;
-    border-color: var(--aviation-blue) !important;
-    color: var(--text-primary) !important;
-    font-weight: 600 !important;
+.btn-skyway-primary.ui-button {
+    background: #2563EB !important;
+    border: none !important;
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
 }
 
-.btn-skyway-primary:hover {
-    background-color: var(--aviation-hover) !important;
-    border-color: var(--aviation-hover) !important;
+.btn-skyway-primary.ui-button:hover {
+    background: #1D4ED8 !important;
 }
 
-.btn-skyway-outlined {
-    background-color: transparent !important;
-    border: 1px solid var(--border-ui) !important;
-    color: var(--text-dim) !important;
-    font-weight: 500 !important;
-}
-
-.btn-skyway-outlined:hover {
-    background-color: rgba(76, 124, 243, 0.1) !important;
-    border-color: var(--aviation-blue) !important;
-    color: var(--text-primary) !important;
-}
-
-/* Botón "Ver Ticket" Sobrio (Reemplazo del verde) */
-.btn-skyway-success {
-    background-color: rgba(76, 124, 243, 0.15) !important;
-    border: 1px solid var(--aviation-blue) !important;
-    color: var(--text-primary) !important;
-    font-weight: 600 !important;
-}
-
-.btn-skyway-success:hover {
-    background-color: var(--aviation-blue) !important;
-    color: #ffffff !important;
-}
-
-.btn-skyway-warning {
-    background-color: var(--status-delayed) !important;
-    border-color: var(--status-delayed) !important;
-    color: var(--text-primary) !important;
-    font-weight: 600 !important;
-}
-
-/* Botones de Icono Sutiles */
-.btn-icon-cyan,
-.btn-icon-blue,
-.btn-icon-secondary {
+.btn-skyway-outlined.ui-button {
+    border: 1px solid var(--slate-glass) !important;
+    color: #94A3B8 !important;
     background: transparent !important;
-    border: 1px solid var(--border-ui) !important;
-    color: var(--text-dim) !important;
-    border-radius: 6px !important;
 }
 
-.btn-icon-cyan:hover,
-.btn-icon-blue:hover,
-.btn-icon-secondary:hover {
-    background: rgba(76, 124, 243, 0.12) !important;
-    border-color: var(--aviation-blue) !important;
-    color: var(--text-primary) !important;
+.btn-skyway-outlined.ui-button:hover {
+    background: var(--slate-glass) !important;
+    color: #FFFFFF !important;
+}
+
+.btn-skyway-accent.ui-button {
+    background: rgba(14, 116, 144, 0.25) !important;
+    border: 1px solid #06B6D4 !important;
+    color: #67E8F9 !important;
+    font-weight: 600 !important;
+}
+
+.btn-skyway-accent.ui-button:hover {
+    background: #0891B2 !important;
+    color: #FFFFFF !important;
 }
 
 /* =============================================================
-   5. TARJETA DE EMBARQUE (BOARDING PASS)
+   5. MODALES Y SOLUCIÓN DEFINITIVA A PESTAÑAS (TABVIEW DE PRIMEFACES)
    ============================================================= */
-.skyway-dialog .ui-dialog-content,
-.skyway-dialog .ui-dialog-titlebar,
-.skyway-dialog .ui-dialog-footer {
-    background-color: var(--midnight-blue) !important;
-    color: var(--text-primary) !important;
-    border-color: var(--slate-glass) !important;
+body .skyway-dialog.ui-dialog .ui-dialog-titlebar {
+    background: var(--midnight-blue) !important;
+    color: #FFFFFF !important;
+    border-bottom: 1px solid var(--slate-glass) !important;
 }
 
-.skyway-dialog .ui-dialog-title {
-    color: var(--text-primary) !important;
+body .skyway-dialog.ui-dialog .ui-dialog-content {
+    background: var(--dark-panel) !important;
+    color: #E6EEF7 !important;
+    padding: 15px !important;
+}
+
+body .skyway-dialog.ui-dialog .ui-dialog-footer {
+    background: var(--midnight-blue) !important;
+    border-top: 1px solid var(--slate-glass) !important;
+}
+
+/* ANULACIÓN TOTAL DEL FONDO BLANCO EN PRIMEFACES TABVIEW Y CONTENEDORES INTERNOS */
+body .skyway-tabs,
+body .skyway-tabs.ui-tabview,
+body .skyway-tabs .ui-tabview-panels,
+body .skyway-tabs .ui-tabview-panel,
+body .skyway-tabs .ui-widget-content {
+    background-color: #0D172A !important;
+    background: #0D172A !important;
+    border-color: #1E3A5C !important;
+    color: #E6EEF7 !important;
+}
+
+body .skyway-tabs .ui-tabview-panels {
+    border: 1px solid #1E3A5C !important;
+    border-top: none !important;
+    border-radius: 0 0 8px 8px !important;
+    padding: 16px !important;
+}
+
+body .skyway-tabs .ui-tabview-nav {
+    background: #101B33 !important;
+    border: 1px solid #1E3A5C !important;
+    border-radius: 8px 8px 0 0 !important;
+    display: flex;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+body .skyway-tabs .ui-tabview-nav li {
+    background: transparent !important;
+    border: none !important;
+    margin: 0 !important;
+}
+
+body .skyway-tabs .ui-tabview-nav li a {
+    color: #94A3B8 !important;
+    font-weight: 600 !important;
+    padding: 10px 16px !important;
+}
+
+body .skyway-tabs .ui-tabview-nav li.ui-state-active {
+    background: #1E293B !important;
+    border-bottom: 3px solid #3B82F6 !important;
+}
+
+body .skyway-tabs .ui-tabview-nav li.ui-state-active a {
+    color: #FFFFFF !important;
+}
+
+.hub-tab-panel {
+    background: #0D172A !important;
+    color: #E6EEF7 !important;
+}
+
+/* =============================================================
+   6. CRONOGRAMA DE VUELO (TIMELINE EN EL HUB)
+   ============================================================= */
+.timeline-compact-wrapper {
+    background: #0D172A;
+    border: 1px solid #1E293B;
+    border-radius: 8px;
+    padding: 12px 16px;
+}
+
+.timeline-compact-grid {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    gap: 10px;
+}
+
+.timeline-compact-grid::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 10%;
+    right: 10%;
+    height: 2px;
+    background: #1E3A5C;
+    z-index: 1;
+    transform: translateY(-50%);
+}
+
+.step-compact-item {
+    position: relative;
+    z-index: 2;
+    background: #11263F;
+    border: 1px solid #1E3A5C;
+    border-radius: 6px;
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: #94A3B8;
+    font-weight: 600;
+}
+
+.step-compact-item.completed {
+    border-color: #22C55E;
+    color: #86EFAC;
+    background: rgba(34, 197, 94, 0.15);
+}
+
+.step-compact-item.active {
+    border-color: #3B82F6;
+    color: #FFFFFF;
+    background: #1E3A5C;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+}
+
+.badge-here-compact {
+    background: #2563EB;
+    color: #FFFFFF;
+    font-size: 0.6rem;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* =============================================================
+   7. PÍLDORAS DE TARIFA Y BENEFICIOS
+   ============================================================= */
+.feature-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #FFFFFF !important;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    margin-bottom: 8px;
+}
+
+.feature-pill.allowed {
+    border-color: rgba(34, 197, 94, 0.4);
+    background-color: rgba(34, 197, 94, 0.15);
+}
+
+.feature-pill.allowed i {
+    color: #22C55E;
+}
+
+.feature-pill.denied {
+    border-color: rgba(220, 53, 69, 0.4);
+    background-color: rgba(220, 53, 69, 0.15);
+}
+
+.feature-pill.denied i {
+    color: #DC2626;
+}
+
+/* =============================================================
+   8. TARJETAS DE EMBARQUE (BOARDING PASS)
+   ============================================================= */
+.ticket-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .boarding-pass {
-    display: flex !important;
-    flex-direction: row !important;
-    background-color: var(--midnight-blue);
-    border: 1px solid var(--slate-glass);
+    background: #11263F !important;
+    border: 1px solid #1E3A5C !important;
     border-radius: 12px;
+    display: flex;
+    flex-direction: row;
     overflow: hidden;
-    color: var(--text-primary);
-    margin-bottom: 20px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    margin-bottom: 12px;
 }
 
 .boarding-pass .main-section {
     flex: 3;
-    padding: 20px;
-    border-right: 2px dashed var(--slate-glass);
+    padding: 18px 20px;
+    border-right: 2px dashed #1E3A5C;
 }
 
 .boarding-pass .stub {
-    flex: 1;
-    padding: 20px;
-    background-color: var(--deep-space);
+    flex: 1.2;
+    padding: 18px 15px;
+    background: #080E1A !important;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    align-items: center;
+    text-align: center;
+    border-left: 1px solid #1E3A5C;
 }
 
 .boarding-pass .pass-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px;
+    border-bottom: 1px solid #1E3A5C;
     padding-bottom: 10px;
-    border-bottom: 1px solid var(--slate-glass);
+    margin-bottom: 12px;
 }
 
 .boarding-pass .airline-brand {
-    color: var(--text-primary);
-    font-weight: bold;
-    font-size: 1.1rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    font-weight: 800;
+    color: #3B82F6;
+    font-size: 1.05rem;
 }
 
 .boarding-pass .pass-type {
-    color: var(--aviation-blue);
-    font-size: 0.85rem;
-    font-weight: bold;
+    font-size: 0.75rem;
+    color: #94A3B8;
     letter-spacing: 1px;
 }
 
 .boarding-pass .pass-row {
-    display: flex !important;
-    flex-direction: row !important;
-    justify-content: space-between;
-    margin-bottom: 12px;
-}
-
-.boarding-pass .pass-col {
     display: flex;
-    flex-direction: column;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    width: 100%;
 }
 
-.text-right { text-align: right; }
-
-.boarding-pass .label {
+.boarding-pass .pass-col .label {
     display: block;
-    color: var(--text-dim);
-    font-size: 0.75rem;
-    font-weight: 600;
+    font-size: 0.7rem;
+    color: #64748B;
     text-transform: uppercase;
+    font-weight: 700;
 }
 
-.boarding-pass .value {
-    color: var(--text-primary);
-    font-weight: bold;
+.boarding-pass .pass-col .value {
     font-size: 0.95rem;
+    font-weight: 700;
+    color: #FFFFFF;
 }
 
-.boarding-pass .value.highlight {
-    color: var(--aviation-blue);
+.boarding-pass .pass-col .value.highlight {
+    color: #3B82F6;
 }
 
-.divider-dashed {
-    border-bottom: 1px dashed var(--slate-glass);
-    margin: 12px 0;
-}
-
-.boarding-pass .seat-badge {
-    background-color: var(--slate-glass);
-    padding: 6px 12px;
+.seat-badge {
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid #3B82F6;
+    padding: 4px 12px;
     border-radius: 6px;
     text-align: center;
 }
 
-.boarding-pass .boarding-notice {
-    margin-top: 15px;
-    font-size: 0.8rem;
-    color: var(--text-dim);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.stub-title {
-    color: var(--aviation-blue);
-    font-weight: bold;
-    font-size: 0.85rem;
-    margin-bottom: 10px;
-    border-bottom: 1px solid var(--slate-glass);
-    padding-bottom: 5px;
+.qr-box {
+    background: #FFFFFF;
+    padding: 6px;
+    border-radius: 6px;
+    display: inline-block;
+    margin: 6px 0;
 }
 
 /* =============================================================
-   6. REGLA DE IMPRESIÓN
+   9. SIDEBAR Y PARADAS DE VUELO
    ============================================================= */
-@media print {
-    body * {
-        visibility: hidden !important;
-    }
-    .printable-area, .printable-area * {
-        visibility: visible !important;
-    }
-    .printable-area {
-        position: absolute !important;
-        left: 0 !important;
-        top: 0 !important;
-        width: 100% !important;
-    }
-    .boarding-pass {
-        border: 1px solid #000 !important;
-        color: #000 !important;
-        background: #fff !important;
-    }
-    .boarding-pass .main-section {
-        border-right: 2px dashed #000 !important;
-    }
-    .boarding-pass .stub {
-        background: #f0f0f0 !important;
-    }
-    .boarding-pass .label {
-        color: #555 !important;
-    }
-    .boarding-pass .value,
-    .boarding-pass .airline-brand,
-    .boarding-pass .value.highlight {
-        color: #000 !important;
-    }
-}
-
-/* =============================================================
-   SIDEBAR CORPORATIVO Y TIMELINE ENRIQUECIDO
-   ============================================================= */
-body .sidebar-corporativo {
-    width: 500px !important;
-    background-color: var(--midnight-blue) !important;
-    border-left: 1px solid var(--slate-glass) !important;
+body .sidebar-corporativo.ui-sidebar {
+    width: 480px !important;
+    background-color: #0D172A !important;
+    border-left: 1px solid #1E3A5C !important;
     padding: 0 !important;
+    color: #FFFFFF !important;
 }
 
-@media (max-width: 576px) {
-    body .sidebar-corporativo {
-        width: 100% !important;
-    }
-}
-
-.sidebar-corporativo .header-titulo {
-    background-color: var(--deep-space);
-    color: var(--text-primary);
-    font-size: 1.25rem;
-    font-weight: 700;
-    padding: 1.25rem;
-    border-bottom: 1px solid var(--slate-glass);
-    display: flex;
-    align-items: center;
-    gap: 10px;
+body .sidebar-corporativo .ui-sidebar-content {
+    background-color: #0D172A !important;
+    padding: 0 !important;
 }
 
 .sidebar-scroll-panel {
     width: 100%;
-    height: calc(100vh - 70px);
-    background: transparent !important;
+    height: calc(100vh - 60px);
+    background: #0D172A !important;
 }
 
 .sidebar-scroll-panel .ui-scrollpanel-content {
-    padding: 1.25rem !important;
-    background: transparent !important;
-}
-
-.skyway-timeline {
-    position: relative;
-    padding-left: 1rem;
-}
-
-.skyway-timeline::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    width: 2px;
-    background: var(--slate-glass);
-}
-
-.timeline-item {
-    position: relative;
-    margin-bottom: 1.5rem;
-}
-
-.timeline-item::before {
-    content: '';
-    position: absolute;
-    left: -1rem;
-    top: 15px;
-    transform: translateX(-50%);
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background-color: var(--aviation-blue);
+    background: #0D172A !important;
+    padding: 15px !important;
 }
 
 .card-parada {
-    background-color: var(--deep-space) !important;
-    border: 1px solid var(--slate-glass) !important;
+    background-color: #11263F !important;
+    border: 1px solid #1E3A5C !important;
     border-radius: 10px;
-    padding: 1.25rem;
-}
-
-.card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: var(--text-primary);
-    font-weight: 700;
-    font-size: 1.1rem;
-    border-bottom: 1px dashed var(--slate-glass);
-    padding-bottom: 0.75rem;
-    margin-bottom: 1rem;
-}
-
-.badge-aerolinea {
-    font-size: 0.8rem;
-    color: var(--text-dim);
-    background-color: var(--slate-glass);
-    padding: 4px 8px;
-    border-radius: 4px;
-}
-
-.card-parada .section {
-    margin-bottom: 1.2rem;
-}
-
-.card-parada .section:last-child {
-    margin-bottom: 0;
-}
-
-.section-title {
-    color: var(--text-dim);
-    font-size: 0.85rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 0.6rem;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.section-title i {
-    color: var(--aviation-blue);
+    padding: 16px;
+    margin-bottom: 16px;
 }
 
 .timeline-leg {
-    background-color: var(--midnight-blue);
+    background-color: #0D172A !important;
     border-radius: 8px;
-    padding: 1rem;
-    border: 1px solid var(--border-ui);
-}
-
-.city-block {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.city-code {
-    color: var(--text-primary);
-    font-weight: 700;
-    font-size: 1rem;
-}
-
-.city-time {
-    color: var(--text-dim);
-    font-size: 0.85rem;
-}
-
-.timeline-arrow {
-    text-align: center;
-    color: var(--aviation-blue);
-    margin: 0.4rem 0;
-    font-size: 0.9rem;
+    padding: 12px;
+    border: 1px solid #1E3A5C;
 }
 
 .info-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 0.75rem;
-    background-color: var(--midnight-blue);
-    padding: 0.85rem;
+    gap: 8px;
+    background-color: #0D172A !important;
+    padding: 10px;
     border-radius: 8px;
-    border: 1px solid var(--border-ui);
+    border: 1px solid #1E3A5C;
+}
+
+.descripcion {
+    background-color: #0D172A !important;
+    padding: 10px;
+    border-radius: 6px;
+    border-left: 3px solid #3B82F6;
+    color: #CBD5E1 !important;
+}
+
+/* =============================================================
+   10. AJUSTES RESPONSIVOS MÓVILES (< 768px)
+   ============================================================= */
+@media (max-width: 768px) {
+    .skyway-container {
+        padding: 10px 8px !important;
+        margin: 10px auto !important;
+    }
+
+    body .skyway-dialog.ui-dialog {
+        width: 95vw !important;
+        max-width: 95vw !important;
+        left: 2.5vw !important;
+        top: 3vh !important;
+        margin: 0 !important;
+    }
+
+    body .skyway-dialog .ui-dialog-content {
+        padding: 10px !important;
+        max-height: 80vh !important;
+        overflow-y: auto !important;
+    }
+
+    body .skyway-tabs .ui-tabview-nav {
+        overflow-x: auto !important;
+        white-space: nowrap !important;
+    }
+
+    #formHubModal .d-flex.justify-content-between.align-items-center {
+        flex-direction: column !important;
+        gap: 12px !important;
+        text-align: center;
+    }
+
+    #formHubModal .text-center.px-4 {
+        border-left: none !important;
+        border-right: none !important;
+        border-top: 1px solid #1E3A5C !important;
+        border-bottom: 1px solid #1E3A5C !important;
+        padding: 10px 0 !important;
+        width: 100% !important;
+    }
+
+    .timeline-compact-grid {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+    }
+
+    .timeline-compact-grid::before {
+        display: none !important;
+    }
+
+    .step-compact-item {
+        justify-content: flex-start !important;
+        width: 100% !important;
+    }
+
+    .boarding-pass {
+        flex-direction: column !important;
+    }
+
+    .boarding-pass .main-section {
+        border-right: none !important;
+        border-bottom: 2px dashed #1E3A5C !important;
+    }
+
+    .skyway-datatable .ui-datatable-tablewrapper {
+        overflow-x: auto !important;
+    }
+
+    body .sidebar-corporativo.ui-sidebar {
+        width: 100% !important;
+    }
+}
+
+/* IMPRESIÓN */
+@media print {
+    body * { visibility: hidden !important; }
+    .printable-area, .printable-area * { visibility: visible !important; }
+    .printable-area { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
+    .boarding-pass { background: #FFFFFF !important; color: #000000 !important; border: 2px solid #000000 !important; box-shadow: none !important; page-break-inside: avoid !important; margin-bottom: 20px !important; }
+    .boarding-pass * { color: #000000 !important; }
+    .main-section { border-right: 2px dashed #000000 !important; }
+    .stub { background: #F8FAFC !important; }
+    .seat-badge { border: 1px solid #000000 !important; background: transparent !important; }
+    .qr-box { border: 1px solid #000000 !important; }
+    .ui-dialog-titlebar, .ui-dialog-footer { display: none !important; }
+}
+
+/* =============================================================
+   PESTAÑA TARIFA Y BENEFICIOS (DISEÑO PREMIUM EN GRID)
+   ============================================================= */
+.tariff-hero-banner {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.15) 0%, rgba(15, 23, 42, 0.6) 100%);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tariff-badge-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #FFFFFF;
+    letter-spacing: 0.5px;
+}
+
+.tariff-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.tariff-card-feature {
+    background: #11263F;
+    border: 1px solid #1E3A5C;
+    border-radius: 10px;
+    padding: 16px;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.tariff-card-feature:hover {
+    transform: translateY(-3px);
+    border-color: #3B82F6;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.tariff-card-feature.allowed-card {
+    border-top: 3px solid #22C55E;
+}
+
+.tariff-card-feature.denied-card {
+    border-top: 3px solid #EF4444;
+}
+
+.tariff-card-feature.info-card {
+    border-top: 3px solid #06B6D4;
+}
+
+.feature-header-icon {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.feature-icon-wrapper {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+}
+
+.allowed-card .feature-icon-wrapper {
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ADE80;
+}
+
+.denied-card .feature-icon-wrapper {
+    background: rgba(239, 68, 68, 0.15);
+    color: #F87171;
+}
+
+.info-card .feature-icon-wrapper {
+    background: rgba(6, 182, 212, 0.15);
+    color: #67E8F9;
+}
+
+.feature-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #E2E8F0;
+    margin-bottom: 4px;
+}
+
+.feature-value {
+    font-size: 0.95rem;
+    font-weight: 800;
+}
+
+.allowed-card .feature-value { color: #86EFAC; }
+.denied-card .feature-value { color: #FCA5A5; }
+.info-card .feature-value { color: #A5F3FC; }
+
+.tariff-footer-note {
+    background: #080E1A;
+    border: 1px dashed #1E3A5C;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 0.8rem;
+    color: #94A3B8;
+}
+
+/* =============================================================
+   ESTILOS ENRIQUECIDOS PARA SIDEBAR Y FICHA DE ITINERARIO
+   ============================================================= */
+.summary-hero-card {
+    background: linear-gradient(135deg, #11263F 0%, #0D172A 100%);
+    border: 1px solid #1E3A5C;
+    border-left: 4px solid #2563EB;
+}
+
+.badge-orden {
+    background-color: #2563EB;
+    color: #FFFFFF;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+}
+
+.timeline-leg {
+    background-color: #080E1A !important;
+    border: 1px solid #1E3A5C;
+}
+
+.flight-line {
+    height: 1px;
+    background: #1E3A5C;
+    width: 100%;
+    position: absolute;
+    top: 50%;
+    z-index: 1;
+}
+
+.flight-duration-badge {
+    position: relative;
+    z-index: 2;
+    background: #11263F;
+    border: 1px solid #1E3A5C;
+    color: #94A3B8;
+    font-size: 0.75rem;
+    padding: 2px 10px;
+    border-radius: 12px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    background-color: #080E1A !important;
+    border: 1px solid #1E3A5C;
 }
 
 .info-item {
@@ -567,37 +804,19 @@ body .sidebar-corporativo {
     flex-direction: column;
 }
 
-.info-item .label {
-    font-size: 0.75rem;
-    color: var(--text-dim);
+.info-label {
+    font-size: 0.7rem;
+    color: #64748B;
+    text-transform: uppercase;
+    font-weight: 700;
 }
 
-.info-item .value {
-    color: var(--text-primary);
-    font-weight: 600;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.info-item .value i {
-    color: var(--aviation-blue);
+.info-value {
     font-size: 0.85rem;
+    color: #E2E8F0;
 }
 
-.descripcion {
-    color: var(--text-dim);
-    font-size: 0.85rem;
-    line-height: 1.5;
-    background-color: var(--midnight-blue);
-    padding: 0.75rem;
-    border-radius: 6px;
-    border-left: 3px solid var(--aviation-blue);
-}
-
-body .btn-scrolltop-skyway {
-    background-color: var(--aviation-blue) !important;
-    color: var(--text-primary) !important;
-    border: none !important;
+.layover-card {
+    background: rgba(217, 119, 6, 0.12);
+    border: 1px dashed #D97706;
 }

@@ -14,6 +14,721 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 
+        <style type="text/css">
+            /* =========================================================
+               SKYWAY — FUSELAJE ANATÓMICO Y AEROESPACIAL MEJORADO
+               ========================================================= */
+            :root {
+                --bg-base: #080e1a;
+                --bg-surface: #0b1426;
+                --bg-card: #101b33;
+                --bg-elevated: #1e2e4a;
+                --border-ui: #1e3a5c;
+                --border-subtle: #334155;
+
+                --brand-blue: #3b82f6;
+                --brand-blue-hover: #2563eb;
+
+                --text-main: #f8fafc;
+                --text-sub: #94a3b8;
+                --text-disabled: #475569;
+
+                --first-class-border: #f59e0b;
+                --business-class-border: #c084fc;
+                --economy-class-border: #38bdf8;
+            }
+
+            body {
+                background-color: var(--bg-base) !important;
+                color: var(--text-main);
+            }
+
+            .seat-selection-container {
+                max-width: 1400px;
+                margin: 0 auto;
+                padding: 0.8rem 0.8rem 6rem 0.8rem;
+                font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            }
+
+            /* 1. BANNER TEMPORIZADOR */
+            .timer-banner-container {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                background-color: var(--bg-surface);
+                border: 1px solid rgba(245, 158, 11, 0.4);
+                border-left: 4px solid #f59e0b;
+                border-radius: 8px;
+                padding: 8px 12px;
+                margin-bottom: 12px;
+                gap: 8px;
+            }
+
+            .timer-banner-container.timer-critical {
+                border-color: #ef4444 !important;
+                border-left-color: #ef4444 !important;
+                background-color: rgba(239, 68, 68, 0.12) !important;
+                animation: pulseRed 1.5s infinite;
+            }
+
+            @keyframes pulseRed {
+                0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+                70% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+                100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+            }
+
+            .timer-content {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                color: #f1f5f9;
+            }
+
+            .timer-icon {
+                font-size: 1.1rem;
+                color: #f59e0b;
+            }
+
+            .timer-subtext {
+                color: var(--text-sub);
+                font-size: 0.72rem;
+            }
+
+            .timer-clock {
+                font-family: 'Courier New', monospace;
+                font-size: 1rem;
+                font-weight: 700;
+                color: #ffffff;
+                background: #020617;
+                padding: 4px 8px;
+                border-radius: 6px;
+                border: 1px solid var(--border-ui);
+            }
+
+            /* 2. HERO CARD COMPACTO RESPONSIVO */
+            .flight-hero-card {
+                background: var(--bg-card);
+                border: 1px solid var(--border-ui);
+                border-radius: 10px;
+                padding: 0.8rem 1rem;
+                margin-bottom: 1rem;
+            }
+
+            .hero-top-row {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 0.6rem;
+                gap: 6px;
+            }
+
+            .hero-tramo-badge {
+                background: var(--bg-elevated);
+                color: #38bdf8;
+                border: 1px solid var(--border-ui);
+                font-weight: 700;
+                font-size: 0.68rem;
+                padding: 3px 10px;
+                border-radius: 14px;
+                white-space: nowrap;
+            }
+
+            .hero-main-info {
+                text-align: center;
+                margin-bottom: 0.5rem;
+            }
+
+            .hero-route {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                margin-bottom: 4px;
+            }
+
+            .hero-route-code {
+                font-size: 1.35rem;
+                font-weight: 800;
+                color: var(--text-main);
+            }
+
+            .hero-route-arrow {
+                color: var(--brand-blue);
+                font-size: 1rem;
+            }
+
+            .hero-flight-meta {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+                font-size: 0.75rem;
+                color: var(--text-sub);
+                flex-wrap: wrap;
+            }
+
+            .hero-flight-chip {
+                background: var(--bg-surface);
+                border: 1px solid var(--border-ui);
+                padding: 3px 8px;
+                border-radius: 6px;
+                font-size: 0.72rem;
+                color: var(--text-sub);
+                display: inline-flex;
+                align-items: center;
+            }
+
+            .hero-flight-chip strong {
+                color: var(--text-main);
+                margin-left: 3px;
+            }
+
+            /* Stepper de tramos */
+            .flight-stepper {
+                display: flex;
+                gap: 0.5rem;
+                margin-bottom: 0.6rem;
+                overflow-x: auto;
+                padding-bottom: 4px;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .flight-step-mini {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.4rem 0.6rem;
+                background: var(--bg-surface);
+                border: 1px solid var(--border-ui);
+                border-radius: 8px;
+                min-width: 120px;
+                flex: 1;
+            }
+
+            .flight-step-mini.active {
+                border-color: var(--brand-blue);
+                background: #112440;
+            }
+
+            .flight-step-mini.completado {
+                border-color: rgba(16, 185, 129, 0.5);
+            }
+
+            .step-mini-icon {
+                width: 18px;
+                height: 18px;
+                border-radius: 50%;
+                background: var(--border-subtle);
+                color: var(--text-main);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.6rem;
+                flex-shrink: 0;
+            }
+
+            .flight-step-mini.active .step-mini-icon { background: var(--brand-blue); color: #ffffff; }
+            .flight-step-mini.completado .step-mini-icon { background: #10b981; color: #ffffff; }
+
+            .step-mini-ruta { font-size: 0.75rem; font-weight: 700; color: var(--text-main); display: block; white-space: nowrap; }
+            .step-mini-num { font-size: 0.65rem; color: var(--text-sub); display: block; white-space: nowrap; }
+
+            .passenger-progress-bar {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                background: var(--bg-surface);
+                border: 1px solid var(--border-ui);
+                border-radius: 6px;
+                padding: 0.4rem 0.8rem;
+                font-size: 0.75rem;
+            }
+
+            .progress-dots { display: flex; gap: 4px; }
+            .progress-dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: var(--border-subtle);
+            }
+            .progress-dot.done { background: #10b981; }
+            .progress-dot.active { background: #f59e0b; }
+
+            /* 3. REJILLA Y REORDENAMIENTO PARA MÓVIL */
+            .booking-grid {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 1.2rem;
+            }
+
+            @media (min-width: 992px) {
+                .booking-grid {
+                    grid-template-columns: 320px 1fr;
+                }
+                .registry-sidebar { order: 1; }
+                .airplane-container { order: 2; }
+            }
+
+            @media (max-width: 991.98px) {
+                .registry-sidebar { order: 2; }
+                .airplane-container { order: 1; }
+            }
+
+            .registry-sidebar {
+                position: relative;
+            }
+
+            @media (min-width: 992px) {
+                .registry-sidebar {
+                    position: sticky;
+                    top: 20px;
+                    z-index: 10;
+                }
+            }
+
+            .sidebar-card {
+                background: var(--bg-card);
+                border: 1px solid var(--border-ui);
+                border-radius: 10px;
+                padding: 0.8rem;
+                margin-bottom: 0.8rem;
+            }
+
+            .card-subtitle {
+                font-size: 0.85rem;
+                margin: 0 0 0.4rem 0;
+                color: var(--text-main);
+                font-weight: 700;
+                display: flex;
+                align-items: center;
+                gap: 0.4rem;
+            }
+
+            .registry-hint {
+                font-size: 0.7rem;
+                color: var(--text-sub);
+                margin-bottom: 0.5rem;
+            }
+
+            .registry-table-wrapper {
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .registry-pasajero-block {
+                background: var(--bg-surface);
+                border: 1px solid var(--border-ui);
+                border-radius: 8px;
+                padding: 0.5rem;
+            }
+
+            .registry-pasajero-block.pasajero-actual {
+                border-color: var(--brand-blue);
+            }
+
+            .registry-pasajero-header {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                margin-bottom: 0.3rem;
+            }
+
+            .registry-pasajero-badge {
+                width: 18px;
+                height: 18px;
+                border-radius: 50%;
+                background: var(--brand-blue);
+                color: #ffffff;
+                font-weight: 800;
+                font-size: 0.65rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .registry-pasajero-nombre { font-size: 0.78rem; font-weight: 700; color: var(--text-main); }
+
+            .registry-tramo-row {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0.25rem 0;
+                border-bottom: 1px solid var(--border-ui);
+                font-size: 0.72rem;
+            }
+            .registry-tramo-row:last-child { border-bottom: none; }
+
+            .registry-tramo-ruta { color: var(--text-sub); font-family: monospace; }
+
+            .registry-asiento-chip {
+                background: rgba(16, 185, 129, 0.18);
+                color: #34d399;
+                font-weight: 700;
+                font-size: 0.68rem;
+                padding: 2px 6px;
+                border-radius: 4px;
+            }
+
+            .registry-pendiente-chip {
+                font-size: 0.68rem;
+                color: var(--text-disabled);
+                background: var(--bg-card);
+                padding: 2px 6px;
+                border-radius: 4px;
+            }
+
+            .seat-legend {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+            .legend-block {
+                display: flex;
+                align-items: center;
+                gap: 0.3rem;
+                font-size: 0.72rem;
+                color: var(--text-sub);
+            }
+            .legend-square { width: 10px; height: 10px; border-radius: 2px; }
+            .legend-square.disponible { background: #11263f; border: 1px solid #1e3a5c; }
+            .legend-square.ocupado { background: #020617; border: 1px solid #1e293b; }
+            .legend-square.seleccionado { background: #f59e0b; }
+            .legend-square.en_proceso { background: #334155; }
+
+            .legend-square.primera-clase { border: 2px solid var(--first-class-border); background: #11263f; }
+            .legend-square.ejec-clase { border: 2px solid var(--business-class-border); background: #11263f; }
+            .legend-square.econ-clase { border: 1px solid var(--economy-class-border); background: #11263f; }
+
+            /* =========================================================
+               4. ESTRUCTURA ANATÓMICA REAL DE AVION COMERCIAL
+               ========================================================= */
+            .airplane-container {
+                display: flex;
+                justify-content: center;
+                width: 100%;
+                position: relative;
+            }
+
+            /* Fuselaje principal estilizado tipo Jet Comercial */
+            .airplane-fuselage-wrapper {
+                position: relative;
+                width: 100%;
+                max-width: 440px;
+                margin: 0 auto;
+            }
+
+            /* Alas proyectadas en los laterales */
+            .fuselage-wing-left, .fuselage-wing-right {
+                position: absolute;
+                top: 45%;
+                width: 50px;
+                height: 180px;
+                background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+                border: 1px solid var(--border-ui);
+                z-index: 1;
+                opacity: 0.85;
+            }
+
+            .fuselage-wing-left {
+                left: -42px;
+                border-radius: 80px 0 0 20px;
+                transform: skewY(18deg);
+                border-left: 3px solid #ef4444; /* Luz de navegación Roja (Babor) */
+            }
+
+            .fuselage-wing-right {
+                right: -42px;
+                border-radius: 0 80px 20px 0;
+                transform: skewY(-18deg);
+                border-right: 3px solid #10b981; /* Luz de navegación Verde (Estribor) */
+            }
+
+            .airplane-fuselage {
+                background: linear-gradient(180deg, #0d182b 0%, #080f1e 100%) !important;
+                border: 2px solid #1e3a5c !important;
+                border-radius: 120px 120px 30px 30px !important;
+                padding: 1.5rem 0.8rem 2.2rem 0.8rem !important;
+                position: relative;
+                z-index: 2;
+                width: 100% !important;
+                max-height: 68vh !important;
+                overflow-y: auto !important;
+                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7);
+                box-sizing: border-box;
+            }
+
+            .airplane-fuselage::-webkit-scrollbar { width: 5px; }
+            .airplane-fuselage::-webkit-scrollbar-track { background: #0b1426; border-radius: 10px; }
+            .airplane-fuselage::-webkit-scrollbar-thumb { background: #1e3a5c; border-radius: 10px; }
+
+            /* NARIZ EN OJIVA AERODINÁMICA */
+            .airplane-nose {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                margin-bottom: 16px;
+                position: relative;
+            }
+
+            /* Cabina de Pilotos / Windshield curvo */
+            .cockpit-windows {
+                display: flex;
+                gap: 4px;
+                margin-top: 4px;
+            }
+
+            .cockpit-glass {
+                background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+                border: 1px solid #7dd3fc;
+                height: 14px;
+                box-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+            }
+
+            .cockpit-glass.left { width: 22px; border-radius: 12px 2px 2px 6px; transform: skewY(-8deg); }
+            .cockpit-glass.center { width: 30px; border-radius: 4px 4px 2px 2px; }
+            .cockpit-glass.right { width: 22px; border-radius: 2px 12px 6px 2px; transform: skewY(8deg); }
+
+            .flight-badge {
+                margin-top: 10px;
+                background: rgba(15, 23, 42, 0.9) !important;
+                border: 1px solid var(--border-ui) !important;
+                color: var(--steel-blue) !important;
+                padding: 3px 12px;
+                border-radius: 12px;
+                font-size: 0.65rem;
+                font-weight: 800 !important;
+                letter-spacing: 0.5px;
+            }
+
+            .class-divider {
+                width: 100% !important;
+                margin: 14px 0 6px 0 !important;
+                text-align: center;
+                position: relative;
+            }
+
+            .class-divider::before {
+                content: '';
+                position: absolute;
+                top: 50%;
+                left: 2%;
+                right: 2%;
+                height: 1px;
+                background: #1e3a5c !important;
+                z-index: 1;
+            }
+
+            .class-divider span {
+                position: relative;
+                z-index: 2;
+                background: #080f1e !important;
+                font-size: 0.62rem !important;
+                font-weight: 800 !important;
+                letter-spacing: 0.5px !important;
+                padding: 2px 10px !important;
+                border-radius: 10px !important;
+                border: 1px solid var(--border-ui) !important;
+            }
+
+            .class-divider.first-class span { color: #f59e0b !important; border-color: rgba(245, 158, 11, 0.4) !important; }
+            .class-divider.business-class span { color: #c084fc !important; border-color: rgba(192, 132, 252, 0.4) !important; }
+            .class-divider.economy-class span { color: #38bdf8 !important; border-color: rgba(56, 189, 248, 0.4) !important; }
+
+            .cabina-body {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                gap: 4px !important;
+                width: 100%;
+            }
+
+            .cabin-row {
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                justify-content: center !important;
+                width: 100%;
+                position: relative;
+            }
+
+            .row-number {
+                font-size: 0.68rem !important;
+                font-weight: 700 !important;
+                color: #64748b !important;
+                width: 18px;
+                text-align: center;
+                user-select: none;
+                flex-shrink: 0;
+            }
+
+            .row-seats-wrapper {
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                justify-content: center !important;
+                width: fit-content !important;
+            }
+
+            .seat-block {
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                justify-content: center !important;
+                gap: 3px !important;
+            }
+
+            .seat-wrapper {
+                position: relative;
+                padding: 1px;
+            }
+
+            /* BOTONES DE ASIENTO REFINADOS */
+            .seat-btn.ui-button {
+                width: 28px !important;
+                height: 30px !important;
+                min-width: 28px !important;
+                max-width: 28px !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border-radius: 5px 5px 3px 3px !important;
+                font-size: 0.65rem !important;
+                font-weight: 800 !important;
+                transition: all 0.15s ease !important;
+            }
+
+            .economy-class-row .seat-btn.ui-button {
+                width: 24px !important;
+                height: 26px !important;
+                min-width: 24px !important;
+                max-width: 24px !important;
+                font-size: 0.6rem !important;
+            }
+
+            @media (max-width: 412px) {
+                .economy-class-row .seat-btn.ui-button {
+                    width: 22px !important;
+                    height: 24px !important;
+                    min-width: 22px !important;
+                    max-width: 22px !important;
+                    font-size: 0.55rem !important;
+                }
+                .aisle-gap {
+                    width: 10px !important;
+                    min-width: 10px !important;
+                }
+            }
+
+            .seat-btn.seat-first { border: 2px solid var(--first-class-border) !important; }
+            .seat-btn.seat-business { border: 2px solid var(--business-class-border) !important; }
+            .seat-btn.seat-economy { border: 1px solid var(--economy-class-border) !important; }
+
+            .seat-btn.disponible {
+                background: linear-gradient(180deg, #11263f 0%, #0d1d30 100%) !important;
+                color: #e2e8f0 !important;
+            }
+
+            .seat-btn.disponible:hover {
+                background: var(--brand-blue) !important;
+                color: #ffffff !important;
+            }
+
+            .seat-btn.ocupado {
+                background: #020617 !important;
+                color: #334155 !important;
+                border-color: #1e293b !important;
+                opacity: 0.4 !important;
+                cursor: not-allowed !important;
+            }
+
+            .seat-btn.seleccionado {
+                background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%) !important;
+                color: #ffffff !important;
+                border-color: #fef3c7 !important;
+                box-shadow: 0 0 6px rgba(245, 158, 11, 0.6) !important;
+            }
+
+            .aisle-gap {
+                width: 14px !important;
+                min-width: 14px !important;
+                height: 24px !important;
+                display: inline-block;
+            }
+
+            .exit-row-badge {
+                background: rgba(245, 158, 11, 0.1) !important;
+                border: 1px dashed rgba(245, 158, 11, 0.4) !important;
+                color: #f59e0b !important;
+                font-size: 0.6rem !important;
+                font-weight: 700 !important;
+                padding: 3px 8px !important;
+                border-radius: 4px !important;
+                margin: 4px 0 !important;
+                text-align: center;
+            }
+
+            /* COLA CON ESTABILIZADORES */
+            .airplane-tail {
+                margin-top: 18px;
+                text-align: center;
+                border-top: 1px solid var(--border-ui);
+                padding-top: 12px;
+                color: var(--text-disabled);
+                font-size: 0.65rem;
+                font-weight: 700;
+                position: relative;
+            }
+
+            .tail-fin {
+                width: 6px;
+                height: 20px;
+                background: var(--brand-blue);
+                margin: 0 auto 6px auto;
+                border-radius: 3px 3px 0 0;
+            }
+
+            /* 5. BARRA STICKY INFERIOR RESPONSIVA */
+            .sticky-bottom-bar {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                z-index: 1000;
+                background: #0a1324;
+                border-top: 1px solid var(--border-ui);
+                padding: 10px 14px;
+                backdrop-filter: blur(8px);
+            }
+
+            .sticky-footer-container {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                max-width: 1400px;
+                margin: 0 auto;
+            }
+
+            @media (max-width: 576px) {
+                .sticky-footer-container {
+                    flex-direction: column;
+                    align-items: stretch;
+                    gap: 8px;
+                }
+                .sticky-info-group {
+                    justify-content: space-between !important;
+                    width: 100%;
+                }
+                .sticky-action-group {
+                    width: 100%;
+                }
+                .sticky-action-group button,
+                .sticky-action-group a {
+                    width: 100% !important;
+                }
+            }
+        </style>
+
         <script type="text/javascript">
             /* <![CDATA[ */
             var stompClient = null;
@@ -67,9 +782,6 @@
                 setTimeout(function () { hero.classList.remove('hero-flash'); }, 900);
             }
 
-            // ==========================================
-            // TEMPORIZADOR INTELIGENTE CON ALERTA Y EXTENSIÓN
-            // ==========================================
             function iniciarCronometroUI(segundos) {
                 var card = document.getElementById("timerCard");
                 var display = document.getElementById("timerDisplay");
@@ -99,7 +811,6 @@
                     var seg = segundos % 60;
                     display.innerText = (min < 10 ? "0" : "") + min + ":" + (seg < 10 ? "0" : "") + seg;
 
-                    // Alerta roja titilante cuando queden menos de 2 minutos (120 seg)
                     if (segundos <= 120) {
                         card.classList.add("timer-critical");
                         if (btnExtender) btnExtender.style.display = "inline-flex";
@@ -138,16 +849,15 @@
                 <div class="timer-content">
                     <i class="pi pi-clock timer-icon"></i>
                     <div>
-                        <span class="d-block fw-bold">Tiempo de retención temporal:</span>
-                        <small class="timer-subtext">Los asientos seleccionados quedarán libres al finalizar el tiempo.</small>
+                        <span class="d-block fw-bold" style="font-size: 0.8rem;">Retención temporal:</span>
+                        <small class="timer-subtext">Se liberarán al caducar.</small>
                     </div>
                 </div>
 
-                <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center gap-2">
                     <div id="timerDisplay" class="timer-clock">00:00</div>
-                    <!-- Botón para extender la retención si está por caducar -->
                     <button type="button" id="btnExtenderTiempo" class="btn btn-sm btn-outline-warning" style="display:none;" onclick="extenderTiempoServidor();">
-                        <i class="pi pi-refresh me-1"></i> Extender 10 min
+                        <i class="pi pi-refresh me-1"></i> Extender
                     </button>
                 </div>
             </div>
@@ -174,14 +884,14 @@
                                  actionListener="#{seleccionAsientosBean.recargarAsientos}"
                                  update="seatForm:timerTriggerPanel" />
 
-                <!-- HEADER SUPERIOR CON ITINERARIO -->
                 <!-- HEADER SUPERIOR CON CONTEXTO COMPLETO DEL VUELO -->
                 <div id="flightHeroCard" class="flight-hero-card shadow-lg">
                     <div class="hero-top-row">
-                        <p:commandButton value="← Vuelo Anterior"
+                        <p:commandButton value="← Anterior"
                                          action="#{seleccionAsientosBean.vueloAnterior}"
                                          rendered="#{seleccionAsientosBean.idxVuelo gt 0}"
                                          styleClass="ui-button-outlined ui-button-secondary nav-btn"
+                                         style="font-size: 0.72rem; padding: 3px 8px;"
                                          process="@form"
                                          update=":seatForm" />
                         <h:panelGroup rendered="#{seleccionAsientosBean.idxVuelo eq 0}" />
@@ -190,10 +900,11 @@
                             <i class="pi pi-compass me-1"></i> TRAMO #{seleccionAsientosBean.idxVuelo + 1} DE #{seleccionAsientosBean.cantVuelos}
                         </div>
 
-                        <p:commandButton value="← Vuelo Anterior"
+                        <p:commandButton value="← Anterior"
                                          action="#{seleccionAsientosBean.vueloAnterior}"
                                          rendered="#{seleccionAsientosBean.idxVuelo gt 0}"
                                          styleClass="ui-button-outlined ui-button-secondary nav-btn"
+                                         style="font-size: 0.72rem; padding: 3px 8px;"
                                          process="@form"
                                          update=":seatForm" />
                         <h:panelGroup rendered="#{seleccionAsientosBean.idxVuelo + 1 ge seleccionAsientosBean.cantVuelos}" />
@@ -204,19 +915,19 @@
                         <div class="hero-route align-items-baseline">
                             <div class="text-end">
                                 <span class="hero-route-code d-block">#{seleccionAsientosBean.vuelo.segmentoVuelos[0].aeropuertoOrigen.codigoIata}</span>
-                                <small class="text-white-50 d-block font-monospace">#{seleccionAsientosBean.origenDetallado}</small>
+                                <small class="text-white-50 d-block font-monospace" style="font-size: 0.7rem;">#{seleccionAsientosBean.origenDetallado}</small>
                             </div>
 
-                            <i class="pi pi-arrow-right hero-route-arrow mx-3"></i>
+                            <i class="pi pi-arrow-right hero-route-arrow mx-2"></i>
 
                             <div class="text-start">
                                 <span class="hero-route-code d-block">#{seleccionAsientosBean.vuelo.segmentoVuelos[seleccionAsientosBean.vuelo.segmentoVuelos.size() - 1].aeropuertoDestino.codigoIata}</span>
-                                <small class="text-white-50 d-block font-monospace">#{seleccionAsientosBean.destinoDetallado}</small>
+                                <small class="text-white-50 d-block font-monospace" style="font-size: 0.7rem;">#{seleccionAsientosBean.destinoDetallado}</small>
                             </div>
                         </div>
 
                         <!-- METADATOS Y DETALLES EN CHIPS ENRIQUECIDOS -->
-                        <div class="hero-flight-meta flex-wrap mt-3 gap-2">
+                        <div class="hero-flight-meta mt-2">
                             <span class="hero-flight-chip">
                                 <i class="pi pi-send text-primary me-1"></i>
                                 Vuelo <strong>#{seleccionAsientosBean.vuelo.numeroVuelo}</strong>
@@ -244,7 +955,7 @@
                     </div>
 
                     <!-- Mini Stepper de tramos -->
-                    <p:outputPanel id="flightStepper" styleClass="flight-stepper mt-3">
+                    <p:outputPanel id="flightStepper" styleClass="flight-stepper mt-2">
                         <ui:repeat value="#{seleccionAsientosBean.vuelos}" var="v" varStatus="st">
                             <div class="flight-step-mini #{st.index eq seleccionAsientosBean.idxVuelo ? 'active' : ''} #{st.index lt seleccionAsientosBean.idxVuelo ? 'completado' : ''}">
                                 <div class="step-mini-icon">
@@ -261,12 +972,12 @@
                     <!-- Barra de progreso por pasajero -->
                     <div class="passenger-progress-bar mt-2">
                         <div class="progress-label">
-                            <i class="pi pi-user text-primary"></i>
-                            Seleccionando asiento para:
+                            <i class="pi pi-user text-primary me-1"></i>
+                            Asiento para:
                             <b class="ms-1 text-white">
                                 <h:outputText value="#{seleccionAsientosBean.pasajeros[seleccionAsientosBean.idxAsientoSeleccion].nombre}"
                                               rendered="#{seleccionAsientosBean.idxAsientoSeleccion lt seleccionAsientosBean.cantAdultos}" />
-                                <h:outputText value="Todos los pasajeros de este tramo seleccionados ✓"
+                                <h:outputText value="Todos seleccionados ✓"
                                               rendered="#{seleccionAsientosBean.idxAsientoSeleccion ge seleccionAsientosBean.cantAdultos}" />
                             </b>
                         </div>
@@ -278,10 +989,99 @@
                     </div>
                 </div>
 
-                <!-- GRID PRINCIPAL (COLUMNA IZQUIERDA Y CABINA DERECHA) -->
-                <div class="booking-grid booking-grid-2col mb-5">
+                <!-- GRID PRINCIPAL -->
+                <div class="booking-grid mb-5">
 
-                    <!-- COLUMNA IZQUIERDA: RESUMEN POR PASAJERO -->
+                    <!-- SECCIÓN CABINA DE AVIÓN ESTILIZADA AEROESPACIAL -->
+                    <section class="airplane-container">
+                        <div class="airplane-fuselage-wrapper">
+
+                            <!-- ALAS LATERALES PROYECTADAS -->
+                            <div class="fuselage-wing-left d-none d-sm-block"></div>
+                            <div class="fuselage-wing-right d-none d-sm-block"></div>
+
+                            <div class="airplane-fuselage shadow-lg">
+
+                                <!-- CABEZA / NARIZ AERODINÁMICA Y CABINA DE PILOTO -->
+                                <div class="airplane-nose">
+                                    <div class="cockpit-windows">
+                                        <div class="cockpit-glass left"></div>
+                                        <div class="cockpit-glass center"></div>
+                                        <div class="cockpit-glass right"></div>
+                                    </div>
+                                    <span class="flight-badge">
+                                        <i class="pi pi-th-large me-1"></i> DISTRIBUCIÓN DE CABINA
+                                    </span>
+                                </div>
+
+                                <!-- CUERPO DE LA CABINA -->
+                                <h:panelGroup id="cabinaPanel" layout="block" styleClass="cabina-body">
+
+                                    <ui:repeat value="#{seleccionAsientosBean.filasCabina}" var="fila">
+
+                                        <!-- ENCABEZADOS Y DIVISORES DE CLASE DINÁMICOS -->
+                                        <h:panelGroup rendered="#{fila.esPrimerFilaDeClase}" layout="block"
+                                                      styleClass="class-divider #{fila.clase.toLowerCase().contains('primera') ? 'first-class' : (fila.clase.toLowerCase().contains('ejecutiva') ? 'business-class' : 'economy-class')}">
+                                            <span>
+                                                <i class="pi #{fila.clase.toLowerCase().contains('primera') ? 'pi-star-fill' : (fila.clase.toLowerCase().contains('ejecutiva') ? 'pi-briefcase' : 'pi-users')} me-1"></i>
+                                                #{fila.clase.toUpperCase()}
+                                            </span>
+                                        </h:panelGroup>
+
+                                        <!-- Salida de Emergencia -->
+                                        <h:panelGroup rendered="#{fila.esEmergencia}" layout="block" styleClass="exit-row-badge">
+                                            <i class="pi pi-exclamation-triangle me-1"></i> SALIDA DE EMERGENCIA
+                                        </h:panelGroup>
+
+                                        <!-- FILA HORIZONTAL DE ASIENTOS -->
+                                        <div class="cabin-row #{fila.clase.toLowerCase().contains('primera') ? 'first-class-row' : (fila.clase.toLowerCase().contains('ejecutiva') ? 'business-class-row' : 'economy-class-row')}">
+
+                                            <!-- Número de Fila (Izquierda) -->
+                                            <span class="row-number">#{fila.numeroFila}</span>
+
+                                            <!-- Contenedor Alineado de Bloques de Asientos -->
+                                            <div class="row-seats-wrapper">
+                                                <ui:repeat value="#{fila.bloques}" var="bloque" varStatus="bSt">
+
+                                                    <!-- Bloque de Butacas -->
+                                                    <div class="seat-block">
+                                                        <ui:repeat value="#{bloque.asientos}" var="a">
+                                                            <div class="seat-wrapper">
+                                                                <p:commandButton value="#{a.letra}"
+                                                                                 title="Asiento #{a.numeroAsiento} (#{a.clase}) - $#{a.precio} CLP"
+                                                                                 styleClass="seat-btn #{a.clase.toLowerCase().contains('primera') ? 'seat-first' : (a.clase.toLowerCase().contains('ejecutiva') ? 'seat-business' : 'seat-economy')} #{a.getEstadoVisual(seleccionAsientosBean.miSessionId).toLowerCase()}"
+                                                                                 disabled="#{a.getEstadoVisual(seleccionAsientosBean.miSessionId) == 'OCUPADO' or a.getEstadoVisual(seleccionAsientosBean.miSessionId) == 'EN_PROCESO'}"
+                                                                                 action="#{seleccionAsientosBean.setearAsiento(a)}"
+                                                                                 process="@this"
+                                                                                 update=":seatForm" />
+                                                            </div>
+                                                        </ui:repeat>
+                                                    </div>
+
+                                                    <!-- Pasillo Dinámico entre Bloques -->
+                                                    <h:panelGroup rendered="#{!bSt.last}" layout="block" styleClass="aisle-gap" />
+
+                                                </ui:repeat>
+                                            </div>
+
+                                            <!-- Número de Fila (Derecha) -->
+                                            <span class="row-number">#{fila.numeroFila}</span>
+                                        </div>
+
+                                    </ui:repeat>
+
+                                </h:panelGroup>
+
+                                <!-- COLA DE LA AERONAVE CON ESTABILIZADOR -->
+                                <div class="airplane-tail">
+                                    <div class="tail-fin"></div>
+                                    <i class="pi pi-arrow-down me-1"></i> PARTE TRASERA DEL AVIÓN
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- COLUMNA SIDEBAR: RESUMEN Y LEYENDA -->
                     <aside class="registry-sidebar">
                         <h:panelGroup id="registroPanel">
                             <div class="sidebar-card registry-card shadow">
@@ -301,7 +1101,6 @@
                                                 <div class="registry-tramo-row #{vs.index eq seleccionAsientosBean.idxVuelo ? 'tramo-activo' : ''}">
                                                     <span class="registry-tramo-ruta">#{seleccionAsientosBean.getRutaDeVuelo(v)}</span>
 
-                                                    <!-- Mapeo posicional por índice de tramo (vs.index) -->
                                                     <h:panelGroup rendered="#{not empty pas.asientos[vs.index]}">
                                                         <span class="registry-asiento-chip">
                                                             <i class="pi pi-check-circle me-1"></i>
@@ -331,7 +1130,7 @@
                         <!-- LEYENDA VISUAL DE ESTADOS Y CLASES -->
                         <div class="sidebar-card legend-card shadow">
                             <h3 class="card-subtitle"><i class="pi pi-info-circle"></i> Leyenda de Asientos</h3>
-                            <div class="seat-legend mb-3">
+                            <div class="seat-legend mb-2">
                                 <div class="legend-block"><span class="legend-square disponible"></span><span>Disponible</span></div>
                                 <div class="legend-block"><span class="legend-square ocupado"></span><span>Ocupado</span></div>
                                 <div class="legend-block"><span class="legend-square seleccionado"></span><span>Tu Selección</span></div>
@@ -349,105 +1148,24 @@
                         </div>
                     </aside>
 
-                    <!-- COLUMNA DERECHA: FUSELAJE Y CABINA DE AVIÓN -->
-                    <section class="airplane-container">
-                        <div class="airplane-fuselage shadow-lg">
-
-                            <!-- Cabeza / Nariz de la Aeronave -->
-                            <div class="airplane-nose">
-                                <div class="cockpit-window"></div>
-                                <span class="flight-badge"><i class="pi pi-th-large me-1"></i> DISTRIBUCIÓN DE CABINA</span>
-                            </div>
-
-                            <!-- CUERPO DE LA CABINA -->
-                            <h:panelGroup id="cabinaPanel" layout="block" styleClass="cabina-body">
-
-
-
-                                <ui:repeat value="#{seleccionAsientosBean.filasCabina}" var="fila">
-
-                                    <!-- ENCABEZADOS Y DIVISORES DE CLASE DINÁMICOS -->
-                                    <h:panelGroup rendered="#{fila.esPrimerFilaDeClase}" layout="block"
-                                                  styleClass="class-divider #{fila.clase.toLowerCase().contains('primera') ? 'first-class' : (fila.clase.toLowerCase().contains('ejecutiva') ? 'business-class' : 'economy-class')}">
-                                                    <span>
-                                                        <i class="pi #{fila.clase.toLowerCase().contains('primera') ? 'pi-star-fill' : (fila.clase.toLowerCase().contains('ejecutiva') ? 'pi-briefcase' : 'pi-users')} me-1"></i>
-                                                        #{fila.clase.toUpperCase()}
-                                                    </span>
-                                    </h:panelGroup>
-
-                                    <!-- Salida de Emergencia -->
-                                    <h:panelGroup rendered="#{fila.esEmergencia}" layout="block" styleClass="exit-row-badge">
-                                        <i class="pi pi-exclamation-triangle me-1"></i> SALIDA DE EMERGENCIA
-                                    </h:panelGroup>
-
-                                    <!-- FILA HORIZONTAL DE ASIENTOS -->
-                                    <div class="cabin-row #{fila.clase.toLowerCase().contains('primera') ? 'first-class-row' : (fila.clase.toLowerCase().contains('ejecutiva') ? 'business-class-row' : 'economy-class-row')}">
-
-                                        <!-- Número de Fila (Izquierda) -->
-                                        <span class="row-number">#{fila.numeroFila}</span>
-
-                                        <!-- Contenedor Alineado de Bloques de Asientos -->
-                                        <div class="row-seats-wrapper">
-                                            <ui:repeat value="#{fila.bloques}" var="bloque" varStatus="bSt">
-
-                                                <!-- Bloque de Butacas (ej: 1, 2, 3 o 4 asientos juntos) -->
-                                                <div class="seat-block">
-                                                    <ui:repeat value="#{bloque.asientos}" var="a">
-                                                        <div class="seat-wrapper">
-                                                            <p:commandButton value="#{a.letra}"
-                                                                             title="Asiento #{a.numeroAsiento} (#{a.clase}) - $#{a.precio} CLP"
-                                                                             styleClass="seat-btn #{a.clase.toLowerCase().contains('primera') ? 'seat-first' : (a.clase.toLowerCase().contains('ejecutiva') ? 'seat-business' : 'seat-economy')} #{a.getEstadoVisual(seleccionAsientosBean.miSessionId).toLowerCase()}"
-                                                                             disabled="#{a.getEstadoVisual(seleccionAsientosBean.miSessionId) == 'OCUPADO' or a.getEstadoVisual(seleccionAsientosBean.miSessionId) == 'EN_PROCESO'}"
-                                                                             action="#{seleccionAsientosBean.setearAsiento(a)}"
-                                                                             process="@this"
-                                                                             update=":seatForm" />
-                                                        </div>
-                                                    </ui:repeat>
-                                                </div>
-
-                                                <!-- Pasillo Dinámico entre Bloques -->
-                                                <h:panelGroup rendered="#{!bSt.last}" layout="block" styleClass="aisle-gap" />
-
-                                            </ui:repeat>
-                                        </div>
-
-                                        <!-- Número de Fila (Derecha) -->
-                                        <span class="row-number">#{fila.numeroFila}</span>
-                                    </div>
-
-                                </ui:repeat>
-
-                            </h:panelGroup>
-
-                            <!-- Cola del Avión -->
-                            <div class="airplane-tail">
-                                <i class="pi pi-arrow-down me-1"></i> PARTE TRASERA DEL AVIÓN
-                            </div>
-                        </div>
-                    </section>
-
                 </div>
 
-                <!-- ========================================================= -->
-                <!-- 🛒 BARRA FIJA INFERIOR (STICKY BOTTOM CHECKOUT BAR)       -->
-                <!-- ========================================================= -->
+                <!-- 🛒 BARRA FIJA INFERIOR (STICKY BOTTOM CHECKOUT BAR) -->
                 <p:outputPanel id="stickyFooterPanel" styleClass="sticky-bottom-bar shadow-lg">
-                    <div class="container d-flex align-items-center justify-content-between">
+                    <div class="sticky-footer-container">
 
-                        <!-- Lado Izquierdo: Resumen de Precios -->
-                        <div class="d-flex align-items-center gap-4">
+                        <!-- Resumen de Precios -->
+                        <div class="d-flex align-items-center gap-3 sticky-info-group">
                             <div>
-                                <small class="text-white-50 d-block">Asientos Seleccionados</small>
-                                <span class="fs-5 fw-bold text-white">
+                                <small class="text-white-50 d-block" style="font-size: 0.68rem;">Asientos</small>
+                                <span class="fs-6 fw-bold text-white">
                                     #{seleccionAsientosBean.asientosCompletados} / #{seleccionAsientosBean.asientosRequeridos}
                                 </span>
                             </div>
 
-                            <!-- En el sticky-bottom-bar -->
-                            <div class="border-start border-secondary ps-4">
-                                <small class="text-white-50 d-block">Total acumulado asientos:</small>
-
-                                <span class="fs-4 fw-bold text-success">
+                            <div class="border-start border-secondary ps-3">
+                                <small class="text-white-50 d-block" style="font-size: 0.68rem;">Total acumulado:</small>
+                                <span class="fs-6 fw-bold text-success">
                                     $<h:outputText value="#{seleccionAsientosBean.subtotalGeneral}">
                                         <f:convertNumber groupingUsed="true" locale="es_CL" />
                                     </h:outputText> CLP
@@ -455,24 +1173,21 @@
                             </div>
                         </div>
 
-                        <!-- Lado Derecho: Acción manual de Siguiente / Continuar -->
-                        <div>
-                            <!-- Si quedan tramos por completar -->
-
+                        <!-- Acción manual de Siguiente / Continuar -->
+                        <div class="sticky-action-group">
                             <p:commandButton value="Siguiente Tramo →"
                                              action="#{seleccionAsientosBean.siguienteVuelo}"
                                              rendered="#{seleccionAsientosBean.idxVuelo + 1 lt seleccionAsientosBean.cantVuelos}"
                                              disabled="#{seleccionAsientosBean.idxAsientoSeleccion lt seleccionAsientosBean.cantAdultos}"
-                                             styleClass="sky-btn btn btn-lg px-4"
+                                             styleClass="sky-btn btn btn-md px-3"
                                              process="@form"
                                              update=":seatForm" />
 
-                            <!-- Si es el último tramo y se completó la cuota -->
                             <p:commandButton value="Continuar a Equipaje →"
                                              action="#{seleccionAsientosBean.irASeleccionEquipaje}"
                                              rendered="#{seleccionAsientosBean.idxVuelo + 1 ge seleccionAsientosBean.cantVuelos}"
                                              disabled="#{seleccionAsientosBean.asientosCompletados lt seleccionAsientosBean.asientosRequeridos}"
-                                             styleClass="btn btn-success btn-lg px-4 fw-bold"
+                                             styleClass="btn btn-success btn-md px-3 fw-bold"
                                              ajax="false" />
                         </div>
 
