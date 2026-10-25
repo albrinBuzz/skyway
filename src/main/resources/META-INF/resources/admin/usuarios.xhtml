@@ -9,30 +9,24 @@
 
     <ui:define name="head-admin">
         <style type="text/css">
+            /* --- PALETA NATIVA DARK SKYWAY --- */
             :root {
-                --bg-deep: #0b1120;
-                --bg-card: #0f172a;
-                --bg-header: #1e293b;
-                --border-subtle: #334155;
+                --sky-bg-dark: #090e1a;
+                --sky-card-dark: #0f172a;
+                --sky-header-dark: #1e293b;
+                --sky-border-dark: rgba(255, 255, 255, 0.08);
 
+                --sky-blue: #38bdf8;
                 --navy-brand: #2563eb;
-                --navy-hover: #1d4ed8;
 
-                /* Tonalidades de tipografía suavizadas para Dark Mode */
-                --text-heading: #e2e8f0;   /* Blanco suavizado mate (Slate 200) */
-                --text-body: #cbd5e1;      /* Texto de tabla refinado (Slate 300) */
-                --text-muted: #94a3b8;     /* Texto secundario y placeholders (Slate 400) */
-                --text-dim: #64748b;       /* Identificadores e IDs (Slate 500) */
-
-                --status-active-bg: rgba(30, 58, 138, 0.4);
-                --status-active-border: #2563eb;
-                --status-active-text: #e2e8f0;
+                --text-main: #f8fafc;
+                --text-sub: #cbd5e1;
+                --text-muted: #94a3b8;
             }
 
             .ops-container {
-                padding: 0.75rem 0;
+                padding: 1.25rem;
                 width: 100%;
-                font-family: inherit;
             }
 
             .header-container {
@@ -40,15 +34,14 @@
                 justify-content: space-between;
                 align-items: center;
                 margin-bottom: 20px;
-                border-bottom: 1px solid var(--border-subtle);
+                border-bottom: 1px solid var(--sky-border-dark);
                 padding-bottom: 16px;
             }
 
             .header-container h2 {
-                color: var(--text-heading) !important;
-                font-size: 1.35rem !important;
-                font-weight: 700 !important;
-                letter-spacing: -0.02em !important;
+                color: var(--text-main) !important;
+                font-size: 1.4rem !important;
+                font-weight: 800 !important;
                 margin: 0 0 4px 0 !important;
             }
 
@@ -57,58 +50,49 @@
                 font-size: 0.85rem !important;
             }
 
-            /* --- REMOCIÓN DE LÍNEAS / BORDES EN LAS TABLAS --- */
-            body .skyway-ops-table {
-                background-color: var(--bg-card) !important;
-                border: 1px solid var(--border-subtle) !important;
-                border-radius: 8px !important;
-                overflow: hidden !important;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-            }
-
-            body .skyway-ops-table .ui-datatable-tablewrapper table {
-                border-collapse: collapse !important;
+            /* --- SOBREESCRITURA FORZADA PARA TABLA EN DARK MODE --- */
+            body .skyway-ops-table,
+            body .skyway-ops-table .ui-datatable-tablewrapper,
+            body .skyway-ops-table table {
+                background-color: var(--sky-card-dark) !important;
+                border: 1px solid var(--sky-border-dark) !important;
+                border-radius: 12px !important;
             }
 
             body .skyway-ops-table thead th {
-                background-color: var(--bg-deep) !important;
+                background-color: var(--sky-bg-dark) !important;
                 color: var(--text-muted) !important;
-                font-size: 0.75rem !important;
-                font-weight: 700 !important;
+                font-size: 0.72rem !important;
+                font-weight: 800 !important;
                 text-transform: uppercase !important;
                 letter-spacing: 0.05em !important;
-                padding: 12px 16px !important;
-                border-top: none !important;
-                border-left: none !important;
-                border-right: none !important;
-                border-bottom: 1px solid var(--border-subtle) !important;
+                padding: 14px 16px !important;
+                border: none !important;
+                border-bottom: 1px solid var(--sky-border-dark) !important;
             }
 
             body .skyway-ops-table tbody td {
-                background-color: var(--bg-card) !important;
-                color: var(--text-body) !important;
-                font-size: 0.875rem !important;
-                font-weight: 500 !important;
+                background-color: var(--sky-card-dark) !important;
+                color: var(--text-sub) !important;
+                font-size: 0.85rem !important;
                 padding: 12px 16px !important;
-                border-left: none !important;
-                border-right: none !important;
-                border-top: none !important;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important;
+                border: none !important;
+                border-bottom: 1px solid var(--sky-border-dark) !important;
             }
 
             body .skyway-ops-table tbody tr:hover td {
-                background-color: var(--bg-header) !important;
+                background-color: var(--sky-header-dark) !important;
             }
 
-            body .skyway-ops-table tbody tr:last-child td {
-                border-bottom: none !important;
-            }
-
+            /* --- FIX COMPLETO PARA PAGINACIÓN DE PRIMEFACES --- */
             body .skyway-ops-table .ui-paginator {
-                background-color: var(--bg-deep) !important;
+                background-color: var(--sky-bg-dark) !important;
                 border: none !important;
-                border-top: 1px solid var(--border-subtle) !important;
-                padding: 10px !important;
+                border-top: 1px solid var(--sky-border-dark) !important;
+                padding: 12px !important;
+                display: flex !important;
+                justify-content: center !important;
+                gap: 4px !important;
             }
 
             body .skyway-ops-table .ui-paginator .ui-paginator-page,
@@ -116,144 +100,202 @@
             body .skyway-ops-table .ui-paginator .ui-paginator-prev,
             body .skyway-ops-table .ui-paginator .ui-paginator-next,
             body .skyway-ops-table .ui-paginator .ui-paginator-last {
-                background-color: var(--bg-card) !important;
+                background: var(--sky-card-dark) !important;
                 color: var(--text-muted) !important;
-                border: 1px solid var(--border-subtle) !important;
-                border-radius: 4px !important;
-                font-weight: 600 !important;
-                padding: 3px 8px !important;
+                border: 1px solid var(--sky-border-dark) !important;
+                border-radius: 6px !important;
+                font-weight: 700 !important;
+                font-size: 0.8rem !important;
+                min-width: 32px !important;
+                height: 32px !important;
+                line-height: 30px !important;
+                padding: 0 6px !important;
             }
 
             body .skyway-ops-table .ui-paginator .ui-paginator-page.ui-state-active {
-                background-color: var(--navy-brand) !important;
+                background: linear-gradient(135deg, #2563eb, #0284c7) !important;
                 color: #ffffff !important;
-                border-color: var(--navy-brand) !important;
+                border-color: #38bdf8 !important;
+            }
+
+            /* BADGES DE TABLA */
+            .rut-badge {
+                background: rgba(56, 189, 248, 0.12) !important;
+                border: 1px solid rgba(56, 189, 248, 0.3) !important;
+                color: var(--sky-blue) !important;
+                font-family: 'JetBrains Mono', monospace;
+                font-weight: 800;
+                font-size: 0.8rem;
+                padding: 3px 8px;
+                border-radius: 6px;
             }
 
             .role-badge {
-                background: var(--status-active-bg);
-                border: 1px solid var(--status-active-border);
-                color: var(--status-active-text);
-                font-size: 0.75rem;
+                background: rgba(30, 58, 138, 0.4);
+                border: 1px solid rgba(59, 130, 246, 0.4);
+                color: #93c5fd;
+                font-size: 0.7rem;
                 padding: 3px 8px;
-                border-radius: 4px;
+                border-radius: 12px;
                 display: inline-block;
                 margin-right: 4px;
-                font-weight: 600;
+                font-weight: 700;
             }
 
-            .rut-badge {
-                background: var(--bg-deep);
-                border: 1px solid var(--border-subtle);
-                color: var(--text-dim);
-                font-weight: 600;
-                font-size: 0.8rem;
-                padding: 4px 8px;
-                border-radius: 4px;
-            }
-
-            .btn-new {
-                background: var(--navy-brand) !important;
+            .btn-skyway-primary {
+                background: linear-gradient(135deg, #2563eb, #0284c7) !important;
                 border: none !important;
-                border-radius: 6px !important;
-                font-weight: 600 !important;
+                border-radius: 8px !important;
+                font-weight: 700 !important;
                 color: #ffffff !important;
                 font-size: 0.85rem !important;
                 padding: 8px 16px !important;
             }
 
-            .btn-new:hover {
-                background: var(--navy-hover) !important;
+            /* --- SOBREESCRITURA FORZADA DE PRIMEFACES DIALOG (MODAL NEGRO/AZUL) --- */
+            body .ui-dialog.custom-dialog,
+            body .ui-dialog.custom-dialog .ui-dialog-content,
+            body .ui-dialog.custom-dialog .ui-dialog-titlebar {
+                background-color: #090e1a !important;
+                background: #090e1a !important;
+                color: var(--text-main) !important;
+                border-color: rgba(255, 255, 255, 0.1) !important;
             }
 
-            /* --- ESTILOS DEL MODAL (DARK MODE SOFT) --- */
             body .ui-dialog.custom-dialog {
-                background-color: var(--bg-card) !important;
-                border: 1px solid var(--border-subtle) !important;
-                border-radius: 12px !important;
-                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5) !important;
-                overflow: hidden !important;
+                border-radius: 14px !important;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8) !important;
+                border: 1px solid rgba(255, 255, 255, 0.12) !important;
             }
 
             body .ui-dialog.custom-dialog .ui-dialog-titlebar {
-                background-color: var(--bg-header) !important;
-                color: var(--text-heading) !important;
-                border-bottom: 1px solid var(--border-subtle) !important;
-                padding: 1rem 1.25rem !important;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+                padding: 1.1rem 1.25rem !important;
             }
 
-            body .ui-dialog.custom-dialog .ui-dialog-titlebar .ui-dialog-title {
-                font-weight: 600 !important;
-                font-size: 1rem !important;
-                color: var(--text-heading) !important;
+            body .ui-dialog.custom-dialog .ui-dialog-title {
+                color: var(--text-main) !important;
+                font-weight: 800 !important;
             }
 
-            body .ui-dialog.custom-dialog .ui-dialog-titlebar .ui-dialog-titlebar-icon {
-                color: var(--text-muted) !important;
-            }
-
-            body .ui-dialog.custom-dialog .ui-dialog-titlebar .ui-dialog-titlebar-icon:hover {
-                color: var(--text-heading) !important;
-                background: rgba(255, 255, 255, 0.1) !important;
-            }
-
-            body .ui-dialog.custom-dialog .ui-dialog-content {
-                background-color: var(--bg-card) !important;
-                color: var(--text-body) !important;
-                padding: 1.25rem !important;
-                border: none !important;
-            }
-
+            /* ETIQUETAS E INPUTS EN MODAL */
             .dark-input label {
                 display: block;
-                color: var(--text-muted) !important;
-                font-size: 0.725rem !important;
-                font-weight: 700 !important;
+                color: #94a3b8 !important;
+                font-size: 0.68rem !important;
+                font-weight: 800 !important;
                 text-transform: uppercase !important;
-                letter-spacing: 0.05em !important;
                 margin-bottom: 4px;
             }
 
             body .dark-input .ui-inputfield,
             body .dark-input .ui-selectonemenu,
-            body .dark-input .ui-calendar {
-                background-color: var(--bg-deep) !important;
-                border: 1px solid var(--border-subtle) !important;
-                color: var(--text-heading) !important;
-                font-size: 0.875rem !important;
-                border-radius: 6px !important;
+            body .dark-input .ui-datepicker {
+                background-color: #0f172a !important;
+                border: 1px solid rgba(255, 255, 255, 0.12) !important;
+                color: #f8fafc !important;
+                font-size: 0.85rem !important;
+                border-radius: 8px !important;
                 padding: 8px 10px !important;
-                width: 100% !important;
-                box-shadow: none !important;
             }
 
-            body .dark-input .ui-inputfield:focus,
-            body .dark-input .ui-selectonemenu:focus {
-                border-color: var(--navy-brand) !important;
+            body .dark-input .ui-inputfield:focus {
+                border-color: #38bdf8 !important;
             }
 
-            body .dark-input .ui-inputfield::placeholder {
-                color: var(--text-dim) !important;
+            body .dark-input .ui-selectmanycheckbox label,
+            body .dark-input .ui-selectbooleancheckbox label {
+                color: #cbd5e1 !important;
+                font-size: 0.8rem !important;
             }
 
             .profile-box {
-                background: var(--bg-deep);
-                border: 1px solid var(--border-subtle);
-                border-radius: 6px;
+                background: #0f172a;
+                border: 1px solid rgba(56, 189, 248, 0.25);
+                border-radius: 10px;
                 padding: 12px;
                 margin-top: 8px;
+            }
+
+            /* --- FIX DEFINITIVO CSS PAGINADOR DE PRIMEFACES --- */
+            body .skyway-ops-table .ui-paginator {
+                background-color: #090e1a !important;
+                border: none !important;
+                border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+                padding: 12px 16px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: flex-end !important;
+                gap: 6px !important;
+            }
+
+            body .skyway-ops-table .ui-paginator .ui-paginator-current {
+                color: #94a3b8 !important;
+                font-size: 0.78rem !important;
+                font-weight: 600 !important;
+                margin-right: auto !important; /* Empuja el texto de reporte a la izquierda */
+            }
+
+            /* Botones y números del paginador */
+            body .skyway-ops-table .ui-paginator .ui-paginator-page,
+            body .skyway-ops-table .ui-paginator .ui-paginator-first,
+            body .skyway-ops-table .ui-paginator .ui-paginator-prev,
+            body .skyway-ops-table .ui-paginator .ui-paginator-next,
+            body .skyway-ops-table .ui-paginator .ui-paginator-last {
+                background: #0f172a !important;
+                color: #f8fafc !important; /* Texto blanco brillante visible */
+                border: 1px solid rgba(255, 255, 255, 0.15) !important;
+                border-radius: 6px !important;
+                font-weight: 800 !important;
+                font-size: 0.85rem !important;
+                min-width: 34px !important;
+                height: 34px !important;
+                line-height: 32px !important;
+                padding: 0 !important;
+                text-align: center !important;
+                cursor: pointer !important;
+                transition: all 0.2s ease !important;
+                opacity: 1 !important;
+            }
+
+            /* Hover en botones activos */
+            body .skyway-ops-table .ui-paginator .ui-paginator-page:hover,
+            body .skyway-ops-table .ui-paginator .ui-paginator-first:not(.ui-state-disabled):hover,
+            body .skyway-ops-table .ui-paginator .ui-paginator-prev:not(.ui-state-disabled):hover,
+            body .skyway-ops-table .ui-paginator .ui-paginator-next:not(.ui-state-disabled):hover,
+            body .skyway-ops-table .ui-paginator .ui-paginator-last:not(.ui-state-disabled):hover {
+                background: #1e293b !important;
+                border-color: #38bdf8 !important;
+                color: #38bdf8 !important;
+            }
+
+            /* Página Seleccionada / Activa */
+            body .skyway-ops-table .ui-paginator .ui-paginator-page.ui-state-active {
+                background: linear-gradient(135deg, #2563eb, #0284c7) !important;
+                color: #ffffff !important;
+                border-color: #38bdf8 !important;
+                box-shadow: 0 0 12px rgba(56, 189, 248, 0.4) !important;
+            }
+
+            /* Botones Deshabilitados (Primera/Última cuando estás al inicio o fin) */
+            body .skyway-ops-table .ui-paginator .ui-state-disabled {
+                opacity: 0.35 !important;
+                cursor: default !important;
+                background: #090e1a !important;
+                border-color: rgba(255, 255, 255, 0.05) !important;
+                color: #64748b !important;
             }
         </style>
     </ui:define>
 
     <ui:define name="contenido-admin">
-        <div class="ops-container">
-            <p:growl id="msgs" showDetail="true" life="3000"/>
+        <div class="ops-container" id="skyway-admin-root">
+            <p:growl id="msgs" showDetail="true" life="4000"/>
 
             <div class="header-container">
                 <div>
                     <h2>Administración de Usuarios y Permisos</h2>
-                    <span>Gestión de cuentas, roles y perfiles de tripulación/pasajeros</span>
+                    <span>Gestión de cuentas, perfiles de tripulación y control de acceso corporativo</span>
                 </div>
                 <p:commandButton value="Nuevo Usuario"
                                  icon="pi pi-user-plus"
@@ -261,136 +303,142 @@
                                  process="@this"
                                  update=":formDialog:panelUsuario"
                                  oncomplete="PF('dlgUsuario').show();"
-                                 styleClass="btn-new" />
+                                 styleClass="btn-skyway-primary" />
             </div>
 
-            <!-- TABLA PRINCIPAL DE USUARIOS -->
+            <!-- TABLA DE USUARIOS -->
+
             <h:form id="formTabla">
                 <p:dataTable id="dt-usuarios"
                              value="#{gestionUsuariosAdminBean.listaUsuarios}"
                              var="usr"
+                             rowKey="#{usr.rut}"
                              styleClass="skyway-ops-table"
                              paginator="true"
                              rows="10"
                              paginatorPosition="bottom"
+                             paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}"
+                             currentPageReportTemplate="Mostrando {startRecord}-{endRecord} de {totalRecords} usuarios"
                              emptyMessage="No hay usuarios registrados en el sistema.">
 
-                    <p:column headerText="RUT" style="width: 120px;">
+                    <!-- Listener explícito para redibujar la tabla al cambiar de página -->
+                    <p:ajax event="page" process="@this" update=":formTabla:dt-usuarios" />
+
+                    <p:column headerText="RUT / ID" style="width: 130px;">
                         <span class="rut-badge">#{usr.rut}</span>
                     </p:column>
 
-                    <p:column headerText="Nombre y Apellido">
-                        <span style="font-weight: 600; color: var(--text-heading);">#{usr.nombre} #{usr.apellido}</span>
+                    <p:column headerText="NOMBRE Y APELLIDO">
+                        <div class="flex flex-column">
+                            <span style="font-weight: 700; color: #f8fafc;">#{usr.nombre} #{usr.apellido}</span>
+                            <span style="font-size: 0.72rem; color: #64748b;">Doc: #{usr.documentoIdentidad}</span>
+                        </div>
                     </p:column>
 
-                    <p:column headerText="Correo Electrónico">
-                        <span style="color: var(--text-body);">#{usr.correoElectronico}</span>
+                    <p:column headerText="CORREO ELECTRÓNICO">
+                        <span style="color: #cbd5e1; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;">#{usr.correoElectronico}</span>
                     </p:column>
 
-                    <p:column headerText="Teléfono">
-                        <span style="color: var(--text-muted);">#{usr.telefono}</span>
+                    <p:column headerText="TELÉFONO">
+                        <span style="color: #94a3b8;">#{usr.telefono}</span>
                     </p:column>
 
-                    <p:column headerText="Roles Asignados">
+                    <p:column headerText="ROLES">
                         <ui:repeat value="#{usr.roles}" var="r">
                             <span class="role-badge">#{r.nombre}</span>
                         </ui:repeat>
                     </p:column>
 
-                    <p:column headerText="Acciones" style="width: 120px; text-align: center;">
-                        <div class="flex gap-2 justify-content-center">
-                            <p:commandButton icon="pi pi-user-edit"
-                                             actionListener="#{gestionUsuariosAdminBean.prepararEdicion(usr)}"
-                                             process="@this"
-                                             update=":formDialog:panelUsuario"
-                                             oncomplete="PF('dlgUsuario').show();"
-                                             styleClass="ui-button-outlined ui-button-secondary me-1"
-                                             title="Editar Cuentas y Roles" />
-
-                            <p:commandButton icon="pi pi-trash"
-                                             actionListener="#{gestionUsuariosAdminBean.eliminarUsuario(usr)}"
-                                             process="@this"
-                                             update=":formTabla:dt-usuarios :msgs"
-                                             styleClass="ui-button-outlined ui-button-danger"
-                                             title="Eliminar Cuenta">
-                                <p:confirm header="Confirmación" message="¿Eliminar la cuenta de '#{usr.nombre} #{usr.apellido}'?" icon="pi pi-exclamation-triangle" />
-                            </p:commandButton>
-                        </div>
+                    <p:column headerText="ACCIONES" style="width: 90px; text-align: center;">
+                        <p:commandButton icon="pi pi-user-edit"
+                                         actionListener="#{gestionUsuariosAdminBean.prepararEdicion(usr)}"
+                                         process="@this"
+                                         update=":formDialog:panelUsuario"
+                                         oncomplete="PF('dlgUsuario').show();"
+                                         styleClass="ui-button-rounded ui-button-flat ui-button-info"
+                                         title="Editar Datos y Permisos" />
                     </p:column>
                 </p:dataTable>
             </h:form>
 
-            <!-- MODAL DE GESTIÓN DE USUARIOS Y ROLES (COMPACTO) -->
+
+
+            <!-- MODAL DE GESTIÓN Y REGISTRO HORIZONTAL RESTRUCTURADO CON FLEXBOX NATIVO -->
             <p:dialog header="#{gestionUsuariosAdminBean.esNuevo ? 'Nuevo Usuario del Sistema' : 'Modificar Usuario y Permisos'}"
                       widgetVar="dlgUsuario"
                       modal="true"
                       responsive="true"
-                      width="820"
-                      height="580"
+                      width="960"
                       blockScroll="true"
                       appendTo="@(body)"
                       styleClass="custom-dialog">
 
                 <h:form id="formDialog" styleClass="dark-input">
-                    <h:panelGroup id="panelUsuario" layout="block" style="padding-right: 5px;">
+                    <h:panelGroup id="panelUsuario" layout="block" style="padding: 10px;">
 
-                        <!-- DATOS BÁSICOS EN GRID 2 COLUMNAS -->
-                        <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;">
-                            <div style="flex: 1 1 calc(50% - 6px);">
+                        <!-- FILA 1: RUT, DOCUMENTO, FECHA DE NACIMIENTO -->
+                        <div style="display: flex; gap: 16px; margin-bottom: 12px; width: 100%;">
+                            <div style="flex: 1 1 33.33%;">
                                 <label>RUT / Identificador</label>
                                 <p:inputText value="#{gestionUsuariosAdminBean.usuarioSeleccionado.rut}"
                                              disabled="#{not gestionUsuariosAdminBean.esNuevo}"
-                                             placeholder="12345678-9" required="true" />
+                                             placeholder="12345678-9" required="true" style="width: 100%;" />
                             </div>
 
-                            <div style="flex: 1 1 calc(50% - 6px);">
+                            <div style="flex: 1 1 33.33%;">
                                 <label>Documento de Identidad</label>
-                                <p:inputText value="#{gestionUsuariosAdminBean.usuarioSeleccionado.documentoIdentidad}" required="true" />
+                                <p:inputText value="#{gestionUsuariosAdminBean.usuarioSeleccionado.documentoIdentidad}" required="true" style="width: 100%;" />
                             </div>
 
-                            <div style="flex: 1 1 calc(50% - 6px);">
-                                <label>Nombre</label>
-                                <p:inputText value="#{gestionUsuariosAdminBean.usuarioSeleccionado.nombre}" required="true" />
-                            </div>
-
-                            <div style="flex: 1 1 calc(50% - 6px);">
-                                <label>Apellido</label>
-                                <p:inputText value="#{gestionUsuariosAdminBean.usuarioSeleccionado.apellido}" required="true" />
-                            </div>
-
-                            <div style="flex: 1 1 calc(50% - 6px);">
-                                <label>Correo Electrónico</label>
-                                <p:inputText value="#{gestionUsuariosAdminBean.usuarioSeleccionado.correoElectronico}" required="true" />
-                            </div>
-
-                            <div style="flex: 1 1 calc(50% - 6px);">
-                                <label>Teléfono</label>
-                                <p:inputText value="#{gestionUsuariosAdminBean.usuarioSeleccionado.telefono}" required="true" />
-                            </div>
-
-                            <div style="flex: 1 1 calc(50% - 6px);">
+                            <div style="flex: 1 1 33.33%;">
                                 <label>Fecha de Nacimiento</label>
                                 <p:datePicker value="#{gestionUsuariosAdminBean.usuarioSeleccionado.fechaNacimiento}"
                                               pattern="yyyy-MM-dd"
-                                              showIcon="true" required="true" style="width:100%;" />
+                                              showIcon="true" required="true" style="width: 100%;" />
+                            </div>
+                        </div>
+
+                        <!-- FILA 2: NOMBRE, APELLIDO, TELÉFONO -->
+                        <div style="display: flex; gap: 16px; margin-bottom: 12px; width: 100%;">
+                            <div style="flex: 1 1 33.33%;">
+                                <label>Nombre</label>
+                                <p:inputText value="#{gestionUsuariosAdminBean.usuarioSeleccionado.nombre}" required="true" style="width: 100%;" />
                             </div>
 
-                            <div style="flex: 1 1 calc(50% - 6px);">
+                            <div style="flex: 1 1 33.33%;">
+                                <label>Apellido</label>
+                                <p:inputText value="#{gestionUsuariosAdminBean.usuarioSeleccionado.apellido}" required="true" style="width: 100%;" />
+                            </div>
+
+                            <div style="flex: 1 1 33.33%;">
+                                <label>Teléfono</label>
+                                <p:inputText value="#{gestionUsuariosAdminBean.usuarioSeleccionado.telefono}" required="true" style="width: 100%;" />
+                            </div>
+                        </div>
+
+                        <!-- FILA 3: CORREO (2 COLS) Y CONTRASEÑA (1 COL) -->
+                        <div style="display: flex; gap: 16px; margin-bottom: 16px; width: 100%;">
+                            <div style="flex: 2 1 66.66%;">
+                                <label>Correo Electrónico</label>
+                                <p:inputText value="#{gestionUsuariosAdminBean.usuarioSeleccionado.correoElectronico}" required="true" style="width: 100%;" />
+                            </div>
+
+                            <div style="flex: 1 1 33.33%;">
                                 <label>Contraseña #{gestionUsuariosAdminBean.esNuevo ? '' : '(Opcional)'}</label>
                                 <p:password value="#{gestionUsuariosAdminBean.contrasenaAuxiliar}"
                                             redisplay="true"
-                                            placeholder="••••••••" toggleMask="true" style="width:100%;" />
+                                            placeholder="••••••••" toggleMask="true" style="width: 100%;" />
                             </div>
                         </div>
 
                         <!-- ROLES DEL SISTEMA -->
-                        <div style="border-top: 1px solid var(--border-subtle); padding-top: 10px;" class="mb-2">
-                            <label style="color: var(--navy-brand); font-size: 0.75rem; font-weight: 700;">
-                                <i class="pi pi-shield" style="margin-right: 4px;"></i>ROLES Y PERMISOS DEL SISTEMA
+                        <div style="border-top: 1px solid var(--sky-border-dark); padding-top: 12px; margin-bottom: 16px;">
+                            <label style="color: var(--sky-blue); font-size: 0.72rem; font-weight: 800; display: block; margin-bottom: 8px;">
+                                <i class="pi pi-shield mr-1"></i>ROLES Y PERMISOS DEL SISTEMA
                             </label>
 
-                            <div style="margin-top: 6px;">
-                                <p:selectManyCheckbox value="#{gestionUsuariosAdminBean.idsRolesSeleccionados}" layout="grid" columns="3">
+                            <div>
+                                <p:selectManyCheckbox value="#{gestionUsuariosAdminBean.idsRolesSeleccionados}" layout="grid" columns="4">
                                     <f:selectItems value="#{gestionUsuariosAdminBean.listaRolesGlobales}"
                                                    var="role"
                                                    itemLabel="#{role.nombre}"
@@ -399,13 +447,13 @@
                             </div>
                         </div>
 
-                        <!-- PERFILES OPERATIVOS COMPLEMENTARIOS -->
-                        <div style="border-top: 1px solid var(--border-subtle); padding-top: 10px;" class="mb-2">
-                            <label style="color: var(--text-heading); font-size: 0.75rem; font-weight: 700;">
-                                <i class="pi pi-id-card" style="margin-right: 4px;"></i>PERFILES OPERATIVOS ASOCIADOS
+                        <!-- PERFILES OPERATIVOS ASOCIADOS -->
+                        <div style="border-top: 1px solid var(--sky-border-dark); padding-top: 12px; margin-bottom: 16px;">
+                            <label style="color: var(--text-main); font-size: 0.72rem; font-weight: 800; display: block; margin-bottom: 8px;">
+                                <i class="pi pi-id-card mr-1"></i>PERFILES OPERATIVOS ASOCIADOS
                             </label>
 
-                            <div style="display: flex; gap: 20px; margin-top: 6px;">
+                            <div style="display: flex; gap: 24px; margin-bottom: 8px;">
                                 <p:selectBooleanCheckbox value="#{gestionUsuariosAdminBean.esPiloto}" itemLabel="Es Piloto">
                                     <p:ajax update="panelPiloto" process="@this" />
                                 </p:selectBooleanCheckbox>
@@ -419,86 +467,82 @@
                                 </p:selectBooleanCheckbox>
                             </div>
 
-                            <!-- PERFIL PILOTO -->
+                            <!-- PERFIL PILOTO HORIZONTAL -->
                             <h:panelGroup id="panelPiloto" layout="block">
-                                <h:panelGroup rendered="#{gestionUsuariosAdminBean.esPiloto}" styleClass="profile-box" layout="block" style="margin-top:8px;">
-                                    <span style="color: var(--navy-brand); font-size: 0.75rem; font-weight: 700; display: block; margin-bottom: 6px;">DATOS DE LICENCIA PILOTO</span>
-                                    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-                                        <div style="flex: 1 1 calc(50% - 5px);">
+                                <h:panelGroup rendered="#{gestionUsuariosAdminBean.esPiloto}" styleClass="profile-box" layout="block">
+                                    <span style="color: var(--sky-blue); font-size: 0.7rem; font-weight: 800; display: block; margin-bottom: 8px;">DATOS DE LICENCIA PILOTO</span>
+                                    <div style="display: flex; gap: 16px; width: 100%;">
+                                        <div style="flex: 1 1 33.33%;">
                                             <label>N° Licencia</label>
-                                            <p:inputText value="#{gestionUsuariosAdminBean.pilotoData.licencia}" placeholder="LIC-12345" />
+                                            <p:inputText value="#{gestionUsuariosAdminBean.pilotoData.licencia}" placeholder="LIC-12345" style="width: 100%;" />
                                         </div>
-                                        <div style="flex: 1 1 calc(50% - 5px);">
+                                        <div style="flex: 1 1 33.33%;">
                                             <label>Años de Experiencia</label>
-                                            <p:spinner value="#{gestionUsuariosAdminBean.pilotoData.experienciaAnos}" min="0" style="width:100%;" />
+                                            <p:spinner value="#{gestionUsuariosAdminBean.pilotoData.experienciaAnos}" min="0" style="width: 100%;" />
                                         </div>
-                                        <div style="flex: 1 1 100%;">
+                                        <div style="flex: 1 1 33.33%;">
                                             <label>Especializaciones</label>
-                                            <p:inputText value="#{gestionUsuariosAdminBean.pilotoData.especializaciones}" placeholder="Boeing 737, Airbus A320..." />
+                                            <p:inputText value="#{gestionUsuariosAdminBean.pilotoData.especializaciones}" placeholder="Boeing 787, Airbus A320..." style="width: 100%;" />
                                         </div>
                                     </div>
                                 </h:panelGroup>
                             </h:panelGroup>
 
-                            <!-- PERFIL TRIPULACIÓN -->
+                            <!-- PERFIL TRIPULACIÓN HORIZONTAL -->
                             <h:panelGroup id="panelTripulacion" layout="block">
-                                <h:panelGroup rendered="#{gestionUsuariosAdminBean.esTripulacion}" styleClass="profile-box" layout="block" style="margin-top:8px;">
-                                    <span style="color: var(--navy-brand); font-size: 0.75rem; font-weight: 700; display: block; margin-bottom: 6px;">DATOS DE TRIPULACIÓN</span>
-                                    <div>
-                                        <label>Cargo / Función</label>
-                                        <p:selectOneMenu value="#{gestionUsuariosAdminBean.tripulacionData.cargo}" style="width:100%;">
-                                            <f:selectItem itemLabel="Copiloto" itemValue="Copiloto" />
-                                            <f:selectItem itemLabel="Jefe de Cabina" itemValue="Jefe de Cabina" />
-                                            <f:selectItem itemLabel="Azafata / Sobrecargo" itemValue="Azafata" />
-                                            <f:selectItem itemLabel="Personal Operativo" itemValue="Personal Operativo" />
-                                        </p:selectOneMenu>
+                                <h:panelGroup rendered="#{gestionUsuariosAdminBean.esTripulacion}" styleClass="profile-box" layout="block">
+                                    <span style="color: var(--sky-blue); font-size: 0.7rem; font-weight: 800; display: block; margin-bottom: 8px;">DATOS DE TRIPULACIÓN</span>
+                                    <div style="display: flex; gap: 16px; width: 100%;">
+                                        <div style="flex: 1 1 50%;">
+                                            <label>Cargo / Función</label>
+                                            <p:selectOneMenu value="#{gestionUsuariosAdminBean.tripulacionData.cargo}" style="width: 100%;">
+                                                <f:selectItem itemLabel="Copiloto" itemValue="Copiloto" />
+                                                <f:selectItem itemLabel="Jefe de Cabina" itemValue="Jefe de Cabina" />
+                                                <f:selectItem itemLabel="Azafata / Sobrecargo" itemValue="Azafata" />
+                                                <f:selectItem itemLabel="Personal Operativo" itemValue="Personal Operativo" />
+                                            </p:selectOneMenu>
+                                        </div>
                                     </div>
                                 </h:panelGroup>
                             </h:panelGroup>
 
-                            <!-- PERFIL PASAJERO -->
+                            <!-- PERFIL PASAJERO HORIZONTAL -->
                             <h:panelGroup id="panelPasajero" layout="block">
-                                <h:panelGroup rendered="#{gestionUsuariosAdminBean.esPasajero}" styleClass="profile-box" layout="block" style="margin-top:8px;">
-                                    <span style="color: var(--navy-brand); font-size: 0.75rem; font-weight: 700; display: block; margin-bottom: 6px;">DATOS DE PASAJERO</span>
-                                    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-                                        <div style="flex: 1 1 calc(33.33% - 7px);">
+                                <h:panelGroup rendered="#{gestionUsuariosAdminBean.esPasajero}" styleClass="profile-box" layout="block">
+                                    <span style="color: var(--sky-blue); font-size: 0.7rem; font-weight: 800; display: block; margin-bottom: 8px;">DATOS DE PASAJERO</span>
+                                    <div style="display: flex; gap: 16px; width: 100%;">
+                                        <div style="flex: 1 1 33.33%;">
                                             <label>Tipo Doc.</label>
-                                            <p:inputText value="#{gestionUsuariosAdminBean.pasajeroData.tipoDocumento}" placeholder="DNI / Pasaporte" />
+                                            <p:inputText value="#{gestionUsuariosAdminBean.pasajeroData.tipoDocumento}" placeholder="DNI / Pasaporte" style="width: 100%;" />
                                         </div>
-                                        <div style="flex: 1 1 calc(33.33% - 7px);">
+                                        <div style="flex: 1 1 33.33%;">
                                             <label>N° Documento</label>
-                                            <p:inputText value="#{gestionUsuariosAdminBean.pasajeroData.numeroDocumento}" />
+                                            <p:inputText value="#{gestionUsuariosAdminBean.pasajeroData.numeroDocumento}" style="width: 100%;" />
                                         </div>
-                                        <div style="flex: 1 1 calc(33.33% - 7px);">
+                                        <div style="flex: 1 1 33.33%;">
                                             <label>Nacionalidad</label>
-                                            <p:inputText value="#{gestionUsuariosAdminBean.pasajeroData.nacionalidad}" placeholder="Chilena, Argentina..." />
+                                            <p:inputText value="#{gestionUsuariosAdminBean.pasajeroData.nacionalidad}" placeholder="Chilena, Argentina..." style="width: 100%;" />
                                         </div>
                                     </div>
                                 </h:panelGroup>
                             </h:panelGroup>
-
                         </div>
 
-                        <!-- BOTONES -->
-                        <div style="display: flex; justify-content: flex-end; gap: 8px; padding-top: 12px; border-top: 1px solid var(--border-subtle);">
+                        <!-- BOTONES DE ACCIÓN -->
+                        <div style="display: flex; justify-content: flex-end; gap: 10px; padding-top: 12px; border-top: 1px solid var(--sky-border-dark);">
                             <p:commandButton value="Cancelar" onclick="PF('dlgUsuario').hide();" type="button"
                                              styleClass="ui-button-flat ui-button-secondary" />
                             <p:commandButton value="Guardar Usuario"
                                              actionListener="#{gestionUsuariosAdminBean.guardarUsuario()}"
                                              process="@form"
                                              update=":formTabla:dt-usuarios :msgs"
-                                             styleClass="btn-new" />
+                                             styleClass="btn-skyway-primary" />
                         </div>
 
                     </h:panelGroup>
                 </h:form>
             </p:dialog>
 
-            <!-- CONFIRM DIALOG GLOBAL -->
-            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" appendTo="@(body)" styleClass="custom-dialog">
-                <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-flat ui-button-secondary" />
-                <p:commandButton value="Sí, Eliminar" type="button" styleClass="ui-confirmdialog-yes btn-new" />
-            </p:confirmDialog>
         </div>
     </ui:define>
 

@@ -1,4 +1,4 @@
-name: Build and deploy JAR app to Azure Web App - skyWay
+name: Build and Deploy Java App to Azure Web App - skyWay
 
 on:
   push:
@@ -9,47 +9,41 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - name: Set up Java version
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
-          distribution: 'temurin'
-          cache: maven
+          distribution: 'microsoft'
+          cache: 'maven'
 
-      - name: Build with Maven
+      - name: Compilar con Maven
         run: mvn clean package -DskipTests
 
-      - name: Upload artifact for deployment job
+      - name: Subir artefacto JAR
         uses: actions/upload-artifact@v4
         with:
           name: java-app
-          path: '${{ github.workspace }}/target/*.jar'
+          path: target/*.jar
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    permissions:
-      id-token: write
-      contents: read
 
     steps:
-      - name: Download artifact from build job
+      - name: Descargar artefacto JAR
         uses: actions/download-artifact@v4
         with:
           name: java-app
+          path: app-build
 
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_0C9E04C40F6841C284FF51A42ED7FCBC }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_B050CC28573D46A284E2BDA556CB4B3C }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_89403E14DA15476E83191C40AF85E8A2 }}
-
-      - name: Deploy to Azure Web App
+      - name: Desplegar en Azure Web App mediante Publish Profile
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'skyWay'
-          package: '*.jar'
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: 'app-build/*.jar'

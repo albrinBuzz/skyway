@@ -1,0 +1,1027 @@
+@startuml
+package "com.SkyWay.domain.model" {
+
+    class Aerolinea {
+        - idAerolinea: Integer
+        - codigo: String
+        - nombre: String
+        - vuelos: List<Vuelo>
+        + getIdAerolinea(): Integer
+        + setIdAerolinea(idAerolinea: Integer): void
+        + getCodigo(): String
+        + setCodigo(codigo: String): void
+        + getNombre(): String
+        + setNombre(nombre: String): void
+        + getVuelos(): List<Vuelo>
+        + setVuelos(vuelos: List<Vuelo>): void
+        + addVuelo(vuelo: Vuelo): Vuelo
+        + removeVuelo(vuelo: Vuelo): Vuelo
+    }
+
+    class Aeropuerto {
+        - idAeropuerto: Integer
+        - codigoIata: String
+        - nombreAeropuerto: String
+        - posicion: Point
+        - ciudad: Ciudad
+        - itinerarios1: List<Itinerario>
+        - itinerarios2: List<Itinerario>
+        - puertaEmbarques: List<PuertaEmbarque>
+        - segmentoVuelos1: List<SegmentoVuelo>
+        - segmentoVuelos2: List<SegmentoVuelo>
+        + getIdAeropuerto(): Integer
+        + setIdAeropuerto(idAeropuerto: Integer): void
+        + getCodigoIata(): String
+        + setCodigoIata(codigoIata: String): void
+        + getNombreAeropuerto(): String
+        + setNombreAeropuerto(nombreAeropuerto: String): void
+        + getCiudad(): Ciudad
+        + setCiudad(ciudad: Ciudad): void
+        + getPosicion(): Point
+        + setPosicion(posicion: Point): void
+        + getItinerarios1(): List<Itinerario>
+        + setItinerarios1(itinerarios1: List<Itinerario>): void
+        + getItinerarios2(): List<Itinerario>
+        + setItinerarios2(itinerarios2: List<Itinerario>): void
+        + getPuertaEmbarques(): List<PuertaEmbarque>
+        + setPuertaEmbarques(puertaEmbarques: List<PuertaEmbarque>): void
+        + addPuertaEmbarque(puertaEmbarque: PuertaEmbarque): PuertaEmbarque
+        + removePuertaEmbarque(puertaEmbarque: PuertaEmbarque): PuertaEmbarque
+        + getSegmentoVuelos1(): List<SegmentoVuelo>
+        + setSegmentoVuelos1(segmentoVuelos1: List<SegmentoVuelo>): void
+        + addSegmentoVuelos1(segmentoVuelos1: SegmentoVuelo): SegmentoVuelo
+        + removeSegmentoVuelos1(segmentoVuelos1: SegmentoVuelo): SegmentoVuelo
+        + getSegmentoVuelos2(): List<SegmentoVuelo>
+        + setSegmentoVuelos2(segmentoVuelos2: List<SegmentoVuelo>): void
+        + addSegmentoVuelos2(segmentoVuelos2: SegmentoVuelo): SegmentoVuelo
+        + removeSegmentoVuelos2(segmentoVuelos2: SegmentoVuelo): SegmentoVuelo
+    }
+
+    class Asiento {
+        - idAsiento: Integer
+        - numeroAsiento: String
+        - fila: Integer
+        - letra: String
+        - esVentana: Boolean
+        - esPasillo: Boolean
+        - esEmergencia: Boolean
+        - avion: Avion
+        - claseAsiento: ClaseAsiento
+        - reservaAsientos: List<ReservaAsiento>
+        + getIdAsiento(): Integer
+        + setIdAsiento(idAsiento: Integer): void
+        + getNumeroAsiento(): String
+        + setNumeroAsiento(numeroAsiento: String): void
+        + getFila(): Integer
+        + setFila(fila: Integer): void
+        + getLetra(): String
+        + setLetra(letra: String): void
+        + getEsVentana(): Boolean
+        + setEsVentana(esVentana: Boolean): void
+        + getEsPasillo(): Boolean
+        + setEsPasillo(esPasillo: Boolean): void
+        + getEsEmergencia(): Boolean
+        + setEsEmergencia(esEmergencia: Boolean): void
+        + getAvion(): Avion
+        + setAvion(avion: Avion): void
+        + getClaseAsiento(): ClaseAsiento
+        + setClaseAsiento(claseAsiento: ClaseAsiento): void
+        + getReservaAsientos(): List<ReservaAsiento>
+        + setReservaAsientos(reservaAsientos: List<ReservaAsiento>): void
+        + addReservaAsiento(reservaAsiento: ReservaAsiento): ReservaAsiento
+        + removeReservaAsiento(reservaAsiento: ReservaAsiento): ReservaAsiento
+    }
+
+    class AsignacionPuerta {
+        - idAsignacion: Integer
+        - horaAsignacion: Timestamp
+        - puertaEmbarque: PuertaEmbarque
+        - segmentoVuelo: SegmentoVuelo
+        + getIdAsignacion(): Integer
+        + setIdAsignacion(idAsignacion: Integer): void
+        + getHoraAsignacion(): Timestamp
+        + setHoraAsignacion(horaAsignacion: Timestamp): void
+        + getPuertaEmbarque(): PuertaEmbarque
+        + setPuertaEmbarque(puertaEmbarque: PuertaEmbarque): void
+        + getSegmentoVuelo(): SegmentoVuelo
+        + setSegmentoVuelo(segmentoVuelo: SegmentoVuelo): void
+    }
+
+    class Avion {
+        - idAvion: Integer
+        - anoDeFabricacion: Integer
+        - capacidadDeCarga: Integer
+        - capacidadDePasajeros: Integer
+        - estadoDeMantenimiento: String
+        - fechaProximoMantenimiento: Timestamp
+        - numeroDeRegistro: String
+        - asientos: List<Asiento>
+        - modeloAvion: ModeloAvion
+        - capacidadClases1: List<CapacidadClase>
+        - vuelos: List<Vuelo>
+        + getIdAvion(): Integer
+        + setIdAvion(idAvion: Integer): void
+        + getAnoDeFabricacion(): Integer
+        + setAnoDeFabricacion(anoDeFabricacion: Integer): void
+        + getCapacidadDeCarga(): Integer
+        + setCapacidadDeCarga(capacidadDeCarga: Integer): void
+        + getCapacidadDePasajeros(): Integer
+        + setCapacidadDePasajeros(capacidadDePasajeros: Integer): void
+        + getEstadoDeMantenimiento(): String
+        + setEstadoDeMantenimiento(estadoDeMantenimiento: String): void
+        + getFechaProximoMantenimiento(): Timestamp
+        + setFechaProximoMantenimiento(fechaProximoMantenimiento: Timestamp): void
+        + getNumeroDeRegistro(): String
+        + setNumeroDeRegistro(numeroDeRegistro: String): void
+        + getAsientos(): List<Asiento>
+        + setAsientos(asientos: List<Asiento>): void
+        + addAsiento(asiento: Asiento): Asiento
+        + removeAsiento(asiento: Asiento): Asiento
+        + getModeloAvion(): ModeloAvion
+        + setModeloAvion(modeloAvion: ModeloAvion): void
+        + getCapacidadClases1(): List<CapacidadClase>
+        + setCapacidadClases1(capacidadClases1: List<CapacidadClase>): void
+        + addCapacidadClases1(capacidadClases1: CapacidadClase): CapacidadClase
+        + removeCapacidadClases1(capacidadClases1: CapacidadClase): CapacidadClase
+        + getVuelos(): List<Vuelo>
+        + setVuelos(vuelos: List<Vuelo>): void
+        + addVuelo(vuelo: Vuelo): Vuelo
+        + removeVuelo(vuelo: Vuelo): Vuelo
+    }
+
+    class CapacidadClase {
+        - idCapacidadClase: Integer
+        - cantidad: Integer
+        - avion1: Avion
+        - claseAsiento1: ClaseAsiento
+        + getIdCapacidadClase(): Integer
+        + setIdCapacidadClase(idCapacidadClase: Integer): void
+        + getCantidad(): Integer
+        + setCantidad(cantidad: Integer): void
+        + getAvion1(): Avion
+        + setAvion1(avion1: Avion): void
+        + getClaseAsiento1(): ClaseAsiento
+        + setClaseAsiento1(claseAsiento1: ClaseAsiento): void
+    }
+
+    class CaracteristicaTarifa {
+        - idCaracteristica: Integer
+        - nombre: String
+        - descripcion: String
+        - tipoDato: String
+        - tarifaCaracteristicas: List<TarifaCaracteristica>
+        + getIdCaracteristica(): Integer
+        + setIdCaracteristica(idCaracteristica: Integer): void
+        + getNombre(): String
+        + setNombre(nombre: String): void
+        + getDescripcion(): String
+        + setDescripcion(descripcion: String): void
+        + getTipoDato(): String
+        + setTipoDato(tipoDato: String): void
+        + getTarifaCaracteristicas(): List<TarifaCaracteristica>
+        + setTarifaCaracteristicas(tarifaCaracteristicas: List<TarifaCaracteristica>): void
+    }
+
+    class Checkin {
+        - idCheckin: Integer
+        - fechaHora: Timestamp
+        - metodo: String
+        - reserva: Reserva
+        + getIdCheckin(): Integer
+        + setIdCheckin(idCheckin: Integer): void
+        + getFechaHora(): Timestamp
+        + setFechaHora(fechaHora: Timestamp): void
+        + getMetodo(): String
+        + setMetodo(metodo: String): void
+        + getReserva(): Reserva
+        + setReserva(reserva: Reserva): void
+    }
+
+    class Ciudad {
+        - idCiudad: Integer
+        - nombre: String
+        - aeropuertos: List<Aeropuerto>
+        - pai: Pai
+        + getIdCiudad(): Integer
+        + setIdCiudad(idCiudad: Integer): void
+        + getNombre(): String
+        + setNombre(nombre: String): void
+        + getAeropuertos(): List<Aeropuerto>
+        + setAeropuertos(aeropuertos: List<Aeropuerto>): void
+        + addAeropuerto(aeropuerto: Aeropuerto): Aeropuerto
+        + removeAeropuerto(aeropuerto: Aeropuerto): Aeropuerto
+        + getPai(): Pai
+        + setPai(pai: Pai): void
+    }
+
+    class ClaseAsiento {
+        - idClase: Integer
+        - descripcion: String
+        - asientos: List<Asiento>
+        - capacidadClases1: List<CapacidadClase>
+        - precioAsientos: List<PrecioAsiento>
+        + getIdClase(): Integer
+        + setIdClase(idClase: Integer): void
+        + getDescripcion(): String
+        + setDescripcion(descripcion: String): void
+        + getAsientos(): List<Asiento>
+        + setAsientos(asientos: List<Asiento>): void
+        + addAsiento(asiento: Asiento): Asiento
+        + removeAsiento(asiento: Asiento): Asiento
+        + getCapacidadClases1(): List<CapacidadClase>
+        + setCapacidadClases1(capacidadClases1: List<CapacidadClase>): void
+        + addCapacidadClases1(capacidadClases1: CapacidadClase): CapacidadClase
+        + removeCapacidadClases1(capacidadClases1: CapacidadClase): CapacidadClase
+        + getPrecioAsientos(): List<PrecioAsiento>
+        + setPrecioAsientos(precioAsientos: List<PrecioAsiento>): void
+        + addPrecioAsiento(precioAsiento: PrecioAsiento): PrecioAsiento
+        + removePrecioAsiento(precioAsiento: PrecioAsiento): PrecioAsiento
+    }
+
+    class Continente {
+        - idContinente: Integer
+        - nombre: String
+        - paises: List<Pai>
+        + getIdContinente(): Integer
+        + setIdContinente(idContinente: Integer): void
+        + getNombre(): String
+        + setNombre(nombre: String): void
+        + getPaises(): List<Pai>
+        + setPaises(paises: List<Pai>): void
+    }
+
+    class Equipaje {
+        - idEquipaje: Integer
+        - dimensiones: String
+        - peso: BigDecimal
+        - tipo: String
+        - pasajero: Pasajero
+        - reserva: Reserva
+        - tipoEquipaje: TipoEquipaje
+        + getIdEquipaje(): Integer
+        + setIdEquipaje(idEquipaje: Integer): void
+        + getDimensiones(): String
+        + setDimensiones(dimensiones: String): void
+        + getPeso(): BigDecimal
+        + setPeso(peso: BigDecimal): void
+        + getTipo(): String
+        + setTipo(tipo: String): void
+        + getPasajero(): Pasajero
+        + setPasajero(pasajero: Pasajero): void
+        + getReserva(): Reserva
+        + setReserva(reserva: Reserva): void
+        + getTipoEquipaje(): TipoEquipaje
+        + setTipoEquipaje(tipoEquipaje: TipoEquipaje): void
+    }
+
+    class EstadoReserva {
+        - idEstadoReserva: Integer
+        - descripcion: String
+        - reservas: List<Reserva>
+        + getIdEstadoReserva(): Integer
+        + setIdEstadoReserva(idEstadoReserva: Integer): void
+        + getDescripcion(): String
+        + setDescripcion(descripcion: String): void
+        + getReservas(): List<Reserva>
+        + setReservas(reservas: List<Reserva>): void
+        + addReserva(reserva: Reserva): Reserva
+        + removeReserva(reserva: Reserva): Reserva
+    }
+
+    class EstadoVuelo {
+        - idEstadoVuelo: Integer
+        - descripcion: String
+        - estado: String
+        - vuelos: List<Vuelo>
+        + getIdEstadoVuelo(): Integer
+        + setIdEstadoVuelo(idEstadoVuelo: Integer): void
+        + getDescripcion(): String
+        + setDescripcion(descripcion: String): void
+        + getEstado(): String
+        + setEstado(estado: String): void
+        + getVuelos(): List<Vuelo>
+        + setVuelos(vuelos: List<Vuelo>): void
+        + addVuelo(vuelo: Vuelo): Vuelo
+        + removeVuelo(vuelo: Vuelo): Vuelo
+    }
+
+    class Fabricante {
+        - idFabricante: Integer
+        - nombre: String
+        - modeloAvions: List<ModeloAvion>
+        + getIdFabricante(): Integer
+        + setIdFabricante(idFabricante: Integer): void
+        + getNombre(): String
+        + setNombre(nombre: String): void
+        + getModeloAvions(): List<ModeloAvion>
+        + setModeloAvions(modeloAvions: List<ModeloAvion>): void
+        + addModeloAvion(modeloAvion: ModeloAvion): ModeloAvion
+        + removeModeloAvion(modeloAvion: ModeloAvion): ModeloAvion
+    }
+
+    class Itinerario {
+        - idItinerario: Integer
+        - fechaCreacion: Timestamp
+        - horaLlegada: Timestamp
+        - horaSalida: Timestamp
+        - numeroEscalas: Integer
+        - precioBase: Integer
+        - aeropuertoDestino: Aeropuerto
+        - aeropuertoOrigen: Aeropuerto
+        - itinerarioVuelos: List<ItinerarioVuelo>
+        - reservaItinerarios: List<ReservaItinerario>
+        + getIdItinerario(): Integer
+        + setIdItinerario(idItinerario: Integer): void
+        + getFechaCreacion(): Timestamp
+        + setFechaCreacion(fechaCreacion: Timestamp): void
+        + getHoraLlegada(): Timestamp
+        + setHoraLlegada(horaLlegada: Timestamp): void
+        + getHoraSalida(): Timestamp
+        + setHoraSalida(horaSalida: Timestamp): void
+        + getNumeroEscalas(): Integer
+        + setNumeroEscalas(numeroEscalas: Integer): void
+        + getPrecioBase(): Integer
+        + setPrecioBase(precioBase: Integer): void
+        + getAeropuertoDestino(): Aeropuerto
+        + setAeropuertoDestino(aeropuertoDestino: Aeropuerto): void
+        + getAeropuertoOrigen(): Aeropuerto
+        + setAeropuertoOrigen(aeropuertoOrigen: Aeropuerto): void
+        + getItinerarioVuelos(): List<ItinerarioVuelo>
+        + setItinerarioVuelos(itinerarioVuelos: List<ItinerarioVuelo>): void
+        + addItinerarioVuelo(itinerarioVuelo: ItinerarioVuelo): ItinerarioVuelo
+        + removeItinerarioVuelo(itinerarioVuelo: ItinerarioVuelo): ItinerarioVuelo
+        + getReservaItinerarios(): List<ReservaItinerario>
+        + setReservaItinerarios(reservaItinerarios: List<ReservaItinerario>): void
+        + addReservaItinerario(reservaItinerario: ReservaItinerario): ReservaItinerario
+        + removeReservaItinerario(reservaItinerario: ReservaItinerario): ReservaItinerario
+    }
+
+    class ItinerarioTarifa {
+        - idItinerarioTarifa: Integer
+        - itinerario: Itinerario
+        - tarifa: Tarifa
+        - precio: BigDecimal
+        + getIdItinerarioTarifa(): Integer
+        + setIdItinerarioTarifa(idItinerarioTarifa: Integer): void
+        + getItinerario(): Itinerario
+        + setItinerario(itinerario: Itinerario): void
+        + getTarifa(): Tarifa
+        + setTarifa(tarifa: Tarifa): void
+        + getPrecio(): BigDecimal
+        + setPrecio(precio: BigDecimal): void
+    }
+
+    class ItinerarioVuelo {
+        - idItinerarioVuelo: Integer
+        - orden: Integer
+        - tipoConexion: String
+        - itinerario: Itinerario
+        - vuelo: Vuelo
+        + getIdItinerarioVuelo(): Integer
+        + setIdItinerarioVuelo(idItinerarioVuelo: Integer): void
+        + getOrden(): Integer
+        + setOrden(orden: Integer): void
+        + getTipoConexion(): String
+        + setTipoConexion(tipoConexion: String): void
+        + getItinerario(): Itinerario
+        + setItinerario(itinerario: Itinerario): void
+        + getVuelo(): Vuelo
+        + setVuelo(vuelo: Vuelo): void
+    }
+
+    class MetodoPago {
+        - idMetodoPago: Integer
+        - descripcion: String
+        - pagos: List<Pago>
+        + getIdMetodoPago(): Integer
+        + setIdMetodoPago(idMetodoPago: Integer): void
+        + getDescripcion(): String
+        + setDescripcion(descripcion: String): void
+        + getPagos(): List<Pago>
+        + setPagos(pagos: List<Pago>): void
+        + addPago(pago: Pago): Pago
+        + removePago(pago: Pago): Pago
+    }
+
+    class ModeloAvion {
+        - idModelo: Integer
+        - nombre: String
+        - avions: List<Avion>
+        - fabricante: Fabricante
+        + getIdModelo(): Integer
+        + setIdModelo(idModelo: Integer): void
+        + getNombre(): String
+        + setNombre(nombre: String): void
+        + getAvions(): List<Avion>
+        + setAvions(avions: List<Avion>): void
+        + addAvion(avion: Avion): Avion
+        + removeAvion(avion: Avion): Avion
+        + getFabricante(): Fabricante
+        + setFabricante(fabricante: Fabricante): void
+    }
+
+    class Notificacion {
+        - idNotificacion: Integer
+        - fecha: Timestamp
+        - leido: Boolean
+        - mensaje: String
+        - titulo: String
+        - usuario: Usuario
+        + getIdNotificacion(): Integer
+        + setIdNotificacion(idNotificacion: Integer): void
+        + getFecha(): Timestamp
+        + setFecha(fecha: Timestamp): void
+        + getLeido(): Boolean
+        + setLeido(leido: Boolean): void
+        + getMensaje(): String
+        + setMensaje(mensaje: String): void
+        + getTitulo(): String
+        + setTitulo(titulo: String): void
+        + getUsuario(): Usuario
+        + setUsuario(usuario: Usuario): void
+    }
+
+    class Pago {
+        - idPago: Integer
+        - fecha: Timestamp
+        - montoPagado: BigDecimal
+        - metodoPago: MetodoPago
+        - reserva: Reserva
+        + getIdPago(): Integer
+        + setIdPago(idPago: Integer): void
+        + getFecha(): Timestamp
+        + setFecha(fecha: Timestamp): void
+        + getMontoPagado(): BigDecimal
+        + setMontoPagado(montoPagado: BigDecimal): void
+        + getMetodoPago(): MetodoPago
+        + setMetodoPago(metodoPago: MetodoPago): void
+        + getReserva(): Reserva
+        + setReserva(reserva: Reserva): void
+    }
+
+    class Pai {
+        - idPais: Integer
+        - nombre: String
+        - continente: Continente
+        - ciudads: List<Ciudad>
+        + getIdPais(): Integer
+        + setIdPais(idPais: Integer): void
+        + getNombre(): String
+        + setNombre(nombre: String): void
+        + getCiudads(): List<Ciudad>
+        + setCiudads(ciudads: List<Ciudad>): void
+        + getContinente(): Continente
+        + setContinente(continente: Continente): void
+        + addCiudad(ciudad: Ciudad): Ciudad
+        + removeCiudad(ciudad: Ciudad): Ciudad
+    }
+
+    class Pasajero {
+        - rut: String
+        - fechaNacimiento: Date
+        - nacionalidad: String
+        - numeroDocumento: String
+        - tipoDocumento: String
+        - equipajes: List<Equipaje>
+        - usuario: Usuario
+        - reservas: List<Reserva>
+        + getRut(): String
+        + setRut(rut: String): void
+        + getFechaNacimiento(): Date
+        + setFechaNacimiento(fechaNacimiento: Date): void
+        + getNacionalidad(): String
+        + setNacionalidad(nacionalidad: String): void
+        + getNumeroDocumento(): String
+        + setNumeroDocumento(numeroDocumento: String): void
+        + getTipoDocumento(): String
+        + setTipoDocumento(tipoDocumento: String): void
+        + getEquipajes(): List<Equipaje>
+        + setEquipajes(equipajes: List<Equipaje>): void
+        + addEquipaje(equipaje: Equipaje): Equipaje
+        + removeEquipaje(equipaje: Equipaje): Equipaje
+        + getUsuario(): Usuario
+        + setUsuario(usuario: Usuario): void
+        + getReservas(): List<Reserva>
+        + setReservas(reservas: List<Reserva>): void
+        + addReserva(reserva: Reserva): Reserva
+        + removeReserva(reserva: Reserva): Reserva
+    }
+
+    class PasajeroReserva {
+        - idPasajeroReserva: Integer
+        - reserva: Reserva
+        - pasajero: Pasajero
+        + getId(): Integer
+        + setId(id: Integer): void
+        + getReserva(): Reserva
+        + setReserva(reserva: Reserva): void
+        + getPasajero(): Pasajero
+        + setPasajero(pasajero: Pasajero): void
+    }
+
+    class PersonalAdministrativo {
+        - rut: String
+        - cargo: String
+        - departamento: String
+        - experienciaAnios: Integer
+        - fechaContratacion: Timestamp
+        - nivelAcceso: String
+        - tituloProfesional: String
+        - usuario: Usuario
+        + getRut(): String
+        + setRut(rut: String): void
+        + getCargo(): String
+        + setCargo(cargo: String): void
+        + getDepartamento(): String
+        + setDepartamento(departamento: String): void
+        + getExperienciaAnios(): Integer
+        + setExperienciaAnios(experienciaAnios: Integer): void
+        + getFechaContratacion(): Timestamp
+        + setFechaContratacion(fechaContratacion: Timestamp): void
+        + getNivelAcceso(): String
+        + setNivelAcceso(nivelAcceso: String): void
+        + getTituloProfesional(): String
+        + setTituloProfesional(tituloProfesional: String): void
+        + getUsuario(): Usuario
+        + setUsuario(usuario: Usuario): void
+    }
+
+    class Piloto {
+        - rut: String
+        - licencia: String
+        - experienciaAnos: int
+        - especializaciones: String
+        - usuario: Usuario
+        + getRut(): String
+        + setRut(rut: String): void
+        + getLicencia(): String
+        + setLicencia(licencia: String): void
+        + getExperienciaAnos(): int
+        + setExperienciaAnos(experienciaAnos: int): void
+        + getEspecializaciones(): String
+        + setEspecializaciones(especializaciones: String): void
+        + getUsuario(): Usuario
+        + setUsuario(usuario: Usuario): void
+    }
+
+    class PrecioAsiento {
+        - idPrecioAsiento: Integer
+        - precio: Integer
+        - claseAsiento: ClaseAsiento
+        - vuelo: Vuelo
+        + getIdPrecioAsiento(): Integer
+        + setIdPrecioAsiento(idPrecioAsiento: Integer): void
+        + getPrecio(): Integer
+        + setPrecio(precio: Integer): void
+        + getClaseAsiento(): ClaseAsiento
+        + setClaseAsiento(claseAsiento: ClaseAsiento): void
+        + getVuelo(): Vuelo
+        + setVuelo(vuelo: Vuelo): void
+    }
+
+    class PuertaEmbarque {
+        - idPuerta: Integer
+        - codigoPuerta: String
+        - terminal: String
+        - asignacionPuertas: List<AsignacionPuerta>
+        - aeropuerto: Aeropuerto
+        + getIdPuerta(): Integer
+        + setIdPuerta(idPuerta: Integer): void
+        + getCodigoPuerta(): String
+        + setCodigoPuerta(codigoPuerta: String): void
+        + getTerminal(): String
+        + setTerminal(terminal: String): void
+        + getAsignacionPuertas(): List<AsignacionPuerta>
+        + setAsignacionPuertas(asignacionPuertas: List<AsignacionPuerta>): void
+        + addAsignacionPuerta(asignacionPuerta: AsignacionPuerta): AsignacionPuerta
+        + removeAsignacionPuerta(asignacionPuerta: AsignacionPuerta): AsignacionPuerta
+        + getAeropuerto(): Aeropuerto
+        + setAeropuerto(aeropuerto: Aeropuerto): void
+    }
+
+    class Reserva {
+        - idReserva: Integer
+        - fechaReserva: Timestamp
+        - codigoReserva: String
+        - total: BigDecimal
+        - checkins: List<Checkin>
+        - equipajes: List<Equipaje>
+        - pagos: List<Pago>
+        - estadoReservaBean: EstadoReserva
+        - pasajero: Pasajero
+        - reservaAsientos: List<ReservaAsiento>
+        - reservaItinerarios: List<ReservaItinerario>
+        - pasajerosReserva: List<PasajeroReserva>
+        + getIdReserva(): Integer
+        + setIdReserva(idReserva: Integer): void
+        + getFechaReserva(): Timestamp
+        + setFechaReserva(fechaReserva: Timestamp): void
+        + setCodigoReserva(codigoReserva: String): void
+        + getCodigoReserva(): String
+        + getTotal(): BigDecimal
+        + setTotal(total: BigDecimal): void
+        + getPasajerosReserva(): List<PasajeroReserva>
+        + setPasajerosReserva(pasajerosReserva: List<PasajeroReserva>): void
+        + getCheckins(): List<Checkin>
+        + setCheckins(checkins: List<Checkin>): void
+        + addCheckin(checkin: Checkin): Checkin
+        + removeCheckin(checkin: Checkin): Checkin
+        + getEquipajes(): List<Equipaje>
+        + setEquipajes(equipajes: List<Equipaje>): void
+        + addEquipaje(equipaje: Equipaje): Equipaje
+        + removeEquipaje(equipaje: Equipaje): Equipaje
+        + getPagos(): List<Pago>
+        + setPagos(pagos: List<Pago>): void
+        + addPago(pago: Pago): Pago
+        + removePago(pago: Pago): Pago
+        + getEstadoReservaBean(): EstadoReserva
+        + setEstadoReservaBean(estadoReservaBean: EstadoReserva): void
+        + getPasajero(): Pasajero
+        + setPasajero(pasajero: Pasajero): void
+        + getReservaAsientos(): List<ReservaAsiento>
+        + setReservaAsientos(reservaAsientos: List<ReservaAsiento>): void
+        + addReservaAsiento(reservaAsiento: ReservaAsiento): ReservaAsiento
+        + removeReservaAsiento(reservaAsiento: ReservaAsiento): ReservaAsiento
+        + getReservaItinerarios(): List<ReservaItinerario>
+        + setReservaItinerarios(reservaItinerarios: List<ReservaItinerario>): void
+        + addReservaItinerario(reservaItinerario: ReservaItinerario): ReservaItinerario
+        + removeReservaItinerario(reservaItinerario: ReservaItinerario): ReservaItinerario
+    }
+
+    class ReservaAsiento {
+        - idReservaAsiento: Integer
+        - rut: String
+        - pasajero: Pasajero
+        - asiento: Asiento
+        - reserva: Reserva
+        - vuelo: Vuelo
+        + getIdReservaAsiento(): Integer
+        + setIdReservaAsiento(idReservaAsiento: Integer): void
+        + getRut(): String
+        + setRut(rut: String): void
+        + getPasajero(): Pasajero
+        + setPasajero(pasajero: Pasajero): void
+        + getAsiento(): Asiento
+        + setAsiento(asiento: Asiento): void
+        + getReserva(): Reserva
+        + setReserva(reserva: Reserva): void
+        + getVuelo(): Vuelo
+        + setVuelo(vuelo: Vuelo): void
+    }
+
+    class ReservaItinerario {
+        - idReservaItinerario: Integer
+        - itinerario: Itinerario
+        - reserva: Reserva
+        - itinerarioTarifa: ItinerarioTarifa
+        + getIdReservaItinerario(): Integer
+        + setIdReservaItinerario(idReservaItinerario: Integer): void
+        + getItinerario(): Itinerario
+        + setItinerario(itinerario: Itinerario): void
+        + getReserva(): Reserva
+        + setReserva(reserva: Reserva): void
+        + getItinerarioTarifa(): ItinerarioTarifa
+        + setItinerarioTarifa(itinerarioTarifa: ItinerarioTarifa): void
+    }
+
+    class Role {
+        - idRol: Integer
+        - descripcion: String
+        - nombre: String
+        - rolusuarios: List<Rolusuario>
+        - usuarios: List<Usuario>
+        + getIdRol(): Integer
+        + setIdRol(idRol: Integer): void
+        + getDescripcion(): String
+        + setDescripcion(descripcion: String): void
+        + getNombre(): String
+        + setNombre(nombre: String): void
+        + getRolusuarios(): List<Rolusuario>
+        + setRolusuarios(rolusuarios: List<Rolusuario>): void
+        + addRolusuario(rolusuario: Rolusuario): Rolusuario
+        + removeRolusuario(rolusuario: Rolusuario): Rolusuario
+        + getUsuarios(): List<Usuario>
+        + setUsuarios(usuarios: List<Usuario>): void
+    }
+
+    class Rolusuario {
+        - id: Integer
+        - usuario: Usuario
+        - role: Role
+        + getId(): Integer
+        + setId(id: Integer): void
+        + getRole(): Role
+        + setRole(role: Role): void
+        + getUsuario(): Usuario
+        + setUsuario(usuario: Usuario): void
+    }
+
+    class SegmentoVuelo {
+        - idSegmento: Integer
+        - horaLlegada: Timestamp
+        - horaSalida: Timestamp
+        - ordenSegmento: Integer
+        - asignacionPuertas: List<AsignacionPuerta>
+        - aeropuertoDestino: Aeropuerto
+        - aeropuertoOrigen: Aeropuerto
+        - vuelo: Vuelo
+        + getIdSegmento(): Integer
+        + setIdSegmento(idSegmento: Integer): void
+        + setHoraLlegada(horaLlegada: Timestamp): void
+        + getHoraLlegada(): Timestamp
+        + setHoraSalida(horaSalida: Timestamp): void
+        + getHoraSalida(): Timestamp
+        + getHoraSalidaDate(): Date
+        + setHoraSalidaDate(date: Date): void
+        + getHoraLlegadaDate(): Date
+        + setHoraLlegadaDate(date: Date): void
+        + getOrdenSegmento(): Integer
+        + setOrdenSegmento(ordenSegmento: Integer): void
+        + getAsignacionPuertas(): List<AsignacionPuerta>
+        + setAsignacionPuertas(asignacionPuertas: List<AsignacionPuerta>): void
+        + getHoraSalidaAsLocalDateTime(): LocalDateTime
+        + getHoraLlegadaAsLocalDateTime(): LocalDateTime
+        + addAsignacionPuerta(asignacionPuerta: AsignacionPuerta): AsignacionPuerta
+        + removeAsignacionPuerta(asignacionPuerta: AsignacionPuerta): AsignacionPuerta
+        + getAeropuertoDestino(): Aeropuerto
+        + setAeropuertoDestino(aeropuertoDestino: Aeropuerto): void
+        + getAeropuertoOrigen(): Aeropuerto
+        + setAeropuertoOrigen(aeropuertoOrigen: Aeropuerto): void
+        + getVuelo(): Vuelo
+        + setVuelo(vuelo: Vuelo): void
+        + getPuertasEmbarque(): String
+    }
+
+    class Tarifa {
+        - idTarifa: Integer
+        - nombre: String
+        - tarifaCaracteristicas: List<TarifaCaracteristica>
+        + getIdTarifa(): Integer
+        + setIdTarifa(idTarifa: Integer): void
+        + getNombre(): String
+        + setNombre(nombre: String): void
+        + getTarifaCaracteristicas(): List<TarifaCaracteristica>
+        + setTarifaCaracteristicas(tarifaCaracteristicas: List<TarifaCaracteristica>): void
+    }
+
+    class TarifaCaracteristica {
+        - idTarifaCaracteristica: Integer
+        - tarifa: Tarifa
+        - caracteristica: CaracteristicaTarifa
+        - valor: String
+        - valorBool: Boolean
+        - valorInt: Integer
+        + getIdTarifaCaracteristica(): Integer
+        + setIdTarifaCaracteristica(idTarifaCaracteristica: Integer): void
+        + getTarifa(): Tarifa
+        + setTarifa(tarifa: Tarifa): void
+        + getCaracteristica(): CaracteristicaTarifa
+        + setCaracteristica(caracteristica: CaracteristicaTarifa): void
+        + getValor(): String
+        + setValor(valor: String): void
+        + getValorBool(): Boolean
+        + getValorInt(): Integer
+        + setValorBool(valorBool: Boolean): void
+        + setValorInt(valorInt: Integer): void
+    }
+
+    class TipoEquipaje {
+        - idTipo: Integer
+        - nombre: String
+        - equipajes: List<Equipaje>
+        + getIdTipo(): Integer
+        + setIdTipo(idTipo: Integer): void
+        + getNombre(): String
+        + setNombre(nombre: String): void
+        + getEquipajes(): List<Equipaje>
+        + setEquipajes(equipajes: List<Equipaje>): void
+        + addEquipaje(equipaje: Equipaje): Equipaje
+        + removeEquipaje(equipaje: Equipaje): Equipaje
+    }
+
+    class TipoTurno {
+        - idTipo: Integer
+        - nombre: String
+        - turnos: List<Turno>
+        + getIdTipo(): Integer
+        + setIdTipo(idTipo: Integer): void
+        + getNombre(): String
+        + setNombre(nombre: String): void
+        + getTurnos(): List<Turno>
+        + setTurnos(turnos: List<Turno>): void
+        + addTurno(turno: Turno): Turno
+        + removeTurno(turno: Turno): Turno
+    }
+
+    class Tripulacion {
+        - rut: String
+        - cargo: String
+        - fechaIngreso: Timestamp
+        - usuario: Usuario
+        - turnoTripulacions1: List<TurnoTripulacion>
+        + getRut(): String
+        + setRut(rut: String): void
+        + getCargo(): String
+        + setCargo(cargo: String): void
+        + getFechaIngreso(): Timestamp
+        + setFechaIngreso(fechaIngreso: Timestamp): void
+        + getUsuario(): Usuario
+        + setUsuario(usuario: Usuario): void
+        + getTurnoTripulacions1(): List<TurnoTripulacion>
+        + setTurnoTripulacions1(turnoTripulacions1: List<TurnoTripulacion>): void
+        + addTurnoTripulacions1(turnoTripulacions1: TurnoTripulacion): TurnoTripulacion
+        + removeTurnoTripulacions1(turnoTripulacions1: TurnoTripulacion): TurnoTripulacion
+    }
+
+    class Turno {
+        - idTurno: Integer
+        - fecha: Date
+        - horaFin: Timestamp
+        - horaInicio: Timestamp
+        - tipoTurno: TipoTurno
+        - vuelo: Vuelo
+        - turnoTripulacions1: List<TurnoTripulacion>
+        + getIdTurno(): Integer
+        + setIdTurno(idTurno: Integer): void
+        + getFecha(): Date
+        + setFecha(fecha: Date): void
+        + getHoraFin(): Timestamp
+        + setHoraFin(horaFin: Timestamp): void
+        + getHoraInicio(): Timestamp
+        + setHoraInicio(horaInicio: Timestamp): void
+        + getTipoTurno(): TipoTurno
+        + setTipoTurno(tipoTurno: TipoTurno): void
+        + getVuelo(): Vuelo
+        + setVuelo(vuelo: Vuelo): void
+        + getTurnoTripulacions1(): List<TurnoTripulacion>
+        + setTurnoTripulacions1(turnoTripulacions1: List<TurnoTripulacion>): void
+        + addTurnoTripulacions1(turnoTripulacions1: TurnoTripulacion): TurnoTripulacion
+        + removeTurnoTripulacions1(turnoTripulacions1: TurnoTripulacion): TurnoTripulacion
+    }
+
+    class TurnoTripulacion {
+        - idTurnoTripulacion: Integer
+        - tripulacion1: Tripulacion
+        - turno1: Turno
+        + getIdTurnoTripulacion(): Integer
+        + setIdTurnoTripulacion(idTurnoTripulacion: Integer): void
+        + getTripulacion1(): Tripulacion
+        + setTripulacion1(tripulacion1: Tripulacion): void
+        + getTurno1(): Turno
+        + setTurno1(turno1: Turno): void
+    }
+
+    class Usuario {
+        - rut: String
+        - nombre: String
+        - apellido: String
+        - correoElectronico: String
+        - telefono: String
+        - documentoIdentidad: String
+        - fechaNacimiento: Date
+        - contrasena: String
+        - fechaRegistro: Timestamp
+        - rolusuarios: List<Rolusuario>
+        - roles: List<Role>
+        + getRut(): String
+        + setRut(rut: String): void
+        + getApellido(): String
+        + setApellido(apellido: String): void
+        + getContrasena(): String
+        + setContrasena(contrasena: String): void
+        + getCorreoElectronico(): String
+        + setCorreoElectronico(correoElectronico: String): void
+        + getDocumentoIdentidad(): String
+        + setDocumentoIdentidad(documentoIdentidad: String): void
+        + getFechaNacimiento(): Date
+        + setFechaNacimiento(fechaNacimiento: Date): void
+        + getFechaRegistro(): Timestamp
+        + setFechaRegistro(fechaRegistro: Timestamp): void
+        + getNombre(): String
+        + setNombre(nombre: String): void
+        + getTelefono(): String
+        + setTelefono(telefono: String): void
+        + getRolusuarios(): List<Rolusuario>
+        + setRolusuarios(rolusuarios: List<Rolusuario>): void
+        + addRolusuario(rolusuario: Rolusuario): Rolusuario
+        + removeRolusuario(rolusuario: Rolusuario): Rolusuario
+        + getRoles(): List<Role>
+        + setRoles(roles: List<Role>): void
+    }
+
+    class Vuelo {
+        - idVuelo: Integer
+        - fechaHoraLlegada: Timestamp
+        - fechaHoraSalida: Timestamp
+        - numeroVuelo: String
+        - itinerarioVuelos: List<ItinerarioVuelo>
+        - precioAsientos: List<PrecioAsiento>
+        - reservaAsientos: List<ReservaAsiento>
+        - segmentoVuelos: List<SegmentoVuelo>
+        - turnos: List<Turno>
+        - aerolinea: Aerolinea
+        - avion: Avion
+        - estadoVuelo: EstadoVuelo
+        - piloto: Piloto
+        + getIdVuelo(): Integer
+        + setIdVuelo(idVuelo: Integer): void
+        + getFechaHoraLlegada(): Timestamp
+        + setFechaHoraLlegada(fechaHoraLlegada: Timestamp): void
+        + getFechaHoraSalida(): Timestamp
+        + setFechaHoraSalida(fechaHoraSalida: Timestamp): void
+        + getNumeroVuelo(): String
+        + setNumeroVuelo(numeroVuelo: String): void
+        + getItinerarioVuelos(): List<ItinerarioVuelo>
+        + setItinerarioVuelos(itinerarioVuelos: List<ItinerarioVuelo>): void
+        + addItinerarioVuelo(itinerarioVuelo: ItinerarioVuelo): ItinerarioVuelo
+        + removeItinerarioVuelo(itinerarioVuelo: ItinerarioVuelo): ItinerarioVuelo
+        + getPrecioAsientos(): List<PrecioAsiento>
+        + setPrecioAsientos(precioAsientos: List<PrecioAsiento>): void
+        + addPrecioAsiento(precioAsiento: PrecioAsiento): PrecioAsiento
+        + removePrecioAsiento(precioAsiento: PrecioAsiento): PrecioAsiento
+        + getReservaAsientos(): List<ReservaAsiento>
+        + setReservaAsientos(reservaAsientos: List<ReservaAsiento>): void
+        + addReservaAsiento(reservaAsiento: ReservaAsiento): ReservaAsiento
+        + removeReservaAsiento(reservaAsiento: ReservaAsiento): ReservaAsiento
+        + getSegmentoVuelos(): List<SegmentoVuelo>
+        + setSegmentoVuelos(segmentoVuelos: List<SegmentoVuelo>): void
+        + addSegmentoVuelo(segmentoVuelo: SegmentoVuelo): SegmentoVuelo
+        + removeSegmentoVuelo(segmentoVuelo: SegmentoVuelo): SegmentoVuelo
+        + getTurnos(): List<Turno>
+        + setTurnos(turnos: List<Turno>): void
+        + addTurno(turno: Turno): Turno
+        + removeTurno(turno: Turno): Turno
+        + getAerolinea(): Aerolinea
+        + setAerolinea(aerolinea: Aerolinea): void
+        + getAvion(): Avion
+        + setAvion(avion: Avion): void
+        + getEstadoVuelo(): EstadoVuelo
+        + setEstadoVuelo(estadoVuelo: EstadoVuelo): void
+        + getPiloto(): Piloto
+        + setPiloto(piloto: Piloto): void
+    }
+
+    ' Relaciones entre Entidades
+    Aerolinea "1" -- "*" Vuelo : "vuelos"
+    Aeropuerto "1" -- "*" Itinerario : "itinerarios1 (destino)"
+    Aeropuerto "1" -- "*" Itinerario : "itinerarios2 (origen)"
+    Aeropuerto "1" -- "*" PuertaEmbarque : "puertaEmbarques"
+    Aeropuerto "1" -- "*" SegmentoVuelo : "segmentoVuelos1 (destino)"
+    Aeropuerto "1" -- "*" SegmentoVuelo : "segmentoVuelos2 (origen)"
+    Asiento "*" -- "1" Avion : "avion"
+    Asiento "*" -- "1" ClaseAsiento : "claseAsiento"
+    AsignacionPuerta "*" -- "1" PuertaEmbarque : "puertaEmbarque"
+    AsignacionPuerta "*" -- "1" SegmentoVuelo : "segmentoVuelo"
+    Avion "*" -- "1" ModeloAvion : "modeloAvion"
+    CapacidadClase "*" -- "1" Avion : "avion1"
+    CapacidadClase "*" -- "1" ClaseAsiento : "claseAsiento1"
+    Checkin "*" -- "1" Reserva : "reserva"
+    Ciudad "1" -- "*" Aeropuerto : "aeropuertos"
+    Ciudad "*" -- "1" Pai : "pai"
+    Equipaje "*" -- "1" Pasajero : "pasajero"
+    Equipaje "*" -- "1" Reserva : "reserva"
+    Equipaje "*" -- "1" TipoEquipaje : "tipoEquipaje"
+    Itinerario "1" -- "*" ItinerarioVuelo : "itinerarioVuelos"
+    Itinerario "1" -- "*" ReservaItinerario : "reservaItinerarios"
+    ItinerarioTarifa "*" -- "1" Itinerario : "itinerario"
+    ItinerarioTarifa "*" -- "1" Tarifa : "tarifa"
+    ItinerarioVuelo "*" -- "1" Vuelo : "vuelo"
+    ModeloAvion "*" -- "1" Fabricante : "fabricante"
+    Notificacion "*" -- "1" Usuario : "usuario"
+    Pago "*" -- "1" MetodoPago : "metodoPago"
+    Pago "*" -- "1" Reserva : "reserva"
+    Pai "*" -- "1" Continente : "continente"
+    Pasajero "1" -- "1" Usuario : "usuario"
+    PasajeroReserva "*" -- "1" Reserva : "reserva"
+    PasajeroReserva "*" -- "1" Pasajero : "pasajero"
+    PersonalAdministrativo "1" -- "1" Usuario : "usuario"
+    Piloto "1" -- "1" Usuario : "usuario"
+    PrecioAsiento "*" -- "1" ClaseAsiento : "claseAsiento"
+    PrecioAsiento "*" -- "1" Vuelo : "vuelo"
+    PuertaEmbarque "1" -- "*" AsignacionPuerta : "asignacionPuertas"
+    Reserva "*" -- "1" EstadoReserva : "estadoReservaBean"
+    Reserva "*" -- "1" Pasajero : "pasajero"
+    ReservaAsiento "*" -- "1" Pasajero : "pasajero"
+    ReservaAsiento "*" -- "1" Asiento : "asiento"
+    ReservaAsiento "*" -- "1" Reserva : "reserva"
+    ReservaAsiento "*" -- "1" Vuelo : "vuelo"
+    ReservaItinerario "*" -- "1" Reserva : "reserva"
+    ReservaItinerario "*" -- "1" ItinerarioTarifa : "itinerarioTarifa"
+    Rolusuario "*" -- "1" Usuario : "usuario"
+    Rolusuario "*" -- "1" Role : "role"
+    SegmentoVuelo "1" -- "*" AsignacionPuerta : "asignacionPuertas"
+    SegmentoVuelo "*" -- "1" Vuelo : "vuelo"
+    TarifaCaracteristica "*" -- "1" Tarifa : "tarifa"
+    TarifaCaracteristica "*" -- "1" CaracteristicaTarifa : "caracteristica"
+    Tripulacion "1" -- "1" Usuario : "usuario"
+    Tripulacion "1" -- "*" TurnoTripulacion : "turnoTripulacions1"
+    Turno "*" -- "1" TipoTurno : "tipoTurno"
+    Turno "*" -- "1" Vuelo : "vuelo"
+    TurnoTripulacion "*" -- "1" Turno : "turno1"
+    Usuario "*" -- "*" Role : "roles"
+    Vuelo "*" -- "1" Aerolinea : "aerolinea"
+    Vuelo "*" -- "1" Avion : "avion"
+    Vuelo "*" -- "1" EstadoVuelo : "estadoVuelo"
+    Vuelo "*" -- "1" Piloto : "piloto"
+}
+@enduml

@@ -7,18 +7,7 @@ import java.util.List;
 
 import com.SkyWay.modules.rolusuario.domain.model.Role;
 import com.SkyWay.modules.rolusuario.domain.model.Rolusuario;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.NamedQuery;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
+import jakarta.persistence.*;
 
 
 /**
@@ -61,21 +50,14 @@ public class Usuario implements Serializable {
 	private Timestamp fechaRegistro;
 
 	//bi-directional many-to-one association to Rolusuario
-	@OneToMany(mappedBy="usuario")
-	private List<Rolusuario> rolusuarios;
-
-	//bi-directional many-to-many association to Role
-	@ManyToMany
+	@ManyToMany(fetch = FetchType.EAGER) // Agregado EAGER aquí si necesitas los roles de inmediato
 	@JoinTable(
-			name="rolusuario",
-			joinColumns={
-					@JoinColumn(name="rut_usuario", referencedColumnName="RUT") // Hacemos referencia a la columna correcta
-			},
-			inverseJoinColumns={
-					@JoinColumn(name="id_rol")
-			}
+			name = "rolusuario",
+			joinColumns = @JoinColumn(name = "rut_usuario", referencedColumnName = "RUT"),
+			inverseJoinColumns = @JoinColumn(name = "id_rol")
 	)
 	private List<Role> roles;
+
 
 
 	public Usuario() {
@@ -153,27 +135,6 @@ public class Usuario implements Serializable {
 		this.telefono = telefono;
 	}
 
-	public List<Rolusuario> getRolusuarios() {
-		return this.rolusuarios;
-	}
-
-	public void setRolusuarios(List<Rolusuario> rolusuarios) {
-		this.rolusuarios = rolusuarios;
-	}
-
-	public Rolusuario addRolusuario(Rolusuario rolusuario) {
-		getRolusuarios().add(rolusuario);
-		rolusuario.setUsuario(this);
-
-		return rolusuario;
-	}
-
-	public Rolusuario removeRolusuario(Rolusuario rolusuario) {
-		getRolusuarios().remove(rolusuario);
-		rolusuario.setUsuario(null);
-
-		return rolusuario;
-	}
 
 	public List<Role> getRoles() {
 		return this.roles;

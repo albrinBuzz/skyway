@@ -4,97 +4,166 @@
                 xmlns:f="jakarta.faces.core"
                 xmlns:h="jakarta.faces.html"
                 xmlns:p="http://primefaces.org/ui"
-                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:ui="jakarta.faces.facelets"
                 template="/template/main.xhtml">
 
     <ui:define name="head">
         <title>SkyWay | Registro de Usuario</title>
         <style type="text/css">
             /* ==========================================================================
-               🎨 ESTILOS DARK THEME CORPORATIVO - REGISTRO SKYWAY
+               🎨 ESTILOS DARK THEME CORPORATIVO SKYWAY - REGISTRO TUNED
                ========================================================================== */
+            :root {
+                --sky-bg-dark: #090E1A;
+                --sky-card-bg: #0F172A;
+                --sky-input-bg: #1E293B;
+                --sky-border: rgba(255, 255, 255, 0.12);
+                --sky-blue: #38BDF8;
+                --navy-brand: #2563EB;
+                --navy-hover: #1D4ED8;
+                --text-heading: #F8FAFC;
+                --text-muted: #94A3B8;
+            }
+
             .register-container {
-                max-width: 820px;
+                max-width: 880px;
                 margin: 40px auto;
-                background: #101B33 !important;
-                border: 1px solid #1E3A5C !important;
-                border-radius: 12px !important;
-                padding: 32px !important;
-                box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4) !important;
+                background: var(--sky-card-bg) !important;
+                border: 1px solid var(--sky-border) !important;
+                border-radius: 16px !important;
+                padding: 36px !important;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5) !important;
             }
 
             .register-title {
-                color: #FFFFFF !important;
+                color: var(--text-heading) !important;
                 font-size: 1.5rem !important;
-                font-weight: 700 !important;
+                font-weight: 800 !important;
                 margin-bottom: 24px !important;
-                border-bottom: 1px solid #1E293B !important;
-                padding-bottom: 12px !important;
+                border-bottom: 1px solid var(--sky-border) !important;
+                padding-bottom: 14px !important;
+                display: flex;
+                align-items: center;
+                gap: 10px;
             }
 
             .section-header {
-                color: #94A3B8 !important;
-                font-size: 0.88rem !important;
-                font-weight: 700 !important;
+                color: var(--sky-blue) !important;
+                font-size: 0.78rem !important;
+                font-weight: 800 !important;
                 text-transform: uppercase !important;
-                letter-spacing: 0.8px !important;
-                margin-top: 16px !important;
-                margin-bottom: 12px !important;
+                letter-spacing: 0.05em !important;
+                margin-top: 22px !important;
+                margin-bottom: 14px !important;
+                display: flex;
+                align-items: center;
+                gap: 6px;
             }
 
-            /* Estilos de Inputs / Selects */
             .skyway-field-group {
                 margin-bottom: 16px;
             }
 
             .skyway-label {
                 display: block !important;
-                color: #CBD5E1 !important;
-                font-size: 0.85rem !important;
-                font-weight: 600 !important;
+                color: var(--text-muted) !important;
+                font-size: 0.78rem !important;
+                font-weight: 700 !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.03em !important;
                 margin-bottom: 6px !important;
             }
 
             .register-container .ui-inputfield,
-            .register-container .ui-selectonemenu,
-            .register-container .ui-datepicker input {
-                background: #11263F !important;
-                border: 1px solid #1E3A5C !important;
-                color: #E6EEF7 !important;
-                border-radius: 6px !important;
-                padding: 10px 12px !important;
+            .register-container .ui-selectonemenu {
+                background: var(--sky-input-bg) !important;
+                border: 1px solid var(--sky-border) !important;
+                color: var(--text-heading) !important;
+                border-radius: 8px !important;
+                padding: 10px 14px !important;
                 width: 100% !important;
+                font-size: 0.88rem !important;
             }
 
             .register-container .ui-inputfield:focus,
             .register-container .ui-selectonemenu:focus-within {
-                border-color: #3B82F6 !important;
-                box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25) !important;
+                border-color: var(--sky-blue) !important;
+                box-shadow: 0 0 10px rgba(56, 189, 248, 0.25) !important;
             }
 
-            /* Botón de Acción Principal */
+            /* Botón Principal */
             .btn-skyway-register.ui-button {
-                background: #2563EB !important;
+                background: linear-gradient(135deg, #2563EB, #0284C7) !important;
                 border: none !important;
                 color: #FFFFFF !important;
-                font-weight: 700 !important;
+                font-weight: 800 !important;
                 padding: 14px !important;
                 font-size: 1rem !important;
-                border-radius: 8px !important;
-                box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3) !important;
-                transition: background-color 0.2s ease !important;
+                border-radius: 10px !important;
+                box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35) !important;
+                transition: transform 0.2s ease, box-shadow 0.2s ease !important;
             }
 
             .btn-skyway-register.ui-button:hover {
-                background: #1D4ED8 !important;
+                background: linear-gradient(135deg, #1D4ED8, #0369A1) !important;
+                transform: translateY(-1px);
             }
 
-            /* Sobrescribir popups de PrimeFaces */
-            body .ui-selectonemenu-panel,
+            /* ==========================================================================
+               🛠️ CALENDARIO POPUP TUNED (DATEPICKER)
+               ========================================================================== */
             body .ui-datepicker {
-                background-color: #0D172A !important;
-                border: 1px solid #1E3A5C !important;
-                color: #E6EEF7 !important;
+                background-color: #0F172A !important;
+                border: 1px solid rgba(56, 189, 248, 0.3) !important;
+                border-radius: 12px !important;
+                color: #F8FAFC !important;
+                padding: 12px !important;
+                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7) !important;
+            }
+
+            body .ui-datepicker .ui-datepicker-header {
+                background-color: #090E1A !important;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+                padding: 8px !important;
+                border-radius: 8px !important;
+            }
+
+            body .ui-datepicker .ui-datepicker-title select {
+                background-color: #1E293B !important;
+                color: #38BDF8 !important;
+                border: 1px solid rgba(56, 189, 248, 0.3) !important;
+                border-radius: 6px !important;
+                padding: 3px 6px !important;
+                font-weight: 700 !important;
+            }
+
+            body .ui-datepicker table th {
+                color: #38BDF8 !important;
+                font-weight: 800 !important;
+            }
+
+            body .ui-datepicker table td a {
+                color: #CBD5E1 !important;
+                border-radius: 6px !important;
+                text-align: center !important;
+            }
+
+            body .ui-datepicker table td a:hover {
+                background-color: #2563EB !important;
+                color: #FFFFFF !important;
+            }
+
+            body .ui-datepicker table td a.ui-state-active {
+                background-color: #38BDF8 !important;
+                color: #0F172A !important;
+                font-weight: 800 !important;
+            }
+
+            /* SELECTONEMENU POPUP */
+            body .ui-selectonemenu-panel {
+                background-color: #0F172A !important;
+                border: 1px solid rgba(255, 255, 255, 0.15) !important;
+                border-radius: 8px !important;
             }
 
             body .ui-selectonemenu-panel .ui-selectonemenu-item {
@@ -103,7 +172,7 @@
 
             body .ui-selectonemenu-panel .ui-selectonemenu-item:hover,
             body .ui-selectonemenu-panel .ui-selectonemenu-item.ui-state-highlight {
-                background-color: #1E3A5C !important;
+                background-color: #2563EB !important;
                 color: #FFFFFF !important;
             }
         </style>
@@ -114,20 +183,20 @@
 
         <div class="container">
             <div class="register-container">
-                <div class="register-title d-flex align-items-center">
-                    <i class="pi pi-user-plus text-primary me-2" style="font-size: 1.5rem;"></i>
+                <div class="register-title">
+                    <i class="pi pi-user-plus text-blue-400"></i>
                     Crear Cuenta de Pasajero
                 </div>
 
                 <h:form id="registroForm">
 
-                    <!-- SECCIÓN 1: DATOS PERSONALES Y CUENTA -->
+                    <!-- SECCIÓN 1: DATOS PERSONALES -->
                     <div class="section-header">
-                        <i class="pi pi-id-card me-1"></i> Información Personal y Acceso
+                        <i class="pi pi-id-card"></i> Información Personal y Acceso
                     </div>
 
                     <div class="row g-3">
-                        <!-- RUT / Identificación principal -->
+                        <!-- RUT -->
                         <div class="col-md-6 skyway-field-group">
                             <p:outputLabel for="rutUsuario" value="RUT / Identificador de Cuenta" styleClass="skyway-label"/>
                             <p:inputText id="rutUsuario" value="#{usuarioBean.usuario.rut}" required="true"
@@ -140,7 +209,7 @@
                             <p:outputLabel for="nombre" value="Nombre" styleClass="skyway-label"/>
                             <p:inputText id="nombre" value="#{usuarioBean.usuario.nombre}" required="true"
                                          requiredMessage="El nombre es obligatorio"
-                                         placeholder="Ingresa tu nombre"/>
+                                         placeholder="Ej: Cristóbal"/>
                         </div>
 
                         <!-- Apellido -->
@@ -148,15 +217,24 @@
                             <p:outputLabel for="apellido" value="Apellido" styleClass="skyway-label"/>
                             <p:inputText id="apellido" value="#{usuarioBean.usuario.apellido}" required="true"
                                          requiredMessage="El apellido es obligatorio"
-                                         placeholder="Ingresa tu apellido"/>
+                                         placeholder="Ej: Román"/>
                         </div>
 
-                        <!-- Fecha Nacimiento -->
+                        <!-- Fecha Nacimiento (DatePicker Tuned con Mayoría de Edad) -->
                         <div class="col-md-6 skyway-field-group">
                             <p:outputLabel for="fechaNacimiento" value="Fecha de Nacimiento" styleClass="skyway-label"/>
-                            <p:datePicker id="fechaNacimiento" value="#{usuarioBean.usuario.fechaNacimiento}"
-                                          pattern="dd/MM/yyyy" monthNavigator="true" yearNavigator="true"
-                                          yearRange="1930:2026" placeholder="DD/MM/AAAA" required="true"
+                            <p:datePicker id="fechaNacimiento"
+                                          value="#{usuarioBean.usuario.fechaNacimiento}"
+                                          pattern="dd/MM/yyyy"
+                                          mask="true"
+                                          monthNavigator="true"
+                                          yearNavigator="true"
+                                          yearRange="c-100:c-18"
+                                          maxdate="#{usuarioBean.fechaMaxMayorEdad}"
+                                          showIcon="true"
+                                          showButtonBar="true"
+                                          placeholder="DD/MM/AAAA"
+                                          required="true"
                                           requiredMessage="La fecha de nacimiento es obligatoria"/>
                         </div>
 
@@ -165,21 +243,21 @@
                             <p:outputLabel for="correoElectronico" value="Correo Electrónico" styleClass="skyway-label"/>
                             <p:inputText id="correoElectronico" value="#{usuarioBean.usuario.correoElectronico}" required="true"
                                          requiredMessage="El correo electrónico es obligatorio"
-                                         placeholder="ejemplo@correo.com"/>
+                                         placeholder="ejemplo@correo.cl"/>
                         </div>
 
-                        <!-- Teléfono -->
+                        <!-- Teléfono Móvil (Chile) -->
                         <div class="col-md-6 skyway-field-group">
-                            <p:outputLabel for="telefono" value="Teléfono" styleClass="skyway-label"/>
-                            <p:inputMask id="telefono" mask="(99) 9999-9999" value="#{usuarioBean.usuario.telefono}"
+                            <p:outputLabel for="telefono" value="Teléfono Móvil (Chile)" styleClass="skyway-label"/>
+                            <p:inputMask id="telefono" mask="+56 9 9999 9999" value="#{usuarioBean.usuario.telefono}"
                                          required="true" requiredMessage="El teléfono es obligatorio"
-                                         placeholder="(56) 91234-5678"/>
+                                         placeholder="+56 9 1234 5678"/>
                         </div>
                     </div>
 
                     <!-- SECCIÓN 2: DOCUMENTACIÓN Y NACIONALIDAD -->
-                    <div class="section-header my-3">
-                        <i class="pi pi-globe me-1"></i> Documento de Viaje y Nacionalidad
+                    <div class="section-header">
+                        <i class="pi pi-globe"></i> Documento de Viaje y Nacionalidad
                     </div>
 
                     <div class="row g-3">
@@ -200,7 +278,7 @@
                             <p:outputLabel for="documentoIdentidad" value="Número de Documento" styleClass="skyway-label"/>
                             <p:inputText id="documentoIdentidad" value="#{usuarioBean.usuario.documentoIdentidad}" required="true"
                                          requiredMessage="El número de documento es obligatorio"
-                                         placeholder="N° Pasaporte o DNI"/>
+                                         placeholder="Ej: 12345678-9 o A1234567"/>
                         </div>
 
                         <!-- Nacionalidad -->
@@ -227,9 +305,9 @@
                         </div>
                     </div>
 
-                    <!-- SECCIÓN 3: CONTRASEÑA -->
-                    <div class="section-header my-3">
-                        <i class="pi pi-lock me-1"></i> Seguridad
+                    <!-- SECCIÓN 3: SEGURIDAD -->
+                    <div class="section-header">
+                        <i class="pi pi-lock"></i> Seguridad y Acceso
                     </div>
 
                     <div class="row g-3">
@@ -249,8 +327,9 @@
                     </div>
 
                     <!-- BOTÓN PRINCIPAL -->
-                    <div class="mt-4">
+                    <div class="mt-4 pt-2">
                         <p:commandButton value="Crear Cuenta de Pasajero" action="#{usuarioBean.registrar}"
+                                         icon="pi pi-check-circle"
                                          styleClass="btn-skyway-register w-100" update=":growl @form"/>
                     </div>
 
