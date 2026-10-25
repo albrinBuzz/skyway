@@ -8,6 +8,7 @@ import com.SkyWay.modules.reservaasiento.domain.service.AsientoCacheService;
 import com.SkyWay.util.Logger;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.faces.context.ExternalContext;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
@@ -39,12 +40,17 @@ public class PagoExitosoController implements Serializable {
         FacesContext facesContext = FacesContext.getCurrentInstance();
         if (facesContext == null || facesContext.getExternalContext() == null) return;
 
-        Map<String, String> params = facesContext.getExternalContext().getRequestParameterMap();
-        String idReservaParam = params.get("idReserva");
+        ExternalContext externalContext = facesContext.getExternalContext();
+        Map<String, Object> sessionMap = externalContext.getSessionMap();
 
-        if (idReservaParam != null && !idReservaParam.isBlank()) {
+        // 🔍 RECUPERAR EL ID DESDE LA SESIÓN DE JSF
+        Integer idReserva = (Integer) sessionMap.get("ULTIMO_ID_RESERVA");
+
+        if (idReserva != null) {
             try {
-                Integer idReserva = Integer.parseInt(idReservaParam.trim());
+                // 🧹 BORRAR DE INMEDIATO DE LA SESIÓN PARA EVITAR RECARGAS MALICIOSAS O REUTILIZACIÓN
+                sessionMap.remove("ULTIMO_ID_RESERVA");
+
                 this.reserva = reservaService.guardarOGenerarPnr(idReserva);
 
                 if (this.reserva != null) {
@@ -52,13 +58,12 @@ public class PagoExitosoController implements Serializable {
                     emailReservaService.enviarComprobanteReservaAsync(this.reserva);
 
                     // 1. Limpiar la memoria del CacheService (WebSockets / RAM)
-                    String sessionId = facesContext.getExternalContext().getSessionId(false);
+                    String sessionId = externalContext.getSessionId(false);
                     if (sessionId != null) {
                         asientoCacheService.liberarTodosLosAsientosDeSesion(sessionId);
                     }
 
-                    // 🧹 2. PURGA COMPLETA DE LA SESIÓN DE JSF (MANDATORIO PARA PERMITIR NUEVAS COMPRAS)
-                    Map<String, Object> sessionMap = facesContext.getExternalContext().getSessionMap();
+                    // 🧹 2. PURGA DE LOS DATOS DE COMPRA TEMPORALES
                     sessionMap.remove("asientosSeleccionados");
                     sessionMap.remove("itinerarios");
                     sessionMap.remove("tarifasItinerios");
@@ -68,11 +73,14 @@ public class PagoExitosoController implements Serializable {
                     sessionMap.remove("SOLICITUD_RESERVA_PENDIENTE");
                     sessionMap.remove("ultimaBusquedaAsientosQuery");
 
-                    Logger.logInfo("🧹 [PagoExitosoController] Sesión de compra de JSF limpiada exitosamente para futuras reservas.");
+                    Logger.logInfo("🧹 [PagoExitosoController] Reserva cargada desde sesión de forma segura.");
                 }
             } catch (Exception e) {
-                Logger.logError("Error al cargar comprobante: " + e.getMessage());
+                Logger.logError("Error al cargar comprobante desde sesión: " + e.getMessage());
             }
+        } else {
+            Logger.logWarn("⚠️ Intento de acceso a pago-exitoso sin ID en sesión o por recarga directa.");
+            // ❌ Ya no hacemos redirect aquí dentro para evitar el conflicto de commit.
         }
     }
 

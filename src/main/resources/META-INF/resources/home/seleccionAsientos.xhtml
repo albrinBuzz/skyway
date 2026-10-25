@@ -737,13 +737,13 @@
             var intervaloTimer = null;
 
             function conectarWebSocket() {
-                console.log("🔌 [WebSocket] Conectando SockJS en '/ws-asientos'...");
+
                 var socket = new SockJS('/ws-asientos');
                 stompClient = Stomp.over(socket);
                 stompClient.debug = null;
 
                 stompClient.connect({}, function (frame) {
-                    console.log("✅ [WebSocket] Conectado.");
+
                     suscribirAEnlaceVuelo(idVueloActual);
                 }, function (error) {
                     console.error("❌ [WebSocket] Error de conexión:", error);
@@ -757,7 +757,7 @@
 
                 idVueloActual = idVuelo;
                 var canal = '/topic/vuelo/' + idVueloActual;
-                console.log("📡 [WebSocket] Suscribiéndose a:", canal);
+
 
                 suscripcionActual = stompClient.subscribe(canal, function (mensaje) {
                     actualizarMapaRemoto();
