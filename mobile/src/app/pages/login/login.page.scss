@@ -1,18 +1,477 @@
-ion-content { --background: #101e3b; }
-.login-wrap { max-width: 490px; margin: auto; min-height: 100%; padding: max(36px, env(safe-area-inset-top)) 24px 28px; color: #fff; }
-.brand { display: flex; gap: 10px; align-items: center; font-size: 34px; font-weight: 800; letter-spacing: -1px; }
-.brand ion-icon { transform: rotate(-25deg); font-size: 29px; color: #82acef; }
-.brand-dot { color: #42d4ba; display: inline-block; padding: 8px 10px; margin: -8px -10px; user-select: none; -webkit-tap-highlight-color: transparent; cursor: default; }
-.intro { margin: 46px 0 30px; }
-.intro .eyebrow { color: #8da6cf; }
-.intro h1 { font-size: 36px; line-height: 1.2; margin-top: 16px; }
-.intro p { color: #bac8df; max-width: 310px; line-height: 1.6; font-size: 15px; }
-.login-panel { background: #fff; color: #172844; padding: 26px; border-radius: 26px; }
-.login-panel h2 { margin: 0 0 8px; }
-ion-button { margin-top: 24px; }
-.server-config { margin-top: 18px; padding-top: 14px; border-top: 1px solid #e6ecf5; }
-.server-box { background: #f8fafd; border-radius: 12px; padding: 10px 12px; border: 1px solid #dbe4f3; }
-.server-hint { margin: 6px 0 4px; font-size: 11px; color: #5c7094; line-height: 1.4; }
-.server-box ion-button { margin-top: 8px; }
-.footer { text-align: center; font-size: 9px; letter-spacing: 1.8px; color: #869bbd; margin-top: 27px; }
-.footer span { padding: 0 6px; }
+/* ===== Login Screen — Visual Language SkyWay ===== */
+$navy: #101e3b;
+$ink: #172844;
+$soft-ink: #4a5a75;
+$blue: #2449d8;
+$teal: #26b99a;
+$mint: #42d4ba;
+$success: #128463;
+$danger: #b83449;
+$line: #e3e9f3;
+$bg-tint: #eef3ff;
+
+ion-content {
+  --background: #101e3b;
+}
+
+.login-wrap {
+  position: relative;
+  max-width: 440px;
+  margin: auto;
+  min-height: 100%;
+  padding: max(20px, env(safe-area-inset-top)) 14px 28px;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* Brillo radial sutil decorativo en la esquina superior */
+.glow-aura {
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(66, 212, 186, 0.2) 0%, rgba(36, 73, 216, 0.1) 50%, transparent 75%);
+  pointer-events: none;
+}
+
+/* Header con la marca SkyWay */
+.brand-section {
+  position: relative;
+  z-index: 1;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.8px;
+  line-height: 1;
+
+  ion-icon {
+    font-size: 24px;
+    color: $mint;
+    transform: rotate(-25deg);
+  }
+}
+
+.brand-text {
+  color: #ffffff;
+}
+
+/* Dot secreto: 5 toques abren el panel de servidor Backend */
+.brand-dot {
+  color: #42d4ba;
+  display: inline-block;
+  padding: 12px 14px;
+  margin: -12px -14px;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+  transition: transform .15s ease;
+
+  &:active {
+    transform: scale(1.35);
+  }
+}
+
+.brand-tag {
+  display: block;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: #8da6cf;
+  margin-top: 3px;
+}
+
+/* Intro de bienvenida */
+.intro {
+  position: relative;
+  z-index: 1;
+  margin: 22px 0 18px;
+
+  .eyebrow {
+    color: #8da6cf;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 1.4px;
+  }
+
+  h1 {
+    font-size: clamp(20px, 5.2vw, 24px);
+    font-weight: 800;
+    line-height: 1.2;
+    margin: 6px 0 4px;
+    color: #ffffff;
+    letter-spacing: -0.5px;
+  }
+
+  p {
+    color: #c3d2e9;
+    font-size: 13.5px;
+    line-height: 1.45;
+    margin: 0;
+    max-width: 340px;
+  }
+}
+
+/* Card del formulario de login */
+.login-panel {
+  position: relative;
+  z-index: 1;
+  background: #ffffff;
+  color: $ink;
+  padding: 20px 16px;
+  border-radius: 20px;
+  border: 1px solid #e3e9f3;
+  box-shadow: 0 14px 36px rgba(10, 20, 40, 0.25);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.panel-header {
+  margin-bottom: 16px;
+
+  h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    color: $navy;
+  }
+
+  .panel-sub {
+    margin: 3px 0 0;
+    font-size: 13px;
+    color: $soft-ink;
+    line-height: 1.35;
+  }
+}
+
+.session-notice {
+  margin-bottom: 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #eaf0ff;
+  border: 1px solid #c4d3fb;
+  color: #1d3bb0;
+
+  ion-icon {
+    font-size: 20px;
+    flex: 0 0 auto;
+    margin-top: 1px;
+  }
+
+  strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  span {
+    display: block;
+    font-size: 12px;
+    margin-top: 2px;
+    line-height: 1.35;
+  }
+}
+
+/* Campos de formulario */
+.form-field-group {
+  margin-bottom: 14px;
+}
+
+.field-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 750;
+  color: $ink;
+  margin-bottom: 5px;
+
+  ion-icon {
+    font-size: 16px;
+    color: $blue;
+  }
+}
+
+.input-container {
+  display: flex;
+  align-items: center;
+  background: #f4f7fb;
+  border: 1.5px solid #dbe4f3;
+  border-radius: 12px;
+  transition: all .2s ease;
+  box-sizing: border-box;
+
+  ion-input {
+    --background: transparent;
+    --padding-start: 12px;
+    --padding-end: 12px;
+    margin: 0;
+    min-height: 44px;
+    font-size: 14px;
+    font-weight: 600;
+    color: $ink;
+  }
+
+  &:focus-within {
+    background: #ffffff;
+    border-color: $blue;
+    box-shadow: 0 0 0 3px rgba(36, 73, 216, 0.14);
+  }
+
+  &.has-error {
+    border-color: $danger;
+    background: #fff8f8;
+  }
+}
+
+.password-input-container {
+  padding-right: 4px;
+}
+
+.toggle-password-btn {
+  min-width: 38px;
+  min-height: 38px;
+  border: none;
+  background: transparent;
+  color: #5c7094;
+  font-size: 19px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all .15s ease;
+
+  &:hover {
+    color: $blue;
+    background: #eef3fc;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $blue;
+    outline-offset: 1px;
+  }
+}
+
+.field-hint {
+  display: block;
+  font-size: 11.5px;
+  color: $soft-ink;
+  margin-top: 3px;
+  padding-left: 2px;
+}
+
+.field-error-message {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #962236;
+  font-size: 12px;
+  font-weight: 650;
+  margin-top: 4px;
+  padding-left: 2px;
+
+  ion-icon {
+    font-size: 15px;
+    flex: 0 0 auto;
+  }
+}
+
+.general-error {
+  margin: 14px 0;
+  font-size: 13px;
+  padding: 10px 12px;
+  border-radius: 12px;
+}
+
+.btn-login-submit {
+  margin-top: 18px;
+  min-height: 46px;
+  --min-height: 46px;
+  font-size: 14.5px;
+  font-weight: 750;
+  --border-radius: 12px;
+  --box-shadow: 0 6px 18px rgba(36, 73, 216, .26);
+  --color: #ffffff;
+
+  ion-icon {
+    font-size: 18px;
+  }
+}
+
+/* Configuración de servidor Backend */
+.server-config {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1.5px dashed #dbe4f3;
+}
+
+.server-box {
+  background: #f7f9fd;
+  border-radius: 14px;
+  padding: 12px;
+  border: 1.5px solid #d4def7;
+  box-sizing: border-box;
+}
+
+.server-box-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 800;
+  color: $navy;
+
+  ion-icon {
+    font-size: 18px;
+    color: $blue;
+  }
+}
+
+.server-explanation {
+  margin: 3px 0 8px;
+  font-size: 11.5px;
+  color: $soft-ink;
+  line-height: 1.35;
+}
+
+.server-presets {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.preset-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 7px 4px;
+  border-radius: 10px;
+  border: 1.5px solid #d0dcee;
+  background: #ffffff;
+  color: $ink;
+  font-size: 10.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+  min-width: 0;
+
+  ion-icon {
+    font-size: 16px;
+    color: $blue;
+  }
+
+  span {
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &.is-active {
+    background: linear-gradient(135deg, $navy 0%, $blue 100%);
+    border-color: $blue;
+    color: #ffffff;
+    box-shadow: 0 4px 10px rgba(36, 73, 216, 0.22);
+
+    ion-icon {
+      color: $mint;
+    }
+  }
+}
+
+.server-input {
+  --background: #ffffff;
+  --padding-start: 10px;
+  --padding-end: 10px;
+  border: 1px solid #d0dcee;
+  border-radius: 10px;
+  margin: 4px 0;
+  font-size: 13px;
+}
+
+.server-hint {
+  margin: 6px 0;
+  font-size: 11.5px;
+  color: $soft-ink;
+  line-height: 1.35;
+
+  strong {
+    color: $navy;
+  }
+}
+
+.server-save-btn {
+  margin-top: 8px;
+  font-weight: 750;
+  --border-radius: 10px;
+  min-height: 38px;
+  font-size: 12.5px;
+}
+
+/* Footer de la pantalla */
+.login-footer {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  margin-top: 24px;
+}
+
+.security-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 11.5px;
+  font-weight: 650;
+  color: #b5c7e5;
+  margin-bottom: 8px;
+
+  ion-icon {
+    color: $mint;
+    font-size: 14px;
+  }
+}
+
+.footer-copy {
+  font-size: 10px;
+  letter-spacing: 1.6px;
+  font-weight: 750;
+  color: #7b94ba;
+  margin: 0;
+
+  span {
+    padding: 0 4px;
+    color: $mint;
+  }
+}
+
+/* Responsive (<= 360px / 320px) */
+@media (max-width: 360px) {
+  .login-wrap { padding: max(16px, env(safe-area-inset-top)) 10px 20px; }
+  .login-panel { padding: 16px 12px; }
+  .intro h1 { font-size: 20px; }
+  .panel-header h2 { font-size: 16.5px; }
+}

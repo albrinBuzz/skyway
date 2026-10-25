@@ -1,8 +1,8 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>Vuelos</ion-title>
+    <ion-title>Tus viajes</ion-title>
     <ion-buttons slot="end">
-      <ion-button aria-label="Actualizar" (click)="load()" [disabled]="busy">
+      <ion-button aria-label="Actualizar vuelos" (click)="load()" [disabled]="busy">
         <ion-icon name="refresh-outline" slot="icon-only"></ion-icon>
       </ion-button>
     </ion-buttons>
@@ -11,138 +11,404 @@
 
 <ion-content>
   <main class="page vuelos-page">
-    <span class="eyebrow">TUS VIAJES</span>
-    <h1>Todo lo que necesitas para volar.</h1>
-    <p class="muted">Consulta tu próximo vuelo o entra a cualquiera de tus reservas activas.</p>
+    <!-- Encabezado Hero institucional -->
+    <header class="page-intro reveal">
+      <span class="eyebrow">SKYWAY · GESTIÓN DE VIAJES</span>
+      <h1>Todo lo que necesitas para volar</h1>
+      <p class="intro-desc">
+        Consulta el estado de tu próximo vuelo, explora tus rutas en el globo 3D interactivo o gestiona tus reservas activas.
+      </p>
+    </header>
 
-    <ion-segment [value]="seccion" (ionChange)="cambiarSeccion($event.detail.value)">
-      <ion-segment-button value="proximo">Próximo vuelo</ion-segment-button>
-      <ion-segment-button value="reservas">Mis reservas</ion-segment-button>
-    </ion-segment>
+    <!-- Selector de pestaña de alto contraste (sin Shadow DOM de ion-segment) -->
+    <div class="tabs-wrapper reveal">
+      <div class="seg-bar" role="tablist" aria-label="Secciones de viajes">
+        <button
+          type="button"
+          role="tab"
+          class="seg-btn"
+          [class.is-active]="seccion === 'proximo'"
+          [attr.aria-selected]="seccion === 'proximo'"
+          (click)="cambiarSeccion('proximo')"
+        >
+          <ion-icon name="airplane" aria-hidden="true"></ion-icon>
+          <span>Próximo vuelo</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          class="seg-btn"
+          [class.is-active]="seccion === 'reservas'"
+          [attr.aria-selected]="seccion === 'reservas'"
+          (click)="cambiarSeccion('reservas')"
+        >
+          <ion-icon name="ticket-outline" aria-hidden="true"></ion-icon>
+          <span>Mis reservas</span>
+        </button>
+      </div>
+    </div>
 
-    <div *ngIf="busy" class="loading"><ion-spinner></ion-spinner></div>
-    <p *ngIf="error" class="error" role="alert">{{ error }}</p>
+    <!-- Indicador de carga -->
+    <div *ngIf="busy" class="loading" role="status" aria-live="polite">
+      <ion-spinner></ion-spinner>
+      <p>Cargando información de tus vuelos…</p>
+    </div>
+
+    <!-- Alerta de error -->
+    <div *ngIf="error" class="error-card reveal" role="alert">
+      <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
+      <div>
+        <strong>No fue posible actualizar</strong>
+        <p>{{ error }}</p>
+      </div>
+    </div>
 
     <ng-container *ngIf="!busy && inicio as d">
-      <section *ngIf="seccion === 'proximo'">
-        <section class="hero" *ngIf="d.proximoVuelo as next; else sinVuelo">
-          <div class="row">
-            <span class="eyebrow">TU PRÓXIMO VUELO</span>
-            <span class="status">{{ next.vuelo.estado.descripcion || 'Por confirmar' }}</span>
-          </div>
-
-          <div class="route">
-            <div>
-              <strong>{{ next.vuelo.segmentos[0]?.origen?.codigoIata || '—' }}</strong>
-              <span class="muted">Origen</span>
-            </div>
-            <ion-icon name="airplane-outline"></ion-icon>
-            <div class="destination">
-              <strong>{{ next.vuelo.segmentos[next.vuelo.segmentos.length - 1]?.destino?.codigoIata || '—' }}</strong>
-              <span class="muted">Destino</span>
-            </div>
-          </div>
-
-          <div class="hero-details-container">
-            <div class="meta">
-              <div><span>Vuelo</span><strong>{{ next.vuelo.numeroVuelo || 'Sin número' }}</strong></div>
-              <div><span>Salida</span><strong>{{ next.vuelo.fechaHoraSalida | date:'dd MMM · HH:mm' }}</strong></div>
-              <div><span>Puerta</span><strong>{{ next.vuelo.segmentos[0]?.puerta?.codigoPuerta || 'Por asignar' }}</strong></div>
-              <div><span>Asiento</span><strong>{{ next.vuelo.asiento?.numeroAsiento || 'Sin asignar' }}</strong></div>
-              <div><span>Avión</span><strong>{{ next.vuelo.modeloAvion || 'Por confirmar' }}</strong></div>
-              <div><span>Reserva</span><strong>#{{ next.idReserva }}</strong></div>
+      <!-- ============================================== -->
+      <!-- PESTAÑA 1: PRÓXIMO VUELO                      -->
+      <!-- ============================================== -->
+      <section *ngIf="seccion === 'proximo'" class="proximo-section">
+        <div *ngIf="d.proximoVuelo as next; else sinVuelo" class="proximo-wrap reveal">
+          <!-- Hero Card del Próximo Vuelo con gradiente azul y resplandor verde menta -->
+          <article class="hero-card" aria-label="Información de tu próximo vuelo">
+            <div class="hero-top">
+              <div class="hero-id">
+                <span class="hero-label">Próximo vuelo</span>
+                <strong class="hero-number">{{ next.vuelo.numeroVuelo || ('Vuelo #' + next.vuelo.idVuelo) }}</strong>
+              </div>
+              <span *ngIf="estadoVuelo(next.vuelo) as st" class="chip chip-{{ st.tono }}">
+                <ion-icon [name]="st.icono" aria-hidden="true"></ion-icon>
+                {{ st.texto }}
+              </span>
             </div>
 
-            <!-- Botón del Cuadro Rojo: Globo 3D Interactivo -->
+            <!-- Trazado de ruta IATA con ciudades y aeropuertos -->
+            <div class="route-block">
+              <div class="route-codes">
+                <strong class="iata">{{ next.vuelo.segmentos[0]?.origen?.codigoIata || '—' }}</strong>
+                <div class="flight-line" aria-hidden="true">
+                  <span class="fl-dot"></span>
+                  <span class="fl-dash"></span>
+                  <ion-icon name="airplane" class="fl-plane"></ion-icon>
+                  <span class="fl-dash"></span>
+                  <span class="fl-dot fl-dot-end"></span>
+                </div>
+                <strong class="iata iata-end">{{ next.vuelo.segmentos[next.vuelo.segmentos.length - 1]?.destino?.codigoIata || '—' }}</strong>
+              </div>
+
+              <div class="route-names">
+                <div class="route-side">
+                  <span class="route-tag">Sales de</span>
+                  <strong>{{ next.vuelo.segmentos[0]?.origen?.ciudad || ciudadPorIata(next.vuelo.segmentos[0]?.origen?.codigoIata) }}</strong>
+                  <span class="airport-label">{{ next.vuelo.segmentos[0]?.origen?.nombreAeropuerto || aeropuertoPorIata(next.vuelo.segmentos[0]?.origen?.codigoIata) }}</span>
+                </div>
+                <div class="route-side end">
+                  <span class="route-tag">Llegas a</span>
+                  <strong>{{ next.vuelo.segmentos[next.vuelo.segmentos.length - 1]?.destino?.ciudad || ciudadPorIata(next.vuelo.segmentos[next.vuelo.segmentos.length - 1]?.destino?.codigoIata) }}</strong>
+                  <span class="airport-label">{{ next.vuelo.segmentos[next.vuelo.segmentos.length - 1]?.destino?.nombreAeropuerto || aeropuertoPorIata(next.vuelo.segmentos[next.vuelo.segmentos.length - 1]?.destino?.codigoIata) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Horarios y Datos de Reserva -->
+            <div class="hero-meta">
+              <div class="hero-meta-item">
+                <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+                <div>
+                  <span>Fecha de salida</span>
+                  <strong class="cap" *ngIf="next.vuelo.fechaHoraSalida; else porConfirmar">
+                    {{ next.vuelo.fechaHoraSalida | date:"EEEE d 'de' MMMM 'de' y" }}
+                  </strong>
+                </div>
+              </div>
+
+              <div class="hero-meta-item">
+                <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
+                <div>
+                  <span>Hora de salida</span>
+                  <strong class="big-time" *ngIf="next.vuelo.fechaHoraSalida; else porConfirmar">
+                    {{ next.vuelo.fechaHoraSalida | date:'HH:mm' }} h
+                  </strong>
+                </div>
+              </div>
+
+              <div class="hero-meta-item">
+                <ion-icon name="ticket-outline" aria-hidden="true"></ion-icon>
+                <div>
+                  <span>Código de reserva</span>
+                  <strong>#{{ next.idReserva }}</strong>
+                </div>
+              </div>
+
+              <div class="hero-meta-item" *ngIf="esTitular(next.idReserva) !== null">
+                <ion-icon name="person-circle-outline" aria-hidden="true"></ion-icon>
+                <div>
+                  <span>Tu rol en la reserva</span>
+                  <strong>{{ esTitular(next.idReserva) ? 'Titular' : 'Acompañante' }}</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pills de embarque: Puerta, Terminal, Asiento y Avión -->
+            <div class="pills-grid" aria-label="Detalles de embarque">
+              <div class="pill" [class.pill-muted]="!next.vuelo.segmentos[0]?.puerta?.codigoPuerta">
+                <ion-icon name="enter-outline" aria-hidden="true"></ion-icon>
+                <div>
+                  <span class="pill-title">Puerta</span>
+                  <strong>{{ next.vuelo.segmentos[0]?.puerta?.codigoPuerta || 'Por asignar' }}</strong>
+                </div>
+              </div>
+
+              <div class="pill" [class.pill-muted]="!next.vuelo.segmentos[0]?.puerta?.terminal">
+                <ion-icon name="business-outline" aria-hidden="true"></ion-icon>
+                <div>
+                  <span class="pill-title">Terminal</span>
+                  <strong>{{ next.vuelo.segmentos[0]?.puerta?.terminal || 'Por asignar' }}</strong>
+                </div>
+              </div>
+
+              <div class="pill" [class.pill-muted]="!next.vuelo.asiento?.numeroAsiento">
+                <ion-icon name="person-circle-outline" aria-hidden="true"></ion-icon>
+                <div>
+                  <span class="pill-title">Asiento</span>
+                  <strong>{{ next.vuelo.asiento?.numeroAsiento || 'Sin asignar' }}</strong>
+                </div>
+              </div>
+
+              <div class="pill" [class.pill-muted]="!next.vuelo.modeloAvion">
+                <ion-icon name="airplane-outline" aria-hidden="true"></ion-icon>
+                <div>
+                  <span class="pill-title">Aeronave</span>
+                  <strong>{{ next.vuelo.modeloAvion || 'Por confirmar' }}</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- Botón Destacado: Globo 3D Interactivo de la ruta -->
             <button
               type="button"
               class="globe-trigger-card"
               (click)="abrirMapaReserva(next.idReserva, next.vuelo.idVuelo)"
               aria-label="Ver ruta de vuelo en globo 3D interactivo"
             >
-              <div class="globe-preview-sphere">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <circle cx="12" cy="12" r="10"/>
-                  <line x1="2" y1="12" x2="22" y2="12"/>
-                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-                </svg>
+              <div class="globe-preview-sphere" aria-hidden="true">
+                <ion-icon name="earth-outline"></ion-icon>
                 <span class="globe-ping"></span>
               </div>
               <div class="globe-trigger-info">
-                <span class="globe-tag">3D INTERACTIVO</span>
-                <strong class="globe-title">Ver ruta 3D</strong>
-                <span class="globe-sub">Mapa interactivo</span>
+                <span class="globe-tag">GLOBO 3D INTERACTIVO</span>
+                <strong class="globe-title">Explorar ruta en 3D</strong>
+                <span class="globe-sub">Visualiza aeropuertos, escalas y trayectoria aérea</span>
               </div>
-              <ion-icon name="chevron-forward-outline" class="globe-arrow"></ion-icon>
+              <ion-icon name="chevron-forward-outline" class="globe-arrow" aria-hidden="true"></ion-icon>
             </button>
-          </div>
 
-          <ion-button expand="block" color="light" [routerLink]="['/vuelos/reservas', next.idReserva]">
-            Ver viaje completo
-            <ion-icon name="arrow-forward-outline" slot="end"></ion-icon>
-          </ion-button>
-        </section>
+            <!-- Acciones Principales Claramente Visibles (>=48px de altura) -->
+            <div class="hero-actions">
+              <ion-button
+                expand="block"
+                class="btn-hero-primary"
+                [routerLink]="['/vuelos/reservas', next.idReserva]"
+              >
+                <ion-icon name="document-text-outline" slot="start" aria-hidden="true"></ion-icon>
+                Ver detalle de reserva
+              </ion-button>
+
+              <ion-button
+                expand="block"
+                class="btn-hero-secondary"
+                [routerLink]="['/vuelos/reservas', next.idReserva, 'vuelos', next.vuelo.idVuelo, 'pase']"
+              >
+                <ion-icon name="ticket-outline" slot="start" aria-hidden="true"></ion-icon>
+                Pase de abordar
+              </ion-button>
+            </div>
+          </article>
+        </div>
 
         <ng-template #sinVuelo>
-          <ion-card class="ion-padding empty-card">
-            <ion-icon name="airplane-outline"></ion-icon>
-            <h2>No hay vuelos próximos</h2>
-            <p class="muted">Cuando tengas una reserva activa, tu vuelo más cercano aparecerá aquí.</p>
-            <ion-button routerLink="/inicio" fill="outline">Buscar un vuelo</ion-button>
-          </ion-card>
+          <div class="empty-state-card reveal">
+            <div class="empty-icon-wrap">
+              <ion-icon name="airplane" aria-hidden="true"></ion-icon>
+            </div>
+            <h2>No tienes vuelos próximos</h2>
+            <p>
+              Cuando compres o tengas una reserva activa, tu vuelo más cercano y su tarjeta de embarque aparecerán aquí para que viajes sin estrés.
+            </p>
+            <ion-button expand="block" class="btn-buscar" routerLink="/inicio">
+              <ion-icon name="airplane" slot="start" aria-hidden="true"></ion-icon>
+              Buscar un vuelo en SkyWay
+            </ion-button>
+          </div>
         </ng-template>
       </section>
 
+      <!-- ============================================== -->
+      <!-- PESTAÑA 2: MIS RESERVAS                       -->
+      <!-- ============================================== -->
       <section *ngIf="seccion === 'reservas' && reservas as result" class="reservas-section">
-        <ion-card *ngFor="let r of result.contenido" class="reserva-card-clickable" (click)="irADetalleReserva(r.idReserva, $event)">
-          <ion-card-content>
-            <div class="row">
-              <span class="eyebrow">RESERVA #{{ r.idReserva }}</span>
-              <span class="status">{{ r.estadoReserva.descripcion || 'Sin estado' }}</span>
-            </div>
-            <div class="route compact-route">
-              <strong>{{ r.codigoIataOrigen || '—' }}</strong>
-              <ion-icon name="airplane-outline"></ion-icon>
-              <strong>{{ r.codigoIataDestino || '—' }}</strong>
-            </div>
-            <div class="row reservation-footer">
-              <span>{{ r.proximaSalida ? (r.proximaSalida | date:'dd MMM yyyy · HH:mm') : 'Horario no disponible' }}</span>
-              <div class="footer-actions">
-                <button
-                  type="button"
-                  class="btn-reserva-mapa"
-                  (click)="abrirMapaDesdeCard($event, r)"
-                  aria-label="Ver ruta 3D de esta reserva"
-                >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="2" y1="12" x2="22" y2="12"/>
-                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-                  </svg>
-                  <span>Ruta 3D</span>
-                </button>
-                <ion-icon name="arrow-forward-outline"></ion-icon>
-              </div>
-            </div>
-          </ion-card-content>
-        </ion-card>
-
-        <div class="empty" *ngIf="!result.contenido.length">
-          <h2>No tienes reservas activas</h2>
-          <p>Busca un vuelo desde Inicio para crear una nueva reserva.</p>
-          <ion-button routerLink="/inicio">Reservar vuelo</ion-button>
+        <div class="sec-head reveal">
+          <span class="sec-icon"><ion-icon name="ticket-outline" aria-hidden="true"></ion-icon></span>
+          <div>
+            <h2>Tus reservas activas</h2>
+            <p>Consulta los detalles, equipaje, selección de asientos y check-in de cada reserva.</p>
+          </div>
         </div>
 
-        <nav class="pagination" aria-label="Paginación de reservas" *ngIf="result.totalPaginas > 1">
-          <ion-button fill="clear" [disabled]="page === 0 || busy" (click)="load(page - 1)">Anterior</ion-button>
-          <span>{{ page + 1 }} / {{ result.totalPaginas }}</span>
-          <ion-button fill="clear" [disabled]="page + 1 >= result.totalPaginas || busy" (click)="load(page + 1)">Siguiente</ion-button>
+        <div *ngIf="result.contenido.length; else sinReservas" class="reservas-list">
+          <article
+            *ngFor="let r of result.contenido"
+            class="card reserva-card reveal"
+            (click)="irADetalleReserva(r.idReserva, $event)"
+          >
+            <!-- Encabezado de la reserva -->
+            <div class="reserva-card-top">
+              <div class="reserva-id-group">
+                <span class="reserva-label">Reserva</span>
+                <strong class="reserva-number">#{{ r.idReserva }}</strong>
+              </div>
+
+              <div class="reserva-badges">
+                <span *ngIf="estadoReserva(r.estadoReserva.descripcion) as st" class="chip chip-{{ st.tono }}">
+                  <ion-icon [name]="st.icono" aria-hidden="true"></ion-icon>
+                  {{ st.texto }}
+                </span>
+
+                <span
+                  *ngIf="esTitular(r.idReserva) !== null"
+                  class="chip chip-sm"
+                  [class.chip-info]="esTitular(r.idReserva)"
+                  [class.chip-neutral]="!esTitular(r.idReserva)"
+                >
+                  <ion-icon [name]="esTitular(r.idReserva) ? 'shield-checkmark-outline' : 'people-outline'" aria-hidden="true"></ion-icon>
+                  {{ esTitular(r.idReserva) ? 'Titular' : 'Acompañante' }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Ruta visual entre aeropuertos -->
+            <div class="reserva-route">
+              <div class="route-codes">
+                <strong class="iata">{{ r.codigoIataOrigen || '—' }}</strong>
+                <div class="flight-line" aria-hidden="true">
+                  <span class="fl-dot"></span>
+                  <span class="fl-dash"></span>
+                  <ion-icon name="airplane" class="fl-plane"></ion-icon>
+                  <span class="fl-dash"></span>
+                  <span class="fl-dot fl-dot-end"></span>
+                </div>
+                <strong class="iata iata-end">{{ r.codigoIataDestino || '—' }}</strong>
+              </div>
+
+              <div class="route-names">
+                <div class="route-side">
+                  <span class="route-tag">Origen</span>
+                  <strong>{{ ciudadPorIata(r.codigoIataOrigen) }}</strong>
+                </div>
+                <div class="route-side end">
+                  <span class="route-tag">Destino</span>
+                  <strong>{{ ciudadPorIata(r.codigoIataDestino) }}</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- Fila de Metadatos: Fecha y Total en CLP -->
+            <div class="reserva-meta-grid">
+              <div class="meta-item">
+                <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+                <div>
+                  <span class="meta-label">Próxima salida</span>
+                  <strong class="meta-value cap">
+                    {{ r.proximaSalida ? (r.proximaSalida | date:"EEEE d 'de' MMMM · HH:mm 'h'") : (r.fechaReserva | date:"d 'de' MMMM 'de' y") }}
+                  </strong>
+                </div>
+              </div>
+
+              <div class="meta-item total-item">
+                <ion-icon name="cash-outline" aria-hidden="true"></ion-icon>
+                <div>
+                  <span class="meta-label">Total pagado</span>
+                  <strong class="meta-value price">{{ clp(r.total) }}</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- Indicador de Check-in si ya está confirmado -->
+            <div *ngIf="tieneCheckin(r.idReserva)" class="checkin-badge-row">
+              <span class="chip chip-ok chip-sm">
+                <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
+                Check-in realizado · Asientos confirmados
+              </span>
+            </div>
+
+            <!-- Botones de Acción (>=48px de altura accesible) -->
+            <div class="reserva-actions">
+              <ion-button
+                expand="block"
+                class="btn-ver-reserva"
+                [routerLink]="['/vuelos/reservas', r.idReserva]"
+                (click)="$event.stopPropagation()"
+              >
+                <ion-icon name="document-text-outline" slot="start" aria-hidden="true"></ion-icon>
+                Ver detalle de reserva
+              </ion-button>
+
+              <button
+                type="button"
+                class="btn-reserva-mapa"
+                (click)="abrirMapaDesdeCard($event, r)"
+                aria-label="Ver ruta 3D de esta reserva"
+              >
+                <ion-icon name="earth-outline" aria-hidden="true"></ion-icon>
+                <span>Ruta 3D</span>
+              </button>
+            </div>
+          </article>
+        </div>
+
+        <ng-template #sinReservas>
+          <div class="empty-state-card reveal">
+            <div class="empty-icon-wrap">
+              <ion-icon name="ticket-outline" aria-hidden="true"></ion-icon>
+            </div>
+            <h2>No tienes reservas activas</h2>
+            <p>
+              Explora nuestros destinos disponibles en Chile y el mundo para planificar tu próximo viaje.
+            </p>
+            <ion-button expand="block" class="btn-buscar" routerLink="/inicio">
+              <ion-icon name="airplane" slot="start" aria-hidden="true"></ion-icon>
+              Reservar un vuelo
+            </ion-button>
+          </div>
+        </ng-template>
+
+        <!-- Paginación accesible -->
+        <nav class="pagination-bar" aria-label="Paginación de reservas activas" *ngIf="result.totalPaginas > 1">
+          <ion-button
+            fill="clear"
+            class="page-nav-btn"
+            [disabled]="page === 0 || busy"
+            (click)="load(page - 1)"
+          >
+            Anterior
+          </ion-button>
+          <span class="page-indicator">Página {{ page + 1 }} de {{ result.totalPaginas }}</span>
+          <ion-button
+            fill="clear"
+            class="page-nav-btn"
+            [disabled]="page + 1 >= result.totalPaginas || busy"
+            (click)="load(page + 1)"
+          >
+            Siguiente
+          </ion-button>
         </nav>
       </section>
     </ng-container>
+
+    <ng-template #porConfirmar><strong>Por confirmar</strong></ng-template>
   </main>
 
-  <!-- Modal Interactivo Globo 3D a Pantalla Completa -->
+  <!-- Modal Interactivo Globo 3D a Pantalla Completa (se preserva 100% el componente existente) -->
   <ion-modal [isOpen]="mostrarModalGlobo" (didDismiss)="cerrarModalGlobo()" cssClass="modal-globo-3d">
     <ng-template>
       <app-globo-mapa [ruta]="rutaSeleccionada" (cerrar)="cerrarModalGlobo()"></app-globo-mapa>

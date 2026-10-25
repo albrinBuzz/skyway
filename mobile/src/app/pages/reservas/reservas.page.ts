@@ -1,8 +1,17 @@
 import { Component, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
+import { addIcons } from 'ionicons';
+import { airplaneOutline, arrowForwardOutline, refreshOutline } from 'ionicons/icons';
 import { ApiService } from '../../core/api.service';
 import { Pagina, ResumenReserva } from '../../core/models';
 import { errorMessage } from '../../core/ui';
+
+addIcons({
+  airplaneOutline,
+  arrowForwardOutline,
+  refreshOutline
+});
+
 @Component({ selector: 'app-reservas', standalone: false, templateUrl: './reservas.page.html' })
 export class ReservasPage {
   private api = inject(ApiService); grupo: 'activas' | 'historial' = 'activas';

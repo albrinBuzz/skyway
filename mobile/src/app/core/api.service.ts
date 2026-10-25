@@ -23,7 +23,8 @@ import {
 } from './models';
 
 const SERVER_HOST_KEY = 'skyway_server_host';
-const DEFAULT_NATIVE_HOST = 'http://192.168.100.7:8080';
+export const DEFAULT_NATIVE_HOST = 'http://192.168.100.7:8080';
+export const AZURE_CLOUD_HOST = 'https://skyway-gde6a6aza3abb8a6.brazilsouth-01.azurewebsites.net';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -32,24 +33,40 @@ export class ApiService {
 
   private loadSavedOrigin(): string | null {
     try {
-      return localStorage.getItem(SERVER_HOST_KEY);
+      const stored = localStorage.getItem(SERVER_HOST_KEY);
+      return stored ? this.normalizeOrigin(stored) : null;
     } catch {
       return null;
     }
   }
 
   private normalizeOrigin(raw: string): string | null {
+    if (!raw || typeof raw !== 'string') return null;
     const trimmed = raw.trim().replace(/\/+$/, '').replace(/\/api\/v1\/mobile$/i, '');
     if (!trimmed) return null;
+
+    // Rechazar esquemas de URL peligrosos de forma inmediata
+    if (/^(?:javascript|data|file|vbscript|blob):/i.test(trimmed)) {
+      return null;
+    }
+
     const withProtocol = /^https?:\/\//i.test(trimmed) ? trimmed : `http://${trimmed}`;
     try {
       const parsed = new URL(withProtocol);
+      // Validar estrictamente protocolos http: o https: (rechaza javascript:, data:, etc.)
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+        return null;
+      }
+      // Validar hostname válido sin credenciales ni inyecciones
+      if (!parsed.hostname || parsed.username || parsed.password) {
+        return null;
+      }
       if (!parsed.port && /^\d+\.\d+\.\d+\.\d+$/.test(parsed.hostname)) {
         parsed.port = '8080';
       }
       return parsed.origin;
     } catch {
-      return withProtocol;
+      return null;
     }
   }
 

@@ -1,138 +1,206 @@
 <ion-content>
   <main class="login-wrap">
 
-    <div class="brand">
-      <ion-icon name="airplane-outline"></ion-icon>
+    <!-- Brillo sutil de fondo en esquina superior -->
+    <div class="glow-aura" aria-hidden="true"></div>
 
-      <span>
-        skyway<span class="brand-dot" (click)="onBrandDotTap()">.</span>
-      </span>
-    </div>
+    <!-- Header con marca e identidad SkyWay -->
+    <header class="brand-section">
+      <div class="brand">
+        <ion-icon name="airplane" aria-hidden="true"></ion-icon>
+        <span class="brand-text">
+          skyway<span class="brand-dot" (click)="onBrandDotTap()" title="SkyWay" aria-label="Punto del logo">.</span>
+        </span>
+      </div>
+      <span class="brand-tag">PORTAL DE PASAJEROS</span>
+    </header>
 
+    <!-- Intro Copy -->
     <div class="intro">
-      <span class="eyebrow">
-        TU VIAJE, CONTIGO
-      </span>
-
-      <h1>
-        Tu próximo destino<br />
-        empieza aquí.
-      </h1>
-
-      <p>
-        Todos los detalles de tu viaje, en un solo lugar.
-      </p>
+      <span class="eyebrow">TU VIAJE, CONTIGO</span>
+      <h1>Tu próximo destino empieza aquí.</h1>
+      <p>Accede a tus reservas, tickets de embarque y estado de vuelos en tiempo real.</p>
     </div>
 
-    <section class="login-panel">
+    <!-- Login Panel Card con estética premium de reserva-detalle -->
+    <section class="card login-panel reveal" aria-label="Formulario de inicio de sesión">
+      <div class="panel-header">
+        <h2>Bienvenido a bordo</h2>
+        <p class="panel-sub">Ingresa con tu cuenta de pasajero para gestionar tus vuelos.</p>
+      </div>
 
-      <h2>Bienvenido a bordo</h2>
+      <!-- Notificación si la sesión caducó -->
+      <div *ngIf="expired" class="notice session-notice" role="status">
+        <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
+        <div>
+          <strong>Sesión caducada</strong>
+          <span>Tu sesión ha vencido por inactividad. Ingresa nuevamente para continuar de forma segura.</span>
+        </div>
+      </div>
 
-      <p class="muted">
-        Ingresa con tu cuenta de pasajero.
-      </p>
+      <form [formGroup]="form" (ngSubmit)="login()" novalidate>
+        <!-- Correo Electrónico -->
+        <div class="form-field-group">
+          <label class="field-label" for="correo-input">
+            <ion-icon name="mail-outline" aria-hidden="true"></ion-icon>
+            Correo electrónico
+          </label>
+          <div class="input-container" [class.has-error]="form.controls.correoElectronico.touched && form.controls.correoElectronico.invalid">
+            <ion-input
+              id="correo-input"
+              type="email"
+              autocomplete="username"
+              inputmode="email"
+              formControlName="correoElectronico"
+              placeholder="tu.correo@ejemplo.cl"
+              [maxlength]="100"
+              aria-describedby="correo-hint"
+            ></ion-input>
+          </div>
+          <span class="field-hint" id="correo-hint">El correo con el que realizaste tu reserva</span>
+          <div
+            class="field-error-message"
+            *ngIf="form.controls.correoElectronico.touched && form.controls.correoElectronico.invalid"
+            role="alert"
+          >
+            <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
+            <span>Ingresa una dirección de correo válida (ej: nombre@correo.cl).</span>
+          </div>
+        </div>
 
-      <p
-              *ngIf="expired"
-              class="notice"
-      >
-        Tu sesión venció. Ingresa nuevamente para continuar.
-      </p>
+        <!-- Contraseña -->
+        <div class="form-field-group">
+          <label class="field-label" for="contrasena-input">
+            <ion-icon name="lock-closed-outline" aria-hidden="true"></ion-icon>
+            Contraseña
+          </label>
+          <div class="input-container password-input-container" [class.has-error]="form.controls.contrasena.touched && form.controls.contrasena.invalid">
+            <ion-input
+              id="contrasena-input"
+              [type]="mostrarContrasena ? 'text' : 'password'"
+              autocomplete="current-password"
+              formControlName="contrasena"
+              placeholder="Tu contraseña de acceso"
+              [maxlength]="72"
+            ></ion-input>
+            <button
+              type="button"
+              class="toggle-password-btn"
+              (click)="toggleMostrarContrasena()"
+              [attr.aria-label]="mostrarContrasena ? 'Ocultar contraseña' : 'Ver contraseña'"
+            >
+              <ion-icon [name]="mostrarContrasena ? 'eye-off-outline' : 'eye-outline'" aria-hidden="true"></ion-icon>
+            </button>
+          </div>
+          <div
+            class="field-error-message"
+            *ngIf="form.controls.contrasena.touched && form.controls.contrasena.invalid"
+            role="alert"
+          >
+            <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
+            <span>Por favor ingresa tu contraseña para continuar.</span>
+          </div>
+        </div>
 
-      <form
-              [formGroup]="form"
-              (ngSubmit)="login()"
-      >
+        <!-- Error general de autenticación -->
+        <div class="error general-error" role="alert" *ngIf="error">
+          <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
+          <span>{{ error }}</span>
+        </div>
 
-        <ion-input
-                label="Correo electrónico"
-                labelPlacement="stacked"
-                type="email"
-                autocomplete="username"
-                inputmode="email"
-                formControlName="correoElectronico"
-                placeholder="tu.correo@ejemplo.cl"
-                [maxlength]="100"
-        ></ion-input>
-
-        <p
-                class="error"
-                *ngIf="
-            form.controls.correoElectronico.touched &&
-            form.controls.correoElectronico.invalid
-          "
-        >
-          Ingresa un correo válido.
-        </p>
-
-        <ion-input
-                label="Contraseña"
-                labelPlacement="stacked"
-                type="password"
-                autocomplete="current-password"
-                formControlName="contrasena"
-                placeholder="Tu contraseña"
-                [maxlength]="72"
-        ></ion-input>
-
-        <p
-                class="error"
-                role="alert"
-                *ngIf="error"
-        >
-          {{ error }}
-        </p>
-
+        <!-- Botón de ingresar accesible (>=52px touch target) -->
         <ion-button
-                type="submit"
-                expand="block"
-                [disabled]="busy || form.invalid"
+          type="submit"
+          expand="block"
+          class="btn-login-submit"
+          [disabled]="busy || form.invalid"
         >
-
-          <ion-spinner
-                  *ngIf="busy"
-                  name="crescent"
-          ></ion-spinner>
-
-          <span *ngIf="!busy">
-            Ingresar
-          </span>
-
-          <ion-icon
-                  *ngIf="!busy"
-                  name="arrow-forward-outline"
-                  slot="end"
-          ></ion-icon>
-
+          <ion-spinner *ngIf="busy" name="crescent"></ion-spinner>
+          <span *ngIf="!busy">Ingresar a mi cuenta</span>
+          <ion-icon *ngIf="!busy" name="arrow-forward-outline" slot="end" aria-hidden="true"></ion-icon>
         </ion-button>
 
+        <!-- Configuración secreta de servidor Backend (5 toques en .brand-dot) -->
         <div class="server-config" *ngIf="mostrarServidor">
           <div class="server-box">
+            <div class="server-box-header">
+              <ion-icon name="server-outline" aria-hidden="true"></ion-icon>
+              <strong>Conexión de Servidor Backend</strong>
+            </div>
+            <p class="server-explanation">
+              Elige a qué entorno conectar la aplicación o ingresa la IP local de otro PC:
+            </p>
+
+            <div class="server-presets" role="group" aria-label="Entorno de servidor">
+              <button
+                type="button"
+                class="preset-chip"
+                [class.is-active]="modoServidorActual === 'azure'"
+                (click)="seleccionarPresetServidor('azure')"
+              >
+                <ion-icon name="cloud-outline" aria-hidden="true"></ion-icon>
+                <span>Azure Cloud</span>
+              </button>
+
+              <button
+                type="button"
+                class="preset-chip"
+                [class.is-active]="modoServidorActual === 'mipc'"
+                (click)="seleccionarPresetServidor('mipc')"
+              >
+                <ion-icon name="desktop-outline" aria-hidden="true"></ion-icon>
+                <span>Mi PC Local</span>
+              </button>
+
+              <button
+                type="button"
+                class="preset-chip"
+                [class.is-active]="modoServidorActual === 'otro'"
+                (click)="seleccionarPresetServidor('otro')"
+              >
+                <ion-icon name="globe-outline" aria-hidden="true"></ion-icon>
+                <span>IP Amigo / Otra</span>
+              </button>
+            </div>
+
             <ion-input
-                    label="IP o URL del servidor Backend"
-                    labelPlacement="stacked"
-                    type="url"
-                    formControlName="servidor"
-                    placeholder="Ej: 192.168.1.50:8080"
+              label="IP o URL del servidor Backend"
+              labelPlacement="stacked"
+              type="url"
+              formControlName="servidor"
+              placeholder="Ej: 192.168.1.50:8080"
+              class="server-input"
             ></ion-input>
             <p class="server-hint">
-              Actual: {{ servidorActual }}
+              <strong>Activo:</strong> {{ servidorActual }}
             </p>
-            <ion-button type="button" size="small" fill="outline" expand="block" (click)="guardarServidor()">
-              Guardar IP y ocultar
+            <ion-button
+              type="button"
+              size="small"
+              fill="outline"
+              expand="block"
+              class="server-save-btn"
+              (click)="guardarServidor()"
+            >
+              <ion-icon name="checkmark-circle" slot="start" aria-hidden="true"></ion-icon>
+              Guardar conexión y ocultar
             </ion-button>
           </div>
         </div>
 
       </form>
-
     </section>
 
-    <p class="footer">
-      SKYWAY AIRLINES
-      <span>•</span>
-      PORTAL DE PASAJEROS
-    </p>
+    <!-- Footer con seguridad y marca -->
+    <footer class="login-footer">
+      <div class="security-badge">
+        <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
+        <span>Conexión cifrada y segura SSL</span>
+      </div>
+      <p class="footer-copy">
+        SKYWAY AIRLINES <span>•</span> PORTAL DE PASAJEROS
+      </p>
+    </footer>
 
   </main>
 </ion-content>

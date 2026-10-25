@@ -1,7 +1,10 @@
 <ion-header>
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-back-button [defaultHref]="rut ? '/vuelos/reservas/' + id + '/vuelos/' + vuelo + '/tickets/' + rut : '/vuelos/reservas/' + id"></ion-back-button>
+      <ion-back-button
+        [defaultHref]="rut ? '/vuelos/reservas/' + id + '/vuelos/' + vuelo + '/tickets/' + rut : '/vuelos/reservas/' + id"
+        text="Volver">
+      </ion-back-button>
     </ion-buttons>
     <ion-title>Elige tu asiento</ion-title>
     <ion-buttons slot="end">
@@ -13,114 +16,307 @@
 </ion-header>
 
 <ion-content>
-  <main class="seat-page">
-    <div class="seat-page-inner">
-      <div class="seat-heading">
-        <span class="eyebrow">MAPA DE CABINA</span>
-        <h1>Elige tu lugar a bordo.</h1>
-        <p *ngIf="rut && nombrePasajero"><strong>Pasajero:</strong> {{ nombrePasajero }}</p>
-        <p>Consulta la distribución real disponible para este vuelo.</p>
-      </div>
-
-      <div *ngIf="busy" class="loading"><ion-spinner name="crescent"></ion-spinner></div>
-      <p *ngIf="error" class="seat-error" role="alert">{{ error }}</p>
-
-      <ng-container *ngIf="data as map">
-        <div class="current-seat">
-          <div>
-            <span>Asiento actual del pasajero</span>
-            <strong>{{ map.asientoActual?.numeroAsiento || 'Sin asignar' }}</strong>
-          </div>
-          <span class="current-seat-class">{{ map.asientoActual?.clase || 'Pendiente' }}</span>
-        </div>
-        <p *ngIf="map.motivo" class="seat-notice">{{ map.motivo }}</p>
-
-        <div class="seat-legend" aria-label="Leyenda de disponibilidad">
-          <span><i class="swatch available"></i> Disponible</span>
-          <span><i class="swatch occupied"></i> Ocupado</span>
-          <span><i class="swatch current"></i> Tu asiento</span>
-          <span><i class="swatch picked"></i> Tu selección</span>
-        </div>
-
-        <section class="airplane-fuselage" aria-label="Distribución de asientos del avión">
-          <div class="airplane-nose">
-            <div class="cockpit-glass" aria-hidden="true"></div>
-            <ion-icon name="airplane-outline" aria-hidden="true"></ion-icon>
-            <span>DISTRIBUCIÓN DE CABINA</span>
-          </div>
-
-          <div class="cabin-body">
-            <ng-container *ngFor="let section of sections">
-              <div class="class-divider" [ngClass]="section.kind">
-                <span>{{ section.label }}</span>
-              </div>
-
-              <div class="cabin-row" *ngFor="let row of section.rows" [ngClass]="row.kind">
-                <span class="row-number">{{ row.label }}</span>
-
-                <div class="seat-side left">
-                  <button
-                    *ngFor="let seat of row.left; trackBy: trackSeat"
-                    type="button"
-                    class="seat-btn"
-                    [class.is-available]="isAvailable(seat)"
-                    [class.is-current]="isCurrent(seat)"
-                    [class.is-picked]="isPicked(seat)"
-                    [class.is-occupied]="!seat.seleccionable && !isCurrent(seat)"
-                    [disabled]="!seat.seleccionable || saving"
-                    [attr.aria-label]="'Asiento ' + seat.numeroAsiento + ', ' + (seat.clase || 'clase no informada') + ', ' + (isCurrent(seat) ? 'tu asiento' : (seat.seleccionable ? 'disponible' : 'no disponible'))"
-                    [attr.aria-pressed]="isPicked(seat)"
-                    (click)="choose(seat)">
-                    {{ seatLetter(seat) }}
-                  </button>
-                </div>
-
-                <span class="aisle-gap" aria-hidden="true"></span>
-
-                <div class="seat-side right">
-                  <button
-                    *ngFor="let seat of row.right; trackBy: trackSeat"
-                    type="button"
-                    class="seat-btn"
-                    [class.is-available]="isAvailable(seat)"
-                    [class.is-current]="isCurrent(seat)"
-                    [class.is-picked]="isPicked(seat)"
-                    [class.is-occupied]="!seat.seleccionable && !isCurrent(seat)"
-                    [disabled]="!seat.seleccionable || saving"
-                    [attr.aria-label]="'Asiento ' + seat.numeroAsiento + ', ' + (seat.clase || 'clase no informada') + ', ' + (isCurrent(seat) ? 'tu asiento' : (seat.seleccionable ? 'disponible' : 'no disponible'))"
-                    [attr.aria-pressed]="isPicked(seat)"
-                    (click)="choose(seat)">
-                    {{ seatLetter(seat) }}
-                  </button>
-                </div>
-
-                <span class="row-number">{{ row.label }}</span>
-              </div>
-            </ng-container>
-          </div>
-
-          <p *ngIf="!sections.length" class="no-seats">No hay asientos cargados para este avión.</p>
-          <div class="airplane-tail" aria-hidden="true">SKYWAY · CABINA</div>
-        </section>
-
-        <ion-card class="selected-card" *ngIf="selected as seat">
-          <ion-card-content>
-            <div class="selected-top">
-              <div>
-                <span class="eyebrow">ASIENTO SELECCIONADO</span>
-                <h2>{{ seat.numeroAsiento }} · {{ seat.clase || 'Clase por confirmar' }}</h2>
-              </div>
-            </div>
-            <p *ngIf="seat.precio != null" class="price-note">
-              Precio de referencia: {{ seat.precio | number:'1.0-2' }} CLP
-            </p>
-            <ion-button expand="block" (click)="save()" [disabled]="saving">
-              <ion-spinner *ngIf="saving" name="crescent"></ion-spinner>
-              <span *ngIf="!saving">{{ map.asientoActual ? 'Confirmar cambio' : 'Confirmar asiento' }}</span>
-            </ion-button>
-          </ion-card-content>
-        </ion-card>
-      </ng-container>
+  <main class="page seat-page">
+    <div *ngIf="busy" class="loading" role="status" aria-live="polite">
+      <ion-spinner></ion-spinner>
+      <p>Cargando mapa de asientos…</p>
     </div>
+
+    <p *ngIf="error" class="error" role="alert">
+      <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
+      <span>{{ error }}</span>
+    </p>
+
+    <ng-container *ngIf="data as map">
+      <!-- 1. Hero Card: Vuelo, Pasajero y Comparación de Asientos -->
+      <section class="hero-card reveal" aria-label="Resumen de selección de asiento">
+        <div class="hero-top">
+          <div class="hero-flight">
+            <span class="hero-label">VUELO</span>
+            <strong class="hero-number">{{ vueloLabel }}</strong>
+          </div>
+          <span class="chip chip-info hero-class-chip">
+            <ion-icon name="pricetag-outline" aria-hidden="true"></ion-icon>
+            {{ claseContratada }}
+          </span>
+        </div>
+
+        <div class="hero-route" *ngIf="rutaLabel">
+          <ion-icon name="airplane" class="route-icon" aria-hidden="true"></ion-icon>
+          <div class="route-details">
+            <strong class="route-iata">{{ rutaLabel }}</strong>
+            <span class="route-cities" *ngIf="origenCiudad && destinoCiudad">
+              {{ origenCiudad }} hacia {{ destinoCiudad }}
+            </span>
+          </div>
+        </div>
+
+        <div class="hero-passenger" *ngIf="nombrePasajero || rut">
+          <ion-icon name="person-circle-outline" aria-hidden="true"></ion-icon>
+          <div class="passenger-text">
+            <span>Pasajero</span>
+            <strong>{{ nombrePasajero || 'Pasajero de la reserva' }}</strong>
+            <small *ngIf="rut" class="rut-tag">RUT: {{ rut }}</small>
+          </div>
+        </div>
+
+        <!-- Comparación Asiento Actual vs Nuevo Asiento -->
+        <div class="seat-comparison">
+          <div class="seat-badge-box current-box">
+            <span class="box-label">Tu asiento actual</span>
+            <strong class="box-seat">{{ map.asientoActual?.numeroAsiento || 'Sin asignar' }}</strong>
+            <span class="box-sub">{{ map.asientoActual?.clase || 'Pendiente' }}</span>
+          </div>
+
+          <div class="comparison-arrow" aria-hidden="true">
+            <ion-icon name="arrow-forward"></ion-icon>
+          </div>
+
+          <div class="seat-badge-box new-box" [class.has-selection]="!!selected">
+            <span class="box-label">Nuevo asiento</span>
+            <strong class="box-seat">{{ selected ? selected.numeroAsiento : '—' }}</strong>
+            <span class="box-sub">{{ selected ? (selected.clase || claseContratada) : 'Por elegir' }}</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Tarjeta de Instrucciones para Adultos Mayores -->
+      <section class="card guide-card reveal" aria-label="Instrucciones para cambiar asiento">
+        <div class="sec-head">
+          <span class="sec-icon"><ion-icon name="information-circle" aria-hidden="true"></ion-icon></span>
+          <div>
+            <h2>Cómo elegir tu asiento</h2>
+            <p>Sigue estos tres sencillos pasos para asegurar tu comodidad:</p>
+          </div>
+        </div>
+
+        <ol class="step-list">
+          <li class="step-item">
+            <span class="step-num" aria-hidden="true">1</span>
+            <div class="step-body">
+              <strong>Toca un asiento disponible</strong>
+              <p>Busca un asiento en color azul dentro de tu clase contratada ({{ claseContratada }}).</p>
+            </div>
+          </li>
+          <li class="step-item">
+            <span class="step-num" aria-hidden="true">2</span>
+            <div class="step-body">
+              <strong>Revisa tu selección</strong>
+              <p>Tu nuevo número de asiento aparecerá destacado en la tarjeta inferior.</p>
+            </div>
+          </li>
+          <li class="step-item">
+            <span class="step-num" aria-hidden="true">3</span>
+            <div class="step-body">
+              <strong>Confirma el cambio</strong>
+              <p>Toca el botón «Confirmar asiento» para guardar tu elección en la reserva.</p>
+            </div>
+          </li>
+        </ol>
+
+        <div *ngIf="map.motivo" class="note warn">
+          <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
+          <span>{{ map.motivo }}</span>
+        </div>
+      </section>
+
+      <!-- 3. Leyenda Visual Clara (Forma + Ícono + Color + Texto) -->
+      <section class="card legend-card reveal" aria-label="Leyenda de disponibilidad de asientos">
+        <h3 class="legend-title">Referencia de colores y símbolos</h3>
+        <div class="legend-grid">
+          <div class="legend-item available">
+            <div class="legend-swatch available-swatch">
+              <ion-icon name="checkmark" aria-hidden="true"></ion-icon>
+            </div>
+            <div class="legend-text">
+              <strong>Disponible</strong>
+              <span>Tu clase contratada</span>
+            </div>
+          </div>
+
+          <div class="legend-item current">
+            <div class="legend-swatch current-swatch">
+              <ion-icon name="star" aria-hidden="true"></ion-icon>
+            </div>
+            <div class="legend-text">
+              <strong>Tu asiento actual</strong>
+              <span>Asignado a ti</span>
+            </div>
+          </div>
+
+          <div class="legend-item picked">
+            <div class="legend-swatch picked-swatch">
+              <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
+            </div>
+            <div class="legend-text">
+              <strong>Seleccionado</strong>
+              <span>Listo para confirmar</span>
+            </div>
+          </div>
+
+          <div class="legend-item occupied">
+            <div class="legend-swatch occupied-swatch">
+              <ion-icon name="close" aria-hidden="true"></ion-icon>
+            </div>
+            <div class="legend-text">
+              <strong>No disponible</strong>
+              <span>Ocupado u otra clase</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. Fuselaje Realista del Avión -->
+      <section class="airplane-fuselage reveal" aria-label="Distribución de asientos en el avión">
+        <!-- Nariz del avión y cabina de pilotos -->
+        <header class="airplane-nose">
+          <div class="cockpit-glass" aria-hidden="true">
+            <div class="glass-reflection"></div>
+          </div>
+          <div class="nose-banner">
+            <ion-icon name="airplane" aria-hidden="true"></ion-icon>
+            <span>FRENTE DEL AVIÓN · CABINA DE PILOTOS</span>
+          </div>
+        </header>
+
+        <!-- Interior de la cabina -->
+        <div class="cabin-body">
+          <ng-container *ngFor="let section of sections">
+            <!-- Divisor de clase con insignia -->
+            <div class="class-divider" [ngClass]="section.kind">
+              <span class="class-chip">
+                <ion-icon name="pricetag-outline" aria-hidden="true"></ion-icon>
+                {{ section.label }}
+              </span>
+            </div>
+
+            <!-- Filas de asientos -->
+            <div class="cabin-row" *ngFor="let row of section.rows" [ngClass]="row.kind">
+              <!-- Número de fila lado izquierdo -->
+              <span class="row-badge left-badge" aria-hidden="true">{{ row.label }}</span>
+
+              <!-- Asientos lado izquierdo -->
+              <div class="seat-side left">
+                <button
+                  *ngFor="let seat of row.left; trackBy: trackSeat"
+                  type="button"
+                  class="seat-btn"
+                  [class.is-available]="isAvailable(seat)"
+                  [class.is-current]="isCurrent(seat)"
+                  [class.is-picked]="isPicked(seat)"
+                  [class.is-occupied]="!seat.seleccionable && !isCurrent(seat)"
+                  [disabled]="!seat.seleccionable || saving"
+                  [attr.aria-label]="'Asiento ' + seat.numeroAsiento + ', ' + (seat.clase || 'clase no informada') + ', ' + (isCurrent(seat) ? 'tu asiento actual' : (isPicked(seat) ? 'seleccionado' : (seat.seleccionable ? 'disponible' : 'ocupado')))"
+                  [attr.aria-pressed]="isPicked(seat)"
+                  (click)="choose(seat)">
+                  <span class="seat-indicator" aria-hidden="true">
+                    <ion-icon *ngIf="isCurrent(seat)" name="star"></ion-icon>
+                    <ion-icon *ngIf="isPicked(seat)" name="checkmark-circle"></ion-icon>
+                    <ion-icon *ngIf="!seat.seleccionable && !isCurrent(seat)" name="lock-closed-outline"></ion-icon>
+                    <span *ngIf="isAvailable(seat)" class="avail-dot"></span>
+                  </span>
+                  <strong class="seat-letter">{{ seatLetter(seat) }}</strong>
+                </button>
+              </div>
+
+              <!-- Pasillo central -->
+              <div class="aisle-lane" aria-hidden="true">
+                <span class="aisle-line"></span>
+                <span class="aisle-tag">PASILLO</span>
+                <span class="aisle-line"></span>
+              </div>
+
+              <!-- Asientos lado derecho -->
+              <div class="seat-side right">
+                <button
+                  *ngFor="let seat of row.right; trackBy: trackSeat"
+                  type="button"
+                  class="seat-btn"
+                  [class.is-available]="isAvailable(seat)"
+                  [class.is-current]="isCurrent(seat)"
+                  [class.is-picked]="isPicked(seat)"
+                  [class.is-occupied]="!seat.seleccionable && !isCurrent(seat)"
+                  [disabled]="!seat.seleccionable || saving"
+                  [attr.aria-label]="'Asiento ' + seat.numeroAsiento + ', ' + (seat.clase || 'clase no informada') + ', ' + (isCurrent(seat) ? 'tu asiento actual' : (isPicked(seat) ? 'seleccionado' : (seat.seleccionable ? 'disponible' : 'ocupado')))"
+                  [attr.aria-pressed]="isPicked(seat)"
+                  (click)="choose(seat)">
+                  <span class="seat-indicator" aria-hidden="true">
+                    <ion-icon *ngIf="isCurrent(seat)" name="star"></ion-icon>
+                    <ion-icon *ngIf="isPicked(seat)" name="checkmark-circle"></ion-icon>
+                    <ion-icon *ngIf="!seat.seleccionable && !isCurrent(seat)" name="lock-closed-outline"></ion-icon>
+                    <span *ngIf="isAvailable(seat)" class="avail-dot"></span>
+                  </span>
+                  <strong class="seat-letter">{{ seatLetter(seat) }}</strong>
+                </button>
+              </div>
+
+              <!-- Número de fila lado derecho -->
+              <span class="row-badge right-badge" aria-hidden="true">{{ row.label }}</span>
+            </div>
+          </ng-container>
+        </div>
+
+        <p *ngIf="!sections.length" class="empty-state small">
+          <ion-icon name="airplane" aria-hidden="true"></ion-icon>
+          <span>No hay asientos cargados para este avión.</span>
+        </p>
+
+        <!-- Cola del avión -->
+        <footer class="airplane-tail" aria-hidden="true">
+          <div class="tail-fin"></div>
+          <span>SKYWAY AIRLINES · PUERTAS DE SALIDA TRASERAS</span>
+        </footer>
+      </section>
+    </ng-container>
   </main>
 </ion-content>
+
+<!-- 5. Barra Inferior Flotante de Confirmación (Docked Sticky Footer) -->
+<ion-footer *ngIf="data as map" class="seat-footer ion-no-border">
+  <div class="footer-container">
+    <div class="confirmation-panel" *ngIf="selected as seat">
+      <div class="confirmation-info">
+        <div class="confirmation-text">
+          <span class="confirm-tag">NUEVA SELECCIÓN</span>
+          <div class="confirm-route-seats">
+            <span class="old-seat">{{ map.asientoActual?.numeroAsiento || 'Sin asignar' }}</span>
+            <ion-icon name="arrow-forward" aria-hidden="true"></ion-icon>
+            <strong class="new-seat">Asiento {{ seat.numeroAsiento }}</strong>
+          </div>
+          <span class="confirm-class">{{ seat.clase || claseContratada }}</span>
+        </div>
+
+        <span *ngIf="seat.precio != null" class="confirm-price">
+          {{ clp(seat.precio) }}
+        </span>
+      </div>
+
+      <div class="confirmation-actions">
+        <ion-button
+          fill="outline"
+          class="cancel-btn"
+          (click)="cancelSelection()"
+          [disabled]="saving">
+          Cancelar
+        </ion-button>
+
+        <ion-button
+          class="confirm-btn"
+          (click)="save()"
+          [disabled]="saving">
+          <ion-spinner *ngIf="saving"></ion-spinner>
+          <ng-container *ngIf="!saving">
+            <ion-icon name="checkmark-circle" slot="start" aria-hidden="true"></ion-icon>
+            {{ map.asientoActual ? 'Confirmar cambio' : 'Confirmar asiento' }}
+          </ng-container>
+        </ion-button>
+      </div>
+    </div>
+
+    <!-- Barra de guía cuando no hay asiento seleccionado -->
+    <div class="hint-bar" *ngIf="!selected">
+      <ion-icon name="information-circle" aria-hidden="true"></ion-icon>
+      <span>Toca un asiento azul disponible para seleccionarlo.</span>
+    </div>
+  </div>
+</ion-footer>

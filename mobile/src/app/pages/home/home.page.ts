@@ -1,9 +1,28 @@
 import { Component, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
+import { addIcons } from 'ionicons';
+import {
+  airplaneOutline,
+  arrowForwardOutline,
+  logOutOutline,
+  notificationsOutline,
+  refreshOutline,
+  ticketOutline
+} from 'ionicons/icons';
 import { ApiService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
 import { Inicio } from '../../core/models';
 import { errorMessage } from '../../core/ui';
+
+addIcons({
+  airplaneOutline,
+  arrowForwardOutline,
+  logOutOutline,
+  notificationsOutline,
+  refreshOutline,
+  ticketOutline
+});
+
 @Component({ selector: 'app-home', standalone: false, templateUrl: './home.page.html' })
 export class HomePage {
   private api = inject(ApiService); auth = inject(AuthService);

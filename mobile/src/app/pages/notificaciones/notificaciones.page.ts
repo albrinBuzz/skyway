@@ -1,8 +1,15 @@
 import { Component, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
+import { addIcons } from 'ionicons';
+import { refreshOutline } from 'ionicons/icons';
 import { ApiService } from '../../core/api.service';
 import { Pagina, Notificacion } from '../../core/models';
 import { errorMessage } from '../../core/ui';
+
+addIcons({
+  refreshOutline
+});
+
 @Component({ selector: 'app-notificaciones', standalone: false, templateUrl: './notificaciones.page.html' })
 export class NotificacionesPage {
   private api = inject(ApiService); data: Pagina<Notificacion> | null = null;

@@ -2,9 +2,93 @@ import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../core/api.service';
-import { Aeropuerto, DetalleReserva, Inicio, Itinerario, Pagina, ResumenReserva } from '../../core/models';
+import { Aeropuerto, DetalleReserva, Inicio, Itinerario, Pagina, ResumenReserva, Vuelo } from '../../core/models';
 import { errorMessage } from '../../core/ui';
 import { ParadaRuta, RutaVuelo3D, TramoRuta } from './globo.models';
+import { addIcons } from 'ionicons';
+import {
+  airplane,
+  airplaneOutline,
+  alertCircle,
+  arrowForwardOutline,
+  businessOutline,
+  calendarOutline,
+  cashOutline,
+  checkmarkCircle,
+  chevronForwardOutline,
+  closeCircle,
+  documentTextOutline,
+  earthOutline,
+  enterOutline,
+  globeOutline,
+  helpCircle,
+  informationCircle,
+  locationOutline,
+  peopleOutline,
+  personCircleOutline,
+  pricetagOutline,
+  refreshOutline,
+  shieldCheckmarkOutline,
+  ticketOutline,
+  timeOutline
+} from 'ionicons/icons';
+
+addIcons({
+  airplane,
+  airplaneOutline,
+  alertCircle,
+  arrowForwardOutline,
+  businessOutline,
+  calendarOutline,
+  cashOutline,
+  checkmarkCircle,
+  chevronForwardOutline,
+  closeCircle,
+  documentTextOutline,
+  earthOutline,
+  enterOutline,
+  globeOutline,
+  helpCircle,
+  informationCircle,
+  locationOutline,
+  peopleOutline,
+  personCircleOutline,
+  pricetagOutline,
+  refreshOutline,
+  shieldCheckmarkOutline,
+  ticketOutline,
+  timeOutline
+});
+
+export type Tono = 'ok' | 'warn' | 'bad' | 'info' | 'neutral';
+export interface Etiqueta { tono: Tono; icono: string; texto: string; }
+
+const CLP_FORMATTER = new Intl.NumberFormat('es-CL', { maximumFractionDigits: 0 });
+
+const CIUDADES_IATA: Record<string, { ciudad: string; aeropuerto: string }> = {
+  SCL: { ciudad: 'Santiago', aeropuerto: 'Aeropuerto Arturo Merino Benítez' },
+  LIM: { ciudad: 'Lima', aeropuerto: 'Aeropuerto Jorge Chávez' },
+  EZE: { ciudad: 'Buenos Aires', aeropuerto: 'Aeropuerto Ministro Pistarini' },
+  AEP: { ciudad: 'Buenos Aires', aeropuerto: 'Aeroparque Jorge Newbery' },
+  GRU: { ciudad: 'São Paulo', aeropuerto: 'Aeropuerto de Guarulhos' },
+  BOG: { ciudad: 'Bogotá', aeropuerto: 'Aeropuerto El Dorado' },
+  MIA: { ciudad: 'Miami', aeropuerto: 'Miami International Airport' },
+  JFK: { ciudad: 'Nueva York', aeropuerto: 'John F. Kennedy International' },
+  MAD: { ciudad: 'Madrid', aeropuerto: 'Aeropuerto Adolfo Suárez Madrid-Barajas' },
+  LAX: { ciudad: 'Los Ángeles', aeropuerto: 'Los Angeles International Airport' },
+  PEK: { ciudad: 'Beijing', aeropuerto: 'Beijing Capital International' },
+  CJC: { ciudad: 'Calama', aeropuerto: 'Aeropuerto El Loa' },
+  ANF: { ciudad: 'Antofagasta', aeropuerto: 'Aeropuerto Andrés Sabella' },
+  IQQ: { ciudad: 'Iquique', aeropuerto: 'Aeropuerto Diego Aracena' },
+  ARI: { ciudad: 'Arica', aeropuerto: 'Aeropuerto Chacalluta' },
+  CCP: { ciudad: 'Concepción', aeropuerto: 'Aeropuerto Carriel Sur' },
+  PMC: { ciudad: 'Puerto Montt', aeropuerto: 'Aeropuerto El Tepual' },
+  PUQ: { ciudad: 'Punta Arenas', aeropuerto: 'Aeropuerto Pdte. Carlos Ibáñez' },
+  BBA: { ciudad: 'Balmaceda', aeropuerto: 'Aeródromo Balmaceda' },
+  LSC: { ciudad: 'La Serena', aeropuerto: 'Aeródromo La Florida' },
+  COR: { ciudad: 'Córdoba', aeropuerto: 'Aeropuerto Ing. Ambrosio Taravella' },
+  MDZ: { ciudad: 'Mendoza', aeropuerto: 'Aeropuerto El Plumerillo' }
+};
 
 const COORDENADAS_FALLBACK: Record<string, { lat: number; lon: number; ciudad: string; pais: string }> = {
   SCL: { lat: -33.3928, lon: -70.7858, ciudad: 'Santiago', pais: 'Chile' },
@@ -43,7 +127,7 @@ export class VuelosPage {
   rutaSeleccionada: RutaVuelo3D | null = null;
 
   // Caché en memoria para evitar peticiones repetidas a la BD
-  private readonly detalleReservaCache = new Map<number, DetalleReserva>();
+  readonly detalleReservaCache = new Map<number, DetalleReserva>();
 
   ionViewWillEnter() {
     void this.load();
@@ -99,6 +183,54 @@ export class VuelosPage {
     } finally {
       if (generation === this.generation) this.busy = false;
     }
+  }
+
+  // --- Helpers de presentación acordes a la guía de diseño ---
+  clp(monto: number | null | undefined): string {
+    if (monto === null || monto === undefined) return 'Sin especificar';
+    return `$${CLP_FORMATTER.format(Math.round(monto))} CLP`;
+  }
+
+  estadoReserva(descripcion: string | null | undefined): Etiqueta {
+    const texto = descripcion || 'Sin estado';
+    if (/cancel/i.test(texto)) return { tono: 'bad', icono: 'close-circle', texto };
+    if (/pendiente/i.test(texto)) return { tono: 'warn', icono: 'time-outline', texto };
+    if (/confirmad|check-?in/i.test(texto)) return { tono: 'ok', icono: 'checkmark-circle', texto };
+    return { tono: 'neutral', icono: 'information-circle', texto };
+  }
+
+  estadoVuelo(v: Vuelo | null | undefined): Etiqueta {
+    if (!v?.estado) return { tono: 'neutral', icono: 'help-circle', texto: 'Por confirmar' };
+    const texto = v.estado.descripcion || v.estado.estado || 'Por confirmar';
+    const clave = `${v.estado.descripcion ?? ''} ${v.estado.estado ?? ''}`;
+    if (/cancel|inactivo/i.test(clave)) return { tono: 'bad', icono: 'close-circle', texto };
+    if (/retras|demor/i.test(clave)) return { tono: 'warn', icono: 'alert-circle', texto };
+    if (/aterriz|finaliz/i.test(clave)) return { tono: 'neutral', icono: 'checkmark-circle', texto };
+    if (/en vuelo/i.test(clave)) return { tono: 'info', icono: 'airplane', texto };
+    if (/program|activo/i.test(clave)) return { tono: 'ok', icono: 'checkmark-circle', texto };
+    return { tono: 'neutral', icono: 'help-circle', texto };
+  }
+
+  ciudadPorIata(iata: string | null | undefined): string {
+    if (!iata) return 'Ciudad';
+    const code = iata.trim().toUpperCase();
+    return CIUDADES_IATA[code]?.ciudad || code;
+  }
+
+  aeropuertoPorIata(iata: string | null | undefined): string {
+    if (!iata) return 'Aeropuerto';
+    const code = iata.trim().toUpperCase();
+    return CIUDADES_IATA[code]?.aeropuerto || `Aeropuerto ${code}`;
+  }
+
+  esTitular(idReserva: number): boolean | null {
+    const d = this.detalleReservaCache.get(idReserva);
+    return d ? d.titular : null;
+  }
+
+  tieneCheckin(idReserva: number): boolean | null {
+    const d = this.detalleReservaCache.get(idReserva);
+    return d ? !!d.checkin : null;
   }
 
   async abrirMapaReserva(idReserva: number, idVuelo?: number | null, resumenFallback?: ResumenReserva) {

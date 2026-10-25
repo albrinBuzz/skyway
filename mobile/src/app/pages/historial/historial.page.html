@@ -1,8 +1,8 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>Historial</ion-title>
+    <ion-title>Historial de viajes</ion-title>
     <ion-buttons slot="end">
-      <ion-button aria-label="Actualizar" (click)="load()" [disabled]="busy">
+      <ion-button aria-label="Actualizar historial" (click)="load()" [disabled]="busy">
         <ion-icon name="refresh-outline" slot="icon-only"></ion-icon>
       </ion-button>
     </ion-buttons>
@@ -11,70 +11,325 @@
 
 <ion-content>
   <main class="page historial-page">
-    <span class="eyebrow">TRAZABILIDAD DE TUS VIAJES</span>
-    <h1>Tu historial de vuelo.</h1>
-    <p class="muted">Consulta reservas activas, viajes terminados o cancelados y los cambios operacionales informados por SkyWay.</p>
+    <!-- Encabezado Hero institucional con identidad visual SkyWay -->
+    <header class="page-intro reveal">
+      <div class="hero-card hero-header">
+        <span class="hero-label">SKYWAY · TRAZABILIDAD Y REGISTROS</span>
+        <h1 class="hero-title">Tu historial de vuelo</h1>
+        <p class="hero-desc">
+          Consulta tus reservas activas, viajes concluidos o cancelados y las actualizaciones operacionales de tus vuelos.
+        </p>
+      </div>
+    </header>
 
-    <ion-segment [value]="seccion" (ionChange)="cambiarSeccion($event.detail.value)" [scrollable]="true">
-      <ion-segment-button value="activas">Activas</ion-segment-button>
-      <ion-segment-button value="historial">Historial</ion-segment-button>
-      <ion-segment-button value="cambios">Cambios</ion-segment-button>
-    </ion-segment>
+    <!-- Selector de pestañas accesible y de alto contraste (sin Shadow DOM de ion-segment) -->
+    <div class="tabs-wrapper reveal">
+      <div class="seg-bar" role="tablist" aria-label="Pestañas del historial de viajes">
+        <button
+          type="button"
+          role="tab"
+          class="seg-btn"
+          [class.is-active]="seccion === 'activas'"
+          [attr.aria-selected]="seccion === 'activas'"
+          (click)="cambiarSeccion('activas')"
+        >
+          <ion-icon name="airplane" aria-hidden="true"></ion-icon>
+          <span>Activas</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          class="seg-btn"
+          [class.is-active]="seccion === 'historial'"
+          [attr.aria-selected]="seccion === 'historial'"
+          (click)="cambiarSeccion('historial')"
+        >
+          <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+          <span>Historial</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          class="seg-btn"
+          [class.is-active]="seccion === 'cambios'"
+          [attr.aria-selected]="seccion === 'cambios'"
+          (click)="cambiarSeccion('cambios')"
+        >
+          <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
+          <span>Cambios</span>
+        </button>
+      </div>
+    </div>
 
-    <div *ngIf="busy" class="loading"><ion-spinner></ion-spinner></div>
-    <p *ngIf="error" class="error" role="alert">{{ error }}</p>
+    <!-- Indicador de carga -->
+    <div *ngIf="busy" class="loading" role="status" aria-live="polite">
+      <ion-spinner></ion-spinner>
+      <p>Cargando información de tu historial…</p>
+    </div>
 
-    <section *ngIf="!busy && reservas as result" class="history-list">
-      <ion-card *ngFor="let r of result.contenido" button [routerLink]="['/vuelos/reservas', r.idReserva]">
-        <ion-card-content>
-          <div class="row">
-            <span class="eyebrow">RESERVA #{{ r.idReserva }}</span>
-            <span class="status" [class.status-cancelled]="(r.estadoReserva.descripcion || '').toLowerCase().includes('cancel')">
-              {{ r.estadoReserva.descripcion || 'Sin estado' }}
+    <!-- Mensaje de error accesible -->
+    <div *ngIf="error" class="error-card reveal" role="alert">
+      <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
+      <div>
+        <strong>No fue posible cargar los datos</strong>
+        <p>{{ error }}</p>
+      </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- SECCIONES 1 & 2: RESERVAS (ACTIVAS / HISTORIAL) -->
+    <!-- ============================================== -->
+    <section *ngIf="!busy && seccion !== 'cambios' && reservas as result" class="reservas-section">
+      <div class="sec-head reveal">
+        <span class="sec-icon">
+          <ion-icon [name]="seccion === 'activas' ? 'airplane' : 'calendar-outline'" aria-hidden="true"></ion-icon>
+        </span>
+        <div>
+          <h2>{{ seccion === 'activas' ? 'Reservas activas' : 'Viajes anteriores y cancelados' }}</h2>
+          <p>
+            {{ seccion === 'activas'
+              ? 'Tus vuelos programados y listos para viajar.'
+              : 'Registro histórico de vuelos completados o anulados.' }}
+          </p>
+        </div>
+      </div>
+
+      <div *ngIf="result.contenido.length; else sinReservas" class="reservas-list">
+        <article
+          *ngFor="let r of result.contenido"
+          class="card reserva-card reveal"
+          button
+          [routerLink]="['/vuelos/reservas', r.idReserva]"
+          aria-label="Ver detalle de la reserva"
+        >
+          <!-- Fila superior: ID y Estados -->
+          <div class="reserva-card-top">
+            <div class="reserva-id-group">
+              <span class="reserva-label">Reserva</span>
+              <strong class="reserva-number">#{{ r.idReserva }}</strong>
+            </div>
+
+            <div class="reserva-badges">
+              <span *ngIf="estadoReserva(r.estadoReserva.descripcion) as st" class="chip chip-{{ st.tono }}">
+                <ion-icon [name]="st.icono" aria-hidden="true"></ion-icon>
+                {{ st.texto }}
+              </span>
+
+              <span
+                *ngIf="esTitular(r.idReserva) !== null"
+                class="chip chip-sm"
+                [class.chip-info]="esTitular(r.idReserva)"
+                [class.chip-neutral]="!esTitular(r.idReserva)"
+              >
+                <ion-icon [name]="esTitular(r.idReserva) ? 'shield-checkmark-outline' : 'people-outline'" aria-hidden="true"></ion-icon>
+                {{ esTitular(r.idReserva) ? 'Titular' : 'Acompañante' }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Trazado de ruta visual -->
+          <div class="reserva-route">
+            <div class="route-codes">
+              <strong class="iata">{{ r.codigoIataOrigen || '—' }}</strong>
+              <div class="flight-line" aria-hidden="true">
+                <span class="fl-dot"></span>
+                <span class="fl-dash"></span>
+                <ion-icon name="airplane" class="fl-plane"></ion-icon>
+                <span class="fl-dash"></span>
+                <span class="fl-dot fl-dot-end"></span>
+              </div>
+              <strong class="iata iata-end">{{ r.codigoIataDestino || '—' }}</strong>
+            </div>
+
+            <div class="route-names">
+              <div class="route-side">
+                <span class="route-tag">Origen</span>
+                <strong>{{ ciudadPorIata(r.codigoIataOrigen) }}</strong>
+              </div>
+              <div class="route-side end">
+                <span class="route-tag">Destino</span>
+                <strong>{{ ciudadPorIata(r.codigoIataDestino) }}</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fila de Metadatos: Horario y Total en CLP -->
+          <div class="reserva-meta-grid">
+            <div class="meta-item">
+              <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+              <div>
+                <span class="meta-label">
+                  {{ r.proximaSalida ? 'Salida de vuelo' : 'Fecha de reserva' }}
+                </span>
+                <strong class="meta-value cap">
+                  {{ r.proximaSalida ? (r.proximaSalida | date:"EEEE d 'de' MMMM · HH:mm 'h'") : (r.fechaReserva | date:"d 'de' MMMM 'de' y") }}
+                </strong>
+              </div>
+            </div>
+
+            <div class="meta-item total-item">
+              <ion-icon name="cash-outline" aria-hidden="true"></ion-icon>
+              <div>
+                <span class="meta-label">Total pagado</span>
+                <strong class="meta-value price">{{ clp(r.total) }}</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Indicador de Check-in -->
+          <div class="checkin-indicator-row">
+            <span *ngIf="tieneCheckin(r)" class="chip chip-ok chip-sm">
+              <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
+              Check-in confirmado
+            </span>
+            <span *ngIf="!tieneCheckin(r) && seccion === 'activas' && !((r.estadoReserva.descripcion || '').toLowerCase().includes('cancel'))" class="chip chip-warn chip-sm">
+              <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
+              Check-in disponible antes de la salida
             </span>
           </div>
 
-          <div class="route compact-route">
-            <strong>{{ r.codigoIataOrigen || '—' }}</strong>
-            <ion-icon name="airplane-outline"></ion-icon>
-            <strong>{{ r.codigoIataDestino || '—' }}</strong>
+          <!-- Botón de Acción Principal (>=48px de altura) -->
+          <div class="reserva-actions">
+            <ion-button
+              expand="block"
+              class="btn-ver-reserva"
+              [routerLink]="['/vuelos/reservas', r.idReserva]"
+            >
+              <ion-icon name="document-text-outline" slot="start" aria-hidden="true"></ion-icon>
+              Ver detalle de reserva
+            </ion-button>
           </div>
+        </article>
+      </div>
 
-          <div class="history-meta">
-            <span>Reserva creada {{ r.fechaReserva | date:'dd MMM yyyy · HH:mm' }}</span>
-            <span>{{ r.proximaSalida ? ('Salida ' + (r.proximaSalida | date:'dd MMM yyyy · HH:mm')) : 'Sin horario disponible' }}</span>
+      <ng-template #sinReservas>
+        <div class="empty-state-card reveal">
+          <div class="empty-icon-wrap">
+            <ion-icon [name]="seccion === 'activas' ? 'airplane' : 'calendar-outline'" aria-hidden="true"></ion-icon>
           </div>
-        </ion-card-content>
-      </ion-card>
+          <h2>{{ seccion === 'activas' ? 'No tienes reservas activas' : 'Sin viajes anteriores' }}</h2>
+          <p>
+            {{ seccion === 'activas'
+              ? 'Cuando realices una reserva en SkyWay, tus pasajes e itinerarios se mostrarán en esta lista.'
+              : 'Tus viajes completados o cancelados se archivarán aquí para que mantengas un registro ordenado.' }}
+          </p>
+          <ion-button expand="block" class="btn-buscar" routerLink="/inicio" *ngIf="seccion === 'activas'">
+            <ion-icon name="airplane" slot="start" aria-hidden="true"></ion-icon>
+            Buscar un vuelo
+          </ion-button>
+        </div>
+      </ng-template>
 
-      <p class="empty" *ngIf="!result.contenido.length">
-        {{ seccion === 'activas' ? 'No tienes reservas activas.' : 'Todavía no tienes viajes finalizados o cancelados.' }}
-      </p>
-
-      <nav class="pagination" *ngIf="result.totalPaginas > 1" aria-label="Paginación del historial">
-        <ion-button fill="clear" [disabled]="page === 0 || busy" (click)="load(page - 1)">Anterior</ion-button>
-        <span>{{ page + 1 }} / {{ result.totalPaginas }}</span>
-        <ion-button fill="clear" [disabled]="page + 1 >= result.totalPaginas || busy" (click)="load(page + 1)">Siguiente</ion-button>
+      <!-- Paginación accesible -->
+      <nav class="pagination-bar" aria-label="Paginación de historial" *ngIf="result.totalPaginas > 1">
+        <ion-button
+          fill="clear"
+          class="page-nav-btn"
+          [disabled]="page === 0 || busy"
+          (click)="load(page - 1)"
+        >
+          Anterior
+        </ion-button>
+        <span class="page-indicator">Página {{ page + 1 }} de {{ result.totalPaginas }}</span>
+        <ion-button
+          fill="clear"
+          class="page-nav-btn"
+          [disabled]="page + 1 >= result.totalPaginas || busy"
+          (click)="load(page + 1)"
+        >
+          Siguiente
+        </ion-button>
       </nav>
     </section>
 
-    <section *ngIf="!busy && cambios as result" class="timeline">
-      <article class="timeline-item" *ngFor="let n of result.contenido">
-        <div class="timeline-icon"><ion-icon [name]="icono(n)"></ion-icon></div>
-        <div class="timeline-content">
-          <span class="eyebrow">{{ n.fecha | date:'dd MMM yyyy · HH:mm' }}</span>
-          <h2>{{ n.titulo || 'Actualización de viaje' }}</h2>
-          <p>{{ n.mensaje }}</p>
-          <span class="read-state">{{ n.leido ? 'Leída' : 'Pendiente de leer' }}</span>
+    <!-- ============================================== -->
+    <!-- SECCIÓN 3: LÍNEA DE TIEMPO DE CAMBIOS          -->
+    <!-- ============================================== -->
+    <section *ngIf="!busy && seccion === 'cambios' && cambios as result" class="cambios-section">
+      <div class="sec-head reveal">
+        <span class="sec-icon"><ion-icon name="notifications-outline" aria-hidden="true"></ion-icon></span>
+        <div>
+          <h2>Cambios operacionales</h2>
+          <p>Notificaciones sobre reprogramaciones, cambio de puerta de embarque y novedades en tus viajes.</p>
         </div>
-      </article>
+      </div>
 
-      <p class="empty" *ngIf="!result.contenido.length">No hay cambios registrados para tus viajes.</p>
+      <div *ngIf="result.contenido.length; else sinCambios" class="timeline-list">
+        <article
+          *ngFor="let n of result.contenido"
+          class="timeline-card reveal"
+          [class.is-unread]="!n.leido"
+        >
+          <!-- Indicador visual del evento (círculo con ícono según tono) -->
+          <div class="timeline-badge badge-{{ tipoCambio(n).tono }}" aria-hidden="true">
+            <ion-icon [name]="tipoCambio(n).icono"></ion-icon>
+          </div>
 
-      <nav class="pagination" *ngIf="result.totalPaginas > 1" aria-label="Paginación de cambios">
-        <ion-button fill="clear" [disabled]="page === 0 || busy" (click)="load(page - 1)">Anterior</ion-button>
-        <span>{{ page + 1 }} / {{ result.totalPaginas }}</span>
-        <ion-button fill="clear" [disabled]="page + 1 >= result.totalPaginas || busy" (click)="load(page + 1)">Siguiente</ion-button>
+          <!-- Contenido del cambio con formato claro para adultos mayores -->
+          <div class="timeline-body">
+            <div class="timeline-top">
+              <div class="timeline-tags">
+                <span class="chip chip-sm chip-{{ tipoCambio(n).tono }}">
+                  <ion-icon [name]="tipoCambio(n).icono" aria-hidden="true"></ion-icon>
+                  {{ tipoCambio(n).etiqueta }}
+                </span>
+
+                <span *ngIf="extraerNumeroVuelo(n) as numVuelo" class="flight-pill">
+                  <ion-icon name="airplane" aria-hidden="true"></ion-icon>
+                  {{ numVuelo }}
+                </span>
+              </div>
+
+              <span class="read-status-badge" [class.unread]="!n.leido">
+                {{ n.leido ? 'Leída' : 'Nuevo aviso' }}
+              </span>
+            </div>
+
+            <time class="timeline-date" [attr.datetime]="n.fecha">
+              <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+              {{ n.fecha | date:"d 'de' MMMM 'de' y · HH:mm 'h'" }}
+            </time>
+
+            <h3 class="timeline-title">{{ n.titulo || 'Actualización de tu vuelo' }}</h3>
+
+            <div class="timeline-message-box">
+              <p class="timeline-message">{{ n.mensaje }}</p>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <ng-template #sinCambios>
+        <div class="empty-state-card reveal">
+          <div class="empty-icon-wrap">
+            <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
+          </div>
+          <h2>No hay cambios operacionales registrados</h2>
+          <p>
+            SkyWay te informará aquí de manera oportuna si tu vuelo sufre alguna reprogramación horaria, cambio de terminal o puerta de embarque.
+          </p>
+        </div>
+      </ng-template>
+
+      <!-- Paginación de cambios -->
+      <nav class="pagination-bar" aria-label="Paginación de cambios" *ngIf="result.totalPaginas > 1">
+        <ion-button
+          fill="clear"
+          class="page-nav-btn"
+          [disabled]="page === 0 || busy"
+          (click)="load(page - 1)"
+        >
+          Anterior
+        </ion-button>
+        <span class="page-indicator">Página {{ page + 1 }} de {{ result.totalPaginas }}</span>
+        <ion-button
+          fill="clear"
+          class="page-nav-btn"
+          [disabled]="page + 1 >= result.totalPaginas || busy"
+          (click)="load(page + 1)"
+        >
+          Siguiente
+        </ion-button>
       </nav>
     </section>
   </main>

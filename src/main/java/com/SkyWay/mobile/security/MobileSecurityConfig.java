@@ -65,7 +65,7 @@ public class MobileSecurityConfig {
     @Bean
     @Order(1)
     SecurityFilterChain mobileFilterChain(HttpSecurity http, JwtDecoder decoder,
-            ObjectMapper mapper, @Value("${skyway.mobile.allowed-origins:http://localhost:8100,http://localhost,https://localhost,capacitor://localhost}") String origins) throws Exception {
+            ObjectMapper mapper, @Value("${skyway.mobile.allowed-origins:http://localhost:8100,http://127.0.0.1:8100,http://localhost:8101,http://127.0.0.1:8101,http://localhost,https://localhost,capacitor://localhost,https://skyway-gde6a6aza3abb8a6.brazilsouth-01.azurewebsites.net}") String origins) throws Exception {
         CorsConfiguration cors = new CorsConfiguration();
         cors.setAllowedOrigins(Arrays.stream(origins.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList());
         cors.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "OPTIONS"));

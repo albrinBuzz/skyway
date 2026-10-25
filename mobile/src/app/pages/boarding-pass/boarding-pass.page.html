@@ -1,68 +1,310 @@
 <ion-header>
   <ion-toolbar>
-    <ion-buttons slot="start"><ion-back-button [defaultHref]="'/vuelos/reservas/' + id"></ion-back-button></ion-buttons>
-    <ion-title>Ticket del pasajero</ion-title>
-    <ion-buttons slot="end"><ion-button aria-label="Actualizar ticket" (click)="load()" [disabled]="busy"><ion-icon name="refresh-outline" slot="icon-only"></ion-icon></ion-button></ion-buttons>
+    <ion-buttons slot="start">
+      <ion-back-button [defaultHref]="'/vuelos/reservas/' + id" text="Volver"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Tarjeta de embarque</ion-title>
+    <ion-buttons slot="end">
+      <ion-button aria-label="Actualizar ticket" (click)="load()" [disabled]="busy">
+        <ion-icon name="refresh-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
+
 <ion-content>
-  <main class="page">
-    <div *ngIf="busy" class="loading"><ion-spinner></ion-spinner></div>
-    <p *ngIf="error" class="error" role="alert">{{ error }}</p>
+  <main class="page ticket-page">
+    <div *ngIf="busy" class="loading" role="status" aria-live="polite">
+      <ion-spinner></ion-spinner>
+      <p>Cargando tarjeta de embarque…</p>
+    </div>
+
+    <p *ngIf="error" class="error" role="alert">
+      <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
+      <span>{{ error }}</span>
+    </p>
+
     <ng-container *ngIf="data as p">
-      <article class="boarding">
-        <div class="boarding-head">
-          <div class="row"><strong>skyway.</strong><span class="eyebrow">TICKET DEL PASAJERO</span></div>
-          <div class="route">
-            <strong>{{ p.vuelo.segmentos[0]?.origen?.codigoIata || '—' }}</strong>
-            <ion-icon name="airplane-outline"></ion-icon>
-            <strong>{{ p.vuelo.segmentos[p.vuelo.segmentos.length - 1]?.destino?.codigoIata || '—' }}</strong>
-          </div>
-          <p>{{ p.vuelo.fechaHoraSalida | date:'EEEE dd MMMM yyyy' }}</p>
-        </div>
-        <div class="boarding-body">
-          <span class="eyebrow">PASAJERO</span>
-          <h2>{{ p.pasajero.nombre }} {{ p.pasajero.apellido }}</h2>
-          <div class="meta">
-            <div><span>Vuelo</span><strong>{{ p.vuelo.numeroVuelo || p.vuelo.idVuelo }}</strong></div>
-            <div *ngIf="p.codigoPnr"><span>Localizador PNR</span><strong>{{ p.codigoPnr }}</strong></div>
-            <div><span>Asiento</span><strong class="seat-number">{{ p.vuelo.asiento?.numeroAsiento || 'Sin asignar' }}</strong></div>
-            <div><span>Clase</span><strong>{{ p.vuelo.asiento?.clase || 'Por confirmar' }}</strong></div>
-            <div><span>Estado</span><strong>{{ p.vuelo.estado.descripcion || 'Por confirmar' }}</strong></div>
-            <div><span>Salida</span><strong>{{ p.vuelo.fechaHoraSalida | date:'dd MMM · HH:mm' }}</strong></div>
-            <div><span>Llegada</span><strong>{{ p.vuelo.fechaHoraLlegada | date:'dd MMM · HH:mm' }}</strong></div>
-            <div><span>Avión</span><strong>{{ p.vuelo.modeloAvion || 'Por confirmar' }}</strong></div>
-            <div><span>Check-in</span><strong>{{ p.checkin ? 'Realizado' : 'Pendiente' }}</strong></div>
-          </div>
-          <div class="segment" *ngFor="let s of p.vuelo.segmentos">
-            <strong>{{ s.origen?.codigoIata || '—' }} → {{ s.destino?.codigoIata || '—' }}</strong>
-            <p>Salida: {{ s.horaSalida | date:'dd MMM · HH:mm' }} · Llegada: {{ s.horaLlegada | date:'dd MMM · HH:mm' }}</p>
-            <p class="muted">Puerta {{ s.puerta?.codigoPuerta || 'por asignar' }} · Terminal {{ s.puerta?.terminal || 'por confirmar' }}</p>
-          </div>
-          <section class="ticket-baggage">
-            <h3>Equipaje del pasajero</h3>
-            <div class="feature" *ngFor="let bag of p.equipajes">
-              <div><strong>{{ bag.nombreTipo || bag.tipo }}</strong><p class="muted">{{ bag.dimensiones }}</p></div>
-              <strong>{{ bag.peso | number:'1.0-2' }} kg</strong>
+      <!-- Tarjeta física simulada de embarque (Boarding Pass) -->
+      <article class="boarding-card reveal" aria-label="Tarjeta de embarque digital">
+        
+        <!-- 1. Cabecera Premium Navy con Branding de SkyWay -->
+        <header class="boarding-head">
+          <div class="head-top">
+            <div class="skyway-brand">
+              <span class="brand-name">SKYWAY</span>
+              <span class="brand-dot" aria-hidden="true"></span>
+              <ion-icon name="airplane" class="brand-plane" aria-hidden="true"></ion-icon>
             </div>
-            <p class="muted" *ngIf="!p.equipajes.length">No hay equipaje registrado para este pasajero.</p>
-          </section>
-          <ion-button *ngIf="rut" expand="block" fill="outline" [routerLink]="['/vuelos/reservas', id, 'vuelos', vuelo, 'tickets', rut, 'asientos']">
-            {{ p.vuelo.asiento ? 'Consultar o cambiar asiento' : 'Consultar mapa de asientos' }}
-            <ion-icon name="airplane-outline" slot="end"></ion-icon>
-          </ion-button>
-          <div *ngIf="qr; else sinPase" class="qr">
-            <img [src]="qr" alt="Código QR de simulación del pase de abordar" width="230" height="230" />
-            <strong>SIMULACIÓN ACADÉMICA</strong>
-            <p>No válido para embarcar</p>
-            <span class="muted">Reserva #{{ id }} · Check-in #{{ p.checkin?.idCheckin }}</span>
+            
+            <span *ngIf="p.checkin" class="chip chip-ok">
+              <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
+              Check-in realizado
+            </span>
+            <span *ngIf="!p.checkin" class="chip chip-warn">
+              <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
+              Check-in pendiente
+            </span>
           </div>
-          <ng-template #sinPase>
-            <p class="ticket-pending">El pase con QR se habilita al completar el check-in y tener asiento asignado. Puedes consultar los datos del ticket mientras tanto.</p>
-          </ng-template>
+
+          <span class="doc-subtitle">TARJETA DE EMBARQUE · BOARDING PASS</span>
+
+          <!-- Ruta Principal en Letras IATA Gigantes -->
+          <div class="head-route">
+            <div class="route-codes">
+              <strong class="iata">{{ primerSegmento?.origen?.codigoIata || '—' }}</strong>
+              <div class="flight-line" aria-hidden="true">
+                <span class="fl-dot"></span>
+                <span class="fl-dash"></span>
+                <ion-icon name="airplane" class="fl-plane"></ion-icon>
+                <span class="fl-dash"></span>
+                <span class="fl-dot fl-dot-end"></span>
+              </div>
+              <strong class="iata iata-end">{{ ultimoSegmento?.destino?.codigoIata || '—' }}</strong>
+            </div>
+
+            <div class="route-cities">
+              <div class="city-origin">
+                <span class="city-tag">ORIGEN</span>
+                <strong class="city-name">{{ primerSegmento?.origen?.ciudad || 'Ciudad de salida' }}</strong>
+                <span class="airport-name">{{ primerSegmento?.origen?.nombreAeropuerto || '' }}</span>
+              </div>
+              <div class="city-dest">
+                <span class="city-tag">DESTINO</span>
+                <strong class="city-name">{{ ultimoSegmento?.destino?.ciudad || 'Ciudad de llegada' }}</strong>
+                <span class="airport-name">{{ ultimoSegmento?.destino?.nombreAeropuerto || '' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Información del Pasajero y Vuelo -->
+          <div class="passenger-banner">
+            <div class="passenger-details">
+              <span class="banner-label">NOMBRE DEL PASAJERO</span>
+              <h2 class="passenger-name">{{ p.pasajero.nombre }} {{ p.pasajero.apellido }}</h2>
+              <div class="passenger-meta">
+                <span class="meta-tag">RUT: <strong>{{ p.pasajero.rut }}</strong></span>
+                <button
+                  *ngIf="p.codigoPnr"
+                  type="button"
+                  class="pnr-btn"
+                  (click)="copyPnr(p.codigoPnr)"
+                  aria-label="Copiar código localizador PNR">
+                  <span>PNR: <strong>{{ p.codigoPnr }}</strong></span>
+                  <ion-icon name="copy-outline" aria-hidden="true"></ion-icon>
+                </button>
+              </div>
+            </div>
+
+            <div class="flight-meta-pill">
+              <span class="banner-label">NÚMERO DE VUELO</span>
+              <strong class="pill-flight">{{ p.vuelo.numeroVuelo || p.vuelo.idVuelo }}</strong>
+              <span class="pill-date" *ngIf="p.vuelo.fechaHoraSalida">
+                {{ p.vuelo.fechaHoraSalida | date:"EEE d 'de' MMM 'de' y" }}
+              </span>
+            </div>
+          </div>
+        </header>
+
+        <!-- 2. Perforación con muescas estilo pasaje físico -->
+        <div class="ticket-perforation" aria-hidden="true">
+          <span class="perforation-notch notch-left"></span>
+          <span class="perforation-line"></span>
+          <span class="perforation-notch notch-right"></span>
         </div>
+
+        <!-- 3. Cajas Grandes Destacadas para el Aeropuerto (Legibles sin lentes) -->
+        <section class="boarding-body" aria-label="Datos de embarque en puerta">
+          <div class="gate-grid">
+            <!-- PUERTA -->
+            <div class="gate-box highlight-gate">
+              <div class="box-head">
+                <ion-icon name="enter-outline" aria-hidden="true"></ion-icon>
+                <span>PUERTA / GATE</span>
+              </div>
+              <strong class="box-value big-number">
+                {{ primerSegmento?.puerta?.codigoPuerta || 'Por asignar' }}
+              </strong>
+              <span class="box-hint">Verifica pantallas</span>
+            </div>
+
+            <!-- TERMINAL -->
+            <div class="gate-box">
+              <div class="box-head">
+                <ion-icon name="business-outline" aria-hidden="true"></ion-icon>
+                <span>TERMINAL</span>
+              </div>
+              <strong class="box-value big-number">
+                {{ primerSegmento?.puerta?.terminal || 'T1' }}
+              </strong>
+              <span class="box-hint">Aeropuerto origen</span>
+            </div>
+
+            <!-- ASIENTO (Especialmente destacado) -->
+            <div class="gate-box highlight-seat">
+              <div class="box-head">
+                <ion-icon name="airplane" aria-hidden="true"></ion-icon>
+                <span>ASIENTO / SEAT</span>
+              </div>
+              <strong class="box-value seat-number">
+                {{ p.vuelo.asiento?.numeroAsiento || 'Sin asignar' }}
+              </strong>
+              <span class="box-hint">Ubicación a bordo</span>
+            </div>
+
+            <!-- CLASE -->
+            <div class="gate-box">
+              <div class="box-head">
+                <ion-icon name="pricetag-outline" aria-hidden="true"></ion-icon>
+                <span>CLASE / CLASS</span>
+              </div>
+              <strong class="box-value">
+                {{ p.vuelo.asiento?.clase || 'Económica' }}
+              </strong>
+              <span class="box-hint">Cabina</span>
+            </div>
+
+            <!-- HORA SALIDA -->
+            <div class="gate-box highlight-time">
+              <div class="box-head">
+                <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
+                <span>HORA DE SALIDA</span>
+              </div>
+              <strong class="box-value big-number time-val">
+                {{ (primerSegmento?.horaSalida || p.vuelo.fechaHoraSalida) | date:'HH:mm' }} h
+              </strong>
+              <span class="box-hint">Hora local</span>
+            </div>
+
+            <!-- HORA LLEGADA -->
+            <div class="gate-box">
+              <div class="box-head">
+                <ion-icon name="location-outline" aria-hidden="true"></ion-icon>
+                <span>LLEGADA PREVISTA</span>
+              </div>
+              <strong class="box-value big-number time-val">
+                {{ (ultimoSegmento?.horaLlegada || p.vuelo.fechaHoraLlegada) | date:'HH:mm' }} h
+              </strong>
+              <span class="box-hint">Hora estimada</span>
+            </div>
+          </div>
+
+          <!-- Tramos / Escalas (si aplica más de 1 tramo) -->
+          <div class="segments-detail" *ngIf="p.vuelo.segmentos.length > 1">
+            <h3 class="section-title">
+              <ion-icon name="airplane" aria-hidden="true"></ion-icon>
+              Tramos de tu vuelo
+            </h3>
+            <div class="segment-card" *ngFor="let s of p.vuelo.segmentos; let idx = index">
+              <div class="segment-head">
+                <span class="segment-idx">Tramo {{ idx + 1 }}</span>
+                <strong>{{ s.origen?.codigoIata }} → {{ s.destino?.codigoIata }}</strong>
+              </div>
+              <div class="segment-meta">
+                <span>Salida: <strong>{{ s.horaSalida | date:'dd MMM · HH:mm' }} h</strong></span>
+                <span>Llegada: <strong>{{ s.horaLlegada | date:'dd MMM · HH:mm' }} h</strong></span>
+                <span>Puerta: <strong>{{ s.puerta?.codigoPuerta || 'Por asignar' }}</strong> (Term. {{ s.puerta?.terminal || 'T1' }})</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Equipaje del Pasajero -->
+          <div class="baggage-card">
+            <h3 class="section-title">
+              <ion-icon name="briefcase-outline" aria-hidden="true"></ion-icon>
+              Equipaje registrado del pasajero
+            </h3>
+
+            <ul class="bag-list" *ngIf="p.equipajes.length; else sinBolsas">
+              <li class="bag-item" *ngFor="let bag of p.equipajes">
+                <div class="bag-icon-box">
+                  <ion-icon name="briefcase-outline" aria-hidden="true"></ion-icon>
+                </div>
+                <div class="bag-desc">
+                  <strong>{{ bag.nombreTipo || bag.tipo }}</strong>
+                  <span *ngIf="bag.dimensiones">Medidas: {{ bag.dimensiones }}</span>
+                </div>
+                <span class="bag-kilos">{{ bag.peso | number:'1.0-2' }} kg</span>
+              </li>
+            </ul>
+
+            <ng-template #sinBolsas>
+              <p class="no-baggage-note">
+                <ion-icon name="information-circle" aria-hidden="true"></ion-icon>
+                <span>No hay maletas ni equipajes adicionales registrados para este pasajero.</span>
+              </p>
+            </ng-template>
+          </div>
+        </section>
+
+        <!-- 4. Segunda Perforación hacia la sección del Código QR -->
+        <div class="ticket-perforation" aria-hidden="true">
+          <span class="perforation-notch notch-left"></span>
+          <span class="perforation-line"></span>
+          <span class="perforation-notch notch-right"></span>
+        </div>
+
+        <!-- 5. Sección de Código QR de Alta Legibilidad -->
+        <section class="qr-section" aria-label="Código QR para escáner de embarque">
+          <div *ngIf="qr; else qrPendiente" class="qr-container">
+            <div class="qr-instructions">
+              <h3>Presenta este código en la puerta de embarque</h3>
+              <p>Puedes aumentar el brillo de tu pantalla para facilitar la lectura del escáner en el aeropuerto.</p>
+            </div>
+
+            <div class="qr-image-wrapper">
+              <img
+                [src]="qr"
+                alt="Código QR de embarque SkyWay"
+                width="240"
+                height="240"
+                class="qr-code-img" />
+            </div>
+
+            <div class="qr-footer-info">
+              <strong class="sim-tag">SIMULACIÓN ACADÉMICA · SKYWAY</strong>
+              <p class="sim-note">No válido para embarque comercial en vuelos reales</p>
+              <span class="reserva-meta">
+                Reserva #{{ id }} · Check-in #{{ p.checkin?.idCheckin || '—' }}
+              </span>
+            </div>
+          </div>
+
+          <ng-template #qrPendiente>
+            <div class="qr-pending-box">
+              <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
+              <h3>Código QR pendiente</h3>
+              <p>
+                El pase con código QR se activa una vez completado el check-in y teniendo un asiento asignado a bordo.
+              </p>
+            </div>
+          </ng-template>
+
+          <!-- 6. Botones de Acción (>=48px de altura) -->
+          <div class="ticket-actions">
+            <ion-button
+              expand="block"
+              class="seat-change-btn"
+              [routerLink]="seatRoute">
+              <ion-icon name="airplane-outline" slot="start" aria-hidden="true"></ion-icon>
+              {{ p.vuelo.asiento ? 'Cambiar o consultar asiento' : 'Asignar asiento en el mapa' }}
+            </ion-button>
+
+            <ion-button
+              expand="block"
+              fill="outline"
+              class="back-btn"
+              [routerLink]="['/vuelos/reservas', id]">
+              <ion-icon name="arrow-back" slot="start" aria-hidden="true"></ion-icon>
+              Volver al detalle de la reserva
+            </ion-button>
+          </div>
+        </section>
       </article>
-      <p class="muted ticket-note">La información corresponde exclusivamente a este pasajero y vuelo.</p>
+
+      <p class="ticket-disclaimer">
+        Esta tarjeta de embarque digital corresponde exclusivamente a este pasajero y vuelo.
+      </p>
     </ng-container>
   </main>
 </ion-content>

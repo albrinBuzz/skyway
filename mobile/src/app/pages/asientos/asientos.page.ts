@@ -3,23 +3,72 @@ import { ActivatedRoute } from '@angular/router';
 import { AlertController, ToastController } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../core/api.service';
-import { Asiento, MapaAsientos } from '../../core/models';
+import { Asiento, MapaAsientos, Vuelo } from '../../core/models';
 import { errorMessage } from '../../core/ui';
+import { addIcons } from 'ionicons';
+import {
+  airplane,
+  airplaneOutline,
+  alertCircle,
+  arrowBack,
+  arrowForward,
+  checkmark,
+  checkmarkCircle,
+  close,
+  closeCircle,
+  helpCircle,
+  informationCircle,
+  locationOutline,
+  lockClosedOutline,
+  personCircleOutline,
+  personOutline,
+  pricetagOutline,
+  refreshOutline,
+  shieldCheckmarkOutline,
+  star,
+  timeOutline
+} from 'ionicons/icons';
 
-type CabinKind = 'first' | 'business' | 'economy' | 'other';
+// Registrar íconos necesarios para la pantalla de selección de asientos
+addIcons({
+  airplane,
+  airplaneOutline,
+  alertCircle,
+  arrowBack,
+  arrowForward,
+  checkmark,
+  checkmarkCircle,
+  close,
+  closeCircle,
+  helpCircle,
+  informationCircle,
+  locationOutline,
+  lockClosedOutline,
+  personCircleOutline,
+  personOutline,
+  pricetagOutline,
+  refreshOutline,
+  shieldCheckmarkOutline,
+  star,
+  timeOutline
+});
 
-interface CabinRow {
+export type CabinKind = 'first' | 'business' | 'economy' | 'other';
+
+export interface CabinRow {
   label: string;
   left: Asiento[];
   right: Asiento[];
   kind: CabinKind;
 }
 
-interface CabinSection {
+export interface CabinSection {
   label: string;
   kind: CabinKind;
   rows: CabinRow[];
 }
+
+const CLP = new Intl.NumberFormat('es-CL', { maximumFractionDigits: 0 });
 
 @Component({
   selector: 'app-asientos',
@@ -33,19 +82,51 @@ export class AsientosPage {
   private readonly alerts = inject(AlertController);
   private readonly toasts = inject(ToastController);
 
-  // Los nombres de estos parámetros vienen de app-routing.module.ts:
+  // Parámetros de ruta:
   // /vuelos/reservas/:id/vuelos/:vuelo/asientos
+  // /vuelos/reservas/:id/vuelos/:vuelo/tickets/:rut/asientos
   get id(): number { return Number(this.route.snapshot.paramMap.get('id')); }
   get vuelo(): number { return Number(this.route.snapshot.paramMap.get('vuelo')); }
   get rut(): string | null { return this.route.snapshot.paramMap.get('rut'); }
 
   data: MapaAsientos | null = null;
+  vueloInfo: Vuelo | null = null;
   selected: Asiento | null = null;
   sections: CabinSection[] = [];
   busy = false;
   saving = false;
   error = '';
   nombrePasajero = '';
+
+  get vueloLabel(): string {
+    if (this.vueloInfo?.numeroVuelo) return `Vuelo ${this.vueloInfo.numeroVuelo}`;
+    return `Vuelo #${this.vuelo}`;
+  }
+
+  get rutaLabel(): string {
+    if (!this.vueloInfo?.segmentos?.length) return '';
+    const orig = this.vueloInfo.segmentos[0]?.origen?.codigoIata;
+    const dest = this.vueloInfo.segmentos[this.vueloInfo.segmentos.length - 1]?.destino?.codigoIata;
+    if (orig && dest) return `${orig} → ${dest}`;
+    return '';
+  }
+
+  get origenCiudad(): string {
+    return this.vueloInfo?.segmentos?.[0]?.origen?.ciudad || '';
+  }
+
+  get destinoCiudad(): string {
+    const s = this.vueloInfo?.segmentos;
+    return s && s.length ? s[s.length - 1]?.destino?.ciudad || '' : '';
+  }
+
+  get claseContratada(): string {
+    return this.data?.asientoActual?.clase || 'Clase por confirmar';
+  }
+
+  clp(monto: number | null): string {
+    return monto === null || monto === undefined ? 'Sin especificar' : `$${CLP.format(Math.round(monto))} CLP`;
+  }
 
   ionViewWillEnter(): void {
     void this.load();
@@ -101,11 +182,9 @@ export class AsientosPage {
       const kind = this.cabinKind(originalClass);
 
       // A/B/C a la izquierda, D/E/F a la derecha del pasillo.
-      // Solo se dibujan los asientos existentes: no inventamos B/E en filas 2+2.
       let left = seats.filter(s => /^[ABC]$/.test(this.seatLetter(s)));
       let right = seats.filter(s => /^[DEF]$/.test(this.seatLetter(s)));
       if (left.length + right.length !== seats.length || !left.length || !right.length) {
-        // Distribución alternativa: mostramos todos los asientos sin descartarlos.
         const split = Math.ceil(seats.length / 2);
         left = seats.slice(0, split);
         right = seats.slice(split);
@@ -153,11 +232,17 @@ export class AsientosPage {
     this.selected = null;
     this.sections = [];
     try {
-      this.setData(await firstValueFrom(
+      const mapaPromise = firstValueFrom(
         this.rut
           ? this.api.asientosPasajero(this.id, this.vuelo, this.rut)
           : this.api.asientos(this.id, this.vuelo)
-      ));
+      );
+      const vueloPromise = firstValueFrom(this.api.vuelo(this.id, this.vuelo)).catch(() => null);
+
+      const [mapa, vuelo] = await Promise.all([mapaPromise, vueloPromise]);
+      this.vueloInfo = vuelo;
+      this.setData(mapa);
+
       if (this.rut) {
         try {
           const personas = await firstValueFrom(this.api.ticketsReserva(this.id, this.vuelo));
@@ -179,6 +264,10 @@ export class AsientosPage {
     this.selected = this.isPicked(seat) ? null : seat;
   }
 
+  cancelSelection(): void {
+    this.selected = null;
+  }
+
   async save(): Promise<void> {
     if (!this.selected || this.saving || !this.data) return;
     const seat = this.selected;
@@ -187,7 +276,7 @@ export class AsientosPage {
       header: isInitial ? `Elegir asiento ${seat.numeroAsiento}` : `Cambiar al asiento ${seat.numeroAsiento}`,
       message: isInitial
         ? `Se asignará el asiento ${seat.numeroAsiento} (${seat.clase ?? 'clase por confirmar'}) a este vuelo.`
-        : 'El cambio conserva las condiciones de la clase de tu asiento actual.',
+        : `El cambio conservará las condiciones de tu pasaje (${this.claseContratada}).`,
       buttons: [
         { text: 'Volver', role: 'cancel' },
         { text: 'Confirmar', role: 'confirm' }
@@ -214,19 +303,19 @@ export class AsientosPage {
       const message = errorMessage(e);
       try {
         this.setData(await firstValueFrom(
-        this.rut
-          ? this.api.asientosPasajero(this.id, this.vuelo, this.rut)
-          : this.api.asientos(this.id, this.vuelo)
-      ));
-      if (this.rut) {
-        try {
-          const personas = await firstValueFrom(this.api.ticketsReserva(this.id, this.vuelo));
-          const persona = personas.find(p => p.rut === this.rut);
-          this.nombrePasajero = persona ? `${persona.nombre} ${persona.apellido}` : '';
-        } catch {
-          this.nombrePasajero = '';
+          this.rut
+            ? this.api.asientosPasajero(this.id, this.vuelo, this.rut)
+            : this.api.asientos(this.id, this.vuelo)
+        ));
+        if (this.rut) {
+          try {
+            const personas = await firstValueFrom(this.api.ticketsReserva(this.id, this.vuelo));
+            const persona = personas.find(p => p.rut === this.rut);
+            this.nombrePasajero = persona ? `${persona.nombre} ${persona.apellido}` : '';
+          } catch {
+            this.nombrePasajero = '';
+          }
         }
-      }
       } catch {
         this.selected = null;
       }

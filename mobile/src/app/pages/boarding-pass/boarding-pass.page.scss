@@ -1,17 +1,761 @@
-.boarding { border-radius: 25px; overflow: hidden; max-width: 450px; margin: auto; box-shadow: 0 15px 40px #14274213; }
-.boarding-head { padding: 26px; background: #101e3b; color: #fff; }
-.boarding-head .row>strong { font-size: 26px; letter-spacing: -1px; }
-.boarding-head .eyebrow { color: #b8c9e4; letter-spacing: 1px; }
-.boarding-body { background: #fff; padding: 26px; }
-.boarding-body h2 { margin: 10px 0 20px; }
-.seat-number { font-size: 24px; color: #2449d8; }
-.qr { text-align: center; padding-top: 24px; margin-top: 24px; border-top: 2px dashed #d9e1ee; }
-.qr img { display: block; margin: auto; max-width: 100%; height: auto; }
-.qr>strong { display: block; font-size: 12px; letter-spacing: 1px; margin-top: 10px; }
-.qr p { font-size: 12px; color: #70809b; }
+/* ===== Tarjeta de Embarque (Boarding Pass) — SkyWay Mobile ===== */
+$navy: #101e3b;
+$ink: #172844;
+$soft-ink: #4a5a75;
+$blue: #2449d8;
+$teal: #26b99a;
+$mint: #42d4ba;
+$success: #128463;
+$danger: #b83449;
+$line: #e3e9f3;
+$bg-tint: #eef3ff;
 
-.ticket-baggage { margin: 22px 0; padding-top: 14px; border-top: 1px solid #dce5f4; }
-.ticket-baggage h3 { font-size: 1rem; color: #142744; }
-.ticket-baggage .feature { display: flex; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid #eef2fa; }
-.ticket-pending { border-radius: 12px; background: #edf3fc; color: #33496a; padding: 14px; font-size: .9rem; margin-top: 20px; }
-.ticket-note { text-align: center; padding: 10px; }
+ion-content {
+  --background: #f4f6fa;
+}
+
+.ticket-page {
+  padding: 12px 10px 32px;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: $ink;
+  max-width: 540px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.loading {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  color: $soft-ink;
+  font-size: 15px;
+  padding: 30px 14px;
+  p { margin: 0; }
+}
+
+.error {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13.5px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  margin-bottom: 14px;
+  background: #fde6ea;
+  color: #962236;
+  border: 1px solid #f4bcc7;
+  box-sizing: border-box;
+  ion-icon { color: $danger; font-size: 20px; flex: 0 0 auto; margin-top: 1px; }
+}
+
+/* ---------- Chips de Estado ---------- */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 28px;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.2;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  ion-icon { font-size: 15px; flex: 0 0 auto; }
+}
+.chip-ok {
+  background: #dff6ee;
+  color: #0b6248;
+  border-color: #b4e6d4;
+  ion-icon { color: #0b6248; }
+}
+.chip-warn {
+  background: #fff1d6;
+  color: #7a4f00;
+  border-color: #f4d493;
+  ion-icon { color: #7a4f00; }
+}
+
+/* ---------- Tarjeta de Embarque Principal (Estilo Físico Premium) ---------- */
+.boarding-card {
+  position: relative;
+  background: #ffffff;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 14px 40px rgba(16, 30, 59, 0.1);
+  border: 1px solid #dce4f0;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+/* 1. Cabecera Azul Marina */
+.boarding-head {
+  position: relative;
+  overflow: hidden;
+  color: #ffffff;
+  padding: 18px 14px 16px;
+  background: linear-gradient(135deg, $navy 0%, #1b3568 58%, $blue 100%);
+  box-sizing: border-box;
+
+  &::after {
+    content: '';
+    position: absolute;
+    right: -40px;
+    top: -40px;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(66, 212, 186, 0.3), transparent 70%);
+    pointer-events: none;
+  }
+}
+
+.head-top {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.skyway-brand {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  .brand-name {
+    font-size: 19px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    color: #ffffff;
+  }
+  .brand-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: $mint;
+  }
+  .brand-plane {
+    font-size: 18px;
+    color: $mint;
+    margin-left: 2px;
+  }
+}
+
+.doc-subtitle {
+  position: relative;
+  z-index: 1;
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  color: #c9d6f2;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+/* Ruta Principal en Letras IATA */
+.head-route {
+  position: relative;
+  z-index: 1;
+  margin-top: 14px;
+}
+
+.route-codes {
+  display: grid;
+  grid-template-columns: auto minmax(32px, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.iata {
+  font-size: clamp(22px, 6.2vw, 26px);
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  line-height: 1;
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+.flight-line {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 32px;
+  color: $mint;
+}
+.fl-dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 2px solid $mint;
+  background: #fff;
+}
+.fl-dot-end { background: $mint; border-color: #fff; }
+.fl-dash { flex: 1; border-top: 1.5px dashed rgba(255, 255, 255, 0.45); }
+.fl-plane { flex: 0 0 auto; font-size: 18px; color: $mint; }
+
+.route-cities {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+  margin-top: 8px;
+
+  .city-origin {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+  .city-dest {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+    gap: 1px;
+    min-width: 0;
+  }
+  .city-tag {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    color: #a5bce9;
+    text-transform: uppercase;
+  }
+  .city-name {
+    font-size: 14px;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.25;
+    word-break: break-word;
+  }
+  .airport-name {
+    font-size: 11.5px;
+    color: #c9d6f2;
+    line-height: 1.25;
+    word-break: break-word;
+  }
+}
+
+/* Banner de Pasajero */
+.passenger-banner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.passenger-details {
+  .banner-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    color: #a5bce9;
+    text-transform: uppercase;
+  }
+  .passenger-name {
+    margin: 2px 0 4px;
+    font-size: 17px;
+    font-weight: 800;
+    line-height: 1.2;
+    color: #ffffff;
+    letter-spacing: -0.2px;
+  }
+  .passenger-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: #c9d6f2;
+  }
+}
+
+.pnr-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  ion-icon {
+    font-size: 13px;
+    color: $mint;
+  }
+}
+
+.flight-meta-pill {
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  text-align: right;
+
+  .banner-label {
+    display: block;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    color: #a5bce9;
+    text-transform: uppercase;
+  }
+  .pill-flight {
+    display: block;
+    font-size: 16px;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.2;
+  }
+  .pill-date {
+    display: block;
+    font-size: 11px;
+    color: #c9d6f2;
+    margin-top: 1px;
+  }
+}
+
+/* 2. Perforación con muescas estilo pasaje físico */
+.ticket-perforation {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 24px;
+  background: #ffffff;
+  margin: 0;
+  overflow: visible;
+
+  .perforation-line {
+    flex: 1;
+    border-top: 2px dashed #cbd5e1;
+    margin: 0 14px;
+  }
+
+  .perforation-notch {
+    width: 18px;
+    height: 24px;
+    background: #f4f6fa;
+    position: absolute;
+    top: 0;
+    z-index: 2;
+
+    &.notch-left {
+      left: -1px;
+      border-radius: 0 24px 24px 0;
+      border-right: 1px solid #dce4f0;
+      box-shadow: inset -2px 0 3px rgba(0, 0, 0, 0.05);
+    }
+    &.notch-right {
+      right: -1px;
+      border-radius: 24px 0 0 24px;
+      border-left: 1px solid #dce4f0;
+      box-shadow: inset 2px 0 3px rgba(0, 0, 0, 0.05);
+    }
+  }
+}
+
+/* 3. Cajas Grandes Destacadas para el Aeropuerto */
+.boarding-body {
+  padding: 12px 14px 8px;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+
+.gate-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  box-sizing: border-box;
+}
+
+.gate-box {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 10px 8px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  box-sizing: border-box;
+
+  .box-head {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: $soft-ink;
+    margin-bottom: 2px;
+
+    ion-icon {
+      font-size: 13px;
+      color: $blue;
+      flex: 0 0 auto;
+    }
+  }
+
+  .box-value {
+    display: block;
+    font-size: 16px;
+    font-weight: 800;
+    color: $ink;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+
+    &.big-number {
+      font-size: 20px;
+      letter-spacing: -0.4px;
+      color: $navy;
+    }
+    &.seat-number {
+      font-size: 22px;
+      font-weight: 900;
+      color: $blue;
+    }
+    &.time-val {
+      color: #0b4f3a;
+    }
+  }
+
+  .box-hint {
+    display: block;
+    font-size: 10.5px;
+    color: #64748b;
+    margin-top: 2px;
+  }
+
+  /* Destacado de Puerta */
+  &.highlight-gate {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    .box-head ion-icon { color: $blue; }
+    .box-value { color: #1e3a8a; }
+  }
+
+  /* Destacado de Asiento */
+  &.highlight-seat {
+    background: #f0fdf9;
+    border-color: #99f6e4;
+    .box-head ion-icon { color: $teal; }
+  }
+
+  /* Destacado de Hora */
+  &.highlight-time {
+    background: #fefce8;
+    border-color: #fef08a;
+    .box-head ion-icon { color: #854d0e; }
+  }
+}
+
+/* Sección de Tramos */
+.segments-detail {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid $line;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 10px;
+  font-size: 14.5px;
+  font-weight: 800;
+  color: $ink;
+
+  ion-icon {
+    font-size: 17px;
+    color: $blue;
+  }
+}
+
+.segment-card {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 8px;
+  box-sizing: border-box;
+
+  .segment-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+    .segment-idx {
+      font-size: 11px;
+      font-weight: 700;
+      color: $soft-ink;
+      text-transform: uppercase;
+    }
+    strong { font-size: 14px; color: $navy; }
+  }
+  .segment-meta {
+    display: grid;
+    gap: 2px;
+    font-size: 12px;
+    color: $soft-ink;
+    strong { color: $ink; }
+  }
+}
+
+/* Equipaje del Pasajero */
+.baggage-card {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid $line;
+}
+
+.bag-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.bag-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #eef2f7;
+  box-sizing: border-box;
+
+  .bag-icon-box {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: #e3f8f3;
+    color: $success;
+    font-size: 18px;
+    flex: 0 0 auto;
+  }
+
+  .bag-desc {
+    flex: 1;
+    min-width: 0;
+    strong { display: block; font-size: 13.5px; color: $ink; }
+    span { font-size: 11.5px; color: $soft-ink; }
+  }
+
+  .bag-kilos {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: $navy;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: $bg-tint;
+  }
+}
+
+.no-baggage-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: $soft-ink;
+  font-size: 12.5px;
+  ion-icon { font-size: 17px; color: $blue; flex: 0 0 auto; }
+}
+
+/* 4. Sección de Código QR */
+.qr-section {
+  padding: 12px 14px 20px;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+
+.qr-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.qr-instructions {
+  margin-bottom: 12px;
+  h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 800;
+    color: $ink;
+    letter-spacing: -0.2px;
+  }
+  p {
+    margin: 3px 0 0;
+    font-size: 12.5px;
+    color: $soft-ink;
+    line-height: 1.35;
+  }
+}
+
+.qr-image-wrapper {
+  padding: 10px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  box-shadow: 0 6px 18px rgba(16, 30, 59, 0.06);
+  display: inline-block;
+  max-width: min(200px, 68vw);
+  box-sizing: border-box;
+
+  .qr-code-img {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+  }
+}
+
+.qr-footer-info {
+  margin-top: 12px;
+  .sim-tag {
+    display: block;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    color: $navy;
+    text-transform: uppercase;
+  }
+  .sim-note {
+    margin: 1px 0 0;
+    font-size: 11.5px;
+    color: #64748b;
+  }
+  .reserva-meta {
+    display: block;
+    margin-top: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    color: $soft-ink;
+  }
+}
+
+.qr-pending-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 18px 12px;
+  border-radius: 14px;
+  background: $bg-tint;
+  border: 1.5px dashed #c4d3fb;
+  margin-bottom: 12px;
+
+  ion-icon {
+    font-size: 32px;
+    color: $blue;
+    margin-bottom: 6px;
+  }
+  h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 800;
+    color: $navy;
+  }
+  p {
+    margin: 4px 0 0;
+    font-size: 12.5px;
+    color: $soft-ink;
+    line-height: 1.4;
+  }
+}
+
+/* 5. Botones de Acción (altura 42px - 46px) */
+.ticket-actions {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid $line;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.seat-change-btn {
+  --border-radius: 12px;
+  --background: linear-gradient(135deg, #101e3b, #2449d8);
+  --box-shadow: 0 6px 18px rgba(36, 73, 216, 0.25);
+  --color: #ffffff;
+  min-height: 44px;
+  font-size: 14px;
+  font-weight: 800;
+  ion-icon { font-size: 18px; }
+}
+
+.back-btn {
+  --border-radius: 12px;
+  --border-color: #cfd7e5;
+  --color: #172844;
+  min-height: 44px;
+  font-size: 13.5px;
+  font-weight: 750;
+  ion-icon { font-size: 18px; }
+}
+
+.ticket-disclaimer {
+  text-align: center;
+  font-size: 11.5px;
+  color: $soft-ink;
+  margin: 14px 0 6px;
+}
+
+/* Animaciones */
+.reveal {
+  animation: reveal .35s ease-out both;
+}
+
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { animation: none; }
+}
+
+/* Pantallas pequeñas (<= 360px / 320px) */
+@media (max-width: 360px) {
+  .ticket-page { padding: 10px 6px 28px; }
+  .boarding-head { padding: 14px 10px; }
+  .iata { font-size: clamp(20px, 6vw, 24px); }
+  .route-codes { gap: 6px; }
+  .passenger-details .passenger-name { font-size: 15.5px; }
+  .gate-grid { grid-template-columns: 1fr; }
+  .gate-box .box-value.big-number { font-size: 18px; }
+}

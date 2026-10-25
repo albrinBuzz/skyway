@@ -1,197 +1,350 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>Inicio</ion-title>
+    <ion-title>Buscar vuelos</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
   <main class="page inicio-page">
-    <span class="eyebrow">ENCUENTRA TU PRÓXIMO DESTINO</span>
-    <h1>Encuentra tu vuelo.</h1>
-    <p class="muted">Encuentra tu itinerario y continúa la compra de forma segura en la página web de SkyWay.</p>
 
-    <ion-card class="search-card">
-      <ion-card-content>
-        <form [formGroup]="form" (ngSubmit)="buscar()">
-          <div class="airport-grid">
-            <div class="airport-field">
-              <span class="airport-field-label" id="origen-label">Origen</span>
-              <button
-                type="button"
-                class="airport-trigger"
-                [class.empty-selection]="!form.controls.origen.value"
-                [disabled]="cargandoCatalogo"
-                (click)="abrirSelector('origen')"
-                aria-haspopup="dialog"
-                aria-labelledby="origen-label"
-                [attr.aria-expanded]="selectorAbierto && campoSelector === 'origen'"
-              >
-                <span class="airport-trigger-copy">
-                  <strong>{{ etiquetaSeleccionada(form.controls.origen.value) }}</strong>
-                  <small *ngIf="form.controls.origen.value">{{ nombreSeleccionado(form.controls.origen.value) }}</small>
-                </span>
-                <ion-icon name="search-outline" aria-hidden="true"></ion-icon>
-              </button>
-            </div>
-
-            <ion-button
-              class="swap-button"
-              type="button"
-              fill="clear"
-              aria-label="Intercambiar origen y destino"
-              (click)="intercambiar()"
-            >
-              <ion-icon name="swap-horizontal-outline" slot="icon-only"></ion-icon>
-            </ion-button>
-
-            <div class="airport-field">
-              <span class="airport-field-label" id="destino-label">Destino</span>
-              <button
-                type="button"
-                class="airport-trigger"
-                [class.empty-selection]="!form.controls.destino.value"
-                [disabled]="cargandoCatalogo"
-                (click)="abrirSelector('destino')"
-                aria-haspopup="dialog"
-                aria-labelledby="destino-label"
-                [attr.aria-expanded]="selectorAbierto && campoSelector === 'destino'"
-              >
-                <span class="airport-trigger-copy">
-                  <strong>{{ etiquetaSeleccionada(form.controls.destino.value) }}</strong>
-                  <small *ngIf="form.controls.destino.value">{{ nombreSeleccionado(form.controls.destino.value) }}</small>
-                </span>
-                <ion-icon name="search-outline" aria-hidden="true"></ion-icon>
-              </button>
-            </div>
-          </div>
-
-          <ion-input
-            formControlName="fecha"
-            type="date"
-            label="Fecha de salida"
-            labelPlacement="stacked"
-            [min]="hoy"
-          ></ion-input>
-
-          <p class="error" *ngIf="form.touched && form.invalid">
-            Completa origen, destino y fecha para buscar vuelos.
-          </p>
-
-          <ion-button expand="block" type="submit" [disabled]="buscando || form.invalid || cargandoCatalogo">
-            <ion-spinner *ngIf="buscando" name="crescent"></ion-spinner>
-            <ng-container *ngIf="!buscando">
-              Buscar vuelos
-              <ion-icon name="search-outline" slot="end"></ion-icon>
-            </ng-container>
-          </ion-button>
-        </form>
-      </ion-card-content>
-    </ion-card>
-
-    <p *ngIf="error" class="error" role="alert">{{ error }}</p>
-
-    <div *ngIf="cargandoCatalogo" class="loading">
-      <ion-spinner></ion-spinner>
-    </div>
-
-    <section *ngIf="resultados.length" class="results">
-      <div class="section-head">
-        <div>
-          <span class="eyebrow">RESULTADOS</span>
-          <h2>Vuelos disponibles</h2>
+    <!-- 1. HERO CARD (Visual language of reserva-detalle) -->
+    <section class="hero-card reveal" aria-label="Encuentra tu próximo vuelo">
+      <div class="hero-top">
+        <div class="hero-id">
+          <span class="hero-label">SkyWay Airlines</span>
+          <h1 class="hero-title">Encuentra tu próximo vuelo</h1>
         </div>
-        <span class="result-count">{{ resultados.length }}</span>
+        <span class="hero-plane-badge" aria-hidden="true">
+          <ion-icon name="airplane"></ion-icon>
+        </span>
       </div>
 
-      <ion-card *ngFor="let i of resultados" class="flight-result">
-        <ion-card-content>
-          <div class="row">
-            <span class="eyebrow">ITINERARIO #{{ i.idItinerario }}</span>
-            <span class="status">{{ i.numeroEscalas || 0 }} escala(s)</span>
+      <p class="hero-sub">
+        Busca itinerarios entre las principales ciudades con tarifas transparentes y compra web 100% segura.
+      </p>
+
+      <div class="hero-features">
+        <div class="hero-pill">
+          <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
+          <span>Compra segura en SkyWay web</span>
+        </div>
+        <div class="hero-pill">
+          <ion-icon name="pricetag-outline" aria-hidden="true"></ion-icon>
+          <span>Precios en pesos chilenos (CLP)</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. SEARCH CARD -->
+    <section class="card search-card reveal" aria-label="Buscador de itinerarios">
+      <div class="sec-head">
+        <span class="sec-icon">
+          <ion-icon name="search-outline" aria-hidden="true"></ion-icon>
+        </span>
+        <div>
+          <h2>Configura tu itinerario</h2>
+          <p>Selecciona tu ciudad de origen, tu destino y la fecha de tu viaje.</p>
+        </div>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="buscar()" novalidate>
+        <!-- Selector táctil de Origen y Destino -->
+        <div class="airports-selection-box">
+          <!-- Origen -->
+          <div class="airport-card-picker" [class.is-empty]="!form.controls.origen.value">
+            <span class="picker-label" id="origen-label">
+              <ion-icon name="location-outline" aria-hidden="true"></ion-icon>
+              Sales de (Origen)
+            </span>
+            <button
+              type="button"
+              class="airport-touch-btn"
+              [disabled]="cargandoCatalogo"
+              (click)="abrirSelector('origen')"
+              aria-haspopup="dialog"
+              aria-labelledby="origen-label"
+              [attr.aria-expanded]="selectorAbierto && campoSelector === 'origen'"
+            >
+              <div class="airport-touch-info">
+                <span class="big-iata">{{ form.controls.origen.value || '---' }}</span>
+                <strong class="airport-city-name">
+                  {{ form.controls.origen.value ? ciudadODefecto(form.controls.origen.value) : 'Seleccionar origen' }}
+                </strong>
+                <span class="airport-full-name">
+                  {{ form.controls.origen.value ? nombreAeropuertoODefecto(form.controls.origen.value) : 'Toca para elegir aeropuerto' }}
+                </span>
+              </div>
+              <span class="touch-action-icon" aria-hidden="true">
+                <ion-icon name="search-outline"></ion-icon>
+              </span>
+            </button>
           </div>
 
-          <div class="route">
-            <div>
-              <strong>{{ i.origen }}</strong>
-              <span class="muted">{{ i.ciudadSalida }}</span>
-            </div>
-            <ion-icon name="airplane-outline"></ion-icon>
-            <div class="destination">
-              <strong>{{ i.destino }}</strong>
-              <span class="muted">{{ i.ciudadLlegada }}</span>
-            </div>
+          <!-- Botón de intercambio táctil (>=44px touch target) -->
+          <div class="swap-action-container">
+            <button
+              class="swap-action-btn"
+              type="button"
+              (click)="intercambiar()"
+              aria-label="Intercambiar aeropuerto de origen y destino"
+              title="Intercambiar origen y destino"
+            >
+              <ion-icon name="swap-horizontal-outline" aria-hidden="true"></ion-icon>
+            </button>
           </div>
 
-          <div class="meta result-meta">
-            <div>
-              <span>Salida</span>
-              <strong>{{ i.horaSalida | date:'dd MMM · HH:mm' }}</strong>
-            </div>
-            <div>
-              <span>Llegada</span>
-              <strong>{{ i.horaLlegada | date:'dd MMM · HH:mm' }}</strong>
-            </div>
-            <div>
-              <span>Duración</span>
-              <strong>{{ i.duracion || 'Por confirmar' }}</strong>
-            </div>
-            <div>
-              <span>Precio base</span>
-              <strong>{{ i.precioBase | number:'1.0-0' }}</strong>
-            </div>
+          <!-- Destino -->
+          <div class="airport-card-picker" [class.is-empty]="!form.controls.destino.value">
+            <span class="picker-label" id="destino-label">
+              <ion-icon name="location-outline" aria-hidden="true"></ion-icon>
+              Llegas a (Destino)
+            </span>
+            <button
+              type="button"
+              class="airport-touch-btn"
+              [disabled]="cargandoCatalogo"
+              (click)="abrirSelector('destino')"
+              aria-haspopup="dialog"
+              aria-labelledby="destino-label"
+              [attr.aria-expanded]="selectorAbierto && campoSelector === 'destino'"
+            >
+              <div class="airport-touch-info">
+                <span class="big-iata">{{ form.controls.destino.value || '---' }}</span>
+                <strong class="airport-city-name">
+                  {{ form.controls.destino.value ? ciudadODefecto(form.controls.destino.value) : 'Seleccionar destino' }}
+                </strong>
+                <span class="airport-full-name">
+                  {{ form.controls.destino.value ? nombreAeropuertoODefecto(form.controls.destino.value) : 'Toca para elegir aeropuerto' }}
+                </span>
+              </div>
+              <span class="touch-action-icon" aria-hidden="true">
+                <ion-icon name="search-outline"></ion-icon>
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Selector de fecha táctil -->
+        <div class="date-picker-box">
+          <div class="date-label-bar">
+            <span class="picker-label">
+              <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+              Fecha de salida
+            </span>
+            <span class="date-friendly-hint" *ngIf="form.controls.fecha.value">
+              {{ fechaFormateada(form.controls.fecha.value) }}
+            </span>
           </div>
 
-          <h3>Selecciona una tarifa para continuar</h3>
-          <p class="muted web-help">
-            Al continuar se abrirá SkyWay web en otra pestaña para escoger asiento,
-            añadir equipaje y completar el pago. No se creará ninguna reserva todavía.
+          <div class="date-input-wrap">
+            <ion-input
+              formControlName="fecha"
+              type="date"
+              [min]="hoy"
+              aria-label="Fecha de salida del vuelo"
+            ></ion-input>
+          </div>
+        </div>
+
+        <!-- Mensajes de validación -->
+        <div class="error" *ngIf="form.touched && form.invalid" role="alert">
+          <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
+          <span>Por favor completa origen, destino y fecha para buscar vuelos disponibles.</span>
+        </div>
+
+        <!-- Botón de búsqueda accesible con altura >=52px -->
+        <ion-button
+          expand="block"
+          type="submit"
+          class="btn-buscar-vuelos"
+          [disabled]="buscando || form.invalid || cargandoCatalogo"
+        >
+          <ion-spinner *ngIf="buscando" name="crescent"></ion-spinner>
+          <ng-container *ngIf="!buscando">
+            <ion-icon name="search-outline" slot="start" aria-hidden="true"></ion-icon>
+            Buscar vuelos disponibles
+          </ng-container>
+        </ion-button>
+      </form>
+    </section>
+
+    <!-- Error general si lo hubiera -->
+    <div *ngIf="error" class="error reveal" role="alert">
+      <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
+      <span>{{ error }}</span>
+    </div>
+
+    <!-- Cargando catálogo inicial -->
+    <div *ngIf="cargandoCatalogo" class="loading reveal" role="status" aria-live="polite">
+      <ion-spinner></ion-spinner>
+      <p>Cargando aeropuertos disponibles…</p>
+    </div>
+
+    <!-- Spinner buscando vuelos -->
+    <div *ngIf="buscando" class="loading search-loading reveal" role="status" aria-live="polite">
+      <ion-spinner></ion-spinner>
+      <p>Buscando las mejores opciones de vuelo para ti…</p>
+    </div>
+
+    <!-- 3. RESULTADOS DE VUELOS DISPONIBLES -->
+    <section *ngIf="resultados.length && !buscando" class="results-section reveal" aria-label="Resultados de búsqueda">
+      <div class="sec-head">
+        <span class="sec-icon">
+          <ion-icon name="airplane" aria-hidden="true"></ion-icon>
+        </span>
+        <div class="results-head-text">
+          <div class="row align-center">
+            <h2>Vuelos disponibles</h2>
+            <span class="chip chip-ok chip-sm">
+              <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
+              {{ resultados.length }} {{ resultados.length === 1 ? 'itinerario encontrado' : 'itinerarios encontrados' }}
+            </span>
+          </div>
+          <p>Selecciona tu tarifa preferida para continuar la compra en SkyWay web.</p>
+        </div>
+      </div>
+
+      <!-- Tarjetas de itinerario idénticas en estilo y claridad a 'reserva-detalle' -->
+      <article *ngFor="let i of resultados" class="card itinerary-result-card reveal">
+        <!-- Encabezado con número de itinerario y chip de escalas -->
+        <header class="itinerary-head">
+          <div class="itinerary-id">
+            <span class="label">Itinerario</span>
+            <strong class="number">#{{ i.idItinerario }}</strong>
+          </div>
+          <span class="chip chip-{{ i.numeroEscalas === 0 ? 'ok' : 'info' }}">
+            <ion-icon [name]="i.numeroEscalas === 0 ? 'checkmark-circle' : 'location-outline'" aria-hidden="true"></ion-icon>
+            {{ escalasTexto(i.numeroEscalas) }}
+          </span>
+        </header>
+
+        <!-- Ruta visual con IATA grande, línea continua de vuelo con avión en movimiento -->
+        <div class="route-codes">
+          <strong class="iata">{{ i.origen }}</strong>
+          <div class="flight-line" aria-hidden="true">
+            <span class="fl-dot"></span>
+            <span class="fl-dash"></span>
+            <ion-icon name="airplane" class="fl-plane"></ion-icon>
+            <span class="fl-dash"></span>
+            <span class="fl-dot fl-dot-end"></span>
+          </div>
+          <strong class="iata iata-end">{{ i.destino }}</strong>
+        </div>
+
+        <!-- Ciudades y aeropuertos -->
+        <div class="route-names">
+          <div>
+            <span class="route-tag">Sales de</span>
+            <strong class="city-title">{{ i.ciudadSalida || i.origen }}</strong>
+            <span class="airport">{{ nombreAeropuertoODefecto(i.origen) }}</span>
+          </div>
+          <div class="end">
+            <span class="route-tag">Llegas a</span>
+            <strong class="city-title">{{ i.ciudadLlegada || i.destino }}</strong>
+            <span class="airport">{{ nombreAeropuertoODefecto(i.destino) }}</span>
+          </div>
+        </div>
+
+        <!-- Horarios y duración -->
+        <div class="when">
+          <div class="when-item">
+            <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+            <div>
+              <span>Fecha de vuelo</span>
+              <strong class="cap">{{ fechaFormateada(i.horaSalida) }}</strong>
+            </div>
+          </div>
+          <div class="when-item">
+            <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
+            <div>
+              <span>Horario estimado</span>
+              <strong class="big-time">{{ horaFormateada(i.horaSalida) }} → {{ horaFormateada(i.horaLlegada) }}</strong>
+              <span class="duration-tag" *ngIf="i.duracion">
+                Duración: {{ duracionTexto(i.duracion) }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tarifa de referencia base si está disponible -->
+        <div class="price-banner" *ngIf="i.precioBase">
+          <span class="price-banner-label">Tarifa base desde:</span>
+          <strong class="price-banner-val">{{ clp(i.precioBase) }}</strong>
+        </div>
+
+        <!-- Bloque de tarifas -->
+        <div class="fares-block">
+          <h3 class="fares-title">
+            <ion-icon name="pricetag-outline" aria-hidden="true"></ion-icon>
+            Elige una tarifa para continuar
+          </h3>
+          <p class="fares-help">
+            Al seleccionar tu tarifa serás dirigido de forma segura a SkyWay web para escoger asientos, equipaje y completar el pago.
           </p>
 
-          <div class="fare-list" *ngIf="i.tarifas.length">
-            <a
-              class="fare-option"
-              *ngFor="let tarifa of i.tarifas"
-              [href]="urlCompraWeb(i, tarifa)"
-              target="_blank"
-              rel="noopener noreferrer"
-              [attr.aria-label]="'Continuar compra web: tarifa ' + tarifa.nombre + ', itinerario ' + i.idItinerario"
-            >
-              <div class="fare-copy">
-                <strong>{{ tarifa.nombre }}</strong>
-                <span>Continuar compra en SkyWay web</span>
+          <div class="fare-cards-grid" *ngIf="i.tarifas.length; else sinTarifasApp">
+            <article class="fare-select-card" *ngFor="let tarifa of i.tarifas">
+              <div class="fare-card-header">
+                <span class="fare-name-pill">Tarifa {{ tarifa.nombre }}</span>
+                <strong class="fare-price-display">{{ clp(tarifa.precio) }}</strong>
               </div>
-              <div class="fare-price">
-                <strong>{{ tarifa.precio | number:'1.0-0' }} CLP</strong>
-                <ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon>
-              </div>
-            </a>
+
+              <!-- Lista de beneficios claros para adultos mayores y personas no técnicas -->
+              <ul class="fare-perks-list">
+                <li *ngFor="let perk of caracteristicasTarifa(tarifa.nombre)">
+                  <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
+                  <span>{{ perk }}</span>
+                </li>
+              </ul>
+
+              <a
+                class="cta-fare-button"
+                [href]="urlCompraWeb(i, tarifa)"
+                target="_blank"
+                rel="noopener noreferrer"
+                [attr.aria-label]="'Continuar compra en SkyWay web: tarifa ' + tarifa.nombre + ', ' + clp(tarifa.precio)"
+              >
+                <span>Continuar compra</span>
+                <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
+              </a>
+            </article>
           </div>
 
+          <ng-template #sinTarifasApp>
+            <div class="note warn">
+              <ion-icon name="information-circle" aria-hidden="true"></ion-icon>
+              <span>Este itinerario aún no tiene tarifas en la app móvil. Puedes revisar las tarifas y disponibilidad directamente en el sitio web de SkyWay.</span>
+            </div>
+          </ng-template>
+
           <a
-            class="web-results-link"
+            class="web-alternative-link"
             [href]="urlResultadosWeb(i)"
             target="_blank"
             rel="noopener noreferrer"
           >
-            Prefiero elegir la tarifa en la web
+            <span>Prefiero elegir la tarifa directamente en la página web</span>
             <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
           </a>
-          <p class="muted" *ngIf="!i.tarifas.length">
-            Este itinerario todavía no tiene tarifas en la aplicación.
-            Puedes revisar las opciones disponibles directamente en la web.
-          </p>
-        </ion-card-content>
-      </ion-card>
+        </div>
+      </article>
     </section>
 
-    <div class="empty" *ngIf="busquedaRealizada && !buscando && !resultados.length && !error">
-      <ion-icon name="airplane-outline"></ion-icon>
-      <h2>No encontramos vuelos</h2>
-      <p>Prueba con otra fecha o cambia el aeropuerto de origen o destino.</p>
+    <!-- Estado vacío cuando no hay resultados de búsqueda -->
+    <div class="empty-state-search card reveal" *ngIf="busquedaRealizada && !buscando && !resultados.length && !error">
+      <div class="empty-icon-wrap">
+        <ion-icon name="airplane" aria-hidden="true"></ion-icon>
+      </div>
+      <h2>No encontramos vuelos para esta ruta</h2>
+      <p>
+        No hay itinerarios programados entre las ciudades seleccionadas para esa fecha.
+        Prueba cambiando el día de salida o buscando opciones en aeropuertos cercanos.
+      </p>
     </div>
+
   </main>
 
-  <!-- Un mismo selector reutilizable para Origen y Destino. -->
+  <!-- MODAL DE SELECCIÓN DE AEROPUERTO REDISEÑADO -->
   <ion-modal
     class="airport-modal"
     [isOpen]="selectorAbierto"
@@ -200,18 +353,21 @@
     <ng-template>
       <ion-header>
         <ion-toolbar>
-          <ion-title>{{ campoSelector === 'origen' ? 'Aeropuerto de origen' : 'Aeropuerto de destino' }}</ion-title>
+          <ion-title>
+            {{ campoSelector === 'origen' ? 'Aeropuerto de origen' : 'Aeropuerto de destino' }}
+          </ion-title>
           <ion-buttons slot="end">
-            <ion-button (click)="cerrarSelector()" aria-label="Cerrar buscador">
-              <ion-icon name="close-outline" slot="icon-only"></ion-icon>
+            <ion-button (click)="cerrarSelector()" aria-label="Cerrar ventana de selección">
+              <ion-icon name="close-outline" slot="icon-only" aria-hidden="true"></ion-icon>
             </ion-button>
           </ion-buttons>
         </ion-toolbar>
-        <ion-toolbar>
+
+        <ion-toolbar class="modal-searchbar-toolbar">
           <ion-searchbar
             [value]="textoAeropuerto"
             (ionInput)="actualizarFiltroAeropuerto($event)"
-            placeholder="Busca por ciudad, aeropuerto o IATA"
+            placeholder="Buscar por ciudad, código o nombre (ej. SCL, Santiago)"
             inputmode="search"
             [debounce]="0"
             showClearButton="always"
@@ -221,41 +377,54 @@
       </ion-header>
 
       <ion-content class="airport-modal-content">
-        <p class="airport-results-counter" aria-live="polite">
-          {{ aeropuertosFiltrados.length }} aeropuerto(s) encontrado(s)
-        </p>
+        <div class="airport-modal-counter">
+          <span>{{ aeropuertosFiltrados.length }} {{ aeropuertosFiltrados.length === 1 ? 'aeropuerto disponible' : 'aeropuertos disponibles' }}</span>
+        </div>
 
         <ion-radio-group
           [value]="codigoSeleccionado"
           (ionChange)="seleccionarDesdeRadio($event)"
         >
-          <ion-list lines="full" *ngIf="aeropuertosFiltrados.length; else sinAeropuertos">
-            <ion-item
+          <div class="airport-cards-list" *ngIf="aeropuertosFiltrados.length; else sinAeropuertos">
+            <button
+              type="button"
               *ngFor="let aeropuerto of aeropuertosFiltrados; trackBy: trackAeropuerto"
-              button
-              detail="false"
+              class="airport-item-row"
+              [class.is-selected]="codigoSeleccionado === aeropuerto.codigoIata"
               (click)="seleccionarAeropuerto(aeropuerto.codigoIata)"
-              class="airport-result"
             >
-              <ion-label>
-                <strong class="airport-code">{{ aeropuerto.codigoIata }}</strong>
-                <span class="airport-city">{{ aeropuerto.ciudad || aeropuerto.nombreAeropuerto }}</span>
-                <p class="airport-name">{{ aeropuerto.nombreAeropuerto }}</p>
-              </ion-label>
-              <ion-radio slot="end" [value]="aeropuerto.codigoIata"
-                         [attr.aria-label]="aeropuerto.codigoIata + ' ' + aeropuerto.nombreAeropuerto"></ion-radio>
-            </ion-item>
-          </ion-list>
+              <div class="iata-pill">
+                {{ aeropuerto.codigoIata }}
+              </div>
+
+              <div class="airport-text-block">
+                <strong class="item-city">{{ aeropuerto.ciudad || aeropuerto.nombreAeropuerto }}</strong>
+                <span class="item-name">{{ aeropuerto.nombreAeropuerto }}</span>
+                <span class="item-country" *ngIf="aeropuerto.pais">{{ aeropuerto.pais }}</span>
+              </div>
+
+              <div class="radio-check-wrap" aria-hidden="true">
+                <ion-icon
+                  [name]="codigoSeleccionado === aeropuerto.codigoIata ? 'checkmark-circle' : 'chevron-forward-outline'"
+                  [class.icon-checked]="codigoSeleccionado === aeropuerto.codigoIata"
+                ></ion-icon>
+              </div>
+            </button>
+          </div>
         </ion-radio-group>
 
         <ng-template #sinAeropuertos>
           <div class="airport-no-results">
             <ion-icon name="search-outline" aria-hidden="true"></ion-icon>
-            <p>No encontramos aeropuertos para «{{ textoAeropuerto }}».</p>
-            <ion-button fill="clear" (click)="limpiarFiltroAeropuerto()">Mostrar todos</ion-button>
+            <h3>No encontramos aeropuertos</h3>
+            <p>No hay coincidencias para «{{ textoAeropuerto }}». Revisa la ortografía o intenta buscar por código IATA.</p>
+            <ion-button fill="outline" (click)="limpiarFiltroAeropuerto()">
+              Mostrar todos los aeropuertos
+            </ion-button>
           </div>
         </ng-template>
       </ion-content>
     </ng-template>
   </ion-modal>
+
 </ion-content>

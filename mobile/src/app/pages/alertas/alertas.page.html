@@ -1,8 +1,8 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>Alertas</ion-title>
+    <ion-title>Avisos de vuelos</ion-title>
     <ion-buttons slot="end">
-      <ion-button aria-label="Actualizar" (click)="load()" [disabled]="busy">
+      <ion-button aria-label="Actualizar alertas" (click)="load()" [disabled]="busy">
         <ion-icon name="refresh-outline" slot="icon-only"></ion-icon>
       </ion-button>
     </ion-buttons>
@@ -11,50 +11,213 @@
 
 <ion-content>
   <main class="page alertas-page">
-    <span class="eyebrow">AL DÍA CON TU VIAJE</span>
-    <h1>Alertas de tus vuelos.</h1>
-    <p class="muted">Aquí recibirás cambios de horario, cancelaciones, cambios operacionales y otras novedades importantes.</p>
+    <!-- Estado de carga -->
+    <div *ngIf="busy" class="loading" role="status" aria-live="polite">
+      <ion-spinner></ion-spinner>
+      <p>Cargando avisos operacionales…</p>
+    </div>
 
-    <ion-segment [value]="filtro" (ionChange)="cambiarFiltro($event.detail.value)">
-      <ion-segment-button value="todas">Todas</ion-segment-button>
-      <ion-segment-button value="nuevas">Nuevas</ion-segment-button>
-    </ion-segment>
+    <!-- Mensaje de error -->
+    <div *ngIf="error" class="error" role="alert">
+      <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
+      <span>{{ error }}</span>
+    </div>
 
-    <div *ngIf="busy" class="loading"><ion-spinner></ion-spinner></div>
-    <p *ngIf="error" class="error" role="alert">{{ error }}</p>
-
-    <ng-container *ngIf="data as result">
-      <ion-card *ngFor="let n of visibles" [class.unread-card]="!n.leido">
-        <ion-card-content>
-          <div class="row">
-            <span class="eyebrow">{{ n.fecha | date:'dd MMM yyyy · HH:mm' }}</span>
-            <span class="status" *ngIf="!n.leido">Nueva</span>
-          </div>
-          <h2>{{ n.titulo || 'Alerta de viaje' }}</h2>
-          <p class="message">{{ n.mensaje }}</p>
-          <ion-button
-            fill="clear"
-            size="small"
-            *ngIf="!n.leido"
-            [disabled]="saving.has(n.idNotificacion)"
-            (click)="leer(n)"
-          >
-            Marcar como leída
-          </ion-button>
-          <p class="muted" *ngIf="n.leido">Leída</p>
-        </ion-card-content>
-      </ion-card>
-
-      <div class="empty" *ngIf="!visibles.length">
-        <ion-icon name="notifications-outline"></ion-icon>
-        <h2>{{ filtro === 'nuevas' ? 'No tienes alertas nuevas' : 'No tienes alertas por ahora' }}</h2>
-        <p>Las novedades importantes de tus vuelos aparecerán aquí.</p>
+    <!-- a) Hero resumen de alertas (Identidad SkyWay: azul marino a azul con brillo teal) -->
+    <section class="hero-card reveal" aria-label="Resumen de alertas">
+      <div class="hero-top">
+        <div>
+          <span class="hero-label">Centro de notificaciones</span>
+          <h1 class="hero-number">Alertas de vuelos</h1>
+        </div>
+        <span class="chip" [ngClass]="totalNuevas > 0 ? 'chip-warn' : 'chip-ok'">
+          <ion-icon [name]="totalNuevas > 0 ? 'notifications' : 'checkmark-circle'" aria-hidden="true"></ion-icon>
+          {{ totalNuevas > 0 ? (totalNuevas === 1 ? '1 aviso nuevo' : totalNuevas + ' avisos nuevos') : 'Todo al día' }}
+        </span>
       </div>
 
-      <nav class="pagination" *ngIf="result.totalPaginas > 1" aria-label="Paginación de alertas">
-        <ion-button fill="clear" [disabled]="page === 0 || busy" (click)="load(page - 1)">Anterior</ion-button>
-        <span>{{ page + 1 }} / {{ result.totalPaginas }}</span>
-        <ion-button fill="clear" [disabled]="page + 1 >= result.totalPaginas || busy" (click)="load(page + 1)">Siguiente</ion-button>
+      <p class="hero-desc">
+        Avisos importantes sobre tus vuelos, puertas de embarque, cambios de horario y confirmaciones de reservas.
+      </p>
+
+      <div class="hero-meta">
+        <div class="hero-meta-item">
+          <ion-icon name="sparkles" aria-hidden="true"></ion-icon>
+          <div>
+            <span>Nuevas por revisar</span>
+            <strong>{{ totalNuevas === 0 ? '0 pendientes' : (totalNuevas === 1 ? '1 por revisar' : totalNuevas + ' por revisar') }}</strong>
+          </div>
+        </div>
+        <div class="hero-meta-item">
+          <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
+          <div>
+            <span>Total registradas</span>
+            <strong>{{ totalTodas }} {{ totalTodas === 1 ? 'notificación' : 'notificaciones' }}</strong>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- b) Filtros de alto contraste (Todas / Nuevas) con objetivos táctiles >= 44px -->
+    <section class="filter-section reveal" aria-label="Filtrar notificaciones">
+      <div class="filter-pills" role="tablist">
+        <button
+          type="button"
+          role="tab"
+          [attr.aria-selected]="filtro === 'todas'"
+          class="filter-pill"
+          [class.active]="filtro === 'todas'"
+          (click)="cambiarFiltro('todas')"
+        >
+          <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
+          <span>Todas</span>
+          <span class="counter-badge">{{ totalTodas }}</span>
+        </button>
+
+        <button
+          type="button"
+          role="tab"
+          [attr.aria-selected]="filtro === 'nuevas'"
+          class="filter-pill"
+          [class.active]="filtro === 'nuevas'"
+          (click)="cambiarFiltro('nuevas')"
+        >
+          <ion-icon name="sparkles" aria-hidden="true"></ion-icon>
+          <span>Nuevas</span>
+          <span class="counter-badge counter-badge-warn" *ngIf="totalNuevas > 0">{{ totalNuevas }}</span>
+          <span class="counter-badge" *ngIf="totalNuevas === 0">0</span>
+        </button>
+      </div>
+
+      <button
+        *ngIf="totalNuevas > 1"
+        type="button"
+        class="mark-all-btn"
+        (click)="marcarTodasComoLeidas()"
+        aria-label="Marcar todas las alertas pendientes como leídas"
+      >
+        <ion-icon name="checkmark-done-outline" aria-hidden="true"></ion-icon>
+        <span>Marcar todas como leídas</span>
+      </button>
+    </section>
+
+    <!-- c) Lista de notificaciones -->
+    <ng-container *ngIf="data as result">
+      <div class="alertas-list" *ngIf="visibles.length > 0">
+        <article
+          *ngFor="let n of visibles"
+          class="card alerta-card reveal"
+          [class.is-unread]="!n.leido"
+          [attr.aria-label]="n.titulo || 'Alerta de vuelo'"
+        >
+          <div *ngIf="clasificarAlerta(n) as meta" class="alerta-inner tone-border-{{ meta.tono }}">
+            <!-- Encabezado de la tarjeta -->
+            <header class="alerta-head">
+              <div class="alerta-meta-tag">
+                <span class="alerta-type-icon tone-bg-{{ meta.tono }}">
+                  <ion-icon [name]="meta.icono" aria-hidden="true"></ion-icon>
+                </span>
+                <div>
+                  <span class="label">{{ meta.tipo }}</span>
+                  <span class="alerta-date" *ngIf="n.fecha">
+                    <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+                    {{ n.fecha | date:"d 'de' MMMM 'de' y · HH:mm" }} h
+                  </span>
+                </div>
+              </div>
+
+              <span class="chip chip-sm" [ngClass]="n.leido ? 'chip-neutral' : 'chip-info'">
+                <ion-icon [name]="n.leido ? 'checkmark-done-outline' : 'sparkles'" aria-hidden="true"></ion-icon>
+                {{ n.leido ? 'Leída' : 'Nueva' }}
+              </span>
+            </header>
+
+            <!-- Título y mensaje legible >= 16px -->
+            <div class="alerta-body">
+              <h2 class="alerta-title">{{ n.titulo || 'Aviso operacional' }}</h2>
+              <p class="alerta-mensaje">{{ n.mensaje }}</p>
+            </div>
+
+            <!-- Acciones claras >= 44px -->
+            <footer class="alerta-actions">
+              <ion-button
+                *ngIf="!n.leido"
+                fill="outline"
+                class="btn-mark-read"
+                (click)="leer(n)"
+                [disabled]="saving.has(n.idNotificacion)"
+                aria-label="Marcar como leída esta notificación"
+              >
+                <ion-spinner *ngIf="saving.has(n.idNotificacion)" name="crescent" slot="start"></ion-spinner>
+                <ion-icon *ngIf="!saving.has(n.idNotificacion)" name="checkmark-circle-outline" slot="start" aria-hidden="true"></ion-icon>
+                <span>{{ saving.has(n.idNotificacion) ? 'Guardando…' : 'Marcar como leída' }}</span>
+              </ion-button>
+
+              <ion-button
+                *ngIf="reservaId(n) as rId"
+                fill="solid"
+                class="btn-view-reserva"
+                [routerLink]="['/vuelos/reservas', rId]"
+                aria-label="Ver detalle de la reserva asociada"
+              >
+                <ion-icon name="airplane" slot="start" aria-hidden="true"></ion-icon>
+                <span>Ver reserva #{{ rId }}</span>
+                <ion-icon name="arrow-forward-outline" slot="end" aria-hidden="true"></ion-icon>
+              </ion-button>
+            </footer>
+          </div>
+        </article>
+      </div>
+
+      <!-- Estado vacío amigable y tranquilizador -->
+      <div class="card empty-state-card reveal" *ngIf="!visibles.length && !busy">
+        <div class="empty-icon-wrap">
+          <ion-icon [name]="filtro === 'nuevas' ? 'checkmark-circle' : 'notifications-outline'" aria-hidden="true"></ion-icon>
+        </div>
+        <h2>{{ filtro === 'nuevas' ? '¡Todo al día!' : 'Sin alertas registradas' }}</h2>
+        <p>
+          {{ filtro === 'nuevas'
+            ? 'No tienes alertas nuevas por revisar. Todos los avisos operacionales han sido leídos.'
+            : 'En este momento no hay avisos de vuelos ni novedades operacionales registradas.' }}
+        </p>
+        <ion-button
+          *ngIf="filtro === 'nuevas' && totalTodas > 0"
+          fill="outline"
+          class="empty-action-btn"
+          (click)="cambiarFiltro('todas')"
+        >
+          <ion-icon name="notifications-outline" slot="start" aria-hidden="true"></ion-icon>
+          <span>Ver todas las notificaciones ({{ totalTodas }})</span>
+        </ion-button>
+      </div>
+
+      <!-- Paginación accesible -->
+      <nav class="pagination-container reveal" *ngIf="result.totalPaginas > 1" aria-label="Páginas de alertas">
+        <ion-button
+          fill="outline"
+          class="page-nav-btn"
+          [disabled]="page === 0 || busy"
+          (click)="load(page - 1)"
+          aria-label="Ir a la página anterior de alertas"
+        >
+          <ion-icon name="chevron-back-outline" slot="start" aria-hidden="true"></ion-icon>
+          <span>Anterior</span>
+        </ion-button>
+
+        <div class="page-indicator" aria-current="page">
+          Página <strong>{{ page + 1 }}</strong> de <strong>{{ result.totalPaginas }}</strong>
+        </div>
+
+        <ion-button
+          fill="outline"
+          class="page-nav-btn"
+          [disabled]="page + 1 >= result.totalPaginas || busy"
+          (click)="load(page + 1)"
+          aria-label="Ir a la página siguiente de alertas"
+        >
+          <span>Siguiente</span>
+          <ion-icon name="chevron-forward-outline" slot="end" aria-hidden="true"></ion-icon>
+        </ion-button>
       </nav>
     </ng-container>
   </main>

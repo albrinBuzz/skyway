@@ -1,11 +1,633 @@
+/* ===== Detalle de reserva — compacto, legible, ordenado y con identidad SkyWay ===== */
+$navy: #101e3b;
+$ink: #172844;
+$soft-ink: #4a5a75;
+$blue: #2449d8;
+$teal: #26b99a;
+$mint: #42d4ba;
+$success: #128463;
+$danger: #b83449;
+$line: #e3e9f3;
+$bg-tint: #eef3ff;
 
-.companions { margin-top: 22px; border-top: 1px solid #dce5f4; padding-top: 16px; }
-.companions h4 { margin: 0 0 4px; color: #132647; font-size: 1rem; }
-.companions > .muted { margin: 5px 0 14px; }
-.passenger-ticket { margin: 9px 0; border: 1px solid #dde7f6; border-radius: 14px; box-shadow: none; }
-.passenger-ticket ion-card-content { padding: 14px; }
-.passenger-ticket .row { gap: 14px; align-items: center; }
-.passenger-ticket .row > div { min-width: 0; overflow-wrap: anywhere; }
-.passenger-ticket .row p { margin: 4px 0 0; font-size: .83rem; }
-.passenger-ticket ion-button { margin-top: 12px; }
-.passenger-ticket .status { white-space: nowrap; }
+.detalle {
+  padding: 14px 12px 32px;
+  font-size: 14px;
+  line-height: 1.48;
+  color: $ink;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  overflow-x: hidden;
+}
+
+.loading {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  color: $soft-ink;
+  font-size: 14px;
+  p { margin: 0; }
+}
+
+.error,
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13.5px;
+  ion-icon { flex: 0 0 auto; font-size: 18px; margin-top: 1px; }
+}
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.cap { display: block; &::first-letter { text-transform: uppercase; } }
+
+.label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: $soft-ink;
+}
+
+.soft { color: $soft-ink; margin: 6px 0 0; font-size: 13px; }
+
+/* ---------- Chips de estado ---------- */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 28px;
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  ion-icon { font-size: 15px; flex: 0 0 auto; }
+}
+.chip-sm { min-height: 25px; font-size: 11.5px; padding: 3px 9px; }
+.chip-ok      { background: #dff6ee; color: #0b6248; border-color: #b4e6d4; }
+.chip-warn    { background: #fff1d6; color: #7a4f00; border-color: #f4d493; }
+.chip-bad     { background: #fde6ea; color: #962236; border-color: #f4bcc7; }
+.chip-info    { background: #e6edff; color: #1d3bb0; border-color: #c4d3fb; }
+.chip-neutral { background: #eef1f6; color: #354360; border-color: #d9dfea; }
+
+.tone-ok      { color: $success; }
+.tone-bad     { color: $danger; }
+.tone-warn    { color: #8a5a00; }
+.tone-info    { color: $blue; }
+.tone-neutral { color: $soft-ink; }
+
+/* ---------- Tarjetas y encabezados de sección ---------- */
+.card {
+  background: #fff;
+  border: 1px solid $line;
+  border-radius: 18px;
+  padding: 15px 14px;
+  box-shadow: 0 8px 24px rgba(20, 42, 75, .06);
+  margin-bottom: 12px;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.block { margin-top: 20px; }
+
+.sec-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  h2 { margin: 0; font-size: 17px; font-weight: 800; letter-spacing: -.2px; color: $ink; }
+  p { margin: 2px 0 0; color: $soft-ink; font-size: 13px; line-height: 1.35; }
+}
+
+.sec-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: linear-gradient(135deg, $bg-tint, #e3f8f3);
+  color: $blue;
+  font-size: 18px;
+}
+
+/* ---------- a) Hero ---------- */
+.hero-card {
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  border-radius: 20px;
+  padding: 16px 15px;
+  background: linear-gradient(135deg, $navy 0%, #1a2f66 55%, $blue 100%);
+  box-shadow: 0 12px 30px rgba(16, 30, 59, .2);
+  box-sizing: border-box;
+
+  &::after {
+    content: '';
+    position: absolute;
+    right: -50px;
+    top: -50px;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(66, 212, 186, .42), transparent 70%);
+    pointer-events: none;
+  }
+}
+
+.hero-top {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.hero-label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: #c9d6f2; }
+.hero-number { display: block; font-size: 22px; font-weight: 800; letter-spacing: -.6px; line-height: 1.15; }
+
+.hero-meta {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.hero-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 11px;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, .1);
+  border: 1px solid rgba(255, 255, 255, .14);
+  ion-icon { font-size: 20px; color: $mint; flex: 0 0 auto; }
+  span { display: block; font-size: 11.5px; color: #c9d6f2; }
+  strong { display: block; font-size: 13.5px; line-height: 1.3; }
+}
+
+/* ---------- b) Ruta ---------- */
+.route-card { position: relative; padding-bottom: 16px; }
+
+.route-codes {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.iata {
+  font-size: clamp(22px, 6.5vw, 28px);
+  font-weight: 800;
+  letter-spacing: -.6px;
+  line-height: 1;
+  color: $navy;
+}
+
+.flight-line {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 40px;
+  color: $blue;
+}
+.fl-dot {
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 2px solid $blue;
+  background: #fff;
+}
+.fl-dot-end { background: $mint; border-color: $teal; }
+.fl-dash { flex: 1; border-top: 2px dashed #9fb3e6; }
+.fl-plane { flex: 0 0 auto; font-size: 19px; }
+
+.route-names {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+  overflow-wrap: anywhere;
+  > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .end { text-align: right; align-items: flex-end; }
+  strong { font-size: 14px; line-height: 1.3; color: $ink; }
+}
+.route-tag { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: $soft-ink; }
+.airport { font-size: 12.5px; color: $soft-ink; line-height: 1.3; }
+
+.when {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+.when-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 13px;
+  background: $bg-tint;
+  ion-icon { font-size: 20px; color: $blue; flex: 0 0 auto; }
+  span { display: block; font-size: 11.5px; color: $soft-ink; }
+  strong { display: block; font-size: 14px; line-height: 1.3; color: $ink; }
+  .big-time { font-size: 17px; font-weight: 800; letter-spacing: -.3px; }
+}
+
+.stops { margin-top: 10px; }
+
+/* ---------- c) Vuelos y tramos ---------- */
+.flight-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid $line;
+}
+.flight-number { display: block; font-size: 18px; font-weight: 800; color: $navy; letter-spacing: -.3px; }
+
+.segments { list-style: none; margin: 0; padding: 0; }
+.segment-item { padding-top: 12px; }
+.segment-item + .segment-item { border-top: 1px dashed $line; margin-top: 12px; }
+.seg-label { margin-bottom: 8px; }
+
+.timeline {
+  position: relative;
+  padding-left: 24px;
+  &::before {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 12px;
+    bottom: 12px;
+    border-left: 2px dashed #9fb3e6;
+  }
+}
+
+.tl-stop {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 10px;
+  row-gap: 2px;
+}
+.tl-dot {
+  position: absolute;
+  left: -24px;
+  top: 5px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid $blue;
+}
+.tl-dot-end { border-color: $teal; background: $mint; }
+
+.tl-time {
+  min-width: 78px;
+  strong { display: block; font-size: 16px; font-weight: 800; color: $ink; line-height: 1.25; }
+  span { font-size: 12px; color: $soft-ink; }
+}
+.tl-place {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  strong { font-size: 15px; font-weight: 800; color: $navy; margin-right: 5px; }
+  span:not(.sr-only) { font-size: 13px; color: $soft-ink; }
+}
+
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0;
+}
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 32px;
+  padding: 5px 10px;
+  border-radius: 10px;
+  background: $bg-tint;
+  color: $ink;
+  font-size: 12.5px;
+  border: 1px solid #d4def7;
+  ion-icon { font-size: 15px; color: $blue; }
+  strong { font-weight: 800; }
+}
+.pill-muted {
+  background: #f4f6fa;
+  border-style: dashed;
+  border-color: #cfd7e5;
+  color: $soft-ink;
+  ion-icon { color: $soft-ink; }
+  strong { font-weight: 600; font-style: italic; }
+}
+
+/* ---------- d) Tarifa ---------- */
+.fare-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid $line;
+}
+.fare-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 99px;
+  background: linear-gradient(135deg, $navy, $blue);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 800;
+  ion-icon { color: $mint; font-size: 16px; }
+}
+.fare-price {
+  strong { display: block; font-size: 18px; font-weight: 800; color: $navy; letter-spacing: -.3px; }
+}
+
+.checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid #eef1f6;
+    &:last-child { border-bottom: 0; }
+  }
+  ion-icon { flex: 0 0 auto; font-size: 20px; margin-top: 1px; }
+}
+.check-name { display: block; font-size: 13.5px; color: $ink; line-height: 1.35; }
+.check-value { display: block; font-size: 14px; font-weight: 800; margin-top: 1px; }
+
+.note {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: $bg-tint;
+  color: #233f78;
+  ion-icon { color: $blue; }
+  &.warn {
+    background: #fff6e5;
+    color: #6b4600;
+    ion-icon { color: #8a5a00; }
+  }
+}
+
+/* ---------- e) Pasajeros ---------- */
+.flight-group + .flight-group { margin-top: 14px; }
+.group-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+  font-size: 15px;
+  color: $ink;
+  ion-icon { color: $blue; }
+}
+
+.passenger-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.avatar {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, $blue, $teal);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: .4px;
+  box-shadow: 0 4px 12px rgba(36, 73, 216, .22);
+}
+.passenger-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.passenger-name { font-size: 15px; font-weight: 800; line-height: 1.25; color: $ink; overflow-wrap: anywhere; }
+
+.passenger-seat {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  margin: 12px 0 4px;
+}
+.seat-badge {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 68px;
+  padding: 6px 11px 7px;
+  border-radius: 12px 12px 8px 8px;
+  background: $bg-tint;
+  border: 1.5px solid $blue;
+  span { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: $soft-ink; }
+  strong { font-size: 19px; font-weight: 800; line-height: 1.1; color: $blue; }
+}
+.seat-class {
+  span { display: block; font-size: 11.5px; color: $soft-ink; }
+  strong { font-size: 14px; color: $ink; }
+}
+
+.ticket-btn {
+  --border-radius: 12px;
+  margin: 10px 0 0;
+  min-height: 44px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* ---------- f) Equipaje ---------- */
+.bags {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid #eef1f6;
+    &:first-child { padding-top: 0; }
+    &:last-child { border-bottom: 0; padding-bottom: 0; }
+  }
+}
+.bag-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: #e3f8f3;
+  color: $success;
+  font-size: 19px;
+}
+.bag-info {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  strong { display: block; font-size: 14px; color: $ink; }
+  span { font-size: 12.5px; color: $soft-ink; }
+}
+.bag-weight {
+  flex: 0 0 auto;
+  padding: 4px 10px;
+  border-radius: 10px;
+  background: $bg-tint;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: $navy;
+  white-space: nowrap;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  padding: 24px 16px;
+  color: $soft-ink;
+  font-size: 13.5px;
+  ion-icon { font-size: 34px; color: #9fb0cc; }
+  &.small { padding: 10px 6px; margin: 0; }
+}
+
+/* ---------- g) Total ---------- */
+.total-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+  padding: 15px 16px;
+  border-radius: 18px;
+  color: #fff;
+  background: linear-gradient(135deg, $navy, #1a2f66);
+  box-shadow: 0 10px 26px rgba(16, 30, 59, .18);
+}
+.total-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  background: rgba(66, 212, 186, .18);
+  color: $mint;
+  font-size: 22px;
+}
+.total-label { display: block; font-size: 12.5px; color: #c9d6f2; }
+.total-amount { display: block; font-size: 21px; font-weight: 800; letter-spacing: -.4px; line-height: 1.2; overflow-wrap: anywhere; }
+
+/* ---------- h) Check-in ---------- */
+.checkin-card {
+  margin-top: 14px;
+  border-radius: 18px;
+  padding: 16px 15px;
+  h2 { margin: 0; font-size: 17px; font-weight: 800; }
+  p { margin: 3px 0 0; font-size: 13.5px; }
+}
+
+.checkin-cta {
+  background: #fff;
+  border: 1.5px solid #c9d6fb;
+  box-shadow: 0 8px 24px rgba(36, 73, 216, .08);
+}
+.checkin-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  p { color: $soft-ink; line-height: 1.35; }
+}
+.steps {
+  list-style: none;
+  margin: 12px 0 4px;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 13.5px;
+    line-height: 1.4;
+  }
+  ion-icon { flex: 0 0 auto; font-size: 18px; color: $success; margin-top: 1px; }
+}
+.checkin-btn {
+  margin: 12px 0 0;
+  min-height: 46px;
+  font-size: 15px;
+  font-weight: 800;
+  --border-radius: 13px;
+  --box-shadow: 0 8px 20px rgba(36, 73, 216, .24);
+}
+
+.checkin-done {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: linear-gradient(135deg, #e3f7ef, #f2fbf8);
+  border: 1.5px solid #a9dfc8;
+  color: #0b4f3a;
+  h2 { color: #0b5a42; }
+}
+.checkin-icon { flex: 0 0 auto; font-size: 32px; color: $success; }
+
+/* ---------- Animación de entrada ---------- */
+.reveal { animation: reveal .35s ease-out both; }
+.block:nth-of-type(2) { animation-delay: .04s; }
+.block:nth-of-type(3) { animation-delay: .08s; }
+.block:nth-of-type(4) { animation-delay: .12s; }
+.block:nth-of-type(5) { animation-delay: .16s; }
+
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { animation: none; }
+}
+
+@media (min-width: 560px) {
+  .detalle { padding: 20px 18px 40px; }
+  .hero-meta { grid-template-columns: 1fr 1fr; }
+  .when { grid-template-columns: 1.4fr 1fr; }
+  .card { padding: 18px; }
+}

@@ -1,128 +1,581 @@
-ion-segment {
-  margin: 24px 0;
+/* ===== Vuelos — Diseño institucional SkyWay con alta legibilidad y responsividad (320px+) ===== */
+$navy: #101e3b;
+$ink: #172844;
+$soft-ink: #4a5a75;
+$blue: #2449d8;
+$teal: #26b99a;
+$mint: #42d4ba;
+$success: #128463;
+$danger: #b83449;
+$line: #e3e9f3;
+$bg-tint: #eef3ff;
+
+:host {
+  display: block;
 }
 
-.reservas-section {
-  margin-top: 20px;
+ion-content {
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --padding-start: 0;
+  --padding-end: 0;
 }
 
-.reserva-card-clickable {
-  cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+.vuelos-page {
+  padding: 16px 14px 36px;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  overflow-x: hidden;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: $ink;
+}
 
-  &:active {
-    transform: scale(0.99);
+/* ---------- Encabezado institucional ---------- */
+.page-intro {
+  margin-top: 0;
+  margin-bottom: 14px;
+
+  .eyebrow {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: $blue;
+    margin-bottom: 4px;
+  }
+
+  h1 {
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: -0.4px;
+    color: $navy;
+    line-height: 1.25;
+    margin: 0 0 6px;
+  }
+
+  .intro-desc {
+    font-size: 0.875rem;
+    color: $soft-ink;
+    margin: 0;
+    line-height: 1.45;
   }
 }
 
-.compact-route {
-  margin: 18px 0;
+/* ---------- Segmented Control Accesible y de Alto Contraste (HTML estándar, sin Shadow DOM) ---------- */
+.tabs-wrapper {
+  margin: 14px 0 18px;
+  width: 100%;
 }
 
-.compact-route strong {
-  font-size: 32px;
-}
-
-.reservation-footer {
-  color: #52647f;
-  margin-top: 14px;
-}
-
-.footer-actions {
+.seg-bar {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  background: #eaf0fa;
+  border: 1px solid #d4def7;
+  border-radius: 14px;
+  padding: 3px;
+  gap: 4px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-/* Botón compacto de mapa en cada reserva */
-.btn-reserva-mapa {
-  background: rgba(255, 144, 32, 0.12);
-  border: 1px solid rgba(255, 144, 32, 0.35);
-  border-radius: 99px;
-  color: #ff9020;
-  padding: 5px 11px;
-  font-size: 12px;
+.seg-btn {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 42px;
+  height: 42px;
+  padding: 6px 8px;
+  border: none;
+  background: transparent;
+  border-radius: 11px;
+  color: #172844;
+  font-size: 0.84rem;
   font-weight: 700;
+  letter-spacing: -0.2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  white-space: nowrap;
+
+  ion-icon {
+    font-size: 17px;
+    color: #172844;
+    flex-shrink: 0;
+    transition: color 0.2s ease;
+  }
+
+  span {
+    white-space: nowrap;
+    overflow: visible;
+  }
+
+  &:hover:not(.is-active) {
+    background: rgba(16, 30, 59, 0.05);
+  }
+
+  &.is-active {
+    background: linear-gradient(135deg, #101e3b 0%, #2449d8 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(23, 50, 108, 0.28);
+
+    ion-icon {
+      color: #ffffff !important;
+    }
+
+    span {
+      color: #ffffff !important;
+    }
+  }
+}
+
+/* ---------- Utilidades y Loading ---------- */
+.loading {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  color: $soft-ink;
+  font-size: 0.9rem;
+  padding: 30px 14px;
+  p { margin: 0; }
+}
+
+.error-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #fde8ec;
+  border: 1px solid #f8b4c0;
+  color: $danger;
+  margin-bottom: 16px;
+
+  ion-icon {
+    font-size: 22px;
+    flex: 0 0 auto;
+    margin-top: 2px;
+  }
+
+  strong {
+    display: block;
+    font-size: 0.925rem;
+    line-height: 1.3;
+    margin-bottom: 2px;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+}
+
+.cap {
+  display: block;
+  &::first-letter { text-transform: uppercase; }
+}
+
+/* ---------- Chips de Estado Semánticos ---------- */
+.chip {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  min-height: 28px;
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  box-sizing: border-box;
 
-  &:active {
-    transform: scale(0.95);
-    background: rgba(255, 144, 32, 0.22);
+  ion-icon { font-size: 15px; flex: 0 0 auto; }
+}
+
+.chip-sm {
+  min-height: 26px;
+  font-size: 0.72rem;
+  padding: 3px 8px;
+}
+
+.chip-ok      { background: #dff6ee; color: #0b6248; border-color: #b4e6d4; }
+.chip-warn    { background: #fff1d6; color: #7a4f00; border-color: #f4d493; }
+.chip-bad     { background: #fde6ea; color: #962236; border-color: #f4bcc7; }
+.chip-info    { background: #e6edff; color: #1d3bb0; border-color: #c4d3fb; }
+.chip-neutral { background: #eef1f6; color: #354360; border-color: #d9dfea; }
+
+/* ---------- Tarjetas y Encabezados ---------- */
+.card {
+  background: #ffffff;
+  border: 1px solid $line;
+  border-radius: 18px;
+  padding: 16px 14px;
+  box-shadow: 0 8px 24px rgba(20, 42, 75, 0.06);
+  margin-bottom: 14px;
+  box-sizing: border-box;
+}
+
+.sec-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+
+  h2 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: -0.2px;
+    color: $navy;
   }
+
+  p {
+    margin: 2px 0 0;
+    color: $soft-ink;
+    font-size: 0.85rem;
+    line-height: 1.35;
+  }
+}
+
+.sec-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, $bg-tint, #e3f8f3);
+  color: $blue;
+  font-size: 20px;
+}
+
+/* ==========================================================================
+   1. HERO CARD — PRÓXIMO VUELO
+   ========================================================================== */
+.hero-card {
+  position: relative;
+  overflow: hidden;
+  color: #ffffff;
+  border-radius: 20px;
+  padding: 18px 14px;
+  background: linear-gradient(135deg, $navy 0%, #1b3568 58%, $blue 100%);
+  box-shadow: 0 14px 34px rgba(16, 30, 59, 0.22);
+  box-sizing: border-box;
+  width: 100%;
+
+  &::after {
+    content: '';
+    position: absolute;
+    right: -60px;
+    top: -60px;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(66, 212, 186, 0.42), transparent 70%);
+    pointer-events: none;
+  }
+}
+
+.hero-top {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.hero-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #c9d6f2;
+}
+
+.hero-number {
+  display: block;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  line-height: 1.15;
+}
+
+/* Bloque de Ruta Hero */
+.route-block {
+  position: relative;
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 16px;
+  padding: 14px 12px;
+  margin-top: 14px;
+  backdrop-filter: blur(8px);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.route-codes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.iata {
+  font-size: clamp(1.35rem, 5.5vw, 1.65rem);
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  line-height: 1;
+  color: #ffffff;
+  min-width: 0;
+}
+
+.iata-end {
+  text-align: right;
+}
+
+.flight-line {
+  width: clamp(48px, 16vw, 90px);
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: $mint;
+  margin: 0 auto;
+}
+
+.fl-dot {
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  background: $navy;
+}
+
+.fl-dot-end {
+  background: $mint;
+  border-color: #ffffff;
+}
+
+.fl-dash {
+  flex: 1;
+  border-top: 1.5px dashed rgba(255, 255, 255, 0.45);
+}
+
+.fl-plane {
+  flex: 0 0 auto;
+  font-size: 18px;
+  color: $mint;
+}
+
+.route-names {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+  width: 100%;
+  box-sizing: border-box;
+
+  .route-side {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+    overflow-wrap: break-word;
+
+    &.end {
+      text-align: right;
+      align-items: flex-end;
+    }
+
+    strong {
+      font-size: 0.95rem;
+      line-height: 1.25;
+      color: #ffffff;
+      overflow-wrap: break-word;
+    }
+  }
+
+  .route-tag {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #c9d6f2;
+  }
+
+  .airport-label {
+    font-size: 0.78rem;
+    color: #d8e3fa;
+    line-height: 1.3;
+    overflow-wrap: break-word;
+  }
+}
+
+/* Horarios y detalles */
+.hero-meta {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.hero-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  min-width: 0;
 
   ion-icon {
-    font-size: 15px;
+    font-size: 20px;
+    color: $mint;
+    flex: 0 0 auto;
+  }
+
+  span {
+    display: block;
+    font-size: 0.75rem;
+    color: #c9d6f2;
+  }
+
+  strong {
+    display: block;
+    font-size: 0.88rem;
+    line-height: 1.25;
+    color: #ffffff;
+  }
+
+  .big-time {
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: -0.3px;
   }
 }
 
-.empty-card {
-  text-align: center;
-  margin-top: 24px;
-}
-
-.empty-card > ion-icon {
-  font-size: 48px;
-  color: #a8b8d1;
-}
-
-/* ── Hero Details Layout & Globe Trigger Card ── */
-.hero-details-container {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin: 20px 0;
-
-  .meta {
-    margin: 0;
-  }
-}
-
-/* Botón Destacado del Cuadro Rojo (3D Interactivo) */
-.globe-trigger-card {
+/* Pills de embarque */
+.pills-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
   width: 100%;
-  background: linear-gradient(135deg, rgba(255, 144, 32, 0.16) 0%, rgba(16, 30, 59, 0.95) 100%);
-  border: 1.5px solid rgba(255, 144, 32, 0.45);
-  border-radius: 18px;
-  padding: 14px 16px;
+  box-sizing: border-box;
+}
+
+.pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  min-width: 0;
+
+  ion-icon {
+    font-size: 18px;
+    color: $mint;
+    flex: 0 0 auto;
+  }
+
+  .pill-title {
+    display: block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #c9d6f2;
+    font-weight: 700;
+  }
+
+  strong {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 800;
+    line-height: 1.2;
+    overflow-wrap: break-word;
+  }
+
+  &.pill-muted {
+    background: rgba(255, 255, 255, 0.06);
+    border-style: dashed;
+    border-color: rgba(255, 255, 255, 0.25);
+    color: #b5c7e8;
+
+    ion-icon { color: #b5c7e8; }
+    strong { font-weight: 600; font-style: italic; }
+  }
+}
+
+/* Botón Destacado: Globo 3D Interactivo */
+.globe-trigger-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  margin-top: 12px;
+  background: linear-gradient(135deg, rgba(38, 185, 154, 0.22) 0%, rgba(16, 30, 59, 0.85) 100%);
+  border: 1.5px solid rgba(66, 212, 186, 0.48);
+  border-radius: 14px;
+  padding: 10px 12px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
   text-align: left;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.16);
   transition: transform 0.15s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-  position: relative;
   overflow: hidden;
+  box-sizing: border-box;
 
   &:active {
     transform: scale(0.98);
-    border-color: #ff9020;
-    box-shadow: 0 4px 14px rgba(255, 144, 32, 0.3);
+    border-color: $mint;
+    box-shadow: 0 4px 14px rgba(66, 212, 186, 0.35);
   }
 
   .globe-preview-sphere {
-    width: 44px;
-    height: 44px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
-    background: radial-gradient(circle at 35% 35%, #ffbe60 0%, #ff9020 40%, #0d1e3d 95%);
+    background: radial-gradient(circle at 35% 35%, #5ee5cc 0%, #26b99a 45%, #0f2244 95%);
     display: flex;
     align-items: center;
     justify-content: center;
     color: #ffffff;
-    font-size: 24px;
+    font-size: 22px;
     flex-shrink: 0;
     position: relative;
-    box-shadow: 0 4px 12px rgba(255, 144, 32, 0.4);
+    box-shadow: 0 3px 10px rgba(38, 185, 154, 0.45);
 
     .globe-ping {
       position: absolute;
-      inset: -4px;
+      inset: -3px;
       border-radius: 50%;
-      border: 1.5px solid rgba(255, 144, 32, 0.6);
+      border: 1.5px solid rgba(66, 212, 186, 0.7);
       animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
     }
   }
@@ -131,39 +584,446 @@ ion-segment {
     flex: 1;
     display: flex;
     flex-direction: column;
+    min-width: 0;
 
     .globe-tag {
-      font-size: 10px;
+      font-size: 0.68rem;
       font-weight: 800;
-      letter-spacing: 1.5px;
+      letter-spacing: 1px;
       text-transform: uppercase;
-      color: #ffbe60;
-      font-family: 'Space Mono', monospace, system-ui;
+      color: $mint;
     }
 
     .globe-title {
-      font-size: 16px;
-      font-weight: 700;
+      font-size: 0.92rem;
+      font-weight: 800;
       color: #ffffff;
-      margin-top: 2px;
+      margin-top: 1px;
       letter-spacing: -0.2px;
     }
 
     .globe-sub {
-      font-size: 12px;
-      color: #b9c8e5;
+      font-size: 0.75rem;
+      color: #c9d6f2;
       margin-top: 1px;
+      line-height: 1.3;
     }
   }
 
   .globe-arrow {
-    font-size: 20px;
-    color: #ff9020;
-    opacity: 0.85;
+    font-size: 18px;
+    color: $mint;
     flex-shrink: 0;
   }
 }
 
+/* Botones de acción del Hero */
+.hero-actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+  width: 100%;
+
+  .btn-hero-primary {
+    --background: #ffffff;
+    --color: #{$navy};
+    --border-radius: 12px;
+    --box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+    min-height: 44px;
+    height: 44px;
+    font-size: 0.85rem;
+    font-weight: 750;
+    letter-spacing: -0.2px;
+    margin: 0;
+    width: 100%;
+
+    ion-icon {
+      font-size: 18px;
+      color: $blue;
+    }
+  }
+
+  .btn-hero-secondary {
+    --background: rgba(255, 255, 255, 0.16);
+    --border-color: rgba(255, 255, 255, 0.35);
+    --border-style: solid;
+    --border-width: 1.5px;
+    --color: #ffffff;
+    --border-radius: 12px;
+    min-height: 44px;
+    height: 44px;
+    font-size: 0.85rem;
+    font-weight: 750;
+    margin: 0;
+    width: 100%;
+
+    ion-icon {
+      font-size: 18px;
+      color: $mint;
+    }
+  }
+}
+
+/* ==========================================================================
+   2. MIS RESERVAS (TARJETAS DE RESERVA ACTIVAS)
+   ========================================================================== */
+.reservas-section {
+  margin-top: 10px;
+}
+
+.reservas-list {
+  display: grid;
+  gap: 12px;
+}
+
+.reserva-card {
+  cursor: pointer;
+  padding: 16px 14px;
+  border-radius: 18px;
+  margin-bottom: 0;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  box-sizing: border-box;
+  width: 100%;
+
+  &:active {
+    transform: scale(0.99);
+    border-color: #9fb3e6;
+  }
+}
+
+.reserva-card-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid $line;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.reserva-id-group {
+  min-width: 0;
+  flex-shrink: 0;
+
+  .reserva-label {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: $soft-ink;
+  }
+
+  .reserva-number {
+    display: block;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: $navy;
+    letter-spacing: -0.4px;
+    line-height: 1.15;
+  }
+}
+
+.reserva-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.reserva-route {
+  padding: 12px 0;
+  border-bottom: 1px solid $line;
+  width: 100%;
+  box-sizing: border-box;
+
+  .route-codes {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: 8px;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .iata {
+    color: $navy;
+    font-size: clamp(1.35rem, 5.5vw, 1.65rem);
+    font-weight: 800;
+    line-height: 1;
+    min-width: 0;
+  }
+
+  .iata-end {
+    text-align: right;
+  }
+
+  .flight-line {
+    width: clamp(48px, 16vw, 90px);
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    color: $blue;
+    margin: 0 auto;
+  }
+
+  .fl-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 2px solid $blue;
+    flex-shrink: 0;
+  }
+
+  .fl-dot-end {
+    background: $mint;
+    border-color: $teal;
+  }
+
+  .fl-dash {
+    flex: 1;
+    border-top: 1.5px dashed #9fb3e6;
+  }
+
+  .fl-plane {
+    font-size: 18px;
+    color: $blue;
+    flex-shrink: 0;
+  }
+
+  .route-names {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px;
+    margin-top: 8px;
+    width: 100%;
+    box-sizing: border-box;
+
+    .route-side {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      min-width: 0;
+      overflow-wrap: break-word;
+
+      &.end {
+        text-align: right;
+        align-items: flex-end;
+      }
+
+      strong {
+        color: $ink;
+        font-size: 0.95rem;
+        line-height: 1.25;
+        overflow-wrap: break-word;
+      }
+    }
+
+    .route-tag {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: $soft-ink;
+    }
+  }
+}
+
+.reserva-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  padding-top: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+
+  ion-icon {
+    font-size: 20px;
+    color: $blue;
+    flex: 0 0 auto;
+  }
+
+  .meta-label {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: $soft-ink;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .meta-value {
+    display: block;
+    font-size: 0.88rem;
+    font-weight: 750;
+    color: $ink;
+    line-height: 1.25;
+    overflow-wrap: break-word;
+
+    &.price {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: $navy;
+    }
+  }
+
+  &.total-item {
+    ion-icon { color: $success; }
+  }
+}
+
+.checkin-badge-row {
+  margin-top: 10px;
+}
+
+.reserva-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin-top: 14px;
+
+  .btn-ver-reserva {
+    width: 100%;
+    --border-radius: 12px;
+    min-height: 44px;
+    height: 44px;
+    font-size: 0.85rem;
+    font-weight: 750;
+    margin: 0;
+
+    ion-icon { font-size: 17px; }
+  }
+
+  .btn-reserva-mapa {
+    width: 100%;
+    background: $bg-tint;
+    border: 1.5px solid #c9d7f7;
+    border-radius: 12px;
+    color: $blue;
+    padding: 0 14px;
+    min-height: 44px;
+    height: 44px;
+    font-size: 0.85rem;
+    font-weight: 750;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+
+    ion-icon {
+      font-size: 18px;
+      color: $blue;
+    }
+
+    &:active {
+      transform: scale(0.98);
+      background: #dde7fa;
+    }
+  }
+}
+
+/* ==========================================================================
+   3. ESTADOS VACÍOS AMIGABLES
+   ========================================================================== */
+.empty-state-card {
+  text-align: center;
+  padding: 30px 18px;
+  border-radius: 20px;
+  background: #ffffff;
+  border: 1px solid $line;
+  box-shadow: 0 8px 24px rgba(20, 42, 75, 0.06);
+  margin-top: 14px;
+  box-sizing: border-box;
+
+  .empty-icon-wrap {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: $bg-tint;
+    color: $blue;
+    display: grid;
+    place-items: center;
+    margin: 0 auto 12px;
+    font-size: 28px;
+  }
+
+  h2 {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: $navy;
+    margin: 0 0 6px;
+    letter-spacing: -0.2px;
+  }
+
+  p {
+    font-size: 0.875rem;
+    color: $soft-ink;
+    line-height: 1.45;
+    margin: 0 auto 18px;
+    max-width: 420px;
+  }
+
+  .btn-buscar {
+    --border-radius: 12px;
+    min-height: 44px;
+    height: 44px;
+    font-size: 0.85rem;
+    font-weight: 750;
+    max-width: 280px;
+    margin: 0 auto;
+  }
+}
+
+/* ==========================================================================
+   4. BARRA DE PAGINACIÓN ACCESIBLE
+   ========================================================================== */
+.pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 6px 6px;
+  margin-top: 10px;
+
+  .page-nav-btn {
+    min-height: 42px;
+    height: 42px;
+    font-size: 0.85rem;
+    font-weight: 750;
+    --color: #{$blue};
+  }
+
+  .page-indicator {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: $soft-ink;
+  }
+}
+
+/* ==========================================================================
+   ANIMACIONES Y RESPONSIVIDAD
+   ========================================================================== */
 @keyframes ping {
   75%, 100% {
     transform: scale(1.4);
@@ -171,37 +1031,33 @@ ion-segment {
   }
 }
 
-@media (min-width: 540px) {
-  .hero-details-container {
-    flex-direction: row;
-    align-items: stretch;
-
-    .meta {
-      flex: 1.3;
-    }
-
-    .globe-trigger-card {
-      flex: 1;
-      flex-direction: column;
-      justify-content: center;
-      align-items: flex-start;
-      padding: 16px;
-
-      .globe-arrow {
-        position: absolute;
-        bottom: 16px;
-        right: 16px;
-      }
-    }
-  }
+.reveal {
+  animation: reveal 0.35s ease-out both;
 }
 
-@media (max-width: 480px) {
-  .hero {
-    padding: 20px;
-  }
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
 
-  .hero .route strong {
-    font-size: 32px;
+@media (prefers-reduced-motion: reduce) {
+  .reveal { animation: none; }
+  .globe-ping { animation: none; }
+}
+
+/* Tablets y pantallas mayores (>= 480px) */
+@media (min-width: 480px) {
+  .vuelos-page { padding: 20px 18px 44px; }
+  .reserva-meta-grid { grid-template-columns: 1.3fr 1fr; }
+  .hero-meta { grid-template-columns: 1fr 1fr; }
+  .reserva-actions {
+    flex-direction: row;
+    .btn-ver-reserva { flex: 1; }
+    .btn-reserva-mapa { width: auto; flex: 0 0 auto; }
+  }
+  .hero-actions {
+    flex-direction: row;
+    .btn-hero-primary { flex: 1; }
+    .btn-hero-secondary { flex: 1; }
   }
 }

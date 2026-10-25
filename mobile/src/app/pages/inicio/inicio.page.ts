@@ -2,16 +2,63 @@ import { Component, inject } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Capacitor } from '@capacitor/core';
 import { firstValueFrom } from 'rxjs';
+import { addIcons } from 'ionicons';
+import {
+  airplane,
+  airplaneOutline,
+  alertCircle,
+  alertCircleOutline,
+  arrowForwardOutline,
+  briefcaseOutline,
+  calendarOutline,
+  checkmarkCircle,
+  checkmarkCircleOutline,
+  chevronForwardOutline,
+  closeOutline,
+  informationCircle,
+  informationCircleOutline,
+  locationOutline,
+  pricetagOutline,
+  refreshOutline,
+  search,
+  searchOutline,
+  shieldCheckmarkOutline,
+  sparklesOutline,
+  swapHorizontalOutline,
+  time,
+  timeOutline
+} from 'ionicons/icons';
 import { ApiService } from '../../core/api.service';
 import { AeropuertoCatalogo, ItinerarioDisponible, TarifaDisponible } from '../../core/models';
 import { errorMessage } from '../../core/ui';
 
-/**
- * Dirección HTTP(S) pública de la web SkyWay (Spring Boot/JSF).
- * Desarrollo local: http://localhost:8080
- * Para celulares reales o producción, cambiar por URL accesible desde el dispositivo.
- */
-const URL_WEB_SKYWAY = Capacitor.isNativePlatform() ? 'http://192.168.100.7:8080' : 'http://localhost:8080';
+addIcons({
+  airplane,
+  airplaneOutline,
+  alertCircle,
+  alertCircleOutline,
+  arrowForwardOutline,
+  briefcaseOutline,
+  calendarOutline,
+  checkmarkCircle,
+  checkmarkCircleOutline,
+  chevronForwardOutline,
+  closeOutline,
+  informationCircle,
+  informationCircleOutline,
+  locationOutline,
+  pricetagOutline,
+  refreshOutline,
+  search,
+  searchOutline,
+  shieldCheckmarkOutline,
+  sparklesOutline,
+  swapHorizontalOutline,
+  time,
+  timeOutline
+});
+
+const CLP = new Intl.NumberFormat('es-CL', { maximumFractionDigits: 0 });
 
 @Component({
   selector: 'app-inicio',
@@ -104,7 +151,7 @@ export class InicioPage {
     this.aeropuertosFiltrados = this.aeropuertos
       .filter(a => {
         const campos = this.textoNormalizado(
-          `${a.codigoIata} ${a.ciudad ?? ''} ${a.nombreAeropuerto}`
+          `${a.codigoIata} ${a.ciudad ?? ''} ${a.nombreAeropuerto} ${a.pais ?? ''}`
         );
         return palabras.every(palabra => campos.includes(palabra));
       })
@@ -131,13 +178,117 @@ export class InicioPage {
   }
 
   etiquetaSeleccionada(codigo: string): string {
-    if (!codigo) return 'Busca aeropuerto o IATA';
+    if (!codigo) return 'Seleccionar aeropuerto';
     const aeropuerto = this.aeropuertos.find(a => a.codigoIata === codigo);
     return aeropuerto ? `${aeropuerto.codigoIata} · ${aeropuerto.ciudad || aeropuerto.nombreAeropuerto}` : codigo;
   }
 
   nombreSeleccionado(codigo: string): string {
     return this.aeropuertos.find(a => a.codigoIata === codigo)?.nombreAeropuerto ?? '';
+  }
+
+  aeropuertoPorCodigo(codigo: string | null | undefined): AeropuertoCatalogo | undefined {
+    if (!codigo) return undefined;
+    return this.aeropuertos.find(a => a.codigoIata.toUpperCase() === codigo.toUpperCase());
+  }
+
+  ciudadODefecto(codigo: string | null | undefined): string {
+    const a = this.aeropuertoPorCodigo(codigo);
+    return a?.ciudad || a?.nombreAeropuerto || codigo || 'Por confirmar';
+  }
+
+  nombreAeropuertoODefecto(codigo: string | null | undefined): string {
+    const a = this.aeropuertoPorCodigo(codigo);
+    return a?.nombreAeropuerto || 'Aeropuerto por confirmar';
+  }
+
+  paisODefecto(codigo: string | null | undefined): string {
+    const a = this.aeropuertoPorCodigo(codigo);
+    return a?.pais || 'Chile';
+  }
+
+  clp(monto: number | null | undefined): string {
+    if (monto === null || monto === undefined) return 'Sin especificar';
+    return `$${CLP.format(Math.round(monto))} CLP`;
+  }
+
+  escalasTexto(n: number | null | undefined): string {
+    if (n === null || n === undefined) return 'Escalas por confirmar';
+    if (n === 0) return 'Vuelo directo';
+    return n === 1 ? '1 escala' : `${n} escalas`;
+  }
+
+  fechaFormateada(fechaIso: string | null | undefined): string {
+    if (!fechaIso) return 'Por confirmar';
+    try {
+      const parts = fechaIso.split('T')[0].split('-');
+      if (parts.length === 3) {
+        const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+        return d.toLocaleDateString('es-CL', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long'
+        });
+      }
+      const d = new Date(fechaIso);
+      return d.toLocaleDateString('es-CL', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long'
+      });
+    } catch {
+      return fechaIso;
+    }
+  }
+
+  horaFormateada(fechaIso: string | null | undefined): string {
+    if (!fechaIso) return '—';
+    try {
+      const d = new Date(fechaIso);
+      if (isNaN(d.getTime())) {
+        const match = fechaIso.match(/T?(\d{2}:\d{2})/);
+        return match ? `${match[1]} h` : '—';
+      }
+      return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')} h`;
+    } catch {
+      return '—';
+    }
+  }
+
+  duracionTexto(duracion: string | null | undefined): string {
+    if (!duracion) return 'Por confirmar';
+    return duracion;
+  }
+
+  caracteristicasTarifa(nombre: string): string[] {
+    const n = (nombre || '').toLowerCase();
+    if (n.includes('basic') || n.includes('básic') || n.includes('zero') || n.includes('promo')) {
+      return [
+        'Bolso de mano o mochila pequeña bajo el asiento',
+        'Asiento asignado al azar',
+        'Check-in digital disponible 48 h antes'
+      ];
+    }
+    if (n.includes('light') || n.includes('classic') || n.includes('estándar') || n.includes('plus')) {
+      return [
+        'Bolso de mano + equipaje de mano de 10 kg',
+        'Elección de asiento estándar incluida',
+        'Cambios de fecha con cargo preferencial'
+      ];
+    }
+    if (n.includes('premium') || n.includes('flex') || n.includes('top') || n.includes('ejecutiv')) {
+      return [
+        'Equipaje en bodega (23 kg) + equipaje de mano (10 kg)',
+        'Elección de asiento preferente o con más espacio',
+        'Cambios y devoluciones flexibles sin penalización',
+        'Embarque prioritario'
+      ];
+    }
+    return [
+      'Equipaje de mano incluido',
+      'Check-in online disponible',
+      'Atención y asistencia durante el vuelo'
+    ];
   }
 
   trackAeropuerto(_indice: number, aeropuerto: AeropuertoCatalogo): string {
@@ -156,8 +307,8 @@ export class InicioPage {
     }
 
     const { origen, destino, fecha } = this.form.getRawValue();
-    if (origen === destino) {
-      this.error = 'El origen y el destino deben ser distintos.';
+    if (origen.toUpperCase() === destino.toUpperCase()) {
+      this.error = 'El aeropuerto de origen y destino deben ser distintos.';
       return;
     }
 

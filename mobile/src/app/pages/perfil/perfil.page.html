@@ -1,9 +1,9 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>Perfil</ion-title>
+    <ion-title>Perfil y seguridad</ion-title>
     <ion-buttons slot="end">
-      <ion-button aria-label="Cerrar sesión" (click)="auth.logout()">
-        <ion-icon name="log-out-outline" slot="icon-only"></ion-icon>
+      <ion-button aria-label="Actualizar datos del perfil" (click)="load()" [disabled]="busy">
+        <ion-icon name="refresh-outline" slot="icon-only"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
@@ -11,101 +11,587 @@
 
 <ion-content>
   <main class="page perfil-page">
-    <div *ngIf="busy" class="loading"><ion-spinner></ion-spinner></div>
-    <p *ngIf="error" class="error" role="alert">{{ error }}</p>
+    <!-- Estado de carga -->
+    <div *ngIf="busy" class="loading" role="status" aria-live="polite">
+      <ion-spinner></ion-spinner>
+      <p>Cargando información de tu perfil…</p>
+    </div>
+
+    <!-- Error global si falla la carga -->
+    <div *ngIf="error" class="error" role="alert">
+      <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
+      <span>{{ error }}</span>
+    </div>
 
     <ng-container *ngIf="perfil as p">
-      <section class="profile-head">
-        <div class="avatar">{{ p.usuario.nombre.charAt(0) }}{{ p.usuario.apellido.charAt(0) }}</div>
-        <div>
-          <span class="eyebrow">TU CUENTA SKYWAY</span>
-          <h1>{{ p.usuario.nombre }} {{ p.usuario.apellido }}</h1>
-          <p class="muted">{{ p.usuario.correoElectronico || 'Sin correo registrado' }}</p>
+      <!-- a) Hero Pasajero (Identidad SkyWay: navy profundo a azul con brillo teal) -->
+      <section class="hero-card reveal" aria-label="Información principal del pasajero">
+        <div class="hero-passenger-main">
+          <!-- Marco de Avatar Animado / Foto Personalizada -->
+          <div class="avatar-frame-wrap">
+            <div class="avatar-large" [attr.aria-label]="'Foto de perfil: ' + currentAvatarLabel">
+              <!-- Caso 1: Personaje ilustrado SVG animado -->
+              <div
+                *ngIf="selectedAvatarType === 'character' && currentCharacter"
+                class="avatar-svg-box"
+                [innerHTML]="currentCharacter.safeSvg"
+              ></div>
+
+              <!-- Caso 2: Foto personalizada subida por el usuario -->
+              <img
+                *ngIf="selectedAvatarType === 'custom' && customPhotoUrl"
+                [src]="customPhotoUrl"
+                alt="Foto de perfil personalizada"
+                class="avatar-custom-img"
+              />
+
+              <!-- Caso 3: Iniciales clásicas -->
+              <span *ngIf="selectedAvatarType === 'initials' || (!currentCharacter && !customPhotoUrl)">
+                {{ iniciales }}
+              </span>
+            </div>
+
+            <!-- Botón badge para abrir el personalizador -->
+            <button
+              type="button"
+              class="btn-change-avatar-badge"
+              (click)="toggleAvatarSelector()"
+              [attr.aria-expanded]="showAvatarSelector"
+              aria-label="Cambiar avatar o foto de perfil"
+            >
+              <ion-icon name="camera-outline" aria-hidden="true"></ion-icon>
+            </button>
+          </div>
+
+          <div class="hero-passenger-details">
+            <span class="hero-label">Cuenta de pasajero SkyWay</span>
+            <h1 class="hero-name">{{ p.usuario.nombre }} {{ p.usuario.apellido }}</h1>
+
+            <div class="hero-chips">
+              <span class="chip chip-info chip-sm">
+                <ion-icon name="card-outline" aria-hidden="true"></ion-icon>
+                RUT: {{ p.usuario.rut }}
+              </span>
+              <span class="chip chip-neutral chip-sm" *ngIf="p.pasajero.nacionalidad">
+                <ion-icon name="globe-outline" aria-hidden="true"></ion-icon>
+                {{ p.pasajero.nacionalidad }}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              class="btn-trigger-avatar-selector"
+              (click)="toggleAvatarSelector()"
+              [attr.aria-expanded]="showAvatarSelector"
+            >
+              <ion-icon name="sparkles-outline" aria-hidden="true"></ion-icon>
+              <span>{{ showAvatarSelector ? 'Ocultar personalizador' : 'Personalizar mi foto / avatar' }}</span>
+              <ion-icon [name]="showAvatarSelector ? 'chevron-up-outline' : 'chevron-down-outline'" aria-hidden="true"></ion-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="hero-meta">
+          <div class="hero-meta-item">
+            <ion-icon name="card-outline" aria-hidden="true"></ion-icon>
+            <div>
+              <span>Documento de viaje</span>
+              <strong>{{ p.pasajero.tipoDocumento || 'RUT' }}: {{ p.pasajero.numeroDocumento || p.usuario.rut }}</strong>
+            </div>
+          </div>
+
+          <div class="hero-meta-item">
+            <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+            <div>
+              <span>Fecha de nacimiento</span>
+              <strong>{{ p.pasajero.fechaNacimiento ? (p.pasajero.fechaNacimiento | date:"d 'de' MMMM 'de' y") : 'No informada' }}</strong>
+            </div>
+          </div>
+
+          <div class="hero-meta-item hero-meta-full">
+            <ion-icon name="mail-outline" aria-hidden="true"></ion-icon>
+            <div>
+              <span>Correo de contacto principal</span>
+              <strong class="email-text">{{ p.usuario.correoElectronico || 'Sin correo registrado' }}</strong>
+            </div>
+          </div>
         </div>
       </section>
 
-      <ion-card>
-        <ion-card-content>
-          <h2>Datos del pasajero</h2>
-          <div class="profile-data"><span>RUT</span><strong>{{ p.usuario.rut }}</strong></div>
-          <div class="profile-data"><span>Documento</span><strong>{{ p.pasajero.tipoDocumento || '—' }} {{ p.pasajero.numeroDocumento || '' }}</strong></div>
-          <div class="profile-data"><span>Nacionalidad</span><strong>{{ p.pasajero.nacionalidad || 'No informada' }}</strong></div>
-          <div class="profile-data"><span>Fecha de nacimiento</span><strong>{{ p.pasajero.fechaNacimiento ? (p.pasajero.fechaNacimiento | date:'dd MMM yyyy') : 'No informada' }}</strong></div>
-        </ion-card-content>
-      </ion-card>
+      <!-- Selector de Avatar y Personalización de Foto -->
+      <section
+        *ngIf="showAvatarSelector"
+        class="block avatar-selector-section reveal"
+        aria-label="Personaliza tu foto de perfil"
+      >
+        <div class="sec-head">
+          <span class="sec-icon sec-icon-avatar"><ion-icon name="sparkles-outline" aria-hidden="true"></ion-icon></span>
+          <div>
+            <h2>Personaliza tu foto de perfil</h2>
+            <p>Elige tu personaje animado favorito o sube una foto desde tu celular o PC.</p>
+          </div>
+        </div>
 
-      <ion-card>
-        <ion-card-content>
-          <div class="form-title">
-            <ion-icon name="mail-outline"></ion-icon>
-            <div><h2>Cambiar correo</h2><p class="muted">Confirma el cambio con tu contraseña actual.</p></div>
+        <div class="card avatar-selector-card">
+          <!-- Alerta de éxito al guardar avatar -->
+          <div *ngIf="avatarSuccess" class="alert-banner alert-success" role="status">
+            <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
+            <span>{{ avatarSuccess }}</span>
           </div>
 
-          <form [formGroup]="emailForm" (ngSubmit)="guardarCorreo()">
-            <ion-input
-              formControlName="correoElectronico"
-              type="email"
-              inputmode="email"
-              label="Correo electrónico"
-              labelPlacement="stacked"
-              autocomplete="email"
-            ></ion-input>
-            <ion-input
-              formControlName="contrasenaActual"
-              type="password"
-              label="Contraseña actual"
-              labelPlacement="stacked"
-              autocomplete="current-password"
-            ></ion-input>
-            <ion-button expand="block" type="submit" [disabled]="savingEmail || emailForm.invalid">
-              <ion-spinner *ngIf="savingEmail" name="crescent"></ion-spinner>
-              <span *ngIf="!savingEmail">Guardar correo</span>
-            </ion-button>
-          </form>
-        </ion-card-content>
-      </ion-card>
-
-      <ion-card>
-        <ion-card-content>
-          <div class="form-title">
-            <ion-icon name="lock-closed-outline"></ion-icon>
-            <div><h2>Cambiar contraseña</h2><p class="muted">La nueva contraseña debe tener al menos 8 caracteres.</p></div>
+          <!-- Filtros de categoría -->
+          <div class="avatar-filter-bar" role="tablist" aria-label="Categorías de avatares">
+            <button
+              type="button"
+              class="filter-pill"
+              [class.active]="avatarCategory === 'todos'"
+              (click)="setAvatarCategory('todos')"
+              role="tab"
+              [attr.aria-selected]="avatarCategory === 'todos'"
+            >
+              ✨ Todos (12)
+            </button>
+            <button
+              type="button"
+              class="filter-pill"
+              [class.active]="avatarCategory === 'perros'"
+              (click)="setAvatarCategory('perros')"
+              role="tab"
+              [attr.aria-selected]="avatarCategory === 'perros'"
+            >
+              🐶 Perros
+            </button>
+            <button
+              type="button"
+              class="filter-pill"
+              [class.active]="avatarCategory === 'gatos'"
+              (click)="setAvatarCategory('gatos')"
+              role="tab"
+              [attr.aria-selected]="avatarCategory === 'gatos'"
+            >
+              🐱 Gatos
+            </button>
+            <button
+              type="button"
+              class="filter-pill"
+              [class.active]="avatarCategory === 'personas'"
+              (click)="setAvatarCategory('personas')"
+              role="tab"
+              [attr.aria-selected]="avatarCategory === 'personas'"
+            >
+              🧑‍✈️ Personas
+            </button>
+            <button
+              type="button"
+              class="filter-pill"
+              [class.active]="avatarCategory === 'mifoto'"
+              (click)="setAvatarCategory('mifoto')"
+              role="tab"
+              [attr.aria-selected]="avatarCategory === 'mifoto'"
+            >
+              📷 Mi foto
+            </button>
           </div>
 
-          <form [formGroup]="passwordForm" (ngSubmit)="guardarContrasena()">
-            <ion-input
-              formControlName="contrasenaActual"
-              type="password"
-              label="Contraseña actual"
-              labelPlacement="stacked"
-              autocomplete="current-password"
-            ></ion-input>
-            <ion-input
-              formControlName="nuevaContrasena"
-              type="password"
-              label="Nueva contraseña"
-              labelPlacement="stacked"
-              autocomplete="new-password"
-            ></ion-input>
-            <ion-input
-              formControlName="confirmarContrasena"
-              type="password"
-              label="Repite la nueva contraseña"
-              labelPlacement="stacked"
-              autocomplete="new-password"
-            ></ion-input>
-            <ion-button expand="block" type="submit" [disabled]="savingPassword || passwordForm.invalid">
-              <ion-spinner *ngIf="savingPassword" name="crescent"></ion-spinner>
-              <span *ngIf="!savingPassword">Actualizar contraseña</span>
+          <!-- Cuadrícula de Avatares Ilustrados y Animados -->
+          <div *ngIf="avatarCategory !== 'mifoto'" class="avatar-grid" role="radiogroup" aria-label="Elige un avatar">
+            <button
+              *ngFor="let char of filteredAvatars"
+              type="button"
+              class="avatar-item-btn"
+              [class.selected]="selectedAvatarType === 'character' && selectedCharacterId === char.id"
+              (click)="selectCharacterAvatar(char.id)"
+              [attr.aria-label]="char.name + ' - ' + char.description"
+            >
+              <div class="avatar-item-preview" [style.background]="char.bgGradient">
+                <div class="svg-thumb" [innerHTML]="char.safeSvg"></div>
+                <div *ngIf="selectedAvatarType === 'character' && selectedCharacterId === char.id" class="check-badge">
+                  <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
+                </div>
+              </div>
+              <strong class="char-name">{{ char.name }}</strong>
+              <span class="char-role">{{ char.badge }}</span>
+            </button>
+          </div>
+
+          <!-- Opciones de Foto Personalizada / Iniciales -->
+          <div class="custom-photo-box" [class.highlight]="avatarCategory === 'mifoto'">
+            <div class="custom-photo-head">
+              <ion-icon name="image-outline" aria-hidden="true"></ion-icon>
+              <div>
+                <strong>¿Prefieres tu propia foto o iniciales?</strong>
+                <p>Sube una imagen desde tu teléfono o computadora (se optimiza automáticamente) o vuelve a tus iniciales.</p>
+              </div>
+            </div>
+
+            <!-- Vista previa de foto personalizada si existe -->
+            <div *ngIf="customPhotoUrl" class="custom-photo-preview-row">
+              <div class="custom-photo-thumbnail">
+                <img [src]="customPhotoUrl" alt="Foto personalizada activa" />
+              </div>
+              <div class="custom-photo-info">
+                <span class="photo-status">Foto personalizada en uso</span>
+                <span class="photo-desc">Guardada en este dispositivo.</span>
+              </div>
+              <button
+                type="button"
+                class="btn-use-custom"
+                [class.active]="selectedAvatarType === 'custom'"
+                (click)="selectCustomPhoto(customPhotoUrl)"
+              >
+                {{ selectedAvatarType === 'custom' ? '✓ Activa' : 'Usar esta foto' }}
+              </button>
+            </div>
+
+            <div class="custom-photo-actions">
+              <!-- Input oculto para archivo con allowlist estricta de imágenes rasterizadas -->
+              <input
+                type="file"
+                #fileInput
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                (change)="onFileSelected($event)"
+                class="hidden-file-input"
+                aria-label="Seleccionar archivo de imagen JPG, PNG o WebP"
+              />
+
+              <button
+                type="button"
+                class="btn-action-primary"
+                (click)="fileInput.click()"
+              >
+                <ion-icon name="cloud-upload-outline" aria-hidden="true"></ion-icon>
+                <span>Subir mi propia foto</span>
+              </button>
+
+              <button
+                type="button"
+                class="btn-action-secondary"
+                [class.active]="selectedAvatarType === 'initials'"
+                (click)="selectInitialsAvatar()"
+              >
+                <ion-icon name="person-outline" aria-hidden="true"></ion-icon>
+                <span>Usar mis iniciales ({{ iniciales }})</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="selector-footer">
+            <button
+              type="button"
+              class="btn-close-selector"
+              (click)="toggleAvatarSelector()"
+            >
+              Listo, cerrar personalizador
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- b) Sección 1: Cambiar correo electrónico -->
+      <section class="block reveal" aria-label="Cambiar correo electrónico">
+        <div class="sec-head">
+          <span class="sec-icon"><ion-icon name="mail-outline" aria-hidden="true"></ion-icon></span>
+          <div>
+            <h2>Cambiar correo electrónico</h2>
+            <p>Aquí recibirás tus tarjetas de embarque, recibos y avisos de vuelo.</p>
+          </div>
+        </div>
+
+        <div class="card form-card">
+          <!-- Correo actual destacado -->
+          <div class="current-email-box">
+            <div class="icon-circle">
+              <ion-icon name="mail-outline" aria-hidden="true"></ion-icon>
+            </div>
+            <div>
+              <span class="label">Correo registrado actualmente</span>
+              <strong class="current-email-text">{{ p.usuario.correoElectronico || 'No tienes correo registrado' }}</strong>
+            </div>
+          </div>
+
+          <!-- Alerta de éxito -->
+          <div *ngIf="emailSuccess" class="alert-banner alert-success" role="status">
+            <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
+            <span>{{ emailSuccess }}</span>
+          </div>
+
+          <!-- Alerta de error -->
+          <div *ngIf="emailError" class="alert-banner alert-danger" role="alert">
+            <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
+            <span>{{ emailError }}</span>
+          </div>
+
+          <form [formGroup]="emailForm" (ngSubmit)="guardarCorreo()" novalidate>
+            <!-- Campo oculto de nombre de usuario para gestores de contraseñas (elimina advertencia de accesibilidad DOM) -->
+            <input
+              type="text"
+              autocomplete="username"
+              [value]="p.usuario.correoElectronico || p.usuario.rut"
+              readonly
+              tabindex="-1"
+              aria-hidden="true"
+              style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; opacity: 0; pointer-events: none;"
+            />
+
+            <div class="input-group">
+              <label class="field-label" for="nuevoCorreo">
+                Nuevo correo electrónico <span class="required">*</span>
+              </label>
+              <div class="input-shell">
+                <ion-icon name="mail-outline" class="input-icon" aria-hidden="true"></ion-icon>
+                <ion-input
+                  id="nuevoCorreo"
+                  formControlName="correoElectronico"
+                  type="email"
+                  inputmode="email"
+                  autocomplete="email"
+                  placeholder="ejemplo@correo.com"
+                  aria-required="true"
+                ></ion-input>
+              </div>
+              <p class="field-hint" *ngIf="emailForm.get('correoElectronico')?.touched && emailForm.get('correoElectronico')?.invalid">
+                <ion-icon name="close-circle-outline" aria-hidden="true"></ion-icon>
+                Ingresa una dirección de correo válida.
+              </p>
+            </div>
+
+            <div class="input-group">
+              <label class="field-label" for="claveActualEmail">
+                Contraseña actual para confirmar <span class="required">*</span>
+              </label>
+              <div class="input-shell">
+                <ion-icon name="lock-closed-outline" class="input-icon" aria-hidden="true"></ion-icon>
+                <ion-input
+                  id="claveActualEmail"
+                  formControlName="contrasenaActual"
+                  [type]="verEmailClave ? 'text' : 'password'"
+                  autocomplete="current-password"
+                  placeholder="Ingresa tu contraseña actual"
+                  aria-required="true"
+                ></ion-input>
+                <button
+                  type="button"
+                  class="btn-toggle-eye"
+                  (click)="verEmailClave = !verEmailClave"
+                  [attr.aria-label]="verEmailClave ? 'Ocultar contraseña' : 'Ver contraseña'"
+                >
+                  <ion-icon [name]="verEmailClave ? 'eye-off-outline' : 'eye-outline'" aria-hidden="true"></ion-icon>
+                </button>
+              </div>
+              <p class="field-hint" *ngIf="emailForm.get('contrasenaActual')?.touched && emailForm.get('contrasenaActual')?.invalid">
+                <ion-icon name="close-circle-outline" aria-hidden="true"></ion-icon>
+                Tu contraseña actual es obligatoria para confirmar el cambio.
+              </p>
+            </div>
+
+            <ion-button
+              type="submit"
+              expand="block"
+              class="primary-submit-btn"
+              [disabled]="savingEmail || emailForm.invalid"
+              aria-label="Guardar nuevo correo electrónico"
+            >
+              <ion-spinner *ngIf="savingEmail" name="crescent" slot="start"></ion-spinner>
+              <ion-icon *ngIf="!savingEmail" name="checkmark-circle-outline" slot="start" aria-hidden="true"></ion-icon>
+              <span>{{ savingEmail ? 'Guardando nuevo correo…' : 'Guardar correo electrónico' }}</span>
             </ion-button>
           </form>
-        </ion-card-content>
-      </ion-card>
+        </div>
+      </section>
 
-      <ion-button class="logout-button" expand="block" fill="outline" color="danger" (click)="auth.logout()">
-        Cerrar sesión
-        <ion-icon name="log-out-outline" slot="end"></ion-icon>
-      </ion-button>
+      <!-- c) Sección 2: Cambiar contraseña -->
+      <section class="block reveal" aria-label="Cambiar contraseña">
+        <div class="sec-head">
+          <span class="sec-icon"><ion-icon name="lock-closed-outline" aria-hidden="true"></ion-icon></span>
+          <div>
+            <h2>Cambiar contraseña</h2>
+            <p>Protege tu cuenta con una clave personal, segura y fácil de recordar para ti.</p>
+          </div>
+        </div>
+
+        <div class="card form-card">
+          <!-- Requisitos de seguridad claros -->
+          <div class="security-rules-box">
+            <div class="security-head">
+              <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
+              <strong>Requisitos para tu nueva contraseña</strong>
+            </div>
+            <ul class="rules-list">
+              <li>
+                <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
+                <span>Mínimo 8 caracteres de longitud.</span>
+              </li>
+              <li>
+                <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
+                <span>Debe ser diferente a tu contraseña actual.</span>
+              </li>
+              <li>
+                <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
+                <span>No la compartas con personas desconocidas.</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Alerta de éxito -->
+          <div *ngIf="passwordSuccess" class="alert-banner alert-success" role="status">
+            <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
+            <span>{{ passwordSuccess }}</span>
+          </div>
+
+          <!-- Alerta de error -->
+          <div *ngIf="passwordError" class="alert-banner alert-danger" role="alert">
+            <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
+            <span>{{ passwordError }}</span>
+          </div>
+
+          <form [formGroup]="passwordForm" (ngSubmit)="guardarContrasena()" novalidate>
+            <!-- Campo oculto de nombre de usuario para gestores de contraseñas (elimina advertencia de accesibilidad DOM) -->
+            <input
+              type="text"
+              autocomplete="username"
+              [value]="p.usuario.correoElectronico || p.usuario.rut"
+              readonly
+              tabindex="-1"
+              aria-hidden="true"
+              style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; opacity: 0; pointer-events: none;"
+            />
+
+            <!-- Contraseña actual -->
+            <div class="input-group">
+              <label class="field-label" for="passActual">
+                Contraseña actual <span class="required">*</span>
+              </label>
+              <div class="input-shell">
+                <ion-icon name="key-outline" class="input-icon" aria-hidden="true"></ion-icon>
+                <ion-input
+                  id="passActual"
+                  formControlName="contrasenaActual"
+                  [type]="verPassActual ? 'text' : 'password'"
+                  autocomplete="current-password"
+                  placeholder="Escribe tu contraseña actual"
+                  aria-required="true"
+                ></ion-input>
+                <button
+                  type="button"
+                  class="btn-toggle-eye"
+                  (click)="verPassActual = !verPassActual"
+                  [attr.aria-label]="verPassActual ? 'Ocultar contraseña actual' : 'Ver contraseña actual'"
+                >
+                  <ion-icon [name]="verPassActual ? 'eye-off-outline' : 'eye-outline'" aria-hidden="true"></ion-icon>
+                </button>
+              </div>
+              <p class="field-hint" *ngIf="passwordForm.get('contrasenaActual')?.touched && passwordForm.get('contrasenaActual')?.invalid">
+                <ion-icon name="close-circle-outline" aria-hidden="true"></ion-icon>
+                Debes ingresar tu contraseña actual.
+              </p>
+            </div>
+
+            <!-- Nueva contraseña -->
+            <div class="input-group">
+              <label class="field-label" for="passNueva">
+                Nueva contraseña <span class="required">*</span>
+              </label>
+              <div class="input-shell">
+                <ion-icon name="lock-closed-outline" class="input-icon" aria-hidden="true"></ion-icon>
+                <ion-input
+                  id="passNueva"
+                  formControlName="nuevaContrasena"
+                  [type]="verPassNueva ? 'text' : 'password'"
+                  autocomplete="new-password"
+                  placeholder="Mínimo 8 caracteres"
+                  aria-required="true"
+                ></ion-input>
+                <button
+                  type="button"
+                  class="btn-toggle-eye"
+                  (click)="verPassNueva = !verPassNueva"
+                  [attr.aria-label]="verPassNueva ? 'Ocultar nueva contraseña' : 'Ver nueva contraseña'"
+                >
+                  <ion-icon [name]="verPassNueva ? 'eye-off-outline' : 'eye-outline'" aria-hidden="true"></ion-icon>
+                </button>
+              </div>
+              <p class="field-hint" *ngIf="passwordForm.get('nuevaContrasena')?.touched && passwordForm.get('nuevaContrasena')?.invalid">
+                <ion-icon name="close-circle-outline" aria-hidden="true"></ion-icon>
+                La nueva contraseña debe tener al menos 8 caracteres.
+              </p>
+            </div>
+
+            <!-- Confirmar contraseña -->
+            <div class="input-group">
+              <label class="field-label" for="passConfirmar">
+                Confirmar nueva contraseña <span class="required">*</span>
+              </label>
+              <div class="input-shell">
+                <ion-icon name="shield-checkmark-outline" class="input-icon" aria-hidden="true"></ion-icon>
+                <ion-input
+                  id="passConfirmar"
+                  formControlName="confirmarContrasena"
+                  [type]="verPassConfirmar ? 'text' : 'password'"
+                  autocomplete="new-password"
+                  placeholder="Vuelve a escribir la nueva contraseña"
+                  aria-required="true"
+                ></ion-input>
+                <button
+                  type="button"
+                  class="btn-toggle-eye"
+                  (click)="verPassConfirmar = !verPassConfirmar"
+                  [attr.aria-label]="verPassConfirmar ? 'Ocultar confirmación' : 'Ver confirmación'"
+                >
+                  <ion-icon [name]="verPassConfirmar ? 'eye-off-outline' : 'eye-outline'" aria-hidden="true"></ion-icon>
+                </button>
+              </div>
+              <p class="field-hint" *ngIf="passwordForm.get('confirmarContrasena')?.touched && passwordForm.get('confirmarContrasena')?.invalid">
+                <ion-icon name="close-circle-outline" aria-hidden="true"></ion-icon>
+                Debes confirmar la nueva contraseña.
+              </p>
+            </div>
+
+            <ion-button
+              type="submit"
+              expand="block"
+              class="primary-submit-btn"
+              [disabled]="savingPassword || passwordForm.invalid"
+              aria-label="Actualizar contraseña"
+            >
+              <ion-spinner *ngIf="savingPassword" name="crescent" slot="start"></ion-spinner>
+              <ion-icon *ngIf="!savingPassword" name="key-outline" slot="start" aria-hidden="true"></ion-icon>
+              <span>{{ savingPassword ? 'Actualizando contraseña…' : 'Actualizar contraseña' }}</span>
+            </ion-button>
+          </form>
+        </div>
+      </section>
+
+      <!-- d) Sección 3: Cerrar sesión -->
+      <section class="block reveal" aria-label="Cerrar sesión">
+        <div class="sec-head">
+          <span class="sec-icon sec-icon-danger"><ion-icon name="log-out-outline" aria-hidden="true"></ion-icon></span>
+          <div>
+            <h2>Cerrar sesión</h2>
+            <p>Finaliza tu sesión actual en este teléfono o tablet.</p>
+          </div>
+        </div>
+
+        <div class="card logout-card">
+          <div class="logout-note">
+            <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+            <p>
+              Al salir de la aplicación, necesitarás tu <strong>RUT</strong> y tu <strong>contraseña</strong> para volver a iniciar sesión.
+            </p>
+          </div>
+
+          <ion-button
+            type="button"
+            expand="block"
+            fill="outline"
+            class="logout-button"
+            (click)="auth.logout()"
+            aria-label="Cerrar sesión en este dispositivo"
+          >
+            <ion-icon name="log-out-outline" slot="start" aria-hidden="true"></ion-icon>
+            <span>Cerrar sesión en este dispositivo</span>
+          </ion-button>
+        </div>
+      </section>
     </ng-container>
   </main>
 </ion-content>
