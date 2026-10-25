@@ -81,6 +81,10 @@ export class ApiService {
     return this.getServerHost() || 'http://localhost:8080';
   }
 
+  get apiBaseUrl(): string {
+    return this.base;
+  }
+
   private get base(): string {
     const host = this.getServerHost();
     if (host) return `${host}/api/v1/mobile`;
