@@ -48,6 +48,9 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
@@ -693,6 +696,33 @@ public class ReservaBean implements Serializable {
 
     public int getTotalEquipaje() {
         return totalEquipaje;
+    }
+
+    public Date getFechaMaxNacimiento() {
+        return java.sql.Date.valueOf(LocalDate.now());
+    }
+
+    // O si trabajas con LocalDate directamente:
+    public LocalDate getFechaMaxNacimientoLocalDate() {
+        return LocalDate.now();
+    }
+
+    /**
+     * Retorna la fecha máxima permitida para cumplir 18 años hoy.
+     * Ejemplo: Si hoy es 25/10/2026, la fecha máxima será 25/10/2008.
+     */
+    public Date getFechaMaxMayorEdad() {
+        LocalDate limiteMayorEdad = LocalDate.now().minusYears(18);
+        return Date.from(limiteMayorEdad.atStartOfDay(ZoneId.systemDefault()).toInstant());
+    }
+
+    public boolean esMayorDeEdad(Date fechaNacimiento) {
+        if (fechaNacimiento == null) return false;
+
+        LocalDate nacimiento = fechaNacimiento.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate hoy = LocalDate.now();
+
+        return Period.between(nacimiento, hoy).getYears() >= 18;
     }
 
     /**

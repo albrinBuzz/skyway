@@ -1,0 +1,376 @@
+@startuml
+top to bottom direction
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 80
+
+package "SkyWay Domain Model" {
+
+    package "Módulo Usuarios" {
+        class Usuario {
+            - rut: String
+            - nombre: String
+            - apellido: String
+            - correoElectronico: String
+            - telefono: String
+            - documentoIdentidad: String
+            - fechaNacimiento: Date
+            - contrasena: String
+            - fechaRegistro: Timestamp
+            + getRut(): String
+            + setRut(rut: String): void
+            + getNombre(): String
+            + setNombre(nombre: String): void
+            + getApellido(): String
+            + setApellido(apellido: String): void
+            + getCorreoElectronico(): String
+            + setCorreoElectronico(correoElectronico: String): void
+        }
+
+        class Role {
+            - idRol: Integer
+            - nombre: String
+            - descripcion: String
+            + getIdRol(): Integer
+            + getNombre(): String
+        }
+
+        class Rolusuario {
+            - id: Integer
+            + getId(): Integer
+        }
+
+        class Notificacion {
+            - idNotificacion: Integer
+            - fecha: Timestamp
+            - leido: Boolean
+            - mensaje: String
+            - titulo: String
+            + getIdNotificacion(): Integer
+        }
+
+        class PersonalAdministrativo {
+            - rut: String
+            - cargo: String
+            - departamento: String
+            - experienciaAnios: Integer
+            - fechaContratacion: Timestamp
+            - nivelAcceso: String
+            - tituloProfesional: String
+        }
+
+        class Piloto {
+            - rut: String
+            - licencia: String
+            - experienciaAnos: int
+            - especializaciones: String
+        }
+
+        class Tripulacion {
+            - rut: String
+            - cargo: String
+            - fechaIngreso: Timestamp
+        }
+
+        class Pasajero {
+            - rut: String
+            - fechaNacimiento: Date
+            - nacionalidad: String
+            - numeroDocumento: String
+            - tipoDocumento: String
+        }
+    }
+
+    package "Módulo Flotas y Vuelos" {
+        class Continente {
+            - idContinente: Integer
+            - nombre: String
+        }
+
+        class Pai {
+            - idPais: Integer
+            - nombre: String
+        }
+
+        class Ciudad {
+            - idCiudad: Integer
+            - nombre: String
+        }
+
+        class Aeropuerto {
+            - idAeropuerto: Integer
+            - codigoIata: String
+            - nombreAeropuerto: String
+            - posicion: Point
+        }
+
+        class PuertaEmbarque {
+            - idPuerta: Integer
+            - codigoPuerta: String
+            - terminal: String
+        }
+
+        class AsignacionPuerta {
+            - idAsignacion: Integer
+            - horaAsignacion: Timestamp
+        }
+
+        class Fabricante {
+            - idFabricante: Integer
+            - nombre: String
+        }
+
+        class ModeloAvion {
+            - idModelo: Integer
+            - nombre: String
+        }
+
+        class Avion {
+            - idAvion: Integer
+            - anoDeFabricacion: Integer
+            - capacidadDeCarga: Integer
+            - capacidadDePasajeros: Integer
+            - estadoDeMantenimiento: String
+            - fechaProximoMantenimiento: Timestamp
+            - numeroDeRegistro: String
+        }
+
+        class ClaseAsiento {
+            - idClase: Integer
+            - descripcion: String
+        }
+
+        class CapacidadClase {
+            - idCapacidadClase: Integer
+            - cantidad: Integer
+        }
+
+        class Asiento {
+            - idAsiento: Integer
+            - numeroAsiento: String
+            - fila: Integer
+            - letra: String
+            - esVentana: Boolean
+            - esPasillo: Boolean
+            - esEmergencia: Boolean
+        }
+
+        class Aerolinea {
+            - idAerolinea: Integer
+            - codigo: String
+            - nombre: String
+        }
+
+        class EstadoVuelo {
+            - idEstadoVuelo: Integer
+            - descripcion: String
+            - estado: String
+        }
+
+        class Vuelo {
+            - idVuelo: Integer
+            - fechaHoraLlegada: Timestamp
+            - fechaHoraSalida: Timestamp
+            - numeroVuelo: String
+        }
+
+        class SegmentoVuelo {
+            - idSegmento: Integer
+            - horaLlegada: Timestamp
+            - horaSalida: Timestamp
+            - ordenSegmento: Integer
+            + getPuertasEmbarque(): String
+        }
+
+        class Itinerario {
+            - idItinerario: Integer
+            - fechaCreacion: Timestamp
+            - horaLlegada: Timestamp
+            - horaSalida: Timestamp
+            - numeroEscalas: Integer
+            - precioBase: Integer
+        }
+
+        class ItinerarioVuelo {
+            - idItinerarioVuelo: Integer
+            - orden: Integer
+            - tipoConexion: String
+        }
+
+        class PrecioAsiento {
+            - idPrecioAsiento: Integer
+            - precio: Integer
+        }
+
+        class Turno {
+            - idTurno: Integer
+            - fecha: Date
+            - horaFin: Timestamp
+            - horaInicio: Timestamp
+        }
+
+        class TipoTurno {
+            - idTipo: Integer
+            - nombre: String
+        }
+
+        class TurnoTripulacion {
+            - idTurnoTripulacion: Integer
+        }
+    }
+
+    package "Módulo Ventas y Reservas" {
+        class Tarifa {
+            - idTarifa: Integer
+            - nombre: String
+        }
+
+        class CaracteristicaTarifa {
+            - idCaracteristica: Integer
+            - nombre: String
+            - descripcion: String
+            - tipoDato: String
+        }
+
+        class TarifaCaracteristica {
+            - idTarifaCaracteristica: Integer
+            - valor: String
+            - valorBool: Boolean
+            - valorInt: Integer
+        }
+
+        class ItinerarioTarifa {
+            - idItinerarioTarifa: Integer
+            - precio: BigDecimal
+        }
+
+        class EstadoReserva {
+            - idEstadoReserva: Integer
+            - descripcion: String
+        }
+
+        class Reserva {
+            - idReserva: Integer
+            - fechaReserva: Timestamp
+            - codigoReserva: String
+            - total: BigDecimal
+        }
+
+        class ReservaItinerario {
+            - idReservaItinerario: Integer
+        }
+
+        class ReservaAsiento {
+            - idReservaAsiento: Integer
+            - rut: String
+        }
+
+        class PasajeroReserva {
+            - idPasajeroReserva: Integer
+        }
+
+        class TipoEquipaje {
+            - idTipo: Integer
+            - nombre: String
+        }
+
+        class Equipaje {
+            - idEquipaje: Integer
+            - dimensiones: String
+            - peso: BigDecimal
+            - tipo: String
+        }
+
+        class Checkin {
+            - idCheckin: Integer
+            - fechaHora: Timestamp
+            - metodo: String
+        }
+
+        class MetodoPago {
+            - idMetodoPago: Integer
+            - descripcion: String
+        }
+
+        class Pago {
+            - idPago: Integer
+            - fecha: Timestamp
+            - montoPagado: BigDecimal
+        }
+    }
+
+    ' Relaciones Usuarios
+    Usuario "1" <-- "1" Pasajero
+    Usuario "1" <-- "1" Piloto
+    Usuario "1" <-- "1" PersonalAdministrativo
+    Usuario "1" <-- "1" Tripulacion
+    Usuario "1" -- "*" Notificacion
+    Usuario "*" -right- "*" Role
+    (Usuario, Role) .. Rolusuario
+
+    ' Geografía
+    Continente "1" -down-> "*" Pai
+    Pai "1" -down-> "*" Ciudad
+    Ciudad "1" -down-> "*" Aeropuerto
+
+    ' Flota y Asientos
+    Fabricante "1" -right-> "*" ModeloAvion
+    ModeloAvion "1" -right-> "*" Avion
+    Avion "1" --> "*" Asiento
+    ClaseAsiento "1" --> "*" Asiento
+    Avion "1" -- "*" CapacidadClase
+    ClaseAsiento "1" -- "*" CapacidadClase
+
+    ' Operación Vuelos
+    Aerolinea "1" -down-> "*" Vuelo
+    Avion "1" -down-> "*" Vuelo
+    Piloto "1" -down-> "*" Vuelo
+    EstadoVuelo "1" -down-> "*" Vuelo
+
+    Vuelo "1" -right-> "*" SegmentoVuelo
+    Aeropuerto "1" -down-> "*" SegmentoVuelo
+    Aeropuerto "1" -down-> "*" PuertaEmbarque
+    PuertaEmbarque "1" -- "*" AsignacionPuerta
+    SegmentoVuelo "1" -- "*" AsignacionPuerta
+
+    Itinerario "*" -left-> "*" Vuelo
+    (Itinerario, Vuelo) .. ItinerarioVuelo
+    Aeropuerto "1" --> "*" Itinerario
+
+    ' Tarifas y Precios
+    Tarifa "1" -- "*" TarifaCaracteristica
+    CaracteristicaTarifa "1" -- "*" TarifaCaracteristica
+    Itinerario "*" -- "*" Tarifa
+    (Itinerario, Tarifa) .. ItinerarioTarifa
+    Vuelo "1" -- "*" PrecioAsiento
+    ClaseAsiento "1" -- "*" PrecioAsiento
+
+    ' Turnos
+    Turno "*" -left-> "1" TipoTurno
+    Turno "*" -left-> "1" Vuelo
+    Tripulacion "*" -- "*" Turno
+    (Tripulacion, Turno) .. TurnoTripulacion
+
+    ' Reservas
+    EstadoReserva "1" -down-> "*" Reserva
+    Pasajero "1" -down-> "*" Reserva
+    Reserva "1" -right-> "*" PasajeroReserva
+    Pasajero "1" -right-> "*" PasajeroReserva
+
+    Reserva "1" --> "*" ReservaItinerario
+    ItinerarioTarifa "1" --> "*" ReservaItinerario
+
+    Reserva "1" --> "*" ReservaAsiento
+    Asiento "1" --> "*" ReservaAsiento
+    Vuelo "1" --> "*" ReservaAsiento
+
+    Reserva "1" -down-> "*" Equipaje
+    TipoEquipaje "1" -down-> "*" Equipaje
+    Pasajero "1" -down-> "*" Equipaje
+
+    Reserva "1" -down-> "*" Checkin
+    Reserva "1" -down-> "*" Pago
+    MetodoPago "1" -right-> "*" Pago
+}
+@enduml
