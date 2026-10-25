@@ -80,7 +80,7 @@ public class SecurityConfig {
 	            UserDetailsService userDetailsService,
 	            PasswordEncoder passwordEncoder) {
 	        var provider = new DaoAuthenticationProvider();
-			
+
 	        provider.setUserDetailsService(userDetailsService);
 	        provider.setPasswordEncoder(passwordEncoder);
 	        return new ProviderManager(authenticationProvider());
@@ -94,7 +94,7 @@ public class SecurityConfig {
 	            .authorizeHttpRequests(authorizeRequests ->
 	                authorizeRequests
 	                	.requestMatchers("/perfil/**").authenticated()
-						//.requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
+						.requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
 						.requestMatchers(mvc.pattern("/home/login.xhtml")).permitAll()
 	                  	//.requestMatchers("/booking").authenticated()
 	                    //.requestMatchers(HttpMethod.DELETE).hasRole("admin")

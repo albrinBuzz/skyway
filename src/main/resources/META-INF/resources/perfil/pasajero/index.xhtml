@@ -10,488 +10,7 @@
     <ui:define name="head">
         <title>Perfil de Usuario - SkyWay</title>
         <h:outputStylesheet library="css" name="perfil/pasajero.css" />
-        <style type="text/css">
-            /* ==========================================================================
-               🎨 ESTILOS DARK THEME CORPORATIVO - PERFIL DE PASAJERO Y HUB DE VUELOS
-               ========================================================================== */
-            .skyway-container {
-                max-width: 1200px;
-                margin: 30px auto;
-                padding: 0 15px;
-            }
 
-            .skyway-card {
-                background: #101B33 !important;
-                border: 1px solid #1E3A5C !important;
-                border-radius: 12px !important;
-                padding: 20px !important;
-            }
-
-            .filter-card {
-                margin-bottom: 24px;
-            }
-
-            .form-grid-inline {
-                display: flex;
-                align-items: flex-end;
-                gap: 16px;
-            }
-
-            .field-label {
-                color: #CBD5E1 !important;
-                font-size: 0.85rem !important;
-                font-weight: 600 !important;
-                margin-bottom: 6px !important;
-                display: block;
-            }
-
-            .quick-filters {
-                display: flex;
-                gap: 10px;
-                margin-bottom: 16px;
-            }
-
-            .btn-skyway-primary.ui-button {
-                background: #2563EB !important;
-                border: none !important;
-                color: #FFFFFF !important;
-                font-weight: 700 !important;
-            }
-
-            .btn-skyway-outlined.ui-button {
-                border: 1px solid #1E3A5C !important;
-                color: #94A3B8 !important;
-                background: transparent !important;
-            }
-
-            .btn-skyway-outlined.ui-button:hover {
-                background: #1E3A5C !important;
-                color: #FFFFFF !important;
-            }
-
-            body .skyway-tabs.ui-tabview {
-                background: transparent !important;
-                border: none !important;
-                padding: 0 !important;
-            }
-
-            body .skyway-tabs .ui-tabview-nav {
-                background: #101B33 !important;
-                border: 1px solid #1E3A5C !important;
-                border-radius: 8px 8px 0 0 !important;
-            }
-
-            body .skyway-tabs .ui-tabview-nav li {
-                background: transparent !important;
-                border: none !important;
-            }
-
-            body .skyway-tabs .ui-tabview-nav li a {
-                color: #94A3B8 !important;
-                font-weight: 600 !important;
-            }
-
-            body .skyway-tabs .ui-tabview-nav li.ui-state-active {
-                background: #1E293B !important;
-                border-bottom: 2px solid #3B82F6 !important;
-            }
-
-            body .skyway-tabs .ui-tabview-nav li.ui-state-active a {
-                color: #FFFFFF !important;
-            }
-
-            body .skyway-tabs .ui-tabview-panels {
-                background: #0D172A !important;
-                border: 1px solid #1E3A5C !important;
-                border-top: none !important;
-                border-radius: 0 0 8px 8px !important;
-                color: #E6EEF7 !important;
-            }
-
-            .skyway-datatable .ui-datatable-header,
-            .skyway-datatable th {
-                background: #11263F !important;
-                border: 1px solid #1E3A5C !important;
-                color: #E6EEF7 !important;
-            }
-
-            .skyway-datatable td {
-                background: #0D172A !important;
-                border: 1px solid #1E293B !important;
-                color: #CBD5E1 !important;
-            }
-
-            .iata-code {
-                font-size: 1.1rem;
-                font-weight: 800;
-                color: #FFFFFF;
-            }
-
-            .route-icon {
-                color: #3B82F6;
-                margin: 0 8px;
-            }
-
-            .action-buttons-wrapper {
-                display: flex;
-                gap: 8px;
-            }
-
-            .skyway-dialog .ui-dialog-titlebar,
-            .skyway-sidebar .header-titulo {
-                background: #101B33 !important;
-                color: #FFFFFF !important;
-                border-bottom: 1px solid #1E3A5C !important;
-            }
-
-            .skyway-dialog .ui-dialog-content,
-            .skyway-sidebar {
-                background: #0D172A !important;
-                color: #E6EEF7 !important;
-            }
-
-            .boarding-pass {
-                background: #11263F;
-                border: 1px solid #1E3A5C;
-                border-radius: 10px;
-                margin-bottom: 16px;
-                display: flex;
-                overflow: hidden;
-            }
-
-            .main-section {
-                flex: 3;
-                padding: 20px;
-                border-right: 2px dashed #1E3A5C;
-            }
-
-            .stub {
-                flex: 1.2;
-                padding: 20px;
-                background: #0D172A;
-                display: flex;
-                flex-direction: column;
-                justify-content: space-between;
-                align-items: center;
-                text-align: center;
-            }
-
-            .pass-header {
-                display: flex;
-                justify-content: space-between;
-                border-bottom: 1px solid #1E3A5C;
-                padding-bottom: 8px;
-                margin-bottom: 12px;
-            }
-
-            .airline-brand {
-                font-weight: 800;
-                color: #3B82F6;
-            }
-
-            .pass-type {
-                font-size: 0.75rem;
-                color: #94A3B8;
-                letter-spacing: 1px;
-            }
-
-            .pass-row {
-                display: flex;
-                justify-content: space-between;
-                margin-bottom: 12px;
-                width: 100%;
-            }
-
-            .pass-col .label {
-                display: block;
-                font-size: 0.7rem;
-                color: #64748B;
-                text-transform: uppercase;
-            }
-
-            .pass-col .value {
-                font-size: 0.95rem;
-                font-weight: 700;
-                color: #FFFFFF;
-            }
-
-            .pass-col .value.highlight {
-                color: #3B82F6;
-            }
-
-            .seat-badge {
-                background: rgba(59, 130, 246, 0.2);
-                border: 1px solid #3B82F6;
-                padding: 4px 12px;
-                border-radius: 6px;
-                text-align: center;
-            }
-
-            .qr-box {
-                background: #FFFFFF;
-                padding: 6px;
-                border-radius: 6px;
-                display: inline-block;
-                margin: 8px 0;
-            }
-
-            .feature-pill {
-                display: inline-flex;
-                align-items: center;
-                padding: 0.4rem 0.8rem;
-                border-radius: 20px;
-                font-size: 0.85rem;
-                font-weight: 500;
-                color: #fff;
-                background-color: rgba(255, 255, 255, 0.05);
-                border: 1px solid rgba(255, 255, 255, 0.1);
-            }
-
-            .feature-pill.allowed i {
-                color: #28a745;
-            }
-
-            .feature-pill.denied {
-                border-color: rgba(220, 53, 69, 0.4);
-                background-color: rgba(220, 53, 69, 0.15);
-            }
-
-            .feature-pill.denied i {
-                color: #dc3545;
-            }
-
-            .btn-skyway-accent.ui-button {
-                background: rgba(14, 116, 144, 0.25) !important;
-                border: 1px solid #06B6D4 !important;
-                color: #67E8F9 !important;
-                font-weight: 600 !important;
-                transition: all 0.2s ease;
-            }
-
-            .btn-skyway-accent.ui-button:hover {
-                background: #0891B2 !important;
-                color: #FFFFFF !important;
-                border-color: #0891B2 !important;
-            }
-
-            .btn-skyway-accent.ui-button.ui-state-disabled {
-                opacity: 0.4 !important;
-                border-color: #334155 !important;
-                color: #94A3B8 !important;
-            }
-
-            .hub-tab-panel {
-                background: #0D172A !important;
-                border-radius: 8px;
-                padding: 16px;
-            }
-
-            /* Estilos para las tarjetas del Cronograma */
-            .step-card {
-                background: #11263F;
-                border: 1px solid #1E3A5C;
-                border-radius: 8px;
-                padding: 10px;
-                transition: all 0.3s ease;
-            }
-
-            .step-card.active-step {
-                border-color: #3B82F6 !important;
-                box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
-                background: rgba(37, 99, 235, 0.1) !important;
-            }
-
-            /* ==========================================================================
-               🚀 TIMELINE DE CRONOGRAMA DE EMBARQUE Y CHECK-IN
-               ========================================================================== */
-            .timeline-cronograma {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                position: relative;
-                margin: 15px 0 5px 0;
-                padding: 0 10px;
-            }
-
-            /* Línea conectora base de fondo */
-            .timeline-cronograma::before {
-                content: '';
-                position: absolute;
-                top: 18px;
-                left: 40px;
-                right: 40px;
-                height: 3px;
-                background: #1E293B;
-                z-index: 1;
-            }
-
-            .timeline-step {
-                position: relative;
-                z-index: 2;
-                text-align: center;
-                flex: 1;
-            }
-
-            .step-node {
-                width: 36px;
-                height: 36px;
-                border-radius: 50%;
-                background: #11263F;
-                border: 2px solid #334155;
-                color: #94A3B8;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                margin: 0 auto 8px auto;
-                font-size: 0.9rem;
-                font-weight: 700;
-                transition: all 0.3s ease;
-            }
-
-            .step-info {
-                background: #11263F;
-                border: 1px solid #1E3A5C;
-                border-radius: 6px;
-                padding: 6px 8px;
-                margin: 0 4px;
-            }
-
-            .step-title {
-                font-size: 0.8rem;
-                font-weight: 700;
-                color: #CBD5E1;
-            }
-
-            .step-sub {
-                font-size: 0.7rem;
-                color: #64748B;
-            }
-
-            /* Estado Completo / Pasado */
-            .timeline-step.completed .step-node {
-                background: #166534;
-                border-color: #22C55E;
-                color: #FFFFFF;
-            }
-
-            /* Estado Activo / "Estás Aquí" */
-            .timeline-step.active .step-node {
-                background: #2563EB;
-                border-color: #60A5FA;
-                color: #FFFFFF;
-                box-shadow: 0 0 12px rgba(59, 130, 246, 0.6);
-                transform: scale(1.15);
-            }
-
-            .timeline-step.active .step-info {
-                border-color: #3B82F6;
-                background: rgba(37, 99, 235, 0.15);
-            }
-
-            .timeline-step.active .step-title {
-                color: #60A5FA;
-            }
-
-            /* Badge 'Estás Aquí' */
-            .badge-here {
-                position: absolute;
-                top: -22px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: #2563EB;
-                color: #FFFFFF;
-                font-size: 0.65rem;
-                font-weight: 800;
-                padding: 2px 8px;
-                border-radius: 10px;
-                letter-spacing: 0.5px;
-                white-space: nowrap;
-                box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-            }
-
-
-            /* ==========================================================================
-   ⚡ TIMELINE ULTRACOMPACTO DE ALTURA MÍNIMA (30px)
-   ========================================================================== */
-            .timeline-compact-wrapper {
-                background: #0D172A;
-                border: 1px solid #1E293B;
-                border-radius: 8px;
-                padding: 10px 14px;
-            }
-
-            .timeline-compact-grid {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                position: relative;
-                gap: 8px;
-            }
-
-            .timeline-compact-grid::before {
-                content: '';
-                position: absolute;
-                top: 50%;
-                left: 15%;
-                right: 15%;
-                height: 2px;
-                background: #1E3A5C;
-                z-index: 1;
-                transform: translateY(-50%);
-            }
-
-            .step-compact-item {
-                position: relative;
-                z-index: 2;
-                background: #11263F;
-                border: 1px solid #1E3A5C;
-                border-radius: 6px;
-                padding: 4px 10px;
-                display: flex;
-                align-items: center;
-                gap: 6px;
-                font-size: 0.75rem;
-                color: #94A3B8;
-            }
-
-            .step-compact-item.completed {
-                border-color: #22C55E;
-                color: #86EFAC;
-                background: rgba(34, 197, 94, 0.1);
-            }
-
-            .step-compact-item.active {
-                border-color: #3B82F6;
-                color: #FFFFFF;
-                background: #1E3A5C;
-                box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
-            }
-
-            .badge-here-compact {
-                background: #2563EB;
-                color: #FFFFFF;
-                font-size: 0.6rem;
-                font-weight: 800;
-                padding: 1px 5px;
-                border-radius: 4px;
-                margin-left: 2px;
-            }
-
-            @media print {
-                body * { visibility: hidden !important; }
-                .printable-area, .printable-area * { visibility: visible !important; }
-                .printable-area { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
-                .boarding-pass { background: #FFFFFF !important; color: #000000 !important; border: 2px solid #000000 !important; box-shadow: none !important; page-break-inside: avoid !important; margin-bottom: 20px !important; }
-                .boarding-pass * { color: #000000 !important; }
-                .main-section { border-right: 2px dashed #000000 !important; }
-                .stub { background: #F8FAFC !important; }
-                .seat-badge { border: 1px solid #000000 !important; background: transparent !important; }
-                .qr-box { border: 1px solid #000000 !important; }
-                .ui-dialog-titlebar, .ui-dialog-footer { display: none !important; }
-            }
-        </style>
-
-        <!-- SCRIPT DEL RELOJ EN TIEMPO REAL CON SEGUNDOS -->
         <script type="text/javascript">
             //<![CDATA[
             function ejecutarImpresionTicket() {
@@ -688,7 +207,6 @@
                           modal="true"
                           resizable="false"
                           id="dlgDetalle"
-                          width="420"
                           showEffect="fade"
                           hideEffect="fade"
                           responsive="true"
@@ -746,7 +264,6 @@
                           id="dlgHubModal"
                           modal="true"
                           resizable="false"
-                          width="850"
                           responsive="true"
                           onShow="arrancarRelojSalida(#{perfilPasajeroView.segundosTotalesSalida});"
                           styleClass="skyway-dialog">
@@ -809,13 +326,13 @@
                             </div>
                         </div>
 
+                        <!-- CRONOGRAMA / TIMELINE -->
                         <div class="timeline-compact-wrapper mb-3">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <span class="text-white font-weight-bold small">
                                     <i class="pi pi-clock text-primary me-1"></i> Cronograma del Vuelo
                                 </span>
 
-                                <!-- BOTÓN ACCIÓN DIRECTA CHECK-IN O BADGE INFORMATIVO -->
                                 <h:panelGroup rendered="#{perfilPasajeroView.checkInAbierto and !perfilPasajeroView.reservaCancelada}">
                                     <p:commandButton value="Realizar Check-In Ahora"
                                                      icon="pi pi-arrow-right"
@@ -833,9 +350,7 @@
                                 </h:panelGroup>
                             </div>
 
-                            <!-- TIMELINE ULTRACOMPACTO EN UNA LÍNEA -->
                             <div class="timeline-compact-grid">
-                                <!-- PASO 1: CHECK-IN WEB -->
                                 <div class="step-compact-item #{perfilPasajeroView.etapaActualCronograma &gt; 1 ? 'completed' : (perfilPasajeroView.etapaActualCronograma == 1 ? 'active' : '')}">
                                     <i class="pi #{perfilPasajeroView.etapaActualCronograma &gt; 1 ? 'pi-check text-success' : 'pi-desktop'}"></i>
                                     <span>1. Check-In Web</span>
@@ -844,7 +359,6 @@
                                     </h:panelGroup>
                                 </div>
 
-                                <!-- PASO 2: ENTREGA EQUIPAJE -->
                                 <div class="step-compact-item #{perfilPasajeroView.etapaActualCronograma &gt; 2 ? 'completed' : (perfilPasajeroView.etapaActualCronograma == 2 ? 'active' : '')}">
                                     <i class="pi #{perfilPasajeroView.etapaActualCronograma &gt; 2 ? 'pi-check text-success' : 'pi-briefcase'}"></i>
                                     <span>2. Entrega Equipaje</span>
@@ -853,7 +367,6 @@
                                     </h:panelGroup>
                                 </div>
 
-                                <!-- PASO 3: PUERTA DE EMBARQUE -->
                                 <div class="step-compact-item #{perfilPasajeroView.etapaActualCronograma &gt; 3 ? 'completed' : (perfilPasajeroView.etapaActualCronograma == 3 ? 'active' : '')}">
                                     <i class="pi #{perfilPasajeroView.etapaActualCronograma &gt; 3 ? 'pi-check text-success' : 'pi-sign-in'}"></i>
                                     <span>3. Puerta Embarque</span>
@@ -864,6 +377,7 @@
                             </div>
                         </div>
 
+                        <!-- PESTAÑAS HUB DE RESERVA -->
                         <p:tabView styleClass="skyway-tabs">
 
                             <!-- TAB 1: ASIENTOS RESERVADOS -->
@@ -892,62 +406,148 @@
                             </p:tab>
 
                             <!-- TAB 2: INCLUSIONES Y REGLAS DE TARIFA -->
+                            <!-- TAB 2: INCLUSIONES Y REGLAS DE TARIFA (DISEÑO MEJORADO) -->
                             <p:tab title="Tarifa y Beneficios">
                                 <div class="hub-tab-panel">
-                                    <h5 class="text-white font-weight-bold mb-3">
-                                        Tarifa Contratada: <span class="text-primary">#{perfilPasajeroView.tarifaActual != null ? perfilPasajeroView.tarifaActual.nombre : 'Básica'}</span>
-                                    </h5>
 
-                                    <div class="mb-2">
-                                        <span class="text-white-50 small d-block mb-3">Características y Reglas Incluidas:</span>
-
-                                        <h:panelGroup rendered="#{not empty perfilPasajeroView.tarifaCaracteristicas}">
-                                            <div class="d-flex flex-wrap gap-2">
-                                                <ui:repeat value="#{perfilPasajeroView.tarifaCaracteristicas}" var="carac">
-
-                                                    <!-- 1. CASO TIPO DE DATO: BOOLEAN -->
-                                                    <h:panelGroup rendered="#{carac.caracteristica.tipoDato eq 'boolean'}">
-                                                        <div class="feature-pill #{carac.valorBool ? 'allowed' : 'denied'}">
-                                                            <i class="pi #{carac.valorBool ? 'pi-check-circle' : 'pi-times-circle'} me-1"></i>
-                                                            #{carac.caracteristica.nombre}:
-                                                            <strong>#{carac.valorBool ? 'Sí' : 'No'}</strong>
-                                                        </div>
-                                                    </h:panelGroup>
-
-                                                    <!-- 2. CASO TIPO DE DATO: INT (Horas límites) -->
-                                                    <h:panelGroup rendered="#{carac.caracteristica.tipoDato eq 'int'}">
-                                                        <div class="feature-pill #{carac.valorInt != null ? 'allowed' : 'denied'}">
-                                                            <i class="pi #{carac.valorInt != null ? 'pi-clock' : 'pi-times-circle'} me-1"></i>
-                                                            #{carac.caracteristica.nombre}:
-                                                            <strong>#{carac.valorInt != null ? 'Hasta '.concat(carac.valorInt).concat('h antes del vuelo') : 'No permitido'}</strong>
-                                                        </div>
-                                                    </h:panelGroup>
-
-                                                    <!-- 3. CASO TIPO DE DATO: TEXT -->
-                                                    <h:panelGroup rendered="#{carac.caracteristica.tipoDato eq 'text'}">
-                                                        <div class="feature-pill allowed">
-                                                            <i class="pi pi-info-circle me-1"></i>
-                                                            #{carac.caracteristica.nombre}:
-                                                            <strong>#{carac.valor}</strong>
-                                                        </div>
-                                                    </h:panelGroup>
-
-                                                </ui:repeat>
-                                            </div>
-                                        </h:panelGroup>
-
-                                        <!-- FALLBACK SI NO HAY CARACTERÍSTICAS CARGADAS EN EL BEAN -->
-                                        <h:panelGroup rendered="#{empty perfilPasajeroView.tarifaCaracteristicas}">
-                                            <div class="d-flex flex-wrap align-items-center gap-2">
-                                                <div class="feature-pill denied">
-                                                    <i class="pi pi-times-circle me-1"></i> Permite Cambios Asiento: <strong>No</strong>
-                                                </div>
-                                                <div class="feature-pill allowed">
-                                                    <i class="pi pi-check-circle me-1"></i> Permite Cancelación: <strong>Sí</strong>
-                                                </div>
-                                            </div>
-                                        </h:panelGroup>
+                                    <!-- BANNER DE TARIFA CONTRATADA -->
+                                    <div class="tariff-hero-banner">
+                                        <div>
+                                            <span class="text-white-50 small d-block uppercase font-weight-bold" style="letter-spacing: 1px;">TARIFA CONTRATADA</span>
+                                            <span class="tariff-badge-title">
+                    <i class="pi pi-verified text-primary me-2"></i>
+                                                #{perfilPasajeroView.tarifaActual != null ? perfilPasajeroView.tarifaActual.nombre : 'Flexible / Estándar'}
+                </span>
+                                        </div>
+                                        <span class="badge bg-primary px-3 py-2 font-weight-bold" style="border-radius: 20px; font-size: 0.8rem;">
+                <i class="pi pi-shield me-1"></i> Cobertura Activa
+            </span>
                                     </div>
+
+                                    <!-- GRID DE CARACTERÍSTICAS Y BENEFICIOS -->
+                                    <h:panelGroup rendered="#{not empty perfilPasajeroView.tarifaCaracteristicas}">
+                                        <div class="tariff-grid">
+                                            <ui:repeat value="#{perfilPasajeroView.tarifaCaracteristicas}" var="carac">
+
+                                                <!-- SI ES TIPO BOOLEANO (SÍ / NO) -->
+                                                <h:panelGroup rendered="#{carac.caracteristica.tipoDato eq 'boolean'}">
+                                                    <div class="tariff-card-feature #{carac.valorBool ? 'allowed-card' : 'denied-card'}">
+                                                        <div class="feature-header-icon">
+                                                            <div class="feature-icon-wrapper">
+                                                                <i class="pi #{carac.valorBool ? 'pi-check-circle' : 'pi-times-circle'}"></i>
+                                                            </div>
+                                                            <span class="badge #{carac.valorBool ? 'bg-success' : 'bg-danger'} font-weight-bold small">
+                                    #{carac.valorBool ? 'INCLUIDO' : 'NO INCLUIDO'}
+                                </span>
+                                                        </div>
+                                                        <div>
+                                                            <div class="feature-title">#{carac.caracteristica.nombre}</div>
+                                                            <div class="feature-value">#{carac.valorBool ? 'Permitido sin costo' : 'Restringido'}</div>
+                                                        </div>
+                                                    </div>
+                                                </h:panelGroup>
+
+                                                <!-- SI ES TIPO ENTERO (HORAS / DÍAS DE PLAZO) -->
+                                                <h:panelGroup rendered="#{carac.caracteristica.tipoDato eq 'int'}">
+                                                    <div class="tariff-card-feature #{carac.valorInt != null ? 'info-card' : 'denied-card'}">
+                                                        <div class="feature-header-icon">
+                                                            <div class="feature-icon-wrapper">
+                                                                <i class="pi #{carac.valorInt != null ? 'pi-clock' : 'pi-ban'}"></i>
+                                                            </div>
+                                                            <span class="badge #{carac.valorInt != null ? 'bg-info text-dark' : 'bg-danger'} font-weight-bold small">
+                                    #{carac.valorInt != null ? 'PLAZO LÍMITE' : 'NO DISPONIBLE'}
+                                </span>
+                                                        </div>
+                                                        <div>
+                                                            <div class="feature-title">#{carac.caracteristica.nombre}</div>
+                                                            <div class="feature-value">
+                                                                #{carac.valorInt != null ? 'Hasta '.concat(carac.valorInt).concat('h antes del vuelo') : 'Sin plazo disponible'}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </h:panelGroup>
+
+                                                <!-- SI ES TIPO TEXTO (INFORMACIÓN GENERAL DE EQUIPAJE/DESCRIPCIÓN) -->
+                                                <h:panelGroup rendered="#{carac.caracteristica.tipoDato eq 'text'}">
+                                                    <div class="tariff-card-feature info-card">
+                                                        <div class="feature-header-icon">
+                                                            <div class="feature-icon-wrapper">
+                                                                <i class="pi pi-info-circle"></i>
+                                                            </div>
+                                                            <span class="badge bg-info text-dark font-weight-bold small">DETALLE</span>
+                                                        </div>
+                                                        <div>
+                                                            <div class="feature-title">#{carac.caracteristica.nombre}</div>
+                                                            <div class="feature-value">#{carac.valor}</div>
+                                                        </div>
+                                                    </div>
+                                                </h:panelGroup>
+
+                                            </ui:repeat>
+                                        </div>
+                                    </h:panelGroup>
+
+                                    <!-- FALLBACK VISUAL EN GRID SI NO HAY DATOS DE BASE DE DATOS -->
+                                    <h:panelGroup rendered="#{empty perfilPasajeroView.tarifaCaracteristicas}">
+                                        <div class="tariff-grid">
+                                            <div class="tariff-card-feature allowed-card">
+                                                <div class="feature-header-icon">
+                                                    <div class="feature-icon-wrapper"><i class="pi pi-user-edit"></i></div>
+                                                    <span class="badge bg-success font-weight-bold small">INCLUIDO</span>
+                                                </div>
+                                                <div>
+                                                    <div class="feature-title">Cambio de Asiento</div>
+                                                    <div class="feature-value">Permitido en la misma clase</div>
+                                                </div>
+                                            </div>
+
+                                            <div class="tariff-card-feature info-card">
+                                                <div class="feature-header-icon">
+                                                    <div class="feature-icon-wrapper"><i class="pi pi-clock"></i></div>
+                                                    <span class="badge bg-info text-dark font-weight-bold small">48 HORAS</span>
+                                                </div>
+                                                <div>
+                                                    <div class="feature-title">Plazo para Modificación</div>
+                                                    <div class="feature-value">Hasta 48h antes de la salida</div>
+                                                </div>
+                                            </div>
+
+                                            <div class="tariff-card-feature allowed-card">
+                                                <div class="feature-header-icon">
+                                                    <div class="feature-icon-wrapper"><i class="pi pi-briefcase"></i></div>
+                                                    <span class="badge bg-success font-weight-bold small">INCLUIDO</span>
+                                                </div>
+                                                <div>
+                                                    <div class="feature-title">Equipaje de Mano</div>
+                                                    <div class="feature-value">1 bolso personal + 1 maleta de cabina</div>
+                                                </div>
+                                            </div>
+
+                                            <div class="tariff-card-feature allowed-card">
+                                                <div class="feature-header-icon">
+                                                    <div class="feature-icon-wrapper"><i class="pi pi-refresh"></i></div>
+                                                    <span class="badge bg-success font-weight-bold small">INCLUIDO</span>
+                                                </div>
+                                                <div>
+                                                    <div class="feature-title">Cancelación y Reembolso</div>
+                                                    <div class="feature-value">Permite anulación según políticas</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </h:panelGroup>
+
+                                    <!-- NOTA INFORMATIVA INFERIOR -->
+                                    <!-- NOTA INFORMATIVA INFERIOR CON ENLACE A LA PÁGINA -->
+                                    <div class="tariff-footer-note d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="pi pi-file-pdf text-primary" style="font-size: 1.2rem;"></i>
+                                            <span>Las condiciones contratadas aplican de forma individual por cada tramo y pasajero de la reserva.</span>
+                                        </div>
+                                        <p:button value="Ver Regulaciones Completas"
+                                                  outcome="/perfil/pasajero/regulaciones.xhtml"
+                                                  styleClass="btn-skyway-outlined btn-sm" />
+                                    </div>
+
                                 </div>
                             </p:tab>
 
@@ -990,7 +590,7 @@
                             <p:tab title="Anulación / Cancelación">
                                 <div class="hub-tab-panel">
                                     <h:panelGroup rendered="#{!perfilPasajeroView.reservaCancelada}">
-                                        <div class="alert alert-danger mb-3" style="background: rgba(239,68,68,0.1); border:1px solid #ef4444; border-radius:8px; padding:12px;">
+                                        <div class="alert alert-danger mb-3" style="background: rgba(239,68,68,0.15); border:1px solid #ef4444; border-radius:8px; padding:12px;">
                                             <h6 class="font-weight-bold text-danger"><i class="pi pi-exclamation-triangle me-2"></i>Atención antes de Cancelar</h6>
                                             <p class="small m-0 text-white-50">La cancelación es irreversible. Se liberarán los asientos para la venta y se registrará la solicitud de reembolso.</p>
                                         </div>
@@ -1025,12 +625,11 @@
                 </p:dialog>
             </h:form>
 
-            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" width="380" styleClass="skyway-dialog">
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" styleClass="skyway-dialog">
                 <p:commandButton value="No, Cancelar" type="button" styleClass="ui-confirmdialog-no ui-button-outlined ui-button-secondary" />
                 <p:commandButton value="Sí, Confirmar" type="button" styleClass="ui-confirmdialog-yes ui-button-danger" />
             </p:confirmDialog>
 
-            <!-- MODAL TICKET / BOARDING PASS -->
             <!-- MODAL TICKET / BOARDING PASS -->
             <h:form id="formDetalleTicket">
                 <p:dialog header="Tarjetas de Embarque"
@@ -1038,8 +637,6 @@
                           modal="true"
                           resizable="false"
                           id="dlgDetalleTicket"
-                          width="780"
-                          height="520"
                           showEffect="fade"
                           hideEffect="fade"
                           responsive="true"
@@ -1056,10 +653,9 @@
                                                 <i class="pi pi-send me-1"></i> <span>SKYWAY AIRLINES</span>
                                             </div>
                                             <div class="pass-type d-flex align-items-center gap-2">
-                                                <!-- MOSTRAR CÓDIGO PNR OBTENIDO DESDE BD -->
                                                 <span class="badge bg-primary px-2 py-1" style="font-size: 0.7rem; font-family: monospace;">
-                                        PNR: #{ticket.codigoPnr}
-                                    </span>
+                                                    PNR: #{ticket.codigoPnr}
+                                                </span>
                                                 <span>TARJETA DE EMBARQUE</span>
                                             </div>
                                         </div>
@@ -1116,7 +712,7 @@
                                         </div>
                                     </div>
 
-                                    <!-- TALÓN DEL PASAJERO CON CÓDIGO QR OBTENIDO DE LA FUNCIÓN SQL -->
+                                    <!-- TALÓN DEL PASAJERO -->
                                     <div class="stub">
                                         <div>
                                             <div class="stub-title font-weight-bold text-white small mb-1">TALÓN PASAJERO</div>
@@ -1127,7 +723,6 @@
                                         </div>
 
                                         <div class="qr-box">
-                                            <!-- CONSUMO DIRECTO DE TICKET.CODIGOQR -->
                                             <img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&amp;data=#{ticket.codigoQr}"
                                                  alt="QR Embarque" style="width: 75px; height: 75px; display: block;" />
                                         </div>
@@ -1150,17 +745,15 @@
                     </div>
 
                     <f:facet name="footer">
-                        <div class="d-flex justify-content-end align-items-center gap-2">
-                            <!-- Descarga 1: Resumen de Reserva -->
-                            <p:commandButton value="Descargar Resumen (PDF)"
+                        <div class="d-flex justify-content-end align-items-center gap-2 flex-wrap">
+                            <p:commandButton value="Resumen (PDF)"
                                              icon="pi pi-file-pdf"
                                              styleClass="btn-skyway-outlined"
                                              ajax="false">
                                 <p:fileDownload value="#{perfilPasajeroView.descargarComprobantePdf()}" />
                             </p:commandButton>
 
-                            <!-- Descarga 2: Tarjetas de Embarque -->
-                            <p:commandButton value="Descargar Tarjetas de Embarque (PDF)"
+                            <p:commandButton value="Tarjetas (PDF)"
                                              icon="pi pi-ticket"
                                              styleClass="btn-skyway-primary"
                                              ajax="false">
@@ -1184,7 +777,6 @@
                           showEffect="fade"
                           hideEffect="fade"
                           resizable="false"
-                          width="550"
                           responsive="true"
                           styleClass="skyway-dialog">
 
@@ -1230,66 +822,150 @@
                        id="sidebarParadas"
                        styleClass="skyway-sidebar sidebar-corporativo">
 
-                <div class="header-titulo p-3 font-weight-bold text-white border-bottom border-secondary">
-                    <i class="pi pi-route me-2 text-primary"></i> Detalle del Itinerario
+                <!-- CABECERA PRINCIPAL DEL SIDEBAR -->
+                <div class="header-titulo p-3 font-weight-bold text-white border-bottom border-secondary d-flex align-items-center justify-content-between">
+                    <div>
+                        <i class="pi pi-route me-2 text-primary"></i>
+                        <span>Detalle del Itinerario</span>
+                    </div>
                 </div>
 
                 <p:scrollPanel mode="native" styleClass="sidebar-scroll-panel p-3">
+
+                    <!-- RESUMEN GLOBAL DEL ITINERARIO (USA DATOS GENERALES DEL PRIMER ELEMENTO) -->
+                    <h:panelGroup rendered="#{not empty itinerarioDetalleBean.paradasVuelo}" layout="block" styleClass="mb-4">
+                        <ui:param name="firstItem" value="#{itinerarioDetalleBean.paradasVuelo[0]}" />
+
+                        <div class="summary-hero-card p-3 rounded shadow-sm">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-primary text-white p-2" style="font-size:0.75rem;">
+                                #{firstItem.numeroEscalas eq 0 ? 'Vuelo Directo' : firstItem.numeroEscalas} #{firstItem.numeroEscalas eq 0 ? '' : 'Escala(s)'}
+                            </span>
+
+                                <span class="text-white-50 small">
+                                <i class="pi pi-clock me-1 text-primary"></i>Duración total: <strong class="text-white">#{firstItem.duracionTotal}</strong>
+                            </span>
+                            </div>
+
+                            <div class="d-flex align-items-center justify-content-between mt-2">
+                                <div class="text-start">
+                                    <div class="display-6 font-weight-bold text-white mb-0" style="font-size: 1.4rem;">#{firstItem.aeropuertoOrigen}</div>
+                                </div>
+                                <div class="text-center px-2">
+                                    <i class="pi pi-plane text-primary" style="font-size: 1.2rem; transform: rotate(90deg);"></i>
+                                </div>
+                                <div class="text-end">
+                                    <div class="display-6 font-weight-bold text-white mb-0" style="font-size: 1.4rem;">#{firstItem.aeropuertoDestino}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </h:panelGroup>
+
+                    <!-- TIMELINE DETALLADO DE TRAMOS -->
                     <div class="skyway-timeline">
                         <ui:repeat value="#{itinerarioDetalleBean.paradasVuelo}" var="p" varStatus="st">
-                            <div class="timeline-item tramo-bloque mb-4 p-3 rounded" style="background:#11263F; border:1px solid #1E3A5C;">
-                                <div class="timeline-content card-parada">
 
-                                    <div class="card-header d-flex justify-content-between align-items-center mb-2">
-                                        <span class="text-white font-weight-bold">Tramo #{st.index + 1}</span>
-                                        <h:panelGroup rendered="#{not empty p.aerolinea}" layout="block" styleClass="badge bg-primary">
-                                            <i class="pi pi-building me-1"></i> #{p.aerolinea}
+                            <!-- TARJETA DEL TRAMO -->
+                            <div class="timeline-item tramo-bloque mb-3 rounded">
+                                <div class="timeline-content card-parada p-3">
+
+                                    <!-- HEADER DEL TRAMO -->
+                                    <div class="card-header-segment d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="badge-orden">Tramo #{empty p.orden ? (st.index + 1) : p.orden}</span>
+                                            <span class="text-white font-weight-bold">#{p.ciudadSalida} <i class="pi pi-arrow-right mx-1 text-muted small"></i> #{p.ciudadLlegada}</span>
+                                        </div>
+                                        <h:panelGroup rendered="#{not empty p.aerolinea}" layout="block" styleClass="badge bg-dark border border-secondary text-primary font-weight-bold">
+                                            <i class="pi pi-building me-1"></i>#{p.aerolinea}
                                         </h:panelGroup>
                                     </div>
 
+                                    <!-- RUTA CIUDAD / AEROPUERTO / FECHA -->
                                     <div class="section mb-3">
-                                        <div class="section-title text-muted small mb-1"><i class="pi pi-map-marker me-1"></i> Tramo del Vuelo</div>
-                                        <div class="timeline-leg text-white small">
-                                            <div class="city-block">
-                                                <div class="city-code font-weight-bold">#{p.aeropuertoSalida}</div>
-                                                <div class="city-time text-white-50"><i class="pi pi-calendar me-1"></i> #{p.salida}</div>
+                                        <div class="section-title text-muted small mb-2"><i class="pi pi-map-marker me-1 text-primary"></i> Trayecto del Tramo</div>
+
+                                        <div class="timeline-leg p-3 rounded">
+                                            <!-- ORIGEN -->
+                                            <div class="city-block d-flex justify-content-between align-items-start mb-2">
+                                                <div>
+                                                    <div class="city-name font-weight-bold text-white">#{p.ciudadSalida} (#{p.aeropuertoSalida})</div>
+                                                    <div class="airport-detail text-white-50 small">Salida programada</div>
+                                                </div>
+                                                <div class="text-end">
+                                                    <div class="city-time font-weight-bold text-primary"><i class="pi pi-calendar me-1"></i>#{p.salida}</div>
+                                                </div>
                                             </div>
-                                            <div class="timeline-arrow text-center my-1 text-primary">
-                                                <i class="pi pi-arrow-down"></i>
+
+                                            <!-- FLECHA DE DURACIÓN DEL VUELO -->
+                                            <div class="timeline-arrow-container text-center my-2 position-relative">
+                                                <div class="flight-line"></div>
+                                                <span class="flight-duration-badge">
+                                        <i class="pi pi-clock me-1"></i>#{p.duracion} de vuelo
+                                    </span>
                                             </div>
-                                            <div class="city-block">
-                                                <div class="city-code font-weight-bold">#{p.aeropuertoLlegada}</div>
-                                                <div class="city-time text-white-50"><i class="pi pi-clock me-1"></i> #{p.llegada}</div>
+
+                                            <!-- DESTINO -->
+                                            <div class="city-block d-flex justify-content-between align-items-start mt-2">
+                                                <div>
+                                                    <div class="city-name font-weight-bold text-white">#{p.ciudadLlegada} (#{p.aeropuertoLlegada})</div>
+                                                    <div class="airport-detail text-white-50 small">Llegada estimada</div>
+                                                </div>
+                                                <div class="text-end">
+                                                    <div class="city-time font-weight-bold text-success"><i class="pi pi-clock me-1"></i>#{p.llegada}</div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
 
+                                    <!-- FICHA TÉCNICA Y EQUIPO DE VUELO -->
                                     <div class="section mb-2">
-                                        <div class="section-title text-muted small mb-1"><i class="pi pi-info-circle me-1"></i> Información del Vuelo</div>
-                                        <div class="info-grid text-white small">
-                                            <div><span class="text-white-50">Vuelo:</span> <i class="pi pi-plane ms-1"></i> #{p.vuelo}</div>
-                                            <div><span class="text-white-50">Duración:</span> <i class="pi pi-clock ms-1"></i> #{p.duracion}</div>
-                                            <div>
-                                                <span class="text-white-50">Espera:</span>
-                                                <i class="pi pi-hourglass ms-1"></i> #{empty p.tiempoEspera ? 'N/A' : p.tiempoEspera}
+                                        <div class="section-title text-muted small mb-2"><i class="pi pi-info-circle me-1 text-primary"></i> Ficha del Vuelo</div>
+
+                                        <div class="info-grid text-white small p-2 rounded">
+                                            <div class="info-item">
+                                                <span class="info-label">N° Vuelo:</span>
+                                                <span class="info-value font-weight-bold text-primary"><i class="pi pi-send ms-1"></i> #{p.vuelo}</span>
                                             </div>
-                                            <div><span class="text-white-50">Aeronave:</span> <i class="pi pi-cog ms-1"></i> #{p.modeloAvion}</div>
+                                            <div class="info-item">
+                                                <span class="info-label">Aeronave:</span>
+                                                <span class="info-value"><i class="pi pi-cog ms-1"></i> #{p.modeloAvion}</span>
+                                            </div>
+                                            <div class="info-item">
+                                                <span class="info-label">Duración Tramo:</span>
+                                                <span class="info-value"><i class="pi pi-hourglass ms-1"></i> #{p.duracion}</span>
+                                            </div>
+                                            <div class="info-item">
+                                                <span class="info-label">Aerolínea Operadora:</span>
+                                                <span class="info-value"><i class="pi pi-briefcase ms-1"></i> #{empty p.aerolinea ? 'SkyWay' : p.aerolinea}</span>
+                                            </div>
                                         </div>
                                     </div>
 
+                                    <!-- DESCRIPCIÓN DEL VUELO -->
                                     <h:panelGroup rendered="#{not empty p.descripcionVuelo}" layout="block" styleClass="section mt-2 pt-2 border-top border-secondary">
-                                        <div class="section-title text-muted small mb-1"><i class="pi pi-align-left me-1"></i> Descripción</div>
+                                        <div class="section-title text-muted small mb-1"><i class="pi pi-align-left me-1 text-primary"></i> Observaciones del Tramo</div>
                                         <div class="descripcion text-white-50 small">#{p.descripcionVuelo}</div>
                                     </h:panelGroup>
 
                                 </div>
                             </div>
+
+                            <!-- BLOQUE VISUAL DE ESPERA / ESCALA ENTRE TRAMOS -->
+                            <h:panelGroup rendered="#{not empty p.tiempoEspera and p.tiempoEspera ne 'N/A' and !st.last}" layout="block" styleClass="layover-card mb-3 p-2 rounded text-center">
+                                <div class="d-flex align-items-center justify-content-center gap-2 text-warning small font-weight-bold">
+                                    <i class="pi pi-hourglass text-warning" style="font-size: 1.1rem;"></i>
+                                    <span>Escala en #{p.ciudadLlegada} (#{p.aeropuertoLlegada}): Espera de <strong>#{p.tiempoEspera}</strong></span>
+                                </div>
+                            </h:panelGroup>
+
                         </ui:repeat>
                     </div>
 
                     <p:scrollTop target="parent" threshold="100" icon="pi pi-arrow-up" styleClass="btn-scrolltop-skyway" />
                 </p:scrollPanel>
             </p:sidebar>
+
+
 
         </div>
     </ui:define>

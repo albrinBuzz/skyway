@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition lang="es"
+                xmlns:f="jakarta.faces.core"
+                xmlns:h="jakarta.faces.html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                template="/template/main.xhtml">
+
+    <ui:define name="head">
+        <title>Página No Encontrada - SkyWay</title>
+        <style type="text/css">
+            .error-page-container {
+                max-width: 650px;
+                margin: 50px auto;
+                padding: 0 15px;
+            }
+
+            .error-card {
+                background-color: #0F172A !important;
+                border: 1px solid #1E293B !important;
+                border-radius: 12px !important;
+                padding: 35px !important;
+                box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.6) !important;
+                text-align: center;
+            }
+
+            .error-code {
+                font-size: 5rem;
+                font-weight: 800;
+                color: #3B82F6;
+                line-height: 1;
+                margin-bottom: 10px;
+                letter-spacing: 2px;
+            }
+
+            .error-title {
+                color: #F8FAFC;
+                font-size: 1.5rem;
+                font-weight: 700;
+                margin-bottom: 10px;
+            }
+
+            .error-description {
+                color: #94A3B8;
+                font-size: 0.95rem;
+                line-height: 1.6;
+                margin-bottom: 30px;
+            }
+
+            .error-actions-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+
+            @media (max-width: 576px) {
+                .error-actions-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
+    </ui:define>
+
+    <ui:define name="contenido">
+        <div class="error-page-container">
+            <div class="error-card">
+
+                <!-- CÓDIGO 404 DESTACADO -->
+                <div class="error-code">404</div>
+
+                <!-- MENSAJE EXPLICATIVO -->
+                <h1 class="error-title">Vuelo no encontrado en el radar</h1>
+                <p class="error-description">
+                    La ruta o página que estás buscando parece haber cambiado de rumbo, ya no existe o ingresaste una dirección incorrecta en el navegador.
+                </p>
+
+                <!-- ACCIONES DE RECUPERACIÓN -->
+                <h:form>
+                    <div class="error-actions-grid">
+
+                        <!-- Volver atrás -->
+                        <p:button value="Volver Atrás"
+                                  icon="pi pi-arrow-left"
+                                  styleClass="ui-button-outlined ui-button-info py-2"
+                                  onclick="window.history.back(); return false;"
+                                  style="border-color: #3B82F6 !important; color: #60A5FA !important;" />
+
+                        <!-- Ir al Inicio -->
+                        <p:button value="Ir al Inicio"
+                                  outcome="/home/index.xhtml"
+                                  icon="pi pi-home"
+                                  styleClass="ui-button-primary py-2"
+                                  style="background-color: #2563EB !important; border-color: #2563EB !important;" />
+
+                        <!-- Reservar Vuelo -->
+                        <p:button value="Reservar un Vuelo"
+                                  outcome="/home/reservar.xhtml"
+                                  icon="pi pi-ticket"
+                                  styleClass="ui-button-secondary py-2"
+                                  style="background-color: #1E293B !important; border-color: #334155 !important; color: #F8FAFC !important;" />
+
+                        <!-- Estado de Vuelos -->
+                        <p:button value="Estado de Vuelos"
+                                  outcome="/home/estado-vuelo.xhtml"
+                                  icon="pi pi-send"
+                                  styleClass="ui-button-secondary py-2"
+                                  style="background-color: #1E293B !important; border-color: #334155 !important; color: #F8FAFC !important;" />
+
+                    </div>
+                </h:form>
+
+            </div>
+        </div>
+    </ui:define>
+
+</ui:composition>

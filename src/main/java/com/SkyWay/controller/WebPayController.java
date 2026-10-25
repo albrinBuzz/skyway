@@ -74,10 +74,16 @@ public class WebPayController {
 
                 Integer idReserva = procesarReservaUseCase.ejecutarPersistenciaReserva(dto, idMetodoPagoWebPay);
 
+                session = request.getSession(false);
+                if (session != null) {
+                    session.setAttribute("ULTIMO_ID_RESERVA", idReserva);
+                }
+
                 session.removeAttribute("SOLICITUD_RESERVA_PENDIENTE");
                 Logger.logInfo("🎉 [WEBPAY-CONTROLLER] Reserva ID: " + idReserva + " procesada con éxito. Redirigiendo a pago-exitoso.xhtml");
 
-                return new RedirectView("/home/pago-exitoso.xhtml?idReserva=" + idReserva);
+                return new RedirectView("/home/pago-exitoso.xhtml");
+                //return new RedirectView("/home/pago-exitoso.xhtml?idReserva=" + idReserva);
             } catch (Exception e) {
                 Logger.logError("💥 Error al escribir la reserva: " + e.getMessage());
                 return new RedirectView("/home/errorPago.xhtml?reason=PERSISTENCE_ERROR");

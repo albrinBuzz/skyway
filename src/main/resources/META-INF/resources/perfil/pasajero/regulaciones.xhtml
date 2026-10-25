@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition lang="es"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="jakarta.faces.core"
+                xmlns:h="jakarta.faces.html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:ui="jakarta.faces.facelets"
+                template="/template/main.xhtml">
+
+    <ui:define name="head">
+        <title>Regulaciones y Condiciones de Tarifas - SkyWay</title>
+        <h:outputStylesheet library="css" name="perfil/pasajero.css" />
+        <h:outputStylesheet library="css" name="perfil/regulaciones.css" />
+    </ui:define>
+
+    <ui:define name="contenido">
+        <div class="skyway-container layout-content skyway-theme">
+
+            <!-- BOTÓN VOLVER -->
+            <div class="mb-3">
+                <p:button value="Volver a Mis Itinerarios"
+                          outcome="/perfil/pasajero/index.xhtml"
+                          icon="pi pi-arrow-left"
+                          styleClass="btn-skyway-outlined" />
+            </div>
+
+            <!-- HERO BANNER -->
+            <div class="rules-hero-banner d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h1 class="rules-hero-title">Regulaciones y Condiciones Tarifarias</h1>
+                    <p class="rules-hero-subtitle">Conoce las reglas oficiales de cambio de asiento, plazos de modificación y políticas de cancelación vigentes.</p>
+                </div>
+            </div>
+
+            <!-- TARIFAS DE LA BASE DE DATOS (BÁSICA, FLEXIBLE, PREMIUM) -->
+            <div class="tariff-comparison-grid">
+
+                <!-- 1. TARIFA BÁSICA (ID 1) -->
+                <div class="tariff-spec-card">
+                    <div>
+                        <div class="tariff-header-badge">
+                            <span class="tariff-title-name">Tarifa Básica</span>
+                            <span class="badge bg-secondary font-weight-bold">ID: 1</span>
+                        </div>
+                        <ul class="rule-list">
+                            <li class="rule-list-item denied">
+                                <i class="pi pi-times-circle"></i>
+                                <span><strong>Permite cambio de asiento:</strong> No. El asiento asignado durante la compra es definitivo.</span>
+                            </li>
+                            <li class="rule-list-item denied">
+                                <i class="pi pi-ban"></i>
+                                <span><strong>Plazo límite para cambio:</strong> No aplica.</span>
+                            </li>
+                            <li class="rule-list-item allowed">
+                                <i class="pi pi-check-circle"></i>
+                                <span><strong>Permite cancelación de reserva:</strong> Sí. Habilitado según las reglas de la aerolínea.</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 2. TARIFA FLEXIBLE (ID 2) -->
+                <div class="tariff-spec-card highlighted">
+                    <div>
+                        <div class="tariff-header-badge">
+                            <span class="tariff-title-name">Tarifa Flexible</span>
+                            <span class="badge bg-primary font-weight-bold"><i class="pi pi-star-fill me-1"></i>ID: 2</span>
+                        </div>
+                        <ul class="rule-list">
+                            <li class="rule-list-item allowed">
+                                <i class="pi pi-check-circle"></i>
+                                <span><strong>Permite cambio de asiento:</strong> Sí. Puedes elegir otro asiento luego de la compra.</span>
+                            </li>
+                            <li class="rule-list-item restricted">
+                                <i class="pi pi-clock"></i>
+                                <span><strong>Plazo límite para cambio:</strong> Hasta 48 horas previas al vuelo.</span>
+                            </li>
+                            <li class="rule-list-item allowed">
+                                <i class="pi pi-check-circle"></i>
+                                <span><strong>Permite cancelación de reserva:</strong> Sí. Habilitado para solicitar anulación.</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 3. TARIFA PREMIUM (ID 3) -->
+                <div class="tariff-spec-card">
+                    <div>
+                        <div class="tariff-header-badge">
+                            <span class="tariff-title-name">Tarifa Premium</span>
+                            <span class="badge bg-info text-dark font-weight-bold">ID: 3</span>
+                        </div>
+                        <ul class="rule-list">
+                            <li class="rule-list-item allowed">
+                                <i class="pi pi-check-circle"></i>
+                                <span><strong>Permite cambio de asiento:</strong> Sí. Total flexibilidad de elección de ubicación.</span>
+                            </li>
+                            <li class="rule-list-item allowed">
+                                <i class="pi pi-clock"></i>
+                                <span><strong>Plazo límite para cambio:</strong> Hasta 24 horas previas al vuelo (Máxima prioridad).</span>
+                            </li>
+                            <li class="rule-list-item allowed">
+                                <i class="pi pi-check-circle"></i>
+                                <span><strong>Permite cancelación de reserva:</strong> Sí. Habilitado sin restricciones adicionales.</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ACORDEÓN TÉCNICO BASE DE DATOS Y CONDICIONES GENERALES -->
+            <h4 class="text-white font-weight-bold mb-3"><i class="pi pi-book text-primary me-2"></i>Términos y Cláusulas Operativas</h4>
+
+            <p:accordionPanel styleClass="skyway-accordion" activeIndex="-1">
+
+                <p:tab title="1. Selección y Cambio de Asientos (Características 1 y 2)">
+                    <p class="m-0">Los cambios de asientos están condicionados al tipo de tarifa contratada. En la <strong>Tarifa Básica</strong> los cambios están deshabilitados. Para las tarifas <strong>Flexible</strong> y <strong>Premium</strong>, los cambios deben realizarse respetando el plazo límite de 48h y 24h previas al vuelo respectivamente, desde la sección de 'Asientos Asignados' en el perfil del pasajero.</p>
+                </p:tab>
+
+                <p:tab title="2. Políticas de Cancelación de Reserva (Característica 3)">
+                    <p class="m-0">La característica de cancelación de reserva está disponible para las tarifas Básica, Flexible y Premium. La solicitud libera los asientos asignados de forma inmediata y registra la orden para el procesamiento de reembolso según el medio de pago original.</p>
+                </p:tab>
+
+                <p:tab title="3. Plazos Límites de Modificación en Sistema">
+                    <p class="m-0">Una vez que el tiempo restante para la salida del vuelo sea menor al plazo definido por la tarifa (48h para Flexible / 24h para Premium), el sistema bloquerá automáticamente las opciones de reasignación de asientos tanto en el portal web como en la aplicación móvil.</p>
+                </p:tab>
+
+            </p:accordionPanel>
+
+        </div>
+    </ui:define>
+</ui:composition>

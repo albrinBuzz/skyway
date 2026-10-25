@@ -6,6 +6,9 @@
                 xmlns:ui="http://java.sun.com/jsf/facelets"
                 template="/template/main.xhtml">
 
+
+
+
     <ui:define name="head">
         <title>Reserva Confirmada - SkyWay</title>
         <style type="text/css">
@@ -112,6 +115,8 @@
     </ui:define>
 
     <ui:define name="contenido">
+
+        <h:panelGroup rendered="#{not empty pagoExitosoController.reserva}">
         <div class="success-container">
             <div class="success-card">
 
@@ -234,6 +239,24 @@
 
             </div>
         </div>
+        </h:panelGroup>
+
+
+        <h:panelGroup rendered="#{empty pagoExitosoController.reserva}">
+            <div class="success-card text-center p-5">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+                     style="width: 60px; height: 60px; background: rgba(239, 68, 68, 0.12); border: 1px solid #EF4444;">
+                    <i class="pi pi-exclamation-triangle" style="font-size: 1.8rem; color: #F87171;"></i>
+                </div>
+                <h3 class="text-white font-weight-bold mb-2">Comprobante no disponible</h3>
+                <p class="text-white-50 small mb-4">No se ha encontrado una reserva activa o el proceso de pago ya fue finalizado.</p>
+                <p:button value="Volver al Inicio"
+                          outcome="/home/index.xhtml"
+                          styleClass="ui-button-primary py-2 px-4"
+                          style="background-color: #2563EB !important; border-color: #2563EB !important;" />
+            </div>
+        </h:panelGroup>
+
     </ui:define>
 
 </ui:composition>
