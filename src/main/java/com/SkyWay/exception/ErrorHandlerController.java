@@ -10,6 +10,11 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @ControllerAdvice
 public class ErrorHandlerController {
 
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    public org.springframework.http.ResponseEntity<Void> handleStatus(org.springframework.web.server.ResponseStatusException ex) {
+        return org.springframework.http.ResponseEntity.status(ex.getStatusCode()).build();
+    }
+
     @ExceptionHandler(Exception.class)
     public String handleException(Exception ex) {
         Logger.logError("💥 [GLOBAL EXCEPTION] Excepción no controlada capturada: " + ex.getClass().getName() + " -> " + ex.getMessage());

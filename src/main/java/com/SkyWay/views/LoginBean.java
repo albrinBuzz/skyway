@@ -2,6 +2,7 @@ package com.SkyWay.views;
 
 import java.io.IOException;
 
+import com.SkyWay.config.security.LoginThrottle;
 import com.SkyWay.util.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +52,9 @@ public class LoginBean {
     
     
     @Autowired
+    private LoginThrottle throttle;
+
+    @Autowired
     HttpServletRequest request;
     
     @Autowired
@@ -85,6 +89,12 @@ public class LoginBean {
     
     // Método de login
     public void login() {
+        String clave = LoginThrottle.clave(request.getRemoteAddr(), username);
+        if (throttle.bloqueado(clave)) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Credenciales incorrectas", "Demasiados intentos. Intenta más tarde."));
+            return;
+        }
         try {
             // Crear un token de autenticación con las credenciales del usuario
             UsernamePasswordAuthenticationToken authenticationToken =
@@ -94,9 +104,14 @@ public class LoginBean {
             Authentication authentication = authenticationManager.authenticate(authenticationToken);
 
             if (authentication.isAuthenticated()) {
+                throttle.registrarExito(clave);
+                // Anti session fixation: nuevo JSESSIONID al autenticar
+                request.getSession(true);
+                request.changeSessionId();
                 // Configurar el contexto de seguridad
-                SecurityContext context = SecurityContextHolder.getContext();
+                SecurityContext context = SecurityContextHolder.createEmptyContext();
                 context.setAuthentication(authentication);
+                SecurityContextHolder.setContext(context);
                 securityContextRepository.saveContext(context, request, response);
 
                 // Manejo exitoso de autenticación
@@ -111,12 +126,13 @@ public class LoginBean {
                 //redigir();
             }
         } catch (BadCredentialsException e) {
+            throttle.registrarFallo(clave);
             // Error específico para credenciales incorrectas
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR, "Credenciales incorrectas", "Nombre de usuario o contraseña incorrectos"));
         } catch (Exception e) {
             // Manejo general de errores
-            System.out.println(e.getMessage());
+            Logger.logError("Fallo en login: " + e.getClass().getSimpleName());
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error de autenticación", "Hubo un problema con el login"));
         }
@@ -127,33 +143,14 @@ public class LoginBean {
         HttpSessionRequestCache requestCache = new HttpSessionRequestCache();
         SavedRequest savedRequest = requestCache.getRequest(request, response);
 
-        // Variable para la URL de redirección
-        String redirectUrl = "/";
-
-        // Verificar si hay una URL guardada en la sesión (cuando la solicitud fue interceptada)
+        String redirectUrl = request.getContextPath() + "/";
         if (savedRequest != null) {
-            // Obtener la URL original a la que el usuario quería acceder
-            redirectUrl = savedRequest.getRedirectUrl();
-
-            // Registrar información detallada sobre la redirección
-            Logger.logInfo("Redirección a URL original detectada.");
-            Logger.logInfo("URL original (guardada en sesión): " + redirectUrl);
-            Logger.logInfo("Método HTTP original: " + savedRequest.getMethod());
-            Logger.logInfo("Query String original: " + savedRequest.getRedirectUrl());
-            Logger.logInfo("Context Path: " + request.getContextPath());
-        } else {
-            // Si no hay URL guardada, redirigir al URI actual
-            redirectUrl = request.getRequestURI();
-
-            // Registrar información detallada sobre la redirección cuando no hay URL guardada
-            Logger.logInfo("No se detectó URL original guardada en sesión.");
-            Logger.logInfo("Redirigiendo a la URI actual: " + redirectUrl);
+            String saved = savedRequest.getRedirectUrl();
+            // Solo rutas del mismo origen (evita open redirect)
+            if (saved != null && saved.startsWith(request.getScheme() + "://" + request.getServerName())) {
+                redirectUrl = saved;
+            }
         }
-
-        // Registrar más información sobre la solicitud
-        Logger.logInfo("Redirigiendo a URL final: " + redirectUrl);
-        Logger.logInfo("Request URI: " + request.getRequestURI());
-        Logger.logInfo("Request URL: " + request.getRequestURL().toString());
 
         // Realizar la redirección a la URL correspondiente
         try {

@@ -89,12 +89,18 @@ public class UsuarioBean implements Serializable {
 
     @Transactional
     public void registrar() {
-        Logger.logInfo("Iniciando proceso de registro para RUT: " + usuario.getRut());
+        Logger.logInfo("Iniciando proceso de registro de usuario");
         Date fechaNacDate = usuario.getFechaNacimiento();
 
         if (!usuario.getContrasena().equals(confirmarContrasena)) {
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error de Validación", "Las contraseñas no coinciden."));
+            return;
+        }
+
+        if (usuario.getContrasena() == null || usuario.getContrasena().length() < 8 || usuario.getContrasena().length() > 72) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error de Validación", "La contraseña debe tener entre 8 y 72 caracteres."));
             return;
         }
 
@@ -118,8 +124,9 @@ public class UsuarioBean implements Serializable {
 
         try {
             if (isCorreoExistente(usuario.getCorreoElectronico())) {
+                // Respuesta generica: no revela si el correo ya existe (anti enumeracion)
                 FacesContext.getCurrentInstance().addMessage(null,
-                        new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "El correo electrónico ya se encuentra registrado."));
+                        new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "No pudimos completar el registro con los datos ingresados. Si ya tienes cuenta, inicia sesión."));
                 return;
             }
 
@@ -129,7 +136,7 @@ public class UsuarioBean implements Serializable {
             // 1. Crear el registro en Base de Datos
             usuarioService.crearPasajeroConDetalle(usuario, tipoDocumento, nacionalidad);
 
-            Logger.logInfo("Usuario " + userEmail + " registrado con éxito. Ejecutando inicio de sesión automático...");
+            Logger.logInfo("Usuario registrado con éxito. Ejecutando inicio de sesión automático...");
 
             // 2. Auto-Login
             autoLogin(userEmail, rawPassword);
@@ -149,8 +156,12 @@ public class UsuarioBean implements Serializable {
             Authentication authentication = authenticationManager.authenticate(authToken);
 
             if (authentication.isAuthenticated()) {
-                SecurityContext context = SecurityContextHolder.getContext();
+                // Anti session fixation: nuevo JSESSIONID al autenticar
+                request.getSession(true);
+                request.changeSessionId();
+                SecurityContext context = SecurityContextHolder.createEmptyContext();
                 context.setAuthentication(authentication);
+                SecurityContextHolder.setContext(context);
                 securityContextRepository.saveContext(context, request, response);
 
                 if (authSuccessHandler != null) {

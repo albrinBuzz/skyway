@@ -7,6 +7,9 @@ import com.SkyWay.util.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.server.ResponseStatusException;
+import com.SkyWay.config.security.AccesoRut;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -50,6 +53,9 @@ public class VueloController {
     private final ReservaService reservaService;
 
     @Autowired
+    private AccesoRut accesoRut;
+
+    @Autowired
     public VueloController(VueloService vueloService, AeropuertoService aeropuertoService,
                            AvionService avionService, PiloService piloService,
                            EstadoVueloService estadoVueloService, ReservaService reservaService) {
@@ -81,7 +87,10 @@ public class VueloController {
 
     // Obtener vuelos por piloto
     @GetMapping("/piloto/{pilotoId}")
-    public ResponseEntity<List<Vuelo>> getVuelosByPiloto(@PathVariable String pilotoId) {
+    public ResponseEntity<List<Vuelo>> getVuelosByPiloto(@PathVariable String pilotoId, Authentication auth) {
+        if (!accesoRut.puedeAcceder(auth, pilotoId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
         Optional<Piloto> piloto = piloService.findByRut(pilotoId);
 
         if (piloto.isPresent()) {
@@ -94,7 +103,10 @@ public class VueloController {
 
     // Obtener reservas de un usuario
     @GetMapping("/reservas/{usuarioRut}")
-    public ResponseEntity<List<ReservaVueloDTO>> getReservasUsuario(@PathVariable String usuarioRut) {
+    public ResponseEntity<List<ReservaVueloDTO>> getReservasUsuario(@PathVariable String usuarioRut, Authentication auth) {
+        if (!accesoRut.puedeAcceder(auth, usuarioRut)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
         List<ReservaVueloDTO> reservas = reservaService.getReservasUsuario(usuarioRut);
         if (reservas.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);

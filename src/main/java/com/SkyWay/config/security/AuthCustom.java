@@ -34,24 +34,25 @@ public class AuthCustom implements AuthenticationSuccessHandler {
         //Logger.logInfo(String.valueOf(principal.getClass()));
         if (principal instanceof UserDetails userDetails) {
 
-            userDetails.getAuthorities().forEach(arg0 -> Logger.logInfo(arg0.getAuthority()));;
-
-
-
             Usuario usuario=usService.buscarPorCorreo(userDetails.getUsername());
 
-        	/*if( usuario instanceof Pasajero) {
+            // Copia desacoplada de JPA y SIN hash de contrasena: es lo que otros beans leen de la sesion.
+            Usuario seguro = new Usuario();
+            seguro.setRut(usuario.getRut());
+            seguro.setNombre(usuario.getNombre());
+            seguro.setApellido(usuario.getApellido());
+            seguro.setCorreoElectronico(usuario.getCorreoElectronico());
+            seguro.setTelefono(usuario.getTelefono());
+            seguro.setDocumentoIdentidad(usuario.getDocumentoIdentidad());
+            seguro.setFechaNacimiento(usuario.getFechaNacimiento());
+            seguro.setFechaRegistro(usuario.getFechaRegistro());
+            seguro.setRoles(usuario.getRoles() == null ? null : new java.util.ArrayList<>(usuario.getRoles()));
 
-              Logger.logInfo( "Es un pasajero " +usuario);
-        	}else if( usuario instanceof Piloto) {
-                Logger.logInfo( "Es un Piloto " +usuario);
-        	}*/
-
-
-            request.getSession().setAttribute("usuario", usuario);
+            request.getSession().setAttribute("usuario", seguro);
+            request.getSession().setAttribute("usuarioRut", usuario.getRut());
 
         }else {
-            Logger.logInfo("No tiene UserDetails");
+            Logger.logWarn("Autenticacion sin UserDetails");
         }
 
     }

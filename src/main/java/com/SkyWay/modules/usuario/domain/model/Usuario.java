@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.SkyWay.modules.rolusuario.domain.model.Role;
 import com.SkyWay.modules.rolusuario.domain.model.Rolusuario;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
@@ -46,6 +47,7 @@ public class Usuario implements Serializable {
 	@Temporal(TemporalType.DATE)
 	private Date fechaNacimiento;
 
+	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
 	@Column(name = "Contrasena",  length = 100)
 	private String contrasena;
 

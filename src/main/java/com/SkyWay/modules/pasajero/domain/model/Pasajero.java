@@ -5,6 +5,7 @@ import java.io.Serializable;
 import com.SkyWay.modules.equipaje.domain.model.Equipaje;
 import com.SkyWay.modules.reserva.domain.model.Reserva;
 import com.SkyWay.modules.usuario.domain.model.Usuario;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.util.Date;
 import java.util.List;
@@ -40,6 +41,7 @@ public class Pasajero implements Serializable {
 	private List<Equipaje> equipajes;
 
 	//bi-directional one-to-one association to Usuario
+	@JsonIgnore
 	@OneToOne(cascade = CascadeType.ALL)
 	@MapsId
 	@JoinColumn(name="rut")

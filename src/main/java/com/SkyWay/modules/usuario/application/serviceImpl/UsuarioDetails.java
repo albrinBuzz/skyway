@@ -31,7 +31,9 @@ public class UsuarioDetails implements UserDetails{
 	public Collection<? extends GrantedAuthority> getAuthorities() {
 
 		var roles= usuario.getRoles().stream()
-				.map(rol -> new SimpleGrantedAuthority("ROLE_" +rol.getNombre().toUpperCase()))
+				.map(rol -> rol.getNombre().trim().toUpperCase())
+				.map(n -> n.startsWith("ROLE_") ? n.substring(5) : n)
+				.map(n -> new SimpleGrantedAuthority("ROLE_" + n))
 				.toList();
 
 		//Logger.logInfo(roles.toString());
