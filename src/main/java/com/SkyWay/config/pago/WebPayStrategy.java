@@ -9,6 +9,7 @@ import com.SkyWay.config.pago.MetodoPagoEnum;
 import com.SkyWay.config.pago.PasarelaPagoStrategy;
 import com.SkyWay.config.pago.SolicitudPagoDTO;
 import com.SkyWay.util.Logger;
+import java.math.BigDecimal;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -32,11 +33,10 @@ public class WebPayStrategy implements PasarelaPagoStrategy {
      * concatenada con el token_ws requerido.
      */
     @Override
-    public String iniciarTransaccion(SolicitudPagoDTO solicitud) throws Exception {
+    public InicioPago iniciarTransaccion(SolicitudPagoDTO solicitud) throws Exception {
         try {
             WebpayPlus.Transaction transaction = new WebpayPlus.Transaction(webpayOptions);
 
-            // Webpay opera en pesos chilenos (CLP) y requiere el monto como un double
             double montoDouble = solicitud.getMonto().doubleValue();
 
             WebpayPlusTransactionCreateResponse response = transaction.create(
@@ -46,11 +46,9 @@ public class WebPayStrategy implements PasarelaPagoStrategy {
                     solicitud.getReturnUrl()
             );
 
-            Logger.logInfo("WebPay Transaction Iniciada - Orden: "
-                    + solicitud.getOrdenCompra() + " | Token: " + response.getToken());
+            Logger.logInfo("WebPay Transaction Iniciada - Orden: " + solicitud.getOrdenCompra());
 
-            // La respuesta de Transbank entrega la URL del formulario de pago y el token
-            return response.getUrl() + "?token_ws=" + response.getToken();
+            return new InicioPago(response.getUrl() + "?token_ws=" + response.getToken(), response.getToken());
 
         } catch (TransactionCreateException | IOException e) {
             Logger.logError("Error al crear la transacción en Webpay: " + e.getMessage());
@@ -59,31 +57,64 @@ public class WebPayStrategy implements PasarelaPagoStrategy {
     }
 
     /**
-     * Confirma la transacción en Webpay a partir del token_ws retornado.
-     *
-     * @param tokenWS El parámetro token_ws que envía Transbank por GET/POST al returnUrl.
-     * @return true si la transacción fue exitosa (status "AUTHORIZED"), false en caso contrario.
+     * Confirma la transacción en Webpay (commit) y valida buyOrder, sessionId y monto contra el pago pendiente.
      */
     @Override
-    public boolean confirmarPago(String tokenWS) {
-        if (tokenWS == null || tokenWS.isBlank()) {
-            Logger.logError("No se recibió token_ws para confirmar la transacción en Webpay.");
-            return false;
+    public PagoConfirmado confirmarPago(String tokenWS, PagoPendiente esperado) {
+        if (tokenWS == null || tokenWS.isBlank() || esperado == null) {
+            Logger.logError("Retorno WebPay sin token o sin pago pendiente.");
+            return PagoConfirmado.rechazado(tokenWS);
         }
 
         try {
             WebpayPlus.Transaction transaction = new WebpayPlus.Transaction(webpayOptions);
+
+            // Pre-chequeo sin capturar: evita hacer commit de un token que no es de esta sesion.
+            try {
+                var estado = transaction.status(tokenWS);
+                BigDecimal montoEstado = BigDecimal.valueOf(estado.getAmount());
+                if (!esperado.getOrdenCompra().equals(estado.getBuyOrder())
+                        || !esperado.getSessionId().equals(estado.getSessionId())
+                        || montoEstado.compareTo(esperado.getMonto()) != 0) {
+                    Logger.logError("Token WebPay no corresponde al pago pendiente de esta sesion.");
+                    return PagoConfirmado.rechazado(tokenWS);
+                }
+            } catch (Exception e) {
+                // Si la consulta previa falla se valida igualmente despues del commit (y se reembolsa si no coincide).
+                Logger.logWarn("No se pudo consultar estado previo WebPay: " + e.getMessage());
+            }
+
             var response = transaction.commit(tokenWS);
+            boolean autorizado = "AUTHORIZED".equalsIgnoreCase(response.getStatus()) && response.getResponseCode() == 0;
+            BigDecimal monto = BigDecimal.valueOf(response.getAmount());
 
             Logger.logInfo("Respuesta commit Webpay - Orden: " + response.getBuyOrder()
-                    + " | Estado: " + response.getStatus()
-                    + " | Código de Autorización: " + response.getAuthorizationCode());
+                    + " | Estado: " + response.getStatus());
 
-            // En Webpay Plus, "AUTHORIZED" indica pago exitoso y aprobado
-            return "AUTHORIZED".equalsIgnoreCase(response.getStatus());
+            if (!autorizado) {
+                return PagoConfirmado.rechazado(tokenWS);
+            }
+
+            boolean coincide = esperado.getOrdenCompra().equals(response.getBuyOrder())
+                    && esperado.getSessionId().equals(response.getSessionId())
+                    && monto.compareTo(esperado.getMonto()) == 0;
+
+            return new PagoConfirmado(true, coincide, tokenWS, null, monto, "CLP");
 
         } catch (TransactionCommitException | IOException e) {
             Logger.logError("Error al confirmar transacción (commit) en Webpay: " + e.getMessage());
+            return PagoConfirmado.rechazado(tokenWS);
+        }
+    }
+
+    @Override
+    public boolean reembolsar(PagoConfirmado pago) {
+        try {
+            WebpayPlus.Transaction transaction = new WebpayPlus.Transaction(webpayOptions);
+            transaction.refund(pago.getIdExterno(), pago.getMonto().doubleValue());
+            return true;
+        } catch (Exception e) {
+            Logger.logError("Error al reembolsar en Webpay: " + e.getMessage());
             return false;
         }
     }

@@ -9,6 +9,7 @@ import com.mercadopago.resources.preference.Preference;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.mercadopago.client.payment.PaymentRefundClient;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
@@ -31,7 +32,7 @@ public class MercadoPagoPaymentStrategy implements PasarelaPagoStrategy {
      * a la que se debe redirigir al usuario.
      */
     @Override
-    public String iniciarTransaccion(SolicitudPagoDTO solicitud) throws Exception {
+    public InicioPago iniciarTransaccion(SolicitudPagoDTO solicitud) throws Exception {
         try {
             PreferenceClient client = new PreferenceClient();
 
@@ -69,7 +70,7 @@ public class MercadoPagoPaymentStrategy implements PasarelaPagoStrategy {
 
             // sandboxInitPoint para pruebas, initPoint para producción.
             // `preference.getInitPoint()` redirige automáticamente según las credenciales.
-            return preference.getInitPoint();
+            return new InicioPago(preference.getInitPoint(), preference.getId());
 
         } catch (Exception e) {
             Logger.logError("Error al iniciar la transacción en Mercado Pago: " + e.getMessage());
@@ -78,34 +79,47 @@ public class MercadoPagoPaymentStrategy implements PasarelaPagoStrategy {
     }
 
     /**
-     * Confirma la transacción consultando el estado del pago mediante el payment_id.
-     *
-     * @param paymentId Identificador del pago retornado por Mercado Pago en la query param 'payment_id'.
-     * @return true si el pago fue aprobado ('approved').
+     * Confirma consultando el pago directamente en Mercado Pago y verificando estado, referencia externa,
+     * monto y moneda contra el pago pendiente de la sesion.
      */
     @Override
-    public boolean confirmarPago(String paymentId) {
-        if (paymentId == null || paymentId.isBlank()) {
-            Logger.logError("No se recibió payment_id para confirmar en Mercado Pago.");
-            return false;
+    public PagoConfirmado confirmarPago(String paymentId, PagoPendiente esperado) {
+        if (paymentId == null || paymentId.isBlank() || esperado == null) {
+            Logger.logError("No se recibió payment_id o no hay pago pendiente para Mercado Pago.");
+            return PagoConfirmado.rechazado(paymentId);
         }
 
         try {
-            PaymentClient paymentClient = new PaymentClient();
-            Long id = Long.parseLong(paymentId);
-
-            // Consultar el estado del pago directamente en Mercado Pago
-            Payment payment = paymentClient.get(id);
+            Payment payment = new PaymentClient().get(Long.parseLong(paymentId));
 
             Logger.logInfo("Respuesta Pago MercadoPago - ID: " + payment.getId()
-                    + " | Estado: " + payment.getStatus()
-                    + " | Referencia Externa: " + payment.getExternalReference());
+                    + " | Estado: " + payment.getStatus());
 
-            // Verificar si el estado es 'approved'
-            return "approved".equalsIgnoreCase(payment.getStatus());
+            boolean aprobado = "approved".equalsIgnoreCase(payment.getStatus());
+            if (!aprobado) {
+                return PagoConfirmado.rechazado(paymentId);
+            }
+
+            BigDecimal monto = payment.getTransactionAmount();
+            boolean coincide = esperado.getOrdenCompra().equals(payment.getExternalReference())
+                    && monto != null && monto.compareTo(esperado.getMonto()) == 0
+                    && esperado.getMoneda().equalsIgnoreCase(payment.getCurrencyId());
+
+            return new PagoConfirmado(true, coincide, paymentId, null, monto, payment.getCurrencyId());
 
         } catch (Exception e) {
             Logger.logError("Error al confirmar el pago en Mercado Pago para ID: " + paymentId + " - " + e.getMessage());
+            return PagoConfirmado.rechazado(paymentId);
+        }
+    }
+
+    @Override
+    public boolean reembolsar(PagoConfirmado pago) {
+        try {
+            new PaymentRefundClient().refund(Long.parseLong(pago.getIdExterno()));
+            return true;
+        } catch (Exception e) {
+            Logger.logError("Error al reembolsar en Mercado Pago: " + e.getMessage());
             return false;
         }
     }

@@ -9,6 +9,8 @@ import com.paypal.orders.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.SkyWay.util.Logger;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,7 +37,7 @@ public class PayPalPaymentStrategy implements PasarelaPagoStrategy {
     }
 
     @Override
-    public String iniciarTransaccion(SolicitudPagoDTO solicitud) throws Exception {
+    public InicioPago iniciarTransaccion(SolicitudPagoDTO solicitud) throws Exception {
         OrderRequest orderRequest = new OrderRequest();
         orderRequest.checkoutPaymentIntent("CAPTURE");
 
@@ -60,20 +62,60 @@ public class PayPalPaymentStrategy implements PasarelaPagoStrategy {
         Order order = response.result();
 
         // Extraer la URL de aprobación a la que el usuario debe ser redirigido
-        return order.links().stream()
+        String href = order.links().stream()
                 .filter(link -> "approve".equals(link.rel()))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("No se encontró link de aprobación en PayPal"))
                 .href();
+        return new InicioPago(href, order.id());
     }
 
     @Override
-    public boolean confirmarPago(String tokenOrderPayPal) {
+    public PagoConfirmado confirmarPago(String tokenOrderPayPal, PagoPendiente esperado) {
+        if (tokenOrderPayPal == null || tokenOrderPayPal.isBlank() || esperado == null) {
+            return PagoConfirmado.rechazado(tokenOrderPayPal);
+        }
         try {
-            OrdersCaptureRequest request = new OrdersCaptureRequest(tokenOrderPayPal);
-            HttpResponse<Order> response = payPalClient.execute(request);
-            return "COMPLETED".equals(response.result().status());
+            // 1. Verificar la orden ANTES de capturar: debe ser la orden creada para esta sesion.
+            Order orden = payPalClient.execute(new OrdersGetRequest(tokenOrderPayPal)).result();
+            PurchaseUnit unidad = orden.purchaseUnits().get(0);
+            boolean ordenOk = tokenOrderPayPal.equals(esperado.getIdExternoInicio())
+                    && esperado.getOrdenCompra().equals(unidad.referenceId())
+                    && esperado.getMoneda().equalsIgnoreCase(unidad.amountWithBreakdown().currencyCode())
+                    && new BigDecimal(unidad.amountWithBreakdown().value()).compareTo(esperado.getMonto()) == 0
+                    && "APPROVED".equals(orden.status());
+            if (!ordenOk) {
+                Logger.logError("Orden PayPal no coincide con el pago pendiente de la sesion.");
+                return PagoConfirmado.rechazado(tokenOrderPayPal);
+            }
+
+            // 2. Capturar y revisar la captura real.
+            Order capturada = payPalClient.execute(new OrdersCaptureRequest(tokenOrderPayPal)).result();
+            if (!"COMPLETED".equals(capturada.status())) {
+                return PagoConfirmado.rechazado(tokenOrderPayPal);
+            }
+            Capture captura = capturada.purchaseUnits().get(0).payments().captures().get(0);
+            BigDecimal monto = new BigDecimal(captura.amount().value());
+            boolean coincide = "COMPLETED".equals(captura.status())
+                    && esperado.getMoneda().equalsIgnoreCase(captura.amount().currencyCode())
+                    && monto.compareTo(esperado.getMonto()) == 0;
+            return new PagoConfirmado(true, coincide, tokenOrderPayPal, captura.id(), monto, captura.amount().currencyCode());
         } catch (Exception e) {
+            Logger.logError("Error al confirmar pago PayPal: " + e.getMessage());
+            return PagoConfirmado.rechazado(tokenOrderPayPal);
+        }
+    }
+
+    @Override
+    public boolean reembolsar(PagoConfirmado pago) {
+        try {
+            com.paypal.payments.CapturesRefundRequest request =
+                    new com.paypal.payments.CapturesRefundRequest(pago.getIdCaptura());
+            request.requestBody(new com.paypal.payments.RefundRequest());
+            payPalClient.execute(request);
+            return true;
+        } catch (Exception e) {
+            Logger.logError("Error al reembolsar en PayPal: " + e.getMessage());
             return false;
         }
     }

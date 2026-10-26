@@ -6,6 +6,8 @@ import com.SkyWay.config.pago.MetodoPagoEnum;
 import com.SkyWay.config.pago.PagoFactoryService;
 import com.SkyWay.config.pago.PasarelaPagoStrategy;
 import com.SkyWay.config.pago.SolicitudPagoDTO;
+import com.SkyWay.config.pago.InicioPago;
+import com.SkyWay.config.pago.PagoPendiente;
 import com.SkyWay.config.webPay.WebPayService;
 
 import com.SkyWay.modules.asiento.domain.service.AsientoService;
@@ -125,13 +127,30 @@ public class ReservaBean implements Serializable {
     private static final Pattern CEDULA_PATTERN = Pattern.compile("^[0-9]{7,8}-[0-9Kk]{1}$");
 
     // FLAG DE MODOS: Se activa/desactiva mediante application.properties o switch manual en UI
-    @Value("${app.modo-desarrollo:true}")
+    // Seguro por defecto: las validaciones estrictas SOLO se omiten si se define app.modo-desarrollo=true
+    // explicitamente (y nunca en el perfil prod, ver check en init()).
+    @Value("${app.modo-desarrollo:false}")
     private boolean modoDesarrollo;
+
+    @Value("${spring.profiles.active:}")
+    private String perfilesActivos;
+
+    // Tipo de cambio CLP por USD para PayPal. Configurable; TODO: obtener de una fuente oficial (Banco Central).
+    @Value("${app.fx.clp-por-usd:950}")
+    private BigDecimal clpPorUsd;
+
+    // URL base publica (https://dominio). Si esta vacia se deduce del request (vulnerable a Host header spoofing).
+    @Value("${app.base-url:}")
+    private String baseUrlConfigurada;
 
     @PostConstruct
     @SuppressWarnings("unchecked")
     public void init() {
         total = 0;
+        if (modoDesarrollo && perfilesActivos != null && perfilesActivos.contains("prod")) {
+            Logger.logError("app.modo-desarrollo=true es ignorado en el perfil prod.");
+            modoDesarrollo = false;
+        }
 
         FacesContext context = FacesContext.getCurrentInstance();
         if (context == null || context.getExternalContext() == null) {
@@ -150,7 +169,8 @@ public class ReservaBean implements Serializable {
         } else {
             HttpSession httpSession = (HttpSession) context.getExternalContext().getSession(false);
             if (httpSession != null) {
-                this.miSessionId = httpSession.getId();
+                // Token opaco: nunca exponer el JSESSIONID real (se emite por WebSocket/vistas).
+                this.miSessionId = java.util.UUID.randomUUID().toString();
                 sessionMap.put("reservaSessionId", this.miSessionId);
             }
         }
@@ -510,40 +530,68 @@ public class ReservaBean implements Serializable {
             ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
             HttpServletRequest request = (HttpServletRequest) externalContext.getRequest();
 
-            String scheme = request.getScheme();
-            String serverName = request.getServerName();
-            int serverPort = request.getServerPort();
-            String contextPath = request.getContextPath();
+            // El monto SIEMPRE sale de la solicitud guardada por el servidor, no de campos del bean/cliente.
+            SolicitudReservaDTO reservaPendiente = (SolicitudReservaDTO)
+                    externalContext.getSessionMap().get("SOLICITUD_RESERVA_PENDIENTE");
+            if (reservaPendiente == null || reservaPendiente.montoTotal() == null
+                    || reservaPendiente.montoTotal().signum() <= 0) {
+                addMessage(FacesMessage.SEVERITY_ERROR, "Error de Pago", "No hay una reserva válida para pagar.");
+                return;
+            }
+            BigDecimal montoClp = reservaPendiente.montoTotal();
 
-            String portSegment = ((scheme.equals("http") && serverPort == 80) || (scheme.equals("https") && serverPort == 443))
-                    ? "" : ":" + serverPort;
-            String baseUrl = String.format("%s://%s%s%s", scheme, serverName, portSegment, contextPath);
-
-            // Generar DTO Unificado
-            SolicitudPagoDTO solicitud = new SolicitudPagoDTO();
-            solicitud.setOrdenCompra("ORD-" + System.currentTimeMillis() % 1000000000L);
-            solicitud.setSessionId(this.miSessionId != null ? this.miSessionId : request.getSession().getId());
-            solicitud.setMonto(BigDecimal.valueOf(this.total));
-            solicitud.setDescripcion("Reserva de vuelo SkyWay");
-
-            // Ajustar moneda si es PayPal (ejemplo: conversión a USD si tu base es CLP)
-            if (metodoPagoSeleccionado == MetodoPagoEnum.PAYPAL) {
-                solicitud.setMoneda("USD");
-                solicitud.setMonto(BigDecimal.valueOf(this.total / 950.0).setScale(2, RoundingMode.HALF_UP)); // Conversión de CLP a USD
-                solicitud.setReturnUrl(baseUrl + "/paypal/commit");
-                solicitud.setCancelUrl(baseUrl + "/paypal/cancel");
+            String baseUrl;
+            if (baseUrlConfigurada != null && !baseUrlConfigurada.isBlank()) {
+                baseUrl = baseUrlConfigurada.replaceAll("/+$", "");
             } else {
-                solicitud.setMoneda("CLP");
-                solicitud.setReturnUrl(baseUrl + "/webpay/commit");
-                solicitud.setCancelUrl(baseUrl + "/reserva.xhtml");
+                String scheme = request.getScheme();
+                String serverName = request.getServerName();
+                int serverPort = request.getServerPort();
+                String portSegment = ((scheme.equals("http") && serverPort == 80) || (scheme.equals("https") && serverPort == 443))
+                        ? "" : ":" + serverPort;
+                baseUrl = String.format("%s://%s%s%s", scheme, serverName, portSegment, request.getContextPath());
             }
 
-            // Obtener la estrategia adecuada (Webpay, MercadoPago o PayPal)
-            PasarelaPagoStrategy pasarela = pagoFactoryService.obtenerEstrategia(metodoPagoSeleccionado);
+            SolicitudPagoDTO solicitud = new SolicitudPagoDTO();
+            // buy_order de WebPay admite max 26 caracteres: "ORD-" + 22 hex aleatorios (unico e impredecible)
+            solicitud.setOrdenCompra("ORD-" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 22));
+            solicitud.setSessionId(this.miSessionId != null ? this.miSessionId : java.util.UUID.randomUUID().toString());
+            solicitud.setDescripcion("Reserva de vuelo SkyWay");
 
-            // Iniciar transacción y redirigir a la URL correspondiente
-            String redirectUrl = pasarela.iniciarTransaccion(solicitud);
-            externalContext.redirect(redirectUrl);
+            switch (metodoPagoSeleccionado) {
+                case PAYPAL -> {
+                    solicitud.setMoneda("USD");
+                    solicitud.setMonto(montoClp.divide(clpPorUsd, 2, RoundingMode.HALF_UP));
+                    solicitud.setReturnUrl(baseUrl + "/paypal/commit");
+                    solicitud.setCancelUrl(baseUrl + "/paypal/cancel");
+                }
+                case MERCADOPAGO -> {
+                    solicitud.setMoneda("CLP");
+                    solicitud.setMonto(montoClp);
+                    solicitud.setReturnUrl(baseUrl + "/mercadopago/commit");
+                    solicitud.setCancelUrl(baseUrl + "/mercadopago/cancel");
+                }
+                default -> {
+                    solicitud.setMoneda("CLP");
+                    solicitud.setMonto(montoClp);
+                    solicitud.setReturnUrl(baseUrl + "/webpay/commit");
+                    solicitud.setCancelUrl(baseUrl + "/reserva.xhtml");
+                }
+            }
+            if (solicitud.getMonto().signum() <= 0) {
+                addMessage(FacesMessage.SEVERITY_ERROR, "Error de Pago", "Monto inválido.");
+                return;
+            }
+
+            PasarelaPagoStrategy pasarela = pagoFactoryService.obtenerEstrategia(metodoPagoSeleccionado);
+            InicioPago inicio = pasarela.iniciarTransaccion(solicitud);
+
+            // Estado PENDIENTE en sesion: es la referencia contra la que se valida el retorno.
+            externalContext.getSessionMap().put("PAGO_PENDIENTE", new PagoPendiente(
+                    metodoPagoSeleccionado, solicitud.getOrdenCompra(), solicitud.getSessionId(),
+                    solicitud.getMonto(), solicitud.getMoneda(), montoClp, inicio.idExterno()));
+
+            externalContext.redirect(inicio.urlRedireccion());
 
         } catch (Exception e) {
             Logger.logInfo(e.getMessage());

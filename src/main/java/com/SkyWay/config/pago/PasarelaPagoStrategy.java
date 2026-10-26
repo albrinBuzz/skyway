@@ -9,12 +9,16 @@ public interface PasarelaPagoStrategy {
 
     /**
      * Inicia la transacción con la pasarela seleccionada.
-     * @return URL de redirección a la que JSF enviará al usuario.
+     * @return URL de redirección y id externo creado por la pasarela.
      */
-    String iniciarTransaccion(SolicitudPagoDTO solicitud) throws Exception;
+    InicioPago iniciarTransaccion(SolicitudPagoDTO solicitud) throws Exception;
 
     /**
-     * Confirma el pago cuando el proveedor redirige de vuelta a nuestro sistema.
+     * Confirma el pago cuando el proveedor redirige de vuelta a nuestro sistema, verificando contra
+     * la respuesta real de la pasarela que orden, monto y moneda coinciden con el pago pendiente.
      */
-    boolean confirmarPago(String tokenOIdentificador);
+    PagoConfirmado confirmarPago(String tokenOIdentificador, PagoPendiente esperado);
+
+    /** Reembolsa/anula un pago ya capturado. @return true si la pasarela acepto el reembolso. */
+    boolean reembolsar(PagoConfirmado pago);
 }
