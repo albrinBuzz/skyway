@@ -28,8 +28,6 @@ public class HealthCheckController {
     @Autowired(required = false)
     private DataSource dataSource;
 
-    @Value("${spring.profiles.active:default}")
-    private String activeProfile;
 
     private static final int DB_TIMEOUT_SECONDS = 3;
     private static final long MEGABYTE = 1024 * 1024;
@@ -71,9 +69,6 @@ public class HealthCheckController {
         long uptimeMs = runtimeBean.getUptime();
 
         Map<String, Object> envDetails = new LinkedHashMap<>();
-        envDetails.put("active_profile", activeProfile);
-        envDetails.put("java_version", JavaVersion.getJavaVersion().toString() + " (" + System.getProperty("java.vendor") + ")");
-        envDetails.put("os_architecture", System.getProperty("os.name") + " " + System.getProperty("os.arch") + " (v" + System.getProperty("os.version") + ")");
         envDetails.put("available_processors", Runtime.getRuntime().availableProcessors());
         envDetails.put("start_time", DateTimeFormatter.ISO_OFFSET_DATE_TIME
                 .withZone(ZoneId.systemDefault())
@@ -104,10 +99,6 @@ public class HealthCheckController {
             DatabaseMetaData metaData = conn.getMetaData();
             dbDetails.put("status", "UP");
             dbDetails.put("latency_ms", latency);
-            dbDetails.put("database_product", metaData.getDatabaseProductName());
-            dbDetails.put("database_version", metaData.getDatabaseProductVersion());
-            dbDetails.put("driver_name", metaData.getDriverName());
-            dbDetails.put("driver_version", metaData.getDriverVersion());
             dbDetails.put("read_only", conn.isReadOnly());
 
             components.put("database", dbDetails);
@@ -115,8 +106,7 @@ public class HealthCheckController {
 
         } catch (Exception e) {
             dbDetails.put("status", "DOWN");
-            dbDetails.put("error_type", e.getClass().getName());
-            dbDetails.put("error_message", e.getMessage());
+            dbDetails.put("error", "Base de datos no disponible");
             components.put("database", dbDetails);
             return false;
         }

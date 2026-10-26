@@ -58,9 +58,10 @@ public class PagoExitosoController implements Serializable {
                     emailReservaService.enviarComprobanteReservaAsync(this.reserva);
 
                     // 1. Limpiar la memoria del CacheService (WebSockets / RAM)
-                    String sessionId = externalContext.getSessionId(false);
+                    String sessionId = (String) sessionMap.get("reservaSessionId");
                     if (sessionId != null) {
                         asientoCacheService.liberarTodosLosAsientosDeSesion(sessionId);
+                        sessionMap.remove("reservaSessionId");
                     }
 
                     // 🧹 2. PURGA DE LOS DATOS DE COMPRA TEMPORALES

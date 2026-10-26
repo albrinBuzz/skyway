@@ -101,7 +101,8 @@ public class ReservaAsientoBean implements Serializable {
         if (sessionMap.containsKey("reservaSessionId")) {
             this.miSessionId = (String) sessionMap.get("reservaSessionId");
         } else {
-            this.miSessionId = rawSessionId;
+            // Token opaco por reserva; nunca el JSESSIONID real.
+            this.miSessionId = java.util.UUID.randomUUID().toString();
             sessionMap.put("reservaSessionId", this.miSessionId);
         }
 

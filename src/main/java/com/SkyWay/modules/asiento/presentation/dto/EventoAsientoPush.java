@@ -6,18 +6,16 @@ public class EventoAsientoPush implements Serializable {
     private Integer idAsiento;
     private Integer idVuelo;
     private String estado; // "Bloqueado", "Disponible", "Ocupado"
-    private String sessionId; // Para diferenciar al usuario actual
 
-    public EventoAsientoPush(Integer idAsiento, Integer idVuelo, String estado, String sessionId) {
+    public EventoAsientoPush(Integer idAsiento, Integer idVuelo, String estado, String ignorado) {
         this.idAsiento = idAsiento;
         this.idVuelo = idVuelo;
         this.estado = estado;
-        this.sessionId = sessionId;
+        // El sessionId/token del dueno NUNCA se emite por el canal publico (evita robo de sesion/suplantacion).
     }
 
     // Getters y Setters
     public Integer getIdAsiento() { return idAsiento; }
     public Integer getIdVuelo() { return idVuelo; }
     public String getEstado() { return estado; }
-    public String getSessionId() { return sessionId; }
 }

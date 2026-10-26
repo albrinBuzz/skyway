@@ -172,9 +172,6 @@ public class UnifiedSystemMonitorTask {
 
             payload.put("jsf_component_count", JSFMetricsTracker.getLastViewComponentCount());
             payload.put("jsf_render_time_ms", JSFMetricsTracker.getLastPhaseDurationMs());
-            payload.put("primefaces_version", "14.0.0");
-            payload.put("omnifaces_version", "4.3");
-            payload.put("jsf_stage", "Production");
 
             // Disk, GC & Runtime
             payload.put("used_disk_gb", (rootDisk.getTotalSpace() - rootDisk.getFreeSpace()) / GIGABYTE);
@@ -182,9 +179,8 @@ public class UnifiedSystemMonitorTask {
             payload.put("uptime_ms", ManagementFactory.getRuntimeMXBean().getUptime());
             payload.put("gc_count", gcCount);
             payload.put("gc_time_ms", gcTimeMs);
-            payload.put("active_profile", activeProfile);
-            payload.put("java_vendor", JavaVersion.getJavaVersion().toString());
 
+            // Solo ADMIN puede suscribirse a /topic/metrics (ver WebSocketConfig); sin versiones ni perfil.
             messagingTemplate.convertAndSend("/topic/metrics", payload);
 
         } catch (Exception e) {

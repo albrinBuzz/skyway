@@ -13,7 +13,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/tipo-turno")
-@CrossOrigin(origins = "*") // Ajustar según tus necesidades de seguridad
 public class TipoTurnoController {
 
     @Autowired
