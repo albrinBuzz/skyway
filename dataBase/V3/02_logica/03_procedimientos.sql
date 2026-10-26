@@ -11,55 +11,59 @@ CREATE OR REPLACE PROCEDURE spConfirmar_reserva(
 LANGUAGE plpgsql
 AS $confirmar_reserva$
 DECLARE
-reserva_id INT;
-    estado_reserva_id INT := 1;
+    v_id_avion INT;
     i INT;
-    id_avion INT;
     id_asientoP INT;
-    asiento_en_reserva INT;
-    numero_asiento TEXT;
+    v_insertadas INT;
+    v_numero_asiento TEXT;
     asientos_reservados TEXT := '';
 BEGIN
-    -- Obtener el avión asignado al vuelo
-SELECT vl.id_avion INTO id_avion
-FROM vuelo vl
-WHERE vl.id_vuelo = p_idVuelo;
+    SELECT vl.id_avion INTO v_id_avion
+    FROM vuelo vl
+    WHERE vl.id_vuelo = p_idVuelo;
 
-FOR i IN 1..array_length(p_asientos, 1)
+    IF v_id_avion IS NULL THEN
+        p_resultado := 'ERROR: El vuelo no existe.';
+        RETURN;
+    END IF;
+
+    IF p_asientos IS NULL OR array_length(p_asientos, 1) IS NULL THEN
+        p_resultado := 'ERROR: No se indicaron asientos.';
+        RETURN;
+    END IF;
+
+    FOR i IN 1..array_length(p_asientos, 1)
     LOOP
         id_asientoP := p_asientos[i];
-        asiento_en_reserva := 0;
 
-        -- Verificar si el asiento ya está reservado (Sin FOR UPDATE para evitar conflicto con EXCEPTION)
-SELECT 1 INTO asiento_en_reserva
-FROM reserva_asiento ra
-WHERE ra.ID_VUELO = p_idVuelo
-  AND ra.ID_ASIENTO = id_asientoP;
+        -- El asiento debe pertenecer al avion asignado al vuelo.
+        IF NOT EXISTS (SELECT 1 FROM asiento a WHERE a.id_asiento = id_asientoP AND a.id_avion = v_id_avion) THEN
+            p_resultado := 'ERROR: El asiento ' || id_asientoP || ' no pertenece al avion del vuelo.';
+            RETURN;
+        END IF;
 
-IF asiento_en_reserva IS NOT NULL AND asiento_en_reserva > 0 THEN
-SELECT ast.numero_asiento INTO numero_asiento
-FROM asiento ast
-WHERE ast.id_asiento = id_asientoP;
+        -- Atomico: el UNIQUE(id_vuelo, id_asiento) decide quien gana la carrera; sin SELECT previo (sin TOCTOU).
+        INSERT INTO reserva_asiento (id_reserva, id_asiento, ID_VUELO, rut)
+        VALUES (p_idReserva, id_asientoP, p_idVuelo, p_rutPasajero)
+        ON CONFLICT (id_vuelo, id_asiento) DO NOTHING;
 
-asientos_reservados := asientos_reservados || numero_asiento || ', ';
-ELSE
-            -- Insertar en reserva_asiento
-            INSERT INTO reserva_asiento (id_reserva, id_asiento, ID_VUELO, rut)
-            VALUES (p_idReserva, id_asientoP, p_idVuelo, p_rutPasajero);
-END IF;
-END LOOP;
+        GET DIAGNOSTICS v_insertadas = ROW_COUNT;
+
+        IF v_insertadas = 0 THEN
+            SELECT ast.numero_asiento INTO v_numero_asiento
+            FROM asiento ast
+            WHERE ast.id_asiento = id_asientoP;
+
+            asientos_reservados := asientos_reservados || v_numero_asiento || ', ';
+        END IF;
+    END LOOP;
 
     IF asientos_reservados <> '' THEN
+        -- No se borra la reserva aqui: el llamador (Java) hace rollback de toda la transaccion al recibir ERROR.
         p_resultado := 'ERROR: Asientos ya reservados: ' || LEFT(asientos_reservados, LENGTH(asientos_reservados) - 2);
-DELETE FROM reserva WHERE id_reserva = p_idReserva;
-ELSE
+    ELSE
         p_resultado := 'OK: Reserva realizada correctamente.';
-END IF;
-EXCEPTION
-    WHEN OTHERS THEN
-        RAISE NOTICE 'Ocurrió un error: %', SQLERRM;
-DELETE FROM reserva WHERE id_reserva = p_idReserva;
-p_resultado := 'ERROR: No se pudo completar la reserva. ' || SQLERRM;
+    END IF;
 END;
 $confirmar_reserva$;
 
@@ -113,18 +117,87 @@ $verificar_asientos$;
 -- ==========================================
 -- 3. PROCEDIMIENTO: CAMBIAR ASIENTO
 -- ==========================================
+-- Reemplaza la version de 3 parametros (sin validacion de dueno).
+DROP PROCEDURE IF EXISTS sp_cambiarAsiento(INT, INT, INT);
+
 CREATE OR REPLACE PROCEDURE sp_cambiarAsiento(
    IN p_id_asiento INT,
    IN p_id_reserva INT,
-   IN p_id_asiento_org INT
+   IN p_id_asiento_org INT,
+   IN p_rut_solicitante VARCHAR
 )
 LANGUAGE plpgsql
 AS $cambiar_asiento$
+DECLARE
+    v_id_vuelo INT;
+    v_id_avion INT;
+    v_clase_org INT;
+    v_clase_new INT;
+    v_avion_new INT;
+    v_estado INT;
+    v_cancelada INT;
+    v_filas INT;
 BEGIN
-UPDATE reserva_asiento
-SET id_asiento = p_id_asiento
-WHERE id_reserva = p_id_reserva
-  AND id_asiento = p_id_asiento_org;
+    IF p_rut_solicitante IS NULL OR p_rut_solicitante = '' THEN
+        RAISE EXCEPTION 'Solicitante no identificado.';
+    END IF;
+
+    -- 1. La reserva debe existir, no estar cancelada y pertenecer al solicitante.
+    SELECT r.estado_reserva INTO v_estado
+    FROM reserva r
+    WHERE r.id_reserva = p_id_reserva
+      AND (r.rut_pasajero = p_rut_solicitante
+           OR EXISTS (SELECT 1 FROM pasajero_reserva pr WHERE pr.id_reserva = r.id_reserva AND pr.rut = p_rut_solicitante)
+           OR EXISTS (SELECT 1 FROM reserva_asiento ra WHERE ra.id_reserva = r.id_reserva AND ra.rut = p_rut_solicitante));
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'La reserva % no existe o no pertenece al solicitante.', p_id_reserva;
+    END IF;
+
+    SELECT id_estado_reserva INTO v_cancelada
+    FROM estado_reserva
+    WHERE LOWER(descripcion) LIKE '%cancelad%'
+    LIMIT 1;
+    IF v_cancelada IS NOT NULL AND v_estado = v_cancelada THEN
+        RAISE EXCEPTION 'La reserva % esta cancelada.', p_id_reserva;
+    END IF;
+
+    -- 2. El asiento original debe estar en esa reserva; se obtiene su vuelo.
+    SELECT ra.id_vuelo INTO v_id_vuelo
+    FROM reserva_asiento ra
+    WHERE ra.id_reserva = p_id_reserva AND ra.id_asiento = p_id_asiento_org;
+
+    IF v_id_vuelo IS NULL THEN
+        RAISE EXCEPTION 'El asiento original no pertenece a la reserva.';
+    END IF;
+
+    -- 3. Mismo avion (mismo vuelo) y misma clase: cambiar de clase requiere pagar la diferencia.
+    SELECT id_avion INTO v_id_avion FROM vuelo WHERE id_vuelo = v_id_vuelo;
+    SELECT id_clase INTO v_clase_org FROM asiento WHERE id_asiento = p_id_asiento_org;
+    SELECT id_clase, id_avion INTO v_clase_new, v_avion_new FROM asiento WHERE id_asiento = p_id_asiento;
+
+    IF v_avion_new IS DISTINCT FROM v_id_avion THEN
+        RAISE EXCEPTION 'El asiento nuevo no pertenece al avion del vuelo.';
+    END IF;
+
+    -- TODO(negocio): para cambiar a una clase de mayor precio, cobrar la diferencia por la pasarela antes de
+    -- permitirlo. Mientras no exista ese flujo, solo se permite dentro de la misma clase.
+    IF v_clase_new IS DISTINCT FROM v_clase_org THEN
+        RAISE EXCEPTION 'Solo se permite cambiar a un asiento de la misma clase.';
+    END IF;
+
+    -- 4. Cambio atomico; el UNIQUE(id_vuelo, id_asiento) impide tomar un asiento ocupado.
+    UPDATE reserva_asiento
+    SET id_asiento = p_id_asiento
+    WHERE id_reserva = p_id_reserva
+      AND id_asiento = p_id_asiento_org
+      AND id_vuelo = v_id_vuelo
+      AND NOT EXISTS (SELECT 1 FROM reserva_asiento x WHERE x.id_vuelo = v_id_vuelo AND x.id_asiento = p_id_asiento);
+
+    GET DIAGNOSTICS v_filas = ROW_COUNT;
+    IF v_filas = 0 THEN
+        RAISE EXCEPTION 'El asiento solicitado ya esta ocupado.';
+    END IF;
 END;
 $cambiar_asiento$;
 

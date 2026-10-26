@@ -16,6 +16,8 @@ import com.SkyWay.modules.reserva.domain.service.ReservaService;
 import com.SkyWay.modules.reserva.presentation.dto.TicketInfo;
 import com.SkyWay.util.Logger;
 import com.SkyWay.util.PnrGenerator;
+import com.SkyWay.util.UsuarioSesion;
+import org.springframework.security.access.AccessDeniedException;
 import jakarta.faces.context.FacesContext;
 import jakarta.persistence.*;
 
@@ -108,23 +110,13 @@ public class ReservaServiceImpl implements ReservaService {
 	@Override
 	@Transactional
 	public void cancelarReserva(Integer id) {
-		// Llamar al procedimiento almacenado
-		StoredProcedureQuery query = em.createStoredProcedureQuery("sp_cancelar_reserva");
-
-		// Registrar los parámetros del procedimiento
-		query.registerStoredProcedureParameter("p_id_reserva", Integer.class, ParameterMode.IN);
-
-		// Establecer los valores de los parámetros
-		query.setParameter("p_id_reserva", id);
-
-		// Ejecutar el procedimiento
-		try {
-			query.execute();
-			Logger.logInfo("Reserva cancelada con éxito");
-		} catch (Exception e) {
-			Logger.logInfo("Error al cancelar la reserva: " + e.getMessage());
-			throw new RuntimeException("Error al cancelar la reserva", e);
+		// Siempre con el RUT del usuario autenticado: el SP sp_cancelarReservaPasajero valida que la reserva sea suya.
+		String rut = UsuarioSesion.rutAutenticado();
+		if (rut == null) {
+			throw new AccessDeniedException("Debes iniciar sesión para cancelar una reserva.");
 		}
+		cancelarReserva(id, rut, null);
+		Logger.logInfo("Reserva cancelada con éxito");
 	}
 
 	public List<Reserva> obtenerReservasPorPasajero(Pasajero pasajero) {
@@ -291,6 +283,10 @@ public class ReservaServiceImpl implements ReservaService {
 	@Override
 	@Transactional
 	public void cancelarReserva(Integer idReserva, String rutPasajero, String motivo) {
+		String rutAuth = UsuarioSesion.rutAutenticado();
+		if (rutAuth == null || !rutAuth.equals(rutPasajero)) {
+			throw new AccessDeniedException("No autorizado para cancelar esta reserva.");
+		}
 		String ipUsuario = "127.0.0.1";
 		FacesContext fc = FacesContext.getCurrentInstance();
 		if (fc != null && fc.getExternalContext() != null) {
@@ -322,6 +318,17 @@ public class ReservaServiceImpl implements ReservaService {
 			throw new IllegalArgumentException("El ID de reserva no puede ser nulo.");
 		}
 
+		if (!itinerarioPerteneceAReserva(idReserva, idItinerario)) {
+			throw new IllegalArgumentException("El itinerario no pertenece a la reserva.");
+		}
+		// Idempotencia: un solo check-in web por reserva.
+		Number previos = (Number) em.createNativeQuery(
+				"SELECT COUNT(*) FROM checkin WHERE id_reserva = :r").setParameter("r", idReserva).getSingleResult();
+		if (previos != null && previos.longValue() > 0) {
+			Logger.logWarn("Check-In ya registrado para la reserva N°: " + idReserva);
+			return;
+		}
+
 		try {
 			// Inserción en la tabla Checkin utilizando la secuencia checkin_seq y la tabla de PostgreSQL
 			Query query = em.createNativeQuery(
@@ -329,7 +336,7 @@ public class ReservaServiceImpl implements ReservaService {
 							"VALUES (:p_reserva, NOW(), 'Web', 'COMPLETADO', :p_code)"
 			);
 
-			String boardingPassCode = "BP-SW-" + idReserva + "-" + System.currentTimeMillis();
+			String boardingPassCode = "BP-SW-" + idReserva + "-" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase();
 
 			query.setParameter("p_reserva", idReserva);
 			query.setParameter("p_code", boardingPassCode);
@@ -449,7 +456,6 @@ public class ReservaServiceImpl implements ReservaService {
 			}
 		}
 
-		Logger.logInfo(reserva.toString());
 		return reserva;
 	}
 
@@ -528,6 +534,36 @@ public class ReservaServiceImpl implements ReservaService {
 		}
 
 		return null;
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public boolean esDuenoDeReserva(Integer idReserva, String rut) {
+		if (idReserva == null || rut == null || rut.isBlank()) {
+			return false;
+		}
+		Number n = (Number) em.createNativeQuery(
+				"SELECT COUNT(*) FROM reserva r WHERE r.id_reserva = :id AND (r.rut_pasajero = :rut "
+						+ "OR EXISTS (SELECT 1 FROM pasajero_reserva pr WHERE pr.id_reserva = r.id_reserva AND pr.rut = :rut) "
+						+ "OR EXISTS (SELECT 1 FROM reserva_asiento ra WHERE ra.id_reserva = r.id_reserva AND ra.rut = :rut))")
+				.setParameter("id", idReserva)
+				.setParameter("rut", rut)
+				.getSingleResult();
+		return n != null && n.longValue() > 0;
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public boolean itinerarioPerteneceAReserva(Integer idReserva, Integer idItinerario) {
+		if (idReserva == null || idItinerario == null) {
+			return false;
+		}
+		Number n = (Number) em.createNativeQuery(
+				"SELECT COUNT(*) FROM reserva_itinerario WHERE id_reserva = :r AND id_itinerario = :i")
+				.setParameter("r", idReserva)
+				.setParameter("i", idItinerario)
+				.getSingleResult();
+		return n != null && n.longValue() > 0;
 	}
 
 }

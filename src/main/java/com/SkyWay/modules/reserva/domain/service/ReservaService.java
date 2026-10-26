@@ -48,5 +48,11 @@ public interface ReservaService {
 	 * Obtiene el ID del itinerario asociado a una reserva dada.
 	 */
 	Integer obtenerIdItinerarioPorReserva(Integer idReserva);
+
+	/** true si el RUT es titular, pasajero o tiene asiento en la reserva. */
+	boolean esDuenoDeReserva(Integer idReserva, String rut);
+
+	/** true si el itinerario pertenece a la reserva. */
+	boolean itinerarioPerteneceAReserva(Integer idReserva, Integer idItinerario);
 	String confirmarReserva(int idVuelo, Integer[] asientosArray, String rutUsuario,Integer idReserva) throws SQLException;
 }

@@ -62,6 +62,13 @@ public class CambioAsientoBean implements Serializable {
                 int parsedIdVuelo = Integer.parseInt(idVuelo);
                 int parsedIdReserva = Integer.parseInt(idReserva);
 
+                // IDOR: la reserva debe pertenecer al usuario autenticado.
+                if (!reservaService.esDuenoDeReserva(parsedIdReserva, com.SkyWay.util.UsuarioSesion.rutAutenticado())) {
+                    System.err.println("CambioAsientoBean: acceso denegado a la reserva " + parsedIdReserva);
+                    asientos = new ArrayList<>();
+                    return;
+                }
+
                 vuelo = vueloService.findById(parsedIdVuelo).orElse(null);
 
                 if (vuelo != null) {

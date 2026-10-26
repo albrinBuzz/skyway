@@ -204,6 +204,9 @@ public class PerfilController {
 	@GetMapping("/cambiarAsiento/{idVuelo}/{idReserva}")
 	public String cambiarAsiento(@PathVariable Integer idVuelo ,@PathVariable Integer idReserva,Model model ) {
 		
+		if (!reservaService.esDuenoDeReserva(idReserva, com.SkyWay.util.UsuarioSesion.rutAutenticado())) {
+			throw new org.springframework.security.access.AccessDeniedException("La reserva no te pertenece.");
+		}
 		InfoVueloDTO vuelo=vueloService.getInfoVuelo(idVuelo);
 		
 		//pasar el objet del InfoVueloDTO al modelo
@@ -233,26 +236,13 @@ public class PerfilController {
 	}
 	
 	
-	@GetMapping("/cancelarReserva/{id}")
+	// POST (no GET): una accion que cambia estado no debe ser disparable por un enlace/imagen (CSRF).
+	// La propiedad de la reserva se valida en ReservaService contra el RUT de la sesion autenticada.
+	@PostMapping("/cancelarReserva/{id}")
 	public String cancelarReserva(@PathVariable Integer id,  Model model,Principal principal,HttpSession session) {
-	
-		
-		
+
 		reservaService.cancelarReserva(id);
-		
-		/*Usuario usuario=(Usuario) session.getAttribute("usuario");
-		model.addAttribute("usuario", session.getAttribute("usuario"));
-		
-		if(usuario instanceof Pasajero) {
-			List<ReservaVueloDTO>vuelos=reservaService.getReservasUsuario(((Usuario) session.getAttribute("usuario")).getRutUsuario());
-			model.addAttribute("vuelos", vuelos);
-			return "perfil/perfil";
-		}else {
-			Piloto piloto=(Piloto) session.getAttribute("usuario");
-			model.addAttribute("piloto", piloto);
-			
-			return "perfil/perfilPiloto";
-		}*/
+
 		return "perfil/perfilPiloto";
 
 	}
@@ -263,20 +253,10 @@ public class PerfilController {
                                   @RequestParam("asientoReemplazo") String asientoReemplazo,
                                   @RequestParam("idVuelo") Integer idVuelo,
                                   @RequestParam("idReserva") Integer idReserva) {
-        // Mostrar los valores recibidos en la consola (para depuración)
-        System.out.println("Asiento Original: " + asientoOriginal);
-        System.out.println("Asiento Reemplazo: " + asientoReemplazo);
-        System.out.println("ID Vuelo: " + idVuelo);
-        System.out.println("ID Reserva: " + idReserva);
-		//LOGGER.info("Asiento Reemplazo: " + asientoReemplazo);
-		
-        
-        System.out.println("Salida : " + reservaAsientoService.cambiarAsiento(Integer.parseInt( asientoReemplazo), idReserva,Integer.parseInt( asientoOriginal)));
+		// El servicio valida dueño (RUT de la sesion), mismo vuelo/avion y clase; lanza excepcion si no cumple.
+		reservaAsientoService.cambiarAsiento(Integer.parseInt(asientoReemplazo), idReserva, Integer.parseInt(asientoOriginal));
 
 		return new ModelAndView("redirect:/perfil/cambiarAsiento/"+idVuelo+"/"+idReserva);
-
-        // Aquí puedes realizar la lógica para cambiar el asiento, por ejemplo, actualizar la base de datos
-
     }
 	
 	@GetMapping("/getData")

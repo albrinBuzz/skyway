@@ -11,8 +11,8 @@ public class ValidadorCheckIn {
 
     public static String validarEstadoVentanaCheckIn(Date fechaHoraSalidaVuelo) {
         if (fechaHoraSalidaVuelo == null) {
-            // Si no se puede determinar la fecha, permitimos el flujo por defecto
-            return "HABILITADO";
+            // Fail-CLOSED: si no se puede determinar la fecha de salida no se habilita el check-in.
+            return "CERRADO";
         }
 
         LocalDateTime ahora = LocalDateTime.now(ZoneId.of("America/Santiago"));

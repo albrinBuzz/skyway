@@ -28,6 +28,7 @@ public class SesionReservaUtil {
                 "equipajePorPasajero",
                 "totalEquipaje",
                 "SOLICITUD_RESERVA_PENDIENTE",
+                "PAGO_PENDIENTE",
                 "ultimaBusquedaAsientosQuery",
                 "reservaSessionId" // Genera una nueva id para la siguiente reserva
         };

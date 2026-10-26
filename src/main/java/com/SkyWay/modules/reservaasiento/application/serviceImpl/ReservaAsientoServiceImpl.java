@@ -10,7 +10,9 @@ import com.SkyWay.modules.reservaasiento.domain.repository.ReservaAsientoReposit
 import jakarta.persistence.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.SkyWay.util.UsuarioSesion;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 
@@ -58,47 +60,47 @@ public class ReservaAsientoServiceImpl implements ReservaAsientoService {
 	@Transactional
 	public boolean cambiarAsiento(Integer idAsiento, Integer idReserva,Integer id_asiento_org) {
 
-		
+		// El solicitante sale de la sesion del servidor; el SP valida dueno, vuelo/avion y clase.
+		String rut = UsuarioSesion.rutAutenticado();
+		if (rut == null) {
+			throw new AccessDeniedException("Debes iniciar sesión para cambiar asientos.");
+		}
+
 		StoredProcedureQuery procedureQuery = em
 	              .createStoredProcedureQuery("sp_cambiarAsiento");
 		
 		procedureQuery.registerStoredProcedureParameter("p_id_asiento", Integer.class, ParameterMode.IN);
 		procedureQuery.registerStoredProcedureParameter("p_id_reserva", Integer.class, ParameterMode.IN);
 		procedureQuery.registerStoredProcedureParameter("p_id_asiento_org", Integer.class, ParameterMode.IN);
+		procedureQuery.registerStoredProcedureParameter("p_rut_solicitante", String.class, ParameterMode.IN);
 		
-	    // Establecer los valores de los parámetros
 		procedureQuery.setParameter("p_id_asiento", idAsiento);
 		procedureQuery.setParameter("p_id_reserva", idReserva);
 		procedureQuery.setParameter("p_id_asiento_org", id_asiento_org);
+		procedureQuery.setParameter("p_rut_solicitante", rut);
 
 		try {
-
 			procedureQuery.execute();
 			LOGGER.info("asiento cambiado");
 			return true;
 		} catch (Exception e) {
-
-            LOGGER.error("Error al cancelar  al cambiar asiento: {}", e.getMessage(), e);
-			return false;
+			LOGGER.error("Error al cambiar asiento: {}", e.getMessage(), e);
+			// Se propaga para que el llamador no informe un exito falso (y haga rollback).
+			throw new IllegalStateException("No se pudo cambiar el asiento: " + mensajeLimpio(e), e);
 		}
-		 // Iniciar la transacción
-	    /*em.getTransaction().begin();
-	    try {
-	        // Ejecutar el procedimiento
-	    	procedureQuery.execute();
-	        em.getTransaction().commit();  // Confirmar los cambios
-	        LOGGER.info("asiento cambiado");
-	        return true;
-	    } catch (Exception e) {
-	        // Si hay un error, hacer rollback
-	        em.getTransaction().rollback();
-	        LOGGER.error("Error al cancelar  al cambiar asiento: " + e.getMessage(), e);
-	        return false;
-	    } finally {
-	        em.close();  // Asegúrate de cerrar el EntityManager
-	    }*/
-		
+	}
 
+	private static String mensajeLimpio(Throwable e) {
+		Throwable t = e;
+		while (t.getCause() != null) {
+			t = t.getCause();
+		}
+		String m = t.getMessage();
+		if (m == null) {
+			return "error desconocido";
+		}
+		int idx = m.indexOf("\n");
+		return idx > 0 ? m.substring(0, idx).replaceFirst("^ERROR:\\s*", "") : m;
 	}
 
 	@Override

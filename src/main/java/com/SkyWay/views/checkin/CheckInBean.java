@@ -45,7 +45,13 @@ public class CheckInBean implements Serializable {
 
     private List<InfoAsientoReservaDTO> listaAsientos = new ArrayList<>();
     private List<TicketInfo> listaTicketsBoardingPass = new ArrayList<>();
-    private int intentosFallidos = 0;
+
+    private static final int MAX_INTENTOS = 5;
+    private static final String ATTR_INTENTOS = "checkin.intentosFallidos";
+    private static final String ATTR_BLOQUEO_HASTA = "checkin.bloqueoHasta";
+
+    // true solo cuando idReserva/idItinerario fueron validados por el servidor (PNR+apellido/RUT o dueno autenticado).
+    private boolean reservaVerificada = false;
 
     @PostConstruct
     public void init() {
@@ -55,25 +61,39 @@ public class CheckInBean implements Serializable {
             String paramReserva = params.get("idReserva");
             String paramItinerario = params.get("idItinerario");
 
-            if (paramReserva != null && !paramReserva.isBlank()) {
-                this.idReserva = Integer.parseInt(paramReserva);
-            }
-            if (paramItinerario != null && !paramItinerario.isBlank()) {
-                this.idItinerario = Integer.parseInt(paramItinerario);
+            // Los IDs de la URL SOLO se aceptan si el usuario autenticado es dueno de esa reserva y el itinerario
+            // pertenece a ella. Un anonimo debe pasar por la busqueda manual (PNR + apellido/RUT).
+            try {
+                if (paramReserva != null && !paramReserva.isBlank() && paramItinerario != null && !paramItinerario.isBlank()) {
+                    Integer r = Integer.parseInt(paramReserva.trim());
+                    Integer it = Integer.parseInt(paramItinerario.trim());
+                    String rut = com.SkyWay.util.UsuarioSesion.rutAutenticado();
+                    if (reservaService.esDuenoDeReserva(r, rut) && reservaService.itinerarioPerteneceAReserva(r, it)) {
+                        this.idReserva = r;
+                        this.idItinerario = it;
+                        this.reservaVerificada = true;
+                    } else {
+                        Logger.logWarn("Check-in: parametros de URL rechazados (no es dueno o itinerario ajeno).");
+                    }
+                }
+            } catch (NumberFormatException e) {
+                Logger.logWarn("Check-in: parametros de URL invalidos.");
             }
         }
 
-        if (idReserva != null && idItinerario != null) {
+        if (reservaVerificada && idReserva != null && idItinerario != null) {
             this.pasoActual = 1;
             cargarDatosCheckIn();
         } else {
+            this.idReserva = null;
+            this.idItinerario = null;
             this.pasoActual = 0;
         }
     }
 
     public void cargarDatosCheckIn() {
         try {
-            if (idReserva != null && idItinerario != null) {
+            if (reservaVerificada && idReserva != null && idItinerario != null) {
                 // 1. Evaluar ventana temporal contra la hora del vuelo
                 this.fechaSalidaVuelo = reservaService.obtenerFechaSalidaVuelo(idItinerario);
                 this.estadoVentanaCheckIn = ValidadorCheckIn.validarEstadoVentanaCheckIn(this.fechaSalidaVuelo);
@@ -103,53 +123,75 @@ public class CheckInBean implements Serializable {
     }
 
     public void buscarReservaManual() {
-        if (intentosFallidos >= 5) {
-            FacesContext.getCurrentInstance().addMessage(null,
+        FacesContext ctx = FacesContext.getCurrentInstance();
+        // Contador en la SESION HTTP (no en el bean de vista): recargar la pagina no lo reinicia.
+        Map<String, Object> sesion = ctx.getExternalContext().getSessionMap();
+        Long bloqueoHasta = (Long) sesion.get(ATTR_BLOQUEO_HASTA);
+        if (bloqueoHasta != null && System.currentTimeMillis() < bloqueoHasta) {
+            ctx.addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR, "Límite Superado", "Has superado el número máximo de intentos. Intenta nuevamente más tarde."));
             return;
         }
+        // TODO: rate limiting por IP en el servidor (filtro/bucket4j): el contador de sesion se evade con cookies nuevas.
 
         if (codigoReservaBuscado == null || codigoReservaBuscado.isBlank() ||
                 apellidoORutBuscado == null || apellidoORutBuscado.isBlank()) {
-            FacesContext.getCurrentInstance().addMessage(null,
+            ctx.addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_WARN, "Campos Incompletos", "Debes ingresar el código de reserva y tu apellido o RUT."));
             return;
         }
 
         try {
-            this.idReserva = reservaService.buscarIdPorPnrYPasajero(
+            Integer encontrada = reservaService.buscarIdPorPnrYPasajero(
                     codigoReservaBuscado.trim(),
                     apellidoORutBuscado.trim()
             );
 
-            if (this.idReserva == null) {
-                intentosFallidos++;
-                FacesContext.getCurrentInstance().addMessage(null,
+            if (encontrada == null) {
+                int intentos = sesion.get(ATTR_INTENTOS) == null ? 0 : (Integer) sesion.get(ATTR_INTENTOS);
+                intentos++;
+                sesion.put(ATTR_INTENTOS, intentos);
+                if (intentos >= MAX_INTENTOS) {
+                    sesion.put(ATTR_BLOQUEO_HASTA, System.currentTimeMillis() + 15 * 60 * 1000L);
+                    sesion.put(ATTR_INTENTOS, 0);
+                }
+                ctx.addMessage(null,
                         new FacesMessage(FacesMessage.SEVERITY_ERROR, "Datos Incorrectos", "No se encontró ninguna reserva activa que coincida con los datos indicados."));
                 return;
             }
 
-            intentosFallidos = 0;
-            this.idItinerario = reservaService.obtenerIdItinerarioPorReserva(this.idReserva);
+            sesion.put(ATTR_INTENTOS, 0);
+            Integer itinerario = reservaService.obtenerIdItinerarioPorReserva(encontrada);
 
-            if (this.idItinerario == null) {
-                FacesContext.getCurrentInstance().addMessage(null,
+            if (itinerario == null || !reservaService.itinerarioPerteneceAReserva(encontrada, itinerario)) {
+                ctx.addMessage(null,
                         new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error de Reserva", "La reserva no tiene un itinerario válido asignado."));
                 return;
             }
+
+            // Recien aqui el servidor da por verificada la reserva (IDs derivados en servidor, no del cliente).
+            this.idReserva = encontrada;
+            this.idItinerario = itinerario;
+            this.reservaVerificada = true;
 
             cargarDatosCheckIn();
             this.pasoActual = 1;
 
         } catch (Exception e) {
             Logger.logError("Error buscando reserva de check-in manual: " + e.getMessage());
-            FacesContext.getCurrentInstance().addMessage(null,
+            ctx.addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error de Búsqueda", "No fue posible encontrar la reserva. Verifica los datos ingresados."));
         }
     }
 
     public void siguientePaso() {
         // Bloqueo de seguridad en el backend
+        if (!reservaVerificada || idReserva == null || idItinerario == null) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Reserva no verificada", "Busca tu reserva con el código y tu apellido o RUT."));
+            this.pasoActual = 0;
+            return;
+        }
         if (!isCheckInHabilitado()) {
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR, "Check-In Bloqueado", "El Check-In web no se encuentra disponible actualmente para esta reserva."));
@@ -206,10 +248,12 @@ public class CheckInBean implements Serializable {
 
     // Getters y Setters
     public Integer getIdReserva() { return idReserva; }
-    public void setIdReserva(Integer idReserva) { this.idReserva = idReserva; }
+    // No-op deliberado (lo exige <f:viewParam>): idReserva solo lo fija el servidor tras verificar la reserva.
+    public void setIdReserva(Integer ignorado) { }
 
     public Integer getIdItinerario() { return idItinerario; }
-    public void setIdItinerario(Integer idItinerario) { this.idItinerario = idItinerario; }
+    // No-op deliberado (lo exige <f:viewParam>): idItinerario solo lo fija el servidor tras verificar la reserva.
+    public void setIdItinerario(Integer ignorado) { }
 
     public String getCodigoReservaBuscado() { return codigoReservaBuscado; }
     public void setCodigoReservaBuscado(String codigoReservaBuscado) { this.codigoReservaBuscado = codigoReservaBuscado; }
