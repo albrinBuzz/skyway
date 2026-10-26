@@ -3,7 +3,6 @@ package com.SkyWay.util;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.Arrays;
 
 public class PnrGenerator {
 
@@ -46,7 +45,6 @@ public class PnrGenerator {
                 pnrChars[j] = temp;
             }
 
-            Logger.logInfo(Arrays.toString(pnrChars));
             return new String(pnrChars);
 
         } catch (NoSuchAlgorithmException e) {
@@ -61,7 +59,6 @@ public class PnrGenerator {
             int index = SECURE_RANDOM.nextInt(ALPHANUMERIC_CHARSET.length());
             sb.append(ALPHANUMERIC_CHARSET.charAt(index));
         }
-        Logger.logInfo(sb.toString());
         return sb.toString();
     }
 

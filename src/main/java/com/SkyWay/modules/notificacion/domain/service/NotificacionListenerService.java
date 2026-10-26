@@ -15,6 +15,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.HtmlUtils;
 
 import javax.sql.DataSource;
 import java.sql.*;
@@ -114,6 +115,10 @@ public class NotificacionListenerService {
             String email = rs.getString("correo_electronico");
             String titulo = rs.getString("titulo");
             String mensaje = rs.getString("mensaje");
+            // Version escapada para el cuerpo HTML; el asunto (texto plano) solo se sanea de saltos de linea.
+            String tituloHtml = HtmlUtils.htmlEscape(titulo == null ? "" : titulo);
+            String mensajeHtml = HtmlUtils.htmlEscape(mensaje == null ? "" : mensaje).replace("\n", "<br>");
+            String asunto = titulo == null ? "" : titulo.replaceAll("[\\r\\n]+", " ");
 
             // Mostrar
             Logger.logInfo("📬 Para: " + email);
@@ -127,7 +132,7 @@ public class NotificacionListenerService {
 
             helper.setFrom("ferremascontra78@gmail.com");
             helper.setTo(email);
-            helper.setSubject(titulo);
+            helper.setSubject(asunto);
 
             String html = """
         <div style="font-family: 'Segoe UI', Helvetica, Arial, sans-serif; background:#e8edf3; padding:30px;">
@@ -148,11 +153,11 @@ public class NotificacionListenerService {
                 <div style="padding:30px 25px;">
 
                     <h2 style="color:#0a1d3b; margin-top:0; text-align:center; font-size:22px;">
-                        """ + titulo + """
+                        """ + tituloHtml + """
                     </h2>
 
                     <p style="font-size:15px; color:#333; line-height:1.6;">
-                        """ + mensaje + """
+                        """ + mensajeHtml + """
                     </p>
 
                     <!-- Tarjeta elegante de información -->

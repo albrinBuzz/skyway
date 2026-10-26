@@ -12,6 +12,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.HtmlUtils;
 
 @Service
 public class EmailReservaService {
@@ -56,9 +57,10 @@ public class EmailReservaService {
             helper.setTo(emailDestino);
             helper.setSubject("✈️ ¡Reserva Confirmada! Tu E-Ticket y Pases de Abordar SkyWay [PNR: " + reserva.getCodigoReserva() + "]");
 
-            String nombrePasajero = (usr != null) ? usr.getNombre() + " " + usr.getApellido() : "Estimado/a Pasajero/a";
-            String rut = (pax != null) ? pax.getRut() : "N/A";
-            String pnr = (reserva.getCodigoReserva() != null) ? reserva.getCodigoReserva() : "S/PNR";
+            // Todo dato controlado por el comprador se escapa antes de ir al HTML (evita phishing con remitente oficial).
+            String nombrePasajero = HtmlUtils.htmlEscape((usr != null) ? usr.getNombre() + " " + usr.getApellido() : "Estimado/a Pasajero/a");
+            String rut = HtmlUtils.htmlEscape((pax != null && pax.getRut() != null) ? pax.getRut() : "N/A");
+            String pnr = HtmlUtils.htmlEscape((reserva.getCodigoReserva() != null) ? reserva.getCodigoReserva() : "S/PNR");
 
             // 3. Plantilla HTML profesional orientada a invitados y múltiples pasajeros
             String htmlTemplate = """
