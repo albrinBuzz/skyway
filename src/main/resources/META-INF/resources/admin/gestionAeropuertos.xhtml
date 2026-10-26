@@ -376,7 +376,13 @@
 
                 if (cercano) {
                     warningBox.style.display = "block";
-                    warningBox.innerHTML = "⚠️ <b>Aeropuerto existente cerca:</b><br/>" + cercano.nombre + " (" + cercano.iata + ") a " + menorDist.toFixed(1) + " km de este punto.";
+                    warningBox.textContent = "";
+                    var b = document.createElement("b");
+                    b.textContent = "Aeropuerto existente cerca:";
+                    warningBox.appendChild(document.createTextNode("\u26A0\uFE0F "));
+                    warningBox.appendChild(b);
+                    warningBox.appendChild(document.createElement("br"));
+                    warningBox.appendChild(document.createTextNode(cercano.nombre + " (" + cercano.iata + ") a " + menorDist.toFixed(1) + " km de este punto."));
                 } else {
                     warningBox.style.display = "none";
                 }
