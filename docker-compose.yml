@@ -11,10 +11,10 @@ services:
     environment:
       POSTGRES_DB: aerolinea_db
       POSTGRES_USER: ${DB_USERNAME:-aerolinea_user}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-aerolinea_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?define DB_PASSWORD en .env}
       TZ: ${TZ:-America/Santiago}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./dataBase/V3/dump.sql:/docker-entrypoint-initdb.d/01_dump.sql
@@ -35,6 +35,9 @@ services:
       SPRING_DATASOURCE_URL: ${DB_URL}
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      WEBPAY_COMMERCE_CODE: ${WEBPAY_COMMERCE_CODE}
+      WEBPAY_API_KEY: ${WEBPAY_API_KEY}
+      WEBPAY_INTEGRATION_TYPE: ${WEBPAY_INTEGRATION_TYPE:-TEST}
       MERCADOPAGO_ACCESS_TOKEN: ${MERCADOPAGO_ACCESS_TOKEN}
       PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID}
       PAYPAL_CLIENT_SECRET: ${PAYPAL_CLIENT_SECRET}

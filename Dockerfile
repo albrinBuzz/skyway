@@ -24,6 +24,8 @@ FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
 COPY --from=builder /app/target/*.jar app.jar
+RUN addgroup -S app && adduser -S app -G app && chown app:app /app/app.jar
+USER app
 
 ENV PORT=8080
 EXPOSE 8080
