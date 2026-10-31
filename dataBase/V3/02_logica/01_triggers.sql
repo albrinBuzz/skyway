@@ -553,6 +553,19 @@ ALTER TABLE Itinerario_Vuelo DISABLE TRIGGER trg_set_fecha_itinerario;
 ALTER TABLE Itinerario_Vuelo DISABLE TRIGGER trg_set_orden_itinerario_vuelo;*/
 
 
+CREATE OR REPLACE FUNCTION fn_bloquear_modificacion_log()
+    RETURNS TRIGGER AS $$
+BEGIN
+    RAISE EXCEPTION 'Operación no permitida: Los registros de la tabla Log_Auditoria son inmutables.';
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_proteger_log_auditoria
+    BEFORE UPDATE OR DELETE ON Log_Auditoria
+    FOR EACH ROW
+EXECUTE FUNCTION fn_bloquear_modificacion_log();
+
 
 
 ALTER TABLE notificacion

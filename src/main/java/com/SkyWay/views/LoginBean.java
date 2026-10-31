@@ -2,8 +2,8 @@ package com.SkyWay.views;
 
 import java.io.IOException;
 
+import com.SkyWay.modules.auditoria.application.LogAuditoriaService;
 import com.SkyWay.util.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -17,7 +17,6 @@ import org.springframework.security.web.context.SecurityContextRepository;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.faces.application.FacesMessage;
-import jakarta.faces.context.ExternalContext;
 import jakarta.faces.context.FacesContext;
 import jakarta.inject.Named;
 import jakarta.servlet.FilterChain;
@@ -35,28 +34,25 @@ public class LoginBean {
 
     @Autowired
     private AuthenticationManager authenticationManager;
-    
+
     @Autowired
-    private  AuthenticationSuccessHandler auth;
+    private AuthenticationSuccessHandler auth;
 
     @Autowired
     private FilterChain chain;
-    
-    @Autowired
-    private  SecurityContextRepository securityContextRepository;
-    
-    //@Autowired
-    //private final SecurityContextHolderStrategy securityContextHolderStrategy = SecurityContextHolder.getContextHolderStrategy();
 
-    
-    
     @Autowired
-    HttpServletRequest request;
-    
+    private SecurityContextRepository securityContextRepository;
+
     @Autowired
-    HttpServletResponse response;
-    
-    // Getters y Setters
+    private LogAuditoriaService logAuditoriaService;
+
+    @Autowired
+    private HttpServletRequest request;
+
+    @Autowired
+    private HttpServletResponse response;
+
     public String getUsername() {
         return username;
     }
@@ -75,47 +71,96 @@ public class LoginBean {
 
     @PostConstruct
     public void init() {
-        // Verificar si ya existe una sesión activa
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated()) {
-            // Si ya está autenticado, redirigir a la página de inicio
-
+            // Usuario ya autenticado
         }
     }
-    
-    // Método de login
+
     public void login() {
         try {
-            // Crear un token de autenticación con las credenciales del usuario
             UsernamePasswordAuthenticationToken authenticationToken =
                     new UsernamePasswordAuthenticationToken(username, password);
 
-            // Autenticar el token con el AuthenticationManager
             Authentication authentication = authenticationManager.authenticate(authenticationToken);
 
             if (authentication.isAuthenticated()) {
-                // Configurar el contexto de seguridad
                 SecurityContext context = SecurityContextHolder.getContext();
                 context.setAuthentication(authentication);
                 securityContextRepository.saveContext(context, request, response);
 
-                // Manejo exitoso de autenticación
                 auth.onAuthenticationSuccess(request, response, chain, authentication);
 
-                //SavedRequest savedRequest = new HttpSessionRequestCache().getRequest(request, response);
+                // 📝 REGISTRO EN AUDITORÍA: INICIO DE SESIÓN EXITOSO (DETALLE COMPLETO)
+                try {
+                    String detalleExito = String.format(
+                            "Autenticación completada | Usuario: '%s' | Principal: '%s' | Autoridades/Roles: %s | Detalles Autenticación: %s",
+                            username,
+                            authentication.getName(),
+                            authentication.getAuthorities(),
+                            authentication.getDetails() != null ? authentication.getDetails().toString() : "N/A"
+                    );
 
+                    logAuditoriaService.registrarLog(
+                            username,
+                            "LOGIN_EXITOSO",
+                            "Usuario",
+                            null,
+                            detalleExito,
+                            request
+                    );
+                } catch (Exception ex) {
+                    Logger.logError("Error al registrar log de auditoría (Login Exitoso): " + ex.getMessage());
+                }
 
-
-                Logger.logInfo("Autenticacion exitosas");
+                Logger.logInfo("Autenticación exitosa");
                 redigir(request, response);
-                //redigir();
             }
         } catch (BadCredentialsException e) {
-            // Error específico para credenciales incorrectas
+            // 📝 REGISTRO EN AUDITORÍA: INTENTO FALLIDO DE CREDENCIALES
+            try {
+                String detalleFallido = String.format(
+                        "Fallo de Autenticación | Credenciales Erróneas | Usuario Intentado: '%s' | Longitud Clave: %d caracteres | Causa: BadCredentialsException",
+                        username,
+                        password != null ? password.length() : 0
+                );
+
+                logAuditoriaService.registrarLog(
+                        username,
+                        "INTENTO_LOGIN_FALLIDO",
+                        "Usuario",
+                        null,
+                        detalleFallido,
+                        request
+                );
+            } catch (Exception ex) {
+                Logger.logError("Error al registrar log de auditoría (Credenciales erróneas): " + ex.getMessage());
+            }
+
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR, "Credenciales incorrectas", "Nombre de usuario o contraseña incorrectos"));
         } catch (Exception e) {
-            // Manejo general de errores
+            // 📝 REGISTRO EN AUDITORÍA: ERROR NO CONTROLADO
+            try {
+                String detalleError = String.format(
+                        "Excepción Grave en Autenticación | Usuario Intentado: '%s' | Tipo Excepción: %s | Mensaje: %s",
+                        username,
+                        e.getClass().getName(),
+                        e.getMessage()
+                );
+
+                logAuditoriaService.registrarLog(
+                        username,
+                        "ERROR_AUTENTICACION",
+                        "Usuario",
+                        null,
+                        detalleError,
+                        request
+                );
+            } catch (Exception ex) {
+                Logger.logError("Error al registrar log de excepción de Login: " + ex.getMessage());
+            }
+
             System.out.println(e.getMessage());
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error de autenticación", "Hubo un problema con el login"));
@@ -123,39 +168,19 @@ public class LoginBean {
     }
 
     private void redigir(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // Guardar el vuelo seleccionado en el contexto de la sesión o como atributo en el bean
         HttpSessionRequestCache requestCache = new HttpSessionRequestCache();
         SavedRequest savedRequest = requestCache.getRequest(request, response);
 
-        // Variable para la URL de redirección
         String redirectUrl = "/";
 
-        // Verificar si hay una URL guardada en la sesión (cuando la solicitud fue interceptada)
         if (savedRequest != null) {
-            // Obtener la URL original a la que el usuario quería acceder
             redirectUrl = savedRequest.getRedirectUrl();
-
-            // Registrar información detallada sobre la redirección
-            Logger.logInfo("Redirección a URL original detectada.");
-            Logger.logInfo("URL original (guardada en sesión): " + redirectUrl);
-            Logger.logInfo("Método HTTP original: " + savedRequest.getMethod());
-            Logger.logInfo("Query String original: " + savedRequest.getRedirectUrl());
-            Logger.logInfo("Context Path: " + request.getContextPath());
+            Logger.logInfo("Redirección a URL original detectada: " + redirectUrl);
         } else {
-            // Si no hay URL guardada, redirigir al URI actual
             redirectUrl = request.getRequestURI();
-
-            // Registrar información detallada sobre la redirección cuando no hay URL guardada
-            Logger.logInfo("No se detectó URL original guardada en sesión.");
-            Logger.logInfo("Redirigiendo a la URI actual: " + redirectUrl);
+            Logger.logInfo("No se detectó URL original guardada. Redirigiendo a: " + redirectUrl);
         }
 
-        // Registrar más información sobre la solicitud
-        Logger.logInfo("Redirigiendo a URL final: " + redirectUrl);
-        Logger.logInfo("Request URI: " + request.getRequestURI());
-        Logger.logInfo("Request URL: " + request.getRequestURL().toString());
-
-        // Realizar la redirección a la URL correspondiente
         try {
             FacesContext.getCurrentInstance().getExternalContext().redirect(redirectUrl);
         } catch (IOException e) {
@@ -164,13 +189,33 @@ public class LoginBean {
         }
     }
 
-
-
-    // Método de logout
     public String logout() {
-        SecurityContextHolder.clearContext();  // Limpiar el contexto de seguridad
+        Authentication authContext = SecurityContextHolder.getContext().getAuthentication();
+        if (authContext != null && authContext.isAuthenticated()) {
+            try {
+                String detalleLogout = String.format(
+                        "Cierre de sesión | Usuario: '%s' | Principal: '%s' | Roles: %s",
+                        username != null ? username : authContext.getName(),
+                        authContext.getName(),
+                        authContext.getAuthorities()
+                );
+
+                logAuditoriaService.registrarLog(
+                        authContext.getName(),
+                        "LOGOUT",
+                        "Usuario",
+                        null,
+                        detalleLogout,
+                        request
+                );
+            } catch (Exception ex) {
+                Logger.logError("Error al registrar log de auditoría (Logout): " + ex.getMessage());
+            }
+        }
+
+        SecurityContextHolder.clearContext();
         FacesContext.getCurrentInstance().getExternalContext().invalidateSession();
         request.getSession().invalidate();
-        return "login.xhtml";  // Redirige al login
+        return "login.xhtml";
     }
 }

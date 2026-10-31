@@ -697,16 +697,36 @@ CREATE TABLE Notificacion (
 
 
 
+-- 1. Eliminar la tabla Log_Auditoria si ya existe (para liberar la dependencia del ENUM)
+DROP TABLE IF EXISTS Log_Auditoria CASCADE;
+
+-- 2. Eliminar el tipo ENUM si ya existe en la base de datos
+DROP TYPE IF EXISTS tipo_nivel_log CASCADE;
+
+-- 1. Crear tipo ENUM para nivel de severidad del evento
+CREATE TYPE tipo_nivel_log AS ENUM ('INFO', 'WARN', 'ERROR', 'SECURITY');
+
+-- 2. Tabla de Auditoría Avanzada
 CREATE TABLE IF NOT EXISTS Log_Auditoria (
-                                             ID_LOG INT PRIMARY KEY DEFAULT nextval('log_auditoria_seq'),
-                                             Fecha_Hora TIMESTAMP NOT NULL DEFAULT NOW(),
-                                             Rut_Usuario VARCHAR(12),
-                                             Accion VARCHAR(100) NOT NULL, -- ej. 'CANCELACION_RESERVA', 'CAMBIO_ASIENTO'
-                                             Tabla_Afectada VARCHAR(50),
-                                             ID_Registro_Afectado INT,
-                                             Detalle TEXT,
-                                             Direccion_IP VARCHAR(45)
+                                             id_log BIGSERIAL PRIMARY KEY,
+                                             fecha_hora TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+                                             rut_usuario VARCHAR(12) REFERENCES Usuario(RUT) ON DELETE SET NULL,
+                                             accion VARCHAR(100) NOT NULL, -- ej. 'LOGIN_EXITOSO', 'CAMBIO_ASIENTO', 'ANULACION_RESERVA'
+                                             nivel tipo_nivel_log NOT NULL DEFAULT 'INFO',
+                                             tabla_afectada VARCHAR(50),
+                                             id_registro_afectado INT,
+                                             datos_anteriores JSONB, -- Estado antes del cambio (para UPDATE/DELETE)
+                                             datos_nuevos JSONB,     -- Estado nuevo tras el cambio
+                                             detalle TEXT,
+                                             direccion_ip VARCHAR(45),
+                                             user_agent VARCHAR(255)  -- Navegador/Dispositivo (Chrome, Firefox, Mobile App, etc.)
 );
+
+-- 3. Índices Estratégicos para Consultas Rápidas y Paneles de Control (Dashboards)
+CREATE INDEX idx_log_auditoria_fecha ON Log_Auditoria(fecha_hora DESC);
+CREATE INDEX idx_log_auditoria_rut ON Log_Auditoria(rut_usuario);
+CREATE INDEX idx_log_auditoria_accion ON Log_Auditoria(accion);
+CREATE INDEX idx_log_auditoria_datos_nuevos ON Log_Auditoria USING gin (datos_nuevos); -- Búsquedas avanzadas en JSONB
 
 
 /*CREATE TABLE Seguimiento_Vuelo (
@@ -1304,6 +1324,19 @@ ALTER TABLE Itinerario_Vuelo DISABLE TRIGGER trg_set_fecha_itinerario;
 
 ALTER TABLE Itinerario_Vuelo DISABLE TRIGGER trg_set_orden_itinerario_vuelo;*/
 
+
+CREATE OR REPLACE FUNCTION fn_bloquear_modificacion_log()
+    RETURNS TRIGGER AS $$
+BEGIN
+    RAISE EXCEPTION 'Operación no permitida: Los registros de la tabla Log_Auditoria son inmutables.';
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_proteger_log_auditoria
+    BEFORE UPDATE OR DELETE ON Log_Auditoria
+    FOR EACH ROW
+EXECUTE FUNCTION fn_bloquear_modificacion_log();
 
 
 
@@ -1903,6 +1936,8 @@ CREATE OR REPLACE FUNCTION fn_getticket(
     RETURNS TABLE(
                      codigo_pnr CHARACTER VARYING,
                      numero_vuelo CHARACTER VARYING,
+                     origen_tramo CHARACTER VARYING,
+                     destino_tramo CHARACTER VARYING,
                      hora_salida TIMESTAMP WITHOUT TIME ZONE,
                      hora_llegada TIMESTAMP WITHOUT TIME ZONE,
                      codigo_puerta CHARACTER VARYING,
@@ -1921,6 +1956,8 @@ BEGIN
         SELECT DISTINCT ON (vl.id_vuelo, ast.id_asiento)
             rsv.codigo_reserva AS codigo_pnr,
             vl.numero_vuelo,
+            a_orig.codigo_iata AS origen_tramo,
+            a_dest.codigo_iata AS destino_tramo,
             sgm.hora_salida,
             sgm.hora_llegada,
             COALESCE(prta.codigo_puerta, 'TBD') AS codigo_puerta,
@@ -1931,18 +1968,19 @@ BEGIN
             'SKYWAY-' || rsv.codigo_reserva || '-' || vl.numero_vuelo || '-' || ast.numero_asiento || '-' || p.rut AS codigo_qr
         FROM reserva rsv
                  JOIN reserva_asiento rsva ON rsva.id_reserva = rsv.id_reserva
-                 JOIN itinerario_vuelo itv ON itv.id_vuelo = rsva.id_vuelo
+                 JOIN itinerario_vuelo itv ON itv.id_vuelo = rsva.id_vuelo AND itv.id_itinerario = p_iditinerario
                  JOIN pasajero p ON p.rut = rsva.rut
                  JOIN usuario us ON us.rut = p.rut
                  JOIN vuelo vl ON vl.id_vuelo = rsva.id_vuelo
                  JOIN segmento_vuelo sgm ON sgm.id_vuelo = vl.id_vuelo
+                 JOIN aeropuerto a_orig ON a_orig.id_aeropuerto = sgm.id_aeropuerto_origen
+                 JOIN aeropuerto a_dest ON a_dest.id_aeropuerto = sgm.id_aeropuerto_destino
                  LEFT JOIN asignacion_puerta asgp ON asgp.id_segmento = sgm.id_segmento
                  LEFT JOIN puerta_embarque prta ON prta.id_puerta = asgp.id_puerta
                  LEFT JOIN asiento ast ON ast.id_asiento = rsva.id_asiento
                  LEFT JOIN clase_asiento clas ON clas.id_clase = ast.id_clase
         WHERE (rsv.rut_pasajero = p_rut_pasajero OR rsva.rut = p_rut_pasajero)
           AND rsv.id_reserva = p_id_reserva
-          AND itv.id_itinerario = p_iditinerario
         ORDER BY vl.id_vuelo, ast.id_asiento, sgm.orden_segmento ASC;
 END;
 $$;
@@ -2347,6 +2385,61 @@ BEGIN
 
 END;
 $sp_cancelar$;
+
+
+
+
+
+
+
+-- 3. Crear el procedimiento con los 10 parámetros
+CREATE OR REPLACE PROCEDURE sp_registrar_log_auditoria(
+    p_rut_usuario VARCHAR(12),
+    p_accion VARCHAR(100),
+    p_nivel VARCHAR(10),
+    p_tabla_afectada VARCHAR(50),
+    p_id_registro_afectado INT,
+    p_datos_anteriores JSONB DEFAULT NULL,
+    p_datos_nuevos JSONB DEFAULT NULL,
+    p_detalle TEXT DEFAULT NULL,
+    p_direccion_ip VARCHAR(45) DEFAULT NULL,
+    p_user_agent VARCHAR(255) DEFAULT NULL
+)
+    LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_nivel tipo_nivel_log;
+BEGIN
+    v_nivel := COALESCE(p_nivel::tipo_nivel_log, 'INFO'::tipo_nivel_log);
+
+    INSERT INTO Log_Auditoria (
+        fecha_hora,
+        rut_usuario,
+        accion,
+        nivel,
+        tabla_afectada,
+        id_registro_afectado,
+        datos_anteriores,
+        datos_nuevos,
+        detalle,
+        direccion_ip,
+        user_agent
+    )
+    VALUES (
+               NOW(),
+               p_rut_usuario,
+               p_accion,
+               v_nivel,
+               p_tabla_afectada,
+               p_id_registro_afectado,
+               p_datos_anteriores,
+               p_datos_nuevos,
+               p_detalle,
+               p_direccion_ip,
+               p_user_agent
+           );
+END;
+$$;
 
 -- =========================================================================
 -- 1. MAESTRO DE CONTINENTES
@@ -3824,3 +3917,4 @@ FROM itinerario it
 WHERE it.hora_salida >= NOW()
   AND it.hora_salida < NOW() + INTERVAL '7 days'
 ORDER BY it.hora_salida ASC;
+

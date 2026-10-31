@@ -645,126 +645,128 @@
                           showEffect="fade"
                           hideEffect="fade"
                           responsive="true"
-                          width="860"
+                          fitViewport="true"
+                          width="880"
                           styleClass="skyway-dialog dialog-boarding">
 
-                    <!-- Contenedor con Scroll de marco oscuro -->
-                    <div class="printable-area ticket-container" style="max-height: 72vh; overflow-y: auto; overflow-x: hidden; padding: 12px; background: #080E1A !important;">
+                    <!-- Contenedor con Scroll responsivo -->
+                    <div class="printable-area ticket-container">
                         <h:panelGroup rendered="#{not empty perfilPasajeroView.ticketInfos}" layout="block">
                             <ui:repeat value="#{perfilPasajeroView.ticketInfos}" var="ticket">
 
-                                <!-- TARJETA EMBARQUE DARK THEME CORPORATIVO SKYWAY -->
-                                <div class="boarding-pass" style="display: flex !important; flex-direction: row !important; height: auto !important; min-height: 250px !important; max-height: none !important; width: 100% !important; background-color: #101B33 !important; color: #FFFFFF !important; border-radius: 10px !important; box-shadow: 0 6px 20px rgba(0,0,0,0.5) !important; border: 1px solid #1E3A5C !important; overflow: visible !important; font-family: 'Segoe UI', Arial, sans-serif !important; margin-bottom: 24px !important;">
+                                <!-- TARJETA DE EMBARQUE DARK THEME RESPONSIVE -->
+                                <div class="boarding-pass">
 
                                     <!-- SECCIÓN PRINCIPAL -->
-                                    <div class="main-section" style="flex: 3 !important; padding: 20px !important; border-right: 2px dashed #1E3A5C !important; background-color: #101B33 !important; height: auto !important; min-height: 100% !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; overflow: visible !important;">
+                                    <div class="main-section">
 
                                         <!-- CABECERA DE LA AEROLÍNEA -->
-                                        <div class="pass-header" style="display: flex !important; justify-content: space-between !important; align-items: center !important; padding-bottom: 8px !important; margin-bottom: 14px !important; border-bottom: 2px solid #1E3A5C !important;">
-                                            <div class="airline-brand" style="color: #FFFFFF !important; font-weight: 900 !important; font-size: 1.15rem !important; letter-spacing: 1px !important;">
-                                                <i class="pi pi-send me-1" style="color: #38BDF8 !important;"></i> SKYWAY AIRLINES
+                                        <div class="pass-header">
+                                            <div class="airline-brand">
+                                                <i class="pi pi-send me-1"></i> SKYWAY AIRLINES
                                             </div>
-                                            <div style="display: flex !important; align-items: center !important; gap: 8px !important;">
-                                                <span class="pnr-badge" style="background-color: #1E293B !important; color: #FFFFFF !important; border: 1px solid #38BDF8 !important; padding: 3px 8px !important; border-radius: 4px !important; font-weight: 700 !important; font-size: 0.75rem !important; font-family: monospace !important;">
+                                            <div class="pass-meta-header">
+                                                <span class="pnr-badge">
                                                     PNR: #{ticket.codigoPnr}
                                                 </span>
-                                                <span class="pass-type" style="font-weight: 800 !important; font-size: 0.8rem !important; color: #38BDF8 !important; letter-spacing: 0.5px !important;">TARJETA DE EMBARQUE</span>
+                                                <span class="pass-type">TARJETA DE EMBARQUE</span>
                                             </div>
                                         </div>
 
                                         <!-- PASAJERO Y VUELO -->
-                                        <div class="pass-row" style="display: flex !important; justify-content: space-between !important; margin-bottom: 12px !important;">
+                                        <div class="pass-row">
                                             <div class="pass-col">
-                                                <span class="pass-label" style="display: block !important; font-size: 0.65rem !important; font-weight: 800 !important; color: #94A3B8 !important; letter-spacing: 0.5px !important;">PASAJERO</span>
-                                                <span class="pass-value passenger-name" style="font-size: 1.1rem !important; font-weight: 800 !important; color: #FFFFFF !important; text-transform: uppercase !important;">#{ticket.nombre}</span>
+                                                <span class="pass-label">PASAJERO</span>
+                                                <span class="pass-value passenger-name">#{ticket.nombre}</span>
                                             </div>
-                                            <div class="pass-col" style="text-align: right !important;">
-                                                <span class="pass-label" style="display: block !important; font-size: 0.65rem !important; font-weight: 800 !important; color: #94A3B8 !important; letter-spacing: 0.5px !important;">VUELO</span>
-                                                <span class="pass-value flight-number" style="font-size: 1.25rem !important; font-weight: 900 !important; color: #FFFFFF !important; font-family: monospace !important;">#{ticket.numeroVuelo}</span>
+                                            <div class="pass-col pass-col-right">
+                                                <span class="pass-label">VUELO</span>
+                                                <span class="pass-value flight-number">#{ticket.numeroVuelo}</span>
                                             </div>
                                         </div>
 
-                                        <!-- BANNER DE RUTA Y HORARIOS DE ALTA VISIBILIDAD -->
-                                        <div class="route-banner" style="background: rgba(30, 58, 92, 0.4) !important; border: 1px solid #1E3A5C !important; border-radius: 6px !important; padding: 10px 14px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; margin-bottom: 14px !important;">
-                                            <div>
-                                                <span class="pass-label" style="display: block !important; font-size: 0.65rem !important; font-weight: 800 !important; color: #94A3B8 !important;">RUTA DEL VUELO</span>
-                                                <span class="route-text" style="font-size: 1.15rem !important; font-weight: 900 !important; color: #FFFFFF !important;">
-                                                    #{ticket.origenTramo} <i class="pi pi-arrow-right mx-1 route-arrow" style="font-size: 0.85rem !important; color: #38BDF8 !important;"></i> #{ticket.destinoTramo}
+                                        <!-- BANNER DE RUTA Y HORARIOS -->
+                                        <div class="route-banner">
+                                            <div class="route-block">
+                                                <span class="pass-label">RUTA DEL VUELO</span>
+                                                <span class="route-text">
+                                                    #{ticket.origenTramo} <i class="pi pi-arrow-right mx-1 route-arrow"></i> #{ticket.destinoTramo}
                                                 </span>
                                             </div>
-                                            <div style="text-align: center !important;">
-                                                <span class="pass-label" style="display: block !important; font-size: 0.65rem !important; font-weight: 800 !important; color: #94A3B8 !important;">SALIDA</span>
-                                                <h:outputText value="#{ticket.horaSalida}" styleClass="time-text" style="font-size: 0.95rem !important; font-weight: 800 !important; color: #FFFFFF !important; display: block !important;">
+                                            <div class="time-block time-salida">
+                                                <span class="pass-label">SALIDA</span>
+                                                <h:outputText value="#{ticket.horaSalida}" styleClass="time-text">
                                                     <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/Santiago"/>
                                                 </h:outputText>
                                             </div>
-                                            <div style="text-align: right !important;">
-                                                <span class="pass-label" style="display: block !important; font-size: 0.65rem !important; font-weight: 800 !important; color: #94A3B8 !important;">LLEGADA</span>
-                                                <h:outputText value="#{ticket.horaLlegada}" styleClass="time-text" style="font-size: 0.95rem !important; font-weight: 800 !important; color: #FFFFFF !important; display: block !important;">
+                                            <div class="time-block time-llegada">
+                                                <span class="pass-label">LLEGADA</span>
+                                                <h:outputText value="#{ticket.horaLlegada}" styleClass="time-text">
                                                     <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/Santiago"/>
                                                 </h:outputText>
                                             </div>
                                         </div>
 
                                         <!-- PUERTA, ASIENTO Y CLASE -->
-                                        <div class="pass-meta-row" style="display: flex !important; justify-content: space-between !important; align-items: center !important; padding-top: 10px !important; border-top: 1px dashed #1E3A5C !important;">
-                                            <div>
-                                                <span class="pass-label" style="display: block !important; font-size: 0.65rem !important; font-weight: 800 !important; color: #94A3B8 !important;">PUERTA</span>
-                                                <span class="gate-value" style="font-size: 1.05rem !important; font-weight: 900 !important; color: #FFFFFF !important;">
-                                                    #{empty ticket.codigoPuerta ? 'TBD' : ticket.codigoPuerta} <span class="terminal-text" style="font-size: 0.75rem !important; font-weight: 600 !important; color: #94A3B8 !important;">(Terminal: #{empty ticket.terminal ? 'TBD' : ticket.terminal})</span>
+                                        <div class="pass-meta-row">
+                                            <div class="meta-item-gate">
+                                                <span class="pass-label">PUERTA</span>
+                                                <span class="gate-value">
+                                                    #{empty ticket.codigoPuerta ? 'TBD' : ticket.codigoPuerta} <span class="terminal-text">(Terminal: #{empty ticket.terminal ? 'TBD' : ticket.terminal})</span>
                                                 </span>
                                             </div>
-                                            <div style="text-align: center !important;">
-                                                <div class="seat-badge" style="background-color: #2563EB !important; color: #FFFFFF !important; padding: 4px 16px !important; border-radius: 6px !important; box-shadow: 0 2px 8px rgba(37,99,235,0.4) !important;">
-                                                    <span class="seat-label" style="display: block !important; font-size: 0.6rem !important; font-weight: 700 !important; color: #CBD5E1 !important;">ASIENTO</span>
-                                                    <span class="seat-number" style="font-size: 1.3rem !important; font-weight: 900 !important; color: #FFFFFF !important;">#{ticket.numeroAsiento}</span>
+                                            <div class="meta-item-seat">
+                                                <div class="seat-badge">
+                                                    <span class="seat-label">ASIENTO</span>
+                                                    <span class="seat-number">#{ticket.numeroAsiento}</span>
                                                 </div>
                                             </div>
-                                            <div style="text-align: right !important;">
-                                                <span class="pass-label" style="display: block !important; font-size: 0.65rem !important; font-weight: 800 !important; color: #94A3B8 !important;">CLASE</span>
-                                                <span class="cabin-value" style="font-size: 0.95rem !important; font-weight: 800 !important; color: #FFFFFF !important; text-transform: uppercase !important;">#{ticket.claseAsiento}</span>
+                                            <div class="meta-item-class">
+                                                <span class="pass-label">CLASE</span>
+                                                <span class="cabin-value">#{ticket.claseAsiento}</span>
                                             </div>
                                         </div>
 
                                         <!-- PIE DE TARJETA -->
-                                        <div class="pass-footer" style="margin-top: 12px !important; padding-top: 8px !important; display: flex !important; justify-content: space-between !important; font-size: 0.68rem !important; border-top: 1px solid #1E3A5C !important;">
-                                            <span class="notice-text" style="color: #94A3B8 !important;"><i class="pi pi-clock me-1" style="color: #38BDF8 !important;"></i> PRESENTARSE 2 HORAS ANTES EN PUERTA</span>
-                                            <span class="operator-text" style="font-weight: 700 !important; color: #38BDF8 !important;">OPERADO POR SKYWAY AIRLINES</span>
+                                        <div class="pass-footer">
+                                            <span class="notice-text"><i class="pi pi-clock me-1"></i> PRESENTARSE 2 HORAS ANTES EN PUERTA</span>
+                                            <span class="operator-text">OPERADO POR SKYWAY AIRLINES</span>
                                         </div>
                                     </div>
 
                                     <!-- TALÓN DEL PASAJERO (STUB DERECHO) -->
-                                    <div class="stub" style="flex: 1.2 !important; width: 220px !important; min-width: 200px !important; background-color: #080E1A !important; padding: 18px 14px !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; border-left: 1px solid #1E3A5C !important; text-align: center !important; height: auto !important; min-height: 100% !important; overflow: visible !important;">
-                                        <div>
-                                            <div class="stub-header" style="font-size: 0.75rem !important; font-weight: 900 !important; color: #38BDF8 !important; letter-spacing: 1px !important; margin-bottom: 10px !important; border-bottom: 2px solid #1E3A5C !important; padding-bottom: 4px !important;">
+                                    <div class="stub">
+                                        <div class="stub-info">
+                                            <div class="stub-header">
                                                 TALÓN DEL PASAJERO
                                             </div>
-                                            <div style="text-align: left !important; margin-bottom: 6px !important;">
-                                                <span class="pass-label" style="display: block !important; font-size: 0.62rem !important; font-weight: 800 !important; color: #94A3B8 !important;">PASAJERO</span>
-                                                <span class="stub-passenger-name" style="font-size: 0.85rem !important; font-weight: 800 !important; color: #FFFFFF !important; display: block !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important;">#{ticket.nombre}</span>
+                                            <div class="stub-field">
+                                                <span class="pass-label">PASAJERO</span>
+                                                <span class="stub-passenger-name">#{ticket.nombre}</span>
                                             </div>
-                                            <div style="text-align: left !important; margin-bottom: 6px !important;">
-                                                <span class="pass-label" style="display: block !important; font-size: 0.62rem !important; font-weight: 800 !important; color: #94A3B8 !important;">VUELO Y RUTA</span>
-                                                <span class="stub-flight-route" style="font-size: 0.85rem !important; font-weight: 800 !important; color: #FFFFFF !important;">#{ticket.numeroVuelo} (#{ticket.origenTramo}-#{ticket.destinoTramo})</span>
+                                            <div class="stub-field">
+                                                <span class="pass-label">VUELO Y RUTA</span>
+                                                <span class="stub-flight-route">#{ticket.numeroVuelo} (#{ticket.origenTramo}-#{ticket.destinoTramo})</span>
                                             </div>
                                         </div>
 
                                         <!-- QR CODE -->
-                                        <div class="qr-container" style="display: flex !important; justify-content: center !important; margin: 8px 0 !important;">
-                                            <div class="qr-box" style="background-color: #FFFFFF !important; padding: 6px !important; border-radius: 6px !important; border: 1px solid #1E3A5C !important;">
+                                        <div class="qr-container">
+                                            <div class="qr-box">
                                                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&amp;data=#{ticket.codigoQr}"
-                                                     alt="QR Embarque" class="qr-img" style="width: 85px !important; height: 85px !important; display: block !important;" />
+                                                     alt="QR Embarque" class="qr-img" />
                                             </div>
                                         </div>
 
-                                        <div class="stub-footer" style="display: flex !important; justify-content: space-between !important; text-align: left !important; padding-top: 6px !important; border-top: 1px dashed #1E3A5C !important;">
-                                            <div>
-                                                <span class="pass-label" style="display: block !important; font-size: 0.6rem !important; font-weight: 800 !important; color: #94A3B8 !important;">PUERTA</span>
-                                                <span class="stub-gate-val" style="font-size: 0.85rem !important; font-weight: 800 !important; color: #FFFFFF !important;">#{empty ticket.codigoPuerta ? 'TBD' : ticket.codigoPuerta}</span>
+                                        <!-- PUERTA Y ASIENTO TALÓN -->
+                                        <div class="stub-footer">
+                                            <div class="stub-gate">
+                                                <span class="pass-label">PUERTA</span>
+                                                <span class="stub-gate-val">#{empty ticket.codigoPuerta ? 'TBD' : ticket.codigoPuerta}</span>
                                             </div>
-                                            <div style="text-align: right !important;">
-                                                <span class="pass-label" style="display: block !important; font-size: 0.6rem !important; font-weight: 800 !important; color: #94A3B8 !important;">ASIENTO</span>
-                                                <span class="stub-seat-val" style="font-size: 1.05rem !important; font-weight: 900 !important; color: #38BDF8 !important;">#{ticket.numeroAsiento}</span>
+                                            <div class="stub-seat">
+                                                <span class="pass-label">ASIENTO</span>
+                                                <span class="stub-seat-val">#{ticket.numeroAsiento}</span>
                                             </div>
                                         </div>
                                     </div>

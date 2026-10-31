@@ -353,3 +353,58 @@ WHERE id_reserva = p_id_reserva;
 
 END;
 $sp_cancelar$;
+
+
+
+
+
+
+
+-- 3. Crear el procedimiento con los 10 parámetros
+CREATE OR REPLACE PROCEDURE sp_registrar_log_auditoria(
+    p_rut_usuario VARCHAR(12),
+    p_accion VARCHAR(100),
+    p_nivel VARCHAR(10),
+    p_tabla_afectada VARCHAR(50),
+    p_id_registro_afectado INT,
+    p_datos_anteriores JSONB DEFAULT NULL,
+    p_datos_nuevos JSONB DEFAULT NULL,
+    p_detalle TEXT DEFAULT NULL,
+    p_direccion_ip VARCHAR(45) DEFAULT NULL,
+    p_user_agent VARCHAR(255) DEFAULT NULL
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+v_nivel tipo_nivel_log;
+BEGIN
+    v_nivel := COALESCE(p_nivel::tipo_nivel_log, 'INFO'::tipo_nivel_log);
+
+INSERT INTO Log_Auditoria (
+    fecha_hora,
+    rut_usuario,
+    accion,
+    nivel,
+    tabla_afectada,
+    id_registro_afectado,
+    datos_anteriores,
+    datos_nuevos,
+    detalle,
+    direccion_ip,
+    user_agent
+)
+VALUES (
+           NOW(),
+           p_rut_usuario,
+           p_accion,
+           v_nivel,
+           p_tabla_afectada,
+           p_id_registro_afectado,
+           p_datos_anteriores,
+           p_datos_nuevos,
+           p_detalle,
+           p_direccion_ip,
+           p_user_agent
+       );
+END;
+$$;
