@@ -9,6 +9,10 @@
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
         <h:outputStylesheet library="css" name="vuelos/vuelo.css" />
+
+        <f:metadata>
+            <f:viewParam name="vueloId" value="#{vueloBean.idVueloParam}" />
+        </f:metadata>
         <script type="text/javascript">
         //<![CDATA[
             window.mapaSelector = null;
@@ -442,14 +446,7 @@
                                                         <div class="ops-info-tile">
                                                             <span class="ops-tile-label"><i class="pi pi-sign-in me-1"></i> Puerta de Embarque</span>
                                                             <div class="ops-tile-value text-gate">
-                                                                <h:panelGroup rendered="#{not empty seg.asignacionPuertas}">
-                                                                    <ui:repeat value="#{seg.asignacionPuertas}" var="ap">
-                                                                        GATE #{ap.puertaEmbarque.codigoPuerta} (Terminal #{ap.puertaEmbarque.terminal})
-                                                                    </ui:repeat>
-                                                                </h:panelGroup>
-                                                                <h:panelGroup rendered="#{empty seg.asignacionPuertas}">
-                                                                    <span>Por Asignar en Despacho</span>
-                                                                </h:panelGroup>
+                                                                <h:outputText value="#{vueloBean.obtenerPuertaEmbarqueTexto(seg)}" />
                                                             </div>
                                                         </div>
                                                     </div>
@@ -500,7 +497,8 @@
                                                      icon="pi pi-send"
                                                      disabled="#{!vueloBean.paso2Completo}"
                                                      process="@form"
-                                                     update=":msgs :formVuelo"
+                                                     update=":formVuelo :msgs"
+                                                     oncomplete="window.renderizarMapaRutaGeneral('#{vueloBean.segmentosJson}');"
                                                      styleClass="btn-confirm-vuelo" />
                                 </div>
 
@@ -512,6 +510,7 @@
             </div>
         </h:form>
 
+        <!-- DIÁLOGO CORPORATIVO PROGRAMACIÓN DE ESCALAS -->
         <!-- DIÁLOGO CORPORATIVO PROGRAMACIÓN DE ESCALAS -->
         <p:dialog widgetVar="dlgNuevoSegmento"
                   header="#{vueloBean.segmentoActual.idSegmento == null ? 'Programar Nueva Escala' : 'Editar Escala N° ' += vueloBean.segmentoActual.ordenSegmento}"
@@ -527,12 +526,12 @@
                 <p:remoteCommand name="rcSeleccionarOrigen"
                                  actionListener="#{vueloBean.seleccionarOrigenDesdeMapa}"
                                  process="@this"
-                                 update="formSegmentoCrear:puertaEmbarque formSegmentoCrear:panelEstadoSeleccion formSegmentoCrear:inOrigen" />
+                                 update="formSegmentoCrear:inOrigen formSegmentoCrear:puertaEmbarque formSegmentoCrear:panelEstadoSeleccion" />
 
                 <p:remoteCommand name="rcSeleccionarDestino"
                                  actionListener="#{vueloBean.seleccionarDestinoDesdeMapa}"
                                  process="@this"
-                                 update="formSegmentoCrear:panelEstadoSeleccion formSegmentoCrear:inDestino :msgs" />
+                                 update="formSegmentoCrear:inDestino formSegmentoCrear:panelEstadoSeleccion formSegmentoCrear:fechaSalida formSegmentoCrear:fechaLlegada :msgs" />
 
                 <p:remoteCommand name="rcReiniciarSeleccion"
                                  actionListener="#{vueloBean.reiniciarSeleccionMapa}"
@@ -547,6 +546,25 @@
                     <h:inputHidden id="inDestino" value="#{vueloBean.aeropuertoDestino}" />
 
                     <div class="dialog-scroll-body p-1">
+
+                        <!-- BOX DESPLEGABLE TÉCNICO DE VALIDACIÓN FÍSICA (DENTRO DEL MODAL) -->
+                        <h:panelGroup id="panelExplicacionFisica">
+                            <p:outputPanel rendered="#{not empty vueloBean.detalleFisicoExplicacion}" style="margin-bottom: 1rem; background: #1e293b; padding: 12px; border-radius: 6px; border-left: 4px solid #38bdf8;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="color: #38bdf8; font-size: 12px; font-weight: bold;"><i class="pi pi-info-circle mr-1"></i> ¿Por qué la física rechaza este horario?</span>
+                                    <p:commandLink value="#{vueloBean.mostrarDetalleFisico ? 'Ocultar detalles' : 'Ver explicación técnica'}"
+                                                   action="#{vueloBean.toggleDetalleFisico}"
+                                                   process="@this"
+                                                   update="formSegmentoCrear:panelExplicacionFisica"
+                                                   style="color: #60a5fa; font-size: 11px; text-decoration: underline;" />
+                                </div>
+
+                                <p:outputPanel rendered="#{vueloBean.mostrarDetalleFisico}" style="margin-top: 8px; color: #cbd5e1; font-size: 11px; white-space: pre-line; line-height: 1.5;">
+                                    #{vueloBean.detalleFisicoExplicacion}
+                                </p:outputPanel>
+                            </p:outputPanel>
+                        </h:panelGroup>
+
                         <div class="p-formgrid p-grid">
 
                             <!-- PASO 1: BARRA DE SELECCIÓN DE MODO -->
@@ -561,7 +579,7 @@
                                 </div>
                             </div>
 
-                            <!-- PASO 2: TARJETAS FLIGHT STRIP CON NOMBRES COMPLETOS Y BORDER-INDICATOR -->
+                            <!-- PASO 2: TARJETAS FLIGHT STRIP -->
                             <p:outputPanel id="panelEstadoSeleccion" layout="block" styleClass="p-field p-col-12 mb-3">
                                 <div class="grid">
                                     <!-- STRIP ORIGEN -->
@@ -603,7 +621,7 @@
                                 </div>
                             </p:outputPanel>
 
-                            <!-- PASO 3: MAPA DE SELECCIÓN CON ALTURA OPTIMIZADA -->
+                            <!-- PASO 3: MAPA DE SELECCIÓN -->
                             <div class="p-field p-col-12 mb-3">
                                 <div id="mapaSelectorAeropuertos" style="width:100%; height:280px;"></div>
                             </div>
@@ -621,7 +639,10 @@
                             <div class="p-field p-col-12 p-md-6 mb-3">
                                 <p:outputLabel for="fechaSalida" value="Fecha y Hora de Salida *" styleClass="ui-outputlabel" />
                                 <p:datePicker id="fechaSalida" value="#{vueloBean.fechaSalida}"
-                                              showTime="true" hourFormat="24" pattern="dd/MM/yyyy HH:mm" required="true" requiredMessage="Ingrese la Fecha de Salida" />
+                                              showTime="true" hourFormat="24" pattern="dd/MM/yyyy HH:mm" required="true" requiredMessage="Ingrese la Fecha de Salida">
+                                    <p:ajax event="dateSelect" listener="#{vueloBean.calcularLlegadaEstimada}" update="formSegmentoCrear:fechaLlegada" />
+                                    <p:ajax event="change" listener="#{vueloBean.calcularLlegadaEstimada}" update="formSegmentoCrear:fechaLlegada" />
+                                </p:datePicker>
                             </div>
 
                             <div class="p-field p-col-12 p-md-6 mb-3">
@@ -640,7 +661,7 @@
                                          icon="pi pi-check"
                                          actionListener="#{vueloBean.agregarSegmentoEnMemoria}"
                                          process="formSegmentoCrear"
-                                         update=":formVuelo:listaSegmentosPanel :formVuelo:aerolinea :formVuelo:avion :formVuelo:piloto :formVuelo:infoCapacidad :msgs"
+                                         update=":formVuelo:listaSegmentosPanel :formVuelo:aerolinea :formVuelo:avion :formVuelo:piloto :formVuelo:infoCapacidad formSegmentoCrear:panelExplicacionFisica :msgs"
                                          oncomplete="if (!args.validationFailed) { PF('dlgNuevoSegmento').hide(); window.renderizarMapaRutaGeneral('#{vueloBean.segmentosJson}'); }"
                                          styleClass="btn-primary-custom" />
                     </div>
@@ -648,7 +669,6 @@
                 </p:outputPanel>
             </h:form>
         </p:dialog>
-
 
     </ui:define>
 </ui:composition>

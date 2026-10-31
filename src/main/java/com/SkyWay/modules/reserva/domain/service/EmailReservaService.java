@@ -21,6 +21,16 @@ public class EmailReservaService {
 
     @Autowired
     private ETicketPdfGeneratorService eTicketPdfGeneratorService;
+    private static boolean activo=checkMail();
+
+    private static boolean checkMail() {
+        String ansiEnv = System.getenv("SKYWAY_MAIL_LISTENER_ENABLED");
+        if (ansiEnv != null) {
+            return Boolean.parseBoolean(ansiEnv.trim());
+        }
+
+        return false;
+    }
 
     /**
      * Envía el correo de confirmación de reserva adjuntando los 2 PDFs especializados (Resumen y Boarding Passes).
@@ -29,6 +39,10 @@ public class EmailReservaService {
     public void enviarComprobanteReservaAsync(Reserva reserva) {
         if (reserva == null) {
             Logger.logWarn("No se puede enviar correo: la entidad Reserva es nula.");
+            return;
+        }
+
+        if (!activo){
             return;
         }
 

@@ -226,13 +226,6 @@ public class ReservaProcesadorService {
             // Asocia la lista de pagos a la entidad Reserva para el PDF
             reservaGuardada.setPagos(List.of(pagoGuardado));
 
-            // Enviar correo con E-Ticket PDF en segundo plano (asíncrono)
-            Logger.logInfo("📧 [EMAIL-SERVICE] Disparando envío asíncrono del E-Ticket PDF a " +
-                    (reservaGuardada.getPasajero() != null && reservaGuardada.getPasajero().getUsuario() != null ?
-                            reservaGuardada.getPasajero().getUsuario().getCorreoElectronico() : "correo desconocido"));
-
-            emailReservaService.enviarComprobanteReservaAsync(reservaGuardada);
-
         } catch (Exception e) {
             Logger.logError("⚠️ Error crítico en el PASO 6 al registrar pago o enviar correo: " + e.getMessage());
             e.printStackTrace();

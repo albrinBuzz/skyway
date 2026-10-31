@@ -77,6 +77,50 @@ npx.cmd ng serve --host 127.0.0.1 --port 8101 --proxy-config proxy.conf.json --p
   * `alertas/`: Bandeja de notificaciones con filtro (`Todas` / `Nuevas`) y marcado como leída.
   * `perfil/`: Datos del pasajero, cambio de correo electrónico y cambio de contraseña.
 
+### Monolito Web (Spring Boot 3.3.4 + JoinFaces 5.3.0 / JSF 4 / PrimeFaces + OmniFaces 4.3)
+* **Configuración e Infraestructura (`JsfConfig.java`, `application.properties`, `config/`, `exception/`):**
+  * `JsfConfig.java` y `application.properties`: Registra `FacesServlet` mapeado a `*.xhtml` (`loadOnStartup = 1`), tema `nova-dark`, `spring.jpa.open-in-view=true` y `spring.jpa.hibernate.ddl-auto=none`.
+  * `config/security/SecurityConfig.java` y `AuthCustom.java`: Autenticación stateful con `HttpSessionSecurityContextRepository`, `BCryptPasswordEncoder` y `DaoAuthenticationProvider` (`UsuarioService`). Tras autenticar en `/home/login.xhtml` (`LoginBean`), `AuthCustom` guarda la entidad `Usuario` en `HttpSession` bajo el atributo `"usuario"`.
+  * `config/WebSocketConfig.java`: Broker STOMP (`/topic`, `/app`) con endpoints SockJS `/ws-asientos` (eventos de bloqueo/liberación de asientos en tiempo real en `/topic/vuelo/{idVuelo}`) y `/ws-metrics` (telemetría en `/topic/metrics`).
+  * `config/UnifiedSystemMonitorTask.java` y `config/health/*`: Monitoreo de rendimiento de BD (`DatabasePerformanceTracker`), ciclo de vida JSF (`JSFMetricsTracker`), sesiones HTTP (`HttpSessionMetricsListener`) y entorno host/cloud (`AzureCloudEnvironmentTracker`).
+  * `config/CustomJSFExceptionHandler.java` y `exception/CustomViewExpiredExceptionResolver.java`: Captura de `ViewExpiredException` (redirigiendo a login) y excepciones de ciclo de vida JSF verificando `!fc.getResponseComplete()`.
+* **Controladores MVC y Callbacks de Pasarelas (`controller/`):**
+  * Navegación e integración: `HomeController.java` (`/` redirige a `home/index.xhtml`), `AdminController.java`, `PerfilController.java`, `VueloController.java`, `AvionController.java`, `PilotoController.java`, `HealthCheckController.java`.
+  * Retornos de pasarelas de pago (`@RestController` con `RedirectView`): `WebPayController.java` (`/webpay/commit`), `MercadoPagoController.java` (`/mercadopago/commit`, `/mercadopago/cancel`) y `PayPalController.java` (`/paypal/commit`, `/paypal/cancel`). Validan el token con `PagoFactoryService` / `WebPayService`, recuperan `SOLICITUD_RESERVA_PENDIENTE` desde `HttpSession`, ejecutan la persistencia transaccional en `ReservaProcesadorService`, guardan `ULTIMO_ID_RESERVA` en sesión y redirigen a `/home/pago-exitoso.xhtml` o `/home/errorPago.xhtml`.
+* **Managed Beans de JSF (`views/` y `beans/`):**
+  * **Front-Office y Flujo de Compra:**
+    * `ItinerarioBusquedaBean` (`@RequestScoped`): Buscador de vuelos (`OW` solo ida y `RT` ida y vuelta) con autocompletado de aeropuertos y redirección por query params a `/home/vuelos.xhtml`.
+    * `ItinerarioDetalleBean` (`@ViewScoped`): Selección de itinerarios de ida/regreso, visualización de escalas, tarifas por itinerario (`ItinerarioTarifa`) y trazado de ruta JSON para el mapa.
+    * `ReservaAsientoBean` (`@Named("seleccionAsientosBean")`, `@ViewScoped`): Renderizado de cabina (`FilaCabinaDTO`, `BloqueAsientosDTO`), retención temporal de asientos en memoria con TTL de 10 minutos mediante `AsientoCacheService` + WebSockets, y persistencia de estado en `sessionMap` (`asientosSeleccionados`, `itinerarios`, `tarifasItinerios`, `pasajeros`, `reservaSessionId`).
+    * `EquipajeBean` (`@ViewScoped`): Selección de equipaje adicional por pasajero (`MAX_CABINA = 1`, `MAX_BODEGA = 3` entre 15kg y 23kg) en `sessionMap` (`equipajePorPasajero`).
+    * `ReservaBean` (`@ViewScoped`): Registro y validación de pasajeros (RUT/Cédula, Pasaporte, Email), cálculo de totales, armado de `SolicitudReservaDTO` en sesión (`SOLICITUD_RESERVA_PENDIENTE`) e inicio de pago con `PagoFactoryService`.
+    * `PagoExitosoController` (`@ViewScoped`): Consume `ULTIMO_ID_RESERVA` de sesión, genera PNR (`PnrGenerator`), envía comprobante por correo asíncrono (`EmailReservaService`), libera asientos en `AsientoCacheService`, purga las claves temporales de compra en `sessionMap` y genera descargas PDF (`StreamedContent` vía `ETicketPdfGeneratorService` con OpenPDF).
+    * `CheckInBean` (`@Named("checkInView")`, `@ViewScoped`): Check-in web por parámetros o búsqueda manual (PNR + Apellido/RUT con límite de 5 intentos fallidos), validación de ventana horaria (`ValidadorCheckIn`: habilitado entre 48h y 60 min antes del vuelo) y emisión de tarjetas de embarque.
+  * **Perfil y Autogestión Web (`views/perfil/`, `beans/viajesPasajero/`):**
+    * `LoginBean`, `NavigationBean`, `PerfilBean` (pasajero y piloto), `MisTurnosBean` (tripulación), `ReservaView` (`viajePsView`), `CambioAsientoBean` (`cambioBean`) y `CambiarAsientoView` (`cambioView`).
+  * **Back-Office y Administración (`views/admin/`, `views/avion/`, `views/aeropuerto/`, `views/Vuelo/`, `views/Itinerario/`, `views/turno/`):**
+    * `GestionFlotaIntegradaBean` (`@ViewScoped`): CRUD unificado de fabricantes, modelos, aviones y capacidades por clase (`CapacidadClase`).
+    * `GestionAeropuertosBean` (`@ViewScoped`): ABM de países, ciudades y aeropuertos con geometría PostGIS e interacción con mapa Leaflet.
+    * `VueloBean`, `SegmentoVueloBean`, `EstadoVueloBean`: Programación de vuelos, segmentos, asignación de puertas (`AsignacionPuerta`), precios por clase (`PrecioAsiento`) y turnos.
+    * `ItinerarioBean` (`@ViewScoped`): Armado comercial de itinerarios conectando vuelos, escalas y precios por tarifa (`ItinerarioTarifa`).
+    * `TurnoBean` (`@ViewScoped`): Asignación de tripulación a turnos de vuelo (`TurnoTripulacion`).
+    * `TarifaBean`, `GestionParametricasBean`, `GestionUsuariosAdminBean` (`@ViewScoped`): Gestión de tarifas y características dinámicas (`boolean`, `int`, `text`), catálogos paramétricos y administración multi-rol de usuarios (`Pasajero`, `Piloto`, `Tripulacion`, `Admin`).
+* **Vistas XHTML y Recursos Estáticos (`src/main/resources/META-INF/resources/`):**
+  * `home/*.xhtml`: Portal de pasajeros y flujo de reserva (`index.xhtml`, `vuelos.xhtml`, `seleccionAsientos.xhtml`, `equipaje.xhtml`, `reserva.xhtml`, `pago-exitoso.xhtml`, `errorPago.xhtml`, `checkin.xhtml`, `estado-vuelo.xhtml`, `login.xhtml`, `registro.xhtml`, `mapa.xhtml`) sobre `home/template/main.xhtml`.
+  * `admin/**/*.xhtml`: Consola administrativa (`index.xhtml`, `gestionFlota.xhtml`, `gestionAeropuertos.xhtml`, `gestionarTarifas.xhtml`, `gestionParametricas.xhtml`, `usuarios.xhtml`, `metrics-ws.xhtml`, `vuelo/vuelos.xhtml`, `itinerario/itinerarios.xhtml`, `turno/turno.xhtml`) sobre `admin/template.xhtml`.
+  * `perfil/**/*.xhtml`: Vistas protegidas por rol (`pasajero/index.xhtml`, `pasajero/detalleReserva.xhtml`, `pasajero/cambioAsiento.xhtml`, `piloto/index.xhtml`, `tripulacion/index.xhtml`).
+  * `resources/`: Estilos (`css/`), mapas interactivos (`js/mapa.js`, `js/vuelos/globo-vuelo.js`) y cliente WebSocket de telemetría (`js/metrics-dashboard.js`).
+
+### Base de Datos PostgreSQL 16 + PostGIS 3.4 (`/dataBase/V3`)
+* `01_esquema/tablas.sql`: Secuencias explícitas (`*_seq`) y tablas principales: identidad (`Usuario`, `Roles`, `RolUsuario`, `Pasajero`, `Piloto`, `Tripulacion`, `Personal_Administrativo`), geografía con índice GiST (`Continente`, `Pais`, `Ciudad`, `Aeropuerto` con columna `posicion GEOGRAPHY(Point, 4326)`, `Puerta_Embarque`), flota y cabina (`Fabricante`, `Modelo_Avion`, `Avion`, `Clase_asiento`, `Capacidad_Clase`, `Configuracion_Cabina`, `Asiento`), operaciones (`Vuelo`, `Estado_Vuelo`, `Segmento_Vuelo`, `Asignacion_Puerta`, `Precio_Asiento`, `Turno`, `Tipo_Turno`, `Turno_Tripulacion`), comercial (`Itinerario`, `Itinerario_Vuelo`, `Tarifa`, `Caracteristica_Tarifa`, `Tarifa_Caracteristica`, `Itinerario_Tarifa`), y reservas/auditoría (`Reserva`, `Estado_reserva`, `Reserva_Itinerario`, `pasajero_reserva`, `Reserva_Asiento`, `Equipaje`, `Tipo_Equipaje`, `Pago`, `Metodo_Pago`, `Checkin`, `Checkin_Pasajero`, `Cancelacion`, `Cancelacion_Asiento`, `Notificacion`, `Log_Auditoria`).
+* `02_logica/01_triggers.sql`:
+  * `trigger_insertar_asientos` (`fn_insertarAsientos` en `Capacidad_Clase`): Genera automáticamente los asientos del avión en `Asiento` según los rangos de filas y columnas de `Configuracion_Cabina`.
+  * Sincronización automática de órdenes, códigos y horarios: `trg_set_orden_segmento_vuelo`, `trg_set_numero_vuelo` (asigna número `IATA1-IATA2<id_segmento>`), `trg_set_fecha_vuelo` (calcula salida/llegada de `Vuelo` desde sus segmentos), `trg_actualizar_fechas_turno`, `trg_set_orden_itinerario_vuelo`, `trg_set_fecha_itinerario`, `trg_vuelo_hacia_itinerario` y `trg_actualizar_duracion_itinerario`.
+  * Alertas operacionales y `LISTEN/NOTIFY`: `tr_notificacionVueloCabecera` y `tr_notificacionVueloEstado` (`fn_notificacionVueloEstado`) crean notificaciones cuando cambia el horario o estado de un vuelo/segmento; `tr_notify_new_notificacion` ejecuta `pg_notify('nuevo_correo', id_notificacion)`, que `NotificacionListenerService` escucha en vivo para despachar correos vía `JavaMailSender`.
+* `02_logica/02_funciones.sql` y `03_procedimientos.sql`:
+  * Funciones: `fnBuscarVuelo`, `FnbuscarVuelos`, `fnDTinitinerario`, `fn_getAsientosAvion`, `fn_getItinerariosRut`, `fn_getItinerariosPorRutYFechas`, `fn_getAsientosPorItinerarioYReserva` (con respaldo en `Cancelacion_Asiento`), `fn_getticket` y `fn_getVueloInfo`.
+  * Procedimientos: `spConfirmar_reserva`, `spVerificarDisponinibilidadAsientos`, `sp_cambiarAsiento`, `sp_upsertPasajero` y `sp_cancelarReservaPasajero` (registra en `Cancelacion`, respalda asientos en `Cancelacion_Asiento`, audita en `Log_Auditoria`, libera `Reserva_Asiento` y actualiza `Reserva`).
+
 ---
 
 ## 4. Reglas Básicas de Desarrollo para Agentes
@@ -87,6 +131,14 @@ npx.cmd ng serve --host 127.0.0.1 --port 8101 --proxy-config proxy.conf.json --p
    - Mantener la distinción entre **titular** (`reserva.rut_pasajero`) y **acompañante** (`pasajero_reserva` / `reserva_asiento`). Solo el titular puede realizar el check-in de la reserva y gestionar asientos/tickets de otros pasajeros de la misma reserva.
 4. **Compatibilidad con Base de Datos V3:** No romper las tablas, secuencias, triggers ni funciones existentes en `dataBase/V3`. Las consultas móviles deben seguir usando SQL parametrizado y bloqueos `FOR UPDATE` en operaciones críticas de concurrencia (cambio de asiento y check-in).
 5. **Verificación en Mobile:** Antes de dar por finalizada una tarea en el frontend móvil, verificar el tipado con `npm run typecheck` (`tsc --noEmit -p tsconfig.app.json`) dentro de `mobile/`.
+6. **Desarrollo en el Monolito JSF / PrimeFaces:**
+   - Todo Managed Bean con alcance `@ViewScoped` (`jakarta.faces.view.ViewScoped` u OmniFaces) **debe implementar `Serializable`**. En métodos `@PostConstruct`, validar siempre que `FacesContext.getCurrentInstance()` y `getExternalContext()` no sean nulos antes de acceder a parámetros o sesión, y verificar `!fc.getResponseComplete()` antes de redirigir.
+   - Mantener la higiene de `sessionMap` / `HttpSession`: las claves temporales del flujo de compra (`asientosSeleccionados`, `itinerarios`, `tarifasItinerios`, `pasajeros`, `equipajePorPasajero`, `SOLICITUD_RESERVA_PENDIENTE`, `ULTIMO_ID_RESERVA`) deben limpiarse al finalizar o reiniciar la compra, liberando también los asientos retenidos en `AsientoCacheService`.
+   - En vistas PrimeFaces (`.xhtml`), actualizar explícitamente los componentes afectados mediante `update="..."` o `PrimeFaces.current().ajax().update(...)` y evitar anidar formularios `<h:form>`.
+7. **Integración con Triggers y Secuencias de PostgreSQL V3:**
+   - Con `spring.jpa.hibernate.ddl-auto=none`, toda entidad JPA debe respetar las secuencias (`@SequenceGenerator` alineado con `*_seq`) y columnas de `dataBase/V3/01_esquema/tablas.sql`.
+   - No insertar manualmente registros en `Asiento` al registrar capacidades de avión (el trigger `trigger_insertar_asientos` en `Capacidad_Clase` los genera según `Configuracion_Cabina`) ni desincronizar horarios de `Vuelo`/`Itinerario`/`Turno` que son mantenidos por los triggers sobre `Segmento_Vuelo` e `Itinerario_Vuelo`.
+8. **Verificación en Backend / Monolito Web:** Antes de dar por finalizada una tarea en el monolito Java/JSF, verificar que compile sin errores ejecutando `.\mvnw.cmd test-compile` (o `mvn test-compile`) en la raíz del proyecto.
 
 ## 5. reglas de uso de tokens
 1. No programar sin contexto

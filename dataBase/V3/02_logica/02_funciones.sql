@@ -389,8 +389,7 @@ END;
 $$ LANGUAGE plpgsql STABLE;
 
 
-
-CREATE OR REPLACE FUNCTION fn_getticket(
+	CREATE OR REPLACE FUNCTION fn_getticket(
     p_rut_pasajero CHARACTER VARYING,
     p_id_reserva INTEGER,
     p_iditinerario INTEGER
@@ -398,6 +397,8 @@ CREATE OR REPLACE FUNCTION fn_getticket(
 RETURNS TABLE(
     codigo_pnr CHARACTER VARYING,
     numero_vuelo CHARACTER VARYING,
+    origen_tramo CHARACTER VARYING,
+    destino_tramo CHARACTER VARYING,
     hora_salida TIMESTAMP WITHOUT TIME ZONE,
     hora_llegada TIMESTAMP WITHOUT TIME ZONE,
     codigo_puerta CHARACTER VARYING,
@@ -413,9 +414,11 @@ AS
 $$
 BEGIN
 RETURN QUERY
-SELECT DISTINCT ON (rsva.id_asiento, vl.id_vuelo)
+SELECT DISTINCT ON (vl.id_vuelo, ast.id_asiento)
     rsv.codigo_reserva AS codigo_pnr,
     vl.numero_vuelo,
+    a_orig.codigo_iata AS origen_tramo,
+    a_dest.codigo_iata AS destino_tramo,
     sgm.hora_salida,
     sgm.hora_llegada,
     COALESCE(prta.codigo_puerta, 'TBD') AS codigo_puerta,
@@ -424,21 +427,22 @@ SELECT DISTINCT ON (rsva.id_asiento, vl.id_vuelo)
     clas.descripcion AS clase_asiento,
     us.nombre || ' ' || us.apellido AS nombre,
     'SKYWAY-' || rsv.codigo_reserva || '-' || vl.numero_vuelo || '-' || ast.numero_asiento || '-' || p.rut AS codigo_qr
-FROM reserva_asiento rsva
-    JOIN reserva rsv ON rsv.id_reserva = rsva.id_reserva
-    JOIN itinerario_vuelo itv ON itv.id_vuelo = rsva.id_vuelo
+FROM reserva rsv
+    JOIN reserva_asiento rsva ON rsva.id_reserva = rsv.id_reserva
+    JOIN itinerario_vuelo itv ON itv.id_vuelo = rsva.id_vuelo AND itv.id_itinerario = p_iditinerario
     JOIN pasajero p ON p.rut = rsva.rut
     JOIN usuario us ON us.rut = p.rut
     JOIN vuelo vl ON vl.id_vuelo = rsva.id_vuelo
-    LEFT JOIN segmento_vuelo sgm ON sgm.id_vuelo = rsva.id_vuelo
+    JOIN segmento_vuelo sgm ON sgm.id_vuelo = vl.id_vuelo
+    JOIN aeropuerto a_orig ON a_orig.id_aeropuerto = sgm.id_aeropuerto_origen
+    JOIN aeropuerto a_dest ON a_dest.id_aeropuerto = sgm.id_aeropuerto_destino
     LEFT JOIN asignacion_puerta asgp ON asgp.id_segmento = sgm.id_segmento
     LEFT JOIN puerta_embarque prta ON prta.id_puerta = asgp.id_puerta
     LEFT JOIN asiento ast ON ast.id_asiento = rsva.id_asiento
     LEFT JOIN clase_asiento clas ON clas.id_clase = ast.id_clase
 WHERE (rsv.rut_pasajero = p_rut_pasajero OR rsva.rut = p_rut_pasajero)
   AND rsv.id_reserva = p_id_reserva
-  AND itv.id_itinerario = p_idItinerario
-ORDER BY rsva.id_asiento, vl.id_vuelo, sgm.hora_salida ASC;
+ORDER BY vl.id_vuelo, ast.id_asiento, sgm.orden_segmento ASC;
 END;
 $$;
 

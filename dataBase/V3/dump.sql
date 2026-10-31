@@ -697,16 +697,36 @@ CREATE TABLE Notificacion (
 
 
 
+-- 1. Eliminar la tabla Log_Auditoria si ya existe (para liberar la dependencia del ENUM)
+DROP TABLE IF EXISTS Log_Auditoria CASCADE;
+
+-- 2. Eliminar el tipo ENUM si ya existe en la base de datos
+DROP TYPE IF EXISTS tipo_nivel_log CASCADE;
+
+-- 1. Crear tipo ENUM para nivel de severidad del evento
+CREATE TYPE tipo_nivel_log AS ENUM ('INFO', 'WARN', 'ERROR', 'SECURITY');
+
+-- 2. Tabla de Auditoría Avanzada
 CREATE TABLE IF NOT EXISTS Log_Auditoria (
-                                             ID_LOG INT PRIMARY KEY DEFAULT nextval('log_auditoria_seq'),
-                                             Fecha_Hora TIMESTAMP NOT NULL DEFAULT NOW(),
-                                             Rut_Usuario VARCHAR(12),
-                                             Accion VARCHAR(100) NOT NULL, -- ej. 'CANCELACION_RESERVA', 'CAMBIO_ASIENTO'
-                                             Tabla_Afectada VARCHAR(50),
-                                             ID_Registro_Afectado INT,
-                                             Detalle TEXT,
-                                             Direccion_IP VARCHAR(45)
+                                             id_log BIGSERIAL PRIMARY KEY,
+                                             fecha_hora TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+                                             rut_usuario VARCHAR(12) REFERENCES Usuario(RUT) ON DELETE SET NULL,
+                                             accion VARCHAR(100) NOT NULL, -- ej. 'LOGIN_EXITOSO', 'CAMBIO_ASIENTO', 'ANULACION_RESERVA'
+                                             nivel tipo_nivel_log NOT NULL DEFAULT 'INFO',
+                                             tabla_afectada VARCHAR(50),
+                                             id_registro_afectado INT,
+                                             datos_anteriores JSONB, -- Estado antes del cambio (para UPDATE/DELETE)
+                                             datos_nuevos JSONB,     -- Estado nuevo tras el cambio
+                                             detalle TEXT,
+                                             direccion_ip VARCHAR(45),
+                                             user_agent VARCHAR(255)  -- Navegador/Dispositivo (Chrome, Firefox, Mobile App, etc.)
 );
+
+-- 3. Índices Estratégicos para Consultas Rápidas y Paneles de Control (Dashboards)
+CREATE INDEX idx_log_auditoria_fecha ON Log_Auditoria(fecha_hora DESC);
+CREATE INDEX idx_log_auditoria_rut ON Log_Auditoria(rut_usuario);
+CREATE INDEX idx_log_auditoria_accion ON Log_Auditoria(accion);
+CREATE INDEX idx_log_auditoria_datos_nuevos ON Log_Auditoria USING gin (datos_nuevos); -- Búsquedas avanzadas en JSONB
 
 
 /*CREATE TABLE Seguimiento_Vuelo (
@@ -1305,6 +1325,19 @@ ALTER TABLE Itinerario_Vuelo DISABLE TRIGGER trg_set_fecha_itinerario;
 ALTER TABLE Itinerario_Vuelo DISABLE TRIGGER trg_set_orden_itinerario_vuelo;*/
 
 
+CREATE OR REPLACE FUNCTION fn_bloquear_modificacion_log()
+    RETURNS TRIGGER AS $$
+BEGIN
+    RAISE EXCEPTION 'Operación no permitida: Los registros de la tabla Log_Auditoria son inmutables.';
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_proteger_log_auditoria
+    BEFORE UPDATE OR DELETE ON Log_Auditoria
+    FOR EACH ROW
+EXECUTE FUNCTION fn_bloquear_modificacion_log();
+
 
 
 ALTER TABLE notificacion
@@ -1317,95 +1350,178 @@ ALTER TABLE notificacion
 
 
 
+ALTER USER aerolinea_user SET search_path TO public, directus;
+SET search_path TO public, directus;
 
-UPDATE Usuario
-SET Correo_Electronico = 'cr.romanz@duocuc.cl'
-WHERE Correo_Electronico = 'juan.perez@piloto.com';
-
-
+-- =============================================================================
+-- FUNCIÓN: GENERACIÓN DE NOTIFICACIONES PROFESIONALES DE CAMBIO DE ESTADO/HORARIO
+-- =============================================================================
 CREATE OR REPLACE FUNCTION fn_notificacionVueloEstado()
     RETURNS TRIGGER
     LANGUAGE PLPGSQL
 AS
 $$
 DECLARE
-    pasajero RECORD;
-    mensaje TEXT;
+    rec_pasajero       RECORD;
+    v_numero_vuelo     VARCHAR(255);
+    v_id_vuelo         INT;
+    v_estado_nombre    VARCHAR(100);
+    v_origen_iata      VARCHAR(10);
+    v_destino_iata     VARCHAR(10);
+    v_puerta_codigo    VARCHAR(20);
+    v_terminal         VARCHAR(50);
+
+    -- Variables de control de cambio
+    v_cambio_salida    BOOLEAN := FALSE;
+    v_cambio_llegada   BOOLEAN := FALSE;
+    v_cambio_estado    BOOLEAN := FALSE;
+
+    mensaje_cuerpo     TEXT;
+    titulo_notif       VARCHAR(150);
 BEGIN
-    -- Iterar sobre cada pasajero asociado al vuelo actualizado
-    FOR pasajero IN
-        SELECT rsv.rut_pasajero, vl.numero_vuelo
+    -- 1. Determinar si el trigger se ejecutó sobre Vuelo o sobre Segmento_Vuelo
+    IF TG_TABLE_NAME = 'segmento_vuelo' THEN
+        v_id_vuelo := NEW.id_vuelo;
+        v_cambio_salida  := (OLD.hora_salida IS DISTINCT FROM NEW.hora_salida);
+        v_cambio_llegada := (OLD.hora_llegada IS DISTINCT FROM NEW.hora_llegada);
+    ELSIF TG_TABLE_NAME = 'vuelo' THEN
+        v_id_vuelo := NEW.id_vuelo;
+        v_cambio_salida  := (OLD.fecha_hora_salida IS DISTINCT FROM NEW.fecha_hora_salida);
+        v_cambio_llegada := (OLD.fecha_hora_llegada IS DISTINCT FROM NEW.fecha_hora_llegada);
+        v_cambio_estado  := (OLD.id_estado_vuelo IS DISTINCT FROM NEW.id_estado_vuelo);
+    END IF;
+
+    -- Si no hubo cambios operacionales significativos, omitir la notificación
+    IF NOT (v_cambio_salida OR v_cambio_llegada OR v_cambio_estado) THEN
+        RETURN NEW;
+    END IF;
+
+    -- 2. Obtener metadatos generales del Vuelo y Ruta principal
+    SELECT
+        v.numero_vuelo,
+        ev.descripcion,
+        a_orig.codigo_iata,
+        a_dest.codigo_iata
+    INTO
+        v_numero_vuelo,
+        v_estado_nombre,
+        v_origen_iata,
+        v_destino_iata
+    FROM vuelo v
+             LEFT JOIN estado_vuelo ev ON ev.id_estado_vuelo = v.id_estado_vuelo
+             LEFT JOIN segmento_vuelo s_orig ON s_orig.id_vuelo = v.id_vuelo AND s_orig.orden_segmento = 1
+             LEFT JOIN aeropuerto a_orig ON a_orig.id_aeropuerto = s_orig.id_aeropuerto_origen
+             LEFT JOIN segmento_vuelo s_dest ON s_dest.id_vuelo = v.id_vuelo
+        AND s_dest.orden_segmento = (SELECT MAX(orden_segmento) FROM segmento_vuelo WHERE id_vuelo = v.id_vuelo)
+             LEFT JOIN aeropuerto a_dest ON a_dest.id_aeropuerto = s_dest.id_aeropuerto_destino
+    WHERE v.id_vuelo = v_id_vuelo;
+
+    -- 3. Obtener Puerta de Embarque y Terminal asignada (si existe)
+    SELECT pe.codigo_puerta, pe.terminal
+    INTO v_puerta_codigo, v_terminal
+    FROM asignacion_puerta ap
+             JOIN segmento_vuelo sv ON sv.id_segmento = ap.id_segmento
+             JOIN puerta_embarque pe ON pe.id_puerta = ap.id_puerta
+    WHERE sv.id_vuelo = v_id_vuelo AND sv.orden_segmento = 1
+    LIMIT 1;
+
+    titulo_notif := '✈️ Actualización de Vuelo: ' || COALESCE(v_numero_vuelo, '#' || v_id_vuelo);
+
+    -- 4. Iterar sobre todos los pasajeros confirmados con reserva activa
+    FOR rec_pasajero IN
+        SELECT DISTINCT
+            u.rut,
+            u.nombre,
+            u.apellido
         FROM reserva_itinerario rsvi
-                 join itinerario_vuelo itv
-                      on itv.id_itinerario = rsvi.id_itinerario
-                 join reserva rsv on rsv.id_reserva = rsvi.id_reserva
-                 join vuelo vl on vl.id_vuelo = itv.id_vuelo
-        WHERE itv.id_vuelo = NEW.id_vuelo
-
+                 JOIN itinerario_vuelo itv ON itv.id_itinerario = rsvi.id_itinerario
+                 JOIN reserva rsv ON rsv.id_reserva = rsvi.id_reserva
+                 JOIN usuario u ON u.rut = rsv.rut_pasajero
+        WHERE itv.id_vuelo = v_id_vuelo
+          AND rsv.estado_reserva <> 3 -- Omitir reservas canceladas
         LOOP
-            -- Construir el mensaje de notificación con detalles específicos
-            mensaje := 'Estimado/a pasajero/a, su vuelo número ' || pasajero.numero_vuelo ||
-                       ' ha sido actualizado. ';
+            -- Construcción HTML optimizada para la plantilla JavaMail
+            mensaje_cuerpo := 'Estimado/a <strong>' || rec_pasajero.nombre || ' ' || rec_pasajero.apellido || '</strong>,<br/><br/>' ||
+                              'Le informamos que se han registrado cambios en el itinerario de su vuelo <strong>' ||
+                              COALESCE(v_numero_vuelo, '') || '</strong> (' || COALESCE(v_origen_iata, 'ORIGEN') || ' &#10140; ' || COALESCE(v_destino_iata, 'DESTINO') || ').<br/><br/>' ||
+                              '<strong>Novedades registradas:</strong><ul style="margin-top:8px; padding-left:20px; color:#cbd5e1; line-height:1.6;">';
 
--- Incluir información sobre la nueva hora de salida
+            -- Detalle 1: Estado del Vuelo
+            IF v_estado_nombre IS NOT NULL THEN
+                mensaje_cuerpo := mensaje_cuerpo || '<li>Estado del vuelo: <strong style="color:#60a5fa;">' || UPPER(v_estado_nombre) || '</strong></li>';
+            END IF;
 
-            IF OLD.hora_salida IS DISTINCT FROM NEW.hora_salida THEN
-                mensaje := mensaje || 'La nueva hora de salida es: ' || TO_CHAR(NEW.hora_salida, 'DD/MM/YYYY HH24:MI') || '. ';
-
-                /*IF NEW.fecha_hora_salida IS NOT NULL THEN
-                    mensaje := mensaje || 'La nueva hora de salida es: ' || TO_CHAR(NEW.fecha_hora_salida, 'DD/MM/YYYY HH24:MI') || '. ';
+            -- Detalle 2: Nueva Hora de Salida
+            IF v_cambio_salida THEN
+                IF TG_TABLE_NAME = 'segmento_vuelo' THEN
+                    mensaje_cuerpo := mensaje_cuerpo || '<li>Nueva hora estimada de salida: <strong style="color:#34d399;">' || TO_CHAR(NEW.hora_salida, 'DD/MM/YYYY HH24:MI hs') || '</strong></li>';
                 ELSE
-                    mensaje := mensaje || 'La hora de salida no ha sido modificada. ';*/
+                    mensaje_cuerpo := mensaje_cuerpo || '<li>Nueva hora estimada de salida: <strong style="color:#34d399;">' || TO_CHAR(NEW.fecha_hora_salida, 'DD/MM/YYYY HH24:MI hs') || '</strong></li>';
+                END IF;
             END IF;
 
-            -- Incluir información sobre la nueva hora de llegada
-            IF OLD.hora_llegada IS DISTINCT FROM NEW.hora_llegada THEN
-                mensaje := mensaje || 'La nueva hora de llegada es: ' || TO_CHAR(NEW.hora_llegada, 'DD/MM/YYYY HH24:MI') || '. ';
-            ELSE
-                --mensaje := mensaje || 'La hora de llegada no ha sido modificada. ';
+            -- Detalle 3: Nueva Hora de Llegada
+            IF v_cambio_llegada THEN
+                IF TG_TABLE_NAME = 'segmento_vuelo' THEN
+                    mensaje_cuerpo := mensaje_cuerpo || '<li>Nueva hora estimada de llegada: <strong style="color:#34d399;">' || TO_CHAR(NEW.hora_llegada, 'DD/MM/YYYY HH24:MI hs') || '</strong></li>';
+                ELSE
+                    mensaje_cuerpo := mensaje_cuerpo || '<li>Nueva hora estimada de llegada: <strong style="color:#34d399;">' || TO_CHAR(NEW.fecha_hora_llegada, 'DD/MM/YYYY HH24:MI hs') || '</strong></li>';
+                END IF;
             END IF;
 
-            -- Añadir información adicional si está disponible
-            /*IF NEW.id_aeropuerto_salida IS NOT NULL THEN
-                mensaje := mensaje || 'Aeropuerto de salida: ' || NEW.id_aeropuerto_salida || '. ';
+            -- Detalle 4: Puerta de Embarque
+            IF v_puerta_codigo IS NOT NULL THEN
+                mensaje_cuerpo := mensaje_cuerpo || '<li>Puerta de Embarque: <strong style="color:#f59e0b;">' || v_puerta_codigo || '</strong>' ||
+                                  COALESCE(' (' || v_terminal || ')', '') || '</li>';
             END IF;
-            IF NEW.id_aeropuerto_llegada IS NOT NULL THEN
-                mensaje := mensaje || 'Aeropuerto de llegada: ' || NEW.id_aeropuerto_llegada || '. ';
-            END IF;
-            IF NEW.precio IS NOT NULL THEN
-                mensaje := mensaje || 'Precio del boleto: $' || NEW.precio || '. ';
-            END IF;
-            IF NEW.rut_piloto IS NOT NULL THEN
 
+            mensaje_cuerpo := mensaje_cuerpo || '</ul>';
 
-                mensaje := mensaje || 'Piloto a cargo: ' || NEW.rut_piloto || '. ';
-            END IF;*/
-
-            -- Insertar la notificación en la tabla correspondiente
-            INSERT INTO notificacion(rut_destinatario, titulo, mensaje, fecha, leido)
+            -- Insertar la notificación asignando enviada = FALSE y canal = 'Email' para el Listener
+            INSERT INTO notificacion (
+                rut_destinatario,
+                titulo,
+                mensaje,
+                fecha,
+                leido,
+                enviada,
+                canal
+            )
             VALUES (
-                       pasajero.rut_pasajero,
-                       'Actualización de Vuelo: ' || pasajero.numero_vuelo,
-                       mensaje,
+                       rec_pasajero.rut,
+                       titulo_notif,
+                       mensaje_cuerpo,
                        NOW(),
-                       FALSE
+                       FALSE,
+                       FALSE,
+                       'Email'
                    );
+
         END LOOP;
+
     RETURN NEW;
 END;
 $$;
 
+-- =============================================================================
+-- DEFINICIÓN DE TRIGGERS EN VUELO Y SEGMENTO_VUELO
+-- =============================================================================
 
+DROP TRIGGER IF EXISTS tr_notificacionVueloCabecera ON Vuelo;
+CREATE TRIGGER tr_notificacionVueloCabecera
+    AFTER UPDATE ON Vuelo
+    FOR EACH ROW
+EXECUTE FUNCTION fn_notificacionVueloEstado();
 
--- Crear el Trigger para enviar notificaciones después de actualizar un vuelo
-CREATE OR REPLACE TRIGGER tr_notificacionVueloEstado
+DROP TRIGGER IF EXISTS tr_notificacionVueloEstado ON Segmento_Vuelo;
+CREATE TRIGGER tr_notificacionVueloEstado
     AFTER UPDATE ON Segmento_Vuelo
     FOR EACH ROW
 EXECUTE FUNCTION fn_notificacionVueloEstado();
 
-
-
-
+-- =============================================================================
+-- TRIGGER PG_NOTIFY EN TIEMPO REAL
+-- =============================================================================
 CREATE OR REPLACE FUNCTION fn_notify_new_notification()
     RETURNS TRIGGER AS
 $$
@@ -1416,7 +1532,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS tr_notify_new_notificacion ON notificacion;
-
 CREATE TRIGGER tr_notify_new_notificacion
     AFTER INSERT ON notificacion
     FOR EACH ROW
@@ -1813,7 +1928,6 @@ END;
 $$ LANGUAGE plpgsql STABLE;
 
 
-
 CREATE OR REPLACE FUNCTION fn_getticket(
     p_rut_pasajero CHARACTER VARYING,
     p_id_reserva INTEGER,
@@ -1822,6 +1936,8 @@ CREATE OR REPLACE FUNCTION fn_getticket(
     RETURNS TABLE(
                      codigo_pnr CHARACTER VARYING,
                      numero_vuelo CHARACTER VARYING,
+                     origen_tramo CHARACTER VARYING,
+                     destino_tramo CHARACTER VARYING,
                      hora_salida TIMESTAMP WITHOUT TIME ZONE,
                      hora_llegada TIMESTAMP WITHOUT TIME ZONE,
                      codigo_puerta CHARACTER VARYING,
@@ -1837,9 +1953,11 @@ AS
 $$
 BEGIN
     RETURN QUERY
-        SELECT DISTINCT ON (rsva.id_asiento, vl.id_vuelo)
+        SELECT DISTINCT ON (vl.id_vuelo, ast.id_asiento)
             rsv.codigo_reserva AS codigo_pnr,
             vl.numero_vuelo,
+            a_orig.codigo_iata AS origen_tramo,
+            a_dest.codigo_iata AS destino_tramo,
             sgm.hora_salida,
             sgm.hora_llegada,
             COALESCE(prta.codigo_puerta, 'TBD') AS codigo_puerta,
@@ -1848,21 +1966,22 @@ BEGIN
             clas.descripcion AS clase_asiento,
             us.nombre || ' ' || us.apellido AS nombre,
             'SKYWAY-' || rsv.codigo_reserva || '-' || vl.numero_vuelo || '-' || ast.numero_asiento || '-' || p.rut AS codigo_qr
-        FROM reserva_asiento rsva
-                 JOIN reserva rsv ON rsv.id_reserva = rsva.id_reserva
-                 JOIN itinerario_vuelo itv ON itv.id_vuelo = rsva.id_vuelo
+        FROM reserva rsv
+                 JOIN reserva_asiento rsva ON rsva.id_reserva = rsv.id_reserva
+                 JOIN itinerario_vuelo itv ON itv.id_vuelo = rsva.id_vuelo AND itv.id_itinerario = p_iditinerario
                  JOIN pasajero p ON p.rut = rsva.rut
                  JOIN usuario us ON us.rut = p.rut
                  JOIN vuelo vl ON vl.id_vuelo = rsva.id_vuelo
-                 LEFT JOIN segmento_vuelo sgm ON sgm.id_vuelo = rsva.id_vuelo
+                 JOIN segmento_vuelo sgm ON sgm.id_vuelo = vl.id_vuelo
+                 JOIN aeropuerto a_orig ON a_orig.id_aeropuerto = sgm.id_aeropuerto_origen
+                 JOIN aeropuerto a_dest ON a_dest.id_aeropuerto = sgm.id_aeropuerto_destino
                  LEFT JOIN asignacion_puerta asgp ON asgp.id_segmento = sgm.id_segmento
                  LEFT JOIN puerta_embarque prta ON prta.id_puerta = asgp.id_puerta
                  LEFT JOIN asiento ast ON ast.id_asiento = rsva.id_asiento
                  LEFT JOIN clase_asiento clas ON clas.id_clase = ast.id_clase
         WHERE (rsv.rut_pasajero = p_rut_pasajero OR rsva.rut = p_rut_pasajero)
           AND rsv.id_reserva = p_id_reserva
-          AND itv.id_itinerario = p_idItinerario
-        ORDER BY rsva.id_asiento, vl.id_vuelo, sgm.hora_salida ASC;
+        ORDER BY vl.id_vuelo, ast.id_asiento, sgm.orden_segmento ASC;
 END;
 $$;
 
@@ -1911,7 +2030,6 @@ BEGIN
 
 END;
 $$ LANGUAGE plpgsql;
-
 -- ==========================================
 -- 1. PROCEDIMIENTO: CONFIRMAR RESERVA
 -- ==========================================
@@ -2267,6 +2385,61 @@ BEGIN
 
 END;
 $sp_cancelar$;
+
+
+
+
+
+
+
+-- 3. Crear el procedimiento con los 10 parámetros
+CREATE OR REPLACE PROCEDURE sp_registrar_log_auditoria(
+    p_rut_usuario VARCHAR(12),
+    p_accion VARCHAR(100),
+    p_nivel VARCHAR(10),
+    p_tabla_afectada VARCHAR(50),
+    p_id_registro_afectado INT,
+    p_datos_anteriores JSONB DEFAULT NULL,
+    p_datos_nuevos JSONB DEFAULT NULL,
+    p_detalle TEXT DEFAULT NULL,
+    p_direccion_ip VARCHAR(45) DEFAULT NULL,
+    p_user_agent VARCHAR(255) DEFAULT NULL
+)
+    LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_nivel tipo_nivel_log;
+BEGIN
+    v_nivel := COALESCE(p_nivel::tipo_nivel_log, 'INFO'::tipo_nivel_log);
+
+    INSERT INTO Log_Auditoria (
+        fecha_hora,
+        rut_usuario,
+        accion,
+        nivel,
+        tabla_afectada,
+        id_registro_afectado,
+        datos_anteriores,
+        datos_nuevos,
+        detalle,
+        direccion_ip,
+        user_agent
+    )
+    VALUES (
+               NOW(),
+               p_rut_usuario,
+               p_accion,
+               v_nivel,
+               p_tabla_afectada,
+               p_id_registro_afectado,
+               p_datos_anteriores,
+               p_datos_nuevos,
+               p_detalle,
+               p_direccion_ip,
+               p_user_agent
+           );
+END;
+$$;
 
 -- =========================================================================
 -- 1. MAESTRO DE CONTINENTES
@@ -3172,14 +3345,14 @@ INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Di
 -- 5. UNIDADES FÍSICAS DE AVIONES (CAPACIDADES TOTALES CORREGIDAS)
 -- =============================================================================
 INSERT INTO Avion (Numero_de_Registro, ID_MODELO, Ano_de_Fabricacion, Capacidad_de_Pasajeros, Capacidad_de_Carga, Estado_de_Mantenimiento, Fecha_Proximo_Mantenimiento) VALUES
-                                                                                                                                                                            ('DEF456', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'),  2018, 146, 15000, 'En mantenimiento', NULL), -- Corregido a 146
+                                                                                                                                                                            ('DEF456', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'),  2018, 146, 15000, 'Operativo', NULL), -- Corregido a 146
                                                                                                                                                                             ('GHI789', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 747'),   2005, 380, 45000, 'Operativo', NULL),
                                                                                                                                                                             ('JKL012', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'),  2019, 310, 40000, 'Operativo', NULL),
-                                                                                                                                                                            ('MNO345', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 787'),   2020, 219, 35000, 'En servicio', NULL),     -- Corregido a 219
+                                                                                                                                                                            ('MNO345', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 787'),   2020, 219, 35000, 'Operativo', NULL),     -- Corregido a 219
                                                                                                                                                                             ('PQR678', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Embraer E195'), 2016, 120, 12000, 'Operativo', NULL),
-                                                                                                                                                                            ('XYZ123', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 777'),   2014, 450, 50000, 'En servicio', NULL),
+                                                                                                                                                                            ('XYZ123', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 777'),   2014, 450, 50000, 'Operativo', NULL),
                                                                                                                                                                             ('LMN987', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A380'),  2018, 650, 75000, 'Operativo', NULL),
-                                                                                                                                                                            ('STU456', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A330'),  2017, 250, 35000, 'En mantenimiento', NULL),
+                                                                                                                                                                            ('STU456', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A330'),  2017, 250, 35000, 'Operativo', NULL),
                                                                                                                                                                             ('WXY543', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 757'),   2003, 190, 22000, 'Operativo', NULL);
 
 -- =============================================================================
@@ -3367,6 +3540,24 @@ VALUES
     ('12345678-9', 'Chilena');
 
 
+-- ===========================================================
+-- Insertar a Cristóbal Román en la tabla Usuario
+-- ===========================================================
+INSERT INTO Usuario (RUT, Nombre, Apellido, Correo_Electronico, Telefono, Documento_Identidad, Fecha_Nacimiento, Contrasena, Fecha_Registro)
+VALUES ('21406428-6', 'Cristóbal', 'Román', 'cr.romanz@duocuc.cl', '912345678', '214064286', '2003-10-03', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW());
+
+-- ===========================================================
+-- Asignar rol de 'Pasajero' (id_rol = 2) en RolUsuario
+-- ===========================================================
+INSERT INTO RolUsuario (rut_usuario, id_rol)
+VALUES ('21406428-6', 2);
+
+-- ===========================================================
+-- Insertar detalles en la tabla Pasajero
+-- ===========================================================
+INSERT INTO Pasajero (RUT, Nacionalidad)
+VALUES ('21406428-6', 'Chilena');
+
 -- 1. Limpieza de Tablas Intermedias
 -- =============================================================================
 -- SCRIPT DE POBLADO: TARIFAS Y CARACTERÍSTICAS (SkyWay)
@@ -3415,30 +3606,29 @@ INSERT INTO Vuelo (ID_VUELO, Numero_Vuelo, Fecha_Hora_Salida, Fecha_Hora_Llegada
                                                                                                                                            (1,  'SW8117', NOW() + INTERVAL '1 day 14 hours 30 min', NOW() + INTERVAL '1 day 17 hours 45 min', 1, 1, '12345678-9', 1),
                                                                                                                                            (2,  'SW8118', NOW() + INTERVAL '1 day 18 hours 55 min', NOW() + INTERVAL '1 day 21 hours 30 min', 1, 1, '12345678-9', 1),
                                                                                                                                            (3,  'SW8180', NOW() + INTERVAL '1 day 22 hours 50 min', NOW() + INTERVAL '2 days 07 hours 35 min', 1, 2, '98765432-1', 1),
-                                                                                                                                           (4,  'SW8989', NOW() + INTERVAL '2 days 09 hours 55 min', NOW() + INTERVAL '2 days 12 hours 50 min', 1, 3, '98765432-1', 1),
-                                                                                                                                           (5,  'SW650',  NOW() + INTERVAL '1 day 07 hours 50 min', NOW() + INTERVAL '1 day 10 hours 40 min', 1, 1, '12345678-9', 1),
-                                                                                                                                           (6,  'SW2482', NOW() + INTERVAL '1 day 12 hours',         NOW() + INTERVAL '1 day 20 hours 15 min', 1, 3, '12345678-9', 1),
-                                                                                                                                           (7,  'SW8954', NOW() + INTERVAL '1 day 22 hours 30 min', NOW() + INTERVAL '2 days 01 hour 06 min',  1, 1, '98765432-1', 1),
-                                                                                                                                           (8,  'SW8120', NOW() + INTERVAL '2 days 15 hours',        NOW() + INTERVAL '2 days 17 hours 30 min', 1, 2, '12345678-9', 1),
-                                                                                                                                           (9,  'SW8130', NOW() + INTERVAL '2 days 19 hours',        NOW() + INTERVAL '2 days 21 hours 45 min', 1, 1, '98765432-1', 1),
-                                                                                                                                           (10, 'SW8140', NOW() + INTERVAL '2 days 22 hours 30 min', NOW() + INTERVAL '3 days 01 hour 30 min',  1, 3, '12345678-9', 1),
-                                                                                                                                           (11, 'SW8150', NOW() + INTERVAL '3 days 03 hours',        NOW() + INTERVAL '3 days 06 hours',        1, 2, '98765432-1', 1),
+                                                                                                                                           (4,  'SW8989', NOW() + INTERVAL '2 days 09 hours 55 min', NOW() + INTERVAL '2 days 12 hours 50 min', 1, 3, '87654321-0', 1),
+                                                                                                                                           (5,  'SW650',  NOW() + INTERVAL '1 day 07 hours 50 min', NOW() + INTERVAL '1 day 10 hours 40 min', 1, 4, '11223344-1', 1),
+                                                                                                                                           (6,  'SW2482', NOW() + INTERVAL '1 day 12 hours',         NOW() + INTERVAL '1 day 20 hours 15 min', 1, 5, '55667788-2', 1),
+                                                                                                                                           (7,  'SW8954', NOW() + INTERVAL '1 day 22 hours 30 min', NOW() + INTERVAL '2 days 01 hour 06 min',  1, 6, '11223344-1', 1),
+                                                                                                                                           (8,  'SW8120', NOW() + INTERVAL '2 days 15 hours',        NOW() + INTERVAL '2 days 17 hours 30 min', 1, 2, '98765432-1', 1),
+                                                                                                                                           (9,  'SW8130', NOW() + INTERVAL '2 days 19 hours',        NOW() + INTERVAL '2 days 21 hours 45 min', 1, 1, '12345678-9', 1),
+                                                                                                                                           (10, 'SW8140', NOW() + INTERVAL '2 days 22 hours 30 min', NOW() + INTERVAL '3 days 01 hour 30 min',  1, 3, '87654321-0', 1),
+                                                                                                                                           (11, 'SW8150', NOW() + INTERVAL '3 days 03 hours',        NOW() + INTERVAL '3 days 06 hours',        1, 4, '55667788-2', 1),
                                                                                                                                            (12, 'SW8160', NOW() + INTERVAL '3 days 08 hours',        NOW() + INTERVAL '3 days 10 hours 30 min', 1, 1, '12345678-9', 1),
-                                                                                                                                           (13, 'SW8170', NOW() + INTERVAL '3 days 11 hours 30 min', NOW() + INTERVAL '3 days 14 hours',        1, 3, '98765432-1', 1),
-                                                                                                                                           (14, 'SW8185', NOW() + INTERVAL '3 days 15 hours',        NOW() + INTERVAL '3 days 20 hours 30 min', 1, 2, '12345678-9', 1),
-                                                                                                                                           (15, 'SW9000', NOW() + INTERVAL '4 days 06 hours',        NOW() + INTERVAL '4 days 13 hours',        1, 1, '12345678-9', 1),
-                                                                                                                                           (16, 'SW9001', NOW() + INTERVAL '4 days 15 hours',        NOW() + INTERVAL '4 days 22 hours',        1, 3, '98765432-1', 1),
-                                                                                                                                           (17, 'SW9002', NOW() + INTERVAL '5 days 06 hours',        NOW() + INTERVAL '5 days 10 hours',        1, 2, '12345678-9', 1),
-                                                                                                                                           (18, 'SW9100', NOW() + INTERVAL '3 days 15 hours',        NOW() + INTERVAL '3 days 19 hours 30 min', 1, 1, '12345678-9', 1),
+                                                                                                                                           (13, 'SW8170', NOW() + INTERVAL '3 days 11 hours 30 min', NOW() + INTERVAL '3 days 14 hours',        1, 3, '87654321-0', 1),
+                                                                                                                                           (14, 'SW8185', NOW() + INTERVAL '3 days 15 hours',        NOW() + INTERVAL '3 days 20 hours 30 min', 1, 2, '98765432-1', 1),
+                                                                                                                                           (15, 'SW9000', NOW() + INTERVAL '4 days 06 hours',        NOW() + INTERVAL '4 days 13 hours',        1, 5, '11223344-1', 1),
+                                                                                                                                           (16, 'SW9001', NOW() + INTERVAL '4 days 15 hours',        NOW() + INTERVAL '4 days 22 hours',        1, 6, '55667788-2', 1),
+                                                                                                                                           (17, 'SW9002', NOW() + INTERVAL '5 days 06 hours',        NOW() + INTERVAL '5 days 10 hours',        1, 7, '12345678-9', 1),
+                                                                                                                                           (18, 'SW9100', NOW() + INTERVAL '3 days 15 hours',        NOW() + INTERVAL '3 days 19 hours 30 min', 1, 8, '11223344-1', 1),
                                                                                                                                            (19, 'SW9200', NOW() + INTERVAL '4 days 08 hours',        NOW() + INTERVAL '4 days 11 hours 30 min', 1, 1, '12345678-9', 1),
                                                                                                                                            (20, 'SW9201', NOW() + INTERVAL '4 days 13 hours',        NOW() + INTERVAL '4 days 16 hours',        1, 2, '98765432-1', 1),
-                                                                                                                                           (21, 'SW9202', NOW() + INTERVAL '4 days 18 hours',        NOW() + INTERVAL '4 days 21 hours',        1, 3, '12345678-9', 1),
-                                                                                                                                           (22, 'SW9900', NOW() + INTERVAL '1 day 23 hours 55 min',  NOW() + INTERVAL '2 days 09 hours 30 min', 1, 1, '12345678-9', 1),
-                                                                                                                                           (23, 'SW9901', NOW() + INTERVAL '1 day 09 hours',         NOW() + INTERVAL '1 day 15 hours',         1, 2, '98765432-1', 1),
-                                                                                                                                           (24, 'SW9902', NOW() + INTERVAL '1 day 17 hours',         NOW() + INTERVAL '1 day 22 hours',         1, 2, '12345678-9', 1),
+                                                                                                                                           (21, 'SW9202', NOW() + INTERVAL '4 days 18 hours',        NOW() + INTERVAL '4 days 21 hours',        1, 3, '87654321-0', 1),
+                                                                                                                                           (22, 'SW9900', NOW() + INTERVAL '1 day 23 hours 55 min',  NOW() + INTERVAL '2 days 09 hours 30 min', 1, 7, '55667788-2', 1),
+                                                                                                                                           (23, 'SW9901', NOW() + INTERVAL '1 day 09 hours',         NOW() + INTERVAL '1 day 15 hours',         1, 8, '87654321-0', 1),
+                                                                                                                                           (24, 'SW9902', NOW() + INTERVAL '1 day 17 hours',         NOW() + INTERVAL '1 day 22 hours',         1, 9, '98765432-1', 1),
                                                                                                                                            (25, 'SW9400', NOW() + INTERVAL '3 days 08 hours',        NOW() + INTERVAL '3 days 15 hours',        1, 2, '98765432-1', 1),
-                                                                                                                                           (26, 'SW9500', NOW() + INTERVAL '3 days 17 hours',        NOW() + INTERVAL '3 days 23 hours 30 min', 1, 2, '98765432-1', 1);
-
+                                                                                                                                           (26, 'SW9500', NOW() + INTERVAL '3 days 17 hours',        NOW() + INTERVAL '3 days 23 hours 30 min', 1, 9, '55667788-2', 1);
 SELECT setval('vuelo_seq', COALESCE((SELECT MAX(ID_VUELO) FROM Vuelo), 1), true);
 
 INSERT INTO Precio_Asiento (ID_VUELO, ID_CLASE, PRECIO)
@@ -3492,56 +3682,47 @@ INSERT INTO Segmento_Vuelo (ID_SEGMENTO, ID_VUELO, ID_AEROPUERTO_ORIGEN, ID_AERO
 
 SELECT setval('segmento_vuelo_seq', COALESCE((SELECT MAX(ID_SEGMENTO) FROM Segmento_Vuelo), 1), true);
 
-INSERT INTO Asignacion_Puerta (ID_SEGMENTO, ID_PUERTA) VALUES
--- SW8117 SCL -> MVD usa la puerta SCL-01
-((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8117' AND sg.ORDEN_SEGMENTO = 1),
- (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'SCL-01')),
+ALTER USER aerolinea_user SET search_path TO public, directus;
+SET search_path TO public, directus;
+DO $$
+    DECLARE
+        vuelorec         RECORD;
+        puerta_id        INT;
+        segrec           RECORD;
+    BEGIN
+        DELETE FROM Asignacion_Puerta;
 
--- SW8118 MVD -> GRU usa la puerta MVD-02
-((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8118' AND sg.ORDEN_SEGMENTO = 1),
- (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'MVD-02')),
+        -- Recorrer todos los segmentos de todos los vuelos
+        FOR segrec IN
+            SELECT s.ID_SEGMENTO, s.ID_AEROPUERTO_ORIGEN, s.HORA_SALIDA
+            FROM Segmento_Vuelo s
+            ORDER BY s.HORA_SALIDA ASC
+            LOOP
+                -- Buscar una puerta en el aeropuerto de origen que NO esté ocupada en ese horario (margen de 2 horas)
+                SELECT p.ID_PUERTA INTO puerta_id
+                FROM Puerta_Embarque p
+                WHERE p.ID_AEROPUERTO = segrec.ID_AEROPUERTO_ORIGEN
+                  AND p.ID_PUERTA NOT IN (
+                    SELECT ap.ID_PUERTA
+                    FROM Asignacion_Puerta ap
+                             JOIN Segmento_Vuelo sv ON sv.ID_SEGMENTO = ap.ID_SEGMENTO
+                    WHERE sv.HORA_SALIDA BETWEEN (segrec.HORA_SALIDA - INTERVAL '2 hours')
+                              AND (segrec.HORA_SALIDA + INTERVAL '1 hour')
+                )
+                ORDER BY p.ID_PUERTA ASC
+                LIMIT 1;
 
--- SW8180 GRU -> JFK usa la puerta GRU-01
-((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8180' AND sg.ORDEN_SEGMENTO = 1),
- (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'GRU-01')),
+                -- Registrar la asignación
+                IF puerta_id IS NOT NULL THEN
+                    INSERT INTO Asignacion_Puerta (ID_SEGMENTO, ID_PUERTA, Hora_Asignacion)
+                    VALUES (segrec.ID_SEGMENTO, puerta_id, NOW());
+                END IF;
 
--- SW8989 JFK -> LAX usa la puerta JFK-03
-((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8989' AND sg.ORDEN_SEGMENTO = 1),
- (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'JFK-03')),
+            END LOOP;
+    END $$;
 
--- SW650 SCL -> LIM usa la puerta SCL-02
-((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW650' AND sg.ORDEN_SEGMENTO = 1),
- (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'SCL-02')),
-
--- SW2482 LIM -> ATL usa la puerta LIM-02
-((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW2482' AND sg.ORDEN_SEGMENTO = 1),
- (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'LIM-02')),
-
--- SW8954 ATL -> JFK usa la puerta ATL-01
-((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8954' AND sg.ORDEN_SEGMENTO = 1),
- (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'ATL-01')),
-
--- SW8160 SCL -> MVD usa la puerta SCL-03
-((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8160' AND sg.ORDEN_SEGMENTO = 1),
- (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'SCL-03')),
-
--- SW8170 MVD -> GRU usa la puerta MVD-01
-((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8170' AND sg.ORDEN_SEGMENTO = 1),
- (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'MVD-01')),
-
--- SW8185 tramo multi-segmento (BOG -> MIA) usa la puerta BOG-01
-((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW8185' AND sg.ORDEN_SEGMENTO = 2),
- (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'BOG-01')),
-
--- SW9400 LAX -> MIA usa la puerta LAX-04
-((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW9400' AND sg.ORDEN_SEGMENTO = 1),
- (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'LAX-04')),
-
--- SW9500 MIA -> SCL usa la puerta MIA-02
-((SELECT sg.ID_SEGMENTO FROM Segmento_Vuelo sg JOIN Vuelo v ON sg.ID_VUELO = v.ID_VUELO WHERE v.Numero_Vuelo = 'SW9500' AND sg.ORDEN_SEGMENTO = 1),
- (SELECT ID_PUERTA FROM Puerta_Embarque WHERE Codigo_Puerta = 'MIA-02'));
-
-
+-- Actualizar la secuencia de la tabla asignacion_puerta
+SELECT setval('asignacion_puerta_seq', COALESCE((SELECT MAX(ID_ASIGNACION) FROM Asignacion_Puerta), 1), true);
 
 -- 10. Itinerarios (IDs hardcoded)
 INSERT INTO Itinerario ( ORIGEN_AEROPUERTO, DESTINO_AEROPUERTO, DURACION_TOTAL, NUMERO_ESCALAS,Precio_Base) VALUES
@@ -3736,3 +3917,4 @@ FROM itinerario it
 WHERE it.hora_salida >= NOW()
   AND it.hora_salida < NOW() + INTERVAL '7 days'
 ORDER BY it.hora_salida ASC;
+

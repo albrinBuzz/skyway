@@ -7,11 +7,12 @@
 
     <ui:define name="head">
         <style type="text/css">
-            /* --- VARIABLES CORPORATIVAS SKYWAY --- */
+            /* --- VARIABLES CORPORATIVAS SKYWAY OPERACIONES --- */
             :root {
-                --primary-deep: #080e1a;
-                --topbar-bg: rgba(11, 20, 38, 0.85);
-                --sidebar-bg: #0f172a;
+                --primary-deep: #070c14;
+                --topbar-bg: rgba(11, 20, 38, 0.88);
+                --sidebar-bg: #0b1324;
+                --sidebar-border: #1e293b;
                 --accent-blue: #38bdf8;
                 --accent-hover: rgba(56, 189, 248, 0.08);
                 --text-main: #f8fafc;
@@ -27,78 +28,126 @@
                 overflow-x: hidden;
             }
 
+            /* --- SIDEBAR BASE --- */
             .sidebar {
-                width: 260px;
+                width: 250px;
                 background-color: var(--sidebar-bg);
-                border-right: 1px solid var(--border-glow);
+                border-right: 1px solid var(--sidebar-border);
                 display: flex;
                 flex-direction: column;
-                transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
                 z-index: 110;
                 overflow: hidden;
                 flex-shrink: 0;
             }
 
-            .sidebar.collapsed {
-                width: 68px;
-            }
-
+            /* --- HEADER DEL SIDEBAR --- */
             .sidebar-header {
                 height: 65px;
                 display: flex;
                 align-items: center;
-                padding: 0 20px;
-                background: rgba(0, 0, 0, 0.15);
-                border-bottom: 1px solid var(--border-glow);
-                overflow: hidden;
+                padding: 0 16px;
+                background: rgba(0, 0, 0, 0.2);
+                border-bottom: 1px solid var(--sidebar-border);
                 white-space: nowrap;
+                overflow: hidden;
             }
 
-            .logo-text {
-                color: var(--text-main) !important;
-                text-decoration: none;
-                font-weight: 800;
-                font-size: 1.15rem;
-                letter-spacing: 1px;
+            .brand-wrapper {
                 display: flex;
                 align-items: center;
-                gap: 14px;
+                gap: 10px;
+                text-decoration: none;
+                width: 100%;
             }
 
-            .logo-text i {
-                font-size: 1.4rem;
+            .brand-icon {
+                font-size: 1.2rem;
                 color: var(--accent-blue);
+                background: rgba(56, 189, 248, 0.1);
+                padding: 8px;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
             }
 
+            .brand-details {
+                display: flex;
+                flex-direction: column;
+                line-height: 1.1;
+                transition: opacity 0.2s ease;
+            }
+
+            .brand-title {
+                color: var(--text-main);
+                font-weight: 700;
+                font-size: 0.92rem;
+                letter-spacing: 0.3px;
+            }
+
+            .brand-subtitle {
+                color: var(--accent-blue);
+                font-size: 0.65rem;
+                font-weight: 700;
+                letter-spacing: 0.8px;
+                text-transform: uppercase;
+                margin-top: 2px;
+            }
+
+            /* --- LISTA Y ELEMENTOS DEL MENÚ --- */
             .menu-list {
                 list-style: none;
-                padding: 20px 10px;
+                padding: 12px 8px;
                 margin: 0;
                 flex-grow: 1;
+                overflow-y: auto;
+                overflow-x: hidden;
+            }
+
+            .menu-category-title {
+                padding: 14px 12px 6px 12px;
+                font-size: 0.65rem;
+                font-weight: 700;
+                color: var(--text-muted);
+                letter-spacing: 1px;
+                text-transform: uppercase;
+                white-space: nowrap;
+                transition: opacity 0.2s ease;
             }
 
             .menu-item {
-                margin-bottom: 6px;
+                margin-bottom: 4px;
                 position: relative;
             }
 
             .menu-link {
                 display: flex;
                 align-items: center;
-                padding: 12px 14px;
+                padding: 10px 12px;
                 color: #94a3b8 !important;
                 text-decoration: none;
                 border-radius: 8px;
-                transition: all 0.2s ease;
+                transition: background 0.2s ease, color 0.2s ease;
                 white-space: nowrap;
+                font-size: 0.88rem;
             }
 
             .menu-link i {
-                font-size: 1.25rem;
-                margin-right: 16px;
+                font-size: 1.15rem;
                 width: 24px;
+                min-width: 24px;
                 text-align: center;
                 transition: color 0.2s ease;
+                margin-right: 12px;
+            }
+
+            .menu-link label {
+                cursor: pointer;
+                white-space: nowrap;
+                margin: 0;
+                transition: opacity 0.2s ease;
             }
 
             .menu-link:hover {
@@ -123,13 +172,43 @@
             .menu-item.active::before {
                 content: '';
                 position: absolute;
-                left: -10px;
-                top: 15%;
-                height: 70%;
-                width: 4px;
+                left: -8px;
+                top: 20%;
+                height: 60%;
+                width: 3px;
                 background: var(--accent-blue);
                 border-radius: 0 4px 4px 0;
-                box-shadow: 0 0 10px var(--accent-blue);
+                box-shadow: 0 0 8px var(--accent-blue);
+            }
+
+            /* --- ESTADOS CUANDO EL SIDEBAR ESTÁ COLAPSADO --- */
+            .sidebar.collapsed {
+                width: 64px;
+            }
+
+            .sidebar.collapsed .brand-details,
+            .sidebar.collapsed .menu-category-title,
+            .sidebar.collapsed .menu-link label {
+                opacity: 0;
+                display: none !important;
+            }
+
+            .sidebar.collapsed .sidebar-header {
+                padding: 0;
+                justify-content: center;
+            }
+
+            .sidebar.collapsed .brand-wrapper {
+                justify-content: center;
+            }
+
+            .sidebar.collapsed .menu-link {
+                padding: 10px 0;
+                justify-content: center;
+            }
+
+            .sidebar.collapsed .menu-link i {
+                margin-right: 0;
             }
 
             .main-content {
@@ -148,7 +227,7 @@
                 align-items: center;
                 justify-content: space-between;
                 padding: 0 1.5rem;
-                border-bottom: 1px solid var(--border-glow);
+                border-bottom: 1px solid var(--sidebar-border);
                 position: sticky;
                 top: 0;
                 z-index: 100;
@@ -184,24 +263,30 @@
                 display: flex;
                 align-items: center;
                 gap: 12px;
-                padding: 6px 12px;
+                padding: 5px 12px;
                 border-radius: 20px;
                 background: rgba(255, 255, 255, 0.02);
-                border: 1px solid rgba(255, 255, 255, 0.03);
+                border: 1px solid rgba(255, 255, 255, 0.05);
             }
 
             .user-profile span {
                 color: #94a3b8 !important;
                 font-weight: 500;
-                font-size: 0.9rem;
+                font-size: 0.88rem;
             }
 
             .view-container {
                 flex-grow: 1;
-                padding: 1.5rem 2rem 2rem 2rem;
+                padding: 1.5rem;
                 display: flex;
                 flex-direction: column;
                 animation: fadeIn 0.4s ease-out;
+            }
+
+            @media (min-width: 768px) {
+                .view-container {
+                    padding: 1.5rem 2rem 2rem 2rem;
+                }
             }
 
             .card-custom {
@@ -223,67 +308,80 @@
     <ui:define name="contenido">
         <div class="admin-wrapper">
             <aside id="sidebar" class="sidebar">
+                <!-- HEADER FORMAL CORPORATIVO (CCO) -->
                 <div class="sidebar-header">
-                    <h:link outcome="/admin/index.xhtml" styleClass="logo-text">
-                        <i class="pi pi-send"></i>
-                        <span>SKY-ADMIN</span>
+                    <h:link outcome="/admin/index.xhtml" styleClass="brand-wrapper">
+                        <div class="brand-icon">
+                            <i class="pi pi-send"></i>
+                        </div>
+                        <div class="brand-details">
+                            <span class="brand-title">Centro de Operaciones</span>
+                            <span class="brand-subtitle">SkyWay Chile</span>
+                        </div>
                     </h:link>
                 </div>
 
+                <!-- MENÚ CATEGORIZADO -->
                 <ul class="menu-list">
-                    <!-- Dashboard / Gestión de Vuelos -->
-                    <li class="menu-item #{view.viewId.contains('index') ? 'active' : ''}">
-                        <h:link outcome="/admin/index.xhtml" styleClass="menu-link">
+
+                    <li class="menu-category-title">Operaciones</li>
+
+                    <!-- Gestión de Vuelos -->
+                    <li class="menu-item #{view.viewId.endsWith('index.xhtml') ? 'active' : ''}">
+                        <h:link outcome="/admin/index.xhtml" styleClass="menu-link" title="Gestión de Vuelos">
                             <i class="pi pi-map"></i>
-                            <span>Gestión de Vuelos</span>
+                            <label>Gestión de Vuelos</label>
                         </h:link>
                     </li>
 
                     <!-- Itinerarios -->
                     <li class="menu-item #{view.viewId.contains('itinerarios') ? 'active' : ''}">
-                        <h:link outcome="/admin/itinerario/itinerarios.xhtml" styleClass="menu-link">
+                        <h:link outcome="/admin/itinerario/itinerarios.xhtml" styleClass="menu-link" title="Itinerarios">
                             <i class="pi pi-calendar-plus"></i>
-                            <span>Itinerarios</span>
+                            <label>Itinerarios</label>
                         </h:link>
                     </li>
 
-                    <!-- Aeropuertos & Nodos Geo -->
+                    <!-- Aeropuertos -->
                     <li class="menu-item #{view.viewId.contains('gestionAeropuertos') ? 'active' : ''}">
-                        <h:link outcome="/admin/gestionAeropuertos.xhtml" styleClass="menu-link">
+                        <h:link outcome="/admin/gestionAeropuertos.xhtml" styleClass="menu-link" title="Aeropuertos">
                             <i class="pi pi-globe"></i>
-                            <span>Aeropuertos</span>
+                            <label>Aeropuertos</label>
                         </h:link>
                     </li>
 
-                    <!-- Flota de Aviones (Ajustado la vista a gestionFlota) -->
+                    <!-- Flota de Aviones -->
                     <li class="menu-item #{view.viewId.contains('gestionFlota') ? 'active' : ''}">
-                        <h:link outcome="/admin/gestionFlota.xhtml" styleClass="menu-link">
-                            <i class="pi pi-spin pi-compass"></i>
-                            <span>Aviones &amp; Flota</span>
+                        <h:link outcome="/admin/gestionFlota.xhtml" styleClass="menu-link" title="Aviones &amp; Flota">
+                            <i class="pi pi-compass"></i>
+                            <label>Aviones &amp; Flota</label>
                         </h:link>
                     </li>
 
-                    <!-- Tarifas y Reglas de Cobro -->
+                    <li class="menu-category-title">Configuración</li>
+
+                    <!-- Tarifas -->
                     <li class="menu-item #{view.viewId.contains('gestionarTarifas') ? 'active' : ''}">
-                        <h:link outcome="/admin/gestionarTarifas.xhtml" styleClass="menu-link">
+                        <h:link outcome="/admin/gestionarTarifas.xhtml" styleClass="menu-link" title="Tarifas">
                             <i class="pi pi-dollar"></i>
-                            <span>Tarifas</span>
+                            <label>Tarifas</label>
                         </h:link>
                     </li>
 
-                    <!-- Tablas Paramétricas / Catálogos Auxiliares -->
+                    <!-- Catálogos Paramétricos -->
                     <li class="menu-item #{view.viewId.contains('gestionParametricas') ? 'active' : ''}">
-                        <h:link outcome="/admin/gestionParametricas.xhtml" styleClass="menu-link">
+                        <h:link outcome="/admin/gestionParametricas.xhtml" styleClass="menu-link" title="Catálogos de Operación">
                             <i class="pi pi-sliders-h"></i>
-                            <span>Catálogos de Operación</span>
+                            <label>Catálogos de Operación</label>
                         </h:link>
                     </li>
 
-                    <!-- Gestión de Usuarios y Personal -->
+                    <li class="menu-category-title">Sistema</li>
+                    <!-- Usuarios -->
                     <li class="menu-item #{view.viewId.contains('usuarios') ? 'active' : ''}">
-                        <h:link outcome="/admin/usuarios.xhtml" styleClass="menu-link">
+                        <h:link outcome="/admin/usuarios.xhtml" styleClass="menu-link" title="Usuarios &amp; Personal">
                             <i class="pi pi-users"></i>
-                            <span>Usuarios</span>
+                            <label>Usuarios &amp; Personal</label>
                         </h:link>
                     </li>
                 </ul>

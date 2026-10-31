@@ -8,11 +8,12 @@
     <ui:define name="contenido-admin">
 
         <style type="text/css">
-            /* --- PALETA CORPORATIVA SERIA Y PROFESIONAL (SKYWAY NAVY) --- */
+            /* --- PALETA CORPORATIVA SKYWAY ITINERARIOS --- */
             :root {
                 --bg-deep: #0b1120;
                 --bg-card: #0f172a;
                 --bg-header: #1e293b;
+                --bg-expansion: #131c31;
                 --border-subtle: #334155;
 
                 --navy-brand: #2563eb;
@@ -20,15 +21,14 @@
                 --text-heading: #f8fafc;
                 --text-body: #e2e8f0;
                 --text-muted: #94a3b8;
-                --success-green: #10b981;
 
-                --status-active-bg: rgba(30, 58, 138, 0.4);
+                --status-active-bg: rgba(30, 58, 138, 0.35);
                 --status-active-border: #2563eb;
                 --status-active-text: #e2e8f0;
             }
 
             .ops-container {
-                padding: 0.75rem 0;
+                padding: 0.5rem 0;
                 width: 100%;
             }
 
@@ -43,25 +43,25 @@
 
             .header-container h2 {
                 color: var(--text-heading) !important;
-                font-size: 1.5rem !important;
+                font-size: 1.4rem !important;
                 font-weight: 700 !important;
                 margin: 0 !important;
-                letter-spacing: -0.02em;
+                letter-spacing: -0.01em;
             }
 
-            /* --- ESTILIZADO SOBRIO DE DATATABLE --- */
+            /* --- ESTILIZADO DATATABLE --- */
             .skyway-ops-table {
                 background-color: var(--bg-card) !important;
                 border: 1px solid var(--border-subtle) !important;
                 border-radius: 8px !important;
-                overflow: hidden;
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
             }
 
             .skyway-ops-table .ui-datatable-header {
                 background-color: var(--bg-header) !important;
-                padding: 14px 18px !important;
+                padding: 12px 16px !important;
                 border-bottom: 1px solid var(--border-subtle) !important;
+                border-radius: 8px 8px 0 0 !important;
             }
 
             /* Encabezados de Columnas */
@@ -71,10 +71,12 @@
                 text-transform: uppercase !important;
                 font-size: 0.72rem !important;
                 font-weight: 700 !important;
-                letter-spacing: 0.05em !important;
-                padding: 12px 16px !important;
+                letter-spacing: 0.04em !important;
+                padding: 12px 14px !important;
                 border: none !important;
                 border-bottom: 1px solid var(--border-subtle) !important;
+                white-space: nowrap !important;
+                vertical-align: middle !important;
             }
 
             .skyway-ops-table thead th .ui-column-filter {
@@ -82,90 +84,86 @@
             }
 
             /* Filas y Celdas */
-            .skyway-ops-table tbody td,
-            .skyway-ops-table tbody tr {
+            .skyway-ops-table tbody td {
                 background-color: var(--bg-card) !important;
                 color: var(--text-body) !important;
-                padding: 12px 16px !important;
+                padding: 12px 14px !important;
                 border: none !important;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
-                font-size: 0.88rem;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+                font-size: 0.85rem !important;
+                white-space: nowrap !important;
+                vertical-align: middle !important;
             }
 
-            /* Hover discreto de filas */
             .skyway-ops-table tbody tr:hover,
             .skyway-ops-table tbody tr:hover td {
-                background-color: var(--bg-header) !important;
+                background-color: rgba(30, 41, 59, 0.7) !important;
             }
 
-            /* --- PAGINADOR SOBRIO INTEGRADO --- */
-            .skyway-ops-table .ui-paginator {
+            /* --- FIX SUBTABLA Y EXPANSIÓN EN OSCURO --- */
+            .skyway-ops-table tbody tr.ui-row-expansion,
+            .skyway-ops-table tbody tr.ui-row-expansion > td {
                 background-color: var(--bg-deep) !important;
-                border: none !important;
-                border-top: 1px solid var(--border-subtle) !important;
-                padding: 10px !important;
+                border-bottom: 1px solid var(--border-subtle) !important;
+                padding: 14px !important;
             }
 
-            .skyway-ops-table .ui-paginator .ui-paginator-page,
-            .skyway-ops-table .ui-paginator .ui-paginator-first,
-            .skyway-ops-table .ui-paginator .ui-paginator-prev,
-            .skyway-ops-table .ui-paginator .ui-paginator-next,
-            .skyway-ops-table .ui-paginator .ui-paginator-last {
-                background-color: var(--bg-card) !important;
-                color: var(--text-muted) !important;
+            .itinerary-card {
+                background: var(--bg-expansion) !important;
                 border: 1px solid var(--border-subtle) !important;
-                border-radius: 4px !important;
-                font-weight: 600 !important;
-                padding: 3px 8px !important;
+                border-radius: 6px !important;
+                padding: 14px !important;
             }
 
-            .skyway-ops-table .ui-paginator .ui-paginator-page:hover {
-                color: var(--text-heading) !important;
-                border-color: var(--navy-brand) !important;
+            .nested-table.ui-datatable,
+            .nested-table.ui-datatable table {
+                background-color: transparent !important;
+                border: none !important;
             }
 
-            .skyway-ops-table .ui-paginator .ui-paginator-page.ui-state-active {
-                background-color: var(--navy-brand) !important;
-                color: #ffffff !important;
-                border-color: var(--navy-brand) !important;
+            .nested-table.ui-datatable thead th {
+                background-color: var(--bg-deep) !important;
+                border-bottom: 1px solid var(--border-subtle) !important;
+                color: var(--text-muted) !important;
+                font-size: 0.72rem !important;
+                text-transform: uppercase !important;
+                padding: 8px 12px !important;
             }
 
-            /* BADGES CÓDIGO Y RUTA */
-            .flight-code-badge {
-                background: #1e293b;
-                border: 1px solid var(--border-subtle);
-                color: var(--text-heading);
-                font-weight: 700;
-                font-size: 0.88rem;
-                padding: 5px 10px;
-                border-radius: 6px;
-                display: inline-block;
-                letter-spacing: 0.03em;
+            .nested-table.ui-datatable tbody tr,
+            .nested-table.ui-datatable tbody td {
+                background-color: var(--bg-expansion) !important;
+                color: var(--text-body) !important;
+                border: none !important;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+                padding: 10px 12px !important;
             }
 
-            .route-pill {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                font-weight: 600;
-                font-size: 0.9rem;
-                color: var(--text-heading);
+            .nested-table.ui-datatable tbody tr:hover,
+            .nested-table.ui-datatable tbody tr:hover td {
+                background-color: rgba(255, 255, 255, 0.03) !important;
             }
 
-            .route-pill .iata {
-                background: #0b1120;
-                padding: 2px 7px;
-                border-radius: 4px;
-                border: 1px solid var(--border-subtle);
-                font-size: 0.82rem;
-                color: var(--text-heading);
-            }
-
-            /* BUSCADOR CORPORATIVO */
+            /* --- BUSCADOR CORREGIDO Y ALINEADO --- */
             .search-box-wrapper {
                 display: flex;
                 align-items: center;
-                gap: 10px;
+                gap: 8px;
+            }
+
+            .search-input-container {
+                position: relative;
+                display: flex;
+                align-items: center;
+            }
+
+            .search-input-container i {
+                position: absolute;
+                left: 12px;
+                color: var(--text-muted);
+                font-size: 0.85rem;
+                pointer-events: none;
+                z-index: 2;
             }
 
             .search-input {
@@ -173,9 +171,11 @@
                 border: 1px solid var(--border-subtle) !important;
                 color: var(--text-heading) !important;
                 border-radius: 6px !important;
-                padding: 7px 12px 7px 36px !important;
-                font-size: 0.85rem !important;
-                width: 300px;
+                padding: 7px 12px 7px 34px !important;
+                font-size: 0.83rem !important;
+                height: 36px !important;
+                width: 280px;
+                box-sizing: border-box !important;
                 transition: border-color 0.2s ease;
             }
 
@@ -191,36 +191,84 @@
                 color: var(--text-muted) !important;
                 border-radius: 6px !important;
                 font-size: 0.8rem !important;
-                padding: 6px 12px !important;
+                height: 36px !important;
+                padding: 0 14px !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                gap: 6px !important;
+                box-sizing: border-box !important;
             }
+
             .btn-clear-search:hover {
                 color: var(--text-heading) !important;
                 border-color: var(--navy-brand) !important;
             }
 
-            /* EXPANSIONES Y SUBTABLAS */
-            .skyway-ops-table .p-rowExpansion > td {
-                background: var(--bg-deep) !important;
-                padding: 16px !important;
-            }
-
-            .itinerary-card {
-                background: var(--bg-card);
-                border: 1px solid var(--border-subtle);
-                border-radius: 6px;
-                padding: 16px;
-            }
-
-            .nested-table.ui-datatable,
-            .nested-table.ui-datatable tbody td {
-                background: transparent !important;
+            /* PAGINADOR CORPORATIVO */
+            .skyway-ops-table .ui-paginator {
+                background-color: var(--bg-deep) !important;
                 border: none !important;
+                border-top: 1px solid var(--border-subtle) !important;
+                padding: 8px 12px !important;
             }
 
-            .nested-table.ui-datatable thead th {
-                background: var(--bg-deep) !important;
-                border-bottom: 1px solid var(--border-subtle) !important;
+            .skyway-ops-table .ui-paginator .ui-paginator-page,
+            .skyway-ops-table .ui-paginator .ui-paginator-first,
+            .skyway-ops-table .ui-paginator .ui-paginator-prev,
+            .skyway-ops-table .ui-paginator .ui-paginator-next,
+            .skyway-ops-table .ui-paginator .ui-paginator-last {
+                background-color: var(--bg-card) !important;
                 color: var(--text-muted) !important;
+                border: 1px solid var(--border-subtle) !important;
+                border-radius: 4px !important;
+                font-weight: 600 !important;
+                padding: 3px 8px !important;
+                font-size: 0.8rem !important;
+            }
+
+            .skyway-ops-table .ui-paginator .ui-paginator-page.ui-state-active {
+                background-color: var(--navy-brand) !important;
+                color: #ffffff !important;
+                border-color: var(--navy-brand) !important;
+            }
+
+            /* BADGES Y COMPONENTES VISUALES */
+            .flight-code-badge {
+                background: #1e293b;
+                border: 1px solid var(--border-subtle);
+                color: var(--text-heading);
+                font-weight: 700;
+                font-size: 0.83rem;
+                padding: 4px 8px;
+                border-radius: 5px;
+                letter-spacing: 0.03em;
+                display: inline-block;
+            }
+
+            .route-pill {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-weight: 600;
+                font-size: 0.85rem;
+                color: var(--text-heading);
+            }
+
+            .route-pill .iata {
+                background: #0b1120;
+                padding: 2px 6px;
+                border-radius: 4px;
+                border: 1px solid var(--border-subtle);
+                font-size: 0.78rem;
+                color: var(--text-heading);
+            }
+
+            /* PRECIO SOBRIO CORPORATIVO */
+            .price-tag {
+                color: var(--text-heading);
+                font-weight: 600;
+                font-size: 0.88rem;
+                letter-spacing: 0.02em;
             }
 
             /* BOTONES DE ACCIÓN */
@@ -230,12 +278,27 @@
                 border-radius: 6px !important;
                 font-weight: 600 !important;
                 color: #ffffff !important;
-                font-size: 0.85rem !important;
-                padding: 8px 16px !important;
+                font-size: 0.83rem !important;
+                padding: 8px 14px !important;
             }
 
             .btn-new:hover {
                 background: var(--navy-hover) !important;
+            }
+
+            .btn-deactivate {
+                border: 1px solid var(--border-subtle) !important;
+                background: transparent !important;
+                color: var(--text-muted) !important;
+                border-radius: 4px !important;
+                font-size: 0.78rem !important;
+                padding: 4px 8px !important;
+            }
+
+            .btn-deactivate:hover {
+                background: rgba(239, 68, 68, 0.1) !important;
+                color: #f87171 !important;
+                border-color: rgba(239, 68, 68, 0.3) !important;
             }
 
             .ui-row-toggler {
@@ -267,7 +330,7 @@
             <div class="header-container">
                 <div>
                     <h2>Matriz de Itinerarios</h2>
-                    <span style="color: var(--text-muted); font-size: 0.85rem;">Gestión de planes de vuelo comerciales y tiquetes</span>
+                    <span style="color: var(--text-muted); font-size: 0.83rem;">Gestión de planes de vuelo comerciales y tarifas base</span>
                 </div>
                 <p:button outcome="itinerario.xhtml"
                           value="Crear Itinerario"
@@ -282,7 +345,7 @@
                              value="#{itinerarioBean.listaItinerarios}"
                              var="itin"
                              widgetVar="wvItinerarios"
-                             responsiveLayout="stack"
+                             responsiveLayout="scroll"
                              styleClass="skyway-ops-table"
                              paginator="true"
                              rows="10"
@@ -291,22 +354,22 @@
                              globalFilterOnly="true"
                              emptyMessage="No se encontraron registros de itinerarios comerciales que coincidan con la búsqueda.">
 
-                    <!-- HEADER CON BUSCADOR DE TABLA -->
+                    <!-- HEADER CON BUSCADOR ALINEADO -->
                     <f:facet name="header">
                         <div class="flex justify-content-between align-items-center flex-wrap gap-2">
                             <div class="flex align-items-center gap-2">
-                                <i class="pi pi-map" style="color: var(--text-muted); font-size: 1rem;"></i>
-                                <span style="color: var(--text-heading); font-weight: 600; font-size: 0.9rem;">Registro General de Itinerarios</span>
+                                <i class="pi pi-map" style="color: var(--text-muted); font-size: 0.9rem;"></i>
+                                <span style="color: var(--text-heading); font-weight: 600; font-size: 0.88rem;">Registro General de Itinerarios</span>
                             </div>
 
                             <div class="search-box-wrapper">
-                                <span class="ui-input-icon-left" style="position: relative;">
-                                    <i class="pi pi-search" style="color: var(--text-muted); position: absolute; left: 12px; top: 50%; transform: translateY(-50%); z-index: 2;" />
+                                <div class="search-input-container">
+                                    <i class="pi pi-search"></i>
                                     <p:inputText id="globalFilter"
                                                  onkeyup="PF('wvItinerarios').filter()"
                                                  placeholder="Buscar por código u origen..."
                                                  styleClass="search-input" />
-                                </span>
+                                </div>
 
                                 <p:commandButton value="Limpiar"
                                                  icon="pi pi-filter-slash"
@@ -318,7 +381,7 @@
                     </f:facet>
 
                     <!-- TOGGLER EXPANSIVO -->
-                    <p:column style="width:3rem; text-align: center">
+                    <p:column style="width:2.5rem; text-align: center">
                         <p:rowToggler />
                     </p:column>
 
@@ -327,7 +390,7 @@
                               sortBy="#{itin.idItinerario}"
                               filterBy="#{itin.idItinerario}"
                               filterMatchMode="contains"
-                              style="width: 140px;">
+                              style="width: 120px;">
                         <span class="flight-code-badge">
                             SKW-ITI-#{itin.idItinerario}
                         </span>
@@ -336,36 +399,37 @@
                     <!-- RUTA COMERCIAL -->
                     <p:column headerText="Trayecto / Ruta Comercial"
                               filterBy="#{itin.aeropuertoOrigen.codigoIata} #{itin.aeropuertoDestino.codigoIata}"
-                              filterMatchMode="contains">
+                              filterMatchMode="contains"
+                              style="width: 320px;">
                         <div class="route-pill">
                             <span class="iata">#{itin.aeropuertoOrigen.codigoIata}</span>
-                            <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 400;">(#{itin.aeropuertoOrigen.nombreAeropuerto})</span>
-                            <i class="pi pi-arrow-right" style="color: var(--text-muted); font-size: 0.75rem;"></i>
+                            <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 400;">(#{itin.aeropuertoOrigen.nombreAeropuerto})</span>
+                            <i class="pi pi-arrow-right" style="color: var(--text-muted); font-size: 0.7rem;"></i>
                             <span class="iata">#{itin.aeropuertoDestino.codigoIata}</span>
-                            <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 400;">(#{itin.aeropuertoDestino.nombreAeropuerto})</span>
+                            <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 400;">(#{itin.aeropuertoDestino.nombreAeropuerto})</span>
                         </div>
                     </p:column>
 
                     <!-- TIPO DE VUELO / ESCALAS -->
                     <p:column headerText="Modalidad"
                               sortBy="#{itin.numeroEscalas}"
-                              style="width: 150px; text-align: center;">
-                        <span style="font-weight: 600; color: var(--text-heading);">
+                              style="width: 130px; text-align: center;">
+                        <span style="font-weight: 500; color: var(--text-heading);">
                             #{itin.numeroEscalas == 0 ? 'Vuelo Directo' : itin.numeroEscalas += ' Escala(s)'}
                         </span>
                     </p:column>
 
-                    <!-- PRECIO BASE -->
+                    <!-- PRECIO BASE (SOBRIO) -->
                     <p:column headerText="Precio Base"
                               sortBy="#{itin.precioBase}"
-                              style="width: 140px;">
-                        <h:outputText value="#{itin.precioBase}" style="font-weight: 700; color: var(--success-green); font-size: 0.95rem;">
+                              style="width: 130px; text-align: right;">
+                        <h:outputText value="#{itin.precioBase}" styleClass="price-tag">
                             <f:convertNumber type="currency" currencySymbol="$ " locale="es_CL" maxFractionDigits="0"/>
                         </h:outputText>
                     </p:column>
 
-                    <!-- ACCIONES -->
-                    <p:column headerText="Acciones" style="width: 120px; text-align: center">
+                    <!-- ACCIONES (OPERACIONES EN LUGAR DE ELIMINAR) -->
+                    <p:column headerText="Acciones" style="width: 100px; text-align: center">
                         <div class="flex gap-2 justify-content-center">
                             <p:button icon="pi pi-pencil"
                                       outcome="itinerario.xhtml"
@@ -374,25 +438,25 @@
                                 <f:param name="id" value="#{itin.idItinerario}" />
                             </p:button>
 
-                            <p:commandButton icon="pi pi-trash"
+                            <p:commandButton icon="pi pi-power-off"
                                              action="#{itinerarioBean.eliminarItinerario(itin)}"
-                                             styleClass="ui-button-outlined ui-button-danger ui-button-sm"
-                                             title="Eliminar Itinerario"
+                                             styleClass="btn-deactivate ui-button-sm"
+                                             title="Desactivar Itinerario"
                                              update="dt-itinerarios formItinerarios:msgs"
                                              process="@this">
-                                <p:confirm header="Confirmar Eliminación"
-                                           message="¿Está seguro de que desea eliminar el itinerario SKW-ITI-#{itin.idItinerario}?"
+                                <p:confirm header="Confirmar Suspensión"
+                                           message="¿Desea dar de baja o suspender la comercialización del itinerario SKW-ITI-#{itin.idItinerario}?"
                                            icon="pi pi-exclamation-triangle" />
                             </p:commandButton>
                         </div>
                     </p:column>
 
-                    <!-- DETALLE EXPANDIDO -->
+                    <!-- DETALLE EXPANDIDO EN OSCURO -->
                     <p:rowExpansion>
                         <div class="itinerary-card">
                             <div class="flex justify-content-between align-items-center mb-3">
-                                <h4 style="margin:0; display: flex; align-items: center; gap: 8px; color: var(--text-heading); font-size: 0.9rem; font-weight: 600;">
-                                    <i class="pi pi-map-marker" style="color: var(--text-muted)"></i>
+                                <h4 style="margin:0; display: flex; align-items: center; gap: 8px; color: var(--text-heading); font-size: 0.88rem; font-weight: 600;">
+                                    <i class="pi pi-map-marker" style="color: var(--navy-brand)"></i>
                                     Tramos Operativos del Plan de Vuelo
                                 </h4>
                             </div>
@@ -445,9 +509,9 @@
                 </p:dataTable>
             </h:form>
 
-            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" width="380">
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" width="400">
                 <p:commandButton value="Cancelar" type="button" styleClass="ui-confirmdialog-no ui-button-flat btn-clear-search" />
-                <p:commandButton value="Eliminar" type="button" styleClass="ui-confirmdialog-yes btn-new" style="background: #ef4444 !important;" />
+                <p:commandButton value="Desactivar" type="button" styleClass="ui-confirmdialog-yes btn-new" style="background: #3b82f6 !important;" />
             </p:confirmDialog>
         </div>
 

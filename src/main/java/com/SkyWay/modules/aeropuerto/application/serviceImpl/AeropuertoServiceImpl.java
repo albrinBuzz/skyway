@@ -6,6 +6,7 @@ import com.SkyWay.modules.aeropuerto.domain.service.AeropuertoService;
 import com.SkyWay.modules.aeropuerto.presentation.dto.AeropuertoMapaDTO;
 import com.SkyWay.modules.aeropuerto.presentation.dto.AeropuertoMapaProjection;
 import com.SkyWay.util.Logger;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -26,9 +27,11 @@ public class AeropuertoServiceImpl implements AeropuertoService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable("aeropuertos")
     public List<Aeropuerto> findAll() {
         return aeropuertoRepository.findAll();
     }
+
 
     @Override
     @Transactional(readOnly = true)

@@ -697,16 +697,36 @@ CREATE TABLE Notificacion (
 
 
 
+-- 1. Eliminar la tabla Log_Auditoria si ya existe (para liberar la dependencia del ENUM)
+DROP TABLE IF EXISTS Log_Auditoria CASCADE;
+
+-- 2. Eliminar el tipo ENUM si ya existe en la base de datos
+DROP TYPE IF EXISTS tipo_nivel_log CASCADE;
+
+-- 1. Crear tipo ENUM para nivel de severidad del evento
+CREATE TYPE tipo_nivel_log AS ENUM ('INFO', 'WARN', 'ERROR', 'SECURITY');
+
+-- 2. Tabla de Auditoría Avanzada
 CREATE TABLE IF NOT EXISTS Log_Auditoria (
-     ID_LOG INT PRIMARY KEY DEFAULT nextval('log_auditoria_seq'),
-     Fecha_Hora TIMESTAMP NOT NULL DEFAULT NOW(),
-     Rut_Usuario VARCHAR(12),
-     Accion VARCHAR(100) NOT NULL, -- ej. 'CANCELACION_RESERVA', 'CAMBIO_ASIENTO'
-     Tabla_Afectada VARCHAR(50),
-     ID_Registro_Afectado INT,
-     Detalle TEXT,
-     Direccion_IP VARCHAR(45)
+id_log BIGSERIAL PRIMARY KEY,
+fecha_hora TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+rut_usuario VARCHAR(12) REFERENCES Usuario(RUT) ON DELETE SET NULL,
+accion VARCHAR(100) NOT NULL, -- ej. 'LOGIN_EXITOSO', 'CAMBIO_ASIENTO', 'ANULACION_RESERVA'
+nivel tipo_nivel_log NOT NULL DEFAULT 'INFO',
+tabla_afectada VARCHAR(50),
+id_registro_afectado INT,
+datos_anteriores JSONB, -- Estado antes del cambio (para UPDATE/DELETE)
+datos_nuevos JSONB,     -- Estado nuevo tras el cambio
+detalle TEXT,
+direccion_ip VARCHAR(45),
+user_agent VARCHAR(255)  -- Navegador/Dispositivo (Chrome, Firefox, Mobile App, etc.)
 );
+
+-- 3. Índices Estratégicos para Consultas Rápidas y Paneles de Control (Dashboards)
+CREATE INDEX idx_log_auditoria_fecha ON Log_Auditoria(fecha_hora DESC);
+CREATE INDEX idx_log_auditoria_rut ON Log_Auditoria(rut_usuario);
+CREATE INDEX idx_log_auditoria_accion ON Log_Auditoria(accion);
+CREATE INDEX idx_log_auditoria_datos_nuevos ON Log_Auditoria USING gin (datos_nuevos); -- Búsquedas avanzadas en JSONB
 
 
 /*CREATE TABLE Seguimiento_Vuelo (
