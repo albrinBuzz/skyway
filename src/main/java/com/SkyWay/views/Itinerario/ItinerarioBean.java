@@ -624,6 +624,36 @@ public class ItinerarioBean implements Serializable {
         }
     }
 
+    /**
+     * Prepara y serializa en JSON la geometría visual de un vuelo individual (origen, escalas y destino)
+     * para ser renderizado en el mapa Leaflet dentro del diálogo modal de vista previa.
+     *
+     * @param vuelo El objeto Vuelo seleccionado en la tabla de búsquedas.
+     */
+    public void prepararMapaVuelo(Vuelo vuelo) {
+        if (vuelo == null) {
+            return;
+        }
+        try {
+            // 1. Generar los DTOs geométricos usando el servicio de vuelos
+            List<VueloMapaDTO> geometrias = vueloService.construirGeometriaVuelos(Collections.singletonList(vuelo));
+
+            String vueloJson = "{}";
+            if (geometrias != null && !geometrias.isEmpty()) {
+                ObjectMapper mapper = new ObjectMapper();
+                vueloJson = mapper.writeValueAsString(geometrias.get(0));
+            }
+
+            // 2. Inyectar el JSON en los argumentos de PrimeFaces (args.vueloJson)
+            PrimeFaces.current().ajax().addCallbackParam("vueloJson", vueloJson);
+
+        } catch (Exception e) {
+            Logger.logInfo("Error al preparar la geometría del mapa para el vuelo "
+                    + vuelo.getNumeroVuelo() + ": " + e.getMessage());
+            PrimeFaces.current().ajax().addCallbackParam("vueloJson", "{}");
+        }
+    }
+
     public int getNumeroEscalasCalculado() {
         return Math.max(0, itinerariosAsignados.size() - 1);
     }

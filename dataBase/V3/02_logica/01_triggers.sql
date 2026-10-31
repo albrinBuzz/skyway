@@ -565,107 +565,189 @@ ALTER TABLE notificacion
 
 
 
+ALTER USER aerolinea_user SET search_path TO public, directus;
+SET search_path TO public, directus;
 
-UPDATE Usuario
-SET Correo_Electronico = 'cr.romanz@duocuc.cl'
-WHERE Correo_Electronico = 'juan.perez@piloto.com';
-
-
+-- =============================================================================
+-- FUNCIÓN: GENERACIÓN DE NOTIFICACIONES PROFESIONALES DE CAMBIO DE ESTADO/HORARIO
+-- =============================================================================
 CREATE OR REPLACE FUNCTION fn_notificacionVueloEstado()
-RETURNS TRIGGER
-LANGUAGE PLPGSQL
+    RETURNS TRIGGER
+    LANGUAGE PLPGSQL
 AS
 $$
 DECLARE
-pasajero RECORD;
-    mensaje TEXT;
+    rec_pasajero       RECORD;
+    v_numero_vuelo     VARCHAR(255);
+    v_id_vuelo         INT;
+    v_estado_nombre    VARCHAR(100);
+    v_origen_iata      VARCHAR(10);
+    v_destino_iata     VARCHAR(10);
+    v_puerta_codigo    VARCHAR(20);
+    v_terminal         VARCHAR(50);
+
+    -- Variables de control de cambio
+    v_cambio_salida    BOOLEAN := FALSE;
+    v_cambio_llegada   BOOLEAN := FALSE;
+    v_cambio_estado    BOOLEAN := FALSE;
+
+    mensaje_cuerpo     TEXT;
+    titulo_notif       VARCHAR(150);
 BEGIN
-    -- Iterar sobre cada pasajero asociado al vuelo actualizado
-FOR pasajero IN
-SELECT rsv.rut_pasajero, vl.numero_vuelo
-FROM reserva_itinerario rsvi
-         join itinerario_vuelo itv
-              on itv.id_itinerario = rsvi.id_itinerario
-         join reserva rsv on rsv.id_reserva = rsvi.id_reserva
-         join vuelo vl on vl.id_vuelo = itv.id_vuelo
-WHERE itv.id_vuelo = NEW.id_vuelo
+    -- 1. Determinar si el trigger se ejecutó sobre Vuelo o sobre Segmento_Vuelo
+    IF TG_TABLE_NAME = 'segmento_vuelo' THEN
+        v_id_vuelo := NEW.id_vuelo;
+        v_cambio_salida  := (OLD.hora_salida IS DISTINCT FROM NEW.hora_salida);
+        v_cambio_llegada := (OLD.hora_llegada IS DISTINCT FROM NEW.hora_llegada);
+    ELSIF TG_TABLE_NAME = 'vuelo' THEN
+        v_id_vuelo := NEW.id_vuelo;
+        v_cambio_salida  := (OLD.fecha_hora_salida IS DISTINCT FROM NEW.fecha_hora_salida);
+        v_cambio_llegada := (OLD.fecha_hora_llegada IS DISTINCT FROM NEW.fecha_hora_llegada);
+        v_cambio_estado  := (OLD.id_estado_vuelo IS DISTINCT FROM NEW.id_estado_vuelo);
+    END IF;
 
-    LOOP
-        -- Construir el mensaje de notificación con detalles específicos
-        mensaje := 'Estimado/a pasajero/a, su vuelo número ' || pasajero.numero_vuelo ||
-                   ' ha sido actualizado. ';
+    -- Si no hubo cambios operacionales significativos, omitir la notificación
+    IF NOT (v_cambio_salida OR v_cambio_llegada OR v_cambio_estado) THEN
+        RETURN NEW;
+    END IF;
 
--- Incluir información sobre la nueva hora de salida
+    -- 2. Obtener metadatos generales del Vuelo y Ruta principal
+    SELECT
+        v.numero_vuelo,
+        ev.descripcion,
+        a_orig.codigo_iata,
+        a_dest.codigo_iata
+    INTO
+        v_numero_vuelo,
+        v_estado_nombre,
+        v_origen_iata,
+        v_destino_iata
+    FROM vuelo v
+             LEFT JOIN estado_vuelo ev ON ev.id_estado_vuelo = v.id_estado_vuelo
+             LEFT JOIN segmento_vuelo s_orig ON s_orig.id_vuelo = v.id_vuelo AND s_orig.orden_segmento = 1
+             LEFT JOIN aeropuerto a_orig ON a_orig.id_aeropuerto = s_orig.id_aeropuerto_origen
+             LEFT JOIN segmento_vuelo s_dest ON s_dest.id_vuelo = v.id_vuelo
+        AND s_dest.orden_segmento = (SELECT MAX(orden_segmento) FROM segmento_vuelo WHERE id_vuelo = v.id_vuelo)
+             LEFT JOIN aeropuerto a_dest ON a_dest.id_aeropuerto = s_dest.id_aeropuerto_destino
+    WHERE v.id_vuelo = v_id_vuelo;
 
-IF OLD.hora_salida IS DISTINCT FROM NEW.hora_salida THEN
-			  mensaje := mensaje || 'La nueva hora de salida es: ' || TO_CHAR(NEW.hora_salida, 'DD/MM/YYYY HH24:MI') || '. ';
+    -- 3. Obtener Puerta de Embarque y Terminal asignada (si existe)
+    SELECT pe.codigo_puerta, pe.terminal
+    INTO v_puerta_codigo, v_terminal
+    FROM asignacion_puerta ap
+             JOIN segmento_vuelo sv ON sv.id_segmento = ap.id_segmento
+             JOIN puerta_embarque pe ON pe.id_puerta = ap.id_puerta
+    WHERE sv.id_vuelo = v_id_vuelo AND sv.orden_segmento = 1
+    LIMIT 1;
 
-        /*IF NEW.fecha_hora_salida IS NOT NULL THEN
-            mensaje := mensaje || 'La nueva hora de salida es: ' || TO_CHAR(NEW.fecha_hora_salida, 'DD/MM/YYYY HH24:MI') || '. ';
-        ELSE
-            mensaje := mensaje || 'La hora de salida no ha sido modificada. ';*/
-END IF;
+    titulo_notif := '✈️ Actualización de Vuelo: ' || COALESCE(v_numero_vuelo, '#' || v_id_vuelo);
 
-        -- Incluir información sobre la nueva hora de llegada
-        IF OLD.hora_llegada IS DISTINCT FROM NEW.hora_llegada THEN
-            mensaje := mensaje || 'La nueva hora de llegada es: ' || TO_CHAR(NEW.hora_llegada, 'DD/MM/YYYY HH24:MI') || '. ';
-ELSE
-            --mensaje := mensaje || 'La hora de llegada no ha sido modificada. ';
-END IF;
+    -- 4. Iterar sobre todos los pasajeros confirmados con reserva activa
+    FOR rec_pasajero IN
+        SELECT DISTINCT
+            u.rut,
+            u.nombre,
+            u.apellido
+        FROM reserva_itinerario rsvi
+                 JOIN itinerario_vuelo itv ON itv.id_itinerario = rsvi.id_itinerario
+                 JOIN reserva rsv ON rsv.id_reserva = rsvi.id_reserva
+                 JOIN usuario u ON u.rut = rsv.rut_pasajero
+        WHERE itv.id_vuelo = v_id_vuelo
+          AND rsv.estado_reserva <> 3 -- Omitir reservas canceladas
+        LOOP
+            -- Construcción HTML optimizada para la plantilla JavaMail
+            mensaje_cuerpo := 'Estimado/a <strong>' || rec_pasajero.nombre || ' ' || rec_pasajero.apellido || '</strong>,<br/><br/>' ||
+                              'Le informamos que se han registrado cambios en el itinerario de su vuelo <strong>' ||
+                              COALESCE(v_numero_vuelo, '') || '</strong> (' || COALESCE(v_origen_iata, 'ORIGEN') || ' &#10140; ' || COALESCE(v_destino_iata, 'DESTINO') || ').<br/><br/>' ||
+                              '<strong>Novedades registradas:</strong><ul style="margin-top:8px; padding-left:20px; color:#cbd5e1; line-height:1.6;">';
 
-        -- Añadir información adicional si está disponible
-        /*IF NEW.id_aeropuerto_salida IS NOT NULL THEN
-            mensaje := mensaje || 'Aeropuerto de salida: ' || NEW.id_aeropuerto_salida || '. ';
-        END IF;
-        IF NEW.id_aeropuerto_llegada IS NOT NULL THEN
-            mensaje := mensaje || 'Aeropuerto de llegada: ' || NEW.id_aeropuerto_llegada || '. ';
-        END IF;
-        IF NEW.precio IS NOT NULL THEN
-            mensaje := mensaje || 'Precio del boleto: $' || NEW.precio || '. ';
-        END IF;
-        IF NEW.rut_piloto IS NOT NULL THEN
+            -- Detalle 1: Estado del Vuelo
+            IF v_estado_nombre IS NOT NULL THEN
+                mensaje_cuerpo := mensaje_cuerpo || '<li>Estado del vuelo: <strong style="color:#60a5fa;">' || UPPER(v_estado_nombre) || '</strong></li>';
+            END IF;
 
+            -- Detalle 2: Nueva Hora de Salida
+            IF v_cambio_salida THEN
+                IF TG_TABLE_NAME = 'segmento_vuelo' THEN
+                    mensaje_cuerpo := mensaje_cuerpo || '<li>Nueva hora estimada de salida: <strong style="color:#34d399;">' || TO_CHAR(NEW.hora_salida, 'DD/MM/YYYY HH24:MI hs') || '</strong></li>';
+                ELSE
+                    mensaje_cuerpo := mensaje_cuerpo || '<li>Nueva hora estimada de salida: <strong style="color:#34d399;">' || TO_CHAR(NEW.fecha_hora_salida, 'DD/MM/YYYY HH24:MI hs') || '</strong></li>';
+                END IF;
+            END IF;
 
-            mensaje := mensaje || 'Piloto a cargo: ' || NEW.rut_piloto || '. ';
-        END IF;*/
+            -- Detalle 3: Nueva Hora de Llegada
+            IF v_cambio_llegada THEN
+                IF TG_TABLE_NAME = 'segmento_vuelo' THEN
+                    mensaje_cuerpo := mensaje_cuerpo || '<li>Nueva hora estimada de llegada: <strong style="color:#34d399;">' || TO_CHAR(NEW.hora_llegada, 'DD/MM/YYYY HH24:MI hs') || '</strong></li>';
+                ELSE
+                    mensaje_cuerpo := mensaje_cuerpo || '<li>Nueva hora estimada de llegada: <strong style="color:#34d399;">' || TO_CHAR(NEW.fecha_hora_llegada, 'DD/MM/YYYY HH24:MI hs') || '</strong></li>';
+                END IF;
+            END IF;
 
-        -- Insertar la notificación en la tabla correspondiente
-INSERT INTO notificacion(rut_destinatario, titulo, mensaje, fecha, leido)
-VALUES (
-           pasajero.rut_pasajero,
-           'Actualización de Vuelo: ' || pasajero.numero_vuelo,
-           mensaje,
-           NOW(),
-           FALSE
-       );
-END LOOP;
-RETURN NEW;
+            -- Detalle 4: Puerta de Embarque
+            IF v_puerta_codigo IS NOT NULL THEN
+                mensaje_cuerpo := mensaje_cuerpo || '<li>Puerta de Embarque: <strong style="color:#f59e0b;">' || v_puerta_codigo || '</strong>' ||
+                                  COALESCE(' (' || v_terminal || ')', '') || '</li>';
+            END IF;
+
+            mensaje_cuerpo := mensaje_cuerpo || '</ul>';
+
+            -- Insertar la notificación asignando enviada = FALSE y canal = 'Email' para el Listener
+            INSERT INTO notificacion (
+                rut_destinatario,
+                titulo,
+                mensaje,
+                fecha,
+                leido,
+                enviada,
+                canal
+            )
+            VALUES (
+                       rec_pasajero.rut,
+                       titulo_notif,
+                       mensaje_cuerpo,
+                       NOW(),
+                       FALSE,
+                       FALSE,
+                       'Email'
+                   );
+
+        END LOOP;
+
+    RETURN NEW;
 END;
 $$;
 
+-- =============================================================================
+-- DEFINICIÓN DE TRIGGERS EN VUELO Y SEGMENTO_VUELO
+-- =============================================================================
 
+DROP TRIGGER IF EXISTS tr_notificacionVueloCabecera ON Vuelo;
+CREATE TRIGGER tr_notificacionVueloCabecera
+    AFTER UPDATE ON Vuelo
+    FOR EACH ROW
+EXECUTE FUNCTION fn_notificacionVueloEstado();
 
--- Crear el Trigger para enviar notificaciones después de actualizar un vuelo
-CREATE OR REPLACE TRIGGER tr_notificacionVueloEstado
-AFTER UPDATE ON Segmento_Vuelo
-                 FOR EACH ROW
-                 EXECUTE FUNCTION fn_notificacionVueloEstado();
+DROP TRIGGER IF EXISTS tr_notificacionVueloEstado ON Segmento_Vuelo;
+CREATE TRIGGER tr_notificacionVueloEstado
+    AFTER UPDATE ON Segmento_Vuelo
+    FOR EACH ROW
+EXECUTE FUNCTION fn_notificacionVueloEstado();
 
-
-
-
+-- =============================================================================
+-- TRIGGER PG_NOTIFY EN TIEMPO REAL
+-- =============================================================================
 CREATE OR REPLACE FUNCTION fn_notify_new_notification()
-RETURNS TRIGGER AS
+    RETURNS TRIGGER AS
 $$
 BEGIN
     PERFORM pg_notify('nuevo_correo', NEW.id_notificacion::TEXT);
-RETURN NEW;
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS tr_notify_new_notificacion ON notificacion;
-
 CREATE TRIGGER tr_notify_new_notificacion
     AFTER INSERT ON notificacion
     FOR EACH ROW
-    EXECUTE FUNCTION fn_notify_new_notification();
+EXECUTE FUNCTION fn_notify_new_notification();

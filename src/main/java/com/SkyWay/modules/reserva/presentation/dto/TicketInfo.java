@@ -8,6 +8,8 @@ public class TicketInfo implements Serializable {
 
     private String codigoPnr;
     private String numeroVuelo;
+    private String origenTramo;   // ✈️ Código IATA Origen (ej: SCL)
+    private String destinoTramo;  // 🛬 Código IATA Destino (ej: MVD)
     private Timestamp horaSalida;
     private Timestamp horaLlegada;
     private String codigoPuerta;
@@ -19,12 +21,15 @@ public class TicketInfo implements Serializable {
 
     public TicketInfo() {}
 
-    // Constructor que invoca automáticamente Hibernate por reflexión
-    public TicketInfo(String codigoPnr, String numeroVuelo, Timestamp horaSalida, Timestamp horaLlegada,
-                      String codigoPuerta, String terminal, String numeroAsiento,
-                      String claseAsiento, String nombre, String codigoQr) {
+    // Constructor completo utilizado por Hibernate NativeQuery
+    public TicketInfo(String codigoPnr, String numeroVuelo, String origenTramo, String destinoTramo,
+                      Timestamp horaSalida, Timestamp horaLlegada, String codigoPuerta,
+                      String terminal, String numeroAsiento, String claseAsiento,
+                      String nombre, String codigoQr) {
         this.codigoPnr = codigoPnr;
         this.numeroVuelo = numeroVuelo;
+        this.origenTramo = origenTramo;
+        this.destinoTramo = destinoTramo;
         this.horaSalida = horaSalida;
         this.horaLlegada = horaLlegada;
         this.codigoPuerta = codigoPuerta;
@@ -39,12 +44,22 @@ public class TicketInfo implements Serializable {
         return (codigoPuerta != null ? codigoPuerta : "TBD") + " / " + (terminal != null ? terminal : "TBD");
     }
 
+    public String getRutaTramo() {
+        return (origenTramo != null ? origenTramo : "---") + " ➔ " + (destinoTramo != null ? destinoTramo : "---");
+    }
+
     // Getters y Setters
     public String getCodigoPnr() { return codigoPnr; }
     public void setCodigoPnr(String codigoPnr) { this.codigoPnr = codigoPnr; }
 
     public String getNumeroVuelo() { return numeroVuelo; }
     public void setNumeroVuelo(String numeroVuelo) { this.numeroVuelo = numeroVuelo; }
+
+    public String getOrigenTramo() { return origenTramo; }
+    public void setOrigenTramo(String origenTramo) { this.origenTramo = origenTramo; }
+
+    public String getDestinoTramo() { return destinoTramo; }
+    public void setDestinoTramo(String destinoTramo) { this.destinoTramo = destinoTramo; }
 
     public Timestamp getHoraSalida() { return horaSalida; }
     public void setHoraSalida(Timestamp horaSalida) { this.horaSalida = horaSalida; }

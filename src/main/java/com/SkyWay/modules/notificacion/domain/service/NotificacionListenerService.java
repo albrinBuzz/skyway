@@ -4,21 +4,17 @@ import com.SkyWay.config.dataBase.PgNotifyConfig;
 import com.SkyWay.util.Logger;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import org.postgresql.PGConnection;
 import org.postgresql.PGNotification;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.datasource.DataSourceUtils;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import javax.sql.DataSource;
 import java.sql.*;
-import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -36,7 +32,7 @@ public class NotificacionListenerService {
 
     @PostConstruct
     public void startListener() {
-        Logger.logInfo("🚀 [INIT] Ejecutando PostConstruct de NotificacionListenerService...");
+        Logger.logInfo("🚀 [INIT] Iniciando listener PG_NOTIFY para notificaciones de vuelos SkyWay...");
         listenerExecutor.submit(this::listenToChannel);
     }
 
@@ -48,8 +44,6 @@ public class NotificacionListenerService {
     }
 
     private void listenToChannel() {
-
-        Logger.logInfo("📡 Iniciando hilo de escucha PG_NOTIFY en segundo plano...");
         while (running) {
             try (Connection conn = DriverManager.getConnection(
                     config.getJdbcUrl(), config.getUsername(), config.getPassword())) {
@@ -60,10 +54,9 @@ public class NotificacionListenerService {
                     stmt.execute("LISTEN nuevo_correo");
                 }
 
-                Logger.logInfo("📡 Escuchando canal 'nuevo_correo' (PG LISTEN activo)...");
+                Logger.logInfo("📡 Escuchando canal 'nuevo_correo' (LISTEN activo)...");
 
                 while (running && !conn.isClosed()) {
-                    // Fuerza al driver a verificar si hay eventos entrantes en el socket
                     try (Statement stmt = conn.createStatement()) {
                         stmt.execute("SELECT 1");
                     }
@@ -78,11 +71,11 @@ public class NotificacionListenerService {
                         }
                     }
 
-                    Thread.sleep(1000); // Pausa de 1 segundo para evitar consumo excesivo de CPU
+                    Thread.sleep(1000);
                 }
             } catch (Exception e) {
                 if (running) {
-                    Logger.logInfo("⚠️ Conexión con PG_NOTIFY interrumpida. Reintentando en 5 segundos... (" + e.getMessage() + ")");
+                    Logger.logInfo("⚠️ Conexión con PG_NOTIFY interrumpida. Reintentando en 5s... (" + e.getMessage() + ")");
                     try {
                         Thread.sleep(5000);
                     } catch (InterruptedException ignored) {}
@@ -97,17 +90,18 @@ public class NotificacionListenerService {
             SELECT n.id_notificacion, n.titulo, n.mensaje, u.correo_electronico
             FROM notificacion n
             JOIN usuario u ON u.rut = n.rut_destinatario
-            WHERE n.id_notificacion = ? AND n.enviada = FALSE AND n.canal = 'Email'
+            WHERE n.id_notificacion = ? AND (n.enviada IS FALSE OR n.enviada IS NULL) AND (n.canal = 'Email' OR n.canal IS NULL)
         """;
 
         try (Connection conn = DriverManager.getConnection(
                 config.getJdbcUrl(), config.getUsername(), config.getPassword());
              PreparedStatement ps = conn.prepareStatement(query)) {
+
             ps.setInt(1, Integer.parseInt(idNotificacion));
             ResultSet rs = ps.executeQuery();
 
             if (!rs.next()) {
-                System.out.println("❌ Notificación ya enviada o no válida: " + idNotificacion);
+                Logger.logWarn("❌ Notificación ya enviada o no válida: " + idNotificacion);
                 return;
             }
 
@@ -115,89 +109,63 @@ public class NotificacionListenerService {
             String titulo = rs.getString("titulo");
             String mensaje = rs.getString("mensaje");
 
-            // Mostrar
-            Logger.logInfo("📬 Para: " + email);
-            Logger.logInfo("✉️  Asunto: " + titulo);
-                    Logger.logInfo("📝 Mensaje:\n" + mensaje);
-
-
-            // Enviar correo
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
 
-            helper.setFrom("ferremascontra78@gmail.com");
+            helper.setFrom(new InternetAddress("ferremascontra78@gmail.com", "SkyWay Airlines"));
             helper.setTo(email);
             helper.setSubject(titulo);
 
-            String html = """
-        <div style="font-family: 'Segoe UI', Helvetica, Arial, sans-serif; background:#e8edf3; padding:30px;">
-            <div style="max-width:600px; margin:auto; background:white; border-radius:10px; 
-                        box-shadow:0 6px 20px rgba(0,0,0,0.15); overflow:hidden;">
+            // Plantilla HTML unificada con EmailReservaService (Estilo Oscuro SkyWay)
+            String htmlTemplate = """
+            <div style="font-family: 'Segoe UI', Helvetica, Arial, sans-serif; background:#0b132b; padding:30px;">
+                <div style="max-width:620px; margin:auto; background:#0f172a; border-radius:12px; border:1px solid #1e293b; overflow:hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
 
-                <!-- HEADER CORPORATIVO -->
-                <div style="background:#0a1d3b; padding:30px 20px; text-align:center;">
-                    <h1 style="color:white; margin:0; font-size:26px; font-weight:600;">
-                        SKYWAY AIRLINES
-                    </h1>
-                    <p style="color:#b7c4d3; margin-top:8px; font-size:13px;">
-                        Experiencia de vuelo superior
-                    </p>
-                </div>
-
-                <!-- CUERPO DEL MENSAJE -->
-                <div style="padding:30px 25px;">
-
-                    <h2 style="color:#0a1d3b; margin-top:0; text-align:center; font-size:22px;">
-                        """ + titulo + """
-                    </h2>
-
-                    <p style="font-size:15px; color:#333; line-height:1.6;">
-                        """ + mensaje + """
-                    </p>
-
-                    <!-- Tarjeta elegante de información -->
-                    <div style="margin-top:25px; background:#f7f9fc; padding:20px; 
-                                border-radius:8px; border-left:6px solid #0a1d3b;">
-                        <p style="margin:0; color:#0a1d3b; font-size:15px; font-weight:600;">
-                            Información importante:
-                        </p>
-                        <p style="margin-top:8px; color:#333; font-size:14px;">
-                            Te recomendamos revisar el estado actualizado de tu vuelo y presentarte con
-                            anticipación en el aeropuerto para evitar inconvenientes.
-                        </p>
+                    <!-- ENCABEZADO CORPORATIVO -->
+                    <div style="background:#0f172a; padding:25px 20px; text-align:center; border-bottom:1px solid #1e293b;">
+                        <h1 style="color:#ffffff; margin:0; font-size:24px; font-weight:700; letter-spacing:1px;">SKYWAY AIRLINES</h1>
+                        <p style="color:#60a5fa; margin-top:5px; font-size:12px; font-weight:600; text-transform:uppercase;">Centro de Control Operativo - Estado de Vuelo</p>
                     </div>
 
-                    <!-- BOTÓN CTA -->
-                    <div style="text-align:center; margin:35px 0 20px;">
-                        <a href="https://skyway.com/vuelos"
-                           style="background:#11346b; padding:14px 28px; border-radius:6px; 
-                                  color:white; text-decoration:none; font-size:14px; font-weight:600;
-                                  display:inline-block;">
-                            Ver estado del vuelo
-                        </a>
+                    <!-- CUERPO PRINCIPAL -->
+                    <div style="padding:25px; color:#f8fafc;">
+                        <h2 style="color:#60a5fa; margin-top:0; font-size:20px; text-align:center;">%s</h2>
+
+                        <div style="color:#cbd5e1; font-size:14px; line-height:1.6; margin-top:15px;">
+                            %s
+                        </div>
+
+                        <!-- RECOMENDACIÓN IMPORTANTE -->
+                        <div style="background:#1e293b; border-radius:8px; padding:15px; margin:20px 0; border-left:4px solid #3b82f6;">
+                            <span style="color:#f8fafc; font-size:13px; font-weight:700; display:block; margin-bottom:4px;">📌 Información Importante:</span>
+                            <p style="color:#94a3b8; font-size:13px; margin:0; line-height:1.5;">
+                                Le recomendamos presentarse en el aeropuerto con la debida anticipación y consultar el estado actualizado de su boarding pass en nuestro portal.
+                            </p>
+                        </div>
+
+                        <!-- BOTÓN DE ACCIÓN -->
+                        <div style="text-align:center; margin:25px 0 10px;">
+                            <a href="https://skyway.cl/home/checkin.xhtml" style="background:#16a34a; padding:12px 30px; border-radius:6px; color:#ffffff; text-decoration:none; font-size:14px; font-weight:700; display:inline-block; box-shadow:0 4px 12px rgba(22, 163, 74, 0.3);">
+                                Ver Estado de Vuelo
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- PIE DE PÁGINA -->
+                    <div style="background:#0b132b; padding:15px; text-align:center; border-top:1px solid #1e293b;">
+                        <p style="color:#64748b; font-size:11px; margin:0;">SkyWay Airlines SpA &bull; Este es un correo automático de notificación, por favor no responda a este mensaje.</p>
                     </div>
 
                 </div>
-
-                <!-- FOOTER -->
-                <div style="background:#f1f3f7; padding:15px; text-align:center;">
-                    <p style="color:#6c7886; font-size:12px; margin:0;">
-                        Este correo fue enviado automáticamente por SkyWay Airlines.<br>
-                        No respondas a este mensaje.
-                    </p>
-                </div>
-
             </div>
-        </div>
-        """;
+            """;
 
-
-
-            helper.setText(html, true); // <-- true indica que es HTML
+            String htmlBody = String.format(htmlTemplate, titulo, mensaje);
+            helper.setText(htmlBody, true);
 
             mailSender.send(mimeMessage);
 
-            // Marcar como enviada
+            // Marcar notificación como enviada en la base de datos
             try (PreparedStatement update = conn.prepareStatement(
                     "UPDATE notificacion SET enviada = TRUE WHERE id_notificacion = ?"
             )) {
@@ -205,10 +173,10 @@ public class NotificacionListenerService {
                 update.executeUpdate();
             }
 
-            Logger.logInfo("✅ Correo enviado a " + email);
+            Logger.logInfo("✅ Correo enviado exitosamente a " + email);
 
         } catch (Exception e) {
-            Logger.logInfo("❌ Error al procesar notificación: " + e.getMessage());
+            Logger.logError("❌ Error al procesar notificación ID " + idNotificacion + ": " + e.getMessage());
         }
     }
 }

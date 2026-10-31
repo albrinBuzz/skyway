@@ -389,7 +389,6 @@ END;
 $$ LANGUAGE plpgsql STABLE;
 
 
-
 CREATE OR REPLACE FUNCTION fn_getticket(
     p_rut_pasajero CHARACTER VARYING,
     p_id_reserva INTEGER,
@@ -413,7 +412,7 @@ AS
 $$
 BEGIN
 RETURN QUERY
-SELECT DISTINCT ON (rsva.id_asiento, vl.id_vuelo)
+SELECT DISTINCT ON (vl.id_vuelo, ast.id_asiento)
     rsv.codigo_reserva AS codigo_pnr,
     vl.numero_vuelo,
     sgm.hora_salida,
@@ -424,21 +423,21 @@ SELECT DISTINCT ON (rsva.id_asiento, vl.id_vuelo)
     clas.descripcion AS clase_asiento,
     us.nombre || ' ' || us.apellido AS nombre,
     'SKYWAY-' || rsv.codigo_reserva || '-' || vl.numero_vuelo || '-' || ast.numero_asiento || '-' || p.rut AS codigo_qr
-FROM reserva_asiento rsva
-    JOIN reserva rsv ON rsv.id_reserva = rsva.id_reserva
+FROM reserva rsv
+    JOIN reserva_asiento rsva ON rsva.id_reserva = rsv.id_reserva
     JOIN itinerario_vuelo itv ON itv.id_vuelo = rsva.id_vuelo
     JOIN pasajero p ON p.rut = rsva.rut
     JOIN usuario us ON us.rut = p.rut
     JOIN vuelo vl ON vl.id_vuelo = rsva.id_vuelo
-    LEFT JOIN segmento_vuelo sgm ON sgm.id_vuelo = rsva.id_vuelo
+    JOIN segmento_vuelo sgm ON sgm.id_vuelo = vl.id_vuelo
     LEFT JOIN asignacion_puerta asgp ON asgp.id_segmento = sgm.id_segmento
     LEFT JOIN puerta_embarque prta ON prta.id_puerta = asgp.id_puerta
     LEFT JOIN asiento ast ON ast.id_asiento = rsva.id_asiento
     LEFT JOIN clase_asiento clas ON clas.id_clase = ast.id_clase
 WHERE (rsv.rut_pasajero = p_rut_pasajero OR rsva.rut = p_rut_pasajero)
   AND rsv.id_reserva = p_id_reserva
-  AND itv.id_itinerario = p_idItinerario
-ORDER BY rsva.id_asiento, vl.id_vuelo, sgm.hora_salida ASC;
+  AND itv.id_itinerario = p_iditinerario
+ORDER BY vl.id_vuelo, ast.id_asiento, sgm.orden_segmento ASC;
 END;
 $$;
 
