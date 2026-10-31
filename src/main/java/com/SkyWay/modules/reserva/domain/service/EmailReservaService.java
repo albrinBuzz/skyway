@@ -42,7 +42,9 @@ public class EmailReservaService {
             return;
         }
 
-        if (!activo) return;
+        if (!activo){
+            return;
+        }
 
         Pasajero pax = reserva.getPasajero();
         Usuario usr = (pax != null) ? pax.getUsuario() : null;
