@@ -8,6 +8,7 @@ import com.SkyWay.modules.pasajero.domain.model.Pasajero;
 import com.SkyWay.modules.reserva.domain.model.Reserva;
 import com.SkyWay.modules.reservaasiento.domain.model.ReservaAsiento;
 import com.SkyWay.modules.reservaitinerario.domain.model.ReservaItinerario;
+import com.SkyWay.modules.reserva.presentation.dto.TicketInfo;
 import com.SkyWay.modules.usuario.domain.model.Usuario;
 import com.SkyWay.modules.vuelo.domain.model.Vuelo;
 import com.SkyWay.util.Logger;
@@ -16,6 +17,10 @@ import org.springframework.stereotype.Service;
 
 import java.awt.Color;
 import java.io.ByteArrayOutputStream;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -285,108 +290,380 @@ public class ETicketPdfGeneratorService {
     }
 
     /**
-     * PDF 2: Tarjetas de Embarque Individuales por Pasajero (Boarding Passes Layout)
+     * PDF 2: Tarjetas de Embarque Individuales por Pasajero (Diseño Tipo Boarding Pass Oficial SkyWay)
      */
-    public byte[] generarPdfBoardingPasses(Reserva reserva) {
-        if (reserva == null) return new byte[0];
+    public byte[] generarPdfBoardingPasses(List<TicketInfo> tickets) {
+        if (tickets == null || tickets.isEmpty()) return new byte[0];
 
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Document document = new Document(PageSize.A4, 20, 20, 20, 20);
             PdfWriter writer = PdfWriter.getInstance(document, out);
             document.open();
 
-            Color navy = new Color(15, 23, 42);
-            Color blue = new Color(37, 99, 235);
-            Color bgLight = new Color(241, 245, 249);
-
-            Font fTitle = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, Color.WHITE);
-            Font fBold = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, navy);
-            Font fVal = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, blue);
-            Font fSub = FontFactory.getFont(FontFactory.HELVETICA, 8, Color.GRAY);
-
-            SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
-            List<PasajeroInfo> pasajeros = obtenerListaPasajeros(reserva);
-
-            for (PasajeroInfo pax : pasajeros) {
-                if (reserva.getReservaItinerarios() != null) {
-                    for (ReservaItinerario ri : reserva.getReservaItinerarios()) {
-                        Itinerario it = ri.getItinerario();
-                        if (it != null && it.getItinerarioVuelos() != null) {
-                            for (ItinerarioVuelo iv : it.getItinerarioVuelos()) {
-                                Vuelo v = iv.getVuelo();
-                                String numVuelo = (v != null && v.getNumeroVuelo() != null) ? v.getNumeroVuelo() : "SK-" + it.getIdItinerario();
-                                String asiento = obtenerAsientoEspecifico(reserva, v != null ? v.getIdVuelo() : null, pax.rut);
-                                String origen = (it.getAeropuertoOrigen() != null) ? it.getAeropuertoOrigen().getCodigoIata() : "SCL";
-                                String destino = (it.getAeropuertoDestino() != null) ? it.getAeropuertoDestino().getCodigoIata() : "LAX";
-
-                                // Tarjeta de Embarque Box
-                                PdfPTable card = new PdfPTable(2);
-                                card.setWidthPercentage(100);
-                                card.setWidths(new float[]{70f, 30f});
-
-                                // LADO IZQUIERDO: DETALLES DEL VUELO
-                                PdfPCell left = new PdfPCell();
-                                left.setBackgroundColor(bgLight);
-                                left.setPadding(10);
-                                left.setBorderColor(navy);
-
-                                // Header de la tarjeta
-                                PdfPTable headerCard = new PdfPTable(1);
-                                PdfPCell hc = new PdfPCell(new Phrase("BOARDING PASS / TARJETA DE EMBARQUE - SKYWAY", fTitle));
-                                hc.setBackgroundColor(navy);
-                                hc.setPadding(6);
-                                headerCard.addCell(hc);
-                                left.addElement(headerCard);
-
-                                left.addElement(new Paragraph("PASAJERO: " + pax.nombreCompleto.toUpperCase(), fBold));
-                                left.addElement(new Paragraph("RUT: " + pax.rut + " | PNR: " + reserva.getCodigoReserva(), fSub));
-
-                                Paragraph pRuta = new Paragraph(origen + " ➔ " + destino, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, navy));
-                                pRuta.setSpacingBefore(5);
-                                left.addElement(pRuta);
-
-                                left.addElement(new Paragraph("VUELO: " + numVuelo + " | SALIDA: " + (v != null && v.getFechaHoraSalida() != null ? dateFormat.format(v.getFechaHoraSalida()) : "S/F"), fSub));
-                                card.addCell(left);
-
-                                // LADO DERECHO: ASIENTO Y BARCODE
-                                PdfPCell right = new PdfPCell();
-                                right.setBackgroundColor(Color.WHITE);
-                                right.setPadding(10);
-                                right.setBorderColor(navy);
-                                right.setHorizontalAlignment(Element.ALIGN_CENTER);
-
-                                right.addElement(new Paragraph("ASIENTO", fSub));
-                                right.addElement(new Paragraph(asiento, fVal));
-
-                                right.addElement(new Paragraph("PUERTA", fSub));
-                                right.addElement(new Paragraph("TBD", fBold));
-
-                                try {
-                                    PdfContentByte cb = writer.getDirectContent();
-                                    Barcode128 code128 = new Barcode128();
-                                    code128.setCode(reserva.getCodigoReserva() + "-" + asiento);
-                                    code128.setCodeType(Barcode128.CODE128);
-                                    Image img = code128.createImageWithBarcode(cb, null, null);
-                                    img.setAlignment(Element.ALIGN_CENTER);
-                                    right.addElement(img);
-                                } catch (Exception e) {}
-
-                                card.addCell(right);
-                                card.setSpacingAfter(15);
-                                document.add(card);
-                            }
-                        }
-                    }
+            // Cargar logotipo de SkyWay si está disponible en classpath
+            Image logoImg = null;
+            try {
+                URL logoRes = getClass().getResource("/META-INF/resources/resources/assets/icons/Logotipo_SkyWay.png");
+                if (logoRes == null) {
+                    logoRes = getClass().getResource("/META-INF/resources/assets/icons/Logotipo_SkyWay.png");
                 }
+                if (logoRes != null) {
+                    logoImg = Image.getInstance(logoRes);
+                }
+            } catch (Exception ignored) {}
+
+            int count = 0;
+            for (TicketInfo t : tickets) {
+                if (count > 0 && count % 2 == 0) {
+                    document.newPage();
+                }
+                PdfPTable card = crearTarjetaEmbarquePdf(t, writer, logoImg);
+                document.add(card);
+                count++;
             }
 
             document.close();
             return out.toByteArray();
-
         } catch (Exception e) {
             Logger.logError("Error al generar Boarding Passes: " + e.getMessage());
+            e.printStackTrace();
             return new byte[0];
         }
+    }
+
+    public byte[] generarPdfBoardingPasses(Reserva reserva) {
+        if (reserva == null) return new byte[0];
+
+        List<TicketInfo> tickets = new ArrayList<>();
+        List<PasajeroInfo> pasajeros = obtenerListaPasajeros(reserva);
+
+        if (reserva.getReservaItinerarios() != null) {
+            for (ReservaItinerario ri : reserva.getReservaItinerarios()) {
+                Itinerario it = ri.getItinerario();
+                if (it != null && it.getItinerarioVuelos() != null) {
+                    for (ItinerarioVuelo iv : it.getItinerarioVuelos()) {
+                        Vuelo v = iv.getVuelo();
+                        String numVuelo = (v != null && v.getNumeroVuelo() != null) ? v.getNumeroVuelo() : "SK-" + it.getIdItinerario();
+                        String origen = (it.getAeropuertoOrigen() != null) ? it.getAeropuertoOrigen().getCodigoIata() : "SCL";
+                        String destino = (it.getAeropuertoDestino() != null) ? it.getAeropuertoDestino().getCodigoIata() : "LAX";
+                        Timestamp fSalida = (v != null && v.getFechaHoraSalida() != null) ? new Timestamp(v.getFechaHoraSalida().getTime()) : null;
+                        Timestamp fLlegada = (v != null && v.getFechaHoraLlegada() != null) ? new Timestamp(v.getFechaHoraLlegada().getTime()) : null;
+
+                        for (PasajeroInfo pax : pasajeros) {
+                            String asiento = obtenerAsientoEspecifico(reserva, v != null ? v.getIdVuelo() : null, pax.rut);
+                            TicketInfo t = new TicketInfo();
+                            t.setCodigoPnr(reserva.getCodigoReserva());
+                            t.setNumeroVuelo(numVuelo);
+                            t.setOrigenTramo(origen);
+                            t.setDestinoTramo(destino);
+                            t.setHoraSalida(fSalida);
+                            t.setHoraLlegada(fLlegada);
+                            t.setCodigoPuerta("TBD");
+                            t.setTerminal("Terminal Internacional");
+                            t.setNumeroAsiento(asiento);
+                            t.setClaseAsiento("Primera Clase");
+                            t.setNombre(pax.nombreCompleto);
+                            t.setCodigoQr(reserva.getCodigoReserva() + "-" + numVuelo + "-" + asiento);
+                            tickets.add(t);
+                        }
+                    }
+                }
+            }
+        }
+
+        return generarPdfBoardingPasses(tickets);
+    }
+
+    private PdfPTable crearTarjetaEmbarquePdf(TicketInfo t, PdfWriter writer, Image baseLogoImg) {
+        PdfPTable card = new PdfPTable(2);
+        card.setWidthPercentage(100);
+        try {
+            card.setWidths(new float[]{71f, 29f});
+        } catch (Exception ignored) {}
+        card.setSpacingAfter(18f);
+        card.setKeepTogether(true);
+
+        Color skyBlue = new Color(2, 132, 199);      // #0284C7
+        Color blueDark = new Color(3, 105, 161);     // #0369A1
+        Color blueMedium = new Color(14, 165, 233);  // #0EA5E9
+        Color cardBg = new Color(248, 250, 252);     // #F8FAFC
+        Color fieldBg = new Color(224, 242, 254);    // #E0F2FE
+        Color inkDark = new Color(17, 24, 39);       // #111827
+        Color grayText = new Color(100, 116, 139);   // #64748B
+        Color borderCard = new Color(203, 213, 225); // #CBD5E1
+
+        SimpleDateFormat dfDate = new SimpleDateFormat("dd.MM.yy");
+        SimpleDateFormat dfTime = new SimpleDateFormat("HH:mm");
+        SimpleDateFormat dfFull = new SimpleDateFormat("dd.MM.yy HH:mm");
+
+        String strFecha = (t.getHoraSalida() != null) ? dfDate.format(t.getHoraSalida()) : "---";
+        String strSalida = (t.getHoraSalida() != null) ? dfTime.format(t.getHoraSalida()) : "--:--";
+        String strLlegada = (t.getHoraLlegada() != null) ? dfFull.format(t.getHoraLlegada()) : "---";
+        String strLimite = (t.getHoraLimiteEmbarque() != null) ? dfTime.format(t.getHoraLimiteEmbarque()) : "--:--";
+
+        // ==========================================
+        // 1. LADO IZQUIERDO: CUERPO PRINCIPAL
+        // ==========================================
+        PdfPCell leftCell = new PdfPCell();
+        leftCell.setBackgroundColor(cardBg);
+        leftCell.setBorderColor(borderCard);
+        leftCell.setBorderWidth(1f);
+        leftCell.setPadding(0);
+
+        PdfPTable mainTable = new PdfPTable(1);
+        mainTable.setWidthPercentage(100);
+
+        // A. Header Principal
+        PdfPTable mainHeader = new PdfPTable(2);
+        mainHeader.setWidthPercentage(100);
+        try { mainHeader.setWidths(new float[]{65f, 35f}); } catch (Exception ignored) {}
+
+        PdfPCell mhBrand = new PdfPCell();
+        mhBrand.setBackgroundColor(skyBlue);
+        mhBrand.setBorder(PdfPCell.NO_BORDER);
+        mhBrand.setPadding(7f);
+        mhBrand.addElement(new Paragraph("✈  SkyWay Airlines", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, Color.WHITE)));
+        mainHeader.addCell(mhBrand);
+
+        PdfPCell mhPnr = new PdfPCell();
+        mhPnr.setBackgroundColor(skyBlue);
+        mhPnr.setBorder(PdfPCell.NO_BORDER);
+        mhPnr.setPadding(7f);
+        Paragraph pnrP = new Paragraph("PNR: " + (t.getCodigoPnr() != null ? t.getCodigoPnr() : "---"), FontFactory.getFont(FontFactory.COURIER_BOLD, 9.5f, Color.WHITE));
+        pnrP.setAlignment(Element.ALIGN_RIGHT);
+        mhPnr.addElement(pnrP);
+        mainHeader.addCell(mhPnr);
+
+        PdfPCell mhWrapper = new PdfPCell(mainHeader);
+        mhWrapper.setBorder(PdfPCell.NO_BORDER);
+        mhWrapper.setPadding(0);
+        mainTable.addCell(mhWrapper);
+
+        // B. Body Principal (3 Columnas)
+        PdfPTable mainBody = new PdfPTable(3);
+        mainBody.setWidthPercentage(100);
+        try { mainBody.setWidths(new float[]{36f, 38f, 26f}); } catch (Exception ignored) {}
+
+        // Columna 1: Pasajero, Origen, Destino, Terminal
+        PdfPCell c1 = new PdfPCell();
+        c1.setBackgroundColor(cardBg);
+        c1.setBorder(PdfPCell.NO_BORDER);
+        c1.setPadding(7f);
+
+        addLabeledBox(c1, "PASAJERO", t.getNombre() != null ? t.getNombre() : "---", fieldBg, inkDark, 8f);
+        addLabeledBox(c1, "ORIGEN", t.getOrigenTramo() != null ? t.getOrigenTramo() : "---", fieldBg, inkDark, 8.5f);
+        addLabeledBox(c1, "DESTINO", t.getDestinoTramo() != null ? t.getDestinoTramo() : "---", fieldBg, inkDark, 8.5f);
+        addLabeledBox(c1, "TERMINAL", t.getTerminal() != null ? t.getTerminal() : "Terminal Internacional", fieldBg, inkDark, 7.5f);
+        mainBody.addCell(c1);
+
+        // Columna 2: Fecha, Salida, Llegada, QR
+        PdfPCell c2 = new PdfPCell();
+        c2.setBackgroundColor(cardBg);
+        c2.setBorder(PdfPCell.NO_BORDER);
+        c2.setPadding(7f);
+
+        Paragraph pFecha = new Paragraph();
+        pFecha.add(new Phrase("FECHA  ", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8f, inkDark)));
+        pFecha.add(new Phrase(strFecha, FontFactory.getFont(FontFactory.COURIER_BOLD, 12f, blueDark)));
+        c2.addElement(pFecha);
+
+        Paragraph pSalida = new Paragraph();
+        pSalida.add(new Phrase("SALIDA ", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8f, inkDark)));
+        pSalida.add(new Phrase(strSalida, FontFactory.getFont(FontFactory.COURIER_BOLD, 15f, blueDark)));
+        c2.addElement(pSalida);
+
+        Paragraph pLlegada = new Paragraph("Llegada: " + strLlegada, FontFactory.getFont(FontFactory.COURIER, 7f, grayText));
+        pLlegada.setSpacingAfter(6f);
+        c2.addElement(pLlegada);
+
+        // Generar QR
+        Image qrImg = null;
+        String qrData = (t.getCodigoQr() != null && !t.getCodigoQr().isBlank())
+                ? t.getCodigoQr()
+                : (t.getCodigoPnr() + "-" + t.getNumeroVuelo() + "-" + t.getNumeroAsiento());
+        try {
+            String qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=110x110&data="
+                    + URLEncoder.encode(qrData, StandardCharsets.UTF_8);
+            qrImg = Image.getInstance(new URL(qrUrl));
+            qrImg.scaleToFit(70f, 70f);
+        } catch (Exception e) {
+            try {
+                Barcode128 code128 = new Barcode128();
+                code128.setCode(qrData);
+                code128.setCodeType(Barcode128.CODE128);
+                qrImg = code128.createImageWithBarcode(writer.getDirectContent(), null, null);
+                qrImg.scaleToFit(95f, 40f);
+            } catch (Exception ignored) {}
+        }
+
+        if (qrImg != null) {
+            PdfPTable qrTable = new PdfPTable(1);
+            qrTable.setWidthPercentage(55);
+            qrTable.setHorizontalAlignment(Element.ALIGN_LEFT);
+            PdfPCell qrCell = new PdfPCell(qrImg, true);
+            qrCell.setBackgroundColor(Color.WHITE);
+            qrCell.setBorderColor(new Color(226, 232, 240));
+            qrCell.setBorderWidth(1f);
+            qrCell.setPadding(3f);
+            qrCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            qrTable.addCell(qrCell);
+            c2.addElement(qrTable);
+        }
+        mainBody.addCell(c2);
+
+        // Columna 3: Vuelo, Puerta, Asiento (Bloques azules verticales)
+        PdfPCell c3 = new PdfPCell();
+        c3.setBackgroundColor(cardBg);
+        c3.setBorder(PdfPCell.NO_BORDER);
+        c3.setPadding(7f);
+
+        addBoxCol(c3, "VUELO", t.getNumeroVuelo() != null ? t.getNumeroVuelo() : "---", blueDark, 10f);
+        addBoxCol(c3, "PUERTA", t.getCodigoPuerta() != null ? t.getCodigoPuerta() : "TBD", blueMedium, 10f);
+        addBoxCol(c3, "ASIENTO", t.getNumeroAsiento() != null ? t.getNumeroAsiento() : "---", blueDark, 11f);
+        mainBody.addCell(c3);
+
+        PdfPCell mbWrapper = new PdfPCell(mainBody);
+        mbWrapper.setBorder(PdfPCell.NO_BORDER);
+        mbWrapper.setPadding(0);
+        mainTable.addCell(mbWrapper);
+
+        // C. Footer Nota Importante
+        PdfPCell noteCell = new PdfPCell();
+        noteCell.setBackgroundColor(cardBg);
+        noteCell.setBorder(PdfPCell.NO_BORDER);
+        noteCell.setPaddingLeft(8f);
+        noteCell.setPaddingRight(8f);
+        noteCell.setPaddingBottom(6f);
+
+        Paragraph pNote = new Paragraph();
+        pNote.add(new Phrase("NOTA IMPORTANTE: ", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 6.5f, blueDark)));
+        pNote.add(new Phrase("Debes estar en la puerta de embarque antes de " + strLimite, FontFactory.getFont(FontFactory.COURIER, 6.5f, grayText)));
+        noteCell.addElement(pNote);
+        mainTable.addCell(noteCell);
+
+        leftCell.addElement(mainTable);
+        card.addCell(leftCell);
+
+        // ==========================================
+        // 2. LADO DERECHO: TALÓN DEL PASAJERO (STUB)
+        // ==========================================
+        PdfPCell rightCell = new PdfPCell();
+        rightCell.setBackgroundColor(cardBg);
+        rightCell.setBorderColor(borderCard);
+        rightCell.setBorderWidth(1f);
+        rightCell.setPadding(0);
+
+        PdfPTable stubTable = new PdfPTable(1);
+        stubTable.setWidthPercentage(100);
+
+        // A. Header Talón
+        PdfPCell shCell = new PdfPCell();
+        shCell.setBackgroundColor(skyBlue);
+        shCell.setBorder(PdfPCell.NO_BORDER);
+        shCell.setPadding(7f);
+        Paragraph pSh = new Paragraph("··· TARJETA DE EMBARQUE ···", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 7.5f, Color.WHITE));
+        pSh.setAlignment(Element.ALIGN_CENTER);
+        shCell.addElement(pSh);
+        stubTable.addCell(shCell);
+
+        // B. Body Talón
+        PdfPCell sbCell = new PdfPCell();
+        sbCell.setBackgroundColor(cardBg);
+        sbCell.setBorder(PdfPCell.NO_BORDER);
+        sbCell.setPadding(7f);
+
+        addLabeledBox(sbCell, "PASAJERO", t.getNombre() != null ? t.getNombre() : "---", Color.WHITE, inkDark, 7f);
+        addLabeledBox(sbCell, "CLASE", t.getClaseAsiento() != null ? t.getClaseAsiento() : "Económica", Color.WHITE, inkDark, 7.5f);
+        addLabeledBox(sbCell, "ASIENTO", t.getNumeroAsiento() != null ? t.getNumeroAsiento() : "---", Color.WHITE, inkDark, 8f);
+
+        // Ruta Talón (Vuelo badge + Ruta IATA)
+        PdfPTable rTable = new PdfPTable(1);
+        rTable.setWidthPercentage(100);
+        PdfPCell rCell = new PdfPCell();
+        rCell.setBackgroundColor(fieldBg);
+        rCell.setBorderColor(new Color(186, 230, 253));
+        rCell.setPadding(4f);
+
+        Paragraph pVueloBadge = new Paragraph("VUELO " + (t.getNumeroVuelo() != null ? t.getNumeroVuelo() : "---"), FontFactory.getFont(FontFactory.COURIER_BOLD, 7f, blueDark));
+        rCell.addElement(pVueloBadge);
+
+        Paragraph pRutaIata = new Paragraph((t.getOrigenTramo() != null ? t.getOrigenTramo() : "---") + " ➔ " + (t.getDestinoTramo() != null ? t.getDestinoTramo() : "---"),
+                FontFactory.getFont(FontFactory.HELVETICA_BOLD, 13f, inkDark));
+        pRutaIata.setAlignment(Element.ALIGN_CENTER);
+        rCell.addElement(pRutaIata);
+        rTable.addCell(rCell);
+
+        sbCell.addElement(rTable);
+        stubTable.addCell(sbCell);
+
+        // C. Logo inferior en el Talón
+        PdfPCell sBrandCell = new PdfPCell();
+        sBrandCell.setBackgroundColor(cardBg);
+        sBrandCell.setBorder(PdfPCell.NO_BORDER);
+        sBrandCell.setPaddingBottom(7f);
+        sBrandCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+
+        boolean logoDrawn = false;
+        if (baseLogoImg != null) {
+            try {
+                Image stubLogo = Image.getInstance(baseLogoImg);
+                stubLogo.scaleToFit(85f, 18f);
+                stubLogo.setAlignment(Element.ALIGN_CENTER);
+                sBrandCell.addElement(stubLogo);
+                logoDrawn = true;
+            } catch (Exception ignored) {}
+        }
+        if (!logoDrawn) {
+            Paragraph pLogoText = new Paragraph("✈  SkyWay Airlines", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8f, blueDark));
+            pLogoText.setAlignment(Element.ALIGN_CENTER);
+            sBrandCell.addElement(pLogoText);
+        }
+        stubTable.addCell(sBrandCell);
+
+        rightCell.addElement(stubTable);
+        card.addCell(rightCell);
+
+        return card;
+    }
+
+    private void addLabeledBox(PdfPCell container, String label, String value, Color bg, Color textCol, float fontSize) {
+        Paragraph pLabel = new Paragraph(label, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 6f, new Color(15, 23, 42)));
+        pLabel.setSpacingBefore(1f);
+        pLabel.setSpacingAfter(1f);
+        container.addElement(pLabel);
+
+        PdfPTable box = new PdfPTable(1);
+        box.setWidthPercentage(100);
+        PdfPCell c = new PdfPCell(new Phrase(value, FontFactory.getFont(FontFactory.COURIER_BOLD, fontSize, textCol)));
+        c.setBackgroundColor(bg);
+        c.setBorderColor(new Color(226, 232, 240));
+        c.setBorderWidth(0.5f);
+        c.setPadding(2f);
+        box.addCell(c);
+        box.setSpacingAfter(2f);
+        container.addElement(box);
+    }
+
+    private void addBoxCol(PdfPCell container, String label, String value, Color bg, float valSize) {
+        PdfPTable box = new PdfPTable(1);
+        box.setWidthPercentage(100);
+        PdfPCell c = new PdfPCell();
+        c.setBackgroundColor(bg);
+        c.setBorder(PdfPCell.NO_BORDER);
+        c.setPadding(3f);
+        c.setHorizontalAlignment(Element.ALIGN_CENTER);
+
+        Paragraph pLbl = new Paragraph(label, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 6f, Color.WHITE));
+        pLbl.setAlignment(Element.ALIGN_CENTER);
+        c.addElement(pLbl);
+
+        Paragraph pVal = new Paragraph(value, FontFactory.getFont(FontFactory.HELVETICA_BOLD, valSize, Color.WHITE));
+        pVal.setAlignment(Element.ALIGN_CENTER);
+        c.addElement(pVal);
+
+        box.addCell(c);
+        box.setSpacingAfter(3f);
+        container.addElement(box);
     }
 
     // --- MÉTODOS DE SOPORTE ---
