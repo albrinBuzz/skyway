@@ -25,7 +25,7 @@ import {
 } from './models';
 
 export const AZURE_CLOUD_HOST = 'https://skyway-gde6a6aza3abb8a6.brazilsouth-01.azurewebsites.net';
-export const DEFAULT_MIPC_HOST = 'http://10.227.14.199:8080';
+export const DEFAULT_MIPC_HOST = 'http://192.168.100.7:8080';
 export const HOME_MIPC_HOST = 'http://192.168.100.7:8080';
 export const DEFAULT_NATIVE_HOST = AZURE_CLOUD_HOST;
 
