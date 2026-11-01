@@ -967,7 +967,10 @@ INSERT INTO Tipo_Equipaje (ID_TIPO, Nombre) VALUES
 INSERT INTO Tipo_Turno (ID_TIPO, Nombre) VALUES
                                              (1, 'Vuelo'),
                                              (2, 'Capacitación'),
-                                             (3, 'Descanso');
+                                             (3, 'Descanso'),
+                                            (4, 'diurno'),
+                                            (5, 'nocturno');
+
 
 
 -- Inserta roles una vez, explícitamente

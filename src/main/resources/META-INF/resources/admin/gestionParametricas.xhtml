@@ -222,6 +222,7 @@
             </h:form>
 
             <h:panelGroup id="mainPanel" layout="block">
+                <h:form id="formParametricas">
 
                 <div class="header-container">
                     <div>
@@ -320,6 +321,7 @@
                     </p:dataTable>
                 </h:panelGroup>
 
+                </h:form>
             </h:panelGroup>
         </div>
 
@@ -369,10 +371,12 @@
         </p:dialog>
 
         <!-- CONFIRMACIÓN GLOBAL -->
-        <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" appendTo="@(body)" styleClass="custom-dialog">
-            <p:commandButton value="Cancelar" type="button" styleClass="ui-confirmdialog-no ui-button-flat ui-button-secondary" />
-            <p:commandButton value="Sí, Eliminar" type="button" styleClass="ui-confirmdialog-yes btn-new" />
-        </p:confirmDialog>
+        <h:form id="confirmDlgForm">
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" appendTo="@(body)" styleClass="custom-dialog">
+                <p:commandButton value="Cancelar" type="button" styleClass="ui-confirmdialog-no ui-button-flat ui-button-secondary" />
+                <p:commandButton value="Sí, Eliminar" type="button" styleClass="ui-confirmdialog-yes btn-new" />
+            </p:confirmDialog>
+        </h:form>
     </ui:define>
 
 </ui:composition>

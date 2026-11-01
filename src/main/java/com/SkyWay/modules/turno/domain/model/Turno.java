@@ -124,7 +124,19 @@ public class Turno implements Serializable {
 	}
 
 
-	@Override
+	public double getDuracionHoras() {
+		if (this.horaInicio != null && this.horaFin != null) {
+			long diff = this.horaFin.getTime() - this.horaInicio.getTime();
+			return (double) diff / (1000.0 * 60.0 * 60.0);
+		}
+		return 0.0;
+	}
+
+	public boolean excedeHorasLegales() {
+		// Normativa aeronáutica: límite operacional máximo de 24 horas para vuelos de ultra largo alcance (ULH) con tripulación reforzada
+		return getDuracionHoras() > 24.0;
+	}
+
 	public String toString() {
 		return "Turno{" +
 				"idTurno=" + idTurno +

@@ -42,8 +42,8 @@
             .flight-info-group { display: flex; align-items: center; gap: 16px; }
 
             .flight-badge {
-                background: rgba(37, 99, 235, 0.15);
-                border: 1px solid var(--navy-brand);
+                background: rgba(37, 99, 235, 0.1);
+                border: 1px solid rgba(59, 130, 246, 0.3);
                 color: var(--text-heading);
                 font-weight: 700;
                 font-size: 1.1rem;
@@ -124,8 +124,10 @@
                 margin-bottom: 6px;
             }
 
-            /* SELECTOR PRINCIPAL EN REPOSO */
-            body .assignment-box .ui-selectonemenu {
+            /* SELECTOR PRINCIPAL Y DE TIPO DE TURNO EN REPOSO (DARK THEME) */
+            body .assignment-box .ui-selectonemenu,
+            body .turno-config-box .ui-selectonemenu,
+            body .ui-selectonemenu {
                 background-color: var(--bg-deep) !important;
                 border: 1px solid var(--border-subtle) !important;
                 color: var(--text-heading) !important;
@@ -135,11 +137,13 @@
                 box-shadow: none !important;
             }
 
-            body .assignment-box .ui-selectonemenu .ui-selectonemenu-label {
+            body .ui-selectonemenu .ui-selectonemenu-label {
                 color: var(--text-heading) !important;
+                background: transparent !important;
+                padding: 6px 10px !important;
             }
 
-            body .assignment-box .ui-selectonemenu .ui-selectonemenu-trigger {
+            body .ui-selectonemenu .ui-selectonemenu-trigger {
                 background: transparent !important;
                 border-left: none !important;
                 color: var(--text-muted) !important;
@@ -220,9 +224,10 @@
                 display: inline-block;
             }
 
-            .cargo-piloto { background: rgba(30, 58, 138, 0.4); border: 1px solid var(--navy-brand); color: #93c5fd; }
-            .cargo-copiloto { background: rgba(51, 65, 85, 0.5); border: 1px solid #475569; color: #e2e8f0; }
-            .cargo-tripulante { background: rgba(14, 116, 144, 0.3); border: 1px solid #0891b2; color: #a5f3fc; }
+            .cargo-comandante { background: rgba(30, 58, 138, 0.3); border: 1px solid rgba(59, 130, 246, 0.4); color: #93c5fd; }
+            .cargo-piloto { background: rgba(30, 58, 138, 0.2); border: 1px solid rgba(59, 130, 246, 0.25); color: #93c5fd; }
+            .cargo-copiloto { background: rgba(51, 65, 85, 0.3); border: 1px solid rgba(148, 163, 184, 0.25); color: #cbd5e1; }
+            .cargo-tripulante { background: rgba(51, 65, 85, 0.3); border: 1px solid rgba(148, 163, 184, 0.25); color: #cbd5e1; }
 
             /* TABLA LIMPIA Y UNIFICADA */
             body .skyway-ops-table {
@@ -303,6 +308,108 @@
                 background-color: var(--bg-card) !important;
                 color: var(--text-body) !important;
             }
+            .badge-confirmado {
+                background: rgba(16, 185, 129, 0.08);
+                color: #6ee7b7;
+                border: 1px solid rgba(110, 231, 183, 0.28);
+                padding: 3px 10px;
+                border-radius: 6px;
+                font-size: 0.75rem;
+                font-weight: 600;
+                letter-spacing: 0.02em;
+            }
+            .badge-pendiente {
+                background: rgba(217, 119, 6, 0.08);
+                color: #fcd34d;
+                border: 1px solid rgba(252, 211, 77, 0.28);
+                padding: 3px 10px;
+                border-radius: 6px;
+                font-size: 0.75rem;
+                font-weight: 600;
+                letter-spacing: 0.02em;
+            }
+            .badge-rechazado {
+                background: rgba(239, 68, 68, 0.08);
+                color: #fca5a5;
+                border: 1px solid rgba(252, 165, 165, 0.28);
+                padding: 3px 10px;
+                border-radius: 6px;
+                font-size: 0.75rem;
+                font-weight: 600;
+                letter-spacing: 0.02em;
+            }
+            .badge-legal-conforme {
+                background: rgba(16, 185, 129, 0.08);
+                color: #6ee7b7;
+                border: 1px solid rgba(110, 231, 183, 0.25);
+                padding: 2px 10px;
+                border-radius: 6px;
+                font-weight: 600;
+                font-size: 0.775rem;
+                display: inline-flex;
+                align-items: center;
+            }
+            .badge-legal-ulh {
+                background: rgba(217, 119, 6, 0.08);
+                color: #fcd34d;
+                border: 1px solid rgba(252, 211, 77, 0.28);
+                padding: 2px 10px;
+                border-radius: 6px;
+                font-weight: 600;
+                font-size: 0.775rem;
+                display: inline-flex;
+                align-items: center;
+            }
+            .badge-legal-excede {
+                background: rgba(239, 68, 68, 0.08);
+                color: #fca5a5;
+                border: 1px solid rgba(252, 165, 165, 0.25);
+                padding: 2px 10px;
+                border-radius: 6px;
+                font-weight: 600;
+                font-size: 0.775rem;
+                display: inline-flex;
+                align-items: center;
+            }
+
+            /* Botones de acción en tabla con paleta ejecutiva sobria */
+            body .skyway-ops-table .ui-button.ui-button-outlined.ui-button-success {
+                color: #6ee7b7 !important;
+                border: 1px solid rgba(110, 231, 183, 0.3) !important;
+                background: rgba(16, 185, 129, 0.04) !important;
+            }
+            body .skyway-ops-table .ui-button.ui-button-outlined.ui-button-success:hover {
+                background: rgba(16, 185, 129, 0.16) !important;
+                border-color: #6ee7b7 !important;
+                color: #ffffff !important;
+            }
+            body .skyway-ops-table .ui-button.ui-button-outlined.ui-button-warning {
+                color: #fcd34d !important;
+                border: 1px solid rgba(252, 211, 77, 0.3) !important;
+                background: rgba(217, 119, 6, 0.04) !important;
+            }
+            body .skyway-ops-table .ui-button.ui-button-outlined.ui-button-warning:hover {
+                background: rgba(217, 119, 6, 0.16) !important;
+                border-color: #fcd34d !important;
+                color: #ffffff !important;
+            }
+            body .skyway-ops-table .ui-button.ui-button-outlined.ui-button-danger {
+                color: #fca5a5 !important;
+                border: 1px solid rgba(252, 165, 165, 0.3) !important;
+                background: rgba(239, 68, 68, 0.04) !important;
+            }
+            body .skyway-ops-table .ui-button.ui-button-outlined.ui-button-danger:hover {
+                background: rgba(239, 68, 68, 0.16) !important;
+                border-color: #fca5a5 !important;
+                color: #ffffff !important;
+            }
+            .turno-config-box {
+                background: var(--bg-card);
+                border: 1px solid var(--border-subtle);
+                border-radius: 12px;
+                padding: 1.25rem 1.5rem;
+                margin-bottom: 20px;
+            }
         </style>
     </ui:define>
 
@@ -324,17 +431,184 @@
                         </h3>
                         <div class="flight-meta">
                             <span>Origen: #{turnoBean.origenNombre} — Destino: #{turnoBean.destinoNombre}</span>
+                            <span class="mx-2">•</span>
+                            <span>Horario Operativo:
+                                <h:outputText value="#{turnoBean.turno.horaInicio}"><f:convertDateTime pattern="dd/MM HH:mm"/></h:outputText>
+                                →
+                                <h:outputText value="#{turnoBean.turno.horaFin}"><f:convertDateTime pattern="HH:mm"/></h:outputText>
+                                (#{turnoBean.turno.duracionHoras} hrs)
+                            </span>
+                            <span class="mx-2">•</span>
+                            <h:panelGroup rendered="#{turnoBean.turno.excedeHorasLegales()}">
+                                <span class="badge-legal-excede">
+                                    <i class="pi pi-exclamation-triangle me-1"></i>Excede Límite Operacional (>24h)
+                                </span>
+                            </h:panelGroup>
+                            <h:panelGroup rendered="#{!turnoBean.turno.excedeHorasLegales() and turnoBean.turno.duracionHoras > 18.0}">
+                                <span class="badge-legal-ulh" title="Vuelo de Ultra Largo Alcance con tripulación reforzada">
+                                    <i class="pi pi-globe me-1"></i>Ultra Largo Alcance / ULH (≤24h)
+                                </span>
+                            </h:panelGroup>
+                            <h:panelGroup rendered="#{!turnoBean.turno.excedeHorasLegales() and turnoBean.turno.duracionHoras > 12.0 and turnoBean.turno.duracionHoras &lt;= 18.0}">
+                                <span class="badge-legal-conforme" title="Vuelo de Largo Alcance">
+                                    <i class="pi pi-compass me-1"></i>Largo Alcance / Reforzado (≤18h)
+                                </span>
+                            </h:panelGroup>
+                            <h:panelGroup rendered="#{!turnoBean.turno.excedeHorasLegales() and turnoBean.turno.duracionHoras &lt;= 12.0}">
+                                <span class="badge-legal-conforme">
+                                    <i class="pi pi-check me-1"></i>Jornada Conforme (≤12h)
+                                </span>
+                            </h:panelGroup>
+                        </div>
+
+                        <!-- ESPECIFICACIONES DE VUELO: AERONAVE Y COMANDANTE (ALINEADO A CREACIÓN DE VUELO) -->
+                        <div class="flight-meta-specs" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.08); display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: center; font-size: 0.85rem;">
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <i class="pi pi-send text-primary" style="font-size: 0.95rem;"></i>
+                                <span style="color: var(--text-muted); font-weight: 500;">Aeronave:</span>
+                                <h:outputText value="#{turnoBean.vuelo.avion.modeloAvion.nombre} [#{turnoBean.vuelo.avion.numeroDeRegistro}] — Cap: #{turnoBean.vuelo.avion.capacidadDePasajeros} pax"
+                                              rendered="#{turnoBean.vuelo != null and turnoBean.vuelo.avion != null}"
+                                              style="color: var(--text-heading); font-weight: 600;" />
+                                <h:outputText value="Sin Aeronave asignada"
+                                              rendered="#{turnoBean.vuelo == null or turnoBean.vuelo.avion == null}"
+                                              style="color: var(--text-muted); font-style: italic;" />
+                            </div>
+
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <i class="pi pi-id-card text-primary" style="font-size: 0.95rem;"></i>
+                                <span style="color: var(--text-muted); font-weight: 500;">Comandante / Piloto al Mando:</span>
+                                <h:panelGroup rendered="#{turnoBean.vuelo != null and turnoBean.vuelo.piloto != null}">
+                                    <span class="badge-cargo cargo-comandante" style="font-size: 0.725rem; padding: 2px 8px;">COMANDANTE</span>
+                                    <strong style="color: #93c5fd; font-weight: 600; margin-left: 4px;">
+                                        #{turnoBean.vuelo.piloto.usuario.nombre} #{turnoBean.vuelo.piloto.usuario.apellido}
+                                    </strong>
+                                    <span style="color: var(--text-muted); font-size: 0.8rem; margin-left: 4px;">
+                                        (Lic: #{turnoBean.vuelo.piloto.licencia})
+                                    </span>
+                                </h:panelGroup>
+                                <h:outputText value="Sin Comandante asignado en el vuelo"
+                                              rendered="#{turnoBean.vuelo == null or turnoBean.vuelo.piloto == null}"
+                                              style="color: #fca5a5; font-style: italic;" />
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div>
+                <h:form id="navForm">
                     <p:button outcome="/admin/index.xhtml" value="Volver a Vuelos" icon="pi pi-arrow-left" styleClass="ui-button-outlined ui-button-secondary" />
-                </div>
+                </h:form>
             </div>
 
+            <!-- ALERTA OPERACIONAL DE REASIGNACIÓN -->
+            <h:panelGroup id="alertaRechazoPanel" layout="block">
+                <h:panelGroup rendered="#{turnoBean.alertaRechazados}" layout="block"
+                              style="background: rgba(239, 68, 68, 0.06); border: 1px solid rgba(252, 165, 165, 0.25); border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="pi pi-exclamation-triangle" style="font-size: 1.5rem; color: #fca5a5;"></i>
+                        <div>
+                            <div style="font-weight: 700; color: #fca5a5; font-size: 0.95rem;">ALERTA OPERACIONAL: Reasignación Requerida</div>
+                            <div style="color: var(--text-body); font-size: 0.85rem;">
+                                Hay #{turnoBean.totalRechazados} tripulante(s) que han rechazado el servicio asignado. Se requiere reasignar antes del despegue.
+                            </div>
+                        </div>
+                    </div>
+                </h:panelGroup>
+            </h:panelGroup>
+
+            <!-- ALERTA OPERACIONAL DE DOTACIÓN Y RELEVO OBLIGATORIO -->
+            <h:form id="dotacionForm">
+                <h:panelGroup id="alertaDotacionPanel" layout="block">
+                    <h:panelGroup rendered="#{turnoBean.alertaDotacionInsuficiente}" layout="block"
+                                  style="background: rgba(217, 119, 6, 0.08); border: 1px solid rgba(252, 211, 77, 0.28); border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+                        <div class="d-flex align-items-center gap-3">
+                            <i class="pi pi-shield" style="font-size: 1.5rem; color: #fcd34d;"></i>
+                            <div>
+                                <div style="font-weight: 700; color: #fcd34d; font-size: 0.95rem;">
+                                    REQUISITO OPERACIONAL: Dotación de Mando y Relevo Requerida
+                                </div>
+                                <div style="color: var(--text-body); font-size: 0.85rem; margin-top: 2px;">
+                                    #{turnoBean.mensajeDotacionRequerida}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge-legal-ulh">Relevo Pendiente (#{turnoBean.totalPilotos + turnoBean.totalCopilotos}/#{turnoBean.pilotosRequeridos} Pilotos)</span>
+                            <p:commandButton value="Aprobar Exención"
+                                             icon="pi pi-check"
+                                             title="Aprobar despacho excepcional bajo autorización de operaciones"
+                                             actionListener="#{turnoBean.aprobarExencionDotacion}"
+                                             process="@this"
+                                             update=":dotacionForm:alertaDotacionPanel :msgs"
+                                             styleClass="ui-button-outlined ui-button-warning ui-button-sm" />
+                        </div>
+                    </h:panelGroup>
+
+                    <h:panelGroup rendered="#{!turnoBean.alertaDotacionInsuficiente and (turnoBean.turno.duracionHoras > 12.0 or turnoBean.exencionDotacionAprobada)}" layout="block"
+                                  style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(110, 231, 183, 0.28); border-radius: 10px; padding: 0.85rem 1.25rem; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+                        <div class="d-flex align-items-center gap-3">
+                            <i class="pi pi-check-circle" style="font-size: 1.3rem; color: #6ee7b7;"></i>
+                            <div>
+                                <div style="font-weight: 700; color: #6ee7b7; font-size: 0.9rem;">
+                                    <h:outputText value="DOTACIÓN DE RELEVO CONFORME" rendered="#{!turnoBean.exencionDotacionAprobada}" />
+                                    <h:outputText value="DESPACHO AUTORIZADO (EXENCIÓN OPERATIVA APROBADA)" rendered="#{turnoBean.exencionDotacionAprobada}" />
+                                </div>
+                                <div style="color: var(--text-body); font-size: 0.825rem;">
+                                    <h:outputText value="La tripulación técnica asignada cumple los estándares reglamentarios de relevo a bordo." rendered="#{!turnoBean.exencionDotacionAprobada}" />
+                                    <h:outputText value="Se autorizó el despacho con dotación actual bajo supervisión de operaciones." rendered="#{turnoBean.exencionDotacionAprobada}" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge-legal-conforme">Despacho Habilitado</span>
+                            <p:commandButton value="Reactivar Control"
+                                             rendered="#{turnoBean.exencionDotacionAprobada}"
+                                             icon="pi pi-refresh"
+                                             actionListener="#{turnoBean.revocarExencionDotacion}"
+                                             process="@this"
+                                             update=":dotacionForm:alertaDotacionPanel :msgs"
+                                             styleClass="ui-button-flat ui-button-secondary ui-button-sm" />
+                        </div>
+                    </h:panelGroup>
+                </h:panelGroup>
+            </h:form>
+
+            <!-- CONFIGURACIÓN DE TIPO DE TURNO -->
+            <h:form id="tipoTurnoForm">
+                <div class="turno-config-box">
+                    <div class="row align-items-center g-3">
+                        <div class="col-md-7">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <i class="pi pi-clock text-primary" style="font-size: 1.2rem;"></i>
+                                <div>
+                                    <div style="font-weight: 700; color: var(--text-heading); font-size: 0.95rem;">
+                                        Tipo de Turno Operacional:
+                                        <span class="text-primary">#{turnoBean.turno.tipoTurno.nombre}</span>
+                                    </div>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted);">
+                                        Clasificación de jornada (Diurno / Nocturno o modalidad Vuelo / Descanso / Capacitación).
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <p:selectOneMenu id="selTipoTurno" value="#{turnoBean.selectedTipoTurnoId}">
+                                <f:selectItems value="#{turnoBean.tiposTurnoDisponibles}" var="tt"
+                                               itemLabel="#{tt.nombre}" itemValue="#{tt.idTipo}" />
+                            </p:selectOneMenu>
+                        </div>
+                        <div class="col-md-2 text-end">
+                            <p:commandButton value="Actualizar" icon="pi pi-save"
+                                             actionListener="#{turnoBean.actualizarTipoTurno}"
+                                             process="@form"
+                                             update=":tipoTurnoForm :turnoForm :msgs"
+                                             styleClass="btn-new w-100" />
+                        </div>
+                    </div>
+                </div>
+            </h:form>
+
             <!-- DASHBOARD / KPIS DE CABINA Y PILOTOS -->
-            <div class="kpi-crew-container">
+            <h:panelGroup id="kpiContainer" layout="block" styleClass="kpi-crew-container" style="flex-wrap: wrap;">
                 <div class="kpi-crew-card">
                     <div class="kpi-crew-icon" style="background: rgba(37, 99, 235, 0.15); color: #60a5fa;">
                         <i class="pi pi-user"></i>
@@ -356,7 +630,7 @@
                 </div>
 
                 <div class="kpi-crew-card">
-                    <div class="kpi-crew-icon" style="background: rgba(14, 116, 144, 0.2); color: #38bdf8;">
+                    <div class="kpi-crew-icon" style="background: rgba(71, 85, 105, 0.2); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.2);">
                         <i class="pi pi-users"></i>
                     </div>
                     <div>
@@ -364,30 +638,104 @@
                         <div class="kpi-crew-value">#{turnoBean.totalCabina} Asignados</div>
                     </div>
                 </div>
-            </div>
 
-            <!-- SECCIÓN DE ASIGNACIÓN RÁPIDA -->
+                <div class="kpi-crew-card">
+                    <div class="kpi-crew-icon" style="background: rgba(16, 185, 129, 0.08); color: #6ee7b7; border: 1px solid rgba(110, 231, 183, 0.2);">
+                        <i class="pi pi-check-circle"></i>
+                    </div>
+                    <div>
+                        <div class="kpi-crew-title">Confirmados</div>
+                        <div class="kpi-crew-value">#{turnoBean.totalConfirmados}</div>
+                    </div>
+                </div>
+
+                <div class="kpi-crew-card">
+                    <div class="kpi-crew-icon" style="background: rgba(217, 119, 6, 0.08); color: #fcd34d; border: 1px solid rgba(252, 211, 77, 0.2);">
+                        <i class="pi pi-clock"></i>
+                    </div>
+                    <div>
+                        <div class="kpi-crew-title">Pendientes</div>
+                        <div class="kpi-crew-value">#{turnoBean.totalPendientes}</div>
+                    </div>
+                </div>
+
+                <div class="kpi-crew-card">
+                    <div class="kpi-crew-icon" style="background: rgba(239, 68, 68, 0.08); color: #fca5a5; border: 1px solid rgba(252, 165, 165, 0.2);">
+                        <i class="pi pi-exclamation-circle"></i>
+                    </div>
+                    <div>
+                        <div class="kpi-crew-title">Rechazados</div>
+                        <div class="kpi-crew-value">#{turnoBean.totalRechazados}</div>
+                    </div>
+                </div>
+            </h:panelGroup>
+
+
+            <!-- SECCIÓN DE ASIGNACIÓN DIFERENCIADA: MANDO TÉCNICO Y CABINA -->
             <h:form id="tripulanteForm">
-                <div class="assignment-box">
-                    <div class="row align-items-end g-3">
-                        <div class="col-md-9">
-                            <label>Seleccionar Personal Disponible de Flota</label>
-                            <p:selectOneMenu id="tripulante" value="#{turnoBean.selectedTripulanteRut}"
-                                             filter="true" filterMatchMode="contains">
-                                <f:selectItem itemLabel="-- Seleccionar tripulante activo por RUT o Nombre --" itemValue="" noSelectionOption="true" />
-                                <f:selectItems value="#{turnoBean.tripulantesDisponibles}" var="tp"
-                                               itemLabel="#{tp.usuario.nombre} #{tp.usuario.apellido} — [#{tp.cargo}] (RUT: #{tp.usuario.rut})"
-                                               itemValue="#{tp.usuario.rut}" />
-                            </p:selectOneMenu>
+                <div class="row g-3 mb-4">
+                    <!-- 1. ASIGNACIÓN TRIPULACIÓN TÉCNICA (PILOTOS / COPILOTOS) -->
+                    <div class="col-lg-6">
+                        <div class="assignment-box" style="height: 100%; border-top: 3px solid #3b82f6; margin-bottom: 0;">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="pi pi-shield" style="font-size: 1.1rem; color: #60a5fa;"></i>
+                                <span style="font-weight: 700; color: var(--text-heading); font-size: 0.9rem;">
+                                    Tripulación Técnica (Pilotos y Copilotos de Relevo)
+                                </span>
+                            </div>
+                            <label>Pilotos Disponibles (#{turnoBean.pilotosDisponibles.size()})</label>
+                            <div class="row align-items-center g-2 mt-1">
+                                <div class="col-md-8">
+                                    <p:selectOneMenu id="selPiloto" value="#{turnoBean.selectedPilotoRut}"
+                                                     filter="true" filterMatchMode="contains" style="width: 100%;">
+                                        <f:selectItem itemLabel="-- Seleccionar Piloto o Copiloto --" itemValue="" noSelectionOption="true" />
+                                        <f:selectItems value="#{turnoBean.pilotosDisponibles}" var="tp"
+                                                       itemLabel="#{tp.usuario.nombre} #{tp.usuario.apellido} — [#{tp.cargo}] (RUT: #{tp.rut})"
+                                                       itemValue="#{tp.rut}" />
+                                    </p:selectOneMenu>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <p:commandButton value="Asignar Piloto"
+                                                     icon="pi pi-user-plus"
+                                                     actionListener="#{turnoBean.asignarPilotoAlTurno}"
+                                                     process="@form"
+                                                     update=":tripulanteForm :turnoForm :kpiContainer :alertaRechazoPanel :dotacionForm:alertaDotacionPanel :msgs"
+                                                     styleClass="btn-new w-100" />
+                                </div>
+                            </div>
                         </div>
+                    </div>
 
-                        <div class="col-md-3 text-end">
-                            <p:commandButton value="Integrar a Tripulación"
-                                             icon="pi pi-user-plus"
-                                             actionListener="#{turnoBean.asignarTripulanteAlTurno}"
-                                             process="@form"
-                                             update=":tripulanteForm :turnoForm :msgs"
-                                             styleClass="btn-new w-100" />
+                    <!-- 2. ASIGNACIÓN TRIPULACIÓN DE CABINA (SOBRECARGOS / AZAFATAS) -->
+                    <div class="col-lg-6">
+                        <div class="assignment-box" style="height: 100%; border-top: 3px solid #64748b; margin-bottom: 0;">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="pi pi-users" style="font-size: 1.1rem; color: #94a3b8;"></i>
+                                <span style="font-weight: 700; color: var(--text-heading); font-size: 0.9rem;">
+                                    Tripulación de Cabina (Sobrecargos y Auxiliares)
+                                </span>
+                            </div>
+                            <label>Personal de Cabina Disponible (#{turnoBean.cabinaDisponibles.size()})</label>
+                            <div class="row align-items-center g-2 mt-1">
+                                <div class="col-md-8">
+                                    <p:selectOneMenu id="selCabina" value="#{turnoBean.selectedCabinaRut}"
+                                                     filter="true" filterMatchMode="contains" style="width: 100%;">
+                                        <f:selectItem itemLabel="-- Seleccionar Sobrecargo o Azafata --" itemValue="" noSelectionOption="true" />
+                                        <f:selectItems value="#{turnoBean.cabinaDisponibles}" var="tp"
+                                                       itemLabel="#{tp.usuario.nombre} #{tp.usuario.apellido} — [#{tp.cargo}] (RUT: #{tp.rut})"
+                                                       itemValue="#{tp.rut}" />
+                                    </p:selectOneMenu>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <p:commandButton value="Asignar Cabina"
+                                                     icon="pi pi-user-plus"
+                                                     actionListener="#{turnoBean.asignarCabinaAlTurno}"
+                                                     process="@form"
+                                                     update=":tripulanteForm :turnoForm :kpiContainer :alertaRechazoPanel :dotacionForm:alertaDotacionPanel :msgs"
+                                                     styleClass="btn-new w-100"
+                                                     style="background: #334155 !important; border: 1px solid #475569 !important;" />
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -423,7 +771,7 @@
                     </p:column>
 
                     <p:column headerText="Función / Cargo" style="width: 180px; text-align: center;">
-                        <span class="badge-cargo #{turnoTrip.tripulacion1.cargo.toLowerCase().contains('piloto') ? 'cargo-piloto' : (turnoTrip.tripulacion1.cargo.toLowerCase().contains('copiloto') ? 'cargo-copiloto' : 'cargo-tripulante')}">
+                        <span class="badge-cargo #{turnoTrip.tripulacion1.cargo.toLowerCase().contains('comandante') ? 'cargo-comandante' : (turnoTrip.tripulacion1.cargo.toLowerCase().contains('piloto') ? 'cargo-piloto' : (turnoTrip.tripulacion1.cargo.toLowerCase().contains('copiloto') ? 'cargo-copiloto' : 'cargo-tripulante'))}">
                             #{turnoTrip.tripulacion1.cargo}
                         </span>
                     </p:column>
@@ -441,18 +789,60 @@
                         </div>
                     </p:column>
 
-                    <p:column headerText="Acciones" style="width: 100px; text-align: center;">
-                        <p:commandButton icon="pi pi-trash"
-                                         title="Retirar del Manifiesto"
-                                         styleClass="ui-button-outlined ui-button-danger"
-                                         actionListener="#{turnoBean.eliminarTripulante(turnoTrip)}"
-                                         process="@this"
-                                         update=":turnoForm :tripulanteForm :msgs">
-                            <p:confirm header="Confirmar Desvinculación" message="¿Desea desvincular a este tripulante del vuelo actual?" icon="pi pi-exclamation-triangle" />
-                        </p:commandButton>
+                    <p:column headerText="Estado" style="width: 160px; text-align: center;">
+                        <h:panelGroup rendered="#{turnoTrip.estado eq 'CONFIRMADO'}">
+                            <span class="badge-confirmado">
+                                <i class="pi pi-check me-1"></i>CONFIRMADO
+                            </span>
+                        </h:panelGroup>
+                        <h:panelGroup rendered="#{empty turnoTrip.estado or turnoTrip.estado eq 'PENDIENTE'}">
+                            <span class="badge-pendiente">
+                                <i class="pi pi-clock me-1"></i>PENDIENTE
+                            </span>
+                        </h:panelGroup>
+                        <h:panelGroup rendered="#{turnoTrip.estado eq 'RECHAZADO'}">
+                            <span class="badge-rechazado" title="Motivo: #{turnoTrip.motivoRechazo}">
+                                <i class="pi pi-times me-1"></i>RECHAZADO
+                            </span>
+                            <div style="font-size: 0.725rem; color: #fca5a5; margin-top: 4px; max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="#{turnoTrip.motivoRechazo}">
+                                #{turnoTrip.motivoRechazo}
+                            </div>
+                        </h:panelGroup>
+                    </p:column>
+
+                    <p:column headerText="Acciones" style="width: 140px; text-align: center;">
+                        <div class="d-flex justify-content-center gap-1">
+                            <p:commandButton icon="pi pi-check-circle"
+                                             title="Aprobar Turno (Admin)"
+                                             rendered="#{turnoTrip.estado eq 'PENDIENTE'}"
+                                             styleClass="ui-button-outlined ui-button-success ui-button-sm"
+                                             actionListener="#{turnoBean.aprobarTurnoManual(turnoTrip)}"
+                                             process="@this"
+                                             update=":turnoForm :kpiContainer :dotacionForm:alertaDotacionPanel :msgs" />
+
+                            <p:commandButton icon="pi pi-user-edit"
+                                             title="Aprobar Rechazo y Reasignar"
+                                             rendered="#{turnoTrip.estado eq 'RECHAZADO'}"
+                                             styleClass="ui-button-outlined ui-button-warning ui-button-sm"
+                                             actionListener="#{turnoBean.aprobarRechazoYReasignar(turnoTrip)}"
+                                             process="@this"
+                                             update=":turnoForm :tripulanteForm :kpiContainer :alertaRechazoPanel :dotacionForm:alertaDotacionPanel :msgs" />
+
+                            <p:commandButton icon="pi pi-trash"
+                                             title="Retirar del Manifiesto"
+                                             styleClass="ui-button-outlined ui-button-danger ui-button-sm"
+                                             actionListener="#{turnoBean.eliminarTripulante(turnoTrip)}"
+                                             process="@this"
+                                             update=":turnoForm :tripulanteForm :kpiContainer :alertaRechazoPanel :dotacionForm:alertaDotacionPanel :msgs">
+                                <p:confirm header="Confirmar Desvinculación" message="¿Desea desvincular a este tripulante del vuelo actual?" icon="pi pi-exclamation-triangle" />
+                            </p:commandButton>
+                        </div>
                     </p:column>
                 </p:dataTable>
 
+            </h:form>
+
+            <h:form id="confirmDlgForm">
                 <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" appendTo="@(body)" styleClass="custom-dialog">
                     <p:commandButton value="Cancelar" type="button" styleClass="ui-confirmdialog-no ui-button-flat ui-button-secondary" />
                     <p:commandButton value="Sí, Retirar" type="button" styleClass="ui-confirmdialog-yes btn-new" />

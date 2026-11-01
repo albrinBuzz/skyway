@@ -61,4 +61,8 @@ public class TripulacionService {
     public boolean existsByRut(String rut) {
         return tripulacionRepository.existsByRut(rut);
     }
+
+    public void upsertTripulacion(String rut, String cargo) {
+        tripulacionRepository.upsertTripulacion(rut, cargo);
+    }
 }

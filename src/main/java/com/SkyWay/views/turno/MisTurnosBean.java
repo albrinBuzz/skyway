@@ -38,6 +38,8 @@ public class MisTurnosBean implements Serializable {
     private TurnoTripulacion selectedTurno;
     private Tripulacion tripulacion;
     private Usuario usuario;
+    private String motivoRechazoForm;
+    private TurnoTripulacion turnoARechazar;
 
     @PostConstruct
     public void init() {
@@ -70,9 +72,46 @@ public class MisTurnosBean implements Serializable {
         this.selectedTurno = turnoTripulacion;
     }
 
+    public void prepararRechazo(TurnoTripulacion turno) {
+        this.turnoARechazar = turno;
+        this.motivoRechazoForm = "";
+    }
+
+    public void ejecutarRechazo() {
+        if (this.turnoARechazar == null) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "No se ha seleccionado ningún turno para rechazar."));
+            return;
+        }
+
+        if (this.motivoRechazoForm == null || this.motivoRechazoForm.trim().isEmpty()) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Motivo Requerido",
+                            "Debe ingresar el motivo justificado de rechazo del servicio."));
+            return;
+        }
+
+        try {
+            turnoTripulacionService.rechazarTurno(this.turnoARechazar.getIdTurnoTripulacion(), this.motivoRechazoForm.trim());
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_WARN, "Turno Rechazado",
+                            "Has registrado el rechazo del turno #" + this.turnoARechazar.getIdTurnoTripulacion() +
+                                    ". Operaciones ha sido notificado para la reasignación."));
+            cargarTurnos();
+            this.turnoARechazar = null;
+            this.motivoRechazoForm = "";
+        } catch (Exception e) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error al Rechazar", e.getMessage()));
+            Logger.logInfo(e.getMessage());
+        }
+    }
+
     public void confirmarAsistencia(TurnoTripulacion turno) {
         try {
-            // Lógica para actualizar estado a confirmado en servicio
+            if (turno != null && turno.getIdTurnoTripulacion() != null) {
+                turnoTripulacionService.confirmarTurno(turno.getIdTurnoTripulacion());
+            }
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_INFO, "Turno Confirmado",
                             "Has confirmado tu asistencia para el turno #" + turno.getIdTurnoTripulacion()));
@@ -83,15 +122,7 @@ public class MisTurnosBean implements Serializable {
     }
 
     public void rechazarTurno(TurnoTripulacion turno) {
-        try {
-            // Lógica para registrar el rechazo/incidencia de turno
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_WARN, "Turno Rechazado",
-                            "Has rechazado la asignación del turno #" + turno.getIdTurnoTripulacion()));
-            cargarTurnos();
-        } catch (Exception e) {
-            Logger.logInfo(e.getMessage());
-        }
+        prepararRechazo(turno);
     }
 
     // Getters y Setters
@@ -105,4 +136,10 @@ public class MisTurnosBean implements Serializable {
     public void setTripulacion(Tripulacion tripulacion) { this.tripulacion = tripulacion; }
 
     public Usuario getUsuario() { return usuario; }
+
+    public String getMotivoRechazoForm() { return motivoRechazoForm; }
+    public void setMotivoRechazoForm(String motivoRechazoForm) { this.motivoRechazoForm = motivoRechazoForm; }
+
+    public TurnoTripulacion getTurnoARechazar() { return turnoARechazar; }
+    public void setTurnoARechazar(TurnoTripulacion turnoARechazar) { this.turnoARechazar = turnoARechazar; }
 }
