@@ -63,17 +63,31 @@ public class MobileSecurityConfig {
     }
 
     @Bean
-    @Order(1)
-    SecurityFilterChain mobileFilterChain(HttpSecurity http, JwtDecoder decoder,
-            ObjectMapper mapper, @Value("${skyway.mobile.allowed-origins:http://localhost:8100,http://127.0.0.1:8100,http://localhost:8101,http://127.0.0.1:8101,http://localhost,https://localhost,capacitor://localhost,https://skyway-gde6a6aza3abb8a6.brazilsouth-01.azurewebsites.net}") String origins) throws Exception {
+    public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cors = new CorsConfiguration();
-        cors.setAllowedOrigins(Arrays.stream(origins.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList());
-        cors.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "OPTIONS"));
-        cors.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        cors.setAllowedOriginPatterns(List.of(
+            "http://localhost:*",
+            "http://127.0.0.1:*",
+            "http://192.168.*:*",
+            "http://10.*:*",
+            "http://172.*:*",
+            "capacitor://localhost",
+            "https://*.azurewebsites.net"
+        ));
+        cors.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        cors.setAllowedHeaders(List.of("*"));
+        cors.setExposedHeaders(List.of("Authorization"));
         cors.setAllowCredentials(false);
         cors.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/v1/mobile/**", cors);
+        source.registerCorsConfiguration("/**", cors);
+        return source;
+    }
+
+    @Bean
+    @Order(1)
+    SecurityFilterChain mobileFilterChain(HttpSecurity http, JwtDecoder decoder,
+            ObjectMapper mapper, CorsConfigurationSource corsConfigurationSource) throws Exception {
         var entry = (org.springframework.security.web.AuthenticationEntryPoint) (req, res, ex) -> {
             res.setStatus(401); res.setContentType("application/json");
             mapper.writeValue(res.getOutputStream(), Map.of("codigo", "NO_AUTENTICADO", "mensaje", "Inicia sesión nuevamente."));
@@ -84,7 +98,7 @@ public class MobileSecurityConfig {
         };
         // AntPathRequestMatcher evita ambigüedad entre FacesServlet y DispatcherServlet.
         http.securityMatcher(new AntPathRequestMatcher("/api/v1/mobile/**"))
-            .cors(c -> c.configurationSource(source))
+            .cors(c -> c.configurationSource(corsConfigurationSource))
             .csrf(c -> c.disable()) // API exclusivamente Bearer; no admite cookies de sesión.
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .requestCache(c -> c.disable())
