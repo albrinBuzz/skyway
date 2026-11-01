@@ -330,9 +330,25 @@
                             </h:outputText>
                         </p:column>
 
+                        <p:column headerText="Duración" style="width: 100px; text-align: center;">
+                            <span style="font-weight: 500;">#{turnoTrip.turno1.duracionHoras} hrs</span>
+                        </p:column>
+
+                        <p:column headerText="Estado" style="width: 140px; text-align: center;">
+                            <h:panelGroup rendered="#{turnoTrip.estado eq 'CONFIRMADO'}">
+                                <span class="badge-confirmado"><i class="pi pi-check me-1"></i>CONFIRMADO</span>
+                            </h:panelGroup>
+                            <h:panelGroup rendered="#{empty turnoTrip.estado or turnoTrip.estado eq 'PENDIENTE'}">
+                                <span class="badge-pendiente"><i class="pi pi-clock me-1"></i>PENDIENTE</span>
+                            </h:panelGroup>
+                            <h:panelGroup rendered="#{turnoTrip.estado eq 'RECHAZADO'}">
+                                <span class="badge-rechazado" title="Motivo: #{turnoTrip.motivoRechazo}"><i class="pi pi-times me-1"></i>RECHAZADO</span>
+                            </h:panelGroup>
+                        </p:column>
+
                         <!-- ACCIONES CORPORATIVAS CON SEMÁFORO PROFESIONAL -->
-                        <p:column headerText="Acciones Operativas" styleClass="text-center" style="width: 250px;">
-                            <div class="d-flex justify-content-center gap-2">
+                        <p:column headerText="Acciones Operativas" styleClass="text-center" style="width: 270px;">
+                            <div class="d-flex justify-content-center align-items-center gap-2">
                                 <p:commandButton icon="pi pi-search"
                                                  title="Ver Detalles"
                                                  styleClass="btn-skyway-search ui-button-sm"
@@ -341,19 +357,34 @@
                                                  oncomplete="PF('detalleDialog').show();"
                                                  process="@this" />
 
-                                <p:commandButton value="Aceptar"
-                                                 icon="pi pi-check"
-                                                 styleClass="btn-skyway-accept"
-                                                 action="#{misTurnosBean.confirmarAsistencia(turnoTrip)}"
-                                                 update=":growlTurnos misTurnosForm"
-                                                 process="@this" />
+                                <h:panelGroup rendered="#{empty turnoTrip.estado or turnoTrip.estado eq 'PENDIENTE'}">
+                                    <p:commandButton value="Aceptar"
+                                                     icon="pi pi-check"
+                                                     styleClass="btn-skyway-accept"
+                                                     action="#{misTurnosBean.confirmarAsistencia(turnoTrip)}"
+                                                     update=":growlTurnos misTurnosForm"
+                                                     process="@this" />
 
-                                <p:commandButton value="Rechazar"
-                                                 icon="pi pi-times"
-                                                 styleClass="btn-skyway-reject"
-                                                 action="#{misTurnosBean.rechazarTurno(turnoTrip)}"
-                                                 update=":growlTurnos misTurnosForm"
-                                                 process="@this" />
+                                    <p:commandButton value="Rechazar"
+                                                     icon="pi pi-times"
+                                                     styleClass="btn-skyway-reject"
+                                                     action="#{misTurnosBean.prepararRechazo(turnoTrip)}"
+                                                     update=":dlgRechazo"
+                                                     oncomplete="PF('rechazoDialog').show();"
+                                                     process="@this" />
+                                </h:panelGroup>
+
+                                <h:panelGroup rendered="#{turnoTrip.estado eq 'CONFIRMADO'}">
+                                    <span style="color: #10b981; font-weight: 600; font-size: 11px;">
+                                        <i class="pi pi-check-circle me-1"></i>Asistencia Confirmada
+                                    </span>
+                                </h:panelGroup>
+
+                                <h:panelGroup rendered="#{turnoTrip.estado eq 'RECHAZADO'}">
+                                    <span style="color: #ef4444; font-weight: 600; font-size: 11px;">
+                                        <i class="pi pi-times-circle me-1"></i>Servicio Rechazado
+                                    </span>
+                                </h:panelGroup>
                             </div>
                         </p:column>
 
@@ -361,8 +392,46 @@
                 </h:form>
             </div>
 
+            <!-- MODAL RECHAZO CON MOTIVO -->
+            <p:dialog id="dlgRechazo"
+                      header="Registrar Rechazo de Turno Operacional"
+                      widgetVar="rechazoDialog"
+                      modal="true"
+                      closable="true"
+                      showEffect="fade"
+                      hideEffect="fade"
+                      width="460"
+                      responsive="true"
+                      styleClass="skyway-dialog">
 
-            <!-- MODAL -->
+                <h:form id="rechazoForm">
+                    <p style="color: var(--text-dim); font-size: 12px; margin-bottom: 14px;">
+                        Al rechazar el servicio, debes fundamentar el motivo conforme a la normativa operacional. La administración de operaciones procederá con la reasignación de la vacante.
+                    </p>
+
+                    <div style="background-color: var(--deep-space); padding: 14px; border-radius: 6px; border: 1px solid var(--slate-glass); margin-bottom: 14px;">
+                        <span style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); display: block; margin-bottom: 4px;">Turno Asignado</span>
+                        <span style="color: var(--glow-white); font-weight: 600;">##{misTurnosBean.turnoARechazar.idTurnoTripulacion} — #{misTurnosBean.turnoARechazar.turno1.tipoTurno.nombre}</span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label style="color: var(--glow-white); font-size: 12px; font-weight: 600; display: block; margin-bottom: 6px;">Motivo Justificado de Rechazo *</label>
+                        <p:inputTextarea value="#{misTurnosBean.motivoRechazoForm}" rows="3" style="width: 100%;"
+                                         placeholder="Ej: Licencia médica, descanso obligatorio reglamentario, fuerza mayor..." required="true" />
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-3">
+                        <p:commandButton value="Cancelar" type="button" onclick="PF('rechazoDialog').hide()" styleClass="btn-action-minimal" />
+                        <p:commandButton value="Confirmar Rechazo" icon="pi pi-times"
+                                         action="#{misTurnosBean.ejecutarRechazo}"
+                                         update=":growlTurnos :misTurnosForm :dlgRechazo"
+                                         oncomplete="if (!args.validationFailed) PF('rechazoDialog').hide();"
+                                         styleClass="btn-skyway-reject" />
+                    </div>
+                </h:form>
+            </p:dialog>
+
+            <!-- MODAL DETALLES -->
             <p:dialog id="dlgDetalleTurno"
                       header="Detalles de Asignación de Turno"
                       widgetVar="detalleDialog"
@@ -370,7 +439,7 @@
                       closable="true"
                       showEffect="fade"
                       hideEffect="fade"
-                      width="480"
+                      width="500"
                       responsive="true"
                       styleClass="skyway-dialog">
 
@@ -384,15 +453,36 @@
                             <span style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); display: block; margin-bottom: 4px;">Cargo</span>
                             <span style="color: var(--glow-white); font-weight: 500;">#{misTurnosBean.selectedTurno.tripulacion1.cargo}</span>
                         </div>
-                        <div style="grid-column: 1 / -1;">
+                        <div>
                             <span style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); display: block; margin-bottom: 4px;">Servicio</span>
                             <span style="color: var(--glow-white); font-weight: 500;">#{misTurnosBean.selectedTurno.turno1.tipoTurno.nombre}</span>
                         </div>
+                        <div>
+                            <span style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); display: block; margin-bottom: 4px;">Duración</span>
+                            <span style="color: var(--glow-white); font-weight: 500;">#{misTurnosBean.selectedTurno.turno1.duracionHoras} hrs</span>
+                        </div>
+                        <div>
+                            <span style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); display: block; margin-bottom: 4px;">Estado</span>
+                            <span style="color: var(--glow-white); font-weight: 600;">#{misTurnosBean.selectedTurno.estado}</span>
+                        </div>
+                        <div>
+                            <span style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); display: block; margin-bottom: 4px;">Fecha Respuesta</span>
+                            <span style="color: var(--glow-white); font-weight: 500;">
+                                <h:outputText value="#{misTurnosBean.selectedTurno.fechaRespuesta}" rendered="#{not empty misTurnosBean.selectedTurno.fechaRespuesta}">
+                                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/Santiago"/>
+                                </h:outputText>
+                                <h:outputText value="Pendiente" rendered="#{empty misTurnosBean.selectedTurno.fechaRespuesta}" />
+                            </span>
+                        </div>
+                        <h:panelGroup rendered="#{not empty misTurnosBean.selectedTurno.motivoRechazo}" layout="block" style="grid-column: 1 / -1;">
+                            <span style="font-size: 11px; text-transform: uppercase; color: #f87171; display: block; margin-bottom: 4px;">Motivo de Rechazo</span>
+                            <span style="color: #fca5a5; font-size: 13px;">#{misTurnosBean.selectedTurno.motivoRechazo}</span>
+                        </h:panelGroup>
                     </div>
                 </h:panelGroup>
 
                 <f:facet name="footer">
-                    <p:commandButton value="Cerrar" type="button" onclick="PF('detalleDialog').hide()" styleClass="btn-action-minimal" />
+                    <button type="button" onclick="PF('detalleDialog').hide()" class="btn-action-minimal">Cerrar</button>
                 </f:facet>
             </p:dialog>
 

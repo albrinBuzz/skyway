@@ -326,13 +326,15 @@
                             <h2>Flota &amp; Aeronaves</h2>
                             <span style="color: var(--text-muted); font-size: 0.85rem;">Listado de aviones certificados en la aerolínea</span>
                         </div>
-                        <p:commandButton value="Nueva Aeronave"
-                                         icon="pi pi-plus"
-                                         actionListener="#{gestionFlotaIntegradaBean.prepararNuevoAvion()}"
-                                         process="@this"
-                                         update=":formDialogAvion:panelAvion"
-                                         oncomplete="PF('dlgAvion').show();"
-                                         styleClass="btn-new" />
+                        <h:form id="headerFormAvion">
+                            <p:commandButton value="Nueva Aeronave"
+                                             icon="pi pi-plus"
+                                             actionListener="#{gestionFlotaIntegradaBean.prepararNuevoAvion()}"
+                                             process="@this"
+                                             update=":formDialogAvion:panelAvion"
+                                             oncomplete="PF('dlgAvion').show();"
+                                             styleClass="btn-new" />
+                        </h:form>
                     </div>
 
                     <h:form id="formTablaAviones">
@@ -421,13 +423,15 @@
                             <h2>Modelos de Avión</h2>
                             <span style="color: var(--text-muted); font-size: 0.85rem;">Catálogo de especificaciones técnicas por modelo</span>
                         </div>
-                        <p:commandButton value="Nuevo Modelo"
-                                         icon="pi pi-plus"
-                                         actionListener="#{gestionFlotaIntegradaBean.prepararNuevoModelo()}"
-                                         process="@this"
-                                         update=":formDialogModelo:panelModelo"
-                                         oncomplete="PF('dlgModelo').show();"
-                                         styleClass="btn-new" />
+                        <h:form id="headerFormModelo">
+                            <p:commandButton value="Nuevo Modelo"
+                                             icon="pi pi-plus"
+                                             actionListener="#{gestionFlotaIntegradaBean.prepararNuevoModelo()}"
+                                             process="@this"
+                                             update=":formDialogModelo:panelModelo"
+                                             oncomplete="PF('dlgModelo').show();"
+                                             styleClass="btn-new" />
+                        </h:form>
                     </div>
 
                     <h:form id="formTablaModelos">
@@ -475,13 +479,15 @@
                             <h2>Fabricantes Aeronáuticos</h2>
                             <span style="color: var(--text-muted); font-size: 0.85rem;">Industrias aeronáuticas asociadas</span>
                         </div>
-                        <p:commandButton value="Nuevo Fabricante"
-                                         icon="pi pi-plus"
-                                         actionListener="#{gestionFlotaIntegradaBean.prepararNuevoFabricante()}"
-                                         process="@this"
-                                         update=":formDialogFabricante:panelFabricante"
-                                         oncomplete="PF('dlgFabricante').show();"
-                                         styleClass="btn-new" />
+                        <h:form id="headerFormFabricante">
+                            <p:commandButton value="Nuevo Fabricante"
+                                             icon="pi pi-plus"
+                                             actionListener="#{gestionFlotaIntegradaBean.prepararNuevoFabricante()}"
+                                             process="@this"
+                                             update=":formDialogFabricante:panelFabricante"
+                                             oncomplete="PF('dlgFabricante').show();"
+                                             styleClass="btn-new" />
+                        </h:form>
                     </div>
 
                     <h:form id="formTablaFabricantes">
@@ -669,10 +675,12 @@
             </p:dialog>
 
             <!-- CONFIRM DIALOG GLOBAL -->
-            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" styleClass="custom-dialog">
-                <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-flat ui-button-secondary" />
-                <p:commandButton value="Sí, Eliminar" type="button" styleClass="ui-confirmdialog-yes btn-new" />
-            </p:confirmDialog>
+            <h:form id="confirmDlgForm">
+                <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" styleClass="custom-dialog">
+                    <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-flat ui-button-secondary" />
+                    <p:commandButton value="Sí, Eliminar" type="button" styleClass="ui-confirmdialog-yes btn-new" />
+                </p:confirmDialog>
+            </h:form>
         </div>
     </ui:define>
 

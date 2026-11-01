@@ -347,13 +347,15 @@
                             <h2>Familias Tarifarias</h2>
                             <span>Asigne características y valores a las tarifas</span>
                         </div>
-                        <p:commandButton value="Nueva Tarifa"
-                                         icon="pi pi-plus"
-                                         actionListener="#{tarifaBean.prepararNuevaTarifa()}"
-                                         process="@this"
-                                         update=":formDialog:panelTarifa"
-                                         oncomplete="PF('dlgTarifa').show();"
-                                         styleClass="btn-new" />
+                        <h:form id="headerFormTarifa">
+                            <p:commandButton value="Nueva Tarifa"
+                                             icon="pi pi-plus"
+                                             actionListener="#{tarifaBean.prepararNuevaTarifa()}"
+                                             process="@this"
+                                             update=":formDialog:panelTarifa"
+                                             oncomplete="PF('dlgTarifa').show();"
+                                             styleClass="btn-new" />
+                        </h:form>
                     </div>
 
                     <h:form id="formTabla">
@@ -417,10 +419,12 @@
                             <h2>Catálogo Parametrizable de Beneficios</h2>
                             <span>Defina nuevas variables globales para usarse en las tarifas</span>
                         </div>
-                        <p:commandButton value="Nuevo Beneficio / Regla"
-                                         icon="pi pi-plus"
-                                         oncomplete="PF('dlgNuevaCaracteristica').show();"
-                                         styleClass="btn-new" />
+                        <h:form id="headerFormBeneficio">
+                            <p:commandButton value="Nuevo Beneficio / Regla"
+                                             icon="pi pi-plus"
+                                             oncomplete="PF('dlgNuevaCaracteristica').show();"
+                                             styleClass="btn-new" />
+                        </h:form>
                     </div>
 
                     <h:form id="formCatalogo">
@@ -562,10 +566,12 @@
             </p:dialog>
 
             <!-- CONFIRM DIALOG GLOBAL -->
-            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" appendTo="@(body)" styleClass="custom-dialog">
-                <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-flat ui-button-secondary" />
-                <p:commandButton value="Sí, Eliminar" type="button" styleClass="ui-confirmdialog-yes btn-new" />
-            </p:confirmDialog>
+            <h:form id="confirmDlgForm">
+                <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" appendTo="@(body)" styleClass="custom-dialog">
+                    <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-flat ui-button-secondary" />
+                    <p:commandButton value="Sí, Eliminar" type="button" styleClass="ui-confirmdialog-yes btn-new" />
+                </p:confirmDialog>
+            </h:form>
         </div>
     </ui:define>
 

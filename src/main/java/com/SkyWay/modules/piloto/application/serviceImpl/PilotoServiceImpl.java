@@ -12,7 +12,8 @@ import com.SkyWay.modules.piloto.domain.repository.PilotoRepositoy;
 import com.SkyWay.modules.piloto.domain.service.PiloService;
 
 @Service
-public class PilotoServiceImpl implements PiloService{
+public class
+PilotoServiceImpl implements PiloService{
 
 	@Autowired 
 	private PilotoRepositoy pilotoRepositoy;

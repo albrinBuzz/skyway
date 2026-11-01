@@ -532,6 +532,9 @@ CREATE TABLE Turno (
 
 CREATE TABLE Turno_Tripulacion (
                                    ID_TURNO_Tripulacion INT PRIMARY KEY DEFAULT nextval('turno_tripulacion_seq'),
+                                   Estado VARCHAR(20) DEFAULT 'PENDIENTE',
+                                   Fecha_Respuesta TIMESTAMP,
+                                   Motivo_Rechazo VARCHAR(255),
                                    RUT_TRIPULACION VARCHAR(12) NOT NULL ,  -- Relacionado al tripulante
                                    ID_TURNO INT NOT NULL,  -- Relacionado al turno específico
                                    CONSTRAINT fk_tripulacion FOREIGN KEY (RUT_TRIPULACION) REFERENCES Tripulacion(RUT),  -- Relación con tripulante

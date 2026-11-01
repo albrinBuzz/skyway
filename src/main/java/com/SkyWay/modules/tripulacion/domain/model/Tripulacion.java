@@ -29,6 +29,7 @@ public class Tripulacion implements Serializable {
 
 	//bi-directional one-to-one association to Usuario
 	@OneToOne
+	@MapsId
 	@JoinColumn(name="rut")
 	private Usuario usuario;
 

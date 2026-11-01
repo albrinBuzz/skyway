@@ -1,6 +1,7 @@
 package com.SkyWay.modules.turnotripulacion.domain.model;
 
 import java.io.Serializable;
+import java.sql.Timestamp;
 
 import com.SkyWay.modules.tripulacion.domain.model.Tripulacion;
 import com.SkyWay.modules.turno.domain.model.Turno;
@@ -35,6 +36,15 @@ public class TurnoTripulacion implements Serializable {
 	@JoinColumn(name="id_turno")
 	private Turno turno1;
 
+	@Column(name="estado", length=20)
+	private String estado = "PENDIENTE";
+
+	@Column(name="fecha_respuesta")
+	private Timestamp fechaRespuesta;
+
+	@Column(name="motivo_rechazo", length=255)
+	private String motivoRechazo;
+
 
 
 	public TurnoTripulacion() {
@@ -64,6 +74,30 @@ public class TurnoTripulacion implements Serializable {
 
 	public void setTurno1(Turno turno1) {
 		this.turno1 = turno1;
+	}
+
+	public String getEstado() {
+		return this.estado != null ? this.estado : "PENDIENTE";
+	}
+
+	public void setEstado(String estado) {
+		this.estado = estado;
+	}
+
+	public Timestamp getFechaRespuesta() {
+		return this.fechaRespuesta;
+	}
+
+	public void setFechaRespuesta(Timestamp fechaRespuesta) {
+		this.fechaRespuesta = fechaRespuesta;
+	}
+
+	public String getMotivoRechazo() {
+		return this.motivoRechazo;
+	}
+
+	public void setMotivoRechazo(String motivoRechazo) {
+		this.motivoRechazo = motivoRechazo;
 	}
 
 
