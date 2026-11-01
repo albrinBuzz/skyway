@@ -418,6 +418,22 @@ public class PerfilBean implements Serializable {
 
 	public StreamedContent descargarBoardingPassesPdf() {
 		Logger.logInfo("🎟️ [PDF BOARDING PASSES] Solicitando descarga para idReservaSeleccionada: " + this.idReservaSeleccionada);
+		if (this.ticketInfos != null && !this.ticketInfos.isEmpty()) {
+			try {
+				byte[] pdfBytes = eTicketPdfGeneratorService.generarPdfBoardingPasses(this.ticketInfos);
+				if (pdfBytes != null && pdfBytes.length > 0) {
+					String pnr = this.ticketInfos.get(0).getCodigoPnr();
+					Logger.logInfo("✅ [PDF BOARDING PASSES] PDF generado desde ticketInfos (" + pdfBytes.length + " bytes).");
+					return DefaultStreamedContent.builder()
+							.name("Tarjetas_Embarque_SkyWay_" + (pnr != null ? pnr : "Viaje") + ".pdf")
+							.contentType("application/pdf")
+							.stream(() -> new ByteArrayInputStream(pdfBytes))
+							.build();
+				}
+			} catch (Exception e) {
+				Logger.logError("❌ [PDF BOARDING PASSES] Error generando PDF desde ticketInfos: " + e.getMessage());
+			}
+		}
 		return descargarBoardingPassesPdf(this.idReservaSeleccionada);
 	}
 
@@ -479,6 +495,35 @@ public class PerfilBean implements Serializable {
 		}
 
 		try {
+			// Si ya tenemos ticketInfos cargados para esta reserva, usarlos directamente
+			if (this.ticketInfos != null && !this.ticketInfos.isEmpty() && idReserva.equals(this.idReservaSeleccionada)) {
+				byte[] pdfBytes = eTicketPdfGeneratorService.generarPdfBoardingPasses(this.ticketInfos);
+				if (pdfBytes != null && pdfBytes.length > 0) {
+					String pnr = this.ticketInfos.get(0).getCodigoPnr();
+					return DefaultStreamedContent.builder()
+							.name("Tarjetas_Embarque_SkyWay_" + (pnr != null ? pnr : "Viaje") + ".pdf")
+							.contentType("application/pdf")
+							.stream(() -> new ByteArrayInputStream(pdfBytes))
+							.build();
+				}
+			}
+
+			// Intentar cargar tickets vía reservaService si se tiene el contexto del itinerario
+			if (usuario != null && itinerarioSeleccionado != null && idReserva.equals(itinerarioSeleccionado.getIdReserva())) {
+				List<TicketInfo> tickets = reservaService.getTicket(usuario.getRut(), idReserva, itinerarioSeleccionado.getIdItinerario());
+				if (tickets != null && !tickets.isEmpty()) {
+					byte[] pdfBytes = eTicketPdfGeneratorService.generarPdfBoardingPasses(tickets);
+					if (pdfBytes != null && pdfBytes.length > 0) {
+						String pnr = tickets.get(0).getCodigoPnr();
+						return DefaultStreamedContent.builder()
+								.name("Tarjetas_Embarque_SkyWay_" + (pnr != null ? pnr : "Viaje") + ".pdf")
+								.contentType("application/pdf")
+								.stream(() -> new ByteArrayInputStream(pdfBytes))
+								.build();
+					}
+				}
+			}
+
 			Optional<Reserva> optReserva = reservaService.findById(idReserva);
 			if (optReserva.isEmpty()) {
 				Logger.logWarn("⚠️ [PDF BOARDING PASSES] No se encontró la entidad Reserva para ID: " + idReserva);

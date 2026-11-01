@@ -10,6 +10,7 @@
     <ui:define name="head">
         <title>Perfil de Usuario - SkyWay</title>
         <h:outputStylesheet library="css" name="perfil/pasajero.css" />
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&amp;display=swap" />
 
         <script type="text/javascript">
             //<![CDATA[
@@ -645,129 +646,139 @@
                           showEffect="fade"
                           hideEffect="fade"
                           responsive="true"
-                          fitViewport="true"
-                          width="880"
+                          blockScroll="true"
+                          closeOnEscape="true"
                           styleClass="skyway-dialog dialog-boarding">
 
                     <!-- Contenedor con Scroll responsivo -->
-                    <div class="printable-area ticket-container">
+                    <div class="printable-area ticket-container" style="max-height: 60vh; overflow-y: auto; overflow-x: hidden;">
                         <h:panelGroup rendered="#{not empty perfilPasajeroView.ticketInfos}" layout="block">
                             <ui:repeat value="#{perfilPasajeroView.ticketInfos}" var="ticket">
 
-                                <!-- TARJETA DE EMBARQUE DARK THEME RESPONSIVE -->
-                                <div class="boarding-pass">
+                                <!-- TARJETA DE EMBARQUE (DISEÑO CLARO TIPO BOARDING PASS) -->
+                                <div class="bp2">
 
-                                    <!-- SECCIÓN PRINCIPAL -->
-                                    <div class="main-section">
-
-                                        <!-- CABECERA DE LA AEROLÍNEA -->
-                                        <div class="pass-header">
-                                            <div class="airline-brand">
-                                                <i class="pi pi-send me-1"></i> SKYWAY AIRLINES
+                                    <!-- CUERPO PRINCIPAL -->
+                                    <div class="bp2-main">
+                                        <div class="bp2-header">
+                                            <div class="bp2-brand">
+                                                <h:graphicImage value="#{resource['assets/icons/Logotipo_SkyWay.png']}"
+                                                                style="height: 28px; width: auto; max-width: 130px; object-fit: contain; filter: brightness(0) invert(1) drop-shadow(0 1px 2px rgba(0,0,0,0.25)); display: inline-block; vertical-align: middle;"
+                                                                styleClass="bp2-brand-logo"
+                                                                alt="SkyWay Airlines" />
                                             </div>
-                                            <div class="pass-meta-header">
-                                                <span class="pnr-badge">
-                                                    PNR: #{ticket.codigoPnr}
-                                                </span>
-                                                <span class="pass-type">TARJETA DE EMBARQUE</span>
-                                            </div>
+                                            <span class="bp2-dots"></span>
+                                            <span class="bp2-pnr">PNR: #{ticket.codigoPnr}</span>
+                                            <i class="pi pi-send bp2-plane"></i>
                                         </div>
 
-                                        <!-- PASAJERO Y VUELO -->
-                                        <div class="pass-row">
-                                            <div class="pass-col">
-                                                <span class="pass-label">PASAJERO</span>
-                                                <span class="pass-value passenger-name">#{ticket.nombre}</span>
-                                            </div>
-                                            <div class="pass-col pass-col-right">
-                                                <span class="pass-label">VUELO</span>
-                                                <span class="pass-value flight-number">#{ticket.numeroVuelo}</span>
-                                            </div>
-                                        </div>
+                                        <div class="bp2-body">
+                                            <!-- Pasajero / Origen / Destino / Terminal -->
+                                            <div class="bp2-col-left">
+                                                <span class="bp2-label"><i class="pi pi-id-card"></i> Pasajero</span>
+                                                <span class="bp2-field">#{ticket.nombre}</span>
 
-                                        <!-- BANNER DE RUTA Y HORARIOS -->
-                                        <div class="route-banner">
-                                            <div class="route-block">
-                                                <span class="pass-label">RUTA DEL VUELO</span>
-                                                <span class="route-text">
-                                                    #{ticket.origenTramo} <i class="pi pi-arrow-right mx-1 route-arrow"></i> #{ticket.destinoTramo}
-                                                </span>
-                                            </div>
-                                            <div class="time-block time-salida">
-                                                <span class="pass-label">SALIDA</span>
-                                                <h:outputText value="#{ticket.horaSalida}" styleClass="time-text">
-                                                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/Santiago"/>
-                                                </h:outputText>
-                                            </div>
-                                            <div class="time-block time-llegada">
-                                                <span class="pass-label">LLEGADA</span>
-                                                <h:outputText value="#{ticket.horaLlegada}" styleClass="time-text">
-                                                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/Santiago"/>
-                                                </h:outputText>
-                                            </div>
-                                        </div>
+                                                <span class="bp2-label"><i class="pi pi-arrow-up-right"></i> Origen</span>
+                                                <span class="bp2-field">#{ticket.origenTramo}</span>
 
-                                        <!-- PUERTA, ASIENTO Y CLASE -->
-                                        <div class="pass-meta-row">
-                                            <div class="meta-item-gate">
-                                                <span class="pass-label">PUERTA</span>
-                                                <span class="gate-value">
-                                                    #{empty ticket.codigoPuerta ? 'TBD' : ticket.codigoPuerta} <span class="terminal-text">(Terminal: #{empty ticket.terminal ? 'TBD' : ticket.terminal})</span>
-                                                </span>
+                                                <span class="bp2-label"><i class="pi pi-arrow-down-right"></i> Destino</span>
+                                                <span class="bp2-field">#{ticket.destinoTramo}</span>
+
+                                                <span class="bp2-label"><i class="pi pi-building"></i> Terminal</span>
+                                                <span class="bp2-field">#{empty ticket.terminal ? 'TBD' : ticket.terminal}</span>
                                             </div>
-                                            <div class="meta-item-seat">
-                                                <div class="seat-badge">
-                                                    <span class="seat-label">ASIENTO</span>
-                                                    <span class="seat-number">#{ticket.numeroAsiento}</span>
+
+                                            <!-- Fecha / Hora / Llegada / Código QR -->
+                                            <div class="bp2-col-center">
+                                                <div class="bp2-dt">
+                                                    <span class="bp2-dt-label">Fecha</span>
+                                                    <h:outputText value="#{ticket.horaSalida}" styleClass="bp2-dt-value">
+                                                        <f:convertDateTime pattern="dd.MM.yy" timeZone="America/Santiago"/>
+                                                    </h:outputText>
+                                                </div>
+                                                <div class="bp2-dt">
+                                                    <span class="bp2-dt-label">Salida</span>
+                                                    <h:outputText value="#{ticket.horaSalida}" styleClass="bp2-dt-value">
+                                                        <f:convertDateTime pattern="HH:mm" timeZone="America/Santiago"/>
+                                                    </h:outputText>
+                                                </div>
+                                                <div class="bp2-arrival">
+                                                    Llegada:
+                                                    <h:outputText value="#{ticket.horaLlegada}">
+                                                        <f:convertDateTime pattern="dd.MM.yy HH:mm" timeZone="America/Santiago"/>
+                                                    </h:outputText>
+                                                </div>
+                                                <div class="bp2-qr-container">
+                                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=110x110&amp;data=#{ticket.codigoQr}"
+                                                         alt="QR Embarque" class="bp2-qr" />
                                                 </div>
                                             </div>
-                                            <div class="meta-item-class">
-                                                <span class="pass-label">CLASE</span>
-                                                <span class="cabin-value">#{ticket.claseAsiento}</span>
+
+                                            <!-- Vuelo / Puerta / Asiento (Columna vertical donde estaba el QR) -->
+                                            <div class="bp2-col-boxes">
+                                                <div class="bp2-box">
+                                                    <span class="bp2-box-label">Vuelo</span>
+                                                    <span class="bp2-box-value">#{ticket.numeroVuelo}</span>
+                                                </div>
+                                                <div class="bp2-box">
+                                                    <span class="bp2-box-label">Puerta</span>
+                                                    <span class="bp2-box-value">#{empty ticket.codigoPuerta ? 'TBD' : ticket.codigoPuerta}</span>
+                                                </div>
+                                                <div class="bp2-box">
+                                                    <span class="bp2-box-label">Asiento</span>
+                                                    <span class="bp2-box-value">#{ticket.numeroAsiento}</span>
+                                                </div>
                                             </div>
                                         </div>
 
-                                        <!-- PIE DE TARJETA -->
-                                        <div class="pass-footer">
-                                            <span class="notice-text"><i class="pi pi-clock me-1"></i> PRESENTARSE 2 HORAS ANTES EN PUERTA</span>
-                                            <span class="operator-text">OPERADO POR SKYWAY AIRLINES</span>
+                                        <div class="bp2-note">
+                                            <i class="pi pi-exclamation-circle"></i>
+                                            <strong>Nota importante:</strong>
+                                            Debes estar en la puerta de embarque antes de
+                                            <h:outputText value="#{ticket.horaLimiteEmbarque}">
+                                                <f:convertDateTime pattern="HH:mm" timeZone="America/Santiago"/>
+                                            </h:outputText>
                                         </div>
                                     </div>
 
-                                    <!-- TALÓN DEL PASAJERO (STUB DERECHO) -->
-                                    <div class="stub">
-                                        <div class="stub-info">
-                                            <div class="stub-header">
-                                                TALÓN DEL PASAJERO
+                                    <!-- TALÓN -->
+                                    <div class="bp2-stub">
+                                        <div class="bp2-stub-header">
+                                            <span class="bp2-stub-dots">···</span>
+                                            Tarjeta de Embarque
+                                            <span class="bp2-stub-dots">···</span>
+                                        </div>
+
+                                        <div class="bp2-stub-body">
+                                            <div class="bp2-stub-row">
+                                                <span class="bp2-label"><i class="pi pi-id-card"></i> Pasajero</span>
+                                                <span class="bp2-stub-field">#{ticket.nombre}</span>
                                             </div>
-                                            <div class="stub-field">
-                                                <span class="pass-label">PASAJERO</span>
-                                                <span class="stub-passenger-name">#{ticket.nombre}</span>
+                                            <div class="bp2-stub-row">
+                                                <span class="bp2-label"><i class="pi pi-star"></i> Clase</span>
+                                                <span class="bp2-stub-field">#{ticket.claseAsiento}</span>
                                             </div>
-                                            <div class="stub-field">
-                                                <span class="pass-label">VUELO Y RUTA</span>
-                                                <span class="stub-flight-route">#{ticket.numeroVuelo} (#{ticket.origenTramo}-#{ticket.destinoTramo})</span>
+                                            <div class="bp2-stub-row">
+                                                <span class="bp2-label"><i class="pi pi-ticket"></i> Asiento</span>
+                                                <span class="bp2-stub-field">#{ticket.numeroAsiento}</span>
                                             </div>
                                         </div>
 
-                                        <!-- QR CODE -->
-                                        <div class="qr-container">
-                                            <div class="qr-box">
-                                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&amp;data=#{ticket.codigoQr}"
-                                                     alt="QR Embarque" class="qr-img" />
+                                        <div class="bp2-stub-route">
+                                            <div class="bp2-stub-flight">
+                                                <span class="bp2-stub-flight-label">Vuelo</span>
+                                                <span class="bp2-stub-flight-value">#{ticket.numeroVuelo}</span>
+                                            </div>
+                                            <div class="bp2-stub-iata">
+                                                #{ticket.origenTramo} <i class="pi pi-arrow-right"></i> #{ticket.destinoTramo}
                                             </div>
                                         </div>
 
-                                        <!-- PUERTA Y ASIENTO TALÓN -->
-                                        <div class="stub-footer">
-                                            <div class="stub-gate">
-                                                <span class="pass-label">PUERTA</span>
-                                                <span class="stub-gate-val">#{empty ticket.codigoPuerta ? 'TBD' : ticket.codigoPuerta}</span>
-                                            </div>
-                                            <div class="stub-seat">
-                                                <span class="pass-label">ASIENTO</span>
-                                                <span class="stub-seat-val">#{ticket.numeroAsiento}</span>
-                                            </div>
+                                        <div class="bp2-stub-brand">
+                                            <h:graphicImage value="#{resource['assets/icons/Logotipo_SkyWay.png']}"
+                                                            style="height: 24px; width: auto; max-width: 110px; object-fit: contain; display: inline-block; vertical-align: middle; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.15));"
+                                                            styleClass="bp2-stub-brand-logo"
+                                                            alt="SkyWay Airlines" />
                                         </div>
                                     </div>
 

@@ -384,6 +384,71 @@ body .skyway-tabs .ui-tabview-nav li.ui-state-active a {
     color: #DC2626;
 }
 
+/* Modal de Tarjetas de Embarque (Responsivo en Desktop y Móvil) */
+body .skyway-dialog.dialog-boarding.ui-dialog {
+    width: 92vw !important;
+    max-width: 860px !important;
+    box-sizing: border-box !important;
+    border-radius: 12px !important;
+    border: 1px solid #1E3A5C !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8) !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+}
+
+body .skyway-dialog.dialog-boarding.ui-dialog .ui-dialog-titlebar {
+    flex: 0 0 auto !important;
+    background: #0B132B !important;
+    border-bottom: 1px solid #1E3A5C !important;
+    padding: 14px 20px !important;
+}
+
+body .skyway-dialog.dialog-boarding.ui-dialog .ui-dialog-content {
+    height: auto !important;
+    max-height: none !important;
+    overflow: hidden !important;
+    padding: 12px 8px 12px 16px !important;
+    background: #080E1A !important;
+}
+
+body .skyway-dialog.dialog-boarding.ui-dialog .ui-dialog-footer {
+    flex: 0 0 auto !important;
+    background: #0B132B !important;
+    border-top: 1px solid #1E3A5C !important;
+    padding: 12px 20px !important;
+}
+
+/* Custom scrollbar para el modal de tickets */
+body .skyway-dialog.dialog-boarding.ui-dialog .ticket-container::-webkit-scrollbar {
+    width: 8px;
+}
+body .skyway-dialog.dialog-boarding.ui-dialog .ticket-container::-webkit-scrollbar-track {
+    background: #0B132B;
+    border-radius: 4px;
+}
+body .skyway-dialog.dialog-boarding.ui-dialog .ticket-container::-webkit-scrollbar-thumb {
+    background: #1E3A5C;
+    border-radius: 4px;
+}
+body .skyway-dialog.dialog-boarding.ui-dialog .ticket-container::-webkit-scrollbar-thumb:hover {
+    background: #38BDF8;
+}
+
+.ticket-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+}
+
+body .skyway-dialog.dialog-boarding.ui-dialog .ticket-container {
+    display: block;
+    max-height: 60vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 8px;
+}
+
 /* =============================================================
    8. TARJETAS DE EMBARQUE (DARK THEME SOBRIO DE ALTO CONTRASTE)
    ============================================================= */
@@ -411,7 +476,8 @@ body .skyway-tabs .ui-tabview-nav li.ui-state-active a {
 }
 
 .boarding-pass .main-section {
-    flex: 3 !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
     padding: 20px !important;
     border-right: 2px dashed #1E3A5C !important;
     background-color: #101B33 !important;
@@ -419,13 +485,12 @@ body .skyway-tabs .ui-tabview-nav li.ui-state-active a {
     flex-direction: column !important;
     justify-content: space-between !important;
     height: auto !important;
-    min-height: 100% !important;
 }
 
 .boarding-pass .stub {
-    flex: 1.2 !important;
+    flex: 0 0 220px !important;
     width: 220px !important;
-    max-width: 240px !important;
+    max-width: 220px !important;
     padding: 18px 14px !important;
     background-color: #080E1A !important;
     border-left: 1px solid #1E3A5C !important;
@@ -777,6 +842,37 @@ body .sidebar-corporativo .ui-sidebar-content {
    10. AJUSTES RESPONSIVOS MÓVILES (< 768px)
    ============================================================= */
 @media (max-width: 768px) {
+    /* Modal de Tarjetas de Embarque en Móviles */
+    body .skyway-dialog.dialog-boarding.ui-dialog {
+        width: 95vw !important;
+        max-width: 95vw !important;
+    }
+
+    body .skyway-dialog.dialog-boarding.ui-dialog .ui-dialog-content {
+        padding: 10px 6px 10px 10px !important;
+        max-height: none !important;
+    }
+
+    body .skyway-dialog.dialog-boarding.ui-dialog .ticket-container {
+        max-height: 55vh;
+    }
+
+    body .skyway-dialog.dialog-boarding.ui-dialog .ui-dialog-footer {
+        padding: 10px 12px !important;
+    }
+
+    body .skyway-dialog.dialog-boarding.ui-dialog .ui-dialog-footer .d-flex {
+        flex-direction: column !important;
+        width: 100% !important;
+        gap: 8px !important;
+    }
+
+    body .skyway-dialog.dialog-boarding.ui-dialog .ui-dialog-footer .d-flex .p-button,
+    body .skyway-dialog.dialog-boarding.ui-dialog .ui-dialog-footer .d-flex button {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+
     .skyway-container {
         padding: 10px 8px !important;
         margin: 10px auto !important;
@@ -857,6 +953,7 @@ body .sidebar-corporativo .ui-sidebar-content {
 
 /* IMPRESIÓN */
 @media print {
+    .printable-area.ticket-container { max-height: none !important; overflow: visible !important; }
     body * { visibility: hidden !important; }
     .printable-area, .printable-area * { visibility: visible !important; }
     .printable-area { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
@@ -1054,4 +1151,335 @@ body .sidebar-corporativo .ui-sidebar-content {
 .layover-card {
     background: rgba(217, 119, 6, 0.12);
     border: 1px dashed #D97706;
+}
+/* =============================================================
+   8B. TARJETA DE EMBARQUE - DISEÑO CLARO (BP2)
+   ============================================================= */
+.bp2 {
+    --bp2-blue: #2F8FD8;
+    --bp2-blue-dark: #1A73BE;
+    --bp2-field: #D6E9F8;
+    --bp2-ink: #1F2937;
+    --bp2-value: #2B3A8C;
+    display: flex;
+    width: 100%;
+    gap: 6px;
+    margin-bottom: 18px;
+    font-family: 'Oswald', 'Arial Narrow', 'Roboto Condensed', sans-serif;
+    color: var(--bp2-ink);
+}
+
+.bp2-main,
+.bp2-stub {
+    background-color: #F1F3F5;
+    background-image:
+        radial-gradient(ellipse 38% 55% at 42% 60%, rgba(148, 163, 184, 0.28) 0 60%, transparent 61%),
+        radial-gradient(ellipse 22% 35% at 75% 45%, rgba(148, 163, 184, 0.22) 0 60%, transparent 61%);
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+}
+
+.bp2-main { flex: 1 1 auto; min-width: 0; }
+.bp2-stub { flex: 0 0 280px; }
+
+/* Cabecera azul con franjas diagonales */
+.bp2-header,
+.bp2-stub-header {
+    background: var(--bp2-blue);
+    background-image: repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.07) 0 40px, transparent 40px 80px);
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 18px;
+    min-height: 52px;
+    max-height: 52px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.bp2-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-height: 36px;
+    overflow: hidden;
+}
+
+.bp2-brand-logo {
+    height: 28px !important;
+    width: auto !important;
+    max-width: 130px !important;
+    object-fit: contain !important;
+    display: inline-block !important;
+    filter: brightness(0) invert(1) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25)) !important;
+}
+
+.bp2-stub-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 16px 12px;
+    margin-top: auto;
+    max-height: 40px;
+    overflow: hidden;
+}
+
+.bp2-stub-brand-logo {
+    height: 24px !important;
+    width: auto !important;
+    max-width: 110px !important;
+    object-fit: contain !important;
+    display: inline-block !important;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15)) !important;
+}
+
+.bp2-dots {
+    flex: 1 1 auto;
+    border-top: 3px dotted rgba(255, 255, 255, 0.85);
+    min-width: 20px;
+}
+
+.bp2-pnr {
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-family: 'Courier New', monospace;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    white-space: nowrap;
+}
+
+.bp2-plane { font-size: 1.4rem; transform: rotate(45deg); }
+
+/* Cuerpo */
+.bp2-body {
+    display: grid;
+    grid-template-columns: minmax(145px, 1.1fr) minmax(180px, 1.2fr) minmax(115px, auto);
+    gap: 18px;
+    padding: 16px 18px 8px;
+    align-items: start;
+}
+
+.bp2-col-left { display: flex; flex-direction: column; min-width: 0; }
+
+.bp2-label {
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.3px;
+    color: var(--bp2-ink);
+    margin-top: 8px;
+    margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.bp2-label:first-child { margin-top: 0; }
+.bp2-label i { font-size: 0.85rem; }
+
+.bp2-field,
+.bp2-stub-field {
+    background: var(--bp2-field);
+    font-family: 'Courier New', monospace;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--bp2-ink);
+    padding: 4px 8px;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+    line-height: 1.25 !important;
+    min-height: 26px;
+    box-sizing: border-box;
+    border-radius: 4px;
+}
+
+.bp2-col-center { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+
+.bp2-dt { display: flex; align-items: baseline; gap: 12px; }
+
+.bp2-dt-label {
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 1.05rem;
+    width: 62px;
+}
+
+.bp2-dt-value {
+    font-family: 'Courier New', monospace;
+    font-size: 2.2rem;
+    line-height: 1.1;
+    color: var(--bp2-value);
+}
+
+.bp2-arrival {
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    color: #475569;
+    margin-bottom: 6px;
+}
+
+.bp2-qr-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-top: 6px;
+}
+
+.bp2-qr {
+    width: 105px;
+    height: 105px;
+    background: #FFFFFF;
+    padding: 5px;
+    border-radius: 6px;
+    display: block;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+/* Columna vertical de cajas azules (Vuelo, Puerta, Asiento) donde estaba el QR */
+.bp2-col-boxes {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 115px;
+    justify-content: space-between;
+}
+
+.bp2-box {
+    background: var(--bp2-blue-dark);
+    color: #FFFFFF;
+    text-align: center;
+    padding: 6px 8px;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 48px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.bp2-box:nth-child(2) { background: var(--bp2-blue); }
+
+.bp2-box-label {
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+}
+
+.bp2-box-value {
+    font-family: 'Oswald', 'Roboto Condensed', sans-serif, monospace;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+    line-height: 1.15 !important;
+    padding: 2px 2px;
+}
+
+.bp2-note {
+    padding: 8px 18px 14px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    color: var(--bp2-ink);
+}
+
+.bp2-note strong {
+    font-family: 'Oswald', 'Arial Narrow', sans-serif;
+    color: var(--bp2-value);
+    text-transform: uppercase;
+    margin-right: 4px;
+}
+
+/* Talón */
+.bp2-stub-header {
+    justify-content: center;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 1.25rem;
+    letter-spacing: 0.5px;
+}
+
+.bp2-stub-dots { letter-spacing: 3px; }
+
+.bp2-stub-body { padding: 14px 16px 6px; display: flex; flex-direction: column; gap: 6px; }
+
+.bp2-stub-row {
+    display: grid;
+    grid-template-columns: 85px 1fr;
+    align-items: center;
+    gap: 6px;
+}
+
+.bp2-stub-row .bp2-label { margin: 0; font-size: 0.8rem; }
+.bp2-stub-field { background: #FFFFFF; font-size: 0.85rem; min-width: 0; }
+
+.bp2-stub-route {
+    background: var(--bp2-field);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    margin-top: 6px;
+}
+
+.bp2-stub-flight { display: flex; flex-direction: column; }
+
+.bp2-stub-flight-label {
+    background: var(--bp2-blue-dark);
+    color: #FFFFFF;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    padding: 1px 6px;
+    text-align: center;
+}
+
+.bp2-stub-flight-value { font-family: 'Courier New', monospace; font-size: 0.85rem; font-weight: 600; }
+
+.bp2-stub-iata {
+    font-weight: 700;
+    font-size: 1.9rem;
+    color: #111827;
+    white-space: nowrap;
+}
+
+.bp2-stub-iata i { color: var(--bp2-blue); font-size: 1.1rem; }
+
+.bp2-stub-brand {
+    justify-content: center;
+    color: #1F2937;
+    padding: 12px 16px 14px;
+    margin-top: auto;
+    font-size: 1.3rem;
+}
+
+/* Responsivo */
+@media (max-width: 860px) {
+    .bp2 { flex-direction: column; gap: 4px; }
+    .bp2-stub { flex: 1 1 auto; }
+    .bp2-body { grid-template-columns: 1fr 1fr; }
+    .bp2-col-boxes { grid-column: 1 / -1; flex-direction: row; width: 100%; }
+    .bp2-box { flex: 1 1 0; }
+}
+
+@media (max-width: 560px) {
+    .bp2-body { grid-template-columns: 1fr; }
+    .bp2-brand { font-size: 1.1rem; }
+    .bp2-dots, .bp2-plane { display: none; }
+    .bp2-header { justify-content: space-between; }
+    .bp2-dt-value { font-size: 1.8rem; }
+}
+
+@media print {
+    .bp2 { page-break-inside: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }

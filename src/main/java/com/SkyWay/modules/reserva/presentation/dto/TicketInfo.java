@@ -44,6 +44,10 @@ public class TicketInfo implements Serializable {
         return (codigoPuerta != null ? codigoPuerta : "TBD") + " / " + (terminal != null ? terminal : "TBD");
     }
 
+    public Timestamp getHoraLimiteEmbarque() {
+        return horaSalida != null ? new Timestamp(horaSalida.getTime() - 30L * 60 * 1000) : null;
+    }
+
     public String getRutaTramo() {
         return (origenTramo != null ? origenTramo : "---") + " ➔ " + (destinoTramo != null ? destinoTramo : "---");
     }
