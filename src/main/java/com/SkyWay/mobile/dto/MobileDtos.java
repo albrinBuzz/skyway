@@ -11,6 +11,17 @@ public final class MobileDtos {
     private MobileDtos() {}
     public record LoginRequest(@NotBlank @Email @Size(max=100) String correoElectronico,
                                @NotBlank @Size(max=72) String contrasena) {}
+    public record RegistroRequest(
+            @NotBlank @Size(max=20) String rut,
+            @NotBlank @Size(max=255) String nombre,
+            @NotBlank @Size(max=255) String apellido,
+            @NotBlank @Email @Size(max=100) String correoElectronico,
+            @NotBlank @Size(min=6, max=72) String contrasena,
+            @NotBlank @Size(max=255) String telefono,
+            @NotNull LocalDate fechaNacimiento,
+            @Size(max=20) String documentoIdentidad,
+            @Size(max=50) String tipoDocumento,
+            @Size(max=50) String nacionalidad) {}
     public record CambioAsientoRequest(@NotNull @Positive Integer idAsiento) {}
     public record ActualizarCorreoRequest(
             @NotBlank @Email @Size(max=100) String correoElectronico,

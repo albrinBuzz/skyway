@@ -1,7 +1,7 @@
 CREATE OR REPLACE FUNCTION fnBuscarVuelo(
     p_codigo_origen VARCHAR,
     p_codigo_destino VARCHAR,
-    p_fecha_inicio DATE
+    p_fecha_inicio DATE DEFAULT NULL
 )
 RETURNS TABLE (
     itinerario INT,
@@ -40,8 +40,8 @@ BEGIN
     JOIN ciudad ci2 ON ci2.id_ciudad = arp2.id_ciudad
     WHERE arp1.codigo_iata = p_codigo_origen
       AND arp2.codigo_iata = p_codigo_destino
-      AND it.hora_salida >= p_fecha_inicio
-      AND it.hora_salida < p_fecha_inicio + INTERVAL '1 day';
+      AND (p_fecha_inicio IS NULL OR (it.hora_salida >= p_fecha_inicio
+      AND it.hora_salida < p_fecha_inicio + INTERVAL '1 day'));
 END;
 $$ LANGUAGE plpgsql;
 

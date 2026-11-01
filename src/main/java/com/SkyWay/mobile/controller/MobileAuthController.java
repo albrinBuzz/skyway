@@ -16,6 +16,11 @@ public class MobileAuthController {
 
     @PostMapping("/login") public LoginResponse login(@Valid @RequestBody LoginRequest body) { return auth.login(body); }
 
+    @PostMapping("/registro")
+    public ResponseEntity<LoginResponse> registro(@Valid @RequestBody RegistroRequest body) {
+        return ResponseEntity.ok(auth.registrar(body));
+    }
+
     @GetMapping("/me") public Perfil me(@AuthenticationPrincipal Jwt jwt) { return auth.perfil(jwt.getSubject()); }
 
     @PatchMapping("/perfil/correo")

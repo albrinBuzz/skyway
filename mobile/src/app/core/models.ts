@@ -25,6 +25,19 @@ export interface LoginResponse {
   perfil: Perfil;
 }
 
+export interface RegistroRequest {
+  rut: string;
+  nombre: string;
+  apellido: string;
+  correoElectronico: string;
+  contrasena: string;
+  telefono: string;
+  fechaNacimiento: string;
+  documentoIdentidad?: string;
+  tipoDocumento?: string;
+  nacionalidad?: string;
+}
+
 export interface Pagina<T> {
   contenido: T[];
   pagina: number;

@@ -1,0 +1,678 @@
+/* ===== Registro Screen — Visual Language SkyWay ===== */
+$navy: #101e3b;
+$ink: #172844;
+$soft-ink: #4a5a75;
+$blue: #2449d8;
+$teal: #26b99a;
+$mint: #42d4ba;
+$success: #128463;
+$danger: #b83449;
+$line: #e3e9f3;
+$bg-tint: #eef3ff;
+
+ion-content {
+  --background: #101e3b;
+}
+
+.registro-wrap {
+  position: relative;
+  max-width: 500px;
+  margin: auto;
+  min-height: 100%;
+  padding: max(16px, env(safe-area-inset-top)) 14px 28px;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  box-sizing: border-box;
+  width: 100%;
+  overflow-x: clip;
+}
+
+/* Brillo decorativo superior */
+.glow-aura {
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(66, 212, 186, 0.18) 0%, rgba(36, 73, 216, 0.1) 50%, transparent 75%);
+  pointer-events: none;
+}
+
+/* Barra superior de navegación */
+.top-bar {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #c3d2e9;
+  text-decoration: none;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  transition: all 0.15s ease;
+  min-height: 44px;
+  box-sizing: border-box;
+
+  ion-icon {
+    font-size: 16px;
+    color: $mint;
+  }
+
+  &:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+.brand-mini {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 17px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.4px;
+
+  ion-icon {
+    font-size: 16px;
+    color: $mint;
+    transform: rotate(-25deg);
+  }
+
+  .brand-dot {
+    color: $mint;
+  }
+}
+
+/* Intro de bienvenida */
+.intro {
+  position: relative;
+  z-index: 1;
+  margin: 8px 0 16px;
+
+  .eyebrow {
+    color: #8da6cf;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    font-size: clamp(22px, 5.5vw, 26px);
+    font-weight: 800;
+    line-height: 1.2;
+    margin: 4px 0;
+    color: #ffffff;
+    letter-spacing: -0.5px;
+  }
+
+  p {
+    color: #c3d2e9;
+    font-size: 13px;
+    line-height: 1.4;
+    margin: 0;
+  }
+}
+
+/* Card del formulario de registro */
+.registro-panel {
+  position: relative;
+  z-index: 1;
+  background: #ffffff;
+  color: $ink;
+  padding: 20px 16px;
+  border-radius: 20px;
+  border: 1px solid #e3e9f3;
+  box-shadow: 0 14px 36px rgba(10, 20, 40, 0.25);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.panel-header {
+  margin-bottom: 16px;
+
+  h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    color: $navy;
+  }
+
+  .panel-sub {
+    margin: 3px 0 0;
+    font-size: 12.5px;
+    color: $soft-ink;
+    line-height: 1.35;
+  }
+}
+
+/* Banner de éxito */
+.success-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #e6f7f2;
+  border: 1.5px solid #a3e5d0;
+  color: #0b6a4f;
+  margin-bottom: 14px;
+
+  ion-icon {
+    font-size: 22px;
+    color: #128463;
+    flex: 0 0 auto;
+    margin-top: 1px;
+  }
+
+  strong {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 800;
+  }
+
+  span {
+    display: block;
+    font-size: 12px;
+    margin-top: 2px;
+    line-height: 1.35;
+  }
+}
+
+/* Filas dobles */
+.form-row {
+  display: flex;
+  gap: 10px;
+
+  .flex-1 {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+/* Campos de formulario */
+.form-field-group {
+  margin-bottom: 13px;
+}
+
+.field-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  font-weight: 750;
+  color: $ink;
+  margin-bottom: 4px;
+
+  ion-icon {
+    font-size: 15px;
+    color: $blue;
+  }
+}
+
+.input-container {
+  display: flex;
+  align-items: center;
+  background: #f4f7fb;
+  border: 1.5px solid #dbe4f3;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+
+  ion-input {
+    --background: transparent;
+    --padding-start: 12px;
+    --padding-end: 12px;
+    margin: 0;
+    min-height: 44px;
+    font-size: 14px;
+    font-weight: 600;
+    color: $ink;
+  }
+
+  &:focus-within {
+    background: #ffffff;
+    border-color: $blue;
+    box-shadow: 0 0 0 3px rgba(36, 73, 216, 0.14);
+  }
+
+  &.has-error {
+    border-color: $danger;
+    background: #fff8f8;
+  }
+}
+
+.select-container {
+  ion-select {
+    width: 100%;
+    min-height: 44px;
+    --padding-start: 12px;
+    --padding-end: 12px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: $ink;
+  }
+}
+
+/* Teléfono compuesto: selector país + número */
+.phone-composite-group {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  width: 100%;
+
+  .country-picker-container {
+    flex: 0 0 125px;
+    background: #f4f7fb;
+    border: 1.5px solid #dbe4f3;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+
+    &:hover,
+    &:focus-within {
+      background: #ffffff;
+      border-color: $blue;
+      box-shadow: 0 0 0 3px rgba(36, 73, 216, 0.14);
+    }
+
+    .country-trigger-btn {
+      width: 100%;
+      min-height: 44px;
+      padding: 0 8px;
+      border: none;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 4px;
+      cursor: pointer;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: $ink;
+      border-radius: 12px;
+
+      .country-flag {
+        font-size: 18px;
+        line-height: 1;
+      }
+
+      .country-code {
+        font-size: 13px;
+        color: $navy;
+        font-weight: 800;
+        letter-spacing: -0.2px;
+      }
+
+      ion-icon {
+        font-size: 14px;
+        color: #627b9f;
+        flex-shrink: 0;
+      }
+    }
+  }
+
+  .phone-input-container {
+    flex: 1 1 0%;
+    min-width: 0;
+  }
+}
+
+.password-input-container {
+  padding-right: 4px;
+}
+
+.toggle-password-btn {
+  min-width: 44px;
+  min-height: 44px;
+  border: none;
+  background: transparent;
+  color: #5c7094;
+  font-size: 18px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+
+  &:hover {
+    color: $blue;
+    background: #eef3fc;
+  }
+}
+
+.field-hint {
+  display: block;
+  font-size: 11px;
+  color: $soft-ink;
+  margin-top: 3px;
+  padding-left: 2px;
+  line-height: 1.35;
+}
+
+.field-error-message {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #962236;
+  font-size: 11.5px;
+  font-weight: 650;
+  margin-top: 3px;
+  padding-left: 2px;
+  line-height: 1.3;
+
+  ion-icon {
+    font-size: 14px;
+    flex: 0 0 auto;
+  }
+}
+
+.general-error {
+  margin: 12px 0;
+  font-size: 12.5px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fdebee;
+  color: #9c1c30;
+  border: 1px solid #f6b5bf;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  ion-icon {
+    font-size: 18px;
+    color: $danger;
+    flex: 0 0 auto;
+  }
+}
+
+.btn-register-submit {
+  margin-top: 16px;
+  min-height: 48px;
+  --min-height: 48px;
+  font-size: 14.5px;
+  font-weight: 750;
+  --border-radius: 12px;
+  --box-shadow: 0 6px 18px rgba(36, 73, 216, 0.26);
+  --color: #ffffff;
+
+  ion-icon {
+    font-size: 18px;
+  }
+}
+
+/* Enlace a login */
+.login-prompt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 14px;
+  padding: 6px 4px;
+  text-align: center;
+  flex-wrap: wrap;
+  font-size: 13px;
+
+  span {
+    color: $soft-ink;
+    font-weight: 550;
+  }
+
+  .login-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: $blue;
+    font-weight: 750;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1.5px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    transition: all 0.15s ease;
+    min-height: 44px;
+    box-sizing: border-box;
+
+    ion-icon {
+      font-size: 13px;
+      color: $blue;
+      transition: transform 0.15s ease;
+    }
+
+    &:hover {
+      color: #1230a0;
+      background: $bg-tint;
+
+      ion-icon {
+        transform: translateX(2px);
+      }
+    }
+
+    &:focus-visible {
+      outline: 2px solid $blue;
+      outline-offset: 2px;
+    }
+  }
+}
+
+/* Footer */
+.registro-footer {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  margin-top: 22px;
+}
+
+.security-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 11.5px;
+  font-weight: 650;
+  color: #b5c7e5;
+  margin-bottom: 8px;
+
+  ion-icon {
+    color: $mint;
+    font-size: 14px;
+  }
+}
+
+.footer-copy {
+  font-size: 10px;
+  letter-spacing: 1.6px;
+  font-weight: 750;
+  color: #7b94ba;
+  margin: 0;
+}
+
+/* Modal Selector de Códigos Telefónicos E.164 */
+.country-select-modal {
+  --border-radius: 16px 16px 0 0;
+
+  .modal-header {
+    background: #ffffff;
+    border-bottom: 1px solid #e3e9f4;
+
+    ion-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: $navy;
+    }
+
+    ion-searchbar {
+      --background: #f1f5fb;
+      --border-radius: 10px;
+      --placeholder-color: #6d84a7;
+      --icon-color: #385ad0;
+      padding: 0 8px 6px;
+      font-size: 13.5px;
+    }
+  }
+
+  .modal-content {
+    --background: #f8fafc;
+  }
+
+  .modal-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+    color: #64748b;
+
+    ion-icon {
+      font-size: 42px;
+      color: #94a3b8;
+      margin-bottom: 10px;
+    }
+
+    p {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.4;
+
+      strong {
+        color: $navy;
+      }
+    }
+  }
+
+  .country-list {
+    background: transparent;
+    padding: 0;
+
+    .country-item {
+      --background: #ffffff;
+      --min-height: 52px;
+      --padding-start: 12px;
+      --padding-end: 12px;
+      --inner-padding-end: 8px;
+      cursor: pointer;
+      transition: background 0.15s ease;
+
+      .country-flag-badge {
+        font-size: 24px;
+        line-height: 1;
+        margin-right: 8px;
+      }
+
+      h3 {
+        font-size: 14px;
+        font-weight: 700;
+        color: $navy;
+        margin: 0 0 2px;
+      }
+
+      p {
+        font-size: 11.5px;
+        color: #64748b;
+        margin: 0;
+      }
+
+      .country-prefix-pill {
+        font-size: 12.5px;
+        font-weight: 800;
+        color: $blue;
+        background: #edf3fc;
+        padding: 4px 8px;
+        border-radius: 6px;
+        margin-right: 6px;
+      }
+
+      &.is-selected {
+        --background: #eff6ff;
+
+        h3 {
+          color: $blue;
+        }
+
+        .country-prefix-pill {
+          background: $blue;
+          color: #ffffff;
+        }
+      }
+    }
+  }
+}
+
+/* Responsive para pantallas estrechas (<= 440px y <= 320px) */
+@media (max-width: 440px) {
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .registro-panel {
+    padding: 16px 12px;
+  }
+
+  .intro h1 {
+    font-size: 21px;
+  }
+
+  .phone-composite-group {
+    .country-picker-container {
+      flex: 0 0 110px;
+
+      .country-trigger-btn {
+        padding: 0 6px;
+
+        .country-code {
+          font-size: 12px;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 340px) {
+  .registro-wrap {
+    padding: 12px 8px 24px;
+  }
+
+  .top-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .phone-composite-group {
+    flex-direction: column;
+    gap: 6px;
+
+    .country-picker-container {
+      flex: 1 1 100%;
+      width: 100%;
+    }
+  }
+}

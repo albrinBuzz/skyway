@@ -2,7 +2,9 @@ package com.SkyWay.mobile.service;
 
 import com.SkyWay.mobile.dto.MobileDtos.*;
 import com.SkyWay.mobile.security.MobileSecurityConfig;
+import com.SkyWay.modules.usuario.domain.model.Usuario;
 import com.SkyWay.modules.usuario.domain.repository.UsuarioRepository;
+import com.SkyWay.modules.usuario.domain.service.UsuarioService;
 import com.SkyWay.modules.pasajero.domain.repository.PasajeroRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -24,11 +26,13 @@ public class MobileAuthService {
     private final Clock clock;
     private final long ttl;
     private final String dummyHash;
+    private final UsuarioService usuarioService;
     public MobileAuthService(UsuarioRepository usuarios, PasajeroRepository pasajeros,
             PasswordEncoder passwords, JwtEncoder tokens, Clock clock,
+            UsuarioService usuarioService,
             @Value("${skyway.mobile.token-seconds:7200}") long ttl) {
         this.usuarios = usuarios; this.pasajeros = pasajeros; this.passwords = passwords;
-        this.tokens = tokens; this.clock = clock;
+        this.tokens = tokens; this.clock = clock; this.usuarioService = usuarioService;
         if (ttl < 60 || ttl > 86400) throw new IllegalArgumentException("token-seconds debe estar entre 60 y 86400.");
         this.ttl = ttl;
         this.dummyHash = passwords.encode(UUID.randomUUID().toString());
@@ -47,6 +51,66 @@ public class MobileAuthService {
         var header = JwsHeader.with(MacAlgorithm.HS256).type("JWT").build();
         return new LoginResponse(tokens.encode(JwtEncoderParameters.from(header, claims)).getTokenValue(),
                 "Bearer", ttl, perfil(usuario.getRut()));
+    }
+    @Transactional
+    public LoginResponse registrar(RegistroRequest request) {
+        String rut = request.rut() != null ? request.rut().trim() : "";
+        String cleanRut = rut.replace(".", "").toUpperCase();
+        if (cleanRut.length() > 12) {
+            cleanRut = cleanRut.substring(0, 12);
+        }
+        String correo = request.correoElectronico() != null ? request.correoElectronico().trim().toLowerCase() : "";
+        if (cleanRut.isBlank()) {
+            throw new MobileException(HttpStatus.BAD_REQUEST, "RUT_REQUERIDO", "El RUT o documento de identidad es obligatorio.");
+        }
+        if (correo.isBlank()) {
+            throw new MobileException(HttpStatus.BAD_REQUEST, "CORREO_REQUERIDO", "El correo electrónico es obligatorio.");
+        }
+        if (usuarios.existsById(cleanRut) || usuarios.existsById(rut) || pasajeros.existsById(cleanRut) || pasajeros.existsById(rut)) {
+            throw new MobileException(HttpStatus.CONFLICT, "RUT_REGISTRADO", "El RUT ya se encuentra registrado en el sistema.");
+        }
+        if (usuarios.findByCorreoElectronicoIgnoreCase(correo).isPresent()) {
+            throw new MobileException(HttpStatus.CONFLICT, "CORREO_REGISTRADO", "El correo electrónico ya se encuentra registrado en el sistema.");
+        }
+
+        LocalDate hoy = LocalDate.now(clock);
+        if (request.fechaNacimiento() == null) {
+            throw new MobileException(HttpStatus.BAD_REQUEST, "FECHA_NACIMIENTO_REQUERIDA", "La fecha de nacimiento es obligatoria.");
+        }
+        if (request.fechaNacimiento().isAfter(hoy) || Period.between(request.fechaNacimiento(), hoy).getYears() < 18) {
+            throw new MobileException(HttpStatus.BAD_REQUEST, "MENOR_DE_EDAD", "Debes tener al menos 18 años para registrarte en SkyWay.");
+        }
+
+        String doc = request.documentoIdentidad() != null && !request.documentoIdentidad().isBlank()
+                ? request.documentoIdentidad().trim()
+                : cleanRut;
+        String tipoDoc = request.tipoDocumento() != null && !request.tipoDocumento().isBlank()
+                ? request.tipoDocumento().trim()
+                : "RUT";
+        String nac = request.nacionalidad() != null && !request.nacionalidad().isBlank()
+                ? request.nacionalidad().trim()
+                : "Chilena";
+
+        Usuario nuevo = new Usuario();
+        nuevo.setRut(cleanRut);
+        nuevo.setNombre(request.nombre().trim());
+        nuevo.setApellido(request.apellido().trim());
+        nuevo.setCorreoElectronico(correo);
+        nuevo.setTelefono(request.telefono().trim());
+        nuevo.setDocumentoIdentidad(doc);
+        nuevo.setFechaNacimiento(java.sql.Date.valueOf(request.fechaNacimiento()));
+        nuevo.setContrasena(request.contrasena());
+
+        usuarioService.crearPasajeroConDetalle(nuevo, tipoDoc, nac);
+
+        var now = clock.instant();
+        var claims = JwtClaimsSet.builder().issuer(MobileSecurityConfig.ISSUER)
+                .audience(List.of(MobileSecurityConfig.AUDIENCE)).subject(cleanRut)
+                .issuedAt(now).expiresAt(now.plusSeconds(ttl)).id(UUID.randomUUID().toString())
+                .claim("scope", "mobile").build();
+        var header = JwsHeader.with(MacAlgorithm.HS256).type("JWT").build();
+        return new LoginResponse(tokens.encode(JwtEncoderParameters.from(header, claims)).getTokenValue(),
+                "Bearer", ttl, perfil(cleanRut));
     }
     public void requirePassenger(String rut) {
         if (!pasajeros.existsById(rut))

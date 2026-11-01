@@ -8,6 +8,7 @@ import {
   airplaneOutline,
   alertCircle,
   alertCircleOutline,
+  arrowBackOutline,
   arrowForwardOutline,
   briefcaseOutline,
   calendarOutline,
@@ -39,6 +40,7 @@ addIcons({
   airplaneOutline,
   alertCircle,
   alertCircleOutline,
+  arrowBackOutline,
   arrowForwardOutline,
   briefcaseOutline,
   calendarOutline,
@@ -81,6 +83,7 @@ export class InicioPage {
   codigoSeleccionado = '';
   textoAeropuerto = '';
   resultados: ItinerarioDisponible[] = [];
+  itinerarioSeleccionado: ItinerarioDisponible | null = null;
   cargandoCatalogo = false;
   buscando = false;
   busquedaRealizada = false;
@@ -91,13 +94,14 @@ export class InicioPage {
   readonly form = this.fb.nonNullable.group({
     origen: ['', [Validators.required, Validators.pattern(/^[A-Za-z]{3}$/)]],
     destino: ['', [Validators.required, Validators.pattern(/^[A-Za-z]{3}$/)]],
-    fecha: [this.hoy, Validators.required]
+    fecha: ['']
   });
 
   get tieneSeleccionOBusqueda(): boolean {
     return Boolean(
       this.form.controls.origen.value ||
       this.form.controls.destino.value ||
+      this.form.controls.fecha.value ||
       this.resultados.length ||
       this.busquedaRealizada ||
       this.error
@@ -105,17 +109,22 @@ export class InicioPage {
   }
 
   limpiarBusqueda(): void {
-    this.form.patchValue({ origen: '', destino: '' });
+    this.form.patchValue({ origen: '', destino: '', fecha: '' });
     this.form.markAsPristine();
     this.form.markAsUntouched();
     this.form.controls.origen.markAsPristine();
     this.form.controls.origen.markAsUntouched();
     this.form.controls.destino.markAsPristine();
     this.form.controls.destino.markAsUntouched();
+    this.form.controls.fecha.markAsPristine();
+    this.form.controls.fecha.markAsUntouched();
     this.resultados = [];
+
+
     this.busquedaRealizada = false;
     this.error = '';
     this.codigoSeleccionado = '';
+    this.itinerarioSeleccionado = null;
   }
 
   limpiarCampo(campo: 'origen' | 'destino', event?: Event): void {
@@ -128,8 +137,25 @@ export class InicioPage {
     this.form.markAsPristine();
     if (this.campoSelector === campo) {
       this.codigoSeleccionado = '';
+    this.itinerarioSeleccionado = null;
     }
     this.resultados = [];
+
+
+    this.busquedaRealizada = false;
+    this.error = '';
+  }
+
+  limpiarFecha(event?: Event): void {
+    event?.stopPropagation();
+    event?.preventDefault();
+    this.form.controls.fecha.setValue('');
+    this.form.controls.fecha.markAsUntouched();
+    this.form.controls.fecha.markAsPristine();
+    this.resultados = [];
+    this.itinerarioSeleccionado = null;
+
+
     this.busquedaRealizada = false;
     this.error = '';
   }
@@ -139,6 +165,7 @@ export class InicioPage {
       this.limpiarCampo(this.campoSelector);
     }
     this.codigoSeleccionado = '';
+    this.itinerarioSeleccionado = null;
     this.cerrarSelector();
   }
 
@@ -350,8 +377,11 @@ export class InicioPage {
   intercambiar() {
     const { origen, destino } = this.form.getRawValue();
     this.form.patchValue({ origen: destino, destino: origen });
+    this.itinerarioSeleccionado = null;
     if (this.resultados.length || this.busquedaRealizada) {
       this.resultados = [];
+
+
       this.busquedaRealizada = false;
     }
   }
@@ -363,6 +393,10 @@ export class InicioPage {
     }
 
     const { origen, destino, fecha } = this.form.getRawValue();
+    if (!origen || !destino) {
+      this.form.markAllAsTouched();
+      return;
+    }
     if (origen.toUpperCase() === destino.toUpperCase()) {
       this.error = 'El aeropuerto de origen y destino deben ser distintos.';
       return;
@@ -371,11 +405,15 @@ export class InicioPage {
     this.buscando = true;
     this.error = '';
     this.busquedaRealizada = true;
+    const fechaFiltro = fecha && fecha.trim().length > 0 ? fecha.trim() : null;
+    this.itinerarioSeleccionado = null;
     this.resultados = [];
+
+
 
     try {
       this.resultados = await firstValueFrom(
-        this.api.buscarItinerarios(origen.toUpperCase(), destino.toUpperCase(), fecha)
+        this.api.buscarItinerarios(origen.toUpperCase(), destino.toUpperCase(), fechaFiltro)
       );
     } catch (e) {
       this.error = errorMessage(e);
@@ -389,6 +427,21 @@ export class InicioPage {
    * IMPORTANTE: La web espera idTarifa, no idItinerarioTarifa.
    * No crea reservas ni registra pagos desde la aplicación Ionic.
    */
+  seleccionarItinerario(itinerario: ItinerarioDisponible): void {
+    this.itinerarioSeleccionado = itinerario;
+  }
+
+  deseleccionarItinerario(): void {
+    this.itinerarioSeleccionado = null;
+  }
+
+  precioMinimo(itinerario: ItinerarioDisponible): number | null {
+    if (itinerario.tarifas && itinerario.tarifas.length > 0) {
+      return Math.min(...itinerario.tarifas.map(t => Number(t.precio)));
+    }
+    return itinerario.precioBase ?? null;
+  }
+
   urlCompraWeb(itinerario: ItinerarioDisponible, tarifa: TarifaDisponible): string {
     const url = new URL('/home/seleccionAsientos.xhtml', this.api.getWebBaseUrl());
     url.searchParams.set('itinerarios', String(itinerario.idItinerario));
@@ -406,7 +459,11 @@ export class InicioPage {
     const { fecha } = this.form.getRawValue();
     url.searchParams.set('salida', itinerario.origen);
     url.searchParams.set('llegada', itinerario.destino);
-    url.searchParams.set('fechaIda', fecha);
+    if (fecha && fecha.trim().length > 0) {
+      url.searchParams.set('fechaIda', fecha.trim());
+    } else if (itinerario.horaSalida) {
+      url.searchParams.set('fechaIda', itinerario.horaSalida.split('T')[0]);
+    }
     url.searchParams.set('adultos', '1');
     url.searchParams.set('trip', 'OW');
     return url.toString();

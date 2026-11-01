@@ -116,10 +116,17 @@ public class ItinerarioServiceImpl implements ItinerarioService {
 
     @Override
     public List<ItinerarioDTO> buscarItinerarios(String codigoIataOrigen, String codigoIataDestino, String fechaInicio) throws ParseException {
-        // Convertir la fecha de String a java.sql.Date
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        java.util.Date parsedDate = dateFormat.parse(fechaInicio);
-        Date sqlDate = new Date(parsedDate.getTime());
+
+
+
+        Date sqlDate = null;
+        if (fechaInicio != null && !fechaInicio.isBlank()) {
+    
+    
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            java.util.Date parsedDate = dateFormat.parse(fechaInicio);
+            sqlDate = new Date(parsedDate.getTime());
+        }
 
         // Logs informativos
         Logger.logInfo("Buscando vuelos para el día: " + sqlDate);
@@ -127,7 +134,7 @@ public class ItinerarioServiceImpl implements ItinerarioService {
         Logger.logInfo("Código IATA Destino: " + codigoIataDestino);
 
         // Consulta SQL actualizada con los nuevos nombres de parámetros
-        String queryString = "SELECT * FROM fnBuscarVuelo(:p_codigo_origen, :p_codigo_destino, :p_fecha_inicio)";
+        String queryString = "SELECT * FROM fnBuscarVuelo(:p_codigo_origen, :p_codigo_destino, CAST(:p_fecha_inicio AS DATE))";
 
         Query query = entityManager.createNativeQuery(queryString, ItinerarioDTO.class);
         query.setParameter("p_codigo_origen", codigoIataOrigen);

@@ -17,6 +17,7 @@ import {
   Pagina,
   PaseAbordar,
   Perfil,
+  RegistroRequest,
   ReservaCreada,
   ResumenReserva,
   Vuelo,
@@ -25,7 +26,7 @@ import {
 } from './models';
 
 export const AZURE_CLOUD_HOST = 'https://skyway-gde6a6aza3abb8a6.brazilsouth-01.azurewebsites.net';
-export const DEFAULT_MIPC_HOST = 'http://192.168.100.7:8080';
+export const DEFAULT_MIPC_HOST = 'http://10.227.14.199:8080';
 export const HOME_MIPC_HOST = 'http://192.168.100.7:8080';
 export const DEFAULT_NATIVE_HOST = AZURE_CLOUD_HOST;
 
@@ -265,6 +266,10 @@ export class ApiService {
     return this.http.post<LoginResponse>(`${this.base}/auth/login`, { correoElectronico, contrasena });
   }
 
+  registro(data: RegistroRequest): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(`${this.base}/auth/registro`, data);
+  }
+
   me() {
     return this.http.get<Perfil>(`${this.base}/auth/me`);
   }
@@ -285,10 +290,12 @@ export class ApiService {
     return this.http.get<AeropuertoCatalogo[]>(`${this.base}/catalogo/aeropuertos`);
   }
 
-  buscarItinerarios(origen: string, destino: string, fecha: string) {
-    return this.http.get<ItinerarioDisponible[]>(`${this.base}/busqueda/itinerarios`, {
-      params: { origen, destino, fecha }
-    });
+  buscarItinerarios(origen: string, destino: string, fecha?: string | null) {
+    const params: Record<string, string> = { origen, destino };
+    if (fecha && fecha.trim().length > 0) {
+      params['fecha'] = fecha.trim();
+    }
+    return this.http.get<ItinerarioDisponible[]>(`${this.base}/busqueda/itinerarios`, { params });
   }
 
   crearReserva(idItinerario: number, idItinerarioTarifa: number) {

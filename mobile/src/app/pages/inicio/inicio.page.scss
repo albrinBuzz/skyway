@@ -296,7 +296,8 @@ $bg-tint: #eef3ff;
   min-height: 24px;
 }
 
-.clear-airport-btn {
+.clear-airport-btn,
+.clear-date-btn {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -503,14 +504,36 @@ $bg-tint: #eef3ff;
   margin-bottom: 4px;
 }
 
+.optional-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  background: #edf2f7;
+  padding: 1px 6px;
+  border-radius: 6px;
+  margin-left: 4px;
+}
+
 .date-friendly-hint {
   font-size: 12.5px;
   font-weight: 750;
   color: $blue;
   text-transform: capitalize;
+
+  &.hint-muted {
+    color: #718096;
+    font-weight: 600;
+    text-transform: none;
+  }
 }
 
-.date-input-wrap ion-input {
+.date-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  ion-input {
+    flex: 1 1 auto;
   --background: #ffffff;
   --padding-start: 12px;
   --padding-end: 12px;
@@ -521,6 +544,7 @@ $bg-tint: #eef3ff;
   font-weight: 700;
   color: $ink;
   min-height: 42px;
+  }
 }
 
 .btn-buscar-vuelos {
@@ -569,6 +593,207 @@ $bg-tint: #eef3ff;
 
   &:hover {
     box-shadow: 0 10px 28px rgba(20, 42, 75, .08);
+  }
+}
+
+/* Tarjetas compactas e interactivas del Paso 1 */
+.compact-flight-card {
+  cursor: pointer;
+  background: #ffffff;
+  border: 1.5px solid #d8e3f5;
+  transition: all .2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+
+  &:hover {
+    background: #f4f8ff;
+    border-color: #2563eb;
+    box-shadow: 0 10px 26px rgba(37, 99, 235, .15);
+    transform: translateY(-2px);
+
+    .cta-select-pill {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #2563eb;
+
+      ion-icon {
+        transform: translateX(3px);
+      }
+    }
+  }
+
+  &:active {
+    transform: scale(0.985);
+    background: #ebf3ff;
+    border-color: #1d4ed8;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, .12);
+  }
+
+  &:focus-visible {
+    outline: 3px solid #60a5fa;
+    outline-offset: 2px;
+  }
+}
+
+.compact-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.price-from-box {
+  .price-from-label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    font-weight: 750;
+    color: #64748b;
+    letter-spacing: .3px;
+  }
+  .price-from-val {
+    display: block;
+    font-size: 17px;
+    font-weight: 850;
+    color: $blue;
+    line-height: 1.2;
+  }
+}
+
+.cta-select-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #eef4ff;
+  color: #1d4ed8;
+  border: 1.5px solid #c7d9fc;
+  border-radius: 99px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 750;
+  transition: all .2s ease;
+
+  ion-icon {
+    font-size: 14px;
+    transition: transform .2s ease;
+  }
+}
+
+/* Barra de navegación de regreso del Paso 2 */
+.selected-nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.btn-volver-lista {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  border: 1.5px solid #2563eb;
+  color: #2563eb;
+  border-radius: 14px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 750;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, .12);
+  transition: all .18s ease;
+
+  ion-icon {
+    font-size: 18px;
+  }
+
+  &:hover {
+    background: #f0f5ff;
+    border-color: #1d4ed8;
+    color: #1d4ed8;
+  }
+
+  &:active {
+    transform: scale(0.97);
+    background: #e3edff;
+  }
+}
+
+.btn-cerrar-vuelo {
+  min-height: 48px;
+  min-width: 48px;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  background: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+  color: #475569;
+  border-radius: 14px;
+  font-size: 22px;
+  cursor: pointer;
+  transition: all .18s ease;
+
+  &:hover {
+    background: #fee2e2;
+    border-color: #fca5a5;
+    color: #dc2626;
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+/* Vuelo seleccionado en Paso 2 */
+.selected-flight-card {
+  border: 2px solid #2563eb;
+  box-shadow: 0 12px 32px rgba(37, 99, 235, .14);
+}
+
+.selected-header-badge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1.5px solid #e2e8f0;
+}
+
+.chip-selected-vuelo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #047857;
+  font-size: 12px;
+  font-weight: 800;
+  border-radius: 8px;
+  padding: 4px 10px;
+
+  ion-icon {
+    font-size: 14px;
+  }
+}
+
+.change-flight-btn {
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 750;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 4px 8px;
+
+  &:hover {
+    color: #1d4ed8;
   }
 }
 
@@ -1287,7 +1512,8 @@ ion-modal.airport-modal {
     gap: 3px;
   }
 
-  .clear-airport-btn {
+  .clear-airport-btn,
+.clear-date-btn {
     padding: 2px 6px;
     font-size: 11px;
   }

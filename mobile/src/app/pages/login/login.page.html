@@ -120,6 +120,19 @@
           <ion-icon *ngIf="!busy" name="arrow-forward-outline" slot="end" aria-hidden="true"></ion-icon>
         </ion-button>
 
+        <!-- Enlace a registro nativo para nuevos pasajeros -->
+        <div class="register-container">
+          <span class="register-prompt">¿No tienes cuenta?</span>
+          <a
+            routerLink="/registro"
+            class="register-link"
+            aria-label="Registrarse en SkyWay"
+          >
+            <span>Regístrate aquí</span>
+            <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
+          </a>
+        </div>
+
         <!-- Configuración secreta de servidor Backend (5 toques en .brand-dot) -->
         <div class="server-config" *ngIf="mostrarServidor">
           <div class="server-box">
@@ -180,15 +193,17 @@
                 class="quick-ip-chip"
                 [class.is-active]="form.controls.servidor.value === defaultMipcHost"
                 (click)="seleccionarSubPresetMipc(defaultMipcHost)"
+                aria-label="Conectar a Wi-Fi Celular 10.227.14.199"
               >
                 <ion-icon name="wifi-outline" aria-hidden="true"></ion-icon>
-                <span>IP Duoc (10.227.14.199)</span>
+                <span>Wi-Fi Cel (10.227.14.199)</span>
               </button>
               <button
                 type="button"
                 class="quick-ip-chip"
                 [class.is-active]="form.controls.servidor.value === homeMipcHost"
                 (click)="seleccionarSubPresetMipc(homeMipcHost)"
+                aria-label="Conectar a Wi-Fi Casa 192.168.100.7"
               >
                 <ion-icon name="home-outline" aria-hidden="true"></ion-icon>
                 <span>Wi-Fi Casa (192.168.100.7)</span>

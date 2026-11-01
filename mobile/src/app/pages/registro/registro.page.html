@@ -1,0 +1,517 @@
+<ion-content>
+  <main class="registro-wrap">
+
+    <!-- Brillo radial decorativo -->
+    <div class="glow-aura" aria-hidden="true"></div>
+
+    <!-- Barra superior con botón volver a Login y marca -->
+    <header class="top-bar">
+      <a routerLink="/login" class="back-btn" aria-label="Volver al inicio de sesión">
+        <ion-icon name="arrow-back-outline" aria-hidden="true"></ion-icon>
+        <span>Volver a iniciar sesión</span>
+      </a>
+      <div class="brand-mini">
+        <ion-icon name="airplane" aria-hidden="true"></ion-icon>
+        <span>skyway<span class="brand-dot">.</span></span>
+      </div>
+    </header>
+
+    <!-- Intro Copy -->
+    <div class="intro">
+      <span class="eyebrow">PORTAL DE PASAJEROS</span>
+      <h1>Crea tu cuenta</h1>
+      <p>Regístrate para gestionar tus vuelos, realizar check-in y obtener tus pases de abordar al instante.</p>
+    </div>
+
+    <!-- Panel Card Formulario -->
+    <section class="card registro-panel reveal" aria-label="Formulario de registro">
+      <div class="panel-header">
+        <h2>Datos del Pasajero</h2>
+        <p class="panel-sub">Ingresa tus datos personales tal como figuran en tu documento oficial.</p>
+      </div>
+
+      <!-- Banner de Éxito -->
+      <div *ngIf="registroExitoso" class="success-banner" role="status">
+        <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
+        <div>
+          <strong>¡Registro exitoso!</strong>
+          <span>Tu cuenta ha sido creada. Ingresando a tu sesión...</span>
+        </div>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="registrar()" novalidate>
+
+        <!-- Tipo y Número de Documento -->
+        <div class="form-row">
+          <div class="form-field-group flex-1">
+            <label class="field-label" for="tipo-doc-select">
+              <ion-icon name="card-outline" aria-hidden="true"></ion-icon>
+              Tipo de documento
+            </label>
+            <div class="input-container select-container">
+              <ion-select
+                id="tipo-doc-select"
+                formControlName="tipoDocumento"
+                interface="popover"
+                aria-label="Selecciona tipo de documento"
+              >
+                <ion-select-option value="RUT">RUT (Chile)</ion-select-option>
+                <ion-select-option value="PASAPORTE">Pasaporte</ion-select-option>
+                <ion-select-option value="CEDULA">Cédula de Identidad</ion-select-option>
+              </ion-select>
+            </div>
+          </div>
+
+          <div class="form-field-group flex-1">
+            <label class="field-label" for="rut-input">
+              <ion-icon name="person-outline" aria-hidden="true"></ion-icon>
+              {{ form.controls.tipoDocumento.value === 'RUT' ? 'RUT' : 'Número de Documento' }}
+            </label>
+            <div
+              class="input-container"
+              [class.has-error]="form.controls.rut.touched && form.controls.rut.invalid"
+            >
+              <ion-input
+                id="rut-input"
+                type="text"
+                formControlName="rut"
+                (ionInput)="onDocumentoInput($event)"
+                [placeholder]="form.controls.tipoDocumento.value === 'RUT' ? '12.345.678-5' : 'Ej: A1234567'"
+                [maxlength]="form.controls.tipoDocumento.value === 'RUT' ? 12 : 20"
+              ></ion-input>
+            </div>
+            <div
+              class="field-error-message"
+              *ngIf="form.controls.rut.touched && form.controls.rut.errors?.['required']"
+              role="alert"
+            >
+              <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
+              <span>El documento es obligatorio.</span>
+            </div>
+            <div
+              class="field-error-message"
+              *ngIf="form.controls.rut.touched && form.controls.rut.errors?.['rutInvalido']"
+              role="alert"
+            >
+              <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
+              <span>El RUT ingresado no es válido (dígito verificador incorrecto).</span>
+            </div>
+            <div
+              class="field-error-message"
+              *ngIf="form.controls.rut.touched && form.controls.rut.errors?.['docInvalido']"
+              role="alert"
+            >
+              <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
+              <span>Documento inválido (debe tener entre 6 y 20 caracteres alfanuméricos).</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Nombres y Apellidos -->
+        <div class="form-row">
+          <div class="form-field-group flex-1">
+            <label class="field-label" for="nombre-input">
+              Nombres
+            </label>
+            <div
+              class="input-container"
+              [class.has-error]="form.controls.nombre.touched && form.controls.nombre.invalid"
+            >
+              <ion-input
+                id="nombre-input"
+                type="text"
+                autocomplete="given-name"
+                formControlName="nombre"
+                placeholder="Ej: Juan Andrés"
+                [maxlength]="60"
+              ></ion-input>
+            </div>
+            <div
+              class="field-error-message"
+              *ngIf="form.controls.nombre.touched && (form.controls.nombre.errors?.['nombreMuyCorto'] || form.controls.nombre.errors?.['nombreInvalido'] || form.controls.nombre.errors?.['required'])"
+              role="alert"
+            >
+              <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
+              <span>Ingresa un nombre válido (mínimo 2 letras, sin números ni símbolos).</span>
+            </div>
+          </div>
+
+          <div class="form-field-group flex-1">
+            <label class="field-label" for="apellido-input">
+              Apellidos
+            </label>
+            <div
+              class="input-container"
+              [class.has-error]="form.controls.apellido.touched && form.controls.apellido.invalid"
+            >
+              <ion-input
+                id="apellido-input"
+                type="text"
+                autocomplete="family-name"
+                formControlName="apellido"
+                placeholder="Ej: Pérez González"
+                [maxlength]="60"
+              ></ion-input>
+            </div>
+            <div
+              class="field-error-message"
+              *ngIf="form.controls.apellido.touched && (form.controls.apellido.errors?.['nombreMuyCorto'] || form.controls.apellido.errors?.['nombreInvalido'] || form.controls.apellido.errors?.['required'])"
+              role="alert"
+            >
+              <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
+              <span>Ingresa un apellido válido (mínimo 2 letras, sin números ni símbolos).</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Correo Electrónico -->
+        <div class="form-field-group">
+          <label class="field-label" for="correo-reg-input">
+            <ion-icon name="mail-outline" aria-hidden="true"></ion-icon>
+            Correo electrónico
+          </label>
+          <div
+            class="input-container"
+            [class.has-error]="form.controls.correoElectronico.touched && form.controls.correoElectronico.invalid"
+          >
+            <ion-input
+              id="correo-reg-input"
+              type="email"
+              inputmode="email"
+              autocomplete="email"
+              formControlName="correoElectronico"
+              placeholder="ejemplo@correo.com"
+              [maxlength]="100"
+            ></ion-input>
+          </div>
+          <span class="field-hint">Recibirás aquí tus confirmaciones de vuelo y tickets.</span>
+          <div
+            class="field-error-message"
+            *ngIf="form.controls.correoElectronico.touched && form.controls.correoElectronico.invalid"
+            role="alert"
+          >
+            <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
+            <span>Ingresa un correo electrónico con formato válido (ejemplo@correo.com).</span>
+          </div>
+        </div>
+
+        <!-- Teléfono de contacto con Selector de País con Bandera -->
+        <div class="form-field-group">
+          <label class="field-label" for="tel-local-input">
+            <ion-icon name="call-outline" aria-hidden="true"></ion-icon>
+            Teléfono de contacto
+          </label>
+          <div class="phone-composite-group">
+            <div class="country-picker-container">
+              <button
+                type="button"
+                class="country-trigger-btn"
+                (click)="abrirModalPais()"
+                [attr.aria-label]="'País seleccionado: ' + paisSeleccionado.nombre + ' ' + paisSeleccionado.prefijo + '. Toca para buscar o cambiar país'"
+              >
+                <span class="country-flag">{{ paisSeleccionado.bandera }}</span>
+                <span class="country-code">{{ paisSeleccionado.prefijo }}</span>
+                <ion-icon name="chevron-down-outline" aria-hidden="true"></ion-icon>
+              </button>
+            </div>
+            <div
+              class="input-container phone-input-container"
+              [class.has-error]="form.controls.telefonoLocal.touched && form.controls.telefonoLocal.invalid"
+            >
+              <ion-input
+                id="tel-local-input"
+                type="tel"
+                inputmode="numeric"
+                autocomplete="tel-national"
+                formControlName="telefonoLocal"
+                (ionInput)="onTelefonoInput($event)"
+                [placeholder]="'Ej: ' + paisSeleccionado.ejemplo"
+                [maxlength]="15"
+              ></ion-input>
+            </div>
+          </div>
+          <span class="field-hint">
+            Prefijo seleccionado: {{ paisSeleccionado.bandera }} {{ paisSeleccionado.prefijo }} ({{ paisSeleccionado.nombre }})
+          </span>
+          <div
+            class="field-error-message"
+            *ngIf="form.controls.telefonoLocal.touched && form.controls.telefonoLocal.errors?.['telefonoChileLargo']"
+            role="alert"
+          >
+            <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
+            <span>El número de Chile debe tener exactamente 9 dígitos.</span>
+          </div>
+          <div
+            class="field-error-message"
+            *ngIf="form.controls.telefonoLocal.touched && form.controls.telefonoLocal.errors?.['telefonoChileFormato']"
+            role="alert"
+          >
+            <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
+            <span>El número móvil en Chile debe comenzar con 9 (ej: 912345678).</span>
+          </div>
+          <div
+            class="field-error-message"
+            *ngIf="form.controls.telefonoLocal.touched && form.controls.telefonoLocal.errors?.['telefonoGeneralLargo']"
+            role="alert"
+          >
+            <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
+            <span>El número debe tener entre {{ form.controls.telefonoLocal.errors?.['telefonoGeneralLargo']?.min }} y {{ form.controls.telefonoLocal.errors?.['telefonoGeneralLargo']?.max }} dígitos.</span>
+          </div>
+          <div
+            class="field-error-message"
+            *ngIf="form.controls.telefonoLocal.touched && form.controls.telefonoLocal.errors?.['required']"
+            role="alert"
+          >
+            <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
+            <span>El teléfono de contacto es obligatorio.</span>
+          </div>
+        </div>
+
+        <!-- Nacionalidad y Fecha de Nacimiento -->
+        <div class="form-row">
+          <div class="form-field-group flex-1">
+            <label class="field-label" for="nac-input">
+              <ion-icon name="globe-outline" aria-hidden="true"></ion-icon>
+              Nacionalidad
+            </label>
+            <div class="input-container">
+              <ion-input
+                id="nac-input"
+                type="text"
+                formControlName="nacionalidad"
+                placeholder="Chilena"
+                [maxlength]="50"
+              ></ion-input>
+            </div>
+          </div>
+
+          <div class="form-field-group flex-1">
+            <label class="field-label" for="fecha-nac-input">
+              <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+              Fecha de nacimiento
+            </label>
+            <div
+              class="input-container"
+              [class.has-error]="form.controls.fechaNacimiento.touched && form.controls.fechaNacimiento.invalid"
+            >
+              <ion-input
+                id="fecha-nac-input"
+                type="date"
+                formControlName="fechaNacimiento"
+                [max]="fechaMaxima"
+                [min]="fechaMinima"
+                aria-describedby="edad-hint"
+              ></ion-input>
+            </div>
+            <div
+              class="field-error-message"
+              *ngIf="form.controls.fechaNacimiento.touched && form.controls.fechaNacimiento.errors?.['menorDeEdad']"
+              role="alert"
+            >
+              <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
+              <span>Debes tener al menos 18 años cumplidos a la fecha de hoy.</span>
+            </div>
+            <div
+              class="field-error-message"
+              *ngIf="form.controls.fechaNacimiento.touched && form.controls.fechaNacimiento.errors?.['anioMuyAntiguo']"
+              role="alert"
+            >
+              <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
+              <span>El año de nacimiento no puede ser anterior a 1920.</span>
+            </div>
+            <div
+              class="field-error-message"
+              *ngIf="form.controls.fechaNacimiento.touched && form.controls.fechaNacimiento.errors?.['required']"
+              role="alert"
+            >
+              <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
+              <span>La fecha de nacimiento es obligatoria.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contraseña -->
+        <div class="form-field-group">
+          <label class="field-label" for="reg-pass-input">
+            <ion-icon name="lock-closed-outline" aria-hidden="true"></ion-icon>
+            Contraseña
+          </label>
+          <div
+            class="input-container password-input-container"
+            [class.has-error]="form.controls.contrasena.touched && form.controls.contrasena.invalid"
+          >
+            <ion-input
+              id="reg-pass-input"
+              [type]="mostrarContrasena ? 'text' : 'password'"
+              autocomplete="new-password"
+              formControlName="contrasena"
+              placeholder="Mínimo 8 caracteres"
+              [maxlength]="72"
+            ></ion-input>
+            <button
+              type="button"
+              class="toggle-password-btn"
+              (click)="toggleMostrarContrasena()"
+              [attr.aria-label]="mostrarContrasena ? 'Ocultar contraseña' : 'Ver contraseña'"
+            >
+              <ion-icon [name]="mostrarContrasena ? 'eye-off-outline' : 'eye-outline'" aria-hidden="true"></ion-icon>
+            </button>
+          </div>
+          <span class="field-hint">Mínimo 8 caracteres, al menos una mayúscula, una minúscula y un número.</span>
+          <div
+            class="field-error-message"
+            *ngIf="form.controls.contrasena.touched && form.controls.contrasena.errors?.['contrasenaInsegura']"
+            role="alert"
+          >
+            <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
+            <span>La contraseña debe tener al menos 8 caracteres, una letra mayúscula, una minúscula y un número.</span>
+          </div>
+          <div
+            class="field-error-message"
+            *ngIf="form.controls.contrasena.touched && form.controls.contrasena.errors?.['required']"
+            role="alert"
+          >
+            <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
+            <span>La contraseña es obligatoria.</span>
+          </div>
+        </div>
+
+        <!-- Confirmar Contraseña -->
+        <div class="form-field-group">
+          <label class="field-label" for="conf-pass-input">
+            <ion-icon name="lock-closed-outline" aria-hidden="true"></ion-icon>
+            Confirmar contraseña
+          </label>
+          <div
+            class="input-container password-input-container"
+            [class.has-error]="(form.controls.confirmarContrasena.touched && form.controls.confirmarContrasena.invalid) || (form.touched && form.errors?.['passwordsMismatch'])"
+          >
+            <ion-input
+              id="conf-pass-input"
+              [type]="mostrarConfirmar ? 'text' : 'password'"
+              autocomplete="new-password"
+              formControlName="confirmarContrasena"
+              placeholder="Repite tu contraseña exactamente"
+              [maxlength]="72"
+            ></ion-input>
+            <button
+              type="button"
+              class="toggle-password-btn"
+              (click)="toggleMostrarConfirmar()"
+              [attr.aria-label]="mostrarConfirmar ? 'Ocultar confirmación' : 'Ver confirmación'"
+            >
+              <ion-icon [name]="mostrarConfirmar ? 'eye-off-outline' : 'eye-outline'" aria-hidden="true"></ion-icon>
+            </button>
+          </div>
+          <div
+            class="field-error-message"
+            *ngIf="form.touched && form.errors?.['passwordsMismatch']"
+            role="alert"
+          >
+            <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
+            <span>Las contraseñas no coinciden. Por favor verifica que ambas sean idénticas.</span>
+          </div>
+        </div>
+
+        <!-- Error del Servidor -->
+        <div class="error general-error" role="alert" *ngIf="error">
+          <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
+          <span>{{ error }}</span>
+        </div>
+
+        <!-- Botón de Registro -->
+        <ion-button
+          type="submit"
+          expand="block"
+          class="btn-register-submit"
+          [disabled]="busy || form.invalid"
+        >
+          <ion-spinner *ngIf="busy" name="crescent"></ion-spinner>
+          <ion-icon *ngIf="!busy" name="person-add-outline" slot="start" aria-hidden="true"></ion-icon>
+          <span *ngIf="!busy">Crear mi cuenta</span>
+        </ion-button>
+
+        <!-- Enlace para volver a iniciar sesión -->
+        <div class="login-prompt">
+          <span>¿Ya tienes cuenta?</span>
+          <a routerLink="/login" class="login-link">
+            <span>Inicia sesión aquí</span>
+            <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
+          </a>
+        </div>
+
+      </form>
+    </section>
+
+    <!-- Footer seguro -->
+    <footer class="registro-footer">
+      <div class="security-badge">
+        <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
+        <span>Protección de datos y cifrado SSL seguro</span>
+      </div>
+      <p class="footer-copy">
+        SKYWAY AIRLINES <span>•</span> PORTAL DE PASAJEROS
+      </p>
+    </footer>
+
+  </main>
+
+  <!-- Modal buscador de países telefónicos internacionales (E.164) -->
+  <ion-modal [isOpen]="modalPaisAbierto" (didDismiss)="cerrarModalPais()" class="country-select-modal">
+    <ng-template>
+      <ion-header class="ion-no-border modal-header">
+        <ion-toolbar color="light">
+          <ion-title>Código de país</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="cerrarModalPais()" aria-label="Cerrar selector de país">
+              <ion-icon name="close-outline" slot="icon-only"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+        <ion-toolbar color="light" class="modal-search-toolbar">
+          <ion-searchbar
+            placeholder="Buscar país, prefijo (+XX) o ISO..."
+            [value]="filtroPais"
+            (ionInput)="filtrarPaises($event)"
+            [debounce]="100"
+            show-clear-button="always"
+            clear-icon="close-circle"
+            aria-label="Buscar país por nombre, código o prefijo"
+          ></ion-searchbar>
+        </ion-toolbar>
+      </ion-header>
+
+      <ion-content class="modal-content">
+        <div class="modal-empty-state" *ngIf="paisesFiltrados.length === 0">
+          <ion-icon name="search-outline" aria-hidden="true"></ion-icon>
+          <p>No encontramos países que coincidan con <strong>"{{ filtroPais }}"</strong></p>
+        </div>
+
+        <ion-list lines="full" class="country-list" *ngIf="paisesFiltrados.length > 0">
+          <ion-item
+            button
+            *ngFor="let p of paisesFiltrados; trackBy: trackByIso2"
+            (click)="seleccionarPais(p)"
+            [class.is-selected]="p.iso2 === form.controls.paisTelefono.value"
+            class="country-item"
+          >
+            <span class="country-flag-badge" slot="start">{{ p.bandera }}</span>
+            <ion-label>
+              <h3>{{ p.nombre }}</h3>
+              <p>{{ p.iso2 }} &bull; {{ p.prefijo }} &bull; Ej: {{ p.ejemplo }}</p>
+            </ion-label>
+            <span class="country-prefix-pill" slot="end">{{ p.prefijo }}</span>
+            <ion-icon
+              name="checkmark-circle"
+              color="primary"
+              slot="end"
+              *ngIf="p.iso2 === form.controls.paisTelefono.value"
+              aria-hidden="true"
+            ></ion-icon>
+          </ion-item>
+        </ion-list>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+</ion-content>

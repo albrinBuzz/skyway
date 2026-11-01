@@ -82,12 +82,13 @@ public class MobileBookingService {
         if (from.equals(to)) {
             throw new MobileException(HttpStatus.BAD_REQUEST, "RUTA_INVALIDA", "El origen y el destino deben ser distintos.");
         }
-        if (fecha == null || fecha.isBefore(LocalDate.now(clock))) {
+        if (fecha != null && fecha.isBefore(LocalDate.now(clock))) {
             throw new MobileException(HttpStatus.BAD_REQUEST, "FECHA_INVALIDA", "La fecha de viaje no puede estar en el pasado.");
         }
 
         try {
-            return itinerarios.buscarItinerarios(from, to, fecha.toString()).stream()
+            String fechaStr = fecha != null ? fecha.toString() : null;
+            return itinerarios.buscarItinerarios(from, to, fechaStr).stream()
                     .map(dto -> {
                         var entity = itinerarios.findById(dto.getItinerario());
                         if (entity == null) return null;

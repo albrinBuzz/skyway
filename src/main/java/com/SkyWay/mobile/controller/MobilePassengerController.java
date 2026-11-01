@@ -53,7 +53,7 @@ public class MobilePassengerController {
             @AuthenticationPrincipal Jwt jwt,
             @RequestParam String origen,
             @RequestParam String destino,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha) {
         return ResponseEntity.ok(bookingService.buscar(jwt.getSubject(), origen, destino, fecha));
     }
 
