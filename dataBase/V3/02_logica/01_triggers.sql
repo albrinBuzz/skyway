@@ -764,3 +764,69 @@ CREATE TRIGGER tr_notify_new_notificacion
     AFTER INSERT ON notificacion
     FOR EACH ROW
 EXECUTE FUNCTION fn_notify_new_notification();
+
+-- =============================================================================
+-- CONTROL DE RESERVAS DUPLICADAS / ANTI-CHURNING A NIVEL DE ITINERARIO
+-- =============================================================================
+CREATE OR REPLACE FUNCTION fn_validar_reserva_duplicada_itinerario()
+    RETURNS TRIGGER AS
+$$
+DECLARE
+    v_rut_titular   VARCHAR(12);
+    v_conflicto_pnr VARCHAR(50);
+BEGIN
+    -- Obtener el RUT del titular de la reserva que se esta vinculando
+    SELECT rut_pasajero INTO v_rut_titular
+    FROM reserva
+    WHERE id_reserva = NEW.id_reserva;
+
+    -- Verificar si el titular o algun pasajero ya tiene reserva activa en este itinerario
+    SELECT r.codigo_reserva INTO v_conflicto_pnr
+    FROM reserva r
+    JOIN reserva_itinerario ri ON ri.id_reserva = r.id_reserva
+    JOIN estado_reserva er ON er.id_estado_reserva = r.estado_reserva
+    WHERE ri.id_itinerario = NEW.id_itinerario
+      AND r.id_reserva <> NEW.id_reserva
+      AND LOWER(er.descripcion) NOT LIKE '%cancelad%'
+      AND LOWER(er.descripcion) NOT LIKE '%anulad%'
+      AND (
+          (v_rut_titular IS NOT NULL AND (
+              UPPER(r.rut_pasajero) = UPPER(v_rut_titular)
+              OR EXISTS (SELECT 1 FROM pasajero_reserva pr WHERE pr.id_reserva = r.id_reserva AND UPPER(pr.rut) = UPPER(v_rut_titular))
+              OR EXISTS (SELECT 1 FROM reserva_asiento ra WHERE ra.id_reserva = r.id_reserva AND UPPER(ra.rut) = UPPER(v_rut_titular))
+          ))
+          OR EXISTS (
+              SELECT 1 FROM pasajero_reserva pr_actual
+              WHERE pr_actual.id_reserva = NEW.id_reserva
+                AND (
+                    UPPER(r.rut_pasajero) = UPPER(pr_actual.rut)
+                    OR EXISTS (SELECT 1 FROM pasajero_reserva pr_exist WHERE pr_exist.id_reserva = r.id_reserva AND UPPER(pr_exist.rut) = UPPER(pr_actual.rut))
+                    OR EXISTS (SELECT 1 FROM reserva_asiento ra_exist WHERE ra_exist.id_reserva = r.id_reserva AND UPPER(ra_exist.rut) = UPPER(pr_actual.rut))
+                )
+          )
+          OR EXISTS (
+              SELECT 1 FROM reserva_asiento ra_actual
+              WHERE ra_actual.id_reserva = NEW.id_reserva
+                AND ra_actual.rut IS NOT NULL
+                AND (
+                    UPPER(r.rut_pasajero) = UPPER(ra_actual.rut)
+                    OR EXISTS (SELECT 1 FROM pasajero_reserva pr_exist WHERE pr_exist.id_reserva = r.id_reserva AND UPPER(pr_exist.rut) = UPPER(ra_actual.rut))
+                    OR EXISTS (SELECT 1 FROM reserva_asiento ra_exist WHERE ra_exist.id_reserva = r.id_reserva AND UPPER(ra_exist.rut) = UPPER(ra_actual.rut))
+                )
+          )
+      )
+    LIMIT 1;
+
+    IF v_conflicto_pnr IS NOT NULL THEN
+        RAISE EXCEPTION 'Operacion rechazada: Ya existe una reserva activa (PNR: %) para uno o mas pasajeros en el itinerario %', v_conflicto_pnr, NEW.id_itinerario;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_validar_reserva_duplicada_itinerario ON reserva_itinerario;
+CREATE TRIGGER trg_validar_reserva_duplicada_itinerario
+    BEFORE INSERT ON reserva_itinerario
+    FOR EACH ROW
+EXECUTE FUNCTION fn_validar_reserva_duplicada_itinerario();

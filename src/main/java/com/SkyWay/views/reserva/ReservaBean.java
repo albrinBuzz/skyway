@@ -334,6 +334,27 @@ public class ReservaBean implements Serializable {
             addMessage(FacesMessage.SEVERITY_INFO, "Modo Desarrollo Activo", "Validaciones estrictas de pasajeros omitidas para agilizar pruebas.");
         }
 
+        // 2.1 VERIFICACIÓN DE DUPLICIDAD / ANTI-CHURNING EN EL ITINERARIO
+        if (tarifasItinerarios != null && !tarifasItinerarios.isEmpty() && pasajerosList != null) {
+            for (Pasajero p : pasajerosList) {
+                String rutP = (p.getRut() != null && !p.getRut().isBlank()) ? p.getRut().trim() : p.getNumeroDocumento();
+                if (rutP == null || rutP.isBlank()) continue;
+
+                for (Integer idItin : tarifasItinerarios.keySet()) {
+                    var pnrExistente = reservaService.buscarReservaActivaPorPasajeroEItinerario(rutP, idItin);
+                    if (pnrExistente.isPresent()) {
+                        String nombreCompleto = (p.getUsuario() != null && p.getUsuario().getNombre() != null)
+                                ? p.getUsuario().getNombre() + " " + p.getUsuario().getApellido()
+                                : rutP;
+                        addMessage(FacesMessage.SEVERITY_ERROR, "Reserva Duplicada",
+                                String.format("El pasajero %s (RUT/Doc: %s) ya cuenta con una reserva activa (PNR: %s) para este itinerario. No es posible generar reservas duplicadas.",
+                                        nombreCompleto, rutP, pnrExistente.get()));
+                        return;
+                    }
+                }
+            }
+        }
+
         // 3. VERIFICACIÓN DE DISPONIBILIDAD EN BD
         for (Map.Entry<Integer, List<InfoAsientoDTO>> entry : asientosSeleccionados.entrySet()) {
             Integer idVuelo = entry.getKey();

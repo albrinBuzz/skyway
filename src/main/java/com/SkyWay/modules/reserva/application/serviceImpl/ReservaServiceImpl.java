@@ -530,4 +530,42 @@ public class ReservaServiceImpl implements ReservaService {
 		return null;
 	}
 
+	@Override
+	@Transactional(readOnly = true)
+	public Optional<String> buscarReservaActivaPorPasajeroEItinerario(String rut, Integer idItinerario) {
+		if (rut == null || rut.isBlank() || idItinerario == null) {
+			return Optional.empty();
+		}
+
+		String rutLimpio = rut.trim().toUpperCase();
+
+		try {
+			String nativeSql = "SELECT r.codigo_reserva " +
+					"FROM reserva r " +
+					"JOIN reserva_itinerario ri ON ri.id_reserva = r.id_reserva " +
+					"JOIN estado_reserva er ON er.id_estado_reserva = r.estado_reserva " +
+					"WHERE ri.id_itinerario = :idItinerario " +
+					"  AND LOWER(er.descripcion) NOT LIKE '%cancelad%' " +
+					"  AND LOWER(er.descripcion) NOT LIKE '%anulad%' " +
+					"  AND ( " +
+					"       UPPER(r.rut_pasajero) = :rut " +
+					"       OR EXISTS (SELECT 1 FROM pasajero_reserva pr WHERE pr.id_reserva = r.id_reserva AND UPPER(pr.rut) = :rut) " +
+					"       OR EXISTS (SELECT 1 FROM reserva_asiento ra WHERE ra.id_reserva = r.id_reserva AND UPPER(ra.rut) = :rut) " +
+					"  ) " +
+					"LIMIT 1";
+
+			List<?> resultados = em.createNativeQuery(nativeSql)
+					.setParameter("idItinerario", idItinerario)
+					.setParameter("rut", rutLimpio)
+					.getResultList();
+
+			if (!resultados.isEmpty() && resultados.get(0) != null) {
+				return Optional.of(resultados.get(0).toString());
+			}
+		} catch (Exception e) {
+			Logger.logError("Error al validar reserva activa por pasajero e itinerario: " + e.getMessage());
+		}
+
+		return Optional.empty();
+	}
 }
