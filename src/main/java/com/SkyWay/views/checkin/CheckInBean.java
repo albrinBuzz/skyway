@@ -24,6 +24,7 @@ import com.SkyWay.modules.reserva.domain.model.Reserva;
 import com.SkyWay.modules.usuario.domain.model.Usuario;
 import jakarta.servlet.http.HttpSession;
 import com.SkyWay.util.BarcodeGeneratorUtil;
+import com.SkyWay.util.BoardingPassSecurityService;
 import java.io.ByteArrayInputStream;
 import java.util.Optional;
 
@@ -162,6 +163,13 @@ public class CheckInBean implements Serializable {
 
                 this.listaAsientos = asientoService.getAsientosReservados(idItinerario, idReserva);
                 this.listaTicketsBoardingPass = reservaService.getTicket(rutFiltro, idReserva, idItinerario);
+                if (this.listaTicketsBoardingPass != null) {
+                    for (TicketInfo t : this.listaTicketsBoardingPass) {
+                        t.setCodigoQr(BoardingPassSecurityService.generarCodigoSeguro(
+                                t.getCodigoPnr(), t.getNumeroVuelo(), t.getNumeroAsiento(), rutFiltro
+                        ));
+                    }
+                }
 
                 // 2. Detección de estado previo: si ya cuenta con Check-In completado, avanza directamente
                 boolean yaCompletado = reservaService.tieneCheckInCompletado(idReserva);

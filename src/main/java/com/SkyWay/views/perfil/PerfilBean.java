@@ -21,6 +21,7 @@ import com.SkyWay.modules.usuario.domain.model.Usuario;
 import com.SkyWay.modules.vuelo.domain.model.Vuelo;
 import com.SkyWay.modules.vuelo.domain.service.VueloService;
 import com.SkyWay.util.BarcodeGeneratorUtil;
+import com.SkyWay.util.BoardingPassSecurityService;
 import com.SkyWay.util.Logger;
 
 import jakarta.annotation.PostConstruct;
@@ -643,6 +644,13 @@ public class PerfilBean implements Serializable {
 		this.itinerarioSeleccionado = itinerario;
 		this.idReservaSeleccionada = itinerario.getIdReserva();
 		ticketInfos = reservaService.getTicket(usuario.getRut(), itinerario.getIdReserva(), itinerario.getIdItinerario());
+		if (ticketInfos != null) {
+			for (TicketInfo t : ticketInfos) {
+				t.setCodigoQr(BoardingPassSecurityService.generarCodigoSeguro(
+						t.getCodigoPnr(), t.getNumeroVuelo(), t.getNumeroAsiento(), usuario.getRut()
+				));
+			}
+		}
 	}
 
 	public boolean isCheckInCompletado(Integer idReserva) {

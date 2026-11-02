@@ -11,6 +11,7 @@ import com.SkyWay.modules.reservaitinerario.domain.model.ReservaItinerario;
 import com.SkyWay.modules.reserva.presentation.dto.TicketInfo;
 import com.SkyWay.modules.usuario.domain.model.Usuario;
 import com.SkyWay.modules.vuelo.domain.model.Vuelo;
+import com.SkyWay.util.BoardingPassSecurityService;
 import com.SkyWay.util.Logger;
 
 import org.springframework.stereotype.Service;
@@ -528,7 +529,7 @@ public class ETicketPdfGeneratorService {
                                 t.setNumeroAsiento(asiento != null ? asiento : "---");
                                 t.setClaseAsiento(clase);
                                 t.setNombre(pax.nombreCompleto);
-                                t.setCodigoQr("SKYWAY-" + reserva.getCodigoReserva() + "-" + numVuelo + "-" + asiento + "-" + pax.rut);
+                                t.setCodigoQr(BoardingPassSecurityService.generarCodigoSeguro(reserva.getCodigoReserva(), numVuelo, asiento != null ? asiento : "---", pax.rut));
                                 tickets.add(t);
                             }
                         }

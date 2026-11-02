@@ -1,0 +1,670 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition lang="es"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="jakarta.faces.core"
+                xmlns:h="jakarta.faces.html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:ui="jakarta.faces.facelets"
+                template="/template/main.xhtml">
+
+    <ui:define name="head">
+        <title>Control de Embarque y Escáner 2D - SkyWay</title>
+        <!-- Librería de escaneo universal HTML5 QR / PDF417 para navegadores -->
+        <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+        <style type="text/css">
+            .gate-container {
+                max-width: 1200px;
+                margin: 25px auto;
+                padding: 0 15px;
+            }
+            .gate-card {
+                background: #0b1528 !important;
+                border: 1px solid #1e3a5c !important;
+                border-radius: 14px !important;
+                padding: 24px !important;
+                color: #e2e8f0 !important;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+            }
+            .gate-header-badge {
+                background: rgba(2, 132, 199, 0.15);
+                border: 1px solid #0284c7;
+                color: #38bdf8;
+                border-radius: 8px;
+                padding: 6px 14px;
+                font-weight: 700;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 0.85rem;
+                letter-spacing: 0.5px;
+            }
+
+            /* Estilos del Visor de la Cámara Web */
+            .scanner-wrapper {
+                background: #070d19;
+                border: 2px dashed #1e3a5c;
+                border-radius: 12px;
+                overflow: hidden;
+                position: relative;
+                min-height: 290px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .scanner-viewfinder {
+                position: absolute;
+                width: 75%;
+                height: 65%;
+                border: 2px solid #38bdf8;
+                border-radius: 10px;
+                box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+                pointer-events: none;
+                z-index: 10;
+            }
+            .scanner-laser {
+                position: absolute;
+                width: 100%;
+                height: 3px;
+                background: linear-gradient(90deg, transparent, #ef4444, #f43f5e, #ef4444, transparent);
+                box-shadow: 0 0 10px #ef4444, 0 0 20px #ef4444;
+                top: 0;
+                animation: scanMove 2.2s ease-in-out infinite alternate;
+                z-index: 11;
+            }
+            @keyframes scanMove {
+                0% { top: 5%; opacity: 0.4; }
+                50% { opacity: 1; }
+                100% { top: 95%; opacity: 0.4; }
+            }
+
+            /* Banners de Estado de Embarque */
+            .status-banner {
+                border-radius: 10px;
+                padding: 16px 20px;
+                margin-bottom: 20px;
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                animation: fadeIn 0.3s ease-out;
+            }
+            .status-banner-success {
+                background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.25) 100%);
+                border: 1px solid #10b981;
+                color: #a7f3d0;
+            }
+            .status-banner-danger {
+                background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(185, 28, 28, 0.3) 100%);
+                border: 1px solid #ef4444;
+                color: #fecaca;
+            }
+            .status-banner-warning {
+                background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(180, 83, 9, 0.3) 100%);
+                border: 1px solid #f59e0b;
+                color: #fde68a;
+            }
+
+            .info-grid-box {
+                background: #0f1c32;
+                border: 1px solid #1e3a5c;
+                border-radius: 8px;
+                padding: 14px;
+                margin-bottom: 12px;
+            }
+            .info-label {
+                color: #94a3b8;
+                font-size: 0.72rem;
+                text-transform: uppercase;
+                letter-spacing: 0.6px;
+                margin-bottom: 2px;
+                display: block;
+            }
+            .info-value {
+                color: #ffffff;
+                font-size: 1.05rem;
+                font-weight: 700;
+            }
+
+            .stat-pill {
+                background: #0f1c32;
+                border: 1px solid #1e3a5c;
+                border-radius: 8px;
+                padding: 10px 16px;
+                text-align: center;
+                flex: 1;
+            }
+            .stat-number {
+                font-size: 1.5rem;
+                font-weight: 800;
+                line-height: 1.1;
+            }
+
+            .btn-cam-control {
+                background: #0284c7;
+                color: #ffffff;
+                border: none;
+                border-radius: 6px;
+                padding: 8px 16px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: background 0.2s;
+            }
+            .btn-cam-control:hover {
+                background: #0369a1;
+            }
+            .btn-cam-stop {
+                background: #dc2626 !important;
+            }
+            .btn-cam-stop:hover {
+                background: #b91c1c !important;
+            }
+
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(6px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+        </style>
+    </ui:define>
+
+    <ui:define name="contenido">
+        <p:growl id="globalGrowl" showDetail="true" life="4500" />
+
+        <div class="gate-container">
+
+            <!-- Encabezado Operacional -->
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+                <div>
+                    <span class="gate-header-badge mb-2">
+                        <i class="pi pi-shield"></i> Control de Embarque &amp; Verificación IATA BCBP
+                    </span>
+                    <h2 class="text-white font-weight-bold m-0">Terminal de Embarque y Escáner Seguro</h2>
+                    <p class="text-white-50 small mt-1 mb-0">
+                        Validación criptográfica HMAC-SHA256 en tiempo real con cámara web, pistola óptica o ingreso manual.
+                    </p>
+                </div>
+                <div class="d-flex align-items-center gap-3 mt-3 mt-md-0">
+                    <div class="text-end">
+                        <span class="text-white-50 small d-block">Puerta Actual</span>
+                        <strong class="text-info fs-5">#{validadorEmbarqueBean.puertaActual} / Terminal Intl.</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fila de Contadores Operacionales -->
+            <div class="row g-3 mb-4">
+                <div class="col-4">
+                    <div class="stat-pill">
+                        <span class="text-white-50 small d-block">Escaneos Totales</span>
+                        <span class="stat-number text-white" id="statEscaneos">#{validadorEmbarqueBean.contadorEscaneos}</span>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="stat-pill border-success">
+                        <span class="text-success small d-block">Abordados / Autorizados</span>
+                        <span class="stat-number text-success" id="statAutorizados">#{validadorEmbarqueBean.contadorAutorizados}</span>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="stat-pill border-danger">
+                        <span class="text-danger small d-block">Rechazados / Alertas</span>
+                        <span class="stat-number text-danger" id="statRechazados">#{validadorEmbarqueBean.contadorRechazados}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+
+                <!-- COLUMNA IZQUIERDA: CÁMARA WEB Y CONTROLES DE ENTRADA -->
+                <div class="col-lg-5">
+                    <div class="gate-card mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="text-white font-weight-bold m-0">
+                                <i class="pi pi-camera text-info me-2"></i>Escáner de Cámara Web
+                            </h5>
+                            <span id="camStatusBadge" class="badge bg-secondary">Cámara Inactiva</span>
+                        </div>
+
+                        <!-- Visor HTML5 de la Cámara con mira animada -->
+                        <div class="scanner-wrapper mb-3" id="scannerWrapper">
+                            <div id="qr-reader" style="width: 100%; height: 100%;"></div>
+                            <div class="scanner-viewfinder" id="scannerCrosshair" style="display:none;">
+                                <div class="scanner-laser"></div>
+                            </div>
+                            <div id="camPlaceholder" class="text-center p-4">
+                                <i class="pi pi-camera text-white-50 mb-2" style="font-size: 3rem;"></i>
+                                <p class="text-white-50 small m-0">Haz clic en <strong>Iniciar Cámara</strong> para enfocar el código 2D PDF417 o QR de la tarjeta de embarque.</p>
+                            </div>
+                        </div>
+
+                        <!-- Botones de Control de la Cámara -->
+                        <div class="d-flex gap-2 mb-3">
+                            <button type="button" id="btnStartCam" class="btn-cam-control flex-grow-1" onclick="iniciarCamara()">
+                                <i class="pi pi-play me-1"></i> Iniciar Cámara
+                            </button>
+                            <button type="button" id="btnStopCam" class="btn-cam-control btn-cam-stop" onclick="detenerCamara()" style="display:none;">
+                                <i class="pi pi-stop me-1"></i> Apagar
+                            </button>
+                            <button type="button" id="btnFlipCam" class="btn btn-outline-info" onclick="alternarCamara()" title="Cambiar Cámara">
+                                <i class="pi pi-refresh"></i>
+                            </button>
+                        </div>
+
+                        <hr class="border-secondary my-3" />
+
+                        <!-- Entrada Manual / Pistola Lectora USB -->
+                        <h6 class="text-white-50 small text-uppercase font-weight-bold mb-2">
+                            <i class="pi pi-barcode me-1"></i> Pistola Láser o Entrada Manual
+                        </h6>
+                        <h:form id="formManual" onsubmit="return false;">
+                            <div class="input-group mb-3">
+                                <p:inputText id="inputManual"
+                                             value="#{validadorEmbarqueBean.codigoManual}"
+                                             placeholder="Pega o escanea el código aquí..."
+                                             styleClass="form-control bg-dark text-white border-secondary"
+                                             onkeypress="if(event.keyCode==13){ rcValidarManual(); return false; }" />
+                                <p:commandButton value="Validar"
+                                                 icon="pi pi-check"
+                                                 actionListener="#{validadorEmbarqueBean.validarManual}"
+                                                 update=":formMonitor:panelMonitor :globalGrowl @form"
+                                                 styleClass="btn btn-primary" />
+                            </div>
+
+                            <!-- Botones de Simulación / Pruebas Rápidas con 1 Clic -->
+                            <span class="text-white-50" style="font-size:0.75rem;">Simulación rápida de prueba:</span>
+                            <div class="d-flex flex-wrap gap-2 mt-2">
+                                <p:commandButton value="Boleto Auténtico (Cristóbal)"
+                                                 icon="pi pi-check-circle"
+                                                 actionListener="#{validadorEmbarqueBean.probarEjemplo('valido')}"
+                                                 update=":formMonitor:panelMonitor :globalGrowl"
+                                                 styleClass="btn btn-sm btn-outline-success" />
+                                <p:commandButton value="Boleto Adulterado (Fraude)"
+                                                 icon="pi pi-exclamation-triangle"
+                                                 actionListener="#{validadorEmbarqueBean.probarEjemplo('adulterado')}"
+                                                 update=":formMonitor:panelMonitor :globalGrowl"
+                                                 styleClass="btn btn-sm btn-outline-danger" />
+                                <p:commandButton value="Boleto Inexistente"
+                                                 icon="pi pi-times"
+                                                 actionListener="#{validadorEmbarqueBean.probarEjemplo('inexistente')}"
+                                                 update=":formMonitor:panelMonitor :globalGrowl"
+                                                 styleClass="btn btn-sm btn-outline-secondary" />
+                            </div>
+                        </h:form>
+                    </div>
+                </div>
+
+                <!-- COLUMNA DERECHA: MONITOR DE RESULTADO EN TIEMPO REAL (GATE DISPLAY) -->
+                <div class="col-lg-7">
+                    <h:form id="formMonitor">
+                        <!-- Remote Command invocado desde la Cámara Web -->
+                        <p:remoteCommand name="rcValidarCodigoCamara"
+                                         actionListener="#{validadorEmbarqueBean.procesarEscaneoDesdeCamara}"
+                                         update="panelMonitor :globalGrowl" />
+
+                        <!-- Remote Command para entrada manual con Enter -->
+                        <p:remoteCommand name="rcValidarManual"
+                                         actionListener="#{validadorEmbarqueBean.validarManual}"
+                                         update="panelMonitor :globalGrowl :formManual:inputManual" />
+
+                        <p:outputPanel id="panelMonitor" layout="block" styleClass="gate-card">
+
+                            <!-- CASO 0: ESPERANDO ESCANEO -->
+                            <ui:fragment rendered="#{validadorEmbarqueBean.resultado == null}">
+                                <div class="text-center py-5">
+                                    <div class="mb-3 text-info">
+                                        <i class="pi pi-id-card" style="font-size: 3.5rem;"></i>
+                                    </div>
+                                    <h4 class="text-white font-weight-bold">Esperando Pasaje de Abordaje</h4>
+                                    <p class="text-white-50 small mb-0" style="max-width: 440px; margin: 0 auto;">
+                                        Apunta el visor de la cámara hacia el código 2D PDF417 o QR impreso o en pantalla. El sistema verificará de inmediato la firma criptográfica y la base de datos.
+                                    </p>
+                                </div>
+                            </ui:fragment>
+
+                            <!-- CASO 1: BOLETO AUTORIZADO (VERDE) -->
+                            <ui:fragment rendered="#{validadorEmbarqueBean.resultado != null and validadorEmbarqueBean.resultado.autorizado}">
+                                <div class="status-banner status-banner-success">
+                                    <i class="pi pi-check-circle" style="font-size: 2.2rem;"></i>
+                                    <div>
+                                        <h4 class="m-0 font-weight-bold text-white">¡EMBARQUE AUTORIZADO!</h4>
+                                        <span class="small">Identidad confirmada, asiento asignado y firma criptográfica válida.</span>
+                                    </div>
+                                </div>
+
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-7">
+                                        <div class="info-grid-box">
+                                            <span class="info-label">Pasajero Titular</span>
+                                            <div class="info-value text-white">#{validadorEmbarqueBean.resultado.nombrePasajero}</div>
+                                            <span class="text-info small">RUT: #{validadorEmbarqueBean.resultado.rut}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <div class="info-grid-box">
+                                            <span class="info-label">Código de Reserva</span>
+                                            <div class="info-value text-warning">#{validadorEmbarqueBean.resultado.pnr}</div>
+                                            <span class="text-white-50 small">Vuelo: #{validadorEmbarqueBean.resultado.numeroVuelo}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-4">
+                                        <div class="info-grid-box text-center bg-primary bg-opacity-25 border-primary">
+                                            <span class="info-label text-info">Asiento Asignado</span>
+                                            <div class="fs-2 font-weight-bold text-white">#{validadorEmbarqueBean.resultado.asiento}</div>
+                                            <span class="badge bg-primary">#{validadorEmbarqueBean.resultado.claseCabina}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="info-grid-box">
+                                            <span class="info-label">Ruta &amp; Trayecto</span>
+                                            <div class="info-value text-info">#{validadorEmbarqueBean.resultado.rutaTramo}</div>
+                                            <span class="text-white-50 small">Salida: #{validadorEmbarqueBean.resultado.horaSalidaFormatted}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="info-grid-box">
+                                            <span class="info-label">Puerta / Terminal</span>
+                                            <div class="info-value text-white">#{validadorEmbarqueBean.resultado.puertaTerminalCompleta}</div>
+                                            <span class="text-success small"><i class="pi pi-check me-1"></i>Check-In OK</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Verificación Criptográfica Inalterable -->
+                                <div class="p-3 mb-3 rounded" style="background:#071224; border:1px solid #10b981;">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong class="text-success small d-block">
+                                                <i class="pi pi-verified me-1"></i> #{validadorEmbarqueBean.resultado.algoritmoSeguridad}
+                                            </strong>
+                                            <span class="text-white-50" style="font-size:0.75rem;">
+                                                Firma Digital: <code class="text-info">#{validadorEmbarqueBean.resultado.firmaHex}</code>
+                                                <h:panelGroup rendered="#{not empty validadorEmbarqueBean.resultado.nonce}">
+                                                    | Nonce Anti-Replay: <code class="text-warning">#{validadorEmbarqueBean.resultado.nonce}</code>
+                                                </h:panelGroup>
+                                            </span>
+                                        </div>
+                                        <span class="badge bg-success">AUTÉNTICO</span>
+                                    </div>
+                                </div>
+
+                                <!-- Botón de Confirmación de Abordaje -->
+                                <div class="d-flex gap-2">
+                                    <p:commandButton value="#{validadorEmbarqueBean.resultado.yaEmbarcado ? 'Pasajero Registrado A Bordo' : 'Confirmar Abordaje a Cabina (Boarded)'}"
+                                                     icon="pi pi-sign-in"
+                                                     actionListener="#{validadorEmbarqueBean.confirmarAbordaje}"
+                                                     disabled="#{validadorEmbarqueBean.resultado.yaEmbarcado}"
+                                                     update="panelMonitor :globalGrowl"
+                                                     styleClass="btn btn-success flex-grow-1" />
+                                    <p:commandButton value="Siguiente Pasajero"
+                                                     icon="pi pi-arrow-right"
+                                                     actionListener="#{validadorEmbarqueBean.limpiar}"
+                                                     update="panelMonitor"
+                                                     styleClass="btn btn-outline-secondary" />
+                                </div>
+                            </ui:fragment>
+
+                            <!-- CASO 2: ADULTERADO / FIRMA INVÁLIDA (ROJO ALERTA) -->
+                            <ui:fragment rendered="#{validadorEmbarqueBean.resultado != null and validadorEmbarqueBean.resultado.adulterado}">
+                                <div class="status-banner status-banner-danger">
+                                    <i class="pi pi-shield-slash" style="font-size: 2.2rem;"></i>
+                                    <div>
+                                        <h4 class="m-0 font-weight-bold text-white">¡ACCESO DENEGADO — CÓDIGO ADULTERADO!</h4>
+                                        <span class="small">La firma digital no coincide con la clave de seguridad de SkyWay.</span>
+                                    </div>
+                                </div>
+
+                                <div class="p-3 mb-3 rounded bg-dark border border-danger">
+                                    <h6 class="text-danger font-weight-bold mb-2">Diagnóstico de Fraude Criptográfico:</h6>
+                                    <p class="text-white small mb-2">#{validadorEmbarqueBean.resultado.mensaje}</p>
+                                    <span class="text-white-50 small d-block">
+                                        Firma Presentada: <code class="text-danger">#{validadorEmbarqueBean.resultado.firmaHex}</code> (INVÁLIDA)
+                                    </span>
+                                    <span class="text-white-50 small d-block mt-1">
+                                        Payload Escaneado: <code class="text-white-50">#{validadorEmbarqueBean.resultado.codigoRaw}</code>
+                                    </span>
+                                </div>
+
+                                <p:commandButton value="Reintentar / Siguiente"
+                                                 icon="pi pi-refresh"
+                                                 actionListener="#{validadorEmbarqueBean.limpiar}"
+                                                 update="panelMonitor"
+                                                 styleClass="btn btn-outline-danger w-100" />
+                            </ui:fragment>
+
+                            <!-- CASO 3: DUPLICADO / YA EMBARCADO (ÁMBAR) -->
+                            <ui:fragment rendered="#{validadorEmbarqueBean.resultado != null and validadorEmbarqueBean.resultado.duplicado}">
+                                <div class="status-banner status-banner-warning">
+                                    <i class="pi pi-exclamation-triangle" style="font-size: 2.2rem;"></i>
+                                    <div>
+                                        <h4 class="m-0 font-weight-bold text-white">¡ALERTA: PASAJERO YA EMBARCADO!</h4>
+                                        <span class="small">Este pasabordo ya fue registrado anteriormente en la puerta.</span>
+                                    </div>
+                                </div>
+
+                                <div class="info-grid-box mb-3">
+                                    <span class="info-label">Detalle del Registro Previo</span>
+                                    <p class="text-white small m-0">#{validadorEmbarqueBean.resultado.mensaje}</p>
+                                </div>
+
+                                <p:commandButton value="Continuar"
+                                                 icon="pi pi-arrow-right"
+                                                 actionListener="#{validadorEmbarqueBean.limpiar}"
+                                                 update="panelMonitor"
+                                                 styleClass="btn btn-outline-warning w-100" />
+                            </ui:fragment>
+
+                            <!-- CASO 4: OTROS RECHAZOS (RESERVA INEXISTENTE O CHECKIN PENDIENTE) -->
+                            <ui:fragment rendered="#{validadorEmbarqueBean.resultado != null and not validadorEmbarqueBean.resultado.autorizado and not validadorEmbarqueBean.resultado.adulterado and not validadorEmbarqueBean.resultado.duplicado}">
+                                <div class="status-banner status-banner-danger">
+                                    <i class="pi pi-times-circle" style="font-size: 2.2rem;"></i>
+                                    <div>
+                                        <h4 class="m-0 font-weight-bold text-white">ACCESO DENEGADO</h4>
+                                        <span class="small">#{validadorEmbarqueBean.resultado.mensaje}</span>
+                                    </div>
+                                </div>
+
+                                <p:commandButton value="Siguiente Pasajero"
+                                                 icon="pi pi-arrow-right"
+                                                 actionListener="#{validadorEmbarqueBean.limpiar}"
+                                                 update="panelMonitor"
+                                                 styleClass="btn btn-outline-secondary w-100" />
+                            </ui:fragment>
+
+                        </p:outputPanel>
+                    </h:form>
+                </div>
+            </div>
+
+            <!-- TABLA DE HISTORIAL DE ESCANEOS RECIENTES -->
+            <div class="gate-card mt-4">
+                <h5 class="text-white font-weight-bold mb-3">
+                    <i class="pi pi-history text-info me-2"></i>Historial de Escaneos de la Sesión
+                </h5>
+
+                <h:form id="formHistorial">
+                    <p:dataTable id="tablaHistorial"
+                                 value="#{validadorEmbarqueBean.historialEscaneos}"
+                                 var="h"
+                                 emptyMessage="Aún no se han realizado escaneos en esta sesión de puerta."
+                                 styleClass="table table-dark table-striped m-0">
+
+                        <p:column headerText="Hora" style="width: 100px;">
+                            <span class="text-white-50 small">#{h.fechaEscaneoFormatted}</span>
+                        </p:column>
+
+                        <p:column headerText="Estado" style="width: 150px;">
+                            <span class="badge #{h.autorizado ? 'bg-success' : (h.adulterado ? 'bg-danger' : (h.duplicado ? 'bg-warning text-dark' : 'bg-secondary'))}">
+                                #{h.estado}
+                            </span>
+                        </p:column>
+
+                        <p:column headerText="Pasajero">
+                            <span class="text-white font-weight-bold">#{h.nombrePasajero != null ? h.nombrePasajero : '---'}</span>
+                            <span class="text-white-50 small d-block">RUT: #{h.rut}</span>
+                        </p:column>
+
+                        <p:column headerText="PNR / Vuelo" style="width: 140px;">
+                            <span class="text-warning">#{h.pnr}</span> / <span class="text-info">#{h.numeroVuelo}</span>
+                        </p:column>
+
+                        <p:column headerText="Asiento" style="width: 100px;">
+                            <span class="badge bg-primary">#{h.asiento}</span>
+                        </p:column>
+
+                        <p:column headerText="Diagnóstico">
+                            <span class="small text-white-50">#{h.mensaje}</span>
+                        </p:column>
+                    </p:dataTable>
+                </h:form>
+            </div>
+
+        </div>
+
+        <!-- SCRIPT CLIENTE PARA LA CÁMARA WEB Y FEEDBACK SONORO -->
+        <script type="text/javascript">
+            //<![CDATA[
+            let html5QrCode = null;
+            let camaraEncendida = false;
+            let camaraFacingMode = "environment"; // "user" o "environment"
+            let pausaEscaneo = false;
+
+            // AudioContext para beeps de escaneo estilo aeropuerto real
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            let audioCtx = null;
+
+            function obtenerAudioContext() {
+                if (!audioCtx) {
+                    audioCtx = new AudioContext();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                return audioCtx;
+            }
+
+            function reproducirBeepExito() {
+                try {
+                    const ctx = obtenerAudioContext();
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(880, ctx.currentTime); // Nota La5 (agudo y limpio)
+                    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.15);
+                } catch (e) {
+                    console.log("Audio not allowed yet:", e);
+                }
+            }
+
+            function reproducirBeepAlerta() {
+                try {
+                    const ctx = obtenerAudioContext();
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, ctx.currentTime); // Tono grave de alerta
+                    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.35);
+                } catch (e) {
+                    console.log("Audio alert:", e);
+                }
+            }
+
+            function iniciarCamara() {
+                if (camaraEncendida) return;
+
+                const qrContainer = document.getElementById("qr-reader");
+                const crosshair = document.getElementById("scannerCrosshair");
+                const placeholder = document.getElementById("camPlaceholder");
+                const statusBadge = document.getElementById("camStatusBadge");
+                const btnStart = document.getElementById("btnStartCam");
+                const btnStop = document.getElementById("btnStopCam");
+
+                if (!html5QrCode) {
+                    html5QrCode = new Html5Qrcode("qr-reader");
+                }
+
+                placeholder.style.display = "none";
+                crosshair.style.display = "block";
+
+                const config = {
+                    fps: 15,
+                    qrbox: { width: 260, height: 180 },
+                    aspectRatio: 1.333334
+                };
+
+                html5QrCode.start(
+                    { facingMode: camaraFacingMode },
+                    config,
+                    (decodedText, decodedResult) => {
+                        if (pausaEscaneo) return;
+                        pausaEscaneo = true;
+
+                        console.log("Código detectado por la cámara:", decodedText);
+                        reproducirBeepExito();
+
+                        // Enviar al bean de PrimeFaces
+                        rcValidarCodigoCamara([{ name: 'codigoEscaneado', value: decodedText }]);
+
+                        // Pausa de 2.5s antes de reanudar la lectura para evitar ráfagas
+                        setTimeout(() => {
+                            pausaEscaneo = false;
+                        }, 2500);
+                    },
+                    (errorMessage) => {
+                        // Búsqueda continua en cada frame, ignorar
+                    }
+                ).then(() => {
+                    camaraEncendida = true;
+                    statusBadge.className = "badge bg-success";
+                    statusBadge.innerText = "Cámara Activa (Enfocando)";
+                    btnStart.style.display = "none";
+                    btnStop.style.display = "inline-block";
+                }).catch(err => {
+                    console.error("Error iniciando cámara:", err);
+                    placeholder.style.display = "block";
+                    crosshair.style.display = "none";
+                    statusBadge.className = "badge bg-danger";
+                    statusBadge.innerText = "Error de Permiso / Sin Cámara";
+                    alert("No se pudo acceder a la cámara web. Verifica los permisos del navegador o usa la entrada manual.");
+                });
+            }
+
+            function detenerCamara() {
+                if (!camaraEncendida || !html5QrCode) return;
+
+                html5QrCode.stop().then(() => {
+                    camaraEncendida = false;
+                    document.getElementById("scannerCrosshair").style.display = "none";
+                    document.getElementById("camPlaceholder").style.display = "block";
+                    document.getElementById("camStatusBadge").className = "badge bg-secondary";
+                    document.getElementById("camStatusBadge").innerText = "Cámara Inactiva";
+                    document.getElementById("btnStartCam").style.display = "inline-block";
+                    document.getElementById("btnStopCam").style.display = "none";
+                }).catch(err => {
+                    console.error("Error deteniendo cámara:", err);
+                });
+            }
+
+            function alternarCamara() {
+                camaraFacingMode = (camaraFacingMode === "environment") ? "user" : "environment";
+                if (camaraEncendida) {
+                    detenerCamara();
+                    setTimeout(iniciarCamara, 300);
+                }
+            }
+            //]]>
+        </script>
+    </ui:define>
+
+</ui:composition>
