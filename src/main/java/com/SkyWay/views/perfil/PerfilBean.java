@@ -20,6 +20,7 @@ import com.SkyWay.modules.tarifa.domain.model.Tarifa;
 import com.SkyWay.modules.usuario.domain.model.Usuario;
 import com.SkyWay.modules.vuelo.domain.model.Vuelo;
 import com.SkyWay.modules.vuelo.domain.service.VueloService;
+import com.SkyWay.util.BarcodeGeneratorUtil;
 import com.SkyWay.util.Logger;
 
 import jakarta.annotation.PostConstruct;
@@ -29,6 +30,7 @@ import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
 import jakarta.servlet.http.HttpSession;
 
+import org.primefaces.PrimeFaces;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -82,6 +85,7 @@ public class PerfilBean implements Serializable {
 	private String tiempoRestanteFormateado;
 	private long segundosTotalesSalida;
 	private boolean checkInAbierto;
+	private boolean checkInCompletado;
 	private double porcentajeCheckIn;
 	private String estadoCheckInTexto;
 	private String cintaEquipaje;
@@ -249,9 +253,13 @@ public class PerfilBean implements Serializable {
 			}
 		}
 
+		Map<String, Object> sessionMap = context.getExternalContext().getSessionMap();
+		sessionMap.put("CAMBIO_ASIENTO_ID_RESERVA", infoAsientoDTO.getIdReserva());
+		sessionMap.put("CAMBIO_ASIENTO_ID_VUELO", infoAsientoDTO.getIdVuelo());
+		sessionMap.put("CAMBIO_ASIENTO_ORIGEN", "PERFIL");
+
 		context.getExternalContext()
-				.redirect("/perfil/pasajero/cambioAsiento.xhtml?idVuelo=" + infoAsientoDTO.getIdVuelo()
-						+ "&idReserva=" + infoAsientoDTO.getIdReserva());
+				.redirect(context.getExternalContext().getRequestContextPath() + "/home/cambio-asiento.xhtml");
 	}
 
 
@@ -363,21 +371,35 @@ public class PerfilBean implements Serializable {
 		}
 
 		// B) CRONOGRAMA DE CHECK-IN
+		boolean checkInYaCompletado = (itinerarioSeleccionado.getIdReserva() != null)
+				&& reservaService.tieneCheckInCompletado(itinerarioSeleccionado.getIdReserva());
+		this.checkInCompletado = checkInYaCompletado;
+
 		long horasHastaSalida = duracionHastaSalida.toHours();
 
-		if (horasHastaSalida > 48) {
+		if (checkInYaCompletado) {
+			this.checkInAbierto = true;
+			this.estadoCheckInTexto = "CHECK-IN COMPLETADO";
+			this.porcentajeCheckIn = 100.0;
+			this.etapaActualCronograma = 2;
+		} else if (horasHastaSalida > 48) {
 			this.checkInAbierto = false;
-			this.estadoCheckInTexto = String.format("Abre en %d días", (horasHastaSalida - 48) / 24 + 1);
+			Date fechaApertura = getFechaAperturaCheckIn(itinerarioSeleccionado.getHoraSalida());
+			SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+			this.estadoCheckInTexto = "Abre el " + (fechaApertura != null ? sdf.format(fechaApertura) + " hrs" : String.format("Abre en %d días", (horasHastaSalida - 48) / 24 + 1));
 			this.porcentajeCheckIn = 15.0;
+			this.etapaActualCronograma = 1;
 		} else if (horasHastaSalida >= 1 && segundosHastaSalida > 0) {
 			this.checkInAbierto = true;
 			this.estadoCheckInTexto = "CHECK-IN ABIERTO";
 			double horasTranscurridas = 48.0 - (segundosHastaSalida / 3600.0);
 			this.porcentajeCheckIn = Math.min(100.0, Math.max(20.0, (horasTranscurridas / 47.0) * 100.0));
+			this.etapaActualCronograma = 1;
 		} else {
 			this.checkInAbierto = false;
 			this.estadoCheckInTexto = "CHECK-IN CERRADO";
 			this.porcentajeCheckIn = 100.0;
+			this.etapaActualCronograma = 3;
 		}
 	}
 
@@ -404,11 +426,21 @@ public class PerfilBean implements Serializable {
 		if (itinerarioSeleccionado == null) return;
 
 		FacesContext context = FacesContext.getCurrentInstance();
-		context.getExternalContext().redirect(
-				context.getExternalContext().getRequestContextPath() +
-						"/home/checkin.xhtml?idReserva=" + itinerarioSeleccionado.getIdReserva() +
-						"&idItinerario=" + itinerarioSeleccionado.getIdItinerario()
-		);
+		if (context != null && context.getExternalContext() != null) {
+			Map<String, Object> sessionMap = context.getExternalContext().getSessionMap();
+			sessionMap.put("CHECKIN_ID_RESERVA", itinerarioSeleccionado.getIdReserva());
+			sessionMap.put("CHECKIN_ID_ITINERARIO", itinerarioSeleccionado.getIdItinerario());
+
+			context.getExternalContext().redirect(
+					context.getExternalContext().getRequestContextPath() + "/home/checkin.xhtml"
+			);
+		}
+	}
+
+	public void irACheckIn(ItinerarioResumenDTO it) throws IOException {
+		if (it == null) return;
+		this.itinerarioSeleccionado = it;
+		irACheckIn();
 	}
 
 	public StreamedContent descargarComprobantePdf() {
@@ -418,6 +450,14 @@ public class PerfilBean implements Serializable {
 
 	public StreamedContent descargarBoardingPassesPdf() {
 		Logger.logInfo("🎟️ [PDF BOARDING PASSES] Solicitando descarga para idReservaSeleccionada: " + this.idReservaSeleccionada);
+		if (this.idReservaSeleccionada == null || !reservaService.tieneCheckInCompletado(this.idReservaSeleccionada)) {
+			FacesContext context = FacesContext.getCurrentInstance();
+			if (context != null) {
+				context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_WARN,
+						"Check-In Requerido", "Debes completar el Check-In Online antes de descargar tus tarjetas de embarque."));
+			}
+			return null;
+		}
 		if (this.ticketInfos != null && !this.ticketInfos.isEmpty()) {
 			try {
 				byte[] pdfBytes = eTicketPdfGeneratorService.generarPdfBoardingPasses(this.ticketInfos);
@@ -494,6 +534,16 @@ public class PerfilBean implements Serializable {
 			return null;
 		}
 
+		if (!reservaService.tieneCheckInCompletado(idReserva)) {
+			Logger.logWarn("⚠️ [PDF BOARDING PASSES] Intento de descarga sin Check-In completado para reserva ID: " + idReserva);
+			FacesContext context = FacesContext.getCurrentInstance();
+			if (context != null) {
+				context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_WARN,
+						"Check-In Requerido", "Debes completar el Check-In Online antes de descargar tus tarjetas de embarque."));
+			}
+			return null;
+		}
+
 		try {
 			// Si ya tenemos ticketInfos cargados para esta reserva, usarlos directamente
 			if (this.ticketInfos != null && !this.ticketInfos.isEmpty() && idReserva.equals(this.idReservaSeleccionada)) {
@@ -557,9 +607,97 @@ public class PerfilBean implements Serializable {
 
 	public void getTicket(ItinerarioResumenDTO itinerario) {
 		if (itinerario == null || usuario == null) return;
+
+		// 1. Validar cancelación
+		if (isReservaCanceladaPorItinerario(itinerario.getIdReserva())) {
+			FacesContext context = FacesContext.getCurrentInstance();
+			if (context != null) {
+				context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_WARN,
+						"Reserva Cancelada", "No es posible acceder a las tarjetas de una reserva cancelada."));
+			}
+			this.ticketInfos = null;
+			PrimeFaces pf = PrimeFaces.current();
+			if (pf != null) pf.ajax().addCallbackParam("checkInInvalido", true);
+			return;
+		}
+
+		// 2. Validar que el Check-In esté completado
+		boolean checkInListo = reservaService.tieneCheckInCompletado(itinerario.getIdReserva());
+		if (!checkInListo) {
+			FacesContext context = FacesContext.getCurrentInstance();
+			Date fechaApertura = getFechaAperturaCheckIn(itinerario.getHoraSalida());
+			SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy 'a las' HH:mm 'hrs'");
+			String detalleFecha = (fechaApertura != null) ? " Podrás realizar tu Check-In a partir del " + sdf.format(fechaApertura) + "." : "";
+
+			if (context != null) {
+				context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_WARN,
+						"Check-In Requerido",
+						"Debes completar el Check-In Online para acceder a tus Tarjetas de Embarque." + detalleFecha));
+			}
+			this.ticketInfos = null;
+			PrimeFaces pf = PrimeFaces.current();
+			if (pf != null) pf.ajax().addCallbackParam("checkInInvalido", true);
+			return;
+		}
+
 		this.itinerarioSeleccionado = itinerario;
 		this.idReservaSeleccionada = itinerario.getIdReserva();
 		ticketInfos = reservaService.getTicket(usuario.getRut(), itinerario.getIdReserva(), itinerario.getIdItinerario());
+	}
+
+	public boolean isCheckInCompletado(Integer idReserva) {
+		if (idReserva == null) return false;
+		return reservaService.tieneCheckInCompletado(idReserva);
+	}
+
+	public boolean isCheckInDisponible(Date horaSalida) {
+		if (horaSalida == null) return false;
+		long diffMillis = horaSalida.getTime() - System.currentTimeMillis();
+		return diffMillis <= (48L * 3600 * 1000) && diffMillis >= (3600 * 1000);
+	}
+
+	public Date getFechaAperturaCheckIn(Date horaSalida) {
+		if (horaSalida == null) return null;
+		return new Date(horaSalida.getTime() - (48L * 3600 * 1000));
+	}
+
+	public String getTextoEstadoCheckIn(ItinerarioResumenDTO it) {
+		if (it == null) return "";
+		if (isReservaCanceladaPorItinerario(it.getIdReserva())) {
+			return "Reserva Cancelada";
+		}
+		if (isCheckInCompletado(it.getIdReserva())) {
+			return "Check-In Completado";
+		}
+		if (it.getHoraSalida() == null) {
+			return "Check-In Pendiente";
+		}
+		long diffMillis = it.getHoraSalida().getTime() - System.currentTimeMillis();
+		if (diffMillis < (3600 * 1000)) {
+			return "Check-In Cerrado";
+		}
+		if (diffMillis <= (48L * 3600 * 1000)) {
+			return "Check-In Abierto";
+		}
+		Date apertura = getFechaAperturaCheckIn(it.getHoraSalida());
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+		return "Check-In disponible desde el " + sdf.format(apertura) + " hrs";
+	}
+
+	public boolean isCheckInCompletado() {
+		return checkInCompletado;
+	}
+
+	public void setCheckInCompletado(boolean checkInCompletado) {
+		this.checkInCompletado = checkInCompletado;
+	}
+
+	/**
+	 * Genera el Data URL del código de barras 2D PDF417 (IATA BCBP) para renderizar en la vista web
+	 * de manera local y autónoma sin depender de APIs externas.
+	 */
+	public String obtenerCodigoBarrasBase64(String codigo) {
+		return BarcodeGeneratorUtil.generarPdf417DataUrl(codigo);
 	}
 
 	private Integer idReservaSeleccionada;

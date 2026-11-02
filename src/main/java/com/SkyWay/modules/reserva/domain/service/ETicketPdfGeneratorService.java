@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.awt.Color;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -38,9 +39,16 @@ import com.lowagie.text.pdf.PdfContentByte;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
+import com.SkyWay.modules.segmentovuelo.domain.model.SegmentoVuelo;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.Query;
 
 @Service
 public class ETicketPdfGeneratorService {
+
+    @PersistenceContext
+    private EntityManager em;
 
     /**
      * PDF 1: Resumen de Reserva, Confirmación de Pago y Guía de Viaje para Invitados
@@ -76,23 +84,60 @@ public class ETicketPdfGeneratorService {
             Pasajero titular = reserva.getPasajero();
             String rutTitular = (titular != null) ? titular.getRut() : "N/A";
 
-            // 1. HEADER BANNER
-            PdfPTable header = new PdfPTable(2);
+            // Cargar logotipo de SkyWay si está disponible en classpath o disco
+            Image logoImg = null;
+            try {
+                URL logoRes = getClass().getResource("/META-INF/resources/resources/assets/icons/Logotipo_SkyWay.png");
+                if (logoRes == null) {
+                    logoRes = getClass().getResource("/META-INF/resources/assets/icons/Logotipo_SkyWay.png");
+                }
+                if (logoRes != null) {
+                    logoImg = Image.getInstance(logoRes);
+                } else {
+                    File f = new File("src/main/resources/META-INF/resources/resources/assets/icons/Logotipo_SkyWay.png");
+                    if (f.exists()) {
+                        logoImg = Image.getInstance(f.getAbsolutePath());
+                    }
+                }
+            } catch (Exception ignored) {}
+
+            // 1. HEADER BANNER CON LOGOTIPO
+            PdfPTable header = new PdfPTable(3);
             header.setWidthPercentage(100);
-            header.setWidths(new float[]{65f, 35f});
+            header.setWidths(new float[]{22f, 48f, 30f});
+
+            PdfPCell hLogo = new PdfPCell();
+            hLogo.setBackgroundColor(navy);
+            hLogo.setPadding(10);
+            hLogo.setBorder(PdfPCell.NO_BORDER);
+            hLogo.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            if (logoImg != null) {
+                try {
+                    Image lImg = Image.getInstance(logoImg);
+                    lImg.scaleToFit(110f, 36f);
+                    hLogo.addElement(lImg);
+                } catch (Exception e) {
+                    hLogo.addElement(new Paragraph("SKYWAY", fTitle));
+                }
+            } else {
+                hLogo.addElement(new Paragraph("SKYWAY", fTitle));
+            }
+            header.addCell(hLogo);
 
             PdfPCell hLeft = new PdfPCell();
             hLeft.setBackgroundColor(navy);
-            hLeft.setPadding(12);
+            hLeft.setPadding(10);
             hLeft.setBorder(PdfPCell.NO_BORDER);
+            hLeft.setVerticalAlignment(Element.ALIGN_MIDDLE);
             hLeft.addElement(new Paragraph("SKYWAY AIRLINES", fTitle));
             hLeft.addElement(new Paragraph("COMPROBANTE DE RESERVA & RESUMEN DE VIAJE", fSubTitle));
             header.addCell(hLeft);
 
             PdfPCell hRight = new PdfPCell();
             hRight.setBackgroundColor(navy);
-            hRight.setPadding(12);
+            hRight.setPadding(10);
             hRight.setBorder(PdfPCell.NO_BORDER);
+            hRight.setVerticalAlignment(Element.ALIGN_MIDDLE);
 
             Paragraph pEticket = new Paragraph("e-Ticket: 789-" + String.format("%07d", reserva.getIdReserva()), FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, Color.WHITE));
             pEticket.setAlignment(Element.ALIGN_RIGHT);
@@ -181,11 +226,11 @@ public class ETicketPdfGeneratorService {
             tPax.setSpacingAfter(12);
             document.add(tPax);
 
-            // 5. ITINERARIO DE VUELOS (OPTIMIZADO SIN REPETICIÓN)
+            // 5. ITINERARIO DE VUELOS (OPTIMIZADO CON CLASES Y RUTAS REALES)
             document.add(createHeader("2. ITINERARIO DE VUELOS Y ASIENTOS", fSection));
             PdfPTable tFlight = new PdfPTable(6);
             tFlight.setWidthPercentage(100);
-            tFlight.setWidths(new float[]{15f, 20f, 20f, 20f, 15f, 10f}); // Anchos corregidos
+            tFlight.setWidths(new float[]{15f, 19f, 19f, 17f, 14f, 16f});
 
             addCellHeader(tFlight, "N° Vuelo", fBold, lightBg);
             addCellHeader(tFlight, "Salida", fBold, lightBg);
@@ -201,26 +246,78 @@ public class ETicketPdfGeneratorService {
                         for (ItinerarioVuelo iv : it.getItinerarioVuelos()) {
                             Vuelo v = iv.getVuelo();
                             String numVuelo = (v != null && v.getNumeroVuelo() != null) ? v.getNumeroVuelo() : "SK-" + it.getIdItinerario();
+
+                            // Origen y destino específicos del tramo de vuelo desde sus segmentos
+                            String codigoOrigen = (it.getAeropuertoOrigen() != null) ? it.getAeropuertoOrigen().getCodigoIata() : "Origen";
+                            String codigoDestino = (it.getAeropuertoDestino() != null) ? it.getAeropuertoDestino().getCodigoIata() : "Destino";
                             Date dSalida = (v != null && v.getFechaHoraSalida() != null) ? v.getFechaHoraSalida() : (it.getHoraSalida() != null ? new Date(it.getHoraSalida().getTime()) : null);
                             Date dLlegada = (v != null && v.getFechaHoraLlegada() != null) ? v.getFechaHoraLlegada() : (it.getHoraLlegada() != null ? new Date(it.getHoraLlegada().getTime()) : null);
 
-                            String origenStr = ((it.getAeropuertoOrigen() != null) ? it.getAeropuertoOrigen().getCodigoIata() : "Origen") + "\n" + (dSalida != null ? dateFormat.format(dSalida) : "S/F");
-                            String destinoStr = ((it.getAeropuertoDestino() != null) ? it.getAeropuertoDestino().getCodigoIata() : "Destino") + "\n" + (dLlegada != null ? dateFormat.format(dLlegada) : "S/F");
-
-                            // Unificar asientos asignados en un string legible
-                            StringBuilder asientosSb = new StringBuilder();
-                            for (PasajeroInfo p : pasajeros) {
-                                String ast = obtenerAsientoEspecifico(reserva, v != null ? v.getIdVuelo() : null, p.rut);
-                                if (asientosSb.length() > 0) asientosSb.append(", ");
-                                asientosSb.append(ast);
+                            if (v != null && v.getSegmentoVuelos() != null && !v.getSegmentoVuelos().isEmpty()) {
+                                List<SegmentoVuelo> segs = v.getSegmentoVuelos();
+                                SegmentoVuelo pSeg = segs.get(0);
+                                SegmentoVuelo uSeg = segs.get(segs.size() - 1);
+                                if (pSeg.getAeropuertoOrigen() != null && pSeg.getAeropuertoOrigen().getCodigoIata() != null) {
+                                    codigoOrigen = pSeg.getAeropuertoOrigen().getCodigoIata();
+                                }
+                                if (uSeg.getAeropuertoDestino() != null && uSeg.getAeropuertoDestino().getCodigoIata() != null) {
+                                    codigoDestino = uSeg.getAeropuertoDestino().getCodigoIata();
+                                }
+                                if (pSeg.getHoraSalida() != null) {
+                                    dSalida = new Date(pSeg.getHoraSalida().getTime());
+                                }
+                                if (uSeg.getHoraLlegada() != null) {
+                                    dLlegada = new Date(uSeg.getHoraLlegada().getTime());
+                                }
                             }
+
+                            String origenStr = codigoOrigen + "\n" + (dSalida != null ? dateFormat.format(dSalida) : "S/F");
+                            String destinoStr = codigoDestino + "\n" + (dLlegada != null ? dateFormat.format(dLlegada) : "S/F");
+
+                            // Asientos y Clases reales asignadas en este vuelo
+                            List<String> listaAsientosVuelo = new ArrayList<>();
+                            Set<String> clasesVuelo = new LinkedHashSet<>();
+
+                            if (reserva.getReservaAsientos() != null) {
+                                for (ReservaAsiento ra : reserva.getReservaAsientos()) {
+                                    if (ra.getVuelo() != null && v != null && v.getIdVuelo().equals(ra.getVuelo().getIdVuelo())) {
+                                        if (ra.getAsiento() != null) {
+                                            if (ra.getAsiento().getNumeroAsiento() != null) {
+                                                listaAsientosVuelo.add(ra.getAsiento().getNumeroAsiento());
+                                            }
+                                            if (ra.getAsiento().getClaseAsiento() != null && ra.getAsiento().getClaseAsiento().getDescripcion() != null) {
+                                                clasesVuelo.add(ra.getAsiento().getClaseAsiento().getDescripcion());
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (listaAsientosVuelo.isEmpty()) {
+                                for (PasajeroInfo p : pasajeros) {
+                                    String ast = obtenerAsientoEspecifico(reserva, v != null ? v.getIdVuelo() : null, p.rut);
+                                    if (ast != null && !ast.isBlank()) {
+                                        listaAsientosVuelo.add(ast);
+                                    }
+                                }
+                            }
+
+                            if (clasesVuelo.isEmpty()) {
+                                String claseDef = (ri.getItinerarioTarifa() != null && ri.getItinerarioTarifa().getTarifa() != null && ri.getItinerarioTarifa().getTarifa().getNombre() != null)
+                                        ? ri.getItinerarioTarifa().getTarifa().getNombre()
+                                        : "Económica";
+                                clasesVuelo.add(claseDef);
+                            }
+
+                            String asientosStr = String.join(", ", listaAsientosVuelo);
+                            String clasesStr = String.join(", ", clasesVuelo);
 
                             addCell(tFlight, numVuelo, fBold);
                             addCell(tFlight, origenStr, fNormal);
                             addCell(tFlight, destinoStr, fNormal);
                             addCell(tFlight, (v != null && v.getAerolinea() != null) ? v.getAerolinea().getNombre() : "SkyWay Airlines", fNormal);
-                            addCell(tFlight, asientosSb.toString(), fBold);
-                            addCell(tFlight, "Economy", fNormal); // No se corta el texto
+                            addCell(tFlight, asientosStr, fBold);
+                            addCell(tFlight, clasesStr, fNormal);
                         }
                     }
                 }
@@ -300,7 +397,7 @@ public class ETicketPdfGeneratorService {
             PdfWriter writer = PdfWriter.getInstance(document, out);
             document.open();
 
-            // Cargar logotipo de SkyWay si está disponible en classpath
+            // Cargar logotipo de SkyWay si está disponible en classpath o disco
             Image logoImg = null;
             try {
                 URL logoRes = getClass().getResource("/META-INF/resources/resources/assets/icons/Logotipo_SkyWay.png");
@@ -309,6 +406,11 @@ public class ETicketPdfGeneratorService {
                 }
                 if (logoRes != null) {
                     logoImg = Image.getInstance(logoRes);
+                } else {
+                    File f = new File("src/main/resources/META-INF/resources/resources/assets/icons/Logotipo_SkyWay.png");
+                    if (f.exists()) {
+                        logoImg = Image.getInstance(f.getAbsolutePath());
+                    }
                 }
             } catch (Exception ignored) {}
 
@@ -335,36 +437,100 @@ public class ETicketPdfGeneratorService {
         if (reserva == null) return new byte[0];
 
         List<TicketInfo> tickets = new ArrayList<>();
-        List<PasajeroInfo> pasajeros = obtenerListaPasajeros(reserva);
+        String rutTitular = (reserva.getPasajero() != null) ? reserva.getPasajero().getRut() : null;
 
-        if (reserva.getReservaItinerarios() != null) {
-            for (ReservaItinerario ri : reserva.getReservaItinerarios()) {
-                Itinerario it = ri.getItinerario();
-                if (it != null && it.getItinerarioVuelos() != null) {
-                    for (ItinerarioVuelo iv : it.getItinerarioVuelos()) {
-                        Vuelo v = iv.getVuelo();
-                        String numVuelo = (v != null && v.getNumeroVuelo() != null) ? v.getNumeroVuelo() : "SK-" + it.getIdItinerario();
-                        String origen = (it.getAeropuertoOrigen() != null) ? it.getAeropuertoOrigen().getCodigoIata() : "SCL";
-                        String destino = (it.getAeropuertoDestino() != null) ? it.getAeropuertoDestino().getCodigoIata() : "LAX";
-                        Timestamp fSalida = (v != null && v.getFechaHoraSalida() != null) ? new Timestamp(v.getFechaHoraSalida().getTime()) : null;
-                        Timestamp fLlegada = (v != null && v.getFechaHoraLlegada() != null) ? new Timestamp(v.getFechaHoraLlegada().getTime()) : null;
+        // Intentar obtener tickets con datos operacionales completos via función nativa fn_getticket
+        if (em != null && reserva.getIdReserva() != null && rutTitular != null && reserva.getReservaItinerarios() != null) {
+            try {
+                for (ReservaItinerario ri : reserva.getReservaItinerarios()) {
+                    if (ri.getItinerario() != null) {
+                        Query query = em.createNativeQuery(
+                                "SELECT * FROM fn_getticket(:p_rut, :p_reserva, :p_idItinerario);",
+                                TicketInfo.class);
+                        query.setParameter("p_rut", rutTitular);
+                        query.setParameter("p_reserva", reserva.getIdReserva());
+                        query.setParameter("p_idItinerario", ri.getItinerario().getIdItinerario());
+                        @SuppressWarnings("unchecked")
+                        List<TicketInfo> rList = query.getResultList();
+                        if (rList != null && !rList.isEmpty()) {
+                            tickets.addAll(rList);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                Logger.logError("Error al obtener tickets via fn_getticket en generador PDF: " + e.getMessage());
+            }
+        }
 
-                        for (PasajeroInfo pax : pasajeros) {
-                            String asiento = obtenerAsientoEspecifico(reserva, v != null ? v.getIdVuelo() : null, pax.rut);
-                            TicketInfo t = new TicketInfo();
-                            t.setCodigoPnr(reserva.getCodigoReserva());
-                            t.setNumeroVuelo(numVuelo);
-                            t.setOrigenTramo(origen);
-                            t.setDestinoTramo(destino);
-                            t.setHoraSalida(fSalida);
-                            t.setHoraLlegada(fLlegada);
-                            t.setCodigoPuerta("TBD");
-                            t.setTerminal("Terminal Internacional");
-                            t.setNumeroAsiento(asiento);
-                            t.setClaseAsiento("Primera Clase");
-                            t.setNombre(pax.nombreCompleto);
-                            t.setCodigoQr(reserva.getCodigoReserva() + "-" + numVuelo + "-" + asiento);
-                            tickets.add(t);
+        // Respaldo resiliente a partir del grafo de entidades JPA
+        if (tickets.isEmpty()) {
+            List<PasajeroInfo> pasajeros = obtenerListaPasajeros(reserva);
+            if (reserva.getReservaItinerarios() != null) {
+                for (ReservaItinerario ri : reserva.getReservaItinerarios()) {
+                    Itinerario it = ri.getItinerario();
+                    if (it != null && it.getItinerarioVuelos() != null) {
+                        for (ItinerarioVuelo iv : it.getItinerarioVuelos()) {
+                            Vuelo v = iv.getVuelo();
+                            String numVuelo = (v != null && v.getNumeroVuelo() != null) ? v.getNumeroVuelo() : "SK-" + it.getIdItinerario();
+                            
+                            String origen = "SCL";
+                            String destino = "LAX";
+                            String puerta = "TBD";
+                            String terminal = "Terminal Internacional";
+                            Timestamp fSalida = (v != null && v.getFechaHoraSalida() != null) ? new Timestamp(v.getFechaHoraSalida().getTime()) : null;
+                            Timestamp fLlegada = (v != null && v.getFechaHoraLlegada() != null) ? new Timestamp(v.getFechaHoraLlegada().getTime()) : null;
+
+                            if (v != null && v.getSegmentoVuelos() != null && !v.getSegmentoVuelos().isEmpty()) {
+                                List<SegmentoVuelo> segs = new ArrayList<>(v.getSegmentoVuelos());
+                                segs.sort(Comparator.comparing(SegmentoVuelo::getOrdenSegmento, Comparator.nullsLast(Comparator.naturalOrder())));
+                                SegmentoVuelo primerSeg = segs.get(0);
+                                SegmentoVuelo ultimoSeg = segs.get(segs.size() - 1);
+                                if (primerSeg.getAeropuertoOrigen() != null) origen = primerSeg.getAeropuertoOrigen().getCodigoIata();
+                                if (ultimoSeg.getAeropuertoDestino() != null) destino = ultimoSeg.getAeropuertoDestino().getCodigoIata();
+                                if (primerSeg.getHoraSalida() != null) fSalida = primerSeg.getHoraSalida();
+                                if (ultimoSeg.getHoraLlegada() != null) fLlegada = ultimoSeg.getHoraLlegada();
+                                if (primerSeg.getAsignacionPuertas() != null && !primerSeg.getAsignacionPuertas().isEmpty()) {
+                                    var asg = primerSeg.getAsignacionPuertas().iterator().next();
+                                    if (asg.getPuertaEmbarque() != null) {
+                                        if (asg.getPuertaEmbarque().getCodigoPuerta() != null) puerta = asg.getPuertaEmbarque().getCodigoPuerta();
+                                        if (asg.getPuertaEmbarque().getTerminal() != null) terminal = asg.getPuertaEmbarque().getTerminal();
+                                    }
+                                }
+                            } else {
+                                if (it.getAeropuertoOrigen() != null) origen = it.getAeropuertoOrigen().getCodigoIata();
+                                if (it.getAeropuertoDestino() != null) destino = it.getAeropuertoDestino().getCodigoIata();
+                            }
+
+                            for (PasajeroInfo pax : pasajeros) {
+                                String asiento = obtenerAsientoEspecifico(reserva, v != null ? v.getIdVuelo() : null, pax.rut);
+                                String clase = "Económica";
+                                if (reserva.getReservaAsientos() != null) {
+                                    for (ReservaAsiento ra : reserva.getReservaAsientos()) {
+                                        if (ra.getVuelo() != null && v != null && v.getIdVuelo().equals(ra.getVuelo().getIdVuelo())
+                                                && ra.getPasajero() != null && pax.rut != null && pax.rut.equals(ra.getPasajero().getRut())) {
+                                            if (ra.getAsiento() != null && ra.getAsiento().getClaseAsiento() != null
+                                                    && ra.getAsiento().getClaseAsiento().getDescripcion() != null) {
+                                                clase = ra.getAsiento().getClaseAsiento().getDescripcion();
+                                            }
+                                        }
+                                    }
+                                }
+
+                                TicketInfo t = new TicketInfo();
+                                t.setCodigoPnr(reserva.getCodigoReserva());
+                                t.setNumeroVuelo(numVuelo);
+                                t.setOrigenTramo(origen);
+                                t.setDestinoTramo(destino);
+                                t.setHoraSalida(fSalida);
+                                t.setHoraLlegada(fLlegada);
+                                t.setCodigoPuerta(puerta);
+                                t.setTerminal(terminal);
+                                t.setNumeroAsiento(asiento != null ? asiento : "---");
+                                t.setClaseAsiento(clase);
+                                t.setNombre(pax.nombreCompleto);
+                                t.setCodigoQr("SKYWAY-" + reserva.getCodigoReserva() + "-" + numVuelo + "-" + asiento + "-" + pax.rut);
+                                tickets.add(t);
+                            }
                         }
                     }
                 }
@@ -421,8 +587,18 @@ public class ETicketPdfGeneratorService {
         PdfPCell mhBrand = new PdfPCell();
         mhBrand.setBackgroundColor(skyBlue);
         mhBrand.setBorder(PdfPCell.NO_BORDER);
-        mhBrand.setPadding(7f);
-        mhBrand.addElement(new Paragraph("✈  SkyWay Airlines", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, Color.WHITE)));
+        mhBrand.setPadding(6f);
+        if (baseLogoImg != null) {
+            try {
+                Image bl = Image.getInstance(baseLogoImg);
+                bl.scaleToFit(85f, 22f);
+                mhBrand.addElement(bl);
+            } catch (Exception e) {
+                mhBrand.addElement(new Paragraph("✈  SkyWay Airlines", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, Color.WHITE)));
+            }
+        } else {
+            mhBrand.addElement(new Paragraph("✈  SkyWay Airlines", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, Color.WHITE)));
+        }
         mainHeader.addCell(mhBrand);
 
         PdfPCell mhPnr = new PdfPCell();
@@ -444,7 +620,7 @@ public class ETicketPdfGeneratorService {
         mainBody.setWidthPercentage(100);
         try { mainBody.setWidths(new float[]{36f, 38f, 26f}); } catch (Exception ignored) {}
 
-        // Columna 1: Pasajero, Origen, Destino, Terminal
+        // Columna 1: Pasajero, Origen, Destino, Clase, Terminal
         PdfPCell c1 = new PdfPCell();
         c1.setBackgroundColor(cardBg);
         c1.setBorder(PdfPCell.NO_BORDER);
@@ -453,6 +629,7 @@ public class ETicketPdfGeneratorService {
         addLabeledBox(c1, "PASAJERO", t.getNombre() != null ? t.getNombre() : "---", fieldBg, inkDark, 8f);
         addLabeledBox(c1, "ORIGEN", t.getOrigenTramo() != null ? t.getOrigenTramo() : "---", fieldBg, inkDark, 8.5f);
         addLabeledBox(c1, "DESTINO", t.getDestinoTramo() != null ? t.getDestinoTramo() : "---", fieldBg, inkDark, 8.5f);
+        addLabeledBox(c1, "CLASE", t.getClaseAsiento() != null ? t.getClaseAsiento() : "Económica", fieldBg, inkDark, 8f);
         addLabeledBox(c1, "TERMINAL", t.getTerminal() != null ? t.getTerminal() : "Terminal Internacional", fieldBg, inkDark, 7.5f);
         mainBody.addCell(c1);
 
@@ -476,16 +653,18 @@ public class ETicketPdfGeneratorService {
         pLlegada.setSpacingAfter(6f);
         c2.addElement(pLlegada);
 
-        // Generar QR
+        // Generar Código 2D PDF417 (Estándar oficial IATA BCBP Res. 792 para Tarjetas de Embarque sin APIs externas)
         Image qrImg = null;
         String qrData = (t.getCodigoQr() != null && !t.getCodigoQr().isBlank())
                 ? t.getCodigoQr()
                 : (t.getCodigoPnr() + "-" + t.getNumeroVuelo() + "-" + t.getNumeroAsiento());
         try {
-            String qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=110x110&data="
-                    + URLEncoder.encode(qrData, StandardCharsets.UTF_8);
-            qrImg = Image.getInstance(new URL(qrUrl));
-            qrImg.scaleToFit(70f, 70f);
+            com.lowagie.text.pdf.BarcodePDF417 pdf417 = new com.lowagie.text.pdf.BarcodePDF417();
+            pdf417.setText(qrData.getBytes(StandardCharsets.UTF_8));
+            qrImg = pdf417.getImage();
+            if (qrImg != null) {
+                qrImg.scaleToFit(85f, 50f);
+            }
         } catch (Exception e) {
             try {
                 Barcode128 code128 = new Barcode128();

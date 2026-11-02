@@ -568,9 +568,7 @@ EXECUTE FUNCTION fn_bloquear_modificacion_log();
 
 
 
-ALTER TABLE notificacion
-    ADD COLUMN IF NOT EXISTS enviada BOOLEAN DEFAULT FALSE,
-    ADD COLUMN IF NOT EXISTS canal VARCHAR(20) DEFAULT 'Email';
+
 
 
 
