@@ -803,99 +803,84 @@ INSERT INTO Modelo_Avion (Nombre, ID_FABRICANTE) VALUES
 ('Airbus A330',  (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Airbus')),
 ('Boeing 757',   (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Boeing'));
 
+INSERT INTO Modelo_Avion (Nombre, ID_FABRICANTE) VALUES
+('Airbus A320',   (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Airbus')),
+('Airbus A321',   (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Airbus')),
+('Boeing 737-800', (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Boeing')),
+('Airbus A330',   (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Airbus')),
+('Boeing 787',    (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Boeing')),
+('Airbus A350',   (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Airbus')),
+('Boeing 777',    (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Boeing')),
+('Boeing 747',    (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Boeing')),
+('Airbus A380',   (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Airbus')),
+('Boeing 757',    (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Boeing')),
+('Embraer E195',  (SELECT ID_FABRICANTE FROM Fabricante WHERE Nombre = 'Embraer'))
+ON CONFLICT (Nombre) DO NOTHING;
 -- =============================================================================
 -- 4. CONFIGURACIÓN ESPACIAL DE CABINAS POR MODELO (REALISTA)
 -- =============================================================================
 
 
 
--- -----------------------------------------------------------------------------
--- AIRBUS A320 (Total: 146 asientos -> 8 Primera + 12 Ejecutiva + 126 Económica)
--- -----------------------------------------------------------------------------
+
 INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
 ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Primera Clase'), 1, 2, '2-2', 'A,C,D,F', FALSE),
-((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'),     3, 5, '2-2', 'A,C,D,F', FALSE),
-((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     6, 11, '3-3', 'A,B,C,D,E,F', FALSE),
-((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     12, 13, '3-3', 'A,B,C,D,E,F', TRUE),
-((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     14, 26, '3-3', 'A,B,C,D,E,F', FALSE);
-
--- -----------------------------------------------------------------------------
--- BOEING 747-400 (Total: 380 asientos -> 12 Primera + 56 Ejecutiva + 312 Económica)
--- -----------------------------------------------------------------------------
-INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
-((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 747'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Primera Clase'), 1, 3, '1-2-1', 'A,D,G,K', FALSE),
-((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 747'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'),     4, 11, '2-3-2', 'A,B,D,E,F,J,K', FALSE),
-((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 747'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     12, 12, '3-4-3', 'A,B,C,D,E,F,G,H,J,K', TRUE),
-((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 747'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     14, 43, '3-4-3', 'A,B,C,D,E,F,G,H,J,K', FALSE);
-
--- -----------------------------------------------------------------------------
--- AIRBUS A350-900 (Total: 310 asientos -> 16 Primera + 48 Ejecutiva + 246 Económica)
--- -----------------------------------------------------------------------------
-
-INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
--- Primera Clase (1-2-1): Pasillos entre A - D y G - K
-((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Primera Clase'), 1, 4, '1-2-1', 'A,D,G,K', FALSE),
-
--- Ejecutiva (2-2-2): Pasillos entre C - D y G - H
-((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'),     5, 12, '2-2-2', 'A,C,D,G,H,K', FALSE),
-
--- Económica (3-3-3): Pasillos entre C - D y F - J
-((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     14, 14, '3-3-3', 'A,B,C,D,E,F,J,K,L', TRUE),
-((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     15, 40, '3-3-3', 'A,B,C,D,E,F,J,K,L', FALSE);
--- -----------------------------------------------------------------------------
--- BOEING 787-9 (Total: 219 asientos -> 12 Primera + 36 Ejecutiva + 171 Económica)
--- -----------------------------------------------------------------------------
-INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
-((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 787'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Primera Clase'), 1, 3, '1-2-1', 'A,D,G,K', FALSE),
-((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 787'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'),     4, 9, '2-2-2', 'A,C,D,G,H,K', FALSE),
-((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 787'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     10, 10, '3-3-3', 'A,B,C,D,E,F,J,K,L', TRUE),
-((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 787'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     11, 28, '3-3-3', 'A,B,C,D,E,F,J,K,L', FALSE);
-
--- -----------------------------------------------------------------------------
--- EMBRAER E195 (Total: 120 asientos -> 12 Ejecutiva + 108 Económica)
--- -----------------------------------------------------------------------------
-INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'), 3, 5, '2-2', 'A,C,D,F', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 6, 11, '3-3', 'A,B,C,D,E,F', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 12, 13, '3-3', 'A,B,C,D,E,F', TRUE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 14, 26, '3-3', 'A,B,C,D,E,F', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A321'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Primera Clase'), 1, 2, '2-2', 'A,C,D,F', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A321'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'), 3, 7, '2-2', 'A,C,D,F', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A321'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 8, 18, '3-3', 'A,B,C,D,E,F', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A321'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 19, 20, '3-3', 'A,B,C,D,E,F', TRUE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A321'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 21, 39, '3-3', 'A,B,C,D,E,F', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 737-800'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'), 1, 3, '2-2', 'A,C,D,F', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 737-800'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 4, 13, '3-3', 'A,B,C,D,E,F', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 737-800'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 14, 15, '3-3', 'A,B,C,D,E,F', TRUE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 737-800'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 16, 32, '3-3', 'A,B,C,D,E,F', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 737-800'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 33, 33, '3-0', 'A,B,C', FALSE),
 ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Embraer E195'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'), 1, 4, '1-2', 'A,C,D', FALSE),
 ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Embraer E195'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 5, 12, '2-2', 'A,B,C,D', FALSE),
 ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Embraer E195'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 13, 13, '2-2', 'A,B,C,D', TRUE),
-((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Embraer E195'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 14, 30, '2-2', 'A,B,C,D', FALSE);
-
--- -----------------------------------------------------------------------------
--- BOEING 777-300ER (Total: 450 asientos -> 16 Primera + 70 Ejecutiva + 364 Económica)
--- -----------------------------------------------------------------------------
-INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
-((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 777'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Primera Clase'), 1, 4, '1-2-1', 'A,D,G,K', FALSE),
-((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 777'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'),     5, 14, '2-3-2', 'A,B,D,E,F,J,K', FALSE),
-((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 777'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     15, 15, '3-4-3', 'A,B,C,D,E,F,G,H,J,K', TRUE),
-((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 777'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     16, 50, '3-4-3', 'A,B,C,D,E,F,G,H,J,K', FALSE);
-
--- -----------------------------------------------------------------------------
--- AIRBUS A380-800 (Total: 650 asientos -> 20 Primera + 96 Ejecutiva + 534 Económica)
--- -----------------------------------------------------------------------------
-INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
-((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A380'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Primera Clase'), 1, 5, '1-2-1', 'A,E,F,K', FALSE),
-((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A380'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'),     6, 21, '2-2-2', 'A,B,E,F,J,K', FALSE),
-((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A380'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     22, 22, '3-4-3', 'A,B,C,D,E,F,G,H,J,K', TRUE),
-((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A380'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     23, 74, '3-4-3', 'A,B,C,D,E,F,G,H,J,K', FALSE);
-
--- -----------------------------------------------------------------------------
--- AIRBUS A330-300 (Total: 250 asientos -> 8 Primera + 36 Ejecutiva + 206 Económica)
--- -----------------------------------------------------------------------------
-INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
-((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A330'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Primera Clase'), 1, 2, '1-2-1', 'A,D,G,K', FALSE),
-((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A330'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'),     3, 8, '2-2-2', 'A,B,D,G,J,K', FALSE),
-((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A330'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     9, 9, '2-4-2', 'A,C,D,E,F,G,H,K', TRUE),
-((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A330'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'),     10, 34, '2-4-2', 'A,C,D,E,F,G,H,K', FALSE);
-
--- -----------------------------------------------------------------------------
--- BOEING 757-200 (Total: 190 asientos -> 16 Ejecutiva + 174 Económica)
--- -----------------------------------------------------------------------------
-INSERT INTO Configuracion_Cabina (ID_MODELO, ID_CLASE, Fila_Inicio, Fila_Fin, Distribucion_Columnas, Letras_Columnas, Es_Salida_Emergencia) VALUES
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Embraer E195'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 14, 31, '2-2', 'A,B,C,D', FALSE),
 ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 757'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'), 1, 4, '2-2', 'A,C,D,F', FALSE),
 ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 757'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 5, 14, '3-3', 'A,B,C,D,E,F', FALSE),
 ((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 757'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 15, 16, '3-3', 'A,B,C,D,E,F', TRUE),
-((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 757'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 17, 33, '3-3', 'A,B,C,D,E,F', FALSE);
--- =============================================================================
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 757'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 17, 33, '3-3', 'A,B,C,D,E,F', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 787'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Primera Clase'), 1, 3, '1-2-1', 'A,D,G,K', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 787'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'), 4, 9, '2-2-2', 'A,C,D,G,H,K', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 787'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 10, 10, '3-3-3', 'A,B,C,D,E,F,J,K,L', TRUE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 787'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 11, 28, '3-3-3', 'A,B,C,D,E,F,J,K,L', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A330'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Primera Clase'), 1, 2, '1-2-1', 'A,D,G,K', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A330'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'), 3, 8, '2-2-2', 'A,B,D,G,J,K', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A330'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 9, 9, '2-4-2', 'A,C,D,E,F,G,H,K', TRUE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A330'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 10, 33, '2-4-2', 'A,C,D,E,F,G,H,K', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A330'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 34, 34, '2-2-2', 'A,C,D,G,H,K', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Primera Clase'), 1, 4, '1-2-1', 'A,D,G,K', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'), 5, 12, '2-2-2', 'A,C,D,G,H,K', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 14, 14, '3-3-3', 'A,B,C,D,E,F,J,K,L', TRUE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 15, 39, '3-3-3', 'A,B,C,D,E,F,J,K,L', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 40, 41, '2-2-2', 'A,C,D,G,H,K', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 747'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Primera Clase'), 1, 3, '1-2-1', 'A,D,G,K', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 747'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'), 4, 11, '2-3-2', 'A,B,D,E,F,J,K', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 747'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 12, 12, '3-4-3', 'A,B,C,D,E,F,G,H,J,K', TRUE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 747'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 13, 41, '3-4-3', 'A,B,C,D,E,F,G,H,J,K', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 747'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 42, 43, '2-2-2', 'A,B,D,G,J,K', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 777'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Primera Clase'), 1, 4, '1-2-1', 'A,D,G,K', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 777'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'), 5, 14, '2-3-2', 'A,B,D,E,F,J,K', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 777'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 15, 15, '3-4-3', 'A,B,C,D,E,F,G,H,J,K', TRUE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 777'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 16, 48, '3-4-3', 'A,B,C,D,E,F,G,H,J,K', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 777'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 49, 51, '2-4-2', 'A,C,D,E,F,G,H,K', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A380'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Primera Clase'), 1, 5, '1-2-1', 'A,E,F,K', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A380'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Ejecutiva'), 6, 21, '2-2-2', 'A,B,E,F,J,K', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A380'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 22, 22, '3-4-3', 'A,B,C,D,E,F,G,H,J,K', TRUE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A380'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 23, 73, '3-4-3', 'A,B,C,D,E,F,G,H,J,K', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A380'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 74, 74, '2-4-2', 'A,C,D,E,F,G,H,K', FALSE),
+((SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A380'), (SELECT ID_CLASE FROM Clase_asiento WHERE Descripcion = 'Económica'), 75, 75, '2-2-2', 'A,C,D,G,H,K', FALSE);
+
+
+
+
 -- 5. UNIDADES FÍSICAS DE AVIONES
 -- =============================================================================
 -- =============================================================================
@@ -911,6 +896,62 @@ INSERT INTO Avion (Numero_de_Registro, ID_MODELO, Ano_de_Fabricacion, Capacidad_
 ('LMN987', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A380'),  2018, 650, 75000, 'Operativo', NULL),
 ('STU456', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A330'),  2017, 250, 35000, 'Operativo', NULL),
 ('WXY543', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 757'),   2003, 190, 22000, 'Operativo', NULL);
+
+
+-- =============================================================================
+-- 3. FLOTA COMERCIAL (44 AERONAVES MODERNAS CON MATRÍCULAS DGAC CHILE)
+-- =============================================================================
+INSERT INTO Avion (Numero_de_Registro, ID_MODELO, Ano_de_Fabricacion, Capacidad_de_Pasajeros, Capacidad_de_Carga, Estado_de_Mantenimiento, Fecha_Proximo_Mantenimiento)
+VALUES
+    ('CC-BAA', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), 2020, 146, 16500, 'Operativo', NOW() + INTERVAL '180 days'),
+    ('CC-BAB', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), 2020, 146, 16500, 'Operativo', NOW() + INTERVAL '210 days'),
+    ('CC-BAC', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), 2021, 146, 16500, 'Operativo', NOW() + INTERVAL '240 days'),
+    ('CC-BAD', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), 2021, 146, 16500, 'Operativo', NOW() + INTERVAL '270 days'),
+    ('CC-BAE', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), 2022, 146, 16500, 'Operativo', NOW() + INTERVAL '300 days'),
+    ('CC-BAF', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), 2022, 146, 16500, 'Operativo', NOW() + INTERVAL '330 days'),
+    ('CC-BAG', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), 2023, 146, 16500, 'Operativo', NOW() + INTERVAL '360 days'),
+    ('CC-BAH', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), 2023, 146, 16500, 'Operativo', NOW() + INTERVAL '390 days'),
+    ('CC-BAI', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), 2024, 146, 16500, 'Operativo', NOW() + INTERVAL '420 days'),
+    ('CC-BAJ', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A320'), 2024, 146, 16500, 'Operativo', NOW() + INTERVAL '450 days'),
+    ('CC-BBA', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A321'), 2021, 220, 22000, 'Operativo', NOW() + INTERVAL '190 days'),
+    ('CC-BBB', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A321'), 2022, 220, 22000, 'Operativo', NOW() + INTERVAL '250 days'),
+    ('CC-BBC', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A321'), 2023, 220, 22000, 'Operativo', NOW() + INTERVAL '310 days'),
+    ('CC-BBD', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A321'), 2024, 220, 22000, 'Operativo', NOW() + INTERVAL '370 days'),
+    ('CC-BBE', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 737-800'), 2019, 189, 20000, 'Operativo', NOW() + INTERVAL '170 days'),
+    ('CC-BBF', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 737-800'), 2020, 189, 20000, 'Operativo', NOW() + INTERVAL '230 days'),
+    ('CC-BBG', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 737-800'), 2022, 189, 20000, 'Operativo', NOW() + INTERVAL '290 days'),
+    ('CC-BBH', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 737-800'), 2023, 189, 20000, 'Operativo', NOW() + INTERVAL '350 days'),
+    ('CC-BCA', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A330'), 2019, 250, 38000, 'Operativo', NOW() + INTERVAL '160 days'),
+    ('CC-BCB', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A330'), 2020, 250, 38000, 'Operativo', NOW() + INTERVAL '220 days'),
+    ('CC-BCC', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A330'), 2021, 250, 38000, 'Operativo', NOW() + INTERVAL '280 days'),
+    ('CC-BCD', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A330'), 2023, 250, 38000, 'Operativo', NOW() + INTERVAL '340 days'),
+    ('CC-BDA', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 787'), 2020, 219, 38000, 'Operativo', NOW() + INTERVAL '200 days'),
+    ('CC-BDB', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 787'), 2021, 219, 38000, 'Operativo', NOW() + INTERVAL '250 days'),
+    ('CC-BDC', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 787'), 2022, 219, 38000, 'Operativo', NOW() + INTERVAL '300 days'),
+    ('CC-BDD', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 787'), 2023, 219, 38000, 'Operativo', NOW() + INTERVAL '350 days'),
+    ('CC-BDE', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 787'), 2024, 219, 38000, 'Operativo', NOW() + INTERVAL '400 days'),
+    ('CC-BEA', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'), 2020, 310, 44000, 'Operativo', NOW() + INTERVAL '190 days'),
+    ('CC-BEB', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'), 2021, 310, 44000, 'Operativo', NOW() + INTERVAL '240 days'),
+    ('CC-BEC', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'), 2022, 310, 44000, 'Operativo', NOW() + INTERVAL '310 days'),
+    ('CC-BED', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A350'), 2023, 310, 44000, 'Operativo', NOW() + INTERVAL '380 days'),
+    ('CC-BFA', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 777'), 2018, 450, 56000, 'Operativo', NOW() + INTERVAL '150 days'),
+    ('CC-BFB', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 777'), 2020, 450, 56000, 'Operativo', NOW() + INTERVAL '220 days'),
+    ('CC-BFC', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 777'), 2022, 450, 56000, 'Operativo', NOW() + INTERVAL '290 days'),
+    ('CC-BFD', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 777'), 2023, 450, 56000, 'Operativo', NOW() + INTERVAL '360 days'),
+    ('CC-BGA', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 747'), 2008, 380, 52000, 'Operativo', NOW() + INTERVAL '140 days'),
+    ('CC-BGB', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 747'), 2010, 380, 52000, 'Operativo', NOW() + INTERVAL '210 days'),
+    ('CC-BHA', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Airbus A380'), 2019, 650, 84000, 'Operativo', NOW() + INTERVAL '260 days'),
+    ('CC-BIA', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 757'), 2006, 190, 24000, 'Operativo', NOW() + INTERVAL '170 days'),
+    ('CC-BIB', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Boeing 757'), 2009, 190, 24000, 'Operativo', NOW() + INTERVAL '230 days'),
+    ('CC-BJA', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Embraer E195'), 2018, 120, 14000, 'Operativo', NOW() + INTERVAL '180 days'),
+    ('CC-BJB', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Embraer E195'), 2019, 120, 14000, 'Operativo', NOW() + INTERVAL '230 days'),
+    ('CC-BJC', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Embraer E195'), 2021, 120, 14000, 'Operativo', NOW() + INTERVAL '290 days'),
+    ('CC-BJD', (SELECT ID_MODELO FROM Modelo_Avion WHERE Nombre = 'Embraer E195'), 2023, 120, 14000, 'Operativo', NOW() + INTERVAL '350 days')
+ON CONFLICT (Numero_de_Registro) DO UPDATE
+    SET Estado_de_Mantenimiento = EXCLUDED.Estado_de_Mantenimiento,
+        Fecha_Proximo_Mantenimiento = EXCLUDED.Fecha_Proximo_Mantenimiento,
+        Capacidad_de_Pasajeros = EXCLUDED.Capacidad_de_Pasajeros,
+        Capacidad_de_Carga = EXCLUDED.Capacidad_de_Carga;
 
 -- =============================================================================
 -- 6. CAPACIDAD OPERATIVA POR CLASE (UNIFICADO Y REVISADO)
@@ -931,6 +972,147 @@ FROM (
      ) AS datos(numero_registro, descripcion_clase, capacidad)
          JOIN Avion avion ON avion.Numero_de_Registro = datos.numero_registro
          JOIN Clase_asiento clase ON clase.Descripcion = datos.descripcion_clase;
+
+
+-- =============================================================================
+-- 4. CAPACIDAD OPERATIVA POR CLASE Y DISPARADOR DE ASIENTOS FÍSICOS
+-- =============================================================================
+-- Limpieza de asientos previos de la flota CC-% para recrear mapas con la nueva configuración de cabina
+DELETE FROM Asiento WHERE ID_AVION IN (SELECT ID_AVION FROM Avion WHERE Numero_de_Registro LIKE 'CC-%');
+DELETE FROM Capacidad_Clase WHERE ID_AVION IN (SELECT ID_AVION FROM Avion WHERE Numero_de_Registro LIKE 'CC-%');
+
+INSERT INTO Capacidad_Clase (ID_AVION, ID_CLASE, Cantidad)
+SELECT av.ID_AVION, cl.ID_CLASE, datos.capacidad
+FROM (
+         VALUES
+             ('CC-BAA', 'Primera Clase', 8),
+             ('CC-BAA', 'Ejecutiva', 12),
+             ('CC-BAA', 'Económica', 126),
+             ('CC-BAB', 'Primera Clase', 8),
+             ('CC-BAB', 'Ejecutiva', 12),
+             ('CC-BAB', 'Económica', 126),
+             ('CC-BAC', 'Primera Clase', 8),
+             ('CC-BAC', 'Ejecutiva', 12),
+             ('CC-BAC', 'Económica', 126),
+             ('CC-BAD', 'Primera Clase', 8),
+             ('CC-BAD', 'Ejecutiva', 12),
+             ('CC-BAD', 'Económica', 126),
+             ('CC-BAE', 'Primera Clase', 8),
+             ('CC-BAE', 'Ejecutiva', 12),
+             ('CC-BAE', 'Económica', 126),
+             ('CC-BAF', 'Primera Clase', 8),
+             ('CC-BAF', 'Ejecutiva', 12),
+             ('CC-BAF', 'Económica', 126),
+             ('CC-BAG', 'Primera Clase', 8),
+             ('CC-BAG', 'Ejecutiva', 12),
+             ('CC-BAG', 'Económica', 126),
+             ('CC-BAH', 'Primera Clase', 8),
+             ('CC-BAH', 'Ejecutiva', 12),
+             ('CC-BAH', 'Económica', 126),
+             ('CC-BAI', 'Primera Clase', 8),
+             ('CC-BAI', 'Ejecutiva', 12),
+             ('CC-BAI', 'Económica', 126),
+             ('CC-BAJ', 'Primera Clase', 8),
+             ('CC-BAJ', 'Ejecutiva', 12),
+             ('CC-BAJ', 'Económica', 126),
+             ('CC-BBA', 'Primera Clase', 8),
+             ('CC-BBA', 'Ejecutiva', 20),
+             ('CC-BBA', 'Económica', 192),
+             ('CC-BBB', 'Primera Clase', 8),
+             ('CC-BBB', 'Ejecutiva', 20),
+             ('CC-BBB', 'Económica', 192),
+             ('CC-BBC', 'Primera Clase', 8),
+             ('CC-BBC', 'Ejecutiva', 20),
+             ('CC-BBC', 'Económica', 192),
+             ('CC-BBD', 'Primera Clase', 8),
+             ('CC-BBD', 'Ejecutiva', 20),
+             ('CC-BBD', 'Económica', 192),
+             ('CC-BBE', 'Ejecutiva', 12),
+             ('CC-BBE', 'Económica', 177),
+             ('CC-BBF', 'Ejecutiva', 12),
+             ('CC-BBF', 'Económica', 177),
+             ('CC-BBG', 'Ejecutiva', 12),
+             ('CC-BBG', 'Económica', 177),
+             ('CC-BBH', 'Ejecutiva', 12),
+             ('CC-BBH', 'Económica', 177),
+             ('CC-BCA', 'Primera Clase', 8),
+             ('CC-BCA', 'Ejecutiva', 36),
+             ('CC-BCA', 'Económica', 206),
+             ('CC-BCB', 'Primera Clase', 8),
+             ('CC-BCB', 'Ejecutiva', 36),
+             ('CC-BCB', 'Económica', 206),
+             ('CC-BCC', 'Primera Clase', 8),
+             ('CC-BCC', 'Ejecutiva', 36),
+             ('CC-BCC', 'Económica', 206),
+             ('CC-BCD', 'Primera Clase', 8),
+             ('CC-BCD', 'Ejecutiva', 36),
+             ('CC-BCD', 'Económica', 206),
+             ('CC-BDA', 'Primera Clase', 12),
+             ('CC-BDA', 'Ejecutiva', 36),
+             ('CC-BDA', 'Económica', 171),
+             ('CC-BDB', 'Primera Clase', 12),
+             ('CC-BDB', 'Ejecutiva', 36),
+             ('CC-BDB', 'Económica', 171),
+             ('CC-BDC', 'Primera Clase', 12),
+             ('CC-BDC', 'Ejecutiva', 36),
+             ('CC-BDC', 'Económica', 171),
+             ('CC-BDD', 'Primera Clase', 12),
+             ('CC-BDD', 'Ejecutiva', 36),
+             ('CC-BDD', 'Económica', 171),
+             ('CC-BDE', 'Primera Clase', 12),
+             ('CC-BDE', 'Ejecutiva', 36),
+             ('CC-BDE', 'Económica', 171),
+             ('CC-BEA', 'Primera Clase', 16),
+             ('CC-BEA', 'Ejecutiva', 48),
+             ('CC-BEA', 'Económica', 246),
+             ('CC-BEB', 'Primera Clase', 16),
+             ('CC-BEB', 'Ejecutiva', 48),
+             ('CC-BEB', 'Económica', 246),
+             ('CC-BEC', 'Primera Clase', 16),
+             ('CC-BEC', 'Ejecutiva', 48),
+             ('CC-BEC', 'Económica', 246),
+             ('CC-BED', 'Primera Clase', 16),
+             ('CC-BED', 'Ejecutiva', 48),
+             ('CC-BED', 'Económica', 246),
+             ('CC-BFA', 'Primera Clase', 16),
+             ('CC-BFA', 'Ejecutiva', 70),
+             ('CC-BFA', 'Económica', 364),
+             ('CC-BFB', 'Primera Clase', 16),
+             ('CC-BFB', 'Ejecutiva', 70),
+             ('CC-BFB', 'Económica', 364),
+             ('CC-BFC', 'Primera Clase', 16),
+             ('CC-BFC', 'Ejecutiva', 70),
+             ('CC-BFC', 'Económica', 364),
+             ('CC-BFD', 'Primera Clase', 16),
+             ('CC-BFD', 'Ejecutiva', 70),
+             ('CC-BFD', 'Económica', 364),
+             ('CC-BGA', 'Primera Clase', 12),
+             ('CC-BGA', 'Ejecutiva', 56),
+             ('CC-BGA', 'Económica', 312),
+             ('CC-BGB', 'Primera Clase', 12),
+             ('CC-BGB', 'Ejecutiva', 56),
+             ('CC-BGB', 'Económica', 312),
+             ('CC-BHA', 'Primera Clase', 20),
+             ('CC-BHA', 'Ejecutiva', 96),
+             ('CC-BHA', 'Económica', 534),
+             ('CC-BIA', 'Ejecutiva', 16),
+             ('CC-BIA', 'Económica', 174),
+             ('CC-BIB', 'Ejecutiva', 16),
+             ('CC-BIB', 'Económica', 174),
+             ('CC-BJA', 'Ejecutiva', 12),
+             ('CC-BJA', 'Económica', 108),
+             ('CC-BJB', 'Ejecutiva', 12),
+             ('CC-BJB', 'Económica', 108),
+             ('CC-BJC', 'Ejecutiva', 12),
+             ('CC-BJC', 'Económica', 108),
+             ('CC-BJD', 'Ejecutiva', 12),
+             ('CC-BJD', 'Económica', 108)
+     ) AS datos(numero_registro, descripcion_clase, capacidad)
+         JOIN Avion av ON av.Numero_de_Registro = datos.numero_registro
+         JOIN Clase_asiento cl ON cl.Descripcion = datos.descripcion_clase;
+
+
+
 
 -- Insertar datos en la tabla Estado_Vuelo
 INSERT INTO Estado_Vuelo (Descripcion, Estado) VALUES
@@ -1118,10 +1300,262 @@ VALUES ('21406428-6', 2);
 INSERT INTO Pasajero (RUT, Nacionalidad)
 VALUES ('21406428-6', 'Chilena');
 
+
+
+-- =============================================================================
+-- 5. PILOTOS COMERCIALES CERTIFICADOS (40 PILOTOS CON RUTS MÓDULO 11 CHILENOS)
+-- =============================================================================
+INSERT INTO Usuario (RUT, Nombre, Apellido, Correo_Electronico, Telefono, Documento_Identidad, Fecha_Nacimiento, Contrasena, Fecha_Registro)
+VALUES
+    ('12480315-2', 'Rodrigo Andrés', 'Valenzuela Matte', 'rodrigo.valenzuelamatte@skyway.com', '+56 9 9234 1101', 'RUN-12480315-2', '1974-06-12', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('12894120-7', 'María Ignacia', 'Larraín Vial', 'maria.larrainvial@skyway.com', '+56 9 8452 1102', 'RUN-12894120-7', '1976-03-24', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('13150244-3', 'Gonzalo Javier', 'Pérez-Cotapos Undurraga', 'gonzalo.perezcotaposundurraga@skyway.com', '+56 9 7123 1103', 'RUN-13150244-3', '1977-11-08', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('13429810-3', 'Camila Paz', 'Vergara Echenique', 'camila.vergaraechenique@skyway.com', '+56 9 9345 1104', 'RUN-13429810-3', '1978-08-19', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('13781255-K', 'Sebastián Eduardo', 'Cousiño Lyon', 'sebastian.cousinolyon@skyway.com', '+56 9 8234 1105', 'RUN-13781255-K', '1979-05-30', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('14022390-5', 'Felipe Ignacio', 'Errázuriz Ossa', 'felipe.errazurizossa@skyway.com', '+56 9 7654 1106', 'RUN-14022390-5', '1980-02-14', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('14235890-5', 'Claudia Andrea', 'García-Huidobro Ruiz', 'claudia.garciahuidobroruiz@skyway.com', '+56 9 9876 1107', 'RUN-14235890-5', '1981-09-27', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('14561230-6', 'Nicolás Alberto', 'Tagle Montt', 'nicolas.taglemontt@skyway.com', '+56 9 8765 1108', 'RUN-14561230-6', '1982-12-05', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('14890125-2', 'Andrés Mauricio', 'Subercaseaux Sommerhoff', 'andres.subercaseauxsommerhoff@skyway.com', '+56 9 7890 1109', 'RUN-14890125-2', '1983-04-18', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('15120340-K', 'Daniela Paz', 'Balmaceda Freire', 'daniela.balmacedafreire@skyway.com', '+56 9 9123 1110', 'RUN-15120340-K', '1984-07-22', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('12670190-K', 'Hans Peter', 'Von Schack', 'hans.vonschack@skyway.com', '+49 171 234 1111', 'RUN-12670190-K', '1975-01-15', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('12950340-8', 'Marco Antonio', 'Rossi Cavalli', 'marco.rossicavalli@skyway.com', '+39 340 567 1112', 'RUN-12950340-8', '1976-10-09', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('13240890-4', 'Claire Marie', 'Dubois Fontaine', 'claire.duboisfontaine@skyway.com', '+33 6 12 34 1113', 'RUN-13240890-4', '1977-04-03', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('13580120-8', 'James Arthur', 'Thompson Wellington', 'james.thompsonwellington@skyway.com', '+44 7700 900114', 'RUN-13580120-8', '1978-09-17', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('13890450-4', 'Hiroshi Kenji', 'Tanaka Takahashi', 'hiroshi.tanakatakahashi@skyway.com', '+81 90 1234 1115', 'RUN-13890450-4', '1979-12-28', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('14150780-K', 'Lucas Gabriel', 'Da Silva Santos', 'lucas.dasilvasantos@skyway.com', '+55 11 98765 1116', 'RUN-14150780-K', '1980-08-07', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('14380210-8', 'Dmitry Alexeyevich', 'Volkov', 'dmitry.volkov@skyway.com', '+7 916 234 1117', 'RUN-14380210-8', '1981-03-19', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('14690340-1', 'Ahmed Mansoor', 'Al-Nuaimi', 'ahmed.alnuaimi@skyway.com', '+971 50 123 1118', 'RUN-14690340-1', '1982-06-11', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('14920560-8', 'Carlos Alberto', 'Gutiérrez Barrientos', 'carlos.gutierrezbarrientos@skyway.com', '+56 9 8543 1119', 'RUN-14920560-8', '1983-11-23', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('15240890-0', 'Isabel Margarita', 'Zaldívar Larraín', 'isabel.zaldivarlarrain@skyway.com', '+56 9 7432 1120', 'RUN-15240890-0', '1984-01-31', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('15480120-0', 'Joaquín Ignacio', 'Matte Irarrázaval', 'joaquin.matteirarrazaval@skyway.com', '+56 9 9654 1121', 'RUN-15480120-0', '1985-05-14', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('15730450-K', 'Vicente José', 'Ochagavía Riesco', 'vicente.ochagaviariesco@skyway.com', '+56 9 8765 1122', 'RUN-15730450-K', '1986-08-25', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('16010780-4', 'Paula Andrea', 'Echeverría Yrarrázaval', 'paula.echeverriayrarrazaval@skyway.com', '+56 9 7321 1123', 'RUN-16010780-4', '1987-02-18', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('16250310-3', 'Matías Alonso', 'Vial Claro', 'matias.vialclaro@skyway.com', '+56 9 9210 1124', 'RUN-16250310-3', '1988-10-04', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('16490640-K', 'Cristóbal José', 'Edwards Eastman', 'cristobal.edwardseastman@skyway.com', '+56 9 8109 1125', 'RUN-16490640-K', '1989-06-16', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('16730970-4', 'Florencia Paz', 'Fernández Concha', 'florencia.fernandezconcha@skyway.com', '+56 9 7098 1126', 'RUN-16730970-4', '1990-12-01', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('13050120-6', 'Tomás Ignacio', 'Lira Correa', 'tomas.liracorrea@skyway.com', '+56 9 9988 1127', 'RUN-13050120-6', '1976-07-29', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('13390450-6', 'Esteban Manuel', 'Quirós Carvajal', 'esteban.quiroscarvajal@skyway.com', '+506 8812 1128', 'RUN-13390450-6', '1977-08-12', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('13620780-6', 'Martín Alonso', 'Barros Tocornal', 'martin.barrostocornal@skyway.com', '+56 9 9456 1129', 'RUN-13620780-6', '1978-10-05', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('13950110-1', 'Guillermo Enrique', 'Amunátegui Stewart', 'guillermo.amunateguistewart@skyway.com', '+56 9 8321 1130', 'RUN-13950110-1', '1979-04-14', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('14280440-9', 'Bernardita Paz', 'Cruzat Infante', 'bernardita.cruzatinfante@skyway.com', '+56 9 7210 1131', 'RUN-14280440-9', '1981-11-20', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('14510770-9', 'Álvaro Hernán', 'Gana Urzúa', 'alvaro.ganaurzua@skyway.com', '+56 9 9109 1132', 'RUN-14510770-9', '1982-03-08', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('14840100-4', 'Benjamín José', 'Hurtado Zañartu', 'benjamin.hurtadozanartu@skyway.com', '+56 9 8098 1133', 'RUN-14840100-4', '1983-09-15', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('15070430-8', 'Consuelo María', 'Izquierdo Menéndez', 'consuelo.izquierdomenendez@skyway.com', '+56 9 7987 1134', 'RUN-15070430-8', '1984-05-22', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('15300760-8', 'Domingo Ignacio', 'Jaramillo Phillips', 'domingo.jaramillophillips@skyway.com', '+56 9 9876 1135', 'RUN-15300760-8', '1985-01-10', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('15630090-K', 'Francisca Elena', 'Kramer Oelckers', 'francisca.krameroelckers@skyway.com', '+56 9 8765 1136', 'RUN-15630090-K', '1986-07-04', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('15860420-5', 'Gustavo Adolfo', 'Labbé Valdés', 'gustavo.labbevaldes@skyway.com', '+56 9 7654 1137', 'RUN-15860420-5', '1987-12-18', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('16190750-2', 'Hernán Patricio', 'Montt Morandé', 'hernan.monttmorande@skyway.com', '+56 9 9543 1138', 'RUN-16190750-2', '1988-06-30', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('16420080-9', 'Ignacio Javier', 'Noguera Prieto', 'ignacio.nogueraprieto@skyway.com', '+56 9 8432 1139', 'RUN-16420080-9', '1989-02-11', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('16650410-4', 'Jorge Andrés', 'Ortúzar Correa', 'jorge.ortuzarcorrea@skyway.com', '+56 9 7321 1140', 'RUN-16650410-4', '1990-08-27', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW())
+ON CONFLICT (RUT) DO UPDATE
+    SET Nombre = EXCLUDED.Nombre, Apellido = EXCLUDED.Apellido, Correo_Electronico = EXCLUDED.Correo_Electronico;
+
+-- Asignación de Rol Piloto en RolUsuario
+INSERT INTO RolUsuario (rut_usuario, id_rol)
+SELECT u.RUT, (SELECT id_rol FROM Roles WHERE LOWER(nombre) = 'piloto')
+FROM Usuario u
+WHERE u.RUT IN (
+                '12480315-2', '12894120-7', '13150244-3', '13429810-3', '13781255-K', '14022390-5', '14235890-5', '14561230-6', '14890125-2', '15120340-K', '12670190-K', '12950340-8', '13240890-4', '13580120-8', '13890450-4', '14150780-K', '14380210-8', '14690340-1', '14920560-8', '15240890-0', '15480120-0', '15730450-K', '16010780-4', '16250310-3', '16490640-K', '16730970-4', '13050120-6', '13390450-6', '13620780-6', '13950110-1', '14280440-9', '14510770-9', '14840100-4', '15070430-8', '15300760-8', '15630090-K', '15860420-5', '16190750-2', '16420080-9', '16650410-4'
+    )
+  AND NOT EXISTS (
+    SELECT 1 FROM RolUsuario ru
+    WHERE ru.rut_usuario = u.RUT
+      AND ru.id_rol = (SELECT id_rol FROM Roles WHERE LOWER(nombre) = 'piloto')
+);
+
+-- Inserción de credenciales técnicas en tabla Piloto
+INSERT INTO Piloto (RUT, Licencia, Experiencia_anos, Especializaciones)
+VALUES
+    ('12480315-2', 'DGAC-ATPL-7412', 22, 'Capitán - Capitán Instructor A320 / A321 Family'),
+    ('12894120-7', 'DGAC-ATPL-7624', 20, 'Capitán - Capitán B787 Dreamliner ETOPS 330'),
+    ('13150244-3', 'DGAC-ATPL-7708', 19, 'Capitán - Capitán A350-900 / A380-800 Heavy'),
+    ('13429810-3', 'DGAC-ATPL-7819', 14, 'Primer Oficial - Primer Oficial Senior B777-300ER'),
+    ('13781255-K', 'DGAC-ATPL-7930', 18, 'Capitán - Capitán Senior B747-400 / B777'),
+    ('14022390-5', 'DGAC-ATPL-8014', 12, 'Primer Oficial - Primer Oficial A320 / A321 Neo'),
+    ('14235890-5', 'DGAC-ATPL-8127', 16, 'Capitán - Capitán A330-300 / Rutas Transatlánticas'),
+    ('14561230-6', 'DGAC-ATPL-8205', 11, 'Primer Oficial - Primer Oficial Embraer E195 / A320'),
+    ('14890125-2', 'DGAC-ATPL-8318', 15, 'Capitán - Capitán B787 Dreamliner / Rutas Oceanía'),
+    ('15120340-K', 'DGAC-ATPL-8422', 10, 'Primer Oficial - Primer Oficial B787 / B757'),
+    ('12670190-K', 'EASA-ATPL-7515', 24, 'Capitán - Capitán Inspector A380-800 / B747'),
+    ('12950340-8', 'ENAC-ATPL-7610', 21, 'Capitán - Capitán A350-900 Rutas Mediterráneas'),
+    ('13240890-4', 'DGAC-FR-ATPL-7703', 19, 'Capitán - Capitán A330 / A350 ETOPS'),
+    ('13580120-8', 'CAA-UK-ATPL-7817', 20, 'Capitán - Capitán B777 Rutas Atlántico Norte (NAT)'),
+    ('13890450-4', 'JCAB-ATPL-7928', 13, 'Primer Oficial - Primer Oficial Senior B777 / Rutas Asia'),
+    ('14150780-K', 'ANAC-BR-ATPL-8007', 17, 'Capitán - Capitán B777 / B787 Hub São Paulo'),
+    ('14380210-8', 'FAVT-ATPL-8119', 18, 'Capitán - Capitán B777-300ER / Rutas Polares'),
+    ('14690340-1', 'GCAA-ATPL-8211', 12, 'Primer Oficial - Primer Oficial A350 / A380'),
+    ('14920560-8', 'DGAC-ATPL-8323', 15, 'Capitán - Capitán B757 / B767 Operaciones Andinas'),
+    ('15240890-0', 'DGAC-ATPL-8431', 9, 'Primer Oficial - Primer Oficial A320 Neo Cono Sur'),
+    ('15480120-0', 'DGAC-ATPL-8514', 14, 'Capitán - Capitán A320 / A321 Rutas Troncales'),
+    ('15730450-K', 'DGAC-ATPL-8625', 8, 'Primer Oficial - Primer Oficial Embraer E195'),
+    ('16010780-4', 'DGAC-ATPL-8718', 13, 'Capitán - Capitán B787 Dreamliner Rutas USA'),
+    ('16250310-3', 'DGAC-ATPL-8804', 7, 'Primer Oficial - Primer Oficial A330 Intercontinental'),
+    ('16490640-K', 'DGAC-ATPL-8916', 11, 'Capitán - Capitán A320 Family'),
+    ('16730970-4', 'DGAC-ATPL-9001', 6, 'Primer Oficial - Primer Oficial Embraer E195'),
+    ('13050120-6', 'DGAC-ATPL-7629', 21, 'Capitán - Capitán Senior B777 / Rutas Asia-Pacífico'),
+    ('13390450-6', 'DGAC-CR-ATPL-7712', 19, 'Capitán - Capitán A320 / Rutas Centroamérica'),
+    ('13620780-6', 'DGAC-ATPL-7805', 13, 'Primer Oficial - Primer Oficial B787 Dreamliner'),
+    ('13950110-1', 'DGAC-ATPL-7914', 17, 'Capitán - Capitán B737-800 / Rutas Regionales'),
+    ('14280440-9', 'DGAC-ATPL-8120', 11, 'Primer Oficial - Primer Oficial A321 Neo / A320'),
+    ('14510770-9', 'DGAC-ATPL-8208', 15, 'Capitán - Capitán B757 / Operaciones Andinas'),
+    ('14840100-4', 'DGAC-ATPL-8315', 10, 'Primer Oficial - Primer Oficial B777-300ER'),
+    ('15070430-8', 'DGAC-ATPL-8422', 14, 'Capitán - Capitán A330-300 / Europa'),
+    ('15300760-8', 'DGAC-ATPL-8510', 9, 'Primer Oficial - Primer Oficial B787 Dreamliner'),
+    ('15630090-K', 'DGAC-ATPL-8604', 12, 'Capitán - Capitán A320 / A321 Family'),
+    ('15860420-5', 'DGAC-ATPL-8718', 8, 'Primer Oficial - Primer Oficial B737-800'),
+    ('16190750-2', 'DGAC-ATPL-8830', 11, 'Capitán - Capitán Embraer E195'),
+    ('16420080-9', 'DGAC-ATPL-8911', 7, 'Primer Oficial - Primer Oficial A350-900 Heavy'),
+    ('16650410-4', 'DGAC-ATPL-9027', 10, 'Capitán - Capitán A320 Family')
+ON CONFLICT (RUT) DO UPDATE
+    SET Licencia = EXCLUDED.Licencia,
+        Experiencia_anos = EXCLUDED.Experiencia_anos,
+        Especializaciones = EXCLUDED.Especializaciones;
+
+-- =============================================================================
+-- 6. TRIPULACIÓN DE CABINA (50 TRIPULANTES CON RUTS MÓDULO 11 CHILENOS)
+-- =============================================================================
+INSERT INTO Usuario (RUT, Nombre, Apellido, Correo_Electronico, Telefono, Documento_Identidad, Fecha_Nacimiento, Contrasena, Fecha_Registro)
+VALUES
+    ('15500120-8', 'Valentina Sofía', 'Riesco Errázuriz', 'valentina.riescoerrazuriz@tripulacion.skyway.com', '+56 9 9111 2201', 'RUN-15500120-8', '1985-04-12', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('15800230-2', 'Catalina Paz', 'Guzmán Lyon', 'catalina.guzmanlyon@tripulacion.skyway.com', '+56 9 9222 2202', 'RUN-15800230-2', '1986-08-23', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('16100340-9', 'María José', 'Undurraga Abbott', 'maria.undurragaabbott@tripulacion.skyway.com', '+56 9 9333 2203', 'RUN-16100340-9', '1987-01-15', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('16400450-3', 'Javiera Ignacia', 'Vial Valdés', 'javiera.vialvaldes@tripulacion.skyway.com', '+56 9 9444 2204', 'RUN-16400450-3', '1988-05-30', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('16700560-8', 'Francisca Antonia', 'Echenique Matte', 'francisca.echeniquematte@tripulacion.skyway.com', '+56 9 9555 2205', 'RUN-16700560-8', '1989-09-14', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('17000670-4', 'Camila Andrea', 'Larraín Bulnes', 'camila.larrainbulnes@tripulacion.skyway.com', '+56 9 9666 2206', 'RUN-17000670-4', '1990-03-02', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('17200780-5', 'Daniela Paz', 'Fernández Concha', 'daniela.fernandezconcha@tripulacion.skyway.com', '+56 9 9777 2207', 'RUN-17200780-5', '1991-07-19', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('17400890-6', 'Constanza Belén', 'Cousiño Mac-Clure', 'constanza.cousinomacclure@tripulacion.skyway.com', '+56 9 9888 2208', 'RUN-17400890-6', '1992-11-04', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('17600910-1', 'Isidora Paz', 'Vergara Edwards', 'isidora.vergaraedwards@tripulacion.skyway.com', '+56 9 9999 2209', 'RUN-17600910-1', '1993-02-18', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('17800120-5', 'Florencia Ignacia', 'Subercaseaux Claro', 'florencia.subercaseauxclaro@tripulacion.skyway.com', '+56 9 9123 2210', 'RUN-17800120-5', '1994-06-25', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('18000230-8', 'Macarena Paz', 'Tagle Irarrázaval', 'macarena.tagleirarrazaval@tripulacion.skyway.com', '+56 9 9234 2211', 'RUN-18000230-8', '1995-10-12', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('18200340-9', 'Trinidad Sofía', 'Montt Ossa', 'trinidad.monttossa@tripulacion.skyway.com', '+56 9 9345 2212', 'RUN-18200340-9', '1996-01-28', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('18400450-K', 'Josefina Andrea', 'Errázuriz Vial', 'josefina.errazurizvial@tripulacion.skyway.com', '+56 9 9456 2213', 'RUN-18400450-K', '1996-05-16', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('18600560-0', 'Rosario Paz', 'Balmaceda Lynch', 'rosario.balmacedalynch@tripulacion.skyway.com', '+56 9 9567 2214', 'RUN-18600560-0', '1997-09-08', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('18800670-1', 'Antonia Ignacia', 'García-Huidobro Matte', 'antonia.garciahuidobromatte@tripulacion.skyway.com', '+56 9 9678 2215', 'RUN-18800670-1', '1998-03-21', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('19000780-4', 'Bárbara Elena', 'Zañartu Prieto', 'barbara.zanartuprieto@tripulacion.skyway.com', '+56 9 9789 2216', 'RUN-19000780-4', '1998-07-14', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('19200890-5', 'Montserrat Paz', 'Pérez-Cotapos Vial', 'montserrat.perezcotaposvial@tripulacion.skyway.com', '+56 9 9890 2217', 'RUN-19200890-5', '1999-02-09', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('19400910-0', 'Esperanza María', 'Ochagavía Valdés', 'esperanza.ochagaviavaldes@tripulacion.skyway.com', '+56 9 9901 2218', 'RUN-19400910-0', '1999-08-25', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('19600120-4', 'Paz Ignacia', 'Subercaseaux Tagle', 'paz.subercaseauxtagle@tripulacion.skyway.com', '+56 9 9012 2219', 'RUN-19600120-4', '2000-01-11', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('19800230-5', 'Clara Sofía', 'Lira Echenique', 'clara.liraechenique@tripulacion.skyway.com', '+56 9 9123 2220', 'RUN-19800230-5', '2000-06-30', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('15750110-0', 'Sebastián Andrés', 'Correa Amunátegui', 'sebastian.correaamunategui@tripulacion.skyway.com', '+56 9 8111 2221', 'RUN-15750110-0', '1986-02-14', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('16050220-7', 'Diego Ignacio', 'Valenzuela Larraín', 'diego.valenzuelalarrain@tripulacion.skyway.com', '+56 9 8222 2222', 'RUN-16050220-7', '1987-06-20', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('16350330-1', 'Nicolás Alberto', 'Barros Cousiño', 'nicolas.barroscousino@tripulacion.skyway.com', '+56 9 8333 2223', 'RUN-16350330-1', '1988-11-15', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('16650440-6', 'Matías Eduardo', 'Gana Montt', 'matias.ganamontt@tripulacion.skyway.com', '+56 9 8444 2224', 'RUN-16650440-6', '1989-04-18', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('16950550-0', 'Felipe José', 'Hurtado Edwards', 'felipe.hurtadoedwards@tripulacion.skyway.com', '+56 9 8555 2225', 'RUN-16950550-0', '1990-09-22', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('17150660-3', 'Lucas Alonso', 'Cruzat Errázuriz', 'lucas.cruzaterrazuriz@tripulacion.skyway.com', '+56 9 8666 2226', 'RUN-17150660-3', '1991-01-30', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('17350770-4', 'Tomás Ignacio', 'Infante Vial', 'tomas.infantevial@tripulacion.skyway.com', '+56 9 8777 2227', 'RUN-17350770-4', '1992-05-12', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('17550880-5', 'Benjamín Andrés', 'Jaramillo Matte', 'benjamin.jaramillomatte@tripulacion.skyway.com', '+56 9 8888 2228', 'RUN-17550880-5', '1993-10-05', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('17750990-6', 'Joaquín Alberto', 'Kramer Bulnes', 'joaquin.kramerbulnes@tripulacion.skyway.com', '+56 9 8999 2229', 'RUN-17750990-6', '1994-03-19', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('17950100-7', 'Cristóbal José', 'Labbé Mac-Clure', 'cristobal.labbemacclure@tripulacion.skyway.com', '+56 9 8123 2230', 'RUN-17950100-7', '1995-07-28', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('18150210-K', 'Martín Ignacio', 'Montt Prieto', 'martin.monttprieto@tripulacion.skyway.com', '+56 9 8234 2231', 'RUN-18150210-K', '1996-02-10', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('18350320-0', 'Vicente Eduardo', 'Noguera Zañartu', 'vicente.noguerazanartu@tripulacion.skyway.com', '+56 9 8345 2232', 'RUN-18350320-0', '1996-08-14', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('18550430-1', 'Álvaro José', 'Ortúzar Ossa', 'alvaro.ortuzarossa@tripulacion.skyway.com', '+56 9 8456 2233', 'RUN-18550430-1', '1997-01-22', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('18750540-2', 'Gonzalo Andrés', 'Pérez Lynch', 'gonzalo.perezlynch@tripulacion.skyway.com', '+56 9 8567 2234', 'RUN-18750540-2', '1997-06-09', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('18950650-3', 'Ignacio Alonso', 'Quirós Valdés', 'ignacio.quirosvaldes@tripulacion.skyway.com', '+56 9 8678 2235', 'RUN-18950650-3', '1998-11-03', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('19150760-6', 'Hernán Alberto', 'Riesco Echenique', 'hernan.riescoechenique@tripulacion.skyway.com', '+56 9 8789 2236', 'RUN-19150760-6', '1999-04-17', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('19350870-7', 'Guillermo José', 'Subercaseaux Lyon', 'guillermo.subercaseauxlyon@tripulacion.skyway.com', '+56 9 8890 2237', 'RUN-19350870-7', '1999-09-24', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('19550980-8', 'Domingo Andrés', 'Tagle Bulnes', 'domingo.taglebulnes@tripulacion.skyway.com', '+56 9 8901 2238', 'RUN-19550980-8', '2000-03-08', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('19750190-1', 'Esteban Ignacio', 'Urzúa Abbott', 'esteban.urzuaabbott@tripulacion.skyway.com', '+56 9 8012 2239', 'RUN-19750190-1', '2000-07-15', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('19950200-K', 'Bruno Alonso', 'Vial Mac-Clure', 'bruno.vialmacclure@tripulacion.skyway.com', '+56 9 8123 2240', 'RUN-19950200-K', '2001-01-20', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('15900130-K', 'Julieta Paz', 'Amunátegui Matte', 'julieta.amunateguimatte@tripulacion.skyway.com', '+56 9 7111 2241', 'RUN-15900130-K', '1987-03-11', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('16200240-6', 'Renata Sofía', 'Barros Errázuriz', 'renata.barroserrazuriz@tripulacion.skyway.com', '+56 9 7222 2242', 'RUN-16200240-6', '1988-07-16', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('16500350-0', 'Amalia Ignacia', 'Correa Vial', 'amalia.correavial@tripulacion.skyway.com', '+56 9 7333 2243', 'RUN-16500350-0', '1989-12-05', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('16800460-5', 'Eloísa Paz', 'Cruzat Lyon', 'eloisa.cruzatlyon@tripulacion.skyway.com', '+56 9 7444 2244', 'RUN-16800460-5', '1990-05-18', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('17100570-1', 'Leonor María', 'Edwards Concha', 'leonor.edwardsconcha@tripulacion.skyway.com', '+56 9 7555 2245', 'RUN-17100570-1', '1991-10-29', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('17300680-2', 'Inés Andrea', 'Gana Echenique', 'ines.ganaechenique@tripulacion.skyway.com', '+56 9 7666 2246', 'RUN-17300680-2', '1992-04-03', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('17500790-3', 'Laura Sofía', 'Hurtado Larraín', 'laura.hurtadolarrain@tripulacion.skyway.com', '+56 9 7777 2247', 'RUN-17500790-3', '1993-08-14', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('17700810-9', 'Sara Paz', 'Infante Montt', 'sara.infantemontt@tripulacion.skyway.com', '+56 9 7888 2248', 'RUN-17700810-9', '1994-01-25', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('17900920-K', 'Emilia Ignacia', 'Labbé Prieto', 'emilia.labbeprieto@tripulacion.skyway.com', '+56 9 7999 2249', 'RUN-17900920-K', '1995-06-11', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('18100130-5', 'Matilde Paz', 'Montt Zañartu', 'matilde.monttzanartu@tripulacion.skyway.com', '+56 9 7123 2250', 'RUN-18100130-5', '1996-11-20', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW())
+ON CONFLICT (RUT) DO UPDATE
+    SET Nombre = EXCLUDED.Nombre, Apellido = EXCLUDED.Apellido, Correo_Electronico = EXCLUDED.Correo_Electronico;
+
+-- Asignación de Rol Tripulacion en RolUsuario
+INSERT INTO RolUsuario (rut_usuario, id_rol)
+SELECT u.RUT, (SELECT id_rol FROM Roles WHERE LOWER(nombre) = 'tripulacion')
+FROM Usuario u
+WHERE u.RUT IN (
+                '15500120-8', '15800230-2', '16100340-9', '16400450-3', '16700560-8', '17000670-4', '17200780-5', '17400890-6', '17600910-1', '17800120-5', '18000230-8', '18200340-9', '18400450-K', '18600560-0', '18800670-1', '19000780-4', '19200890-5', '19400910-0', '19600120-4', '19800230-5', '15750110-0', '16050220-7', '16350330-1', '16650440-6', '16950550-0', '17150660-3', '17350770-4', '17550880-5', '17750990-6', '17950100-7', '18150210-K', '18350320-0', '18550430-1', '18750540-2', '18950650-3', '19150760-6', '19350870-7', '19550980-8', '19750190-1', '19950200-K', '15900130-K', '16200240-6', '16500350-0', '16800460-5', '17100570-1', '17300680-2', '17500790-3', '17700810-9', '17900920-K', '18100130-5'
+    )
+  AND NOT EXISTS (
+    SELECT 1 FROM RolUsuario ru
+    WHERE ru.rut_usuario = u.RUT
+      AND ru.id_rol = (SELECT id_rol FROM Roles WHERE LOWER(nombre) = 'tripulacion')
+);
+
+-- Inserción de cargos y antigüedad en Tripulacion
+INSERT INTO Tripulacion (RUT, Cargo, Fecha_Ingreso)
+VALUES
+    ('15500120-8', 'Jefe de Cabina Internacional', NOW() - INTERVAL '12 years'),
+    ('15800230-2', 'Jefe de Cabina Internacional', NOW() - INTERVAL '11 years'),
+    ('16100340-9', 'Jefe de Cabina Internacional', NOW() - INTERVAL '10 years'),
+    ('16400450-3', 'Jefe de Cabina Internacional', NOW() - INTERVAL '9 years'),
+    ('16700560-8', 'Jefe de Cabina Internacional', NOW() - INTERVAL '8 years'),
+    ('17000670-4', 'Jefe de Cabina', NOW() - INTERVAL '7 years'),
+    ('17200780-5', 'Jefe de Cabina', NOW() - INTERVAL '7 years'),
+    ('17400890-6', 'Jefe de Cabina', NOW() - INTERVAL '6 years'),
+    ('17600910-1', 'Jefe de Cabina', NOW() - INTERVAL '6 years'),
+    ('17800120-5', 'Jefe de Cabina', NOW() - INTERVAL '5 years'),
+    ('18000230-8', 'Comisario de Vuelo', NOW() - INTERVAL '5 years'),
+    ('18200340-9', 'Comisario de Vuelo', NOW() - INTERVAL '4 years'),
+    ('18400450-K', 'Comisario de Vuelo', NOW() - INTERVAL '4 years'),
+    ('18600560-0', 'Comisario de Vuelo', NOW() - INTERVAL '4 years'),
+    ('18800670-1', 'Comisario de Vuelo', NOW() - INTERVAL '3 years'),
+    ('19000780-4', 'Tripulante de Cabina Senior', NOW() - INTERVAL '3 years'),
+    ('19200890-5', 'Tripulante de Cabina Senior', NOW() - INTERVAL '3 years'),
+    ('19400910-0', 'Tripulante de Cabina Senior', NOW() - INTERVAL '2 years'),
+    ('19600120-4', 'Tripulante de Cabina Senior', NOW() - INTERVAL '2 years'),
+    ('19800230-5', 'Tripulante de Cabina Senior', NOW() - INTERVAL '2 years'),
+    ('15750110-0', 'Tripulante de Cabina', NOW() - INTERVAL '10 years'),
+    ('16050220-7', 'Tripulante de Cabina', NOW() - INTERVAL '9 years'),
+    ('16350330-1', 'Tripulante de Cabina', NOW() - INTERVAL '8 years'),
+    ('16650440-6', 'Tripulante de Cabina', NOW() - INTERVAL '8 years'),
+    ('16950550-0', 'Tripulante de Cabina', NOW() - INTERVAL '7 years'),
+    ('17150660-3', 'Tripulante de Cabina', NOW() - INTERVAL '6 years'),
+    ('17350770-4', 'Tripulante de Cabina', NOW() - INTERVAL '6 years'),
+    ('17550880-5', 'Tripulante de Cabina', NOW() - INTERVAL '5 years'),
+    ('17750990-6', 'Tripulante de Cabina', NOW() - INTERVAL '5 years'),
+    ('17950100-7', 'Tripulante de Cabina', NOW() - INTERVAL '4 years'),
+    ('18150210-K', 'Tripulante de Cabina', NOW() - INTERVAL '4 years'),
+    ('18350320-0', 'Tripulante de Cabina', NOW() - INTERVAL '3 years'),
+    ('18550430-1', 'Tripulante de Cabina', NOW() - INTERVAL '3 years'),
+    ('18750540-2', 'Tripulante de Cabina', NOW() - INTERVAL '3 years'),
+    ('18950650-3', 'Tripulante de Cabina', NOW() - INTERVAL '2 years'),
+    ('19150760-6', 'Tripulante de Cabina', NOW() - INTERVAL '2 years'),
+    ('19350870-7', 'Tripulante de Cabina', NOW() - INTERVAL '2 years'),
+    ('19550980-8', 'Tripulante de Cabina', NOW() - INTERVAL '1 years'),
+    ('19750190-1', 'Tripulante de Cabina', NOW() - INTERVAL '1 years'),
+    ('19950200-K', 'Tripulante de Cabina', NOW() - INTERVAL '1 years'),
+    ('15900130-K', 'Tripulante de Cabina', NOW() - INTERVAL '9 years'),
+    ('16200240-6', 'Tripulante de Cabina', NOW() - INTERVAL '8 years'),
+    ('16500350-0', 'Tripulante de Cabina', NOW() - INTERVAL '8 years'),
+    ('16800460-5', 'Tripulante de Cabina', NOW() - INTERVAL '7 years'),
+    ('17100570-1', 'Tripulante de Cabina', NOW() - INTERVAL '6 years'),
+    ('17300680-2', 'Tripulante de Cabina', NOW() - INTERVAL '6 years'),
+    ('17500790-3', 'Tripulante de Cabina', NOW() - INTERVAL '5 years'),
+    ('17700810-9', 'Tripulante de Cabina', NOW() - INTERVAL '5 years'),
+    ('17900920-K', 'Tripulante de Cabina', NOW() - INTERVAL '4 years'),
+    ('18100130-5', 'Tripulante de Cabina', NOW() - INTERVAL '4 years')
+ON CONFLICT (RUT) DO UPDATE
+    SET Cargo = EXCLUDED.Cargo, Fecha_Ingreso = EXCLUDED.Fecha_Ingreso;
+
+-- =============================================================================
+-- 7. RE-SINCRONIZACIÓN DE SECUENCIAS RELACIONALES
+-- =============================================================================
+SELECT setval('fabricante_seq', COALESCE((SELECT MAX(ID_FABRICANTE) FROM Fabricante), 1), true);
+SELECT setval('modelo_avion_seq', COALESCE((SELECT MAX(ID_MODELO) FROM Modelo_Avion), 1), true);
+SELECT setval('configuracion_cabina_seq', COALESCE((SELECT MAX(ID_CONFIGURACION) FROM Configuracion_Cabina), 1), true);
+SELECT setval('avion_seq', COALESCE((SELECT MAX(ID_AVION) FROM Avion), 1), true);
+SELECT setval('capacidad_clase_seq', COALESCE((SELECT MAX(ID_CAPACIDAD_CLASE) FROM Capacidad_Clase), 1), true);
+SELECT setval('asiento_seq', COALESCE((SELECT MAX(ID_ASIENTO) FROM Asiento), 1), true);
+SELECT setval('rolusuario_id_seq', COALESCE((SELECT MAX(id_rol_usuario) FROM RolUsuario), 1), true);
+
+
 -- 1. Limpieza de Tablas Intermedias
 -- =============================================================================
 -- SCRIPT DE POBLADO: TARIFAS Y CARACTERÍSTICAS (SkyWay)
 -- =============================================================================
+
+
 
 -- 1. Insertar Tarifas
 INSERT INTO Tarifa (ID_TARIFA, Nombre) VALUES

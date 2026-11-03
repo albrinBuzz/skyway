@@ -5,6 +5,8 @@ import com.SkyWay.config.pago.PagoFactoryService;
 import com.SkyWay.config.pago.PasarelaPagoStrategy;
 import com.SkyWay.modules.reserva.domain.service.ReservaProcesadorService;
 import com.SkyWay.modules.reserva.presentation.dto.SolicitudReservaDTO;
+import com.SkyWay.modules.tarifa.domain.service.UpgradeTarifaService;
+import com.SkyWay.modules.tarifa.presentation.dto.SolicitudUpgradeDTO;
 import com.SkyWay.util.Logger;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -21,6 +23,8 @@ public class MercadoPagoController {
 
     @Autowired
     private ReservaProcesadorService procesarReservaUseCase;
+    @Autowired
+    private UpgradeTarifaService upgradeTarifaService;
 
     private final PagoFactoryService pagoFactoryService;
 
@@ -58,6 +62,38 @@ public class MercadoPagoController {
 
             // Obtener la sesión pendiente
             HttpSession session = request.getSession(false);
+
+            // 1. Verificar si corresponde a un Ascenso de Tarifa (Upgrade)
+            SolicitudUpgradeDTO upgradeDto = (session != null)
+                    ? (SolicitudUpgradeDTO) session.getAttribute("SOLICITUD_UPGRADE_PENDIENTE")
+                    : null;
+
+            if (upgradeDto != null) {
+                Logger.logInfo("🎯 [MERCADOPAGO] Confirmando Ascenso de Tarifa para Reserva ID: " + upgradeDto.getIdReserva());
+                int idMetodoPagoMP = 1;
+                boolean ok = upgradeTarifaService.procesarUpgrade(
+                        upgradeDto.getIdReserva(),
+                        upgradeDto.getIdItinerario(),
+                        upgradeDto.getIdItinerarioTarifaNuevo(),
+                        idMetodoPagoMP,
+                        "Mercado Pago Checkout Pro"
+                );
+                session.removeAttribute("SOLICITUD_UPGRADE_PENDIENTE");
+
+                if (ok) {
+                    if ("checkin".equalsIgnoreCase(upgradeDto.getOrigen())) {
+                        session.setAttribute("CHECKIN_ID_RESERVA", upgradeDto.getIdReserva());
+                        session.setAttribute("CHECKIN_ID_ITINERARIO", upgradeDto.getIdItinerario());
+                        return new RedirectView("/home/checkin.xhtml?upgradeSuccess=true");
+                    } else {
+                        return new RedirectView("/perfil/pasajero/index.xhtml?upgradeSuccess=true");
+                    }
+                } else {
+                    return new RedirectView("/home/errorPago.xhtml?reason=UPGRADE_ERROR");
+                }
+            }
+
+            // 2. Flujo regular de nueva reserva
             SolicitudReservaDTO dto = (session != null)
                     ? (SolicitudReservaDTO) session.getAttribute("SOLICITUD_RESERVA_PENDIENTE")
                     : null;

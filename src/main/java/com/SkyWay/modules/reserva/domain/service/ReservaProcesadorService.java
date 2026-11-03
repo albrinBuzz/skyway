@@ -71,6 +71,26 @@ public class ReservaProcesadorService {
         }
 
         // -----------------------------------------------------------------------------------------
+        // 0. VERIFICACIÓN ATÓMICA ANTI-CHURNING (DUPLICIDAD EN ITINERARIOS)
+        // -----------------------------------------------------------------------------------------
+        if (dto.tarifasItinerarios() != null && !dto.tarifasItinerarios().isEmpty()) {
+            for (Pasajero p : pasajerosList) {
+                String rutP = (p.getRut() != null && !p.getRut().isBlank()) ? p.getRut().trim() : p.getNumeroDocumento();
+                if (rutP == null || rutP.isBlank()) continue;
+
+                for (Integer idItin : dto.tarifasItinerarios().keySet()) {
+                    var pnrExistenteOpt = reservaService.buscarReservaActivaPorPasajeroEItinerario(rutP, idItin);
+                    if (pnrExistenteOpt.isPresent()) {
+                        String errorMsg = String.format("El pasajero con identificación '%s' ya cuenta con una reserva activa (PNR: %s) para el itinerario comercial #%d.",
+                                rutP, pnrExistenteOpt.get(), idItin);
+                        Logger.logError("❌ [ANTI-CHURNING] " + errorMsg);
+                        throw new IllegalStateException(errorMsg);
+                    }
+                }
+            }
+        }
+
+        // -----------------------------------------------------------------------------------------
         // 1. REGISTRO Y AUDITORÍA DE PASAJEROS
         // -----------------------------------------------------------------------------------------
         Logger.logInfo("🔍 --- PASO 1: VERIFICANDO Y ACTUALIZANDO PASAJEROS ---");
@@ -124,6 +144,19 @@ public class ReservaProcesadorService {
         entityManager.flush();
 
         Integer idReservaGenerado = reservaGuardada.getIdReserva();
+
+        // Registrar a todos los pasajeros de la reserva en la tabla asociativa pasajero_reserva
+        for (Pasajero p : pasajerosPersistidos) {
+            String rutP = p.getRut();
+            if (rutP != null && !rutP.isBlank()) {
+                entityManager.createNativeQuery(
+                        "INSERT INTO pasajero_reserva (id_reserva, rut) VALUES (:idReserva, :rut) ON CONFLICT DO NOTHING"
+                )
+                .setParameter("idReserva", idReservaGenerado)
+                .setParameter("rut", rutP)
+                .executeUpdate();
+            }
+        }
 
         // -----------------------------------------------------------------------------------------
         // 3. CONFIRMACIÓN Y ASOCIACIÓN DE ASIENTOS

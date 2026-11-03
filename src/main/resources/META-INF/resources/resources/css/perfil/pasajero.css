@@ -212,21 +212,39 @@ body {
 /* =============================================================
    5. MODALES Y SOLUCIÓN DEFINITIVA A PESTAÑAS (TABVIEW DE PRIMEFACES)
    ============================================================= */
-body .skyway-dialog.ui-dialog .ui-dialog-titlebar {
-    background: var(--midnight-blue) !important;
+body .skyway-dialog.ui-dialog,
+body .skyway-corporate-dialog.ui-dialog {
+    background: #0B132B !important;
+    background-color: #0B132B !important;
+    border: 1px solid #1E3A5C !important;
+    border-radius: 12px !important;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.75) !important;
+    overflow: hidden !important;
+}
+
+body .skyway-dialog.ui-dialog .ui-dialog-titlebar,
+body .skyway-corporate-dialog.ui-dialog .ui-dialog-titlebar {
+    background: #0F1E36 !important;
+    background-color: #0F1E36 !important;
     color: #FFFFFF !important;
-    border-bottom: 1px solid var(--slate-glass) !important;
+    border-bottom: 1px solid #1E3A5C !important;
+    padding: 16px 20px !important;
 }
 
-body .skyway-dialog.ui-dialog .ui-dialog-content {
-    background: var(--dark-panel) !important;
+body .skyway-dialog.ui-dialog .ui-dialog-content,
+body .skyway-corporate-dialog.ui-dialog .ui-dialog-content {
+    background: #0B132B !important;
+    background-color: #0B132B !important;
     color: #E6EEF7 !important;
-    padding: 15px !important;
+    padding: 16px !important;
 }
 
-body .skyway-dialog.ui-dialog .ui-dialog-footer {
-    background: var(--midnight-blue) !important;
-    border-top: 1px solid var(--slate-glass) !important;
+body .skyway-dialog.ui-dialog .ui-dialog-footer,
+body .skyway-corporate-dialog.ui-dialog .ui-dialog-footer {
+    background: #0F1E36 !important;
+    background-color: #0F1E36 !important;
+    border-top: 1px solid #1E3A5C !important;
+    padding: 14px 20px !important;
 }
 
 /* ANULACIÓN TOTAL DEL FONDO BLANCO EN PRIMEFACES TABVIEW Y CONTENEDORES INTERNOS */
@@ -1287,10 +1305,10 @@ body .sidebar-corporativo .ui-sidebar-content {
 .bp2-field,
 .bp2-stub-field {
     background: var(--bp2-field);
-    font-family: 'Courier New', monospace;
-    font-size: 0.92rem;
-    font-weight: 600;
-    color: var(--bp2-ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #0F172A;
     padding: 4px 8px;
     white-space: normal !important;
     word-break: break-word !important;
@@ -1313,15 +1331,17 @@ body .sidebar-corporativo .ui-sidebar-content {
 }
 
 .bp2-dt-value {
-    font-family: 'Courier New', monospace;
-    font-size: 2.2rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+    font-size: 2.1rem;
+    font-weight: 800;
     line-height: 1.1;
     color: var(--bp2-value);
 }
 
 .bp2-arrival {
-    font-family: 'Courier New', monospace;
-    font-size: 0.85rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+    font-size: 0.82rem;
+    font-weight: 600;
     color: #475569;
     margin-bottom: 6px;
 }
@@ -1334,10 +1354,13 @@ body .sidebar-corporativo .ui-sidebar-content {
 }
 
 .bp2-qr {
-    width: 105px;
-    height: 105px;
+    max-width: 140px;
+    width: 100%;
+    height: auto;
+    max-height: 70px;
+    object-fit: contain;
     background: #FFFFFF;
-    padding: 5px;
+    padding: 4px;
     border-radius: 6px;
     display: block;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
@@ -1421,7 +1444,14 @@ body .sidebar-corporativo .ui-sidebar-content {
 }
 
 .bp2-stub-row .bp2-label { margin: 0; font-size: 0.8rem; }
-.bp2-stub-field { background: #FFFFFF; font-size: 0.85rem; min-width: 0; }
+.bp2-stub-field {
+    background: #FFFFFF;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #0F172A;
+    min-width: 0;
+    border: 1px solid #E2E8F0;
+}
 
 .bp2-stub-route {
     background: var(--bp2-field);
@@ -1482,4 +1512,23 @@ body .sidebar-corporativo .ui-sidebar-content {
 
 @media print {
     .bp2 { page-break-inside: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+
+/* =============================================================
+   15. ESTILOS CORPORATIVOS PARA ASCENSO DE TARIFA (UPGRADE)
+   ============================================================= */
+.badge-tier-flexible {
+    background: #082F49 !important;
+    color: #38BDF8 !important;
+    border: 1px solid #0369A1 !important;
+}
+.badge-tier-premium {
+    background: #1E1B4B !important;
+    color: #A5B4FC !important;
+    border: 1px solid #4338CA !important;
+}
+.badge-tier-corporate {
+    background: #0F172A !important;
+    color: #94A3B8 !important;
+    border: 1px solid #334155 !important;
 }

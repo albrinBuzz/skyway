@@ -17,9 +17,23 @@ import com.SkyWay.modules.reservaitinerario.domain.model.ReservaItinerario;
 import com.SkyWay.modules.reservaitinerario.domain.service.ReservaItinerarioService;
 import com.SkyWay.modules.rolusuario.domain.model.Role;
 import com.SkyWay.modules.tarifa.domain.model.Tarifa;
+import com.SkyWay.config.pago.MetodoPagoEnum;
+import com.SkyWay.config.pago.PagoFactoryService;
+import com.SkyWay.config.pago.PasarelaPagoStrategy;
+import com.SkyWay.config.pago.SolicitudPagoDTO;
+import com.SkyWay.modules.tarifa.presentation.dto.SolicitudUpgradeDTO;
+import jakarta.faces.context.ExternalContext;
+import jakarta.servlet.http.HttpServletRequest;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import com.SkyWay.modules.tarifa.domain.service.UpgradeTarifaService;
+import com.SkyWay.modules.tarifa.presentation.dto.OpcionUpgradeDTO;
+import com.SkyWay.modules.tarifa.presentation.dto.ResultadoUpgradeDTO;
 import com.SkyWay.modules.usuario.domain.model.Usuario;
 import com.SkyWay.modules.vuelo.domain.model.Vuelo;
 import com.SkyWay.modules.vuelo.domain.service.VueloService;
+import com.SkyWay.util.BarcodeGeneratorUtil;
+import com.SkyWay.util.BoardingPassSecurityService;
 import com.SkyWay.util.Logger;
 
 import jakarta.annotation.PostConstruct;
@@ -29,6 +43,7 @@ import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
 import jakarta.servlet.http.HttpSession;
 
+import org.primefaces.PrimeFaces;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +51,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -56,6 +72,12 @@ public class PerfilBean implements Serializable {
 	@Autowired private VueloService vueloService;
 	@Autowired private EquipajeService equipajeService;
 	@Autowired private ETicketPdfGeneratorService eTicketPdfGeneratorService;
+	@Autowired private UpgradeTarifaService upgradeTarifaService;
+	@Autowired private PagoFactoryService pagoFactoryService;
+
+	private List<OpcionUpgradeDTO> opcionesUpgrade = new ArrayList<>();
+	private OpcionUpgradeDTO opcionUpgradeSeleccionada;
+	private Integer idMetodoPagoUpgrade = 1;
 
 
 	private List<ItinerarioResumenDTO> listaItinerarios;
@@ -82,12 +104,16 @@ public class PerfilBean implements Serializable {
 	private String tiempoRestanteFormateado;
 	private long segundosTotalesSalida;
 	private boolean checkInAbierto;
+	private boolean checkInCompletado;
 	private double porcentajeCheckIn;
 	private String estadoCheckInTexto;
 	private String cintaEquipaje;
 	private int etapaActualCronograma;
 
 	private final Map<Integer, String> numeroVueloCache = new HashMap<>();
+
+	private ResultadoUpgradeDTO resultadoUpgrade;
+	private boolean mostrarModalResultadoUpgrade = false;
 
 	@PostConstruct
 	public void init() {
@@ -122,6 +148,29 @@ public class PerfilBean implements Serializable {
 
 		long endTime = System.currentTimeMillis();
 		Logger.logInfo("⏱ Tiempo total en init(): " + (endTime - startTime) + " ms");
+
+		if (facesContext != null && facesContext.getExternalContext() != null) {
+			Map<String, String> params = facesContext.getExternalContext().getRequestParameterMap();
+			Map<String, Object> sessionMap = facesContext.getExternalContext().getSessionMap();
+
+			if (params.containsKey("upgradeSuccess")) {
+				if (sessionMap.containsKey("RESULTADO_UPGRADE_CONFIRMADO")) {
+					this.resultadoUpgrade = (ResultadoUpgradeDTO) sessionMap.get("RESULTADO_UPGRADE_CONFIRMADO");
+					sessionMap.remove("RESULTADO_UPGRADE_CONFIRMADO");
+				}
+				this.mostrarModalResultadoUpgrade = true;
+
+				facesContext.addMessage(null,
+						new FacesMessage(FacesMessage.SEVERITY_INFO, "¡Ascenso de Tarifa Exitoso!",
+								"Tu categoría de vuelo ha sido actualizada exitosamente a " +
+										(this.resultadoUpgrade != null ? this.resultadoUpgrade.getTarifaNueva() : "una categoría superior") +
+										". Disfruta de tus nuevos beneficios."));
+			} else if (params.containsKey("upgradeCancelled")) {
+				facesContext.addMessage(null,
+						new FacesMessage(FacesMessage.SEVERITY_WARN, "Ascenso Cancelado",
+								"El proceso de pago del ascenso de tarifa fue cancelado en la pasarela."));
+			}
+		}
 	}
 
 	public void filtrarVuelosHoy() {
@@ -249,9 +298,13 @@ public class PerfilBean implements Serializable {
 			}
 		}
 
+		Map<String, Object> sessionMap = context.getExternalContext().getSessionMap();
+		sessionMap.put("CAMBIO_ASIENTO_ID_RESERVA", infoAsientoDTO.getIdReserva());
+		sessionMap.put("CAMBIO_ASIENTO_ID_VUELO", infoAsientoDTO.getIdVuelo());
+		sessionMap.put("CAMBIO_ASIENTO_ORIGEN", "PERFIL");
+
 		context.getExternalContext()
-				.redirect("/perfil/pasajero/cambioAsiento.xhtml?idVuelo=" + infoAsientoDTO.getIdVuelo()
-						+ "&idReserva=" + infoAsientoDTO.getIdReserva());
+				.redirect(context.getExternalContext().getRequestContextPath() + "/home/cambio-asiento.xhtml");
 	}
 
 
@@ -363,21 +416,35 @@ public class PerfilBean implements Serializable {
 		}
 
 		// B) CRONOGRAMA DE CHECK-IN
+		boolean checkInYaCompletado = (itinerarioSeleccionado.getIdReserva() != null)
+				&& reservaService.tieneCheckInCompletado(itinerarioSeleccionado.getIdReserva());
+		this.checkInCompletado = checkInYaCompletado;
+
 		long horasHastaSalida = duracionHastaSalida.toHours();
 
-		if (horasHastaSalida > 48) {
+		if (checkInYaCompletado) {
+			this.checkInAbierto = true;
+			this.estadoCheckInTexto = "CHECK-IN COMPLETADO";
+			this.porcentajeCheckIn = 100.0;
+			this.etapaActualCronograma = 2;
+		} else if (horasHastaSalida > 48) {
 			this.checkInAbierto = false;
-			this.estadoCheckInTexto = String.format("Abre en %d días", (horasHastaSalida - 48) / 24 + 1);
+			Date fechaApertura = getFechaAperturaCheckIn(itinerarioSeleccionado.getHoraSalida());
+			SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+			this.estadoCheckInTexto = "Abre el " + (fechaApertura != null ? sdf.format(fechaApertura) + " hrs" : String.format("Abre en %d días", (horasHastaSalida - 48) / 24 + 1));
 			this.porcentajeCheckIn = 15.0;
+			this.etapaActualCronograma = 1;
 		} else if (horasHastaSalida >= 1 && segundosHastaSalida > 0) {
 			this.checkInAbierto = true;
 			this.estadoCheckInTexto = "CHECK-IN ABIERTO";
 			double horasTranscurridas = 48.0 - (segundosHastaSalida / 3600.0);
 			this.porcentajeCheckIn = Math.min(100.0, Math.max(20.0, (horasTranscurridas / 47.0) * 100.0));
+			this.etapaActualCronograma = 1;
 		} else {
 			this.checkInAbierto = false;
 			this.estadoCheckInTexto = "CHECK-IN CERRADO";
 			this.porcentajeCheckIn = 100.0;
+			this.etapaActualCronograma = 3;
 		}
 	}
 
@@ -404,11 +471,21 @@ public class PerfilBean implements Serializable {
 		if (itinerarioSeleccionado == null) return;
 
 		FacesContext context = FacesContext.getCurrentInstance();
-		context.getExternalContext().redirect(
-				context.getExternalContext().getRequestContextPath() +
-						"/home/checkin.xhtml?idReserva=" + itinerarioSeleccionado.getIdReserva() +
-						"&idItinerario=" + itinerarioSeleccionado.getIdItinerario()
-		);
+		if (context != null && context.getExternalContext() != null) {
+			Map<String, Object> sessionMap = context.getExternalContext().getSessionMap();
+			sessionMap.put("CHECKIN_ID_RESERVA", itinerarioSeleccionado.getIdReserva());
+			sessionMap.put("CHECKIN_ID_ITINERARIO", itinerarioSeleccionado.getIdItinerario());
+
+			context.getExternalContext().redirect(
+					context.getExternalContext().getRequestContextPath() + "/home/checkin.xhtml"
+			);
+		}
+	}
+
+	public void irACheckIn(ItinerarioResumenDTO it) throws IOException {
+		if (it == null) return;
+		this.itinerarioSeleccionado = it;
+		irACheckIn();
 	}
 
 	public StreamedContent descargarComprobantePdf() {
@@ -418,6 +495,14 @@ public class PerfilBean implements Serializable {
 
 	public StreamedContent descargarBoardingPassesPdf() {
 		Logger.logInfo("🎟️ [PDF BOARDING PASSES] Solicitando descarga para idReservaSeleccionada: " + this.idReservaSeleccionada);
+		if (this.idReservaSeleccionada == null || !reservaService.tieneCheckInCompletado(this.idReservaSeleccionada)) {
+			FacesContext context = FacesContext.getCurrentInstance();
+			if (context != null) {
+				context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_WARN,
+						"Check-In Requerido", "Debes completar el Check-In Online antes de descargar tus tarjetas de embarque."));
+			}
+			return null;
+		}
 		if (this.ticketInfos != null && !this.ticketInfos.isEmpty()) {
 			try {
 				byte[] pdfBytes = eTicketPdfGeneratorService.generarPdfBoardingPasses(this.ticketInfos);
@@ -494,6 +579,16 @@ public class PerfilBean implements Serializable {
 			return null;
 		}
 
+		if (!reservaService.tieneCheckInCompletado(idReserva)) {
+			Logger.logWarn("⚠️ [PDF BOARDING PASSES] Intento de descarga sin Check-In completado para reserva ID: " + idReserva);
+			FacesContext context = FacesContext.getCurrentInstance();
+			if (context != null) {
+				context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_WARN,
+						"Check-In Requerido", "Debes completar el Check-In Online antes de descargar tus tarjetas de embarque."));
+			}
+			return null;
+		}
+
 		try {
 			// Si ya tenemos ticketInfos cargados para esta reserva, usarlos directamente
 			if (this.ticketInfos != null && !this.ticketInfos.isEmpty() && idReserva.equals(this.idReservaSeleccionada)) {
@@ -557,9 +652,104 @@ public class PerfilBean implements Serializable {
 
 	public void getTicket(ItinerarioResumenDTO itinerario) {
 		if (itinerario == null || usuario == null) return;
+
+		// 1. Validar cancelación
+		if (isReservaCanceladaPorItinerario(itinerario.getIdReserva())) {
+			FacesContext context = FacesContext.getCurrentInstance();
+			if (context != null) {
+				context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_WARN,
+						"Reserva Cancelada", "No es posible acceder a las tarjetas de una reserva cancelada."));
+			}
+			this.ticketInfos = null;
+			PrimeFaces pf = PrimeFaces.current();
+			if (pf != null) pf.ajax().addCallbackParam("checkInInvalido", true);
+			return;
+		}
+
+		// 2. Validar que el Check-In esté completado
+		boolean checkInListo = reservaService.tieneCheckInCompletado(itinerario.getIdReserva());
+		if (!checkInListo) {
+			FacesContext context = FacesContext.getCurrentInstance();
+			Date fechaApertura = getFechaAperturaCheckIn(itinerario.getHoraSalida());
+			SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy 'a las' HH:mm 'hrs'");
+			String detalleFecha = (fechaApertura != null) ? " Podrás realizar tu Check-In a partir del " + sdf.format(fechaApertura) + "." : "";
+
+			if (context != null) {
+				context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_WARN,
+						"Check-In Requerido",
+						"Debes completar el Check-In Online para acceder a tus Tarjetas de Embarque." + detalleFecha));
+			}
+			this.ticketInfos = null;
+			PrimeFaces pf = PrimeFaces.current();
+			if (pf != null) pf.ajax().addCallbackParam("checkInInvalido", true);
+			return;
+		}
+
 		this.itinerarioSeleccionado = itinerario;
 		this.idReservaSeleccionada = itinerario.getIdReserva();
 		ticketInfos = reservaService.getTicket(usuario.getRut(), itinerario.getIdReserva(), itinerario.getIdItinerario());
+		if (ticketInfos != null) {
+			for (TicketInfo t : ticketInfos) {
+				t.setCodigoQr(BoardingPassSecurityService.generarCodigoSeguro(
+						t.getCodigoPnr(), t.getNumeroVuelo(), t.getNumeroAsiento(), usuario.getRut()
+				));
+			}
+		}
+	}
+
+	public boolean isCheckInCompletado(Integer idReserva) {
+		if (idReserva == null) return false;
+		return reservaService.tieneCheckInCompletado(idReserva);
+	}
+
+	public boolean isCheckInDisponible(Date horaSalida) {
+		if (horaSalida == null) return false;
+		long diffMillis = horaSalida.getTime() - System.currentTimeMillis();
+		return diffMillis <= (48L * 3600 * 1000) && diffMillis >= (3600 * 1000);
+	}
+
+	public Date getFechaAperturaCheckIn(Date horaSalida) {
+		if (horaSalida == null) return null;
+		return new Date(horaSalida.getTime() - (48L * 3600 * 1000));
+	}
+
+	public String getTextoEstadoCheckIn(ItinerarioResumenDTO it) {
+		if (it == null) return "";
+		if (isReservaCanceladaPorItinerario(it.getIdReserva())) {
+			return "Reserva Cancelada";
+		}
+		if (isCheckInCompletado(it.getIdReserva())) {
+			return "Check-In Completado";
+		}
+		if (it.getHoraSalida() == null) {
+			return "Check-In Pendiente";
+		}
+		long diffMillis = it.getHoraSalida().getTime() - System.currentTimeMillis();
+		if (diffMillis < (3600 * 1000)) {
+			return "Check-In Cerrado";
+		}
+		if (diffMillis <= (48L * 3600 * 1000)) {
+			return "Check-In Abierto";
+		}
+		Date apertura = getFechaAperturaCheckIn(it.getHoraSalida());
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+		return "Check-In disponible desde el " + sdf.format(apertura) + " hrs";
+	}
+
+	public boolean isCheckInCompletado() {
+		return checkInCompletado;
+	}
+
+	public void setCheckInCompletado(boolean checkInCompletado) {
+		this.checkInCompletado = checkInCompletado;
+	}
+
+	/**
+	 * Genera el Data URL del código de barras 2D PDF417 (IATA BCBP) para renderizar en la vista web
+	 * de manera local y autónoma sin depender de APIs externas.
+	 */
+	public String obtenerCodigoBarrasBase64(String codigo) {
+		return BarcodeGeneratorUtil.generarPdf417DataUrl(codigo);
 	}
 
 	private Integer idReservaSeleccionada;
@@ -599,7 +789,114 @@ public class PerfilBean implements Serializable {
 	public String getEstadoCheckInTexto() { return estadoCheckInTexto; }
 	public String getCintaEquipaje() { return cintaEquipaje; }
 
+	// ==========================================
+	// GESTIÓN DE ASCENSO DE TARIFA (FARE UPGRADE)
+	// ==========================================
+
+	public void prepararUpgrade(ItinerarioResumenDTO it) {
+		if (it == null) return;
+		this.itinerarioSeleccionado = it;
+		this.opcionesUpgrade = upgradeTarifaService.obtenerOpcionesUpgrade(it.getIdReserva(), it.getIdItinerario());
+		if (this.opcionesUpgrade != null && !this.opcionesUpgrade.isEmpty()) {
+			this.opcionUpgradeSeleccionada = this.opcionesUpgrade.get(0);
+		} else {
+			this.opcionUpgradeSeleccionada = null;
+		}
+	}
+
+	public void seleccionarOpcionUpgrade(OpcionUpgradeDTO opcion) {
+		this.opcionUpgradeSeleccionada = opcion;
+	}
+
+	public void ejecutarUpgrade() {
+		if (itinerarioSeleccionado == null || opcionUpgradeSeleccionada == null) {
+			FacesContext.getCurrentInstance().addMessage(null,
+					new FacesMessage(FacesMessage.SEVERITY_WARN, "Selección Requerida", "Debes seleccionar una tarifa superior para ascender."));
+			return;
+		}
+
+		try {
+			FacesContext context = FacesContext.getCurrentInstance();
+			ExternalContext externalContext = context.getExternalContext();
+			HttpServletRequest request = (HttpServletRequest) externalContext.getRequest();
+			HttpSession session = (HttpSession) externalContext.getSession(true);
+
+			// 1. Guardar Solicitud de Upgrade en Sesión
+			SolicitudUpgradeDTO upgradeDto = new SolicitudUpgradeDTO(
+					itinerarioSeleccionado.getIdReserva(),
+					itinerarioSeleccionado.getIdItinerario(),
+					opcionUpgradeSeleccionada.getIdItinerarioTarifaNuevo(),
+					opcionUpgradeSeleccionada.getDiferenciaAPagar(),
+					opcionUpgradeSeleccionada.getNombreTarifa(),
+					"perfil",
+					idMetodoPagoUpgrade
+			);
+			session.setAttribute("SOLICITUD_UPGRADE_PENDIENTE", upgradeDto);
+
+			// 2. Determinar método de pago (1: WebPay, 2: PayPal, etc.)
+			MetodoPagoEnum metodo = (idMetodoPagoUpgrade != null && idMetodoPagoUpgrade == 2)
+					? MetodoPagoEnum.PAYPAL
+					: MetodoPagoEnum.WEBPAY;
+
+			String scheme = request.getScheme();
+			String serverName = request.getServerName();
+			int serverPort = request.getServerPort();
+			String contextPath = request.getContextPath();
+			String portSegment = ((scheme.equals("http") && serverPort == 80) || (scheme.equals("https") && serverPort == 443))
+					? "" : ":" + serverPort;
+			String baseUrl = String.format("%s://%s%s%s", scheme, serverName, portSegment, contextPath);
+
+			SolicitudPagoDTO solicitud = new SolicitudPagoDTO();
+			solicitud.setOrdenCompra("UPG-" + System.currentTimeMillis() % 1000000000L);
+			solicitud.setSessionId(session.getId());
+			solicitud.setDescripcion("Ascenso Tarifa SkyWay - " + opcionUpgradeSeleccionada.getNombreTarifa());
+
+			if (metodo == MetodoPagoEnum.PAYPAL) {
+				solicitud.setMoneda("USD");
+				double montoUsd = opcionUpgradeSeleccionada.getDiferenciaAPagar().doubleValue() / 950.0;
+				solicitud.setMonto(BigDecimal.valueOf(montoUsd).setScale(2, RoundingMode.HALF_UP));
+				solicitud.setReturnUrl(baseUrl + "/paypal/commit");
+				solicitud.setCancelUrl(baseUrl + "/paypal/cancel");
+			} else {
+				solicitud.setMoneda("CLP");
+				solicitud.setMonto(opcionUpgradeSeleccionada.getDiferenciaAPagar());
+				solicitud.setReturnUrl(baseUrl + "/webpay/commit");
+				solicitud.setCancelUrl(baseUrl + "/perfil/pasajero/index.xhtml");
+			}
+
+			PasarelaPagoStrategy pasarela = pagoFactoryService.obtenerEstrategia(metodo);
+			String redirectUrl = pasarela.iniciarTransaccion(solicitud);
+			Logger.logInfo("🚀 [UPGRADE-PERFIL] Redirigiendo a pasarela: " + redirectUrl);
+			externalContext.redirect(redirectUrl);
+
+		} catch (Exception e) {
+			Logger.logError("❌ Error al iniciar pago de Upgrade en pasarela: " + e.getMessage());
+			FacesContext.getCurrentInstance().addMessage(null,
+					new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error de Pago", "No fue posible redirigir a la pasarela de pago seleccionada."));
+		}
+	}
+
+	public boolean isUpgradeDisponible() {
+		return opcionesUpgrade != null && !opcionesUpgrade.isEmpty();
+	}
+
+	public List<OpcionUpgradeDTO> getOpcionesUpgrade() { return opcionesUpgrade; }
+	public OpcionUpgradeDTO getOpcionUpgradeSeleccionada() { return opcionUpgradeSeleccionada; }
+	public void setOpcionUpgradeSeleccionada(OpcionUpgradeDTO opcionUpgradeSeleccionada) { this.opcionUpgradeSeleccionada = opcionUpgradeSeleccionada; }
+	public Integer getIdMetodoPagoUpgrade() { return idMetodoPagoUpgrade; }
+	public void setIdMetodoPagoUpgrade(Integer idMetodoPagoUpgrade) { this.idMetodoPagoUpgrade = idMetodoPagoUpgrade; }
+
 	public int getEtapaActualCronograma() {
 		return etapaActualCronograma;
+	}
+
+	public ResultadoUpgradeDTO getResultadoUpgrade() { return resultadoUpgrade; }
+	public void setResultadoUpgrade(ResultadoUpgradeDTO resultadoUpgrade) { this.resultadoUpgrade = resultadoUpgrade; }
+
+	public boolean isMostrarModalResultadoUpgrade() { return mostrarModalResultadoUpgrade; }
+	public void setMostrarModalResultadoUpgrade(boolean mostrarModalResultadoUpgrade) { this.mostrarModalResultadoUpgrade = mostrarModalResultadoUpgrade; }
+
+	public void cerrarModalResultadoUpgrade() {
+		this.mostrarModalResultadoUpgrade = false;
 	}
 }

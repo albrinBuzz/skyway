@@ -316,6 +316,45 @@ public class ReservaServiceImpl implements ReservaService {
 
 
 	@Override
+	@Transactional(readOnly = true)
+	public boolean esPasajeroDeReserva(String rut, Integer idReserva) {
+		if (rut == null || rut.isBlank() || idReserva == null) return false;
+		String rutLimpio = rut.trim().toUpperCase();
+		try {
+			Number count = (Number) em.createNativeQuery(
+					"SELECT COUNT(*) FROM reserva r " +
+					"WHERE r.id_reserva = :idReserva " +
+					"  AND ( " +
+					"       UPPER(r.rut_pasajero) = :rut " +
+					"       OR EXISTS (SELECT 1 FROM pasajero_reserva pr WHERE pr.id_reserva = r.id_reserva AND UPPER(pr.rut) = :rut) " +
+					"       OR EXISTS (SELECT 1 FROM reserva_asiento ra WHERE ra.id_reserva = r.id_reserva AND UPPER(ra.rut) = :rut) " +
+					"  )"
+			).setParameter("idReserva", idReserva)
+			 .setParameter("rut", rutLimpio)
+			 .getSingleResult();
+			return count != null && count.intValue() > 0;
+		} catch (Exception e) {
+			Logger.logError("Error al verificar pertenencia de pasajero a reserva: " + e.getMessage());
+			return false;
+		}
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public boolean tieneCheckInCompletado(Integer idReserva) {
+		if (idReserva == null) return false;
+		try {
+			Number count = (Number) em.createNativeQuery(
+					"SELECT COUNT(*) FROM checkin WHERE id_reserva = :p_reserva AND estado = 'COMPLETADO'"
+			).setParameter("p_reserva", idReserva).getSingleResult();
+			return count != null && count.intValue() > 0;
+		} catch (Exception e) {
+			Logger.logError("Error al verificar estado de checkin: " + e.getMessage());
+			return false;
+		}
+	}
+
+	@Override
 	@Transactional
 	public void procesarCheckInWeb(Integer idReserva, Integer idItinerario) {
 		if (idReserva == null) {
@@ -323,19 +362,50 @@ public class ReservaServiceImpl implements ReservaService {
 		}
 
 		try {
-			// Inserción en la tabla Checkin utilizando la secuencia checkin_seq y la tabla de PostgreSQL
-			Query query = em.createNativeQuery(
-					"INSERT INTO checkin (id_reserva, fecha_hora, metodo, estado, codigo_boarding_pass) " +
-							"VALUES (:p_reserva, NOW(), 'Web', 'COMPLETADO', :p_code)"
-			);
+			// 1. Verificar si ya existe Check-In COMPLETADO para mantener idempotencia
+			Number existingId = null;
+			try {
+				List<?> results = em.createNativeQuery(
+						"SELECT id_checkin FROM checkin WHERE id_reserva = :p_reserva AND estado = 'COMPLETADO' ORDER BY id_checkin DESC LIMIT 1"
+				).setParameter("p_reserva", idReserva).getResultList();
+				if (!results.isEmpty()) {
+					existingId = (Number) results.get(0);
+				}
+			} catch (Exception ignored) {}
 
-			String boardingPassCode = "BP-SW-" + idReserva + "-" + System.currentTimeMillis();
+			Integer idCheckin;
+			if (existingId != null) {
+				idCheckin = existingId.intValue();
+				Logger.logInfo("Check-In ya existente para reserva Nº: " + idReserva + " (ID Checkin: " + idCheckin + ")");
+			} else {
+				String boardingPassCode = "BP-SW-" + idReserva + "-" + System.currentTimeMillis();
+				Number nuevoId = (Number) em.createNativeQuery(
+						"INSERT INTO checkin (id_reserva, fecha_hora, metodo, estado, codigo_boarding_pass) " +
+								"VALUES (:p_reserva, NOW(), 'Web', 'COMPLETADO', :p_code) RETURNING id_checkin"
+				).setParameter("p_reserva", idReserva)
+				 .setParameter("p_code", boardingPassCode)
+				 .getSingleResult();
+				idCheckin = nuevoId.intValue();
+				Logger.logInfo("Check-In Web registrado con éxito (ID: " + idCheckin + ") para la reserva Nº: " + idReserva);
+			}
 
-			query.setParameter("p_reserva", idReserva);
-			query.setParameter("p_code", boardingPassCode);
-
-			query.executeUpdate();
-			Logger.logInfo("Check-In Web registrado con éxito para la reserva N°: " + idReserva);
+			// 2. Registrar formalmente a cada pasajero (titular y acompañantes) en Checkin_Pasajero
+			em.createNativeQuery(
+					"INSERT INTO checkin_pasajero (id_checkin, rut, declaracion_equipaje_aceptada, fecha_registro) " +
+							"SELECT :p_checkin, p.rut, TRUE, NOW() " +
+							"FROM ( " +
+							"    SELECT r.rut_pasajero AS rut FROM reserva r WHERE r.id_reserva = :p_reserva " +
+							"    UNION " +
+							"    SELECT pr.rut AS rut FROM pasajero_reserva pr WHERE pr.id_reserva = :p_reserva " +
+							"    UNION " +
+							"    SELECT ra.rut AS rut FROM reserva_asiento ra WHERE ra.id_reserva = :p_reserva " +
+							") p " +
+							"JOIN pasajero pas ON pas.rut = p.rut " +
+							"WHERE p.rut IS NOT NULL " +
+							"ON CONFLICT (id_checkin, rut) DO NOTHING"
+			).setParameter("p_checkin", idCheckin)
+			 .setParameter("p_reserva", idReserva)
+			 .executeUpdate();
 
 		} catch (Exception e) {
 			Logger.logError("Error al registrar Check-In Web: " + e.getMessage());
@@ -530,4 +600,42 @@ public class ReservaServiceImpl implements ReservaService {
 		return null;
 	}
 
+	@Override
+	@Transactional(readOnly = true)
+	public Optional<String> buscarReservaActivaPorPasajeroEItinerario(String rut, Integer idItinerario) {
+		if (rut == null || rut.isBlank() || idItinerario == null) {
+			return Optional.empty();
+		}
+
+		String rutLimpio = rut.trim().toUpperCase();
+
+		try {
+			String nativeSql = "SELECT r.codigo_reserva " +
+					"FROM reserva r " +
+					"JOIN reserva_itinerario ri ON ri.id_reserva = r.id_reserva " +
+					"JOIN estado_reserva er ON er.id_estado_reserva = r.estado_reserva " +
+					"WHERE ri.id_itinerario = :idItinerario " +
+					"  AND LOWER(er.descripcion) NOT LIKE '%cancelad%' " +
+					"  AND LOWER(er.descripcion) NOT LIKE '%anulad%' " +
+					"  AND ( " +
+					"       UPPER(r.rut_pasajero) = :rut " +
+					"       OR EXISTS (SELECT 1 FROM pasajero_reserva pr WHERE pr.id_reserva = r.id_reserva AND UPPER(pr.rut) = :rut) " +
+					"       OR EXISTS (SELECT 1 FROM reserva_asiento ra WHERE ra.id_reserva = r.id_reserva AND UPPER(ra.rut) = :rut) " +
+					"  ) " +
+					"LIMIT 1";
+
+			List<?> resultados = em.createNativeQuery(nativeSql)
+					.setParameter("idItinerario", idItinerario)
+					.setParameter("rut", rutLimpio)
+					.getResultList();
+
+			if (!resultados.isEmpty() && resultados.get(0) != null) {
+				return Optional.of(resultados.get(0).toString());
+			}
+		} catch (Exception e) {
+			Logger.logError("Error al validar reserva activa por pasajero e itinerario: " + e.getMessage());
+		}
+
+		return Optional.empty();
+	}
 }

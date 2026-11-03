@@ -5,6 +5,9 @@ import com.SkyWay.config.pago.PagoFactoryService;
 import com.SkyWay.config.pago.PasarelaPagoStrategy;
 import com.SkyWay.modules.reserva.domain.service.ReservaProcesadorService;
 import com.SkyWay.modules.reserva.presentation.dto.SolicitudReservaDTO;
+import com.SkyWay.modules.tarifa.domain.service.UpgradeTarifaService;
+import com.SkyWay.modules.tarifa.presentation.dto.ResultadoUpgradeDTO;
+import com.SkyWay.modules.tarifa.presentation.dto.SolicitudUpgradeDTO;
 import com.SkyWay.util.Logger;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -21,6 +24,8 @@ public class PayPalController {
 
     @Autowired
     private ReservaProcesadorService procesarReservaUseCase;
+    @Autowired
+    private UpgradeTarifaService upgradeTarifaService;
 
     private final PagoFactoryService pagoFactoryService;
 
@@ -56,8 +61,43 @@ public class PayPalController {
 
             Logger.logInfo("✅ [PAYPAL] Pago AUTORIZADO exitosamente en la pasarela");
 
-            // Recuperar DTO guardado en la sesión
+            // Recuperar sesión
             HttpSession session = request.getSession(false);
+
+            // 1. Verificar si corresponde a un Ascenso de Tarifa (Upgrade)
+            SolicitudUpgradeDTO upgradeDto = (session != null)
+                    ? (SolicitudUpgradeDTO) session.getAttribute("SOLICITUD_UPGRADE_PENDIENTE")
+                    : null;
+
+            if (upgradeDto != null) {
+                Logger.logInfo("🎯 [PAYPAL] Confirmando Ascenso de Tarifa para Reserva ID: " + upgradeDto.getIdReserva());
+                int idMetodoPagoPayPal = 2;
+                ResultadoUpgradeDTO resultadoUpgrade = upgradeTarifaService.procesarYConfirmarUpgrade(
+                        upgradeDto.getIdReserva(),
+                        upgradeDto.getIdItinerario(),
+                        upgradeDto.getIdItinerarioTarifaNuevo(),
+                        idMetodoPagoPayPal,
+                        "PayPal Express Checkout"
+                );
+                session.removeAttribute("SOLICITUD_UPGRADE_PENDIENTE");
+
+                if (resultadoUpgrade != null) {
+                    resultadoUpgrade.setOrigen(upgradeDto.getOrigen());
+                    session.setAttribute("RESULTADO_UPGRADE_CONFIRMADO", resultadoUpgrade);
+
+                    if ("checkin".equalsIgnoreCase(upgradeDto.getOrigen())) {
+                        session.setAttribute("CHECKIN_ID_RESERVA", upgradeDto.getIdReserva());
+                        session.setAttribute("CHECKIN_ID_ITINERARIO", upgradeDto.getIdItinerario());
+                        return new RedirectView("/home/checkin.xhtml?upgradeSuccess=true");
+                    } else {
+                        return new RedirectView("/perfil/pasajero/index.xhtml?upgradeSuccess=true");
+                    }
+                } else {
+                    return new RedirectView("/home/errorPago.xhtml?reason=UPGRADE_ERROR");
+                }
+            }
+
+            // 2. Recuperar DTO guardado en la sesión para nueva reserva
             SolicitudReservaDTO dto = (session != null)
                     ? (SolicitudReservaDTO) session.getAttribute("SOLICITUD_RESERVA_PENDIENTE")
                     : null;
@@ -68,7 +108,7 @@ public class PayPalController {
             }
 
             try {
-                // ID_METODO_PAGO = 4 (PayPal según la tabla Metodo_Pago)
+                // ID_METODO_PAGO = 2 (PayPal según la tabla Metodo_Pago)
                 int idMetodoPagoPayPal = 2;
                 Logger.logInfo("💾 Persistiendo reserva con ID Método de Pago PAYPAL (" + idMetodoPagoPayPal + ")...");
 
@@ -80,12 +120,8 @@ public class PayPalController {
                 }
 
                 session.removeAttribute("SOLICITUD_RESERVA_PENDIENTE");
-                Logger.logInfo("🎉 [WEBPAY-CONTROLLER] Reserva ID: " + idReserva + " procesada con éxito. Redirigiendo a pago-exitoso.xhtml");
-
-
                 Logger.logInfo("🎉 [PAYPAL-CONTROLLER] Reserva ID: " + idReserva + " procesada con éxito. Redirigiendo a pago-exitoso.xhtml");
                 return new RedirectView("/home/pago-exitoso.xhtml");
-                //return new RedirectView("/home/pago-exitoso.xhtml?idReserva=" + idReserva);
             } catch (Exception e) {
                 Logger.logError("💥 Error al escribir la reserva tras pago con PayPal: " + e.getMessage());
                 return new RedirectView("/home/errorPago.xhtml?reason=PERSISTENCE_ERROR");
@@ -100,8 +136,20 @@ public class PayPalController {
      * Endpoint invocado por PayPal si el usuario decide cancelar la transacción (cancelUrl).
      */
     @GetMapping("/paypal/cancel")
-    public RedirectView cancelarPayPal() {
+    public RedirectView cancelarPayPal(HttpServletRequest request) {
         Logger.logInfo("⚠️ El usuario canceló la compra en la pasarela de PayPal.");
+        HttpSession session = request.getSession(false);
+        if (session != null && session.getAttribute("SOLICITUD_UPGRADE_PENDIENTE") != null) {
+            SolicitudUpgradeDTO upg = (SolicitudUpgradeDTO) session.getAttribute("SOLICITUD_UPGRADE_PENDIENTE");
+            session.removeAttribute("SOLICITUD_UPGRADE_PENDIENTE");
+            if ("checkin".equalsIgnoreCase(upg.getOrigen())) {
+                session.setAttribute("CHECKIN_ID_RESERVA", upg.getIdReserva());
+                session.setAttribute("CHECKIN_ID_ITINERARIO", upg.getIdItinerario());
+                return new RedirectView("/home/checkin.xhtml?upgradeCancelled=true");
+            } else {
+                return new RedirectView("/perfil/pasajero/index.xhtml?upgradeCancelled=true");
+            }
+        }
         return new RedirectView("/home/errorPago.xhtml?reason=CANCELLED");
     }
 }

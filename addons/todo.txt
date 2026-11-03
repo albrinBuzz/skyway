@@ -11,6 +11,16 @@ dado que ahora no lo valida, y puede ocasionar un solapamiento
 -validar la logica , cuando un tripulante rechaza el turno, que debe pasar luego? que se deberia hacer?
 -corregir decimales
 
+-corregir reserva con admin, se bugea y rompe la transaccion verificar atomicidad
+
+-corregir error de duplicidad de correo al realizar la reserva con un invitado,
+dado que da error cuando el invitado tiene un correo ya duplicado
+
+-corregir al momento de realizar y confirmar el pago, no se deberian poder descargar las tarjetas de embarque
+ya que deja fuera la utilidad del check in
+
+
+
 =================================================================
                       DETALLE DE AUDITORÍA
 =================================================================
@@ -75,3 +85,69 @@ CF-Conn-IP     : null
 MEMORIA USADA  : 361 MB / 501 MB (Max: 989 MB)
 PROCESADORES   : 2 Cores asignados
 HILO (THREAD)  : http-nio-80-exec-6 (ID: 49, Prioridad: 5)
+
+
+
+
+
+=================================================================
+                      DETALLE DE AUDITORÍA
+=================================================================
+DESCRIPCIÓN    : Transacción de Pago Aprobada | PNR: null | Reserva #2 | Monto: $1275205 | Método: PayPal
+TIMESTAMP APP  : 2026-11-01 21:34:57.276
+
+-----------------------------------------------------------------
+1. CONTEXTO DE SOLICITUD HTTP (REQUEST)
+-----------------------------------------------------------------
+MÉTODO HTTP    : GET
+URI SOLICITADA : /paypal/commit
+URL COMPLETA   : http://localhost:8080/paypal/commit
+QUERY STRING   : token=71K01737AN479301M&PayerID=S48SER8KA3VBL
+ESQUEMA/PROTOCO: http / HTTP/1.1
+PUERTO SERVIDOR: localhost:8080
+DIRECCIÓN LOCAL: 0:0:0:0:0:0:0:1:8080
+
+-----------------------------------------------------------------
+2. PARÁMETROS DE LA PETICIÓN (HTTP PARAMETERS)
+-----------------------------------------------------------------
+  - token = [PROTEGIDO]
+  - PayerID = S48SER8KA3VBL
+
+-----------------------------------------------------------------
+3. ESTADO DE LA SESIÓN HTTP
+-----------------------------------------------------------------
+SESSION ID     : 9D4A12284C354EACD73654F6A64DAC49
+ES NUEVA       : NO
+CREACIÓN       : 2026-11-01 21:33:51.571
+ÚLTIMO ACCESO  : 2026-11-01 21:34:38.382
+INACTIVIDAD MAX: 1800 segundos
+
+-----------------------------------------------------------------
+4. NAVEGADOR Y PLATAFORMA CLIENTE
+-----------------------------------------------------------------
+USER AGENT     : Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36
+RESUMEN OS/NAV : Windows / Chrome
+IDIOMA CLIENTE : es-419,es;q=0.6
+REFERER        : Directo / Sin Referer
+SEC-CH-UA      : "Not:A-Brand";v="8", "Chromium";v="156", "Brave";v="156"
+SEC-CH-UA-PLAT : "Windows"
+SEC-CH-UA-MOB  : ?0
+
+-----------------------------------------------------------------
+5. TRAZA DE RED Y PROXIES
+-----------------------------------------------------------------
+X-Forwarded-For: null
+X-Real-IP      : null
+CF-Conn-IP     : null
+
+-----------------------------------------------------------------
+6. COOKIES RECIBIDAS
+-----------------------------------------------------------------
+  - JSESSIONID (Domain: null, MaxAge: -1s)
+
+-----------------------------------------------------------------
+7. ESTADO Y MÉTRICAS DE SERVIDOR (JVM)
+-----------------------------------------------------------------
+MEMORIA USADA  : 269 MB / 912 MB (Max: 16328 MB)
+PROCESADORES   : 20 Cores asignados
+HILO (THREAD)  : http-nio-8080-exec-2 (ID: 232, Prioridad: 5)

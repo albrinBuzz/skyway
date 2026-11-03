@@ -696,7 +696,9 @@ CREATE TABLE Notificacion (
                               Fecha TIMESTAMP DEFAULT NOW()
 );
 
-
+ALTER TABLE notificacion
+    ADD COLUMN IF NOT EXISTS enviada BOOLEAN DEFAULT FALSE,
+    ADD COLUMN IF NOT EXISTS canal VARCHAR(20) DEFAULT 'Email';
 
 -- 1. Eliminar la tabla Log_Auditoria si ya existe (para liberar la dependencia del ENUM)
 DROP TABLE IF EXISTS Log_Auditoria CASCADE;
