@@ -182,7 +182,7 @@ public class CambioAsientoBean implements Serializable {
                         if (fSalida != null) {
                             long diffMillis = fSalida.getTime() - System.currentTimeMillis();
                             int horasRestantes = (int) (diffMillis / (3600 * 1000));
-                            if (!tarifaValidator.cumpleHorasMinimasCambio(caracs, horasRestantes)) {
+                            if (!"CHECKIN".equalsIgnoreCase(this.origenRetorno) && !tarifaValidator.cumpleHorasMinimasCambio(caracs, horasRestantes)) {
                                 this.permiteCambio = false;
                                 this.mensajeReglaTarifa = "El plazo límite estipulado por tu tarifa (" + this.nombreTarifa + ") para cambiar asientos ha finalizado.";
                                 return;

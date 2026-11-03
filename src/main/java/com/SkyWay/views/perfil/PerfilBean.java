@@ -17,6 +17,18 @@ import com.SkyWay.modules.reservaitinerario.domain.model.ReservaItinerario;
 import com.SkyWay.modules.reservaitinerario.domain.service.ReservaItinerarioService;
 import com.SkyWay.modules.rolusuario.domain.model.Role;
 import com.SkyWay.modules.tarifa.domain.model.Tarifa;
+import com.SkyWay.config.pago.MetodoPagoEnum;
+import com.SkyWay.config.pago.PagoFactoryService;
+import com.SkyWay.config.pago.PasarelaPagoStrategy;
+import com.SkyWay.config.pago.SolicitudPagoDTO;
+import com.SkyWay.modules.tarifa.presentation.dto.SolicitudUpgradeDTO;
+import jakarta.faces.context.ExternalContext;
+import jakarta.servlet.http.HttpServletRequest;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import com.SkyWay.modules.tarifa.domain.service.UpgradeTarifaService;
+import com.SkyWay.modules.tarifa.presentation.dto.OpcionUpgradeDTO;
+import com.SkyWay.modules.tarifa.presentation.dto.ResultadoUpgradeDTO;
 import com.SkyWay.modules.usuario.domain.model.Usuario;
 import com.SkyWay.modules.vuelo.domain.model.Vuelo;
 import com.SkyWay.modules.vuelo.domain.service.VueloService;
@@ -60,6 +72,12 @@ public class PerfilBean implements Serializable {
 	@Autowired private VueloService vueloService;
 	@Autowired private EquipajeService equipajeService;
 	@Autowired private ETicketPdfGeneratorService eTicketPdfGeneratorService;
+	@Autowired private UpgradeTarifaService upgradeTarifaService;
+	@Autowired private PagoFactoryService pagoFactoryService;
+
+	private List<OpcionUpgradeDTO> opcionesUpgrade = new ArrayList<>();
+	private OpcionUpgradeDTO opcionUpgradeSeleccionada;
+	private Integer idMetodoPagoUpgrade = 1;
 
 
 	private List<ItinerarioResumenDTO> listaItinerarios;
@@ -94,6 +112,9 @@ public class PerfilBean implements Serializable {
 
 	private final Map<Integer, String> numeroVueloCache = new HashMap<>();
 
+	private ResultadoUpgradeDTO resultadoUpgrade;
+	private boolean mostrarModalResultadoUpgrade = false;
+
 	@PostConstruct
 	public void init() {
 		long startTime = System.currentTimeMillis();
@@ -127,6 +148,29 @@ public class PerfilBean implements Serializable {
 
 		long endTime = System.currentTimeMillis();
 		Logger.logInfo("⏱ Tiempo total en init(): " + (endTime - startTime) + " ms");
+
+		if (facesContext != null && facesContext.getExternalContext() != null) {
+			Map<String, String> params = facesContext.getExternalContext().getRequestParameterMap();
+			Map<String, Object> sessionMap = facesContext.getExternalContext().getSessionMap();
+
+			if (params.containsKey("upgradeSuccess")) {
+				if (sessionMap.containsKey("RESULTADO_UPGRADE_CONFIRMADO")) {
+					this.resultadoUpgrade = (ResultadoUpgradeDTO) sessionMap.get("RESULTADO_UPGRADE_CONFIRMADO");
+					sessionMap.remove("RESULTADO_UPGRADE_CONFIRMADO");
+				}
+				this.mostrarModalResultadoUpgrade = true;
+
+				facesContext.addMessage(null,
+						new FacesMessage(FacesMessage.SEVERITY_INFO, "¡Ascenso de Tarifa Exitoso!",
+								"Tu categoría de vuelo ha sido actualizada exitosamente a " +
+										(this.resultadoUpgrade != null ? this.resultadoUpgrade.getTarifaNueva() : "una categoría superior") +
+										". Disfruta de tus nuevos beneficios."));
+			} else if (params.containsKey("upgradeCancelled")) {
+				facesContext.addMessage(null,
+						new FacesMessage(FacesMessage.SEVERITY_WARN, "Ascenso Cancelado",
+								"El proceso de pago del ascenso de tarifa fue cancelado en la pasarela."));
+			}
+		}
 	}
 
 	public void filtrarVuelosHoy() {
@@ -745,7 +789,114 @@ public class PerfilBean implements Serializable {
 	public String getEstadoCheckInTexto() { return estadoCheckInTexto; }
 	public String getCintaEquipaje() { return cintaEquipaje; }
 
+	// ==========================================
+	// GESTIÓN DE ASCENSO DE TARIFA (FARE UPGRADE)
+	// ==========================================
+
+	public void prepararUpgrade(ItinerarioResumenDTO it) {
+		if (it == null) return;
+		this.itinerarioSeleccionado = it;
+		this.opcionesUpgrade = upgradeTarifaService.obtenerOpcionesUpgrade(it.getIdReserva(), it.getIdItinerario());
+		if (this.opcionesUpgrade != null && !this.opcionesUpgrade.isEmpty()) {
+			this.opcionUpgradeSeleccionada = this.opcionesUpgrade.get(0);
+		} else {
+			this.opcionUpgradeSeleccionada = null;
+		}
+	}
+
+	public void seleccionarOpcionUpgrade(OpcionUpgradeDTO opcion) {
+		this.opcionUpgradeSeleccionada = opcion;
+	}
+
+	public void ejecutarUpgrade() {
+		if (itinerarioSeleccionado == null || opcionUpgradeSeleccionada == null) {
+			FacesContext.getCurrentInstance().addMessage(null,
+					new FacesMessage(FacesMessage.SEVERITY_WARN, "Selección Requerida", "Debes seleccionar una tarifa superior para ascender."));
+			return;
+		}
+
+		try {
+			FacesContext context = FacesContext.getCurrentInstance();
+			ExternalContext externalContext = context.getExternalContext();
+			HttpServletRequest request = (HttpServletRequest) externalContext.getRequest();
+			HttpSession session = (HttpSession) externalContext.getSession(true);
+
+			// 1. Guardar Solicitud de Upgrade en Sesión
+			SolicitudUpgradeDTO upgradeDto = new SolicitudUpgradeDTO(
+					itinerarioSeleccionado.getIdReserva(),
+					itinerarioSeleccionado.getIdItinerario(),
+					opcionUpgradeSeleccionada.getIdItinerarioTarifaNuevo(),
+					opcionUpgradeSeleccionada.getDiferenciaAPagar(),
+					opcionUpgradeSeleccionada.getNombreTarifa(),
+					"perfil",
+					idMetodoPagoUpgrade
+			);
+			session.setAttribute("SOLICITUD_UPGRADE_PENDIENTE", upgradeDto);
+
+			// 2. Determinar método de pago (1: WebPay, 2: PayPal, etc.)
+			MetodoPagoEnum metodo = (idMetodoPagoUpgrade != null && idMetodoPagoUpgrade == 2)
+					? MetodoPagoEnum.PAYPAL
+					: MetodoPagoEnum.WEBPAY;
+
+			String scheme = request.getScheme();
+			String serverName = request.getServerName();
+			int serverPort = request.getServerPort();
+			String contextPath = request.getContextPath();
+			String portSegment = ((scheme.equals("http") && serverPort == 80) || (scheme.equals("https") && serverPort == 443))
+					? "" : ":" + serverPort;
+			String baseUrl = String.format("%s://%s%s%s", scheme, serverName, portSegment, contextPath);
+
+			SolicitudPagoDTO solicitud = new SolicitudPagoDTO();
+			solicitud.setOrdenCompra("UPG-" + System.currentTimeMillis() % 1000000000L);
+			solicitud.setSessionId(session.getId());
+			solicitud.setDescripcion("Ascenso Tarifa SkyWay - " + opcionUpgradeSeleccionada.getNombreTarifa());
+
+			if (metodo == MetodoPagoEnum.PAYPAL) {
+				solicitud.setMoneda("USD");
+				double montoUsd = opcionUpgradeSeleccionada.getDiferenciaAPagar().doubleValue() / 950.0;
+				solicitud.setMonto(BigDecimal.valueOf(montoUsd).setScale(2, RoundingMode.HALF_UP));
+				solicitud.setReturnUrl(baseUrl + "/paypal/commit");
+				solicitud.setCancelUrl(baseUrl + "/paypal/cancel");
+			} else {
+				solicitud.setMoneda("CLP");
+				solicitud.setMonto(opcionUpgradeSeleccionada.getDiferenciaAPagar());
+				solicitud.setReturnUrl(baseUrl + "/webpay/commit");
+				solicitud.setCancelUrl(baseUrl + "/perfil/pasajero/index.xhtml");
+			}
+
+			PasarelaPagoStrategy pasarela = pagoFactoryService.obtenerEstrategia(metodo);
+			String redirectUrl = pasarela.iniciarTransaccion(solicitud);
+			Logger.logInfo("🚀 [UPGRADE-PERFIL] Redirigiendo a pasarela: " + redirectUrl);
+			externalContext.redirect(redirectUrl);
+
+		} catch (Exception e) {
+			Logger.logError("❌ Error al iniciar pago de Upgrade en pasarela: " + e.getMessage());
+			FacesContext.getCurrentInstance().addMessage(null,
+					new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error de Pago", "No fue posible redirigir a la pasarela de pago seleccionada."));
+		}
+	}
+
+	public boolean isUpgradeDisponible() {
+		return opcionesUpgrade != null && !opcionesUpgrade.isEmpty();
+	}
+
+	public List<OpcionUpgradeDTO> getOpcionesUpgrade() { return opcionesUpgrade; }
+	public OpcionUpgradeDTO getOpcionUpgradeSeleccionada() { return opcionUpgradeSeleccionada; }
+	public void setOpcionUpgradeSeleccionada(OpcionUpgradeDTO opcionUpgradeSeleccionada) { this.opcionUpgradeSeleccionada = opcionUpgradeSeleccionada; }
+	public Integer getIdMetodoPagoUpgrade() { return idMetodoPagoUpgrade; }
+	public void setIdMetodoPagoUpgrade(Integer idMetodoPagoUpgrade) { this.idMetodoPagoUpgrade = idMetodoPagoUpgrade; }
+
 	public int getEtapaActualCronograma() {
 		return etapaActualCronograma;
+	}
+
+	public ResultadoUpgradeDTO getResultadoUpgrade() { return resultadoUpgrade; }
+	public void setResultadoUpgrade(ResultadoUpgradeDTO resultadoUpgrade) { this.resultadoUpgrade = resultadoUpgrade; }
+
+	public boolean isMostrarModalResultadoUpgrade() { return mostrarModalResultadoUpgrade; }
+	public void setMostrarModalResultadoUpgrade(boolean mostrarModalResultadoUpgrade) { this.mostrarModalResultadoUpgrade = mostrarModalResultadoUpgrade; }
+
+	public void cerrarModalResultadoUpgrade() {
+		this.mostrarModalResultadoUpgrade = false;
 	}
 }

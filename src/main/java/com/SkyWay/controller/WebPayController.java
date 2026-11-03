@@ -7,6 +7,9 @@ import com.SkyWay.config.webPay.WebPayService;
 
 import com.SkyWay.modules.reserva.domain.service.ReservaProcesadorService;
 import com.SkyWay.modules.reserva.presentation.dto.SolicitudReservaDTO;
+import com.SkyWay.modules.tarifa.domain.service.UpgradeTarifaService;
+import com.SkyWay.modules.tarifa.presentation.dto.ResultadoUpgradeDTO;
+import com.SkyWay.modules.tarifa.presentation.dto.SolicitudUpgradeDTO;
 import com.SkyWay.util.Logger;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -23,6 +26,7 @@ public class WebPayController {
 
     @Autowired private WebPayService webPayService;
     @Autowired private ReservaProcesadorService procesarReservaUseCase;
+    @Autowired private UpgradeTarifaService upgradeTarifaService;
 
     private final PagoFactoryService pagoFactoryService;
 
@@ -43,6 +47,18 @@ public class WebPayController {
         // El usuario canceló la compra en la pasarela
         if (tbkToken.isPresent()) {
             Logger.logWarn("⚠️ El usuario canceló la compra en la pasarela WebPay (TBK_TOKEN presente)");
+            HttpSession session = request.getSession(false);
+            if (session != null && session.getAttribute("SOLICITUD_UPGRADE_PENDIENTE") != null) {
+                SolicitudUpgradeDTO upg = (SolicitudUpgradeDTO) session.getAttribute("SOLICITUD_UPGRADE_PENDIENTE");
+                session.removeAttribute("SOLICITUD_UPGRADE_PENDIENTE");
+                if ("checkin".equalsIgnoreCase(upg.getOrigen())) {
+                    session.setAttribute("CHECKIN_ID_RESERVA", upg.getIdReserva());
+                    session.setAttribute("CHECKIN_ID_ITINERARIO", upg.getIdItinerario());
+                    return new RedirectView("/home/checkin.xhtml?upgradeCancelled=true");
+                } else {
+                    return new RedirectView("/perfil/pasajero/index.xhtml?upgradeCancelled=true");
+                }
+            }
             return new RedirectView("/home/errorPago.xhtml?reason=CANCELLED");
         }
 
@@ -60,6 +76,41 @@ public class WebPayController {
             Logger.logInfo("✅ [WEBPAY] Pago APROBADO en Transbank");
 
             HttpSession session = request.getSession(false);
+
+            // 1. Verificar si corresponde a un Ascenso de Tarifa (Upgrade)
+            SolicitudUpgradeDTO upgradeDto = (session != null)
+                    ? (SolicitudUpgradeDTO) session.getAttribute("SOLICITUD_UPGRADE_PENDIENTE")
+                    : null;
+
+            if (upgradeDto != null) {
+                Logger.logInfo("🎯 [WEBPAY] Confirmando Ascenso de Tarifa para Reserva ID: " + upgradeDto.getIdReserva());
+                int idMetodoPagoWebPay = 1;
+                ResultadoUpgradeDTO resultadoUpgrade = upgradeTarifaService.procesarYConfirmarUpgrade(
+                        upgradeDto.getIdReserva(),
+                        upgradeDto.getIdItinerario(),
+                        upgradeDto.getIdItinerarioTarifaNuevo(),
+                        idMetodoPagoWebPay,
+                        "Transbank WebPay Plus"
+                );
+                session.removeAttribute("SOLICITUD_UPGRADE_PENDIENTE");
+
+                if (resultadoUpgrade != null) {
+                    resultadoUpgrade.setOrigen(upgradeDto.getOrigen());
+                    session.setAttribute("RESULTADO_UPGRADE_CONFIRMADO", resultadoUpgrade);
+
+                    if ("checkin".equalsIgnoreCase(upgradeDto.getOrigen())) {
+                        session.setAttribute("CHECKIN_ID_RESERVA", upgradeDto.getIdReserva());
+                        session.setAttribute("CHECKIN_ID_ITINERARIO", upgradeDto.getIdItinerario());
+                        return new RedirectView("/home/checkin.xhtml?upgradeSuccess=true");
+                    } else {
+                        return new RedirectView("/perfil/pasajero/index.xhtml?upgradeSuccess=true");
+                    }
+                } else {
+                    return new RedirectView("/home/errorPago.xhtml?reason=UPGRADE_ERROR");
+                }
+            }
+
+            // 2. Flujo regular de nueva reserva
             SolicitudReservaDTO dto = (session != null) ? (SolicitudReservaDTO) session.getAttribute("SOLICITUD_RESERVA_PENDIENTE") : null;
 
             if (dto == null) {
