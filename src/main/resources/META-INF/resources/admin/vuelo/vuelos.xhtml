@@ -329,7 +329,8 @@
                 <p:button outcome="/admin/vuelo/vuelo.xhtml"
                           value="Nuevo Vuelo"
                           icon="pi pi-plus"
-                          styleClass="btn-new" />
+                          styleClass="btn-new"
+                          rendered="#{userBean.hasRole('ROLE_ADMIN') or userBean.hasRole('ROLE_DESPACHADOR')}" />
             </h:form>
         </div>
 
@@ -474,11 +475,13 @@
                         <p:commandButton icon="pi pi-pencil"
                                          action="#{vueloBean.editarVuelo(vuelo)}"
                                          styleClass="ui-button-outlined ui-button-secondary ui-button-sm"
+                                         rendered="#{userBean.hasRole('ROLE_ADMIN') or userBean.hasRole('ROLE_DESPACHADOR')}"
                                          title="Editar Vuelo" />
 
                         <p:commandButton value="Turnos"
                                          icon="pi pi-users"
                                          action="#{vueloBean.verTurnos(vuelo)}"
+                                         rendered="#{userBean.hasRole('ROLE_ADMIN') or userBean.hasRole('ROLE_DESPACHADOR')}"
                                          styleClass="btn-turns ui-button-sm" />
                     </div>
                 </p:column>

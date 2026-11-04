@@ -37,6 +37,9 @@ public class SecurityConfig {
 	@Autowired
 	AuthenticationSuccessHandler authenticationSuccessHandler;
 
+	@Autowired
+	private CustomAccessDeniedHandler customAccessDeniedHandler;
+
 	   @Bean
 	    public static PasswordEncoder passwordEncoder(){
 	        return new BCryptPasswordEncoder();
@@ -94,7 +97,13 @@ public class SecurityConfig {
 	            .authorizeHttpRequests(authorizeRequests ->
 	                authorizeRequests
 	                	.requestMatchers("/perfil/**").authenticated()
-						.requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
+						// Acceso granular al Centro de Control de Operaciones (CCO) segun rol aeronautico
+						.requestMatchers("/admin/usuarios.xhtml", "/admin/metrics-ws.xhtml").hasAuthority("ROLE_ADMIN")
+						.requestMatchers("/admin/gestionarTarifas.xhtml", "/admin/itinerario/**", "/admin/gestionParametricas.xhtml").hasAnyAuthority("ROLE_ADMIN", "ROLE_REVENUE_MANAGER")
+						.requestMatchers("/admin/gestionFlota.xhtml").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANTENIMIENTO")
+						.requestMatchers("/admin/gestionAeropuertos.xhtml").hasAnyAuthority("ROLE_ADMIN", "ROLE_DESPACHADOR", "ROLE_MANTENIMIENTO", "ROLE_REVENUE_MANAGER")
+						.requestMatchers("/admin/vuelo/**", "/admin/turno/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_DESPACHADOR")
+						.requestMatchers("/admin/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_DESPACHADOR", "ROLE_REVENUE_MANAGER", "ROLE_MANTENIMIENTO", "ROLE_AGENTE_AEROPUERTO")
 						.requestMatchers(mvc.pattern("/home/login.xhtml")).permitAll()
 	                  	//.requestMatchers("/booking").authenticated()
 	                    //.requestMatchers(HttpMethod.DELETE).hasRole("admin")
@@ -107,8 +116,7 @@ public class SecurityConfig {
 
 	            .exceptionHandling(exceptionHandling ->
 	                exceptionHandling
-
-	                    .accessDeniedPage("/errors/403") // Ruta correcta para la página 403
+	                    .accessDeniedHandler(customAccessDeniedHandler)
 	            )
 	            .formLogin(formLogin ->
 	                formLogin

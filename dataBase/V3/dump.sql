@@ -772,7 +772,6 @@ FOREIGN KEY (ID_VUELO) REFERENCES Vuelo(ID_VUELO) ON DELETE CASCADE;
 ALTER TABLE Reserva_Asiento
 ADD CONSTRAINT reserva_asiento_id_vuelo_fkey
 FOREIGN KEY (ID_VUELO) REFERENCES Vuelo(ID_VUELO) ON DELETE CASCADE;*/
-
 DO $$
     DECLARE
         reg RECORD;
@@ -2508,7 +2507,6 @@ BEGIN
            );
 END;
 $$;
-
 -- =========================================================================
 -- 1. MAESTRO DE CONTINENTES
 -- =========================================================================
@@ -3673,7 +3671,12 @@ VALUES
     ('Pasajero', 'Cliente registrado que puede reservar vuelos'),
     ('Piloto', 'Piloto de la aerolínea'),
     ('Tripulacion', 'Miembro del equipo de vuelo (azafatas, copilotos, etc.)'),
-    ('Administrativo', 'Empleado administrativo de la aerolínea');
+    ('Administrativo', 'Empleado administrativo de la aerolínea'),
+    ('Despachador', 'Despachador de Vuelos y Centro de Operaciones CCO'),
+    ('Revenue_Manager', 'Gestor de Ingresos, Itinerarios Comerciales y Tarifas'),
+    ('Mantenimiento', 'Ingeniero de Operaciones, Flota y Mantenimiento Aeronáutico'),
+    ('Agente_Aeropuerto', 'Agente de Mostrador y Puerta de Embarque (Gate Agent)')
+ON CONFLICT (nombre) DO NOTHING;
 
 -- Insertar un usuario con rol 'admin'
 -- ===========================================================
@@ -3685,9 +3688,28 @@ VALUES ('123456789-0', 'Juan', 'Pérez', 'admin@skyway.com', '123456789', '98765
 
 -- Asignar el rol 'admin' al usuario en la tabla RolUsuario
 -- ===========================================================
--- Este INSERT asigna el rol 'admin' (id_rol = 1) al usuario 'Juan Pérez'.
 INSERT INTO RolUsuario (rut_usuario, id_rol)
 VALUES ('123456789-0', 1);
+
+-- Usuarios de Operaciones Especializados (Password: admin123)
+INSERT INTO Usuario (RUT, Nombre, Apellido, Correo_Electronico, Telefono, Documento_Identidad, Fecha_Nacimiento, Contrasena, Fecha_Registro)
+VALUES
+    ('20000001-1', 'Carlos', 'Despacho', 'despacho@skyway.com', '+56911223344', '200000011', '1988-04-12', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('20000002-2', 'Valentina', 'Tarifas', 'revenue@skyway.com', '+56922334455', '200000022', '1991-09-25', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('20000003-3', 'Esteban', 'Mantenimiento', 'mantenimiento@skyway.com', '+56933445566', '200000033', '1984-11-03', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW()),
+    ('20000004-4', 'Lorena', 'Puerta', 'gate@skyway.com', '+56944556677', '200000044', '1993-02-18', '$2a$10$hsjnyiws1X0PpAZYrNNbYuFacX53JUO9jfasNhL.WhHa6JpkO4O/m', NOW());
+
+INSERT INTO RolUsuario (rut_usuario, id_rol)
+SELECT '20000001-1', id_rol FROM Roles WHERE nombre = 'Despachador';
+
+INSERT INTO RolUsuario (rut_usuario, id_rol)
+SELECT '20000002-2', id_rol FROM Roles WHERE nombre = 'Revenue_Manager';
+
+INSERT INTO RolUsuario (rut_usuario, id_rol)
+SELECT '20000003-3', id_rol FROM Roles WHERE nombre = 'Mantenimiento';
+
+INSERT INTO RolUsuario (rut_usuario, id_rol)
+SELECT '20000004-4', id_rol FROM Roles WHERE nombre = 'Agente_Aeropuerto';
 
 
 -- ===========================================================

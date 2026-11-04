@@ -321,69 +321,92 @@
                     </h:link>
                 </div>
 
-                <!-- MENÚ CATEGORIZADO -->
+                <!-- MENÚ CATEGORIZADO DINÁMICO POR ROL -->
                 <ul class="menu-list">
 
-                    <li class="menu-category-title">Operaciones</li>
+                    <h:panelGroup rendered="#{userBean.accesoOperaciones or userBean.accesoComercial or userBean.accesoFlota or userBean.accesoAeropuertos}">
+                        <li class="menu-category-title">Operaciones CCO</li>
+                    </h:panelGroup>
 
-                    <!-- Gestión de Vuelos -->
-                    <li class="menu-item #{view.viewId.endsWith('index.xhtml') ? 'active' : ''}">
-                        <h:link outcome="/admin/index.xhtml" styleClass="menu-link" title="Gestión de Vuelos">
-                            <i class="pi pi-map"></i>
-                            <label>Gestión de Vuelos</label>
-                        </h:link>
-                    </li>
+                    <!-- Gestión de Vuelos (Despacho / CCO / Agente) -->
+                    <h:panelGroup rendered="#{userBean.hasRole('ROLE_ADMIN') or userBean.hasRole('ROLE_DESPACHADOR') or userBean.hasRole('ROLE_AGENTE_AEROPUERTO')}">
+                        <li class="menu-item #{view.viewId.endsWith('index.xhtml') ? 'active' : ''}">
+                            <h:link outcome="/admin/index.xhtml" styleClass="menu-link" title="Gestión de Vuelos">
+                                <i class="pi pi-map"></i>
+                                <label>Gestión de Vuelos</label>
+                            </h:link>
+                        </li>
+                    </h:panelGroup>
 
-                    <!-- Itinerarios -->
-                    <li class="menu-item #{view.viewId.contains('itinerarios') ? 'active' : ''}">
-                        <h:link outcome="/admin/itinerario/itinerarios.xhtml" styleClass="menu-link" title="Itinerarios">
-                            <i class="pi pi-calendar-plus"></i>
-                            <label>Itinerarios</label>
-                        </h:link>
-                    </li>
+                    <!-- Itinerarios (Comercial / Revenue Management) -->
+                    <h:panelGroup rendered="#{userBean.hasRole('ROLE_ADMIN') or userBean.hasRole('ROLE_REVENUE_MANAGER')}">
+                        <li class="menu-item #{view.viewId.contains('itinerarios') ? 'active' : ''}">
+                            <h:link outcome="/admin/itinerario/itinerarios.xhtml" styleClass="menu-link" title="Itinerarios">
+                                <i class="pi pi-calendar-plus"></i>
+                                <label>Itinerarios</label>
+                            </h:link>
+                        </li>
+                    </h:panelGroup>
 
-                    <!-- Aeropuertos -->
-                    <li class="menu-item #{view.viewId.contains('gestionAeropuertos') ? 'active' : ''}">
-                        <h:link outcome="/admin/gestionAeropuertos.xhtml" styleClass="menu-link" title="Aeropuertos">
-                            <i class="pi pi-globe"></i>
-                            <label>Aeropuertos</label>
-                        </h:link>
-                    </li>
+                    <!-- Aeropuertos (Despacho, Mantenimiento, Comercial) -->
+                    <h:panelGroup rendered="#{userBean.hasRole('ROLE_ADMIN') or userBean.hasRole('ROLE_DESPACHADOR') or userBean.hasRole('ROLE_MANTENIMIENTO') or userBean.hasRole('ROLE_REVENUE_MANAGER')}">
+                        <li class="menu-item #{view.viewId.contains('gestionAeropuertos') ? 'active' : ''}">
+                            <h:link outcome="/admin/gestionAeropuertos.xhtml" styleClass="menu-link" title="Aeropuertos">
+                                <i class="pi pi-globe"></i>
+                                <label>Aeropuertos</label>
+                            </h:link>
+                        </li>
+                    </h:panelGroup>
 
-                    <!-- Flota de Aviones -->
-                    <li class="menu-item #{view.viewId.contains('gestionFlota') ? 'active' : ''}">
-                        <h:link outcome="/admin/gestionFlota.xhtml" styleClass="menu-link" title="Aviones &amp; Flota">
-                            <i class="pi pi-compass"></i>
-                            <label>Aviones &amp; Flota</label>
-                        </h:link>
-                    </li>
+                    <!-- Flota de Aviones (Mantenimiento / Ingeniería) -->
+                    <h:panelGroup rendered="#{userBean.hasRole('ROLE_ADMIN') or userBean.hasRole('ROLE_MANTENIMIENTO')}">
+                        <li class="menu-item #{view.viewId.contains('gestionFlota') ? 'active' : ''}">
+                            <h:link outcome="/admin/gestionFlota.xhtml" styleClass="menu-link" title="Aviones &amp; Flota">
+                                <i class="pi pi-compass"></i>
+                                <label>Aviones &amp; Flota</label>
+                            </h:link>
+                        </li>
+                    </h:panelGroup>
 
-                    <li class="menu-category-title">Configuración</li>
+                    <!-- Configuración Comercial -->
+                    <h:panelGroup rendered="#{userBean.hasRole('ROLE_ADMIN') or userBean.hasRole('ROLE_REVENUE_MANAGER')}">
+                        <li class="menu-category-title">Comercial &amp; Pricing</li>
 
-                    <!-- Tarifas -->
-                    <li class="menu-item #{view.viewId.contains('gestionarTarifas') ? 'active' : ''}">
-                        <h:link outcome="/admin/gestionarTarifas.xhtml" styleClass="menu-link" title="Tarifas">
-                            <i class="pi pi-dollar"></i>
-                            <label>Tarifas</label>
-                        </h:link>
-                    </li>
+                        <!-- Tarifas -->
+                        <li class="menu-item #{view.viewId.contains('gestionarTarifas') ? 'active' : ''}">
+                            <h:link outcome="/admin/gestionarTarifas.xhtml" styleClass="menu-link" title="Tarifas">
+                                <i class="pi pi-dollar"></i>
+                                <label>Tarifas</label>
+                            </h:link>
+                        </li>
 
-                    <!-- Catálogos Paramétricos -->
-                    <li class="menu-item #{view.viewId.contains('gestionParametricas') ? 'active' : ''}">
-                        <h:link outcome="/admin/gestionParametricas.xhtml" styleClass="menu-link" title="Catálogos de Operación">
-                            <i class="pi pi-sliders-h"></i>
-                            <label>Catálogos de Operación</label>
-                        </h:link>
-                    </li>
+                        <!-- Catálogos Paramétricos -->
+                        <li class="menu-item #{view.viewId.contains('gestionParametricas') ? 'active' : ''}">
+                            <h:link outcome="/admin/gestionParametricas.xhtml" styleClass="menu-link" title="Catálogos de Operación">
+                                <i class="pi pi-sliders-h"></i>
+                                <label>Catálogos de Operación</label>
+                            </h:link>
+                        </li>
+                    </h:panelGroup>
 
-                    <li class="menu-category-title">Sistema</li>
-                    <!-- Usuarios -->
-                    <li class="menu-item #{view.viewId.contains('usuarios') ? 'active' : ''}">
-                        <h:link outcome="/admin/usuarios.xhtml" styleClass="menu-link" title="Usuarios &amp; Personal">
-                            <i class="pi pi-users"></i>
-                            <label>Usuarios &amp; Personal</label>
-                        </h:link>
-                    </li>
+                    <!-- Gobierno y Sistema (Exclusivo Super Admin) -->
+                    <h:panelGroup rendered="#{userBean.hasRole('ROLE_ADMIN')}">
+                        <li class="menu-category-title">Gobierno &amp; Sistema</li>
+                        <!-- Usuarios & Personal -->
+                        <li class="menu-item #{view.viewId.contains('usuarios') ? 'active' : ''}">
+                            <h:link outcome="/admin/usuarios.xhtml" styleClass="menu-link" title="Usuarios &amp; Personal">
+                                <i class="pi pi-users"></i>
+                                <label>Usuarios &amp; Personal</label>
+                            </h:link>
+                        </li>
+                        <!-- Telemetría en Vivo WebSocket -->
+                        <li class="menu-item #{view.viewId.contains('metrics-ws') ? 'active' : ''}">
+                            <h:link outcome="/admin/metrics-ws.xhtml" styleClass="menu-link" title="Telemetría en Vivo">
+                                <i class="pi pi-chart-line"></i>
+                                <label>Telemetría en Vivo</label>
+                            </h:link>
+                        </li>
+                    </h:panelGroup>
                 </ul>
             </aside>
 
@@ -394,8 +417,13 @@
                     </button>
 
                     <div class="user-profile">
-                        <span>Admin Aerolínea</span>
-                        <p:avatar icon="pi pi-user" shape="circle" style="background-color:#1e293b; color:#fff;" />
+                        <div class="text-end me-2 d-none d-md-block">
+                            <span class="d-block font-weight-bold" style="font-size: 0.85rem; color: #f8fafc;">#{userBean.name != null ? userBean.name : 'Personal SkyWay'}</span>
+                            <span class="badge" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; font-size: 0.7rem; border: 1px solid rgba(56, 189, 248, 0.4);">
+                                #{userBean.rolPrincipalNombre}
+                            </span>
+                        </div>
+                        <p:avatar icon="pi pi-user" shape="circle" style="background-color:#1e293b; color:#38bdf8;" />
                     </div>
                 </header>
 

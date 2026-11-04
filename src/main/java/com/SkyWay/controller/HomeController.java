@@ -44,6 +44,11 @@ public class HomeController {
         return new RedirectView("home/index.xhtml");
     }
 
+    @GetMapping({"/errors/403", "/error/403"})
+    public RedirectView error403() {
+        return new RedirectView("/home/index.xhtml");
+    }
+
 
 	/*@GetMapping("")
 	public String home() {

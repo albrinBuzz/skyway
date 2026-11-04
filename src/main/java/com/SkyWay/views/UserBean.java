@@ -94,8 +94,47 @@ public class UserBean implements Serializable {
 
     public boolean hasRole(String role) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getAuthorities() == null) {
+            return false;
+        }
         return auth.getAuthorities().stream()
                 .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals(role));
+    }
+
+    public String getRolPrincipalNombre() {
+        if (hasRole("ROLE_ADMIN")) return "Administrador CCO";
+        if (hasRole("ROLE_DESPACHADOR")) return "Despachador de Vuelos";
+        if (hasRole("ROLE_REVENUE_MANAGER")) return "Revenue Manager";
+        if (hasRole("ROLE_MANTENIMIENTO")) return "Ingeniero Mantenimiento";
+        if (hasRole("ROLE_AGENTE_AEROPUERTO")) return "Agente Aeropuerto";
+        if (hasRole("ROLE_PILOTO")) return "Piloto Comandante";
+        if (hasRole("ROLE_TRIPULACION")) return "Tripulante de Cabina";
+        if (hasRole("ROLE_PASAJERO")) return "Pasajero";
+        return "Personal SkyWay";
+    }
+
+    public boolean isAccesoOperaciones() {
+        return hasRole("ROLE_ADMIN") || hasRole("ROLE_DESPACHADOR") || hasRole("ROLE_AGENTE_AEROPUERTO");
+    }
+
+    public boolean isAccesoComercial() {
+        return hasRole("ROLE_ADMIN") || hasRole("ROLE_REVENUE_MANAGER");
+    }
+
+    public boolean isAccesoFlota() {
+        return hasRole("ROLE_ADMIN") || hasRole("ROLE_MANTENIMIENTO");
+    }
+
+    public boolean isAccesoAeropuertos() {
+        return hasRole("ROLE_ADMIN") || hasRole("ROLE_DESPACHADOR") || hasRole("ROLE_MANTENIMIENTO") || hasRole("ROLE_REVENUE_MANAGER");
+    }
+
+    public boolean isAccesoUsuarios() {
+        return hasRole("ROLE_ADMIN");
+    }
+
+    public boolean isAccesoCCO() {
+        return hasRole("ROLE_ADMIN") || hasRole("ROLE_DESPACHADOR") || hasRole("ROLE_REVENUE_MANAGER") || hasRole("ROLE_MANTENIMIENTO") || hasRole("ROLE_AGENTE_AEROPUERTO");
     }
 
     // Método para cerrar sesión
