@@ -5,6 +5,7 @@ import com.SkyWay.config.pago.PagoFactoryService;
 import com.SkyWay.config.pago.PasarelaPagoStrategy;
 import com.SkyWay.modules.reserva.domain.service.ReservaProcesadorService;
 import com.SkyWay.modules.reserva.presentation.dto.SolicitudReservaDTO;
+import com.SkyWay.modules.reservaasiento.presentation.dto.SolicitudCambioAsientoDTO;
 import com.SkyWay.modules.tarifa.domain.service.UpgradeTarifaService;
 import com.SkyWay.modules.tarifa.presentation.dto.ResultadoUpgradeDTO;
 import com.SkyWay.modules.tarifa.presentation.dto.SolicitudUpgradeDTO;
@@ -26,6 +27,8 @@ public class PayPalController {
     private ReservaProcesadorService procesarReservaUseCase;
     @Autowired
     private UpgradeTarifaService upgradeTarifaService;
+    @Autowired
+    private com.SkyWay.modules.reservaasiento.domain.service.CambioAsientoProcesadorService cambioAsientoProcesadorService;
 
     private final PagoFactoryService pagoFactoryService;
 
@@ -97,7 +100,28 @@ public class PayPalController {
                 }
             }
 
-            // 2. Recuperar DTO guardado en la sesión para nueva reserva
+            // 2. Verificar si corresponde a Cambio de Asiento con Pago
+            SolicitudCambioAsientoDTO cambioDto = (session != null)
+                    ? (SolicitudCambioAsientoDTO) session.getAttribute("SOLICITUD_CAMBIO_ASIENTO_PENDIENTE")
+                    : null;
+
+            if (cambioDto != null) {
+                Logger.logInfo("🎯 [PAYPAL] Confirmando Cambio de Asientos para Reserva ID: " + cambioDto.getIdReserva());
+                int idMetodoPagoPayPal = 2;
+                com.SkyWay.modules.reservaasiento.presentation.dto.ResultadoCambioAsientoDTO resultado = cambioAsientoProcesadorService.procesarYConfirmarCambioAsiento(cambioDto, idMetodoPagoPayPal, "PayPal Express Checkout", request);
+                session.removeAttribute("SOLICITUD_CAMBIO_ASIENTO_PENDIENTE");
+
+                if (resultado != null) {
+                    session.setAttribute("RESULTADO_CAMBIO_ASIENTO", resultado);
+                    session.setAttribute("CAMBIO_ASIENTO_STATUS", "SUCCESS");
+                    session.setAttribute("CAMBIO_ASIENTO_ID_RESERVA", cambioDto.getIdReserva());
+                    return new RedirectView("/home/cambio-asiento.xhtml");
+                } else {
+                    return new RedirectView("/home/errorPago.xhtml?reason=CAMBIO_ASIENTO_ERROR");
+                }
+            }
+
+            // 3. Recuperar DTO guardado en la sesión para nueva reserva
             SolicitudReservaDTO dto = (session != null)
                     ? (SolicitudReservaDTO) session.getAttribute("SOLICITUD_RESERVA_PENDIENTE")
                     : null;
@@ -149,6 +173,13 @@ public class PayPalController {
             } else {
                 return new RedirectView("/perfil/pasajero/index.xhtml?upgradeCancelled=true");
             }
+        }
+        if (session != null && session.getAttribute("SOLICITUD_CAMBIO_ASIENTO_PENDIENTE") != null) {
+            SolicitudCambioAsientoDTO cambioDto = (SolicitudCambioAsientoDTO) session.getAttribute("SOLICITUD_CAMBIO_ASIENTO_PENDIENTE");
+            session.removeAttribute("SOLICITUD_CAMBIO_ASIENTO_PENDIENTE");
+            session.setAttribute("CAMBIO_ASIENTO_STATUS", "CANCELLED");
+            session.setAttribute("CAMBIO_ASIENTO_ID_RESERVA", cambioDto.getIdReserva());
+            return new RedirectView("/home/cambio-asiento.xhtml");
         }
         return new RedirectView("/home/errorPago.xhtml?reason=CANCELLED");
     }

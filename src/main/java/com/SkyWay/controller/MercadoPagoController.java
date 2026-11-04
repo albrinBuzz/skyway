@@ -5,6 +5,7 @@ import com.SkyWay.config.pago.PagoFactoryService;
 import com.SkyWay.config.pago.PasarelaPagoStrategy;
 import com.SkyWay.modules.reserva.domain.service.ReservaProcesadorService;
 import com.SkyWay.modules.reserva.presentation.dto.SolicitudReservaDTO;
+import com.SkyWay.modules.reservaasiento.presentation.dto.SolicitudCambioAsientoDTO;
 import com.SkyWay.modules.tarifa.domain.service.UpgradeTarifaService;
 import com.SkyWay.modules.tarifa.presentation.dto.SolicitudUpgradeDTO;
 import com.SkyWay.util.Logger;
@@ -25,6 +26,8 @@ public class MercadoPagoController {
     private ReservaProcesadorService procesarReservaUseCase;
     @Autowired
     private UpgradeTarifaService upgradeTarifaService;
+    @Autowired
+    private com.SkyWay.modules.reservaasiento.domain.service.CambioAsientoProcesadorService cambioAsientoProcesadorService;
 
     private final PagoFactoryService pagoFactoryService;
 
@@ -93,6 +96,27 @@ public class MercadoPagoController {
                 }
             }
 
+            // 1b. Verificar si corresponde a un Cambio de Asiento con Pago
+            SolicitudCambioAsientoDTO cambioDto = (session != null)
+                    ? (SolicitudCambioAsientoDTO) session.getAttribute("SOLICITUD_CAMBIO_ASIENTO_PENDIENTE")
+                    : null;
+
+            if (cambioDto != null) {
+                Logger.logInfo("🎯 [MERCADOPAGO] Confirmando Cambio de Asientos para Reserva ID: " + cambioDto.getIdReserva());
+                int idMetodoPagoMP = 1;
+                com.SkyWay.modules.reservaasiento.presentation.dto.ResultadoCambioAsientoDTO resultado = cambioAsientoProcesadorService.procesarYConfirmarCambioAsiento(cambioDto, idMetodoPagoMP, "Mercado Pago Checkout Pro", request);
+                session.removeAttribute("SOLICITUD_CAMBIO_ASIENTO_PENDIENTE");
+
+                if (resultado != null) {
+                    session.setAttribute("RESULTADO_CAMBIO_ASIENTO", resultado);
+                    session.setAttribute("CAMBIO_ASIENTO_STATUS", "SUCCESS");
+                    session.setAttribute("CAMBIO_ASIENTO_ID_RESERVA", cambioDto.getIdReserva());
+                    return new RedirectView("/home/cambio-asiento.xhtml");
+                } else {
+                    return new RedirectView("/home/errorPago.xhtml?reason=CAMBIO_ASIENTO_ERROR");
+                }
+            }
+
             // 2. Flujo regular de nueva reserva
             SolicitudReservaDTO dto = (session != null)
                     ? (SolicitudReservaDTO) session.getAttribute("SOLICITUD_RESERVA_PENDIENTE")
@@ -121,8 +145,16 @@ public class MercadoPagoController {
      * Endpoint de falla o cancelación configurado en la preferencia.
      */
     @GetMapping("/mercadopago/cancel")
-    public RedirectView cancelarMercadoPago() {
+    public RedirectView cancelarMercadoPago(HttpServletRequest request) {
         Logger.logInfo("El usuario canceló el pago en el formulario de Mercado Pago.");
+        HttpSession session = request.getSession(false);
+        if (session != null && session.getAttribute("SOLICITUD_CAMBIO_ASIENTO_PENDIENTE") != null) {
+            SolicitudCambioAsientoDTO cambioDto = (SolicitudCambioAsientoDTO) session.getAttribute("SOLICITUD_CAMBIO_ASIENTO_PENDIENTE");
+            session.removeAttribute("SOLICITUD_CAMBIO_ASIENTO_PENDIENTE");
+            session.setAttribute("CAMBIO_ASIENTO_STATUS", "CANCELLED");
+            session.setAttribute("CAMBIO_ASIENTO_ID_RESERVA", cambioDto.getIdReserva());
+            return new RedirectView("/home/cambio-asiento.xhtml");
+        }
         return new RedirectView("/home/errorPago.xhtml?reason=CANCELLED");
     }
 }

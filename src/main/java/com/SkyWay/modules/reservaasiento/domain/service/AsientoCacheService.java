@@ -281,6 +281,46 @@ public class AsientoCacheService {
         }
     }
 
+    /**
+     * Sincronización inmediata de cambio de asiento en memoria y notificación vía WebSocket
+     * al canal /topic/vuelo/{idVuelo}.
+     */
+    public void actualizarCambioAsiento(Integer idVuelo, Integer idAsientoOriginal, Integer idAsientoNuevo) {
+        if (idVuelo == null) return;
+
+        Map<Integer, InfoAsientoDTO> asientosMap = mapaVuelos.get(idVuelo);
+        if (asientosMap != null) {
+            if (idAsientoOriginal != null) {
+                asientosMap.computeIfPresent(idAsientoOriginal, (id, asiento) -> {
+                    asiento.setEstado("libre");
+                    asiento.setReservadoPor(null);
+                    tiempoSeleccionMap.remove(id);
+                    return asiento;
+                });
+            }
+            if (idAsientoNuevo != null) {
+                asientosMap.computeIfPresent(idAsientoNuevo, (id, asiento) -> {
+                    asiento.setEstado("OCUPADO");
+                    asiento.setReservadoPor(null);
+                    tiempoSeleccionMap.remove(id);
+                    return asiento;
+                });
+            }
+        }
+
+        // Notificación en tiempo real a todos los clientes suscritos al vuelo
+        if (idAsientoOriginal != null) {
+            EventoAsientoPush evLibre = new EventoAsientoPush(idAsientoOriginal, idVuelo, "libre", null);
+            messagingTemplate.convertAndSend("/topic/vuelo/" + idVuelo, evLibre);
+        }
+        if (idAsientoNuevo != null) {
+            EventoAsientoPush evOcupado = new EventoAsientoPush(idAsientoNuevo, idVuelo, "OCUPADO", null);
+            messagingTemplate.convertAndSend("/topic/vuelo/" + idVuelo, evOcupado);
+        }
+        Logger.logInfo(String.format("🔄 [WebSocket-Sync] Cambio de asiento en Vuelo #%d: Original #%d LIBERADO, Nuevo #%d OCUPADO",
+                idVuelo, idAsientoOriginal, idAsientoNuevo));
+    }
+
     public enum ResultadoSeleccion {
         EXITO_SELECCIONADO, EXITO_LIBERADO,
         FALLO_ASIENTO_NO_DISPONIBLE, FALLO_BLOQUEADO_POR_OTRO
