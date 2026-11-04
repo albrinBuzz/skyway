@@ -729,7 +729,8 @@
                                      actionListener="#{gestionAeropuertosBean.nuevoAeropuerto}"
                                      update=":formDialog"
                                      oncomplete="PF('dlgAeropuerto').show(); window.resetearMapa();"
-                                     styleClass="btn-new" />
+                                     styleClass="btn-new"
+                                     rendered="#{userBean.hasRole('ROLE_ADMIN') or userBean.hasRole('ROLE_DESPACHADOR')}" />
                 </h:form>
             </div>
 
@@ -843,12 +844,14 @@
                                              update=":formDialog"
                                              oncomplete="PF('dlgAeropuerto').show(); window.cargarUbicacionExistente(#{a.latitud}, #{a.longitud});"
                                              styleClass="ui-button-outlined ui-button-secondary ui-button-sm"
+                                             rendered="#{userBean.hasRole('ROLE_ADMIN') or userBean.hasRole('ROLE_DESPACHADOR')}"
                                              title="Editar" />
 
                             <p:commandButton icon="pi pi-power-off"
                                              actionListener="#{gestionAeropuertosBean.eliminar(a.idAeropuerto)}"
                                              update=":formTabla"
                                              styleClass="btn-deactivate ui-button-sm"
+                                             rendered="#{userBean.hasRole('ROLE_ADMIN')}"
                                              title="Desactivar">
                                 <p:confirm header="Confirmar Suspensión" message="¿Desea suspender la operación del aeropuerto #{a.codigoIata}?" icon="pi pi-exclamation-triangle" />
                             </p:commandButton>
