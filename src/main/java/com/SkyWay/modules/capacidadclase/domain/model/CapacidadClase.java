@@ -30,6 +30,7 @@ public class CapacidadClase implements Serializable {
 	@ManyToOne
 	@JoinColumn(name="id_avion")
 	@JsonIgnore
+	@org.hibernate.annotations.NotFound(action = org.hibernate.annotations.NotFoundAction.IGNORE)
 	private Avion avion1;
 
 	//bi-directional many-to-one association to Avion
@@ -38,6 +39,7 @@ public class CapacidadClase implements Serializable {
 	//bi-directional many-to-one association to ClaseAsiento
 	@ManyToOne
 	@JoinColumn(name="id_clase")
+	@org.hibernate.annotations.NotFound(action = org.hibernate.annotations.NotFoundAction.IGNORE)
 	private ClaseAsiento claseAsiento1;
 
 	//bi-directional many-to-one association to ClaseAsiento

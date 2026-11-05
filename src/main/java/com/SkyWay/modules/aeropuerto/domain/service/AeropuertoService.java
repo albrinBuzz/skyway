@@ -13,9 +13,11 @@ public interface AeropuertoService {
     Optional<Aeropuerto> findById(Integer id);
     Aeropuerto save(Aeropuerto aeropuerto);
     void delete(Integer id);
+    void reactivar(Integer id);
     Aeropuerto update(Aeropuerto aeropuerto);
     List<AeropuertoMapaDTO> findAllParaMapa();
     List<AeropuertoMapaProjection> findAllConCoordenadas();
+    List<AeropuertoMapaProjection> findAllConCoordenadasAdmin();
 
     // Métodos CRUD personalizados
     void registrarAeropuerto(String nombre, String codigoIata, Integer idCiudad, Double latitud, Double longitud) throws Exception;

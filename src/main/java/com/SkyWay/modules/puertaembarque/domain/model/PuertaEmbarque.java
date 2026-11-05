@@ -15,6 +15,8 @@ import java.util.List;
  */
 @Entity
 @Table(name="puerta_embarque")
+@org.hibernate.annotations.SQLDelete(sql = "UPDATE puerta_embarque SET activo = false, fecha_baja = NOW() WHERE id_puerta = ?")
+@org.hibernate.annotations.SQLRestriction("activo = true")
 @NamedQuery(name="PuertaEmbarque.findAll", query="SELECT p FROM PuertaEmbarque p")
 public class PuertaEmbarque implements Serializable {
 	private static final long serialVersionUID = 1L;
@@ -30,6 +32,17 @@ public class PuertaEmbarque implements Serializable {
 
 	private String terminal;
 
+	@Column(name="activo", nullable=false)
+	private Boolean activo = true;
+
+	@Column(name="fecha_baja")
+	private java.sql.Timestamp fechaBaja;
+
+	public Boolean getActivo() { return this.activo; }
+	public void setActivo(Boolean activo) { this.activo = activo; }
+	public java.sql.Timestamp getFechaBaja() { return this.fechaBaja; }
+	public void setFechaBaja(java.sql.Timestamp fechaBaja) { this.fechaBaja = fechaBaja; }
+
 	//bi-directional many-to-one association to AsignacionPuerta
 	@OneToMany(mappedBy="puertaEmbarque")
 	@JsonIgnore
@@ -38,6 +51,7 @@ public class PuertaEmbarque implements Serializable {
 	//bi-directional many-to-one association to Aeropuerto
 	@ManyToOne
 	@JoinColumn(name="id_aeropuerto")
+	@org.hibernate.annotations.NotFound(action = org.hibernate.annotations.NotFoundAction.IGNORE)
 	@JsonIgnore
 	private Aeropuerto aeropuerto;
 

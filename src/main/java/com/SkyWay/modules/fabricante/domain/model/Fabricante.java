@@ -12,6 +12,9 @@ import java.util.List;
  * 
  */
 @Entity
+@Table(name="fabricante")
+@org.hibernate.annotations.SQLDelete(sql = "UPDATE fabricante SET activo = false, fecha_baja = NOW() WHERE id_fabricante = ?")
+@org.hibernate.annotations.SQLRestriction("activo = true")
 @NamedQuery(name="Fabricante.findAll", query="SELECT f FROM Fabricante f")
 public class Fabricante implements Serializable {
 	private static final long serialVersionUID = 1L;
@@ -23,6 +26,12 @@ public class Fabricante implements Serializable {
 	private Integer idFabricante;
 
 	private String nombre;
+
+	@Column(name="activo", nullable=false)
+	private Boolean activo = true;
+
+	@Column(name="fecha_baja")
+	private java.sql.Timestamp fechaBaja;
 
 	//bi-directional many-to-one association to ModeloAvion
 	@OneToMany(mappedBy="fabricante")
@@ -42,6 +51,11 @@ public class Fabricante implements Serializable {
 	public String getNombre() {
 		return this.nombre;
 	}
+
+	public Boolean getActivo() { return this.activo; }
+	public void setActivo(Boolean activo) { this.activo = activo; }
+	public java.sql.Timestamp getFechaBaja() { return this.fechaBaja; }
+	public void setFechaBaja(java.sql.Timestamp fechaBaja) { this.fechaBaja = fechaBaja; }
 
 	public void setNombre(String nombre) {
 		this.nombre = nombre;

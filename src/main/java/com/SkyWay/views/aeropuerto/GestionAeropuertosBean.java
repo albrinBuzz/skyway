@@ -31,9 +31,13 @@ public class GestionAeropuertosBean implements Serializable {
     @Autowired
     private CiudadService ciudadService;
 
-    private List<AeropuertoMapaProjection> listaAeropuertos;
-    private List<Pai> paisesDisponibles;
-    private List<Ciudad> ciudadesFiltradas = new ArrayList<>();
+    // Listas Administrativas (Traen TODO: Activos e Inactivos para la tabla de gestión)
+    private List<AeropuertoMapaProjection> listaAeropuertosAdmin;
+
+    // Listas Operativas / Activas (Traen SOLO Activos para dropdowns, selects y mapa)
+    private List<AeropuertoMapaProjection> listaAeropuertosActivos;
+    private List<Pai> paisesActivos;
+    private List<Ciudad> ciudadesFiltradasActivas = new ArrayList<>();
 
     private Integer idAeropuerto;
     private String nombreAeropuerto;
@@ -54,17 +58,22 @@ public class GestionAeropuertosBean implements Serializable {
     }
 
     public void cargarListas() {
-        this.listaAeropuertos = aeropuertoService.findAllConCoordenadas();
-        this.paisesDisponibles = paiService.findAllOrdenados();
+        // 1. Lista administrativa completa para gestión (con activos e inactivos)
+        this.listaAeropuertosAdmin = aeropuertoService.findAllConCoordenadasAdmin();
+
+        // 2. Listas operativas activas para dropdowns y mapa
+        this.listaAeropuertosActivos = aeropuertoService.findAllConCoordenadas();
+        this.paisesActivos = paiService.findAllOrdenados();
     }
 
     public String getAeropuertosJson() {
-        if (listaAeropuertos == null || listaAeropuertos.isEmpty()) {
+        List<AeropuertoMapaProjection> listaMapa = (listaAeropuertosActivos != null) ? listaAeropuertosActivos : listaAeropuertosAdmin;
+        if (listaMapa == null || listaMapa.isEmpty()) {
             return "[]";
         }
         StringBuilder sb = new StringBuilder("[");
-        for (int i = 0; i < listaAeropuertos.size(); i++) {
-            AeropuertoMapaProjection a = listaAeropuertos.get(i);
+        for (int i = 0; i < listaMapa.size(); i++) {
+            AeropuertoMapaProjection a = listaMapa.get(i);
             sb.append("{")
                     .append("\"id\":").append(a.getIdAeropuerto()).append(",")
                     .append("\"nombre\":\"").append(a.getNombreAeropuerto().replace("\"", "\\\"")).append("\",")
@@ -72,7 +81,7 @@ public class GestionAeropuertosBean implements Serializable {
                     .append("\"lat\":").append(a.getLatitud()).append(",")
                     .append("\"lng\":").append(a.getLongitud())
                     .append("}");
-            if (i < listaAeropuertos.size() - 1) {
+            if (i < listaMapa.size() - 1) {
                 sb.append(",");
             }
         }
@@ -82,9 +91,9 @@ public class GestionAeropuertosBean implements Serializable {
 
     public void onPaisChange() {
         if (idPaisSeleccionado != null) {
-            this.ciudadesFiltradas = ciudadService.obtenerCiudadesPorPais(idPaisSeleccionado);
+            this.ciudadesFiltradasActivas = ciudadService.obtenerCiudadesPorPais(idPaisSeleccionado);
         } else {
-            this.ciudadesFiltradas = new ArrayList<>();
+            this.ciudadesFiltradasActivas = new ArrayList<>();
         }
     }
 
@@ -100,7 +109,7 @@ public class GestionAeropuertosBean implements Serializable {
                         onPaisChange();
 
                         if (ciudadDetectada != null && !ciudadDetectada.isBlank()) {
-                            ciudadesFiltradas.stream()
+                            ciudadesFiltradasActivas.stream()
                                     .filter(c -> c.getNombre().equalsIgnoreCase(ciudadDetectada.trim()))
                                     .findFirst()
                                     .ifPresentOrElse(
@@ -136,7 +145,8 @@ public class GestionAeropuertosBean implements Serializable {
         this.latitud = null;
         this.longitud = null;
         this.modoEdicion = false;
-        this.ciudadesFiltradas = new ArrayList<>();
+        this.ciudadesFiltradasActivas = new ArrayList<>();
+        this.paisesActivos = paiService.findAllOrdenados();
 
         PrimeFaces.current().executeScript("PF('dlgAeropuerto').show(); window.resetearMapa();");
     }
@@ -208,10 +218,20 @@ public class GestionAeropuertosBean implements Serializable {
     public void eliminar(Integer id) {
         try {
             aeropuertoService.delete(id);
-            addMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Aeropuerto eliminado.");
+            addMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Aeropuerto dado de baja exitosamente.");
             cargarListas();
         } catch (Exception e) {
             addMessage(FacesMessage.SEVERITY_ERROR, "Error", "No se puede eliminar: el aeropuerto tiene operaciones vinculadas.");
+        }
+    }
+
+    public void reactivar(Integer id) {
+        try {
+            aeropuertoService.reactivar(id);
+            addMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Aeropuerto reactivado exitosamente.");
+            cargarListas();
+        } catch (Exception e) {
+            addMessage(FacesMessage.SEVERITY_ERROR, "Error", "No se pudo reactivar el aeropuerto: " + e.getMessage());
         }
     }
 
@@ -220,9 +240,15 @@ public class GestionAeropuertosBean implements Serializable {
     }
 
     // Getters y Setters
-    public List<AeropuertoMapaProjection> getListaAeropuertos() { return listaAeropuertos; }
-    public List<Pai> getPaisesDisponibles() { return paisesDisponibles; }
-    public List<Ciudad> getCiudadesFiltradas() { return ciudadesFiltradas; }
+    public List<AeropuertoMapaProjection> getListaAeropuertosAdmin() { return listaAeropuertosAdmin; }
+    public List<AeropuertoMapaProjection> getListaAeropuertosActivos() { return listaAeropuertosActivos; }
+    public List<Pai> getPaisesActivos() { return paisesActivos; }
+    public List<Ciudad> getCiudadesFiltradasActivas() { return ciudadesFiltradasActivas; }
+
+    // Compatibilidad
+    public List<AeropuertoMapaProjection> getListaAeropuertos() { return listaAeropuertosAdmin; }
+    public List<Pai> getPaisesDisponibles() { return paisesActivos; }
+    public List<Ciudad> getCiudadesFiltradas() { return ciudadesFiltradasActivas; }
     public Integer getIdAeropuerto() { return idAeropuerto; }
     public void setIdAeropuerto(Integer idAeropuerto) { this.idAeropuerto = idAeropuerto; }
     public String getNombreAeropuerto() { return nombreAeropuerto; }

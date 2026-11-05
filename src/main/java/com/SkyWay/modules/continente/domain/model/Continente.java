@@ -9,6 +9,8 @@ import java.util.List;
  * Entidad JPA para la tabla 'continente'
  */
 @Entity
+@org.hibernate.annotations.SQLDelete(sql = "UPDATE continente SET activo = false, fecha_baja = NOW() WHERE id_continente = ?")
+@org.hibernate.annotations.SQLRestriction("activo = true")
 @Table(name = "continente", schema = "public")
 @NamedQuery(name = "Continente.findAll", query = "SELECT c FROM Continente c")
 public class Continente implements Serializable {
@@ -21,6 +23,17 @@ public class Continente implements Serializable {
 
     @Column(name = "nombre", nullable = false, length = 100)
     private String nombre;
+
+    @Column(name = "activo", nullable = false)
+    private Boolean activo = true;
+
+    @Column(name = "fecha_baja")
+    private java.sql.Timestamp fechaBaja;
+
+    public Boolean getActivo() { return this.activo; }
+    public void setActivo(Boolean activo) { this.activo = activo; }
+    public java.sql.Timestamp getFechaBaja() { return this.fechaBaja; }
+    public void setFechaBaja(java.sql.Timestamp fechaBaja) { this.fechaBaja = fechaBaja; }
 
     // Relación bidireccional OneToMany con País (un continente tiene muchos países)
     @OneToMany(mappedBy = "continente", fetch = FetchType.LAZY)

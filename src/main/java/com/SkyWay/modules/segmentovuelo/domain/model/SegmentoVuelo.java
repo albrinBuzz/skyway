@@ -56,11 +56,13 @@ public class SegmentoVuelo implements Serializable {
 	//bi-directional many-to-one association to Aeropuerto
 	@ManyToOne
 	@JoinColumn(name="id_aeropuerto_destino")
+	@org.hibernate.annotations.NotFound(action = org.hibernate.annotations.NotFoundAction.IGNORE)
 	private Aeropuerto aeropuertoDestino;
 
 	//bi-directional many-to-one association to Aeropuerto
 	@ManyToOne
 	@JoinColumn(name="id_aeropuerto_origen")
+	@org.hibernate.annotations.NotFound(action = org.hibernate.annotations.NotFoundAction.IGNORE)
 	private Aeropuerto aeropuertoOrigen;
 
 

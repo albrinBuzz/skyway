@@ -13,6 +13,8 @@ import java.util.List;
  * 
  */
 @Entity
+@org.hibernate.annotations.SQLDelete(sql = "UPDATE pais SET activo = false, fecha_baja = NOW() WHERE id_pais = ?")
+@org.hibernate.annotations.SQLRestriction("activo = true")
 @Table(name="pais")
 @NamedQuery(name="Pai.findAll", query="SELECT p FROM Pai p")
 public class Pai implements Serializable {
@@ -26,8 +28,20 @@ public class Pai implements Serializable {
 
 	private String nombre;
 
+	@Column(name = "activo", nullable = false)
+	private Boolean activo = true;
+
+	@Column(name = "fecha_baja")
+	private java.sql.Timestamp fechaBaja;
+
+	public Boolean getActivo() { return this.activo; }
+	public void setActivo(Boolean activo) { this.activo = activo; }
+	public java.sql.Timestamp getFechaBaja() { return this.fechaBaja; }
+	public void setFechaBaja(java.sql.Timestamp fechaBaja) { this.fechaBaja = fechaBaja; }
+
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "id_continente")
+	@org.hibernate.annotations.NotFound(action = org.hibernate.annotations.NotFoundAction.IGNORE)
 	private Continente continente;
 
 	//bi-directional many-to-one association to Ciudad

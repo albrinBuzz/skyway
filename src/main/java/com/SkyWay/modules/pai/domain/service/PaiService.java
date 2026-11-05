@@ -12,4 +12,6 @@ public interface PaiService {
     Pai guardarPais(String nombre);
     Optional<Pai> buscarPorNombre(String nombre);
     Pai obtenerPorId(Integer idPais);
+    void eliminarPais(Integer idPais);
+    void reactivarPais(Integer idPais);
 }

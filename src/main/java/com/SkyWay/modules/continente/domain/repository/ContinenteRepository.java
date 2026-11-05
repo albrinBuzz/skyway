@@ -15,4 +15,16 @@ public interface ContinenteRepository extends JpaRepository<Continente, Integer>
     Optional<Continente> findByNombreIgnoreCase(String nombre);
 
     boolean existsByNombreIgnoreCase(String nombre);
+
+    List<Continente> findByActivoTrueOrderByNombreAsc();
+
+    @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true)
+    @org.springframework.transaction.annotation.Transactional
+    @org.springframework.data.jpa.repository.Query(value = "UPDATE continente SET activo = false, fecha_baja = CURRENT_TIMESTAMP WHERE id_continente = :id", nativeQuery = true)
+    void softDeleteById(@org.springframework.data.repository.query.Param("id") Integer id);
+
+    @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true)
+    @org.springframework.transaction.annotation.Transactional
+    @org.springframework.data.jpa.repository.Query(value = "UPDATE continente SET activo = true, fecha_baja = NULL WHERE id_continente = :id", nativeQuery = true)
+    void reactivarById(@org.springframework.data.repository.query.Param("id") Integer id);
 }

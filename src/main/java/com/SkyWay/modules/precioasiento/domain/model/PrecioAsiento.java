@@ -28,6 +28,7 @@ public class PrecioAsiento implements Serializable {
 	//bi-directional many-to-one association to ClaseAsiento
 	@ManyToOne
 	@JoinColumn(name="id_clase")
+	@org.hibernate.annotations.NotFound(action = org.hibernate.annotations.NotFoundAction.IGNORE)
 	private ClaseAsiento claseAsiento;
 
 	//bi-directional many-to-one association to Vuelo

@@ -339,7 +339,7 @@
 
                     <h:form id="formTablaAviones">
                         <p:dataTable id="dt-aviones"
-                                     value="#{gestionFlotaIntegradaBean.listaAviones}"
+                                     value="#{gestionFlotaIntegradaBean.listaAvionesAdmin}"
                                      var="a"
                                      styleClass="skyway-ops-table"
                                      paginator="true"
@@ -373,13 +373,26 @@
                                 <span>#{a.capacidadDeCarga} Kg</span>
                             </p:column>
 
-                            <p:column headerText="Estado" style="width: 130px; text-align: center;">
+                            <p:column headerText="Mantenimiento" style="width: 120px; text-align: center;">
                                 <span style="background: var(--status-active-bg); border: 1px solid var(--status-active-border); color: var(--status-active-text); padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">
                                     #{a.estadoDeMantenimiento}
                                 </span>
                             </p:column>
 
-                            <p:column headerText="Acciones" style="width: 120px; text-align: center;">
+                            <p:column headerText="Estado" sortBy="#{a.activo}" style="width: 100px; text-align: center;">
+                                <h:panelGroup rendered="#{a.activo}">
+                                    <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #34d399; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">
+                                        <i class="pi pi-check-circle me-1"></i>Activo
+                                    </span>
+                                </h:panelGroup>
+                                <h:panelGroup rendered="#{not a.activo}">
+                                    <span style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #f87171; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">
+                                        <i class="pi pi-ban me-1"></i>Inactivo
+                                    </span>
+                                </h:panelGroup>
+                            </p:column>
+
+                            <p:column headerText="Acciones" style="width: 130px; text-align: center;">
                                 <div class="flex gap-2 justify-content-center">
                                     <!-- BOTÓN MAPA DE ASIENTOS -->
                                     <p:commandButton icon="pi pi-th-large"
@@ -390,23 +403,36 @@
                                                      styleClass="ui-button-outlined ui-button-secondary ui-button-sm"
                                                      title="Ver Fuselaje de Asientos" />
 
-                                    <!-- BOTÓN EDITAR (CORREGIDO) -->
+                                    <!-- BOTÓN EDITAR -->
                                     <p:commandButton icon="pi pi-pencil"
                                                      actionListener="#{gestionFlotaIntegradaBean.prepararEdicionAvion(a)}"
                                                      process="@this"
                                                      update=":formDialogAvion:panelAvion"
                                                      oncomplete="PF('dlgAvion').show();"
                                                      styleClass="ui-button-outlined ui-button-secondary ui-button-sm"
+                                                     rendered="#{a.activo}"
                                                      title="Editar Aeronave" />
 
-                                    <!-- BOTÓN ELIMINAR -->
+                                    <!-- BOTÓN DESACTIVAR -->
                                     <p:commandButton icon="pi pi-trash"
                                                      actionListener="#{gestionFlotaIntegradaBean.eliminarAvion(a.idAvion)}"
                                                      process="@this"
                                                      update=":mainPanel :msgs"
                                                      styleClass="ui-button-outlined ui-button-danger ui-button-sm"
-                                                     title="Eliminar">
-                                        <p:confirm header="Confirmación" message="¿Eliminar aeronave '#{a.numeroDeRegistro}'?" icon="pi pi-exclamation-triangle" />
+                                                     rendered="#{a.activo}"
+                                                     title="Dar de baja">
+                                        <p:confirm header="Confirmación" message="¿Dar de baja la aeronave '#{a.numeroDeRegistro}'?" icon="pi pi-exclamation-triangle" />
+                                    </p:commandButton>
+
+                                    <!-- BOTÓN REACTIVAR -->
+                                    <p:commandButton icon="pi pi-refresh"
+                                                     actionListener="#{gestionFlotaIntegradaBean.reactivarAvion(a.idAvion)}"
+                                                     process="@this"
+                                                     update=":mainPanel :msgs"
+                                                     styleClass="ui-button-outlined ui-button-success ui-button-sm"
+                                                     rendered="#{not a.activo}"
+                                                     title="Reactivar Aeronave">
+                                        <p:confirm header="Confirmación" message="¿Reactivar la aeronave '#{a.numeroDeRegistro}'?" icon="pi pi-check-circle" />
                                     </p:commandButton>
                                 </div>
                             </p:column>
@@ -436,7 +462,7 @@
 
                     <h:form id="formTablaModelos">
                         <p:dataTable id="dt-modelos"
-                                     value="#{gestionFlotaIntegradaBean.listaModelos}"
+                                     value="#{gestionFlotaIntegradaBean.listaModelosAdmin}"
                                      var="m"
                                      styleClass="skyway-ops-table"
                                      paginator="true"
@@ -458,12 +484,37 @@
                                 <span style="color: var(--navy-brand); font-weight: 600;">#{m.fabricante.nombre}</span>
                             </p:column>
 
+                            <p:column headerText="Estado" sortBy="#{m.activo}" style="width: 100px; text-align: center;">
+                                <h:panelGroup rendered="#{m.activo}">
+                                    <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #34d399; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">
+                                        <i class="pi pi-check-circle me-1"></i>Activo
+                                    </span>
+                                </h:panelGroup>
+                                <h:panelGroup rendered="#{not m.activo}">
+                                    <span style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #f87171; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">
+                                        <i class="pi pi-ban me-1"></i>Inactivo
+                                    </span>
+                                </h:panelGroup>
+                            </p:column>
+
                             <p:column headerText="Acciones" style="width: 100px; text-align: center;">
                                 <p:commandButton icon="pi pi-trash"
                                                  actionListener="#{gestionFlotaIntegradaBean.eliminarModelo(m.idModelo)}"
+                                                 process="@this"
                                                  update=":mainPanel :msgs"
+                                                 rendered="#{m.activo}"
+                                                 title="Dar de baja"
                                                  styleClass="ui-button-outlined ui-button-danger ui-button-sm">
-                                    <p:confirm header="Confirmación" message="¿Eliminar el modelo '#{m.nombre}'?" icon="pi pi-exclamation-triangle" />
+                                    <p:confirm header="Confirmación" message="¿Dar de baja el modelo '#{m.nombre}'?" icon="pi pi-exclamation-triangle" />
+                                </p:commandButton>
+                                <p:commandButton icon="pi pi-refresh"
+                                                 actionListener="#{gestionFlotaIntegradaBean.reactivarModelo(m.idModelo)}"
+                                                 process="@this"
+                                                 update=":mainPanel :msgs"
+                                                 rendered="#{not m.activo}"
+                                                 title="Reactivar modelo"
+                                                 styleClass="ui-button-outlined ui-button-success ui-button-sm">
+                                    <p:confirm header="Confirmación" message="¿Reactivar el modelo '#{m.nombre}'?" icon="pi pi-check-circle" />
                                 </p:commandButton>
                             </p:column>
                         </p:dataTable>
@@ -492,7 +543,7 @@
 
                     <h:form id="formTablaFabricantes">
                         <p:dataTable id="dt-fabricantes"
-                                     value="#{gestionFlotaIntegradaBean.listaFabricantes}"
+                                     value="#{gestionFlotaIntegradaBean.listaFabricantesAdmin}"
                                      var="f"
                                      styleClass="skyway-ops-table"
                                      paginator="true"
@@ -510,12 +561,37 @@
                                 <span style="font-weight: 700; color: var(--text-heading);">#{f.nombre}</span>
                             </p:column>
 
+                            <p:column headerText="Estado" sortBy="#{f.activo}" style="width: 100px; text-align: center;">
+                                <h:panelGroup rendered="#{f.activo}">
+                                    <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #34d399; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">
+                                        <i class="pi pi-check-circle me-1"></i>Activo
+                                    </span>
+                                </h:panelGroup>
+                                <h:panelGroup rendered="#{not f.activo}">
+                                    <span style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #f87171; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">
+                                        <i class="pi pi-ban me-1"></i>Inactivo
+                                    </span>
+                                </h:panelGroup>
+                            </p:column>
+
                             <p:column headerText="Acciones" style="width: 100px; text-align: center;">
                                 <p:commandButton icon="pi pi-trash"
                                                  actionListener="#{gestionFlotaIntegradaBean.eliminarFabricante(f.idFabricante)}"
+                                                 process="@this"
                                                  update=":mainPanel :msgs"
+                                                 rendered="#{f.activo}"
+                                                 title="Dar de baja"
                                                  styleClass="ui-button-outlined ui-button-danger ui-button-sm">
-                                    <p:confirm header="Confirmación" message="¿Eliminar fabricante '#{f.nombre}'?" icon="pi pi-exclamation-triangle" />
+                                    <p:confirm header="Confirmación" message="¿Dar de baja el fabricante '#{f.nombre}'?" icon="pi pi-exclamation-triangle" />
+                                </p:commandButton>
+                                <p:commandButton icon="pi pi-refresh"
+                                                 actionListener="#{gestionFlotaIntegradaBean.reactivarFabricante(f.idFabricante)}"
+                                                 process="@this"
+                                                 update=":mainPanel :msgs"
+                                                 rendered="#{not f.activo}"
+                                                 title="Reactivar fabricante"
+                                                 styleClass="ui-button-outlined ui-button-success ui-button-sm">
+                                    <p:confirm header="Confirmación" message="¿Reactivar el fabricante '#{f.nombre}'?" icon="pi pi-check-circle" />
                                 </p:commandButton>
                             </p:column>
                         </p:dataTable>
@@ -549,7 +625,7 @@
                                 <label>Modelo de Avión</label>
                                 <p:selectOneMenu value="#{gestionFlotaIntegradaBean.idModeloParaAvion}">
                                     <f:selectItem itemLabel="-- Seleccionar Modelo --" itemValue="" />
-                                    <f:selectItems value="#{gestionFlotaIntegradaBean.listaModelos}" var="m" itemLabel="#{m.fabricante.nombre} #{m.nombre}" itemValue="#{m.idModelo}" />
+                                    <f:selectItems value="#{gestionFlotaIntegradaBean.listaModelosActivos}" var="m" itemLabel="#{m.fabricante != null ? m.fabricante.nombre.concat(' ') : ''}#{m.nombre}" itemValue="#{m.idModelo}" />
                                 </p:selectOneMenu>
                             </div>
 
@@ -593,7 +669,7 @@
                             </div>
 
                             <div class="horizontal-form-grid">
-                                <ui:repeat value="#{gestionFlotaIntegradaBean.listaClases}" var="c">
+                                <ui:repeat value="#{gestionFlotaIntegradaBean.listaClasesActivas}" var="c">
                                     <div class="form-col-4">
                                         <div style="background: var(--bg-deep); border: 1px solid var(--border-subtle); padding: 10px; border-radius: 6px;">
                                             <label style="color: var(--text-heading); font-size: 0.7rem; font-weight: 700; display: block;" class="mb-1">#{c.descripcion}</label>
@@ -622,7 +698,7 @@
                             <label>Fabricante Asociado</label>
                             <p:selectOneMenu value="#{gestionFlotaIntegradaBean.idFabricanteParaModelo}" required="true">
                                 <f:selectItem itemLabel="-- Seleccionar Fabricante --" itemValue="" />
-                                <f:selectItems value="#{gestionFlotaIntegradaBean.listaFabricantes}" var="f" itemLabel="#{f.nombre}" itemValue="#{f.idFabricante}" />
+                                <f:selectItems value="#{gestionFlotaIntegradaBean.listaFabricantesActivos}" var="f" itemLabel="#{f.nombre}" itemValue="#{f.idFabricante}" />
                             </p:selectOneMenu>
                         </div>
                         <div class="mb-3">
@@ -678,7 +754,7 @@
             <h:form id="confirmDlgForm">
                 <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" styleClass="custom-dialog">
                     <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-flat ui-button-secondary" />
-                    <p:commandButton value="Sí, Eliminar" type="button" styleClass="ui-confirmdialog-yes btn-new" />
+                    <p:commandButton value="Sí, Confirmar" type="button" styleClass="ui-confirmdialog-yes btn-new" />
                 </p:confirmDialog>
             </h:form>
         </div>

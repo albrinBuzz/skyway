@@ -54,6 +54,12 @@ public class AvionServiceImpl implements AvionService {
 
 	@Override
 	@Transactional(readOnly = true)
+	public List<Avion> findAllAdmin() {
+		return avionRepository.findAllAdmin();
+	}
+
+	@Override
+	@Transactional(readOnly = true)
 	public Optional<Avion> findById(Integer id) {
 		return avionRepository.findById(id);
 	}
@@ -69,13 +75,19 @@ public class AvionServiceImpl implements AvionService {
 	public boolean deleteById(Integer id) {
 		try {
 			if (avionRepository.existsById(id)) {
-				avionRepository.deleteById(id);
+				avionRepository.softDeleteById(id);
 				return true;
 			}
 			return false;
 		} catch (Exception e) {
 			throw new AvionValidationException("No es posible eliminar la aeronave. Registra vuelos, itinerarios o tickets vigentes.");
 		}
+	}
+
+	@Override
+	@Transactional
+	public void reactivar(Integer id) {
+		avionRepository.reactivarById(id);
 	}
 
 	@Override

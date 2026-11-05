@@ -772,6 +772,73 @@ FOREIGN KEY (ID_VUELO) REFERENCES Vuelo(ID_VUELO) ON DELETE CASCADE;
 ALTER TABLE Reserva_Asiento
 ADD CONSTRAINT reserva_asiento_id_vuelo_fkey
 FOREIGN KEY (ID_VUELO) REFERENCES Vuelo(ID_VUELO) ON DELETE CASCADE;*/
+
+
+-- ============================================================================
+-- SKYWAY AIRLINES - MIGRACIÓN: SOFT DELETE EN CATÁLOGOS Y FLOTA
+-- ============================================================================
+-- Agrega columnas 'activo' y 'fecha_baja' a catálogos no transaccionales,
+-- crea índices parciales para lecturas operacionales optimizadas y
+-- registra procedimientos de baja y reactivación lógica con auditoría.
+
+-- 1. COLUMNAS DE CICLO DE VIDA (FLOTA)
+ALTER TABLE Fabricante ADD COLUMN IF NOT EXISTS activo BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE Fabricante ADD COLUMN IF NOT EXISTS fecha_baja TIMESTAMP WITH TIME ZONE;
+
+ALTER TABLE Modelo_Avion ADD COLUMN IF NOT EXISTS activo BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE Modelo_Avion ADD COLUMN IF NOT EXISTS fecha_baja TIMESTAMP WITH TIME ZONE;
+
+ALTER TABLE Avion ADD COLUMN IF NOT EXISTS activo BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE Avion ADD COLUMN IF NOT EXISTS fecha_baja TIMESTAMP WITH TIME ZONE;
+
+ALTER TABLE Clase_asiento ADD COLUMN IF NOT EXISTS activo BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE Clase_asiento ADD COLUMN IF NOT EXISTS fecha_baja TIMESTAMP WITH TIME ZONE;
+
+-- 2. COLUMNAS DE CICLO DE VIDA (INFRAESTRUCTURA Y GEOGRAFÍA)
+ALTER TABLE Continente ADD COLUMN IF NOT EXISTS activo BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE Continente ADD COLUMN IF NOT EXISTS fecha_baja TIMESTAMP WITH TIME ZONE;
+
+ALTER TABLE Pais ADD COLUMN IF NOT EXISTS activo BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE Pais ADD COLUMN IF NOT EXISTS fecha_baja TIMESTAMP WITH TIME ZONE;
+
+ALTER TABLE Ciudad ADD COLUMN IF NOT EXISTS activo BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE Ciudad ADD COLUMN IF NOT EXISTS fecha_baja TIMESTAMP WITH TIME ZONE;
+
+ALTER TABLE Aeropuerto ADD COLUMN IF NOT EXISTS activo BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE Aeropuerto ADD COLUMN IF NOT EXISTS fecha_baja TIMESTAMP WITH TIME ZONE;
+
+ALTER TABLE Puerta_Embarque ADD COLUMN IF NOT EXISTS activo BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE Puerta_Embarque ADD COLUMN IF NOT EXISTS fecha_baja TIMESTAMP WITH TIME ZONE;
+
+-- 3. COLUMNAS DE CICLO DE VIDA (COMERCIAL Y OPERACIONAL)
+ALTER TABLE Tarifa ADD COLUMN IF NOT EXISTS activo BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE Tarifa ADD COLUMN IF NOT EXISTS fecha_baja TIMESTAMP WITH TIME ZONE;
+
+ALTER TABLE Caracteristica_Tarifa ADD COLUMN IF NOT EXISTS activo BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE Caracteristica_Tarifa ADD COLUMN IF NOT EXISTS fecha_baja TIMESTAMP WITH TIME ZONE;
+
+ALTER TABLE Tipo_Equipaje ADD COLUMN IF NOT EXISTS activo BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE Tipo_Equipaje ADD COLUMN IF NOT EXISTS fecha_baja TIMESTAMP WITH TIME ZONE;
+
+ALTER TABLE Tipo_Turno ADD COLUMN IF NOT EXISTS activo BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE Tipo_Turno ADD COLUMN IF NOT EXISTS fecha_baja TIMESTAMP WITH TIME ZONE;
+
+-- 4. ÍNDICES PARCIALES PARA BÚSQUEDAS OPERACIONALES ACTIVAS
+CREATE INDEX IF NOT EXISTS idx_fabricante_activo ON Fabricante(id_fabricante) WHERE activo = TRUE;
+CREATE INDEX IF NOT EXISTS idx_modelo_avion_activo ON Modelo_Avion(id_modelo) WHERE activo = TRUE;
+CREATE INDEX IF NOT EXISTS idx_avion_activo ON Avion(id_avion) WHERE activo = TRUE;
+CREATE INDEX IF NOT EXISTS idx_clase_asiento_activo ON Clase_asiento(id_clase) WHERE activo = TRUE;
+CREATE INDEX IF NOT EXISTS idx_aeropuerto_activo ON Aeropuerto(id_aeropuerto) WHERE activo = TRUE;
+CREATE INDEX IF NOT EXISTS idx_aeropuerto_iata_activo ON Aeropuerto(codigo_iata) WHERE activo = TRUE;
+CREATE INDEX IF NOT EXISTS idx_puerta_embarque_activo ON Puerta_Embarque(id_puerta) WHERE activo = TRUE;
+CREATE INDEX IF NOT EXISTS idx_ciudad_activo ON Ciudad(id_ciudad) WHERE activo = TRUE;
+CREATE INDEX IF NOT EXISTS idx_pais_activo ON Pais(id_pais) WHERE activo = TRUE;
+CREATE INDEX IF NOT EXISTS idx_tarifa_activo ON Tarifa(id_tarifa) WHERE activo = TRUE;
+CREATE INDEX IF NOT EXISTS idx_caracteristica_tarifa_activo ON Caracteristica_Tarifa(id_caracteristica) WHERE activo = TRUE;
+CREATE INDEX IF NOT EXISTS idx_tipo_equipaje_activo ON Tipo_Equipaje(id_tipo) WHERE activo = TRUE;
+CREATE INDEX IF NOT EXISTS idx_tipo_turno_activo ON Tipo_Turno(id_tipo) WHERE activo = TRUE;
+
+
 DO $$
     DECLARE
         reg RECORD;
@@ -1604,6 +1671,63 @@ CREATE TRIGGER trg_validar_reserva_duplicada_itinerario
 EXECUTE FUNCTION fn_validar_reserva_duplicada_itinerario();
 
 
+
+
+-- 5. PROCEDIMIENTOS ALMACENADOS DE BAJA LÓGICA CON AUDITORÍA
+CREATE OR REPLACE PROCEDURE sp_darBajaFabricante(IN p_id INT, IN p_rut VARCHAR(12) DEFAULT 'SISTEMA')
+    LANGUAGE plpgsql AS $$
+BEGIN
+    UPDATE Fabricante SET activo = FALSE, fecha_baja = NOW() WHERE id_fabricante = p_id;
+    INSERT INTO Log_Auditoria (rut_usuario, accion, nivel, tabla_afectada, id_registro_afectado, detalle)
+    VALUES (p_rut, 'BAJA_LOGICA_FABRICANTE', 'INFO', 'Fabricante', p_id, FORMAT('Fabricante ID %s dado de baja lógicamente.', p_id));
+END;
+$$;
+
+CREATE OR REPLACE PROCEDURE sp_darBajaModeloAvion(IN p_id INT, IN p_rut VARCHAR(12) DEFAULT 'SISTEMA')
+    LANGUAGE plpgsql AS $$
+BEGIN
+    UPDATE Modelo_Avion SET activo = FALSE, fecha_baja = NOW() WHERE id_modelo = p_id;
+    INSERT INTO Log_Auditoria (rut_usuario, accion, nivel, tabla_afectada, id_registro_afectado, detalle)
+    VALUES (p_rut, 'BAJA_LOGICA_MODELO_AVION', 'INFO', 'Modelo_Avion', p_id, FORMAT('Modelo de avión ID %s dado de baja lógicamente.', p_id));
+END;
+$$;
+
+CREATE OR REPLACE PROCEDURE sp_darBajaAvion(IN p_id INT, IN p_rut VARCHAR(12) DEFAULT 'SISTEMA')
+    LANGUAGE plpgsql AS $$
+BEGIN
+    UPDATE Avion SET activo = FALSE, fecha_baja = NOW() WHERE id_avion = p_id;
+    INSERT INTO Log_Auditoria (rut_usuario, accion, nivel, tabla_afectada, id_registro_afectado, detalle)
+    VALUES (p_rut, 'BAJA_LOGICA_AVION', 'INFO', 'Avion', p_id, FORMAT('Aeronave ID %s dada de baja lógicamente de la flota.', p_id));
+END;
+$$;
+
+CREATE OR REPLACE PROCEDURE sp_darBajaAeropuerto(IN p_id INT, IN p_rut VARCHAR(12) DEFAULT 'SISTEMA')
+    LANGUAGE plpgsql AS $$
+BEGIN
+    UPDATE Aeropuerto SET activo = FALSE, fecha_baja = NOW() WHERE id_aeropuerto = p_id;
+    INSERT INTO Log_Auditoria (rut_usuario, accion, nivel, tabla_afectada, id_registro_afectado, detalle)
+    VALUES (p_rut, 'BAJA_LOGICA_AEROPUERTO', 'INFO', 'Aeropuerto', p_id, FORMAT('Aeropuerto ID %s dado de baja lógicamente.', p_id));
+END;
+$$;
+
+CREATE OR REPLACE PROCEDURE sp_darBajaTarifa(IN p_id INT, IN p_rut VARCHAR(12) DEFAULT 'SISTEMA')
+    LANGUAGE plpgsql AS $$
+BEGIN
+    UPDATE Tarifa SET activo = FALSE, fecha_baja = NOW() WHERE id_tarifa = p_id;
+    INSERT INTO Log_Auditoria (rut_usuario, accion, nivel, tabla_afectada, id_registro_afectado, detalle)
+    VALUES (p_rut, 'BAJA_LOGICA_TARIFA', 'INFO', 'Tarifa', p_id, FORMAT('Tarifa ID %s dada de baja lógicamente.', p_id));
+END;
+$$;
+
+-- 6. PROCEDIMIENTOS DE REACTIVACIÓN
+CREATE OR REPLACE PROCEDURE sp_reactivarRegistro(IN p_tabla VARCHAR(50), IN p_id INT, IN p_columna_pk VARCHAR(50), IN p_rut VARCHAR(12) DEFAULT 'SISTEMA')
+    LANGUAGE plpgsql AS $$
+BEGIN
+    EXECUTE FORMAT('UPDATE %I SET activo = TRUE, fecha_baja = NULL WHERE %I = $1', p_tabla, p_columna_pk) USING p_id;
+    INSERT INTO Log_Auditoria (rut_usuario, accion, nivel, tabla_afectada, id_registro_afectado, detalle)
+    VALUES (p_rut, 'REACTIVACION_REGISTRO', 'INFO', p_tabla, p_id, FORMAT('Registro ID %s en tabla %s reactivado exitosamente.', p_id, p_tabla));
+END;
+$$;
 
 CREATE OR REPLACE FUNCTION fnBuscarVuelo(
     p_codigo_origen VARCHAR,
@@ -2565,6 +2689,7 @@ BEGIN
            );
 END;
 $$;
+
 
 -- =========================================================================
 -- 1. MAESTRO DE CONTINENTES
@@ -4155,11 +4280,15 @@ INSERT INTO Tarifa (ID_TARIFA, Nombre) VALUES
                                            (2, 'Flexible'),
                                            (3, 'Premium');
 
+SELECT setval('tarifa_seq', COALESCE((SELECT MAX(ID_TARIFA) FROM Tarifa), 1), true);
+
 -- 2. Insertar Definición de Características
 INSERT INTO Caracteristica_Tarifa (ID_CARACTERISTICA, Nombre, Descripcion, Tipo_Dato) VALUES
                                                                                           (1, 'Permite cambio de asiento', 'Permite cambiar los asientos luego de la compra', 'boolean'),
                                                                                           (2, 'Plazo límite para cambio de asiento', 'Horas previas al vuelo para realizar cambios de asiento', 'int'),
                                                                                           (3, 'Permite cancelación de reserva', 'Permite cancelar la reserva', 'boolean');
+
+SELECT setval('caracteristica_tarifa_seq', COALESCE((SELECT MAX(ID_CARACTERISTICA) FROM Caracteristica_Tarifa), 1), true);
 
 -- 3. Configuración para Tarifa Básica
 -- (Sin cambio de asiento, sí permite cancelación)
@@ -4181,7 +4310,7 @@ INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool, Val
                                                                                                    (3, 2, NULL, 24,   NULL),
                                                                                                    (3, 3, TRUE, NULL, NULL);
 
-
+SELECT setval('tarifa_caracteristica_seq', COALESCE((SELECT MAX(ID_TARIFA_CARACTERISTICA) FROM Tarifa_Caracteristica), 1), true);
 
 
 -- Insertar vuelos con los RUTs de los pilotos correctos y estados de vuelo

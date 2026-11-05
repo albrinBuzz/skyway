@@ -17,6 +17,9 @@ import java.util.List;
  * 
  */
 @Entity
+@Table(name="Avion")
+@org.hibernate.annotations.SQLDelete(sql = "UPDATE Avion SET activo = false, fecha_baja = NOW() WHERE id_avion = ?")
+@org.hibernate.annotations.SQLRestriction("activo = true")
 @NamedQuery(name="Avion.findAll", query="SELECT a FROM Avion a")
 public class Avion implements Serializable {
 	private static final long serialVersionUID = 1L;
@@ -45,6 +48,17 @@ public class Avion implements Serializable {
 	@Column(name="numero_de_registro")
 	private String numeroDeRegistro;
 
+	@Column(name="activo", nullable=false)
+	private Boolean activo = true;
+
+	@Column(name="fecha_baja")
+	private Timestamp fechaBaja;
+
+	public Boolean getActivo() { return this.activo; }
+	public void setActivo(Boolean activo) { this.activo = activo; }
+	public Timestamp getFechaBaja() { return this.fechaBaja; }
+	public void setFechaBaja(Timestamp fechaBaja) { this.fechaBaja = fechaBaja; }
+
 	//bi-directional many-to-one association to Asiento
 	@OneToMany(mappedBy="avion")
 	private List<Asiento> asientos;
@@ -52,6 +66,7 @@ public class Avion implements Serializable {
 	//bi-directional many-to-one association to ModeloAvion
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name="id_modelo")
+	@org.hibernate.annotations.NotFound(action = org.hibernate.annotations.NotFoundAction.IGNORE)
 	private ModeloAvion modeloAvion;
 
 	//bi-directional many-to-one association to CapacidadClase

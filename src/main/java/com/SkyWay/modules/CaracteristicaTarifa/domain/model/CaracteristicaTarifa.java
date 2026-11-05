@@ -6,6 +6,8 @@ import java.io.Serializable;
 import java.util.List;
 
 @Entity
+@org.hibernate.annotations.SQLDelete(sql = "UPDATE Caracteristica_Tarifa SET activo = false, fecha_baja = NOW() WHERE id_caracteristica = ?")
+@org.hibernate.annotations.SQLRestriction("activo = true")
 @NamedQuery(name = "CaracteristicaTarifa.findAll", query = "SELECT c FROM CaracteristicaTarifa c")
 @Table(name = "Caracteristica_Tarifa")
 public class CaracteristicaTarifa implements Serializable {
@@ -25,6 +27,17 @@ public class CaracteristicaTarifa implements Serializable {
 
     @Column(name = "Tipo_Dato", nullable = false, length = 20)
     private String tipoDato;
+
+    @Column(name = "activo", nullable = false)
+    private Boolean activo = true;
+
+    @Column(name = "fecha_baja")
+    private java.sql.Timestamp fechaBaja;
+
+    public Boolean getActivo() { return this.activo; }
+    public void setActivo(Boolean activo) { this.activo = activo; }
+    public java.sql.Timestamp getFechaBaja() { return this.fechaBaja; }
+    public void setFechaBaja(java.sql.Timestamp fechaBaja) { this.fechaBaja = fechaBaja; }
 
     // bi-directional one-to-many association to TarifaCaracteristica
     @OneToMany(mappedBy = "caracteristica", cascade = CascadeType.ALL, orphanRemoval = true)

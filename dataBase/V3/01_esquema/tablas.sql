@@ -772,3 +772,69 @@ FOREIGN KEY (ID_VUELO) REFERENCES Vuelo(ID_VUELO) ON DELETE CASCADE;
 ALTER TABLE Reserva_Asiento
 ADD CONSTRAINT reserva_asiento_id_vuelo_fkey
 FOREIGN KEY (ID_VUELO) REFERENCES Vuelo(ID_VUELO) ON DELETE CASCADE;*/
+
+
+-- ============================================================================
+-- SKYWAY AIRLINES - MIGRACIÓN: SOFT DELETE EN CATÁLOGOS Y FLOTA
+-- ============================================================================
+-- Agrega columnas 'activo' y 'fecha_baja' a catálogos no transaccionales,
+-- crea índices parciales para lecturas operacionales optimizadas y
+-- registra procedimientos de baja y reactivación lógica con auditoría.
+
+-- 1. COLUMNAS DE CICLO DE VIDA (FLOTA)
+ALTER TABLE Fabricante ADD COLUMN IF NOT EXISTS activo BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE Fabricante ADD COLUMN IF NOT EXISTS fecha_baja TIMESTAMP WITH TIME ZONE;
+
+ALTER TABLE Modelo_Avion ADD COLUMN IF NOT EXISTS activo BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE Modelo_Avion ADD COLUMN IF NOT EXISTS fecha_baja TIMESTAMP WITH TIME ZONE;
+
+ALTER TABLE Avion ADD COLUMN IF NOT EXISTS activo BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE Avion ADD COLUMN IF NOT EXISTS fecha_baja TIMESTAMP WITH TIME ZONE;
+
+ALTER TABLE Clase_asiento ADD COLUMN IF NOT EXISTS activo BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE Clase_asiento ADD COLUMN IF NOT EXISTS fecha_baja TIMESTAMP WITH TIME ZONE;
+
+-- 2. COLUMNAS DE CICLO DE VIDA (INFRAESTRUCTURA Y GEOGRAFÍA)
+ALTER TABLE Continente ADD COLUMN IF NOT EXISTS activo BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE Continente ADD COLUMN IF NOT EXISTS fecha_baja TIMESTAMP WITH TIME ZONE;
+
+ALTER TABLE Pais ADD COLUMN IF NOT EXISTS activo BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE Pais ADD COLUMN IF NOT EXISTS fecha_baja TIMESTAMP WITH TIME ZONE;
+
+ALTER TABLE Ciudad ADD COLUMN IF NOT EXISTS activo BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE Ciudad ADD COLUMN IF NOT EXISTS fecha_baja TIMESTAMP WITH TIME ZONE;
+
+ALTER TABLE Aeropuerto ADD COLUMN IF NOT EXISTS activo BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE Aeropuerto ADD COLUMN IF NOT EXISTS fecha_baja TIMESTAMP WITH TIME ZONE;
+
+ALTER TABLE Puerta_Embarque ADD COLUMN IF NOT EXISTS activo BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE Puerta_Embarque ADD COLUMN IF NOT EXISTS fecha_baja TIMESTAMP WITH TIME ZONE;
+
+-- 3. COLUMNAS DE CICLO DE VIDA (COMERCIAL Y OPERACIONAL)
+ALTER TABLE Tarifa ADD COLUMN IF NOT EXISTS activo BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE Tarifa ADD COLUMN IF NOT EXISTS fecha_baja TIMESTAMP WITH TIME ZONE;
+
+ALTER TABLE Caracteristica_Tarifa ADD COLUMN IF NOT EXISTS activo BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE Caracteristica_Tarifa ADD COLUMN IF NOT EXISTS fecha_baja TIMESTAMP WITH TIME ZONE;
+
+ALTER TABLE Tipo_Equipaje ADD COLUMN IF NOT EXISTS activo BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE Tipo_Equipaje ADD COLUMN IF NOT EXISTS fecha_baja TIMESTAMP WITH TIME ZONE;
+
+ALTER TABLE Tipo_Turno ADD COLUMN IF NOT EXISTS activo BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE Tipo_Turno ADD COLUMN IF NOT EXISTS fecha_baja TIMESTAMP WITH TIME ZONE;
+
+-- 4. ÍNDICES PARCIALES PARA BÚSQUEDAS OPERACIONALES ACTIVAS
+CREATE INDEX IF NOT EXISTS idx_fabricante_activo ON Fabricante(id_fabricante) WHERE activo = TRUE;
+CREATE INDEX IF NOT EXISTS idx_modelo_avion_activo ON Modelo_Avion(id_modelo) WHERE activo = TRUE;
+CREATE INDEX IF NOT EXISTS idx_avion_activo ON Avion(id_avion) WHERE activo = TRUE;
+CREATE INDEX IF NOT EXISTS idx_clase_asiento_activo ON Clase_asiento(id_clase) WHERE activo = TRUE;
+CREATE INDEX IF NOT EXISTS idx_aeropuerto_activo ON Aeropuerto(id_aeropuerto) WHERE activo = TRUE;
+CREATE INDEX IF NOT EXISTS idx_aeropuerto_iata_activo ON Aeropuerto(codigo_iata) WHERE activo = TRUE;
+CREATE INDEX IF NOT EXISTS idx_puerta_embarque_activo ON Puerta_Embarque(id_puerta) WHERE activo = TRUE;
+CREATE INDEX IF NOT EXISTS idx_ciudad_activo ON Ciudad(id_ciudad) WHERE activo = TRUE;
+CREATE INDEX IF NOT EXISTS idx_pais_activo ON Pais(id_pais) WHERE activo = TRUE;
+CREATE INDEX IF NOT EXISTS idx_tarifa_activo ON Tarifa(id_tarifa) WHERE activo = TRUE;
+CREATE INDEX IF NOT EXISTS idx_caracteristica_tarifa_activo ON Caracteristica_Tarifa(id_caracteristica) WHERE activo = TRUE;
+CREATE INDEX IF NOT EXISTS idx_tipo_equipaje_activo ON Tipo_Equipaje(id_tipo) WHERE activo = TRUE;
+CREATE INDEX IF NOT EXISTS idx_tipo_turno_activo ON Tipo_Turno(id_tipo) WHERE activo = TRUE;
+

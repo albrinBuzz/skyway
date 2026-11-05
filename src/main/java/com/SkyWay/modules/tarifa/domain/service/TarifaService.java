@@ -21,6 +21,11 @@ public class TarifaService {
     }
 
     @Transactional(readOnly = true)
+    public List<Tarifa> findAllAdmin() {
+        return tarifaRepository.findAllAdmin();
+    }
+
+    @Transactional(readOnly = true)
     public Optional<Tarifa> findById(Integer id) {
         return tarifaRepository.findById(id);
     }
@@ -32,7 +37,12 @@ public class TarifaService {
 
     @Transactional
     public void deleteById(Integer id) {
-        tarifaRepository.deleteById(id);
+        tarifaRepository.softDeleteById(id);
+    }
+
+    @Transactional
+    public void reactivar(Integer id) {
+        tarifaRepository.reactivarById(id);
     }
 
     @Transactional(readOnly = true)

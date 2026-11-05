@@ -49,7 +49,15 @@ public class ContinenteServiceImpl implements ContinenteService {
     @Transactional
     public void eliminar(Integer id) {
         if (id != null && continenteRepository.existsById(id)) {
-            continenteRepository.deleteById(id);
+            continenteRepository.softDeleteById(id);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void reactivar(Integer id) {
+        if (id != null) {
+            continenteRepository.reactivarById(id);
         }
     }
 }

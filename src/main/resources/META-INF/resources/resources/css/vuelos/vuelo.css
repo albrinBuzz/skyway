@@ -562,10 +562,387 @@ body, .ui-widget-content, .p-grid {
 }
 
 /* Estado deshabilitado para el flujo secuencial de pasos */
+/* ==========================================================================
+   SELECTOR Y VISUALIZADOR DE AERONAVE EN CABECERA DE VUELO
+   ========================================================================== */
+.avion-picker-container {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px dashed var(--border-subtle);
+}
+
+.avion-picker-unselected {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 1.25rem 1.5rem;
+    background: rgba(15, 23, 42, 0.6);
+    border: 2px dashed #334155;
+    border-radius: 10px;
+    transition: all 0.25s ease;
+}
+
+.avion-picker-unselected:hover {
+    border-color: #38bdf8;
+    background: rgba(30, 41, 59, 0.6);
+}
+
+.avion-picker-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(56, 189, 248, 0.1);
+    color: #38bdf8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.avion-picker-info {
+    flex-grow: 1;
+}
+
+.avion-picker-title {
+    display: block;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-heading);
+    margin-bottom: 4px;
+}
+
+.avion-picker-subtitle {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.avion-card-selected {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%);
+    border: 1px solid #38bdf8;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(56, 189, 248, 0.15);
+}
+
+.avion-card-main {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.avion-badge-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    flex-shrink: 0;
+    box-shadow: 0 4px 10px rgba(2, 132, 199, 0.35);
+}
+
+.avion-model-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+}
+
+.avion-model-name {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -0.01em;
+}
+
+.avion-manufacturer-badge {
+    background: rgba(56, 189, 248, 0.15);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+}
+
+.avion-reg-badge {
+    background: #141f36;
+    color: #38bdf8;
+    border: 1px solid #24395e;
+    font-family: monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.avion-specs-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.spec-chip {
+    font-size: 0.82rem;
+    color: #cbd5e1;
+    display: flex;
+    align-items: center;
+}
+
+.spec-chip strong {
+    color: #ffffff;
+    margin-left: 4px;
+}
+
+.avion-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+/* Diálogo Selector de Flota */
+.flota-search-box {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.flota-search-box input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.5rem !important;
+    background: #1e293b !important;
+    border: 1px solid #334155 !important;
+    border-radius: 8px !important;
+    color: #f8fafc !important;
+    font-size: 0.95rem;
+}
+
+.flota-search-box i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+}
+
 .step-disabled {
     opacity: 0.45;
     pointer-events: none;
     user-select: none;
     filter: grayscale(0.2);
     transition: all 0.3s ease;
+}
+/* ==========================================================================
+   PALETA CORPORATIVA SKYWAY PARA TABLAS Y DIÁLOGOS (SIN BLANCO NI NEGRO ABSOLUTO)
+   ========================================================================== */
+body .custom-dialog.ui-dialog {
+    background: #0d172a !important;
+    border: 1px solid #223554 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75) !important;
+    overflow: hidden !important;
+}
+
+body .custom-dialog .ui-dialog-titlebar {
+    background: #13223d !important;
+    border: none !important;
+    border-bottom: 1px solid #223554 !important;
+    padding: 1.1rem 1.5rem !important;
+    color: #f8fafc !important;
+}
+
+body .custom-dialog .ui-dialog-title {
+    font-size: 1.1rem !important;
+    font-weight: 700 !important;
+    color: #f8fafc !important;
+    letter-spacing: -0.01em !important;
+}
+
+body .custom-dialog .ui-dialog-titlebar-icon {
+    color: #94a3b8 !important;
+    border-radius: 6px !important;
+}
+
+body .custom-dialog .ui-dialog-titlebar-icon:hover {
+    background: #1e3560 !important;
+    color: #ffffff !important;
+}
+
+body .custom-dialog .ui-dialog-content {
+    background: #0a1324 !important;
+    color: #e2e8f0 !important;
+    padding: 1.25rem 1.5rem 1.5rem 1.5rem !important;
+}
+
+/* Buscador Flota */
+.flota-search-box {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.flota-search-box input.ui-inputtext {
+    width: 100% !important;
+    padding: 0.8rem 1rem 0.8rem 2.8rem !important;
+    background: #111f38 !important;
+    border: 1px solid #24395e !important;
+    border-radius: 8px !important;
+    color: #f8fafc !important;
+    font-size: 0.95rem !important;
+    transition: all 0.2s ease !important;
+}
+
+.flota-search-box input.ui-inputtext:focus {
+    background: #142544 !important;
+    border-color: #38bdf8 !important;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2) !important;
+}
+
+.flota-search-box i.pi-search {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #38bdf8 !important;
+    font-size: 1.05rem;
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* Tabla de Flota Corporativa SkyWay */
+body .tabla-flota-skyway.ui-datatable,
+body .tabla-flota-skyway.ui-datatable .ui-datatable-tablewrapper,
+body .tabla-flota-skyway.ui-datatable table {
+    background: #0d172a !important;
+    border: 1px solid #1e304f !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+}
+
+body .custom-dialog .ui-datatable thead th,
+body .custom-dialog .ui-datatable thead tr,
+body .custom-dialog .ui-datatable .ui-widget-header,
+body .tabla-flota-skyway.ui-datatable thead th,
+body .tabla-flota-skyway.ui-datatable .ui-datatable-header {
+    background: #13223d !important;
+    background-color: #13223d !important;
+    color: #93c5fd !important;
+    border: 1px solid #1e304f !important;
+    font-size: 0.82rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    padding: 0.85rem 0.65rem !important;
+    text-shadow: none !important;
+}
+
+body .tabla-flota-skyway.ui-datatable thead th .ui-column-title {
+    color: #93c5fd !important;
+}
+
+body .tabla-flota-skyway.ui-datatable thead th .ui-sortable-column-icon {
+    color: #38bdf8 !important;
+}
+
+body .tabla-flota-skyway.ui-datatable tbody tr.ui-widget-content {
+    background: #0d172a !important;
+    background-color: #0d172a !important;
+    color: #e2e8f0 !important;
+    border-bottom: 1px solid #192a47 !important;
+    transition: background-color 0.15s ease !important;
+}
+
+body .tabla-flota-skyway.ui-datatable tbody tr.ui-datatable-odd {
+    background: #111e36 !important;
+    background-color: #111e36 !important;
+}
+
+body .tabla-flota-skyway.ui-datatable tbody tr.ui-datatable-even {
+    background: #0d172a !important;
+    background-color: #0d172a !important;
+}
+
+body .tabla-flota-skyway.ui-datatable tbody tr:hover,
+body .tabla-flota-skyway.ui-datatable tbody tr.ui-state-hover {
+    background: #1a2f55 !important;
+    background-color: #1a2f55 !important;
+}
+
+body .tabla-flota-skyway.ui-datatable tbody td {
+    background: transparent !important;
+    color: #e2e8f0 !important;
+    border: 1px solid #192a47 !important;
+    padding: 0.75rem 0.65rem !important;
+}
+
+body .tabla-flota-skyway.ui-datatable .ui-datatable-emptymessage td {
+    background: #0d172a !important;
+    color: #94a3b8 !important;
+    padding: 2.5rem 1rem !important;
+    text-align: center !important;
+}
+
+/* Paginador SkyWay */
+body .custom-dialog .ui-paginator,
+body .custom-dialog .ui-paginator.ui-widget-header,
+body .tabla-flota-skyway.ui-datatable .ui-paginator,
+body .tabla-flota-skyway .ui-paginator.ui-widget-header {
+    background: #101c33 !important;
+    background-color: #101c33 !important;
+    border: 1px solid #1e304f !important;
+    border-top: none !important;
+    padding: 0.65rem !important;
+    color: #cbd5e1 !important;
+}
+
+body .tabla-flota-skyway .ui-paginator .ui-paginator-page,
+body .tabla-flota-skyway .ui-paginator .ui-paginator-first,
+body .tabla-flota-skyway .ui-paginator .ui-paginator-prev,
+body .tabla-flota-skyway .ui-paginator .ui-paginator-next,
+body .tabla-flota-skyway .ui-paginator .ui-paginator-last {
+    background: #152442 !important;
+    background-color: #152442 !important;
+    color: #94a3b8 !important;
+    border: 1px solid #22375e !important;
+    border-radius: 6px !important;
+    margin: 0 3px !important;
+    min-width: 32px !important;
+    height: 32px !important;
+    line-height: 30px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s ease !important;
+}
+
+body .tabla-flota-skyway .ui-paginator .ui-paginator-page.ui-state-active {
+    background: #2563eb !important;
+    background-color: #2563eb !important;
+    color: #ffffff !important;
+    border-color: #3b82f6 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.45) !important;
+}
+
+body .tabla-flota-skyway .ui-paginator .ui-paginator-page:hover:not(.ui-state-active),
+body .tabla-flota-skyway .ui-paginator .ui-paginator-first:hover,
+body .tabla-flota-skyway .ui-paginator .ui-paginator-prev:hover,
+body .tabla-flota-skyway .ui-paginator .ui-paginator-next:hover,
+body .tabla-flota-skyway .ui-paginator .ui-paginator-last:hover {
+    background: #1e345e !important;
+    color: #f8fafc !important;
+    border-color: #3b82f6 !important;
 }

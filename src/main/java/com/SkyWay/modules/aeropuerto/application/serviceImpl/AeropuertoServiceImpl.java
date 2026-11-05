@@ -7,6 +7,7 @@ import com.SkyWay.modules.aeropuerto.presentation.dto.AeropuertoMapaDTO;
 import com.SkyWay.modules.aeropuerto.presentation.dto.AeropuertoMapaProjection;
 import com.SkyWay.util.Logger;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -47,8 +48,16 @@ public class AeropuertoServiceImpl implements AeropuertoService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "aeropuertos", allEntries = true)
     public void delete(Integer id) {
-        aeropuertoRepository.deleteById(id);
+        aeropuertoRepository.softDeleteById(id);
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(value = "aeropuertos", allEntries = true)
+    public void reactivar(Integer id) {
+        aeropuertoRepository.reactivarById(id);
     }
 
     @Override
@@ -61,6 +70,12 @@ public class AeropuertoServiceImpl implements AeropuertoService {
     @Transactional(readOnly = true)
     public List<AeropuertoMapaProjection> findAllConCoordenadas() {
         return aeropuertoRepository.findAllConCoordenadas();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AeropuertoMapaProjection> findAllConCoordenadasAdmin() {
+        return aeropuertoRepository.findAllConCoordenadasAdmin();
     }
 
     @Override

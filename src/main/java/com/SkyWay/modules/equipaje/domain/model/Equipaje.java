@@ -43,6 +43,7 @@ public class Equipaje implements Serializable {
 	//bi-directional many-to-one association to TipoEquipaje
 	@ManyToOne
 	@JoinColumn(name="id_tipo")
+	@org.hibernate.annotations.NotFound(action = org.hibernate.annotations.NotFoundAction.IGNORE)
 	private TipoEquipaje tipoEquipaje;
 
 	public Equipaje() {

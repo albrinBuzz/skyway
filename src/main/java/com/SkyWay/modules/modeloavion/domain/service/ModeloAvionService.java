@@ -19,6 +19,11 @@ public class ModeloAvionService {
         return modeloAvionRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
+    public List<ModeloAvion> findAllAdmin() {
+        return modeloAvionRepository.findAllAdmin();
+    }
+
     @Transactional
     public ModeloAvion guardar(ModeloAvion modelo) {
         if (modelo.getNombre() == null || modelo.getNombre().isBlank()) {
@@ -32,6 +37,11 @@ public class ModeloAvionService {
 
     @Transactional
     public void eliminar(Integer id) {
-        modeloAvionRepository.deleteById(id);
+        modeloAvionRepository.softDeleteById(id);
+    }
+
+    @Transactional
+    public void reactivar(Integer id) {
+        modeloAvionRepository.reactivarById(id);
     }
 }

@@ -12,8 +12,8 @@ import java.util.List;
 @Repository
 public interface ItinerarioTarifaRepository extends JpaRepository<ItinerarioTarifa, Integer> {
 
-    // Ejemplo de métodos derivados personalizados:
-    List<ItinerarioTarifa> findByItinerarioIdItinerario(Integer idItinerario);
+    @Query("SELECT it FROM ItinerarioTarifa it LEFT JOIN FETCH it.tarifa t WHERE it.itinerario.idItinerario = :idItinerario AND (t.activo = true OR t IS NULL)")
+    List<ItinerarioTarifa> findByItinerarioIdItinerario(@Param("idItinerario") Integer idItinerario);
 
 
     List<ItinerarioTarifa> findByTarifaIdTarifa(Integer idTarifa);

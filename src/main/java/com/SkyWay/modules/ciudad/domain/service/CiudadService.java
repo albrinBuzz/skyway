@@ -34,7 +34,11 @@ public class CiudadService {
     }
 
     public void deleteCiudad(Integer id) {
-        ciudadRepository.deleteById(id);
+        ciudadRepository.softDeleteById(id);
+    }
+
+    public void reactivarCiudad(Integer id) {
+        ciudadRepository.reactivarById(id);
     }
 
     public List<Ciudad> findCiudadesByNombre(String nombre) {

@@ -46,9 +46,14 @@ public class ClaseAsientoServiceImpl implements ClaseAsientoService {
     }
 
     @Override
+    public void reactivarClaseAsiento(Integer id) {
+        claseAsientoRepository.reactivarById(id);
+    }
+
+    @Override
     public void eliminarClaseAsiento(Integer id) {
         if (claseAsientoRepository.existsById(id)) {
-            claseAsientoRepository.deleteById(id);
+            claseAsientoRepository.softDeleteById(id);
         } else {
             // Lógica para manejar el caso de que no exista el ID.
         }

@@ -16,6 +16,18 @@ public interface AeropuertoRepository extends JpaRepository<Aeropuerto, Integer>
 
     boolean existsByCodigoIata(String codigoIata);
 
+    java.util.List<Aeropuerto> findByActivoTrue();
+
+    @Modifying(clearAutomatically = true)
+    @Transactional
+    @Query(value = "UPDATE aeropuerto SET activo = false, fecha_baja = CURRENT_TIMESTAMP WHERE id_aeropuerto = :id", nativeQuery = true)
+    void softDeleteById(@Param("id") Integer id);
+
+    @Modifying(clearAutomatically = true)
+    @Transactional
+    @Query(value = "UPDATE aeropuerto SET activo = true, fecha_baja = NULL WHERE id_aeropuerto = :id", nativeQuery = true)
+    void reactivarById(@Param("id") Integer id);
+
     @Query(value = """
         SELECT
             a.id_aeropuerto     AS idAeropuerto,
@@ -23,12 +35,29 @@ public interface AeropuertoRepository extends JpaRepository<Aeropuerto, Integer>
             a.nombre_aeropuerto AS nombreAeropuerto,
             c.nombre            AS ciudad,
             ST_Y(a.posicion::geometry) AS latitud,
-            ST_X(a.posicion::geometry) AS longitud
+            ST_X(a.posicion::geometry) AS longitud,
+            a.activo            AS activo
         FROM aeropuerto a
         JOIN ciudad c ON c.id_ciudad = a.id_ciudad
+        WHERE a.activo = true AND c.activo = true
         ORDER BY a.nombre_aeropuerto
         """, nativeQuery = true)
     List<AeropuertoMapaProjection> findAllConCoordenadas();
+
+    @Query(value = """
+        SELECT
+            a.id_aeropuerto     AS idAeropuerto,
+            a.codigo_iata       AS codigoIata,
+            a.nombre_aeropuerto AS nombreAeropuerto,
+            c.nombre            AS ciudad,
+            ST_Y(a.posicion::geometry) AS latitud,
+            ST_X(a.posicion::geometry) AS longitud,
+            a.activo            AS activo
+        FROM aeropuerto a
+        JOIN ciudad c ON c.id_ciudad = a.id_ciudad
+        ORDER BY a.activo DESC, a.nombre_aeropuerto
+        """, nativeQuery = true)
+    List<AeropuertoMapaProjection> findAllConCoordenadasAdmin();
 
     // Inserción nativa PostGIS sin modificar el esquema existente
     @Modifying

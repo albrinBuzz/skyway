@@ -20,6 +20,11 @@ public class FabricanteService {
         return fabricanteRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
+    public List<Fabricante> findAllAdmin() {
+        return fabricanteRepository.findAllAdmin();
+    }
+
     @Transactional
     public Fabricante guardar(Fabricante fabricante) {
         if (fabricante.getNombre() == null || fabricante.getNombre().isBlank()) {
@@ -30,6 +35,11 @@ public class FabricanteService {
 
     @Transactional
     public void eliminar(Integer id) {
-        fabricanteRepository.deleteById(id);
+        fabricanteRepository.softDeleteById(id);
+    }
+
+    @Transactional
+    public void reactivar(Integer id) {
+        fabricanteRepository.reactivarById(id);
     }
 }

@@ -9,4 +9,5 @@ public interface TipoEquipajeService {
     TipoEquipaje buscarPorId(Integer id);
     TipoEquipaje guardar(TipoEquipaje tipoEquipaje);
     void eliminar(Integer id);
+    void reactivar(Integer id);
 }

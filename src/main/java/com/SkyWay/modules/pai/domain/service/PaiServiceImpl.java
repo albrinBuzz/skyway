@@ -21,7 +21,7 @@ public class PaiServiceImpl implements PaiService {
     @Override
     @Transactional(readOnly = true)
     public List<Pai> findAllOrdenados() {
-        return paiRepository.findAllByOrderByNombreAsc();
+        return paiRepository.findByActivoTrueOrderByNombreAsc();
     }
 
     @Override
@@ -50,5 +50,21 @@ public class PaiServiceImpl implements PaiService {
     public Pai obtenerPorId(Integer idPais) {
         return paiRepository.findById(idPais)
                 .orElseThrow(() -> new IllegalArgumentException("El país con ID " + idPais + " no existe."));
+    }
+
+    @Override
+    @Transactional
+    public void eliminarPais(Integer idPais) {
+        if (idPais != null) {
+            paiRepository.softDeleteById(idPais);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void reactivarPais(Integer idPais) {
+        if (idPais != null) {
+            paiRepository.reactivarById(idPais);
+        }
     }
 }

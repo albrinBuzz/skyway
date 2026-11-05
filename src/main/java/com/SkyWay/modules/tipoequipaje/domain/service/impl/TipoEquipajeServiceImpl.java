@@ -45,6 +45,11 @@ public class TipoEquipajeServiceImpl implements TipoEquipajeService {
         if (!tipoEquipajeRepository.existsById(id)) {
             throw new RuntimeException("No existe el registro de Tipo de Equipaje a eliminar.");
         }
-        tipoEquipajeRepository.deleteById(id);
+        tipoEquipajeRepository.softDeleteById(id);
+    }
+
+    @Override
+    public void reactivar(Integer id) {
+        tipoEquipajeRepository.reactivarById(id);
     }
 }

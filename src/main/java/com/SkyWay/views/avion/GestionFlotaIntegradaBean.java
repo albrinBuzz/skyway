@@ -49,11 +49,17 @@ public class GestionFlotaIntegradaBean implements Serializable {
     @Autowired
     private AsientoRepository asientoRepository;
 
-    // Listas Globales
-    private List<Avion> listaAviones;
-    private List<ModeloAvion> listaModelos;
-    private List<Fabricante> listaFabricantes;
-    private List<ClaseAsiento> listaClases;
+    // Listas Administrativas (Traen TODO: Activos e Inactivos para las tablas de gestión)
+    private List<Avion> listaAvionesAdmin;
+    private List<ModeloAvion> listaModelosAdmin;
+    private List<Fabricante> listaFabricantesAdmin;
+    private List<ClaseAsiento> listaClasesAdmin;
+
+    // Listas Operativas / Activas (Traen SOLO Activos para selects, dropdowns y modales)
+    private List<Avion> listaAvionesActivos;
+    private List<ModeloAvion> listaModelosActivos;
+    private List<Fabricante> listaFabricantesActivos;
+    private List<ClaseAsiento> listaClasesActivas;
 
     // Entidades para formularios
     private Avion avionSeleccionado;
@@ -77,10 +83,19 @@ public class GestionFlotaIntegradaBean implements Serializable {
     }
 
     public void cargarTodo() {
-        this.listaAviones = avionService.findAll();
-        this.listaModelos = modeloAvionService.findAll();
-        this.listaFabricantes = fabricanteService.findAll();
-        this.listaClases = claseAsientoRepository.findAll();
+        // 1. Listas administrativas completas (para las dataTables del admin)
+        this.listaAvionesAdmin = avionService.findAllAdmin();
+        this.listaModelosAdmin = modeloAvionService.findAllAdmin();
+        this.listaFabricantesAdmin = fabricanteService.findAllAdmin();
+        this.listaClasesAdmin = claseAsientoRepository.findAllAdmin();
+
+        // 2. Listas de entidades activas (para dropdowns de asignación y modales)
+        this.listaAvionesActivos = avionService.findAll();
+        this.listaFabricantesActivos = fabricanteService.findAll();
+        this.listaModelosActivos = modeloAvionService.findAll().stream()
+                .filter(m -> m.getFabricante() == null || Boolean.TRUE.equals(m.getFabricante().getActivo()))
+                .collect(Collectors.toList());
+        this.listaClasesActivas = claseAsientoRepository.findByActivoTrueOrderByDescripcionAsc();
     }
 
     // ==========================================
@@ -106,9 +121,20 @@ public class GestionFlotaIntegradaBean implements Serializable {
         try {
             fabricanteService.eliminar(id);
             cargarTodo();
-            addMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Fabricante eliminado.");
+            addMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Fabricante dado de baja exitosamente.");
         } catch (Exception e) {
             addMessage(FacesMessage.SEVERITY_ERROR, "Error", "No se puede eliminar un fabricante con modelos asociados.");
+        }
+    }
+
+    public void reactivarFabricante(Integer id) {
+
+        try {
+            fabricanteService.reactivar(id);
+            cargarTodo();
+            addMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Fabricante reactivado exitosamente.");
+        } catch (Exception e) {
+            addMessage(FacesMessage.SEVERITY_ERROR, "Error", "No se pudo reactivar el fabricante: " + e.getMessage());
         }
     }
 
@@ -118,15 +144,21 @@ public class GestionFlotaIntegradaBean implements Serializable {
     public void prepararNuevoModelo() {
         this.modeloSeleccionado = new ModeloAvion();
         this.idFabricanteParaModelo = null;
+        this.listaFabricantesActivos = fabricanteService.findAll();
         PrimeFaces.current().executeScript("PF('dlgModelo').show();");
     }
 
     public void guardarModelo() {
         try {
             if (idFabricanteParaModelo != null) {
-                Fabricante fab = listaFabricantes.stream()
+                Fabricante fab = listaFabricantesActivos != null ? listaFabricantesActivos.stream()
                         .filter(f -> f.getIdFabricante().equals(idFabricanteParaModelo))
-                        .findFirst().orElse(null);
+                        .findFirst().orElse(null) : null;
+                if (fab == null && listaFabricantesAdmin != null) {
+                    fab = listaFabricantesAdmin.stream()
+                            .filter(f -> f.getIdFabricante().equals(idFabricanteParaModelo))
+                            .findFirst().orElse(null);
+                }
                 modeloSeleccionado.setFabricante(fab);
             }
             modeloAvionService.guardar(modeloSeleccionado);
@@ -142,9 +174,19 @@ public class GestionFlotaIntegradaBean implements Serializable {
         try {
             modeloAvionService.eliminar(id);
             cargarTodo();
-            addMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Modelo eliminado.");
+            addMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Modelo dado de baja exitosamente.");
         } catch (Exception e) {
             addMessage(FacesMessage.SEVERITY_ERROR, "Error", "No se puede eliminar un modelo con aeronaves asignadas.");
+        }
+    }
+
+    public void reactivarModelo(Integer id) {
+        try {
+            modeloAvionService.reactivar(id);
+            cargarTodo();
+            addMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Modelo reactivado exitosamente.");
+        } catch (Exception e) {
+            addMessage(FacesMessage.SEVERITY_ERROR, "Error", "No se pudo reactivar el modelo: " + e.getMessage());
         }
     }
 
@@ -160,12 +202,19 @@ public class GestionFlotaIntegradaBean implements Serializable {
         this.modoEdicionAvion = false;
         this.totalAsientosCalculados = 0;
 
+        this.listaModelosActivos = modeloAvionService.findAll().stream()
+                .filter(m -> m.getFabricante() == null || Boolean.TRUE.equals(m.getFabricante().getActivo()))
+                .collect(Collectors.toList());
+        this.listaClasesActivas = claseAsientoRepository.findByActivoTrueOrderByDescripcionAsc();
+
         LocalDate seisMeses = LocalDate.now().plusMonths(6);
         this.fechaMantenimientoAux = Date.from(seisMeses.atStartOfDay(ZoneId.systemDefault()).toInstant());
 
         this.capacidadesClaseMap.clear();
-        for (ClaseAsiento c : listaClases) {
-            capacidadesClaseMap.put(c.getIdClase(), 0);
+        if (listaClasesActivas != null) {
+            for (ClaseAsiento c : listaClasesActivas) {
+                capacidadesClaseMap.put(c.getIdClase(), 0);
+            }
         }
 
         PrimeFaces.current().executeScript("PF('dlgAvion').show();");
@@ -181,6 +230,11 @@ public class GestionFlotaIntegradaBean implements Serializable {
         this.modoEdicionAvion = true;
         this.idModeloParaAvion = (a.getModeloAvion() != null) ? a.getModeloAvion().getIdModelo() : null;
 
+        this.listaModelosActivos = modeloAvionService.findAll().stream()
+                .filter(m -> m.getFabricante() == null || Boolean.TRUE.equals(m.getFabricante().getActivo()))
+                .collect(Collectors.toList());
+        this.listaClasesActivas = claseAsientoRepository.findByActivoTrueOrderByDescripcionAsc();
+
         // Carga de la fecha de próximo mantenimiento
         if (a.getFechaProximoMantenimiento() != null) {
             this.fechaMantenimientoAux = new Date(a.getFechaProximoMantenimiento().getTime());
@@ -190,8 +244,8 @@ public class GestionFlotaIntegradaBean implements Serializable {
 
         // Inicializar mapa de capacidades
         this.capacidadesClaseMap.clear();
-        if (listaClases != null) {
-            for (ClaseAsiento c : listaClases) {
+        if (listaClasesActivas != null) {
+            for (ClaseAsiento c : listaClasesActivas) {
                 capacidadesClaseMap.put(c.getIdClase(), 0);
             }
         }
@@ -218,9 +272,14 @@ public class GestionFlotaIntegradaBean implements Serializable {
     public void guardarAvion() {
         try {
             if (idModeloParaAvion != null) {
-                ModeloAvion mod = listaModelos.stream()
+                ModeloAvion mod = listaModelosActivos != null ? listaModelosActivos.stream()
                         .filter(m -> m.getIdModelo().equals(idModeloParaAvion))
-                        .findFirst().orElse(null);
+                        .findFirst().orElse(null) : null;
+                if (mod == null && listaModelosAdmin != null) {
+                    mod = listaModelosAdmin.stream()
+                            .filter(m -> m.getIdModelo().equals(idModeloParaAvion))
+                            .findFirst().orElse(null);
+                }
                 avionSeleccionado.setModeloAvion(mod);
             }
 
@@ -265,6 +324,16 @@ public class GestionFlotaIntegradaBean implements Serializable {
         }
     }
 
+    public void reactivarAvion(Integer id) {
+        try {
+            avionService.reactivar(id);
+            cargarTodo();
+            addMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Aeronave reactivada exitosamente.");
+        } catch (Exception e) {
+            addMessage(FacesMessage.SEVERITY_ERROR, "Error", "No se pudo reactivar la aeronave: " + e.getMessage());
+        }
+    }
+
     private void addMessage(FacesMessage.Severity severity, String summary, String detail) {
         FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(severity, summary, detail));
     }
@@ -272,10 +341,26 @@ public class GestionFlotaIntegradaBean implements Serializable {
     // Getters y Setters
     public int getTabActiva() { return tabActiva; }
     public void setTabActiva(int tabActiva) { this.tabActiva = tabActiva; }
-    public List<Avion> getListaAviones() { return listaAviones; }
-    public List<ModeloAvion> getListaModelos() { return listaModelos; }
-    public List<Fabricante> getListaFabricantes() { return listaFabricantes; }
-    public List<ClaseAsiento> getListaClases() { return listaClases; }
+    // Getters Listas Administrativas
+    public List<Avion> getListaAvionesAdmin() { return listaAvionesAdmin; }
+    public List<ModeloAvion> getListaModelosAdmin() { return listaModelosAdmin; }
+    public List<Fabricante> getListaFabricantesAdmin() { return listaFabricantesAdmin; }
+    public List<ClaseAsiento> getListaClasesAdmin() { return listaClasesAdmin; }
+
+    // Getters Listas Activas
+    public List<Avion> getListaAvionesActivos() { return listaAvionesActivos; }
+    public List<ModeloAvion> getListaModelosActivos() { return listaModelosActivos; }
+    public List<Fabricante> getListaFabricantesActivos() { return listaFabricantesActivos; }
+    public List<ClaseAsiento> getListaClasesActivas() { return listaClasesActivas; }
+
+    // Compatibilidad retroactiva
+    public List<Avion> getListaAviones() { return listaAvionesAdmin; }
+    public List<ModeloAvion> getListaModelos() { return listaModelosAdmin; }
+    public List<Fabricante> getListaFabricantes() { return listaFabricantesAdmin; }
+    public List<ClaseAsiento> getListaClases() { return listaClasesAdmin; }
+    public List<Fabricante> getFabricantesActivos() { return listaFabricantesActivos; }
+    public List<ModeloAvion> getModelosActivos() { return listaModelosActivos; }
+    public List<ClaseAsiento> getClasesActivas() { return listaClasesActivas; }
     public Avion getAvionSeleccionado() { return avionSeleccionado; }
     public void setAvionSeleccionado(Avion avionSeleccionado) { this.avionSeleccionado = avionSeleccionado; }
     public ModeloAvion getModeloSeleccionado() { return modeloSeleccionado; }
