@@ -386,31 +386,31 @@
                 <h:panelGroup rendered="#{gestionParametricasBean.activeTab == 0 or gestionParametricasBean.activeTab == 5}">
                     <div class="mb-3">
                         <label class="mb-2 d-block">Nombre *</label>
-                        <p:inputText value="#{gestionParametricasBean.nombreForm}" required="true" placeholder="Ej: Bodega 23kg / Turno Mañana" />
+                        <p:inputText id="paramNombre1" value="#{gestionParametricasBean.nombreForm}" required="true" label="Nombre" requiredMessage="El nombre es obligatorio." placeholder="Ej: Bodega 23kg / Turno Mañana" />
                     </div>
                 </h:panelGroup>
 
                 <h:panelGroup rendered="#{gestionParametricasBean.activeTab == 1 or gestionParametricasBean.activeTab == 2 or gestionParametricasBean.activeTab == 3}">
                     <div class="mb-3">
                         <label class="mb-2 d-block">Descripción *</label>
-                        <p:inputText value="#{gestionParametricasBean.descripcionForm}" required="true" placeholder="Ej: Tarjeta de Crédito / Confirmada / Ejecutiva" />
+                        <p:inputText id="paramDesc1" value="#{gestionParametricasBean.descripcionForm}" required="true" label="Descripción" requiredMessage="La descripción es obligatoria." placeholder="Ej: Tarjeta de Crédito / Confirmada / Ejecutiva" />
                     </div>
                 </h:panelGroup>
 
                 <h:panelGroup rendered="#{gestionParametricasBean.activeTab == 4}">
                     <div class="mb-3">
                         <label class="mb-2 d-block">Nombre / Estado *</label>
-                        <p:inputText value="#{gestionParametricasBean.nombreForm}" required="true" placeholder="Ej: Demorado" />
+                        <p:inputText id="paramNombre2" value="#{gestionParametricasBean.nombreForm}" required="true" label="Nombre / Estado" requiredMessage="El nombre o estado es obligatorio." placeholder="Ej: Demorado" />
                     </div>
                     <div class="mb-3">
                         <label class="mb-2 d-block">Descripción *</label>
-                        <p:inputText value="#{gestionParametricasBean.descripcionForm}" required="true" placeholder="Ej: El vuelo presenta un retraso menor" />
+                        <p:inputText id="paramDesc2" value="#{gestionParametricasBean.descripcionForm}" required="true" label="Descripción" requiredMessage="La descripción es obligatoria." placeholder="Ej: El vuelo presenta un retraso menor" />
                     </div>
                 </h:panelGroup>
 
                 <div class="flex justify-content-end gap-2 pt-3 mt-3" style="border-top: 1px solid var(--border-subtle);">
                     <p:commandButton value="Cancelar" type="button" onclick="PF('dlgParametrica').hide();" styleClass="ui-button-flat ui-button-secondary" />
-                    <p:commandButton value="Guardar" actionListener="#{gestionParametricasBean.guardar}" process="@form" styleClass="btn-new" icon="pi pi-check" />
+                    <p:commandButton value="Guardar" actionListener="#{gestionParametricasBean.guardar}" process="@form" oncomplete="if (args &amp;&amp; !args.validationFailed) PF('dlgParametrica').hide();" styleClass="btn-new" icon="pi pi-check" />
                 </div>
             </h:form>
         </p:dialog>

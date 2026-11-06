@@ -695,19 +695,28 @@
                 <h:form id="formDialogModelo" styleClass="dark-input">
                     <h:panelGroup id="panelModelo" layout="block">
                         <div class="mb-3">
-                            <label>Fabricante Asociado</label>
-                            <p:selectOneMenu value="#{gestionFlotaIntegradaBean.idFabricanteParaModelo}" required="true">
+                            <label for="formDialogModelo:fabricanteModelo">Fabricante Asociado</label>
+                            <p:selectOneMenu id="fabricanteModelo"
+                                             value="#{gestionFlotaIntegradaBean.idFabricanteParaModelo}"
+                                             required="true"
+                                             label="Fabricante Asociado"
+                                             requiredMessage="Debe seleccionar un fabricante.">
                                 <f:selectItem itemLabel="-- Seleccionar Fabricante --" itemValue="" />
                                 <f:selectItems value="#{gestionFlotaIntegradaBean.listaFabricantesActivos}" var="f" itemLabel="#{f.nombre}" itemValue="#{f.idFabricante}" />
                             </p:selectOneMenu>
                         </div>
                         <div class="mb-3">
-                            <label>Nombre del Modelo</label>
-                            <p:inputText value="#{gestionFlotaIntegradaBean.modeloSeleccionado.nombre}" placeholder="Ej: 787-9 Dreamliner, A320neo" required="true" />
+                            <label for="formDialogModelo:nombreModelo">Nombre del Modelo</label>
+                            <p:inputText id="nombreModelo"
+                                         value="#{gestionFlotaIntegradaBean.modeloSeleccionado.nombre}"
+                                         placeholder="Ej: 787-9 Dreamliner, A320neo"
+                                         required="true"
+                                         label="Nombre del Modelo"
+                                         requiredMessage="El nombre del modelo es obligatorio." />
                         </div>
                         <div class="flex justify-content-end gap-2 pt-3" style="border-top: 1px solid var(--border-subtle);">
                             <p:commandButton value="Cancelar" onclick="PF('dlgModelo').hide();" type="button" styleClass="ui-button-flat ui-button-secondary" />
-                            <p:commandButton value="Guardar Modelo" actionListener="#{gestionFlotaIntegradaBean.guardarModelo()}" update=":mainPanel :msgs" styleClass="btn-new" />
+                            <p:commandButton value="Guardar Modelo" actionListener="#{gestionFlotaIntegradaBean.guardarModelo()}" update=":mainPanel :msgs" oncomplete="if (args &amp;&amp; !args.validationFailed) PF('dlgModelo').hide();" styleClass="btn-new" />
                         </div>
                     </h:panelGroup>
                 </h:form>
@@ -718,12 +727,17 @@
                 <h:form id="formDialogFabricante" styleClass="dark-input">
                     <h:panelGroup id="panelFabricante" layout="block">
                         <div class="mb-3">
-                            <label>Nombre del Fabricante</label>
-                            <p:inputText value="#{gestionFlotaIntegradaBean.fabricanteSeleccionado.nombre}" placeholder="Ej: Boeing, Airbus, Embraer" required="true" />
+                            <label for="formDialogFabricante:nombreFabricante">Nombre del Fabricante</label>
+                            <p:inputText id="nombreFabricante"
+                                         value="#{gestionFlotaIntegradaBean.fabricanteSeleccionado.nombre}"
+                                         placeholder="Ej: Boeing, Airbus, Embraer"
+                                         required="true"
+                                         label="Nombre del Fabricante"
+                                         requiredMessage="El nombre del fabricante es obligatorio." />
                         </div>
                         <div class="flex justify-content-end gap-2 pt-3" style="border-top: 1px solid var(--border-subtle);">
                             <p:commandButton value="Cancelar" onclick="PF('dlgFabricante').hide();" type="button" styleClass="ui-button-flat ui-button-secondary" />
-                            <p:commandButton value="Guardar Fabricante" actionListener="#{gestionFlotaIntegradaBean.guardarFabricante()}" update=":mainPanel :msgs" styleClass="btn-new" />
+                            <p:commandButton value="Guardar Fabricante" actionListener="#{gestionFlotaIntegradaBean.guardarFabricante()}" update=":mainPanel :msgs" oncomplete="if (args &amp;&amp; !args.validationFailed) PF('dlgFabricante').hide();" styleClass="btn-new" />
                         </div>
                     </h:panelGroup>
                 </h:form>

@@ -533,8 +533,13 @@
                 <h:form id="formDialog" styleClass="dark-input">
                     <h:panelGroup id="panelTarifa" layout="block">
                         <div class="mb-4">
-                            <label>Nombre de la Tarifa</label>
-                            <p:inputText value="#{tarifaBean.tarifaSeleccionada.nombre}" placeholder="Ej: Flex, Classic, Basic, Premium" required="true" />
+                            <label for="formDialog:nombreTarifa">Nombre de la Tarifa</label>
+                            <p:inputText id="nombreTarifa"
+                                         value="#{tarifaBean.tarifaSeleccionada.nombre}"
+                                         placeholder="Ej: Flex, Classic, Basic, Premium"
+                                         required="true"
+                                         label="Nombre de la Tarifa"
+                                         requiredMessage="El nombre de la tarifa es obligatorio." />
                         </div>
 
                         <div style="border-top: 1px solid var(--border-subtle); padding-top: 12px;" class="mb-3">
@@ -596,18 +601,27 @@
 
                 <h:form id="formNuevoBeneficio" styleClass="dark-input">
                     <div class="mb-3">
-                        <label>Nombre del Beneficio</label>
-                        <p:inputText value="#{tarifaBean.nuevaCaracteristica.nombre}" placeholder="Ej: Acceso a Salón VIP, Selección de Asiento" required="true" />
+                        <label for="formNuevoBeneficio:nombreBeneficio">Nombre del Beneficio</label>
+                        <p:inputText id="nombreBeneficio"
+                                     value="#{tarifaBean.nuevaCaracteristica.nombre}"
+                                     placeholder="Ej: Acceso a Salón VIP, Selección de Asiento"
+                                     required="true"
+                                     label="Nombre del Beneficio"
+                                     requiredMessage="El nombre del beneficio es obligatorio." />
                     </div>
 
                     <div class="mb-3">
-                        <label>Descripción</label>
-                        <p:inputTextarea value="#{tarifaBean.nuevaCaracteristica.descripcion}" rows="2" placeholder="Detalle..." />
+                        <label for="formNuevoBeneficio:descBeneficio">Descripción</label>
+                        <p:inputTextarea id="descBeneficio" value="#{tarifaBean.nuevaCaracteristica.descripcion}" rows="2" placeholder="Detalle..." />
                     </div>
 
                     <div class="mb-4">
-                        <label>Tipo de Selector</label>
-                        <p:selectOneMenu value="#{tarifaBean.nuevaCaracteristica.tipoDato}" required="true">
+                        <label for="formNuevoBeneficio:tipoSelector">Tipo de Selector</label>
+                        <p:selectOneMenu id="tipoSelector"
+                                         value="#{tarifaBean.nuevaCaracteristica.tipoDato}"
+                                         required="true"
+                                         label="Tipo de Selector"
+                                         requiredMessage="Debe seleccionar un tipo de selector.">
                             <f:selectItem itemLabel="Booleano (Sí / No)" itemValue="boolean" />
                             <f:selectItem itemLabel="Numérico (Cantidades / Enteros)" itemValue="int" />
                             <f:selectItem itemLabel="Texto (Reglas específicas / Comentarios)" itemValue="text" />

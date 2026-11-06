@@ -907,20 +907,24 @@
                     <div class="grid-dialog p-1">
                         <div>
                             <div class="mb-3">
-                                <p:outputLabel value="Nombre Aeropuerto *" styleClass="fw-bold text-light" />
+                                <p:outputLabel for="inputNombreAeropuerto" value="Nombre Aeropuerto *" styleClass="fw-bold text-light" />
                                 <p:inputText id="inputNombreAeropuerto"
                                              value="#{gestionAeropuertosBean.nombreAeropuerto}"
                                              required="true"
+                                             label="Nombre del Aeropuerto"
+                                             requiredMessage="El nombre del aeropuerto es obligatorio."
                                              placeholder="Ej: Aeropuerto Internacional de Manchester"
                                              styleClass="w-100 mt-1" />
                             </div>
 
                             <div class="mb-3">
-                                <p:outputLabel value="Código IATA (3 Letras) *" styleClass="fw-bold text-light" />
+                                <p:outputLabel for="inputIata" value="Código IATA (3 Letras) *" styleClass="fw-bold text-light" />
                                 <p:inputText id="inputIata"
                                              value="#{gestionAeropuertosBean.codigoIata}"
                                              maxlength="3"
                                              required="true"
+                                             label="Código IATA"
+                                             requiredMessage="El código IATA es obligatorio."
                                              placeholder="Ej: MAN / BCN"
                                              styleClass="w-100 text-uppercase mt-1 font-monospace" />
                             </div>
@@ -940,12 +944,14 @@
 
                                 <div class="mb-3">
                                     <div class="d-flex justify-content-between align-items-center mb-1">
-                                        <p:outputLabel value="Ciudad *" styleClass="fw-bold text-light" />
+                                        <p:outputLabel for="selectCiudad" value="Ciudad *" styleClass="fw-bold text-light" />
                                         <span class="insitu-link" onclick="PF('dlgNuevaCiudad').show();">+ Crear Ciudad</span>
                                     </div>
                                     <p:selectOneMenu id="selectCiudad"
                                                      value="#{gestionAeropuertosBean.idCiudad}"
                                                      required="true"
+                                                     label="Ciudad"
+                                                     requiredMessage="Debe seleccionar una ciudad."
                                                      onchange="window.centrarEnCiudadSeleccionada()"
                                                      styleClass="w-100">
                                         <f:selectItem itemLabel="-- Seleccione Ciudad --" itemValue="" />
@@ -962,7 +968,7 @@
 
                             <div class="mt-4 pt-2 text-end">
                                 <p:commandButton value="Cancelar" type="button" onclick="PF('dlgAeropuerto').hide();" styleClass="btn-clear-search" />
-                                <p:commandButton value="Confirmar y Guardar" action="#{gestionAeropuertosBean.guardar}" update=":formTabla :formDialog" styleClass="btn-new ms-2" icon="pi pi-check" />
+                                <p:commandButton value="Confirmar y Guardar" action="#{gestionAeropuertosBean.guardar}" update=":formTabla :formDialog" oncomplete="if (args &amp;&amp; args.validationFailed) { window.resetearMapa(); }" styleClass="btn-new ms-2" icon="pi pi-check" />
                             </div>
                         </div>
 
@@ -988,22 +994,22 @@
             </p:dialog>
 
             <p:dialog header="Registrar País" widgetVar="dlgNuevoPais" modal="true" width="350">
-                <h:form>
+                <h:form id="formNuevoPais">
                     <div class="mb-3">
-                        <p:outputLabel value="Nombre del País" />
-                        <p:inputText value="#{gestionAeropuertosBean.nuevoPaisNombre}" required="true" styleClass="w-100 mt-1" />
+                        <p:outputLabel for="nuevoPaisNombre" value="Nombre del País" />
+                        <p:inputText id="nuevoPaisNombre" value="#{gestionAeropuertosBean.nuevoPaisNombre}" required="true" label="Nombre del País" requiredMessage="El nombre del país es obligatorio." styleClass="w-100 mt-1" />
                     </div>
-                    <p:commandButton value="Guardar País" action="#{gestionAeropuertosBean.guardarNuevoPais}" update=":formDialog:panelUbicacion" styleClass="btn-new w-100" />
+                    <p:commandButton value="Guardar País" action="#{gestionAeropuertosBean.guardarNuevoPais}" update=":formDialog:panelUbicacion" oncomplete="if (args &amp;&amp; !args.validationFailed) PF('dlgNuevoPais').hide();" styleClass="btn-new w-100" />
                 </h:form>
             </p:dialog>
 
             <p:dialog header="Registrar Ciudad" widgetVar="dlgNuevaCiudad" modal="true" width="350">
-                <h:form>
+                <h:form id="formNuevaCiudad">
                     <div class="mb-3">
-                        <p:outputLabel value="Nombre de la Ciudad" />
-                        <p:inputText value="#{gestionAeropuertosBean.nuevaCiudadNombre}" required="true" styleClass="w-100 mt-1" />
+                        <p:outputLabel for="nuevaCiudadNombre" value="Nombre de la Ciudad" />
+                        <p:inputText id="nuevaCiudadNombre" value="#{gestionAeropuertosBean.nuevaCiudadNombre}" required="true" label="Nombre de la Ciudad" requiredMessage="El nombre de la ciudad es obligatorio." styleClass="w-100 mt-1" />
                     </div>
-                    <p:commandButton value="Guardar Ciudad" action="#{gestionAeropuertosBean.guardarNuevaCiudad}" update=":formDialog:panelUbicacion" styleClass="btn-new w-100" />
+                    <p:commandButton value="Guardar Ciudad" action="#{gestionAeropuertosBean.guardarNuevaCiudad}" update=":formDialog:panelUbicacion" oncomplete="if (args &amp;&amp; !args.validationFailed) PF('dlgNuevaCiudad').hide();" styleClass="btn-new w-100" />
                 </h:form>
             </p:dialog>
         </div>
