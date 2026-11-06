@@ -1,0 +1,304 @@
+<ui:composition lang="es"
+                xmlns:f="jakarta.faces.core"
+                xmlns:h="jakarta.faces.html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:ui="jakarta.faces.facelets"
+                template="/admin/template.xhtml">
+
+    <ui:define name="contenido-admin">
+
+        <!-- LIBRERÍAS EXTERNAS -->
+        <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+        <style>
+            .card-custom { background: #161e2e; border: 1px solid #243044; border-radius: 10px; padding: 14px 16px; color: #e2e8f0; }
+            .text-value { font-size: 1.5rem; font-weight: bold; }
+            @media (min-width: 768px) { .text-value { font-size: 1.8rem; } }
+            .detail-item { padding: 5px 0; border-bottom: 1px solid #1e293b; display: flex; justify-content: space-between; font-size: 0.81rem; align-items: center; }
+            .detail-item:last-child { border-bottom: none; }
+            .progress-custom { height: 8px; background-color: #1f2937; border-radius: 4px; overflow: hidden; }
+            .chart-container { position: relative; height: 210px; width: 100%; }
+            @media (min-width: 992px) { .chart-container { height: 250px; } }
+        </style>
+
+        <div class="container-fluid px-2 px-md-3 py-2" style="background-color: #090d16; min-height: 100vh;">
+
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-2">
+                <div>
+                    <h4 class="mb-0 fw-bold text-light">SkyWay Full Telemetry &amp; Infra Monitor</h4>
+                    <small class="text-secondary">Spring Boot + JSF 4 | Target: <span class="badge bg-primary">Azure App Service F1</span></small>
+                </div>
+                <span id="wsStatus" class="badge bg-warning align-self-start align-self-md-auto">Conectando...</span>
+            </div>
+
+            <!-- TARJETAS -->
+            <div class="row g-2 g-md-3 mb-3">
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="card-custom">
+                        <small class="text-secondary">RAM Proceso Java</small>
+                        <div id="ramText" class="text-value text-info mt-1">0 MB</div>
+                        <small id="ramSubtext" class="text-secondary">Presión F1: 0%</small>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="card-custom">
+                        <small class="text-secondary">Uso CPU Proceso</small>
+                        <div id="cpuText" class="text-value text-success mt-1">0.0%</div>
+                        <small id="cpuSubtext" class="text-secondary">CPU Sistema: 0.0%</small>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="card-custom">
+                        <small class="text-secondary">Base de Datos (SQL Ping)</small>
+                        <div id="dbText" class="text-value text-warning mt-1">0 ms</div>
+                        <small id="hikariText" class="text-secondary">Hikari: 0 / 0</small>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="card-custom">
+                        <small class="text-secondary">Sesiones HTTP Activas</small>
+                        <div id="sessionsText" class="text-value text-primary mt-1">0</div>
+                        <small id="sessionsSubtext" class="text-secondary">Total Creadas: 0</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-2 g-md-3 mb-3">
+                <div class="col-12">
+                    <div class="card-custom">
+                        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-2 gap-1">
+                            <h6 class="mb-0 text-info fw-bold">Consumo de Memoria JVM vs Cuota Azure App Service F1 (1024 MB)</h6>
+                            <strong id="f1RamVal" class="text-light">0 MB / 1024 MB (0%)</strong>
+                        </div>
+                        <div class="progress-custom">
+                            <div id="f1RamBar" class="progress-bar bg-info" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-2 g-md-3 mb-3">
+                <div class="col-12">
+                    <div class="card-custom">
+                        <h6 class="mb-3 text-light">Gráfico Multivariable: RAM Proceso vs Latencia SQL vs CPU %</h6>
+                        <div class="chart-container">
+                            <canvas id="liveChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DETALLES -->
+            <div class="row g-2 g-md-3">
+                <div class="col-12 col-md-6 col-xl-4">
+                    <div class="card-custom h-100">
+                        <h6 class="mb-3 text-warning fw-bold">Base de Datos &amp; HikariCP</h6>
+                        <div class="detail-item"><span class="text-secondary">Nombre Pool:</span><strong id="hikariPoolNameVal" class="text-light">HikariPool-1</strong></div>
+                        <div class="detail-item"><span class="text-secondary">Motor / Versión:</span><strong id="dbProductVal" class="text-light">PostgreSQL</strong></div>
+                        <div class="detail-item"><span class="text-secondary">Driver JDBC:</span><strong id="dbDriverVal" class="text-light">JDBC Driver</strong></div>
+                        <div class="detail-item"><span class="text-secondary">Base de Datos / Catálogo:</span><strong id="dbCatalogVal" class="text-info">skyway</strong></div>
+                        <div class="detail-item"><span class="text-secondary">Tiempo Adquisición Socket:</span><strong id="dbAcquireVal" class="text-info">0 ms</strong></div>
+                        <div class="detail-item"><span class="text-secondary">Pico Adquisición Socket:</span><strong id="maxAcquireVal" class="text-light">0 ms</strong></div>
+                        <div class="detail-item"><span class="text-secondary">Conexiones Inactivas (Idle):</span><strong id="idleConnsVal" class="text-light">0</strong></div>
+                        <div class="detail-item"><span class="text-secondary">SQL en Espera:</span><strong id="awaitingConnsVal" class="text-warning">0</strong></div>
+                        <div class="detail-item"><span class="text-secondary">Queries Ejecutadas:</span><strong id="totalQueriesVal" class="text-light">0</strong></div>
+                        <div class="detail-item"><span class="text-secondary">Fallos Conexión:</span><strong id="dbFailuresVal" class="text-danger">0</strong></div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-4">
+                    <div class="card-custom h-100">
+                        <h6 class="mb-3 text-info fw-bold">Infraestructura Host &amp; OS</h6>
+                        <div class="detail-item"><span class="text-secondary">RAM Física Servidor:</span><strong id="physicalRamVal" class="text-light">0 MB / 0 MB</strong></div>
+                        <div class="detail-item"><span class="text-secondary">Memoria Swap Usada:</span><strong id="swapVal" class="text-light">0 MB</strong></div>
+                        <div class="detail-item"><span class="text-secondary">Almacenamiento Disco:</span><strong id="diskVal" class="text-light">0 GB / 0 GB</strong></div>
+                        <div class="detail-item"><span class="text-secondary">Disco Libre:</span><strong id="freeDiskVal" class="text-success">0 GB</strong></div>
+                        <div class="detail-item"><span class="text-secondary">Procesadores Lógicos:</span><strong id="coresVal" class="text-light">1 vCPU</strong></div>
+                        <div class="detail-item"><span class="text-secondary">Sistema Operativo:</span><strong id="osVal" class="text-light">Linux</strong></div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-4">
+                    <div class="card-custom h-100">
+                        <h6 class="mb-3 text-secondary fw-bold">Desglose Memoria JVM</h6>
+                        <div class="detail-item"><span class="text-secondary">Young Gen (Eden):</span><strong id="edenVal" class="text-light">0 MB</strong></div>
+                        <div class="detail-item"><span class="text-secondary">Young Gen (Survivor):</span><strong id="survivorVal" class="text-light">0 MB</strong></div>
+                        <div class="detail-item"><span class="text-secondary">Old Gen (Tenured):</span><strong id="oldGenVal" class="text-light">0 MB</strong></div>
+                        <div class="detail-item"><span class="text-secondary">Metaspace:</span><strong id="metaspaceVal" class="text-info">0 MB</strong></div>
+                        <div class="detail-item"><span class="text-secondary">Code Cache JIT:</span><strong id="codeCacheVal" class="text-light">0 MB</strong></div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-6">
+                    <div class="card-custom h-100">
+                        <h6 class="mb-3 text-primary fw-bold">Hilos &amp; Concurrencia Tomcat/JVM</h6>
+                        <div class="detail-item"><span class="text-secondary">Hilos Totales JVM:</span><strong id="threadsVal" class="text-light">0 hilos</strong></div>
+                        <div class="detail-item"><span class="text-secondary">Pico Máximo de Hilos:</span><strong id="peakThreadsVal" class="text-light">0 hilos</strong></div>
+                        <div class="detail-item"><span class="text-secondary">Ejecutando (Runnable):</span><strong id="runnableVal" class="text-success">0</strong></div>
+                        <div class="detail-item"><span class="text-secondary">En Espera (Waiting):</span><strong id="waitingVal" class="text-warning">0</strong></div>
+                        <div class="detail-item"><span class="text-secondary">Bloqueados (Blocked):</span><strong id="blockedVal" class="text-danger">0</strong></div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-6">
+                    <div class="card-custom h-100">
+                        <h6 class="mb-3 text-success fw-bold">JSF 4 &amp; Framework State</h6>
+                        <div class="detail-item"><span class="text-secondary">Nodos Componentes UI:</span><strong id="jsfCompVal" class="text-info">0 nodos</strong></div>
+                        <div class="detail-item"><span class="text-secondary">Tiempo Render Vista:</span><strong id="jsfRenderVal" class="text-light">0 ms</strong></div>
+                        <div class="detail-item"><span class="text-secondary">Peticiones JSF:</span><strong id="jsfTotalReqVal" class="text-light">0</strong></div>
+                        <div class="detail-item"><span class="text-secondary">Beans Registrados en Spring:</span><strong id="springBeansVal" class="text-light">0 beans</strong></div>
+                        <div class="detail-item"><span class="text-secondary">Tiempo Actividad:</span><strong id="uptimeVal" class="text-light">0d 0h 0m 0s</strong></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <script type="text/javascript">
+            //<![CDATA[
+            (function initDashboard() {
+                function startMonitor() {
+                    const chartCanvas = document.getElementById('liveChart');
+                    if (!chartCanvas) {
+                        setTimeout(startMonitor, 100);
+                        return;
+                    }
+
+                    const ctx = chartCanvas.getContext('2d');
+                    const chart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: [],
+                            datasets: [
+                                { label: 'RAM Proceso JVM (MB)', data: [], borderColor: '#38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.12)', fill: true, tension: 0.25 },
+                                { label: 'Latencia DB Ping (ms)', data: [], borderColor: '#f59e0b', borderDash: [4, 4], fill: false, tension: 0.25 },
+                                { label: 'CPU Proceso (%)', data: [], borderColor: '#4ade80', borderDash: [2, 2], fill: false, tension: 0.25 }
+                            ]
+                        },
+                        options: {
+                            animation: false,
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: { beginAtZero: true, grid: { color: '#1e293b' } },
+                                x: { grid: { display: false } }
+                            },
+                            plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11 } } } }
+                        }
+                    });
+
+                    function setSafeText(id, value) {
+                        const el = document.getElementById(id);
+                        if (el) el.innerText = value;
+                    }
+
+                    function formatUptime(millis) {
+                        let seconds = Math.floor(millis / 1000);
+                        let minutes = Math.floor(seconds / 60);
+                        let hours = Math.floor(minutes / 60);
+                        let days = Math.floor(hours / 24);
+                        return `${days}d ${hours % 24}h ${minutes % 60}m ${seconds % 60}s`;
+                    }
+
+                    const socket = new SockJS('/ws-metrics');
+                    const stompClient = Stomp.over(socket);
+                    stompClient.debug = null;
+
+                    stompClient.connect({}, function (frame) {
+                        const statusElem = document.getElementById('wsStatus');
+                        if (statusElem) {
+                            statusElem.innerText = 'Online';
+                            statusElem.className = 'badge bg-success';
+                        }
+
+                        stompClient.subscribe('/topic/metrics', function (message) {
+                            const data = JSON.parse(message.body);
+                            const time = new Date(data.timestamp).toLocaleTimeString();
+
+                            const db = data.db || {};
+                            const cloud = data.cloud || {};
+                            const jsf = data.jsf || {};
+                            const threads = data.threads || {};
+                            const app = data.app || {};
+
+                            setSafeText('ramText', (cloud.jvm_process_ram_mb || 0) + ' MB');
+                            setSafeText('ramSubtext', `Presión Azure F1: ${cloud.azure_f1_pressure_pct || 0}%`);
+                            setSafeText('cpuText', (cloud.process_cpu_load || 0.0) + '%');
+                            setSafeText('cpuSubtext', `CPU Sistema: ${cloud.system_cpu_load || 0.0}%`);
+                            setSafeText('dbText', (db.latency_ping_ms >= 0 ? db.latency_ping_ms : 'ERR') + ' ms');
+                            setSafeText('hikariText', `Hikari: ${db.active_connections || 0} / ${db.total_connections || 0}`);
+                            setSafeText('sessionsText', app.active_sessions || 0);
+                            setSafeText('sessionsSubtext', `Total Creadas: ${app.total_created_sessions || 0}`);
+
+                            const f1Pct = cloud.azure_f1_pressure_pct || 0;
+                            setSafeText('f1RamVal', `${cloud.jvm_process_ram_mb || 0} MB / 1024 MB (${f1Pct}%)`);
+                            const f1Bar = document.getElementById('f1RamBar');
+                            if (f1Bar) {
+                                f1Bar.style.width = Math.min(f1Pct, 100) + '%';
+                                f1Bar.className = f1Pct > 85 ? 'progress-bar bg-danger' : (f1Pct > 70 ? 'progress-bar bg-warning' : 'progress-bar bg-info');
+                            }
+
+                            setSafeText('hikariPoolNameVal', db.pool_name || 'HikariPool-1');
+                            setSafeText('dbProductVal', (db.db_product_name || 'PostgreSQL') + ' ' + (db.db_product_version || ''));
+                            setSafeText('dbDriverVal', (db.driver_name || 'JDBC') + ' (' + (db.driver_version || 'v1') + ')');
+                            setSafeText('dbAcquireVal', (db.acquire_time_ms >= 0 ? db.acquire_time_ms : 0) + ' ms');
+                            setSafeText('maxAcquireVal', (db.max_acquire_time_ms || 0) + ' ms');
+                            setSafeText('idleConnsVal', db.idle_connections || 0);
+                            setSafeText('awaitingConnsVal', db.threads_awaiting || 0);
+                            setSafeText('totalQueriesVal', db.total_queries_executed || 0);
+                            setSafeText('dbFailuresVal', db.total_connection_failures || 0);
+                            setSafeText('dbCatalogVal', db.catalog || 'skyway');
+
+                            setSafeText('physicalRamVal', `${cloud.physical_ram_used_mb || 0} MB / ${cloud.physical_ram_total_mb || 0} MB`);
+                            setSafeText('swapVal', `${cloud.swap_used_mb || 0} MB / ${cloud.swap_total_mb || 0} MB`);
+                            setSafeText('diskVal', `${cloud.used_disk_gb || 0} GB / ${cloud.total_disk_gb || 0} GB (${cloud.disk_usage_pct || 0}%)`);
+                            setSafeText('freeDiskVal', (cloud.free_disk_gb || 0) + ' GB');
+                            setSafeText('coresVal', (cloud.available_processors || 1) + ' vCPU');
+                            setSafeText('osVal', cloud.os_name || 'Linux');
+
+                            setSafeText('edenVal', (cloud.eden_mb || 0) + ' MB');
+                            setSafeText('survivorVal', (cloud.survivor_mb || 0) + ' MB');
+                            setSafeText('oldGenVal', (cloud.oldgen_mb || 0) + ' MB');
+                            setSafeText('metaspaceVal', (cloud.metaspace_mb || 0) + ' MB');
+                            setSafeText('codeCacheVal', (cloud.codecache_mb || 0) + ' MB');
+
+                            setSafeText('threadsVal', (threads.total || 0) + ' hilos');
+                            setSafeText('peakThreadsVal', (threads.peak || 0) + ' hilos');
+                            setSafeText('runnableVal', threads.runnable || 0);
+                            setSafeText('waitingVal', threads.waiting || 0);
+                            setSafeText('blockedVal', threads.blocked || 0);
+
+                            setSafeText('jsfCompVal', (jsf.last_component_count || 0) + ' nodos');
+                            setSafeText('jsfRenderVal', (jsf.total_render_time_ms || 0) + ' ms');
+                            setSafeText('jsfTotalReqVal', jsf.total_jsf_requests || 0);
+                            setSafeText('springBeansVal', (app.spring_beans_count || 0) + ' beans');
+                            setSafeText('uptimeVal', formatUptime(app.uptime_ms || 0));
+
+                            if (chart.data.labels.length >= 25) {
+                                chart.data.labels.shift();
+                                chart.data.datasets[0].data.shift();
+                                chart.data.datasets[1].data.shift();
+                                chart.data.datasets[2].data.shift();
+                            }
+                            chart.data.labels.push(time);
+                            chart.data.datasets[0].data.push(cloud.jvm_process_ram_mb || 0);
+                            chart.data.datasets[1].data.push(db.latency_ping_ms >= 0 ? db.latency_ping_ms : 0);
+                            chart.data.datasets[2].data.push(cloud.process_cpu_load || 0);
+                            chart.update();
+                        });
+                    });
+                }
+
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', startMonitor);
+                } else {
+                    startMonitor();
+                }
+            })();
+            //]]>
+        </script>
+
+    </ui:define>
+</ui:composition>

@@ -1,0 +1,64 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui">
+
+    <!-- MODAL DETALLE DE PRECIO / RESUMEN -->
+    <h:form id="formDetalle">
+        <p:dialog header="Resumen del Itinerario"
+                  widgetVar="dlgDetalle"
+                  modal="true"
+                  resizable="false"
+                  id="dlgDetalle"
+                  showEffect="fade"
+                  hideEffect="fade"
+                  responsive="true"
+                  styleClass="skyway-dialog">
+
+            <h:panelGroup id="cntDetalle" rendered="#{not empty perfilPasajeroView.itinerarioDetalle}" layout="block" styleClass="dialog-padding p-3">
+                <div class="route-header-modal text-center mb-3">
+                    <h3 class="route-title text-white font-weight-bold">
+                        #{perfilPasajeroView.itinerarioDetalle.aeropuertoOrigen.codigoIata}
+                        <i class="pi pi-send icon-flight text-primary mx-2"></i>
+                        #{perfilPasajeroView.itinerarioDetalle.aeropuertoDestino.codigoIata}
+                    </h3>
+                </div>
+
+                <div class="detail-grid d-flex justify-content-between mb-3 text-white-50">
+                    <div class="detail-item">
+                        <span class="detail-label d-block small">Salida</span>
+                        <strong class="detail-value text-white">
+                            <h:outputText value="#{perfilPasajeroView.itinerarioDetalle.horaSalida}">
+                                <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/Santiago"/>
+                            </h:outputText>
+                        </strong>
+                    </div>
+                    <div class="detail-item text-end">
+                        <span class="detail-label d-block small">Llegada</span>
+                        <strong class="detail-value text-white">
+                            <h:outputText value="#{perfilPasajeroView.itinerarioDetalle.horaLlegada}">
+                                <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/Santiago"/>
+                            </h:outputText>
+                        </strong>
+                    </div>
+                </div>
+
+                <p:divider styleClass="skyway-divider my-3" />
+
+                <div class="summary-info text-white">
+                    <p class="mb-2"><strong>Escalas totales:</strong> #{perfilPasajeroView.itinerarioDetalle.numeroEscalas}</p>
+                    <p class="price-row d-flex justify-content-between align-items-center font-weight-bold">
+                        <span>Precio Base:</span>
+                        <span class="price-tag text-success font-weight-bold" style="font-size: 1.2rem;">
+                            <h:outputText value="#{perfilPasajeroView.itinerarioDetalle.precioBase}">
+                                <f:convertNumber type="currency" currencySymbol="$" />
+                            </h:outputText>
+                        </span>
+                    </p>
+                </div>
+            </h:panelGroup>
+        </p:dialog>
+    </h:form>
+
+</ui:composition>

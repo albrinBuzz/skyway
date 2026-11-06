@@ -22,6 +22,8 @@ import com.SkyWay.config.pago.PagoFactoryService;
 import com.SkyWay.config.pago.PasarelaPagoStrategy;
 import com.SkyWay.config.pago.SolicitudPagoDTO;
 import com.SkyWay.modules.tarifa.presentation.dto.SolicitudUpgradeDTO;
+import com.SkyWay.modules.pago.domain.model.Pago;
+import com.SkyWay.modules.itinerariovuelo.domain.model.ItinerarioVuelo;
 import jakarta.faces.context.ExternalContext;
 import jakarta.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
@@ -30,6 +32,10 @@ import com.SkyWay.modules.tarifa.domain.service.UpgradeTarifaService;
 import com.SkyWay.modules.tarifa.presentation.dto.OpcionUpgradeDTO;
 import com.SkyWay.modules.tarifa.presentation.dto.ResultadoUpgradeDTO;
 import com.SkyWay.modules.usuario.domain.model.Usuario;
+import com.SkyWay.modules.pasajero.domain.model.Pasajero;
+import com.SkyWay.modules.pasajero.domain.service.PasajeroService;
+import com.SkyWay.modules.PasajeroReserva.domain.model.PasajeroReserva;
+import com.SkyWay.modules.reservaasiento.domain.model.ReservaAsiento;
 import com.SkyWay.modules.vuelo.domain.model.Vuelo;
 import com.SkyWay.modules.vuelo.domain.service.VueloService;
 import com.SkyWay.util.BarcodeGeneratorUtil;
@@ -44,7 +50,12 @@ import jakarta.inject.Named;
 import jakarta.servlet.http.HttpSession;
 
 import org.primefaces.PrimeFaces;
+import org.primefaces.event.SelectEvent;
+import org.primefaces.model.DefaultScheduleEvent;
+import org.primefaces.model.DefaultScheduleModel;
 import org.primefaces.model.DefaultStreamedContent;
+import org.primefaces.model.ScheduleEvent;
+import org.primefaces.model.ScheduleModel;
 import org.primefaces.model.StreamedContent;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -74,6 +85,7 @@ public class PerfilBean implements Serializable {
 	@Autowired private ETicketPdfGeneratorService eTicketPdfGeneratorService;
 	@Autowired private UpgradeTarifaService upgradeTarifaService;
 	@Autowired private PagoFactoryService pagoFactoryService;
+	@Autowired private PasajeroService pasajeroService;
 
 	private List<OpcionUpgradeDTO> opcionesUpgrade = new ArrayList<>();
 	private OpcionUpgradeDTO opcionUpgradeSeleccionada;
@@ -84,8 +96,18 @@ public class PerfilBean implements Serializable {
 	private List<ItinerarioResumenDTO> listaItinerariosFiltrados;
 	private ItinerarioResumenDTO itinerarioSeleccionado;
 	private Itinerario itinerarioDetalle;
+	private Reserva reservaDetalle;
 	private List<InfoAsientoReservaDTO> listaAsientosReservados;
 	private List<Equipaje> listaEquipajeReserva;
+
+	// Multi-pasajeros de la reserva
+	private final Map<String, PasajeroReservaInfo> pasajerosReservaMap = new LinkedHashMap<>();
+	private final List<PasajeroReservaInfo> listaPasajerosReserva = new ArrayList<>();
+
+	// Schedule nativo PrimeFaces para itinerarios
+	private ScheduleModel scheduleModel = new DefaultScheduleModel();
+	private String vistaActiva = "calendario"; // "calendario" o "lista"
+	private LocalDate fechaInicialSchedule;
 
 	private LocalDate fechaInicioFiltro;
 	private LocalDate fechaFinFiltro;
@@ -143,6 +165,7 @@ public class PerfilBean implements Serializable {
 			if (esPasajero) {
 				listaItinerarios = itinerarioService.findResumenByRut(usuario.getRut(), 100, 0);
 				filtrarVuelosFuturos();
+				actualizarSchedule();
 			}
 		}
 
@@ -183,6 +206,7 @@ public class PerfilBean implements Serializable {
 				100,
 				0
 		);
+		actualizarSchedule();
 	}
 
 	public void filtrarVuelosFuturos() {
@@ -191,6 +215,7 @@ public class PerfilBean implements Serializable {
 		listaItinerariosFiltrados = listaItinerarios.stream()
 				.filter(it -> it.getHoraSalida() != null && it.getHoraSalida().after(ahora))
 				.collect(Collectors.toList());
+		actualizarSchedule();
 	}
 
 	public void filtrarVuelosPasados() {
@@ -199,6 +224,7 @@ public class PerfilBean implements Serializable {
 		listaItinerariosFiltrados = listaItinerarios.stream()
 				.filter(it -> it.getHoraSalida() != null && it.getHoraSalida().before(ahora))
 				.collect(Collectors.toList());
+		actualizarSchedule();
 	}
 
 	public void buscarPorRangoFechas() {
@@ -216,6 +242,8 @@ public class PerfilBean implements Serializable {
 				100,
 				0
 		);
+
+		actualizarSchedule();
 
 		long endTime = System.currentTimeMillis();
 		Logger.logInfo("⏱ Tiempo total en buscarPorRangoFechas(): " + (endTime - startTime) + " ms");
@@ -248,8 +276,16 @@ public class PerfilBean implements Serializable {
 		this.itinerarioDetalle = itinerarioService.findById(item.getIdItinerario());
 
 		ReservaItinerario ri = reservaItinerarioService.obtenerReservaItinerario(item.getIdReserva(), item.getIdItinerario());
-		if (ri != null && ri.getReserva() != null && ri.getReserva().getEstadoReservaBean() != null) {
-			String estadoNombre = ri.getReserva().getEstadoReservaBean().getDescripcion();
+		if (item.getIdReserva() != null) {
+			this.reservaDetalle = reservaService.findById(item.getIdReserva()).orElse(ri != null ? ri.getReserva() : null);
+		} else if (ri != null && ri.getReserva() != null) {
+			this.reservaDetalle = ri.getReserva();
+		} else {
+			this.reservaDetalle = null;
+		}
+
+		if (this.reservaDetalle != null && this.reservaDetalle.getEstadoReservaBean() != null) {
+			String estadoNombre = this.reservaDetalle.getEstadoReservaBean().getDescripcion();
 			this.reservaCancelada = estadoNombre != null && estadoNombre.toLowerCase().contains("cancelad");
 		} else {
 			this.reservaCancelada = false;
@@ -269,6 +305,8 @@ public class PerfilBean implements Serializable {
 		} catch (Exception e) {
 			listaEquipajeReserva = new ArrayList<>();
 		}
+
+		cargarPasajerosReserva();
 
 		calcularMétricasVuelo(item);
 	}
@@ -301,6 +339,13 @@ public class PerfilBean implements Serializable {
 		Map<String, Object> sessionMap = context.getExternalContext().getSessionMap();
 		sessionMap.put("CAMBIO_ASIENTO_ID_RESERVA", infoAsientoDTO.getIdReserva());
 		sessionMap.put("CAMBIO_ASIENTO_ID_VUELO", infoAsientoDTO.getIdVuelo());
+		if (itinerarioSeleccionado != null) {
+			sessionMap.put("CAMBIO_ASIENTO_ID_ITINERARIO", itinerarioSeleccionado.getIdItinerario());
+		}
+		PasajeroReservaInfo pInfo = getPasajeroParaAsiento(infoAsientoDTO);
+		if (pInfo != null && pInfo.getRut() != null) {
+			sessionMap.put("CAMBIO_ASIENTO_RUT_PASAJERO", pInfo.getRut());
+		}
 		sessionMap.put("CAMBIO_ASIENTO_ORIGEN", "PERFIL");
 
 		context.getExternalContext()
@@ -335,6 +380,7 @@ public class PerfilBean implements Serializable {
 
 			listaItinerarios = itinerarioService.findResumenByRut(usuario.getRut(), 100, 0);
 			filtrarVuelosFuturos();
+			actualizarSchedule();
 
 		} catch (Exception e) {
 			Logger.logError("Error al cancelar la reserva: " + e.getMessage());
@@ -898,5 +944,366 @@ public class PerfilBean implements Serializable {
 
 	public void cerrarModalResultadoUpgrade() {
 		this.mostrarModalResultadoUpgrade = false;
+	}
+
+	public void actualizarSchedule() {
+		this.scheduleModel = new DefaultScheduleModel();
+		List<ItinerarioResumenDTO> fuente = (this.listaItinerariosFiltrados != null) ? this.listaItinerariosFiltrados : this.listaItinerarios;
+		if (fuente == null || fuente.isEmpty()) {
+			this.fechaInicialSchedule = LocalDate.now();
+			return;
+		}
+
+		LocalDate primeraFecha = null;
+
+		for (ItinerarioResumenDTO it : fuente) {
+			if (it.getHoraSalida() == null) continue;
+
+			LocalDateTime start = it.getHoraSalida().toInstant()
+					.atZone(ZoneId.of("America/Santiago"))
+					.toLocalDateTime();
+
+			if (primeraFecha == null || (start.toLocalDate().isAfter(LocalDate.now().minusDays(1)) && primeraFecha.isBefore(LocalDate.now()))) {
+				primeraFecha = start.toLocalDate();
+			}
+
+			LocalDateTime end;
+			if (it.getHoraLlegada() != null) {
+				end = it.getHoraLlegada().toInstant()
+						.atZone(ZoneId.of("America/Santiago"))
+						.toLocalDateTime();
+			} else {
+				end = start.plusHours(2);
+			}
+
+			boolean cancelada = isReservaCanceladaPorItinerario(it.getIdReserva());
+			boolean checkInListo = isCheckInCompletado(it.getIdReserva());
+
+			String estiloClase = "vuelo-evento-normal";
+			String bg = "#0284c7";
+			String border = "#0369a1";
+
+			if (cancelada) {
+				estiloClase = "vuelo-evento-cancelado";
+				bg = "#64748b";
+				border = "#475569";
+			} else if (checkInListo) {
+				estiloClase = "vuelo-evento-checkin";
+				bg = "#10b981";
+				border = "#059669";
+			} else if (start.isBefore(LocalDateTime.now())) {
+				estiloClase = "vuelo-evento-pasado";
+				bg = "#334155";
+				border = "#1e293b";
+			}
+
+			String title = (cancelada ? "🚫 " : "✈ ") + it.getCodigoIataOrigen() + " ➔ " + it.getCodigoIataDestino();
+
+			ScheduleEvent<?> event = DefaultScheduleEvent.builder()
+					.title(title)
+					.startDate(start)
+					.endDate(end)
+					.data(it)
+					.description("Itinerario #" + it.getIdItinerario() + " - Reserva #" + it.getIdReserva())
+					.styleClass(estiloClase)
+					.borderColor(border)
+					.backgroundColor(bg)
+					.textColor("#ffffff")
+					.build();
+
+			this.scheduleModel.addEvent(event);
+		}
+
+		this.fechaInicialSchedule = primeraFecha != null ? primeraFecha : LocalDate.now();
+	}
+
+	public void onEventSelect(SelectEvent<ScheduleEvent<?>> selectEvent) {
+		if (selectEvent == null || selectEvent.getObject() == null) return;
+		ScheduleEvent<?> event = selectEvent.getObject();
+		if (event.getData() instanceof ItinerarioResumenDTO) {
+			ItinerarioResumenDTO item = (ItinerarioResumenDTO) event.getData();
+			verDetalleCompletoReserva(item);
+			PrimeFaces.current().ajax().update("formHubModal:dlgHubModal");
+			PrimeFaces.current().executeScript("PF('dlgHubModal').show();");
+		}
+	}
+
+	public ScheduleModel getScheduleModel() {
+		return scheduleModel;
+	}
+
+	public void setScheduleModel(ScheduleModel scheduleModel) {
+		this.scheduleModel = scheduleModel;
+	}
+
+	public String getVistaActiva() {
+		return vistaActiva;
+	}
+
+	public void setVistaActiva(String vistaActiva) {
+		this.vistaActiva = vistaActiva;
+	}
+
+	public LocalDate getFechaInicialSchedule() {
+		return fechaInicialSchedule;
+	}
+
+	public void setFechaInicialSchedule(LocalDate fechaInicialSchedule) {
+		this.fechaInicialSchedule = fechaInicialSchedule;
+	}
+
+	public Reserva getReservaDetalle() {
+		return reservaDetalle;
+	}
+
+	public void setReservaDetalle(Reserva reservaDetalle) {
+		this.reservaDetalle = reservaDetalle;
+	}
+
+	public String getModeloAvionItinerario() {
+		if (itinerarioDetalle != null && itinerarioDetalle.getItinerarioVuelos() != null && !itinerarioDetalle.getItinerarioVuelos().isEmpty()) {
+			ItinerarioVuelo iv = itinerarioDetalle.getItinerarioVuelos().get(0);
+			if (iv.getVuelo() != null && iv.getVuelo().getAvion() != null && iv.getVuelo().getAvion().getModeloAvion() != null) {
+				return iv.getVuelo().getAvion().getModeloAvion().getNombre();
+			}
+		}
+		return "Boeing 787-9 Dreamliner";
+	}
+
+	public Date getHoraEmbarqueEstimada() {
+		if (itinerarioSeleccionado != null && itinerarioSeleccionado.getHoraSalida() != null) {
+			return new Date(itinerarioSeleccionado.getHoraSalida().getTime() - (45L * 60L * 1000L));
+		}
+		return null;
+	}
+
+	public String getMetodoPagoReserva() {
+		if (reservaDetalle != null && reservaDetalle.getPagos() != null && !reservaDetalle.getPagos().isEmpty()) {
+			Pago p = reservaDetalle.getPagos().get(0);
+			if (p.getMetodoPago() != null && p.getMetodoPago().getDescripcion() != null) {
+				return p.getMetodoPago().getDescripcion();
+			}
+		}
+		return "WebPay Plus / Transbank";
+	}
+
+	public String getUbicacionAsiento(String numeroAsiento) {
+		if (numeroAsiento == null || numeroAsiento.isEmpty()) return "Estándar";
+		char letra = Character.toUpperCase(numeroAsiento.charAt(numeroAsiento.length() - 1));
+		if (letra == 'A' || letra == 'F' || letra == 'K') return "Ventana";
+		if (letra == 'C' || letra == 'D' || letra == 'G' || letra == 'H') return "Pasillo";
+		return "Centro";
+	}
+
+	public String getNombreTitularReserva() {
+		if (reservaDetalle != null && reservaDetalle.getPasajero() != null && reservaDetalle.getPasajero().getUsuario() != null) {
+			return reservaDetalle.getPasajero().getUsuario().getNombre() + " " + reservaDetalle.getPasajero().getUsuario().getApellido();
+		}
+		if (usuario != null) {
+			return usuario.getNombre() + " " + usuario.getApellido();
+		}
+		return "Pasajero SkyWay";
+	}
+
+	private void cargarPasajerosReserva() {
+		this.pasajerosReservaMap.clear();
+		this.listaPasajerosReserva.clear();
+
+		if (reservaDetalle == null) return;
+
+		// 1. Titular
+		Pasajero tit = reservaDetalle.getPasajero();
+		String rutTitular = (tit != null) ? tit.getRut() : (usuario != null ? usuario.getRut() : null);
+		if (tit != null) {
+			Usuario u = tit.getUsuario();
+			if (u == null && pasajeroService != null) {
+				Pasajero pLoaded = pasajeroService.findById(tit.getRut()).orElse(null);
+				if (pLoaded != null) {
+					tit = pLoaded;
+					u = pLoaded.getUsuario();
+				}
+			}
+			String nombre = (u != null) ? (u.getNombre() + " " + u.getApellido()) : "Titular";
+			String correo = (u != null && u.getCorreoElectronico() != null) ? u.getCorreoElectronico() : "";
+			pasajerosReservaMap.put(tit.getRut(), new PasajeroReservaInfo(tit.getRut(), nombre, correo, true));
+		} else if (usuario != null && rutTitular != null) {
+			pasajerosReservaMap.put(rutTitular, new PasajeroReservaInfo(rutTitular, usuario.getNombre() + " " + usuario.getApellido(), usuario.getCorreoElectronico(), true));
+		}
+
+		// 2. Pasajeros asociados en pasajero_reserva
+		if (reservaDetalle.getPasajerosReserva() != null) {
+			for (PasajeroReserva pr : reservaDetalle.getPasajerosReserva()) {
+				if (pr == null) continue;
+				Pasajero p = pr.getPasajero();
+				String rut = (p != null) ? p.getRut() : null;
+				if (rut != null && !pasajerosReservaMap.containsKey(rut)) {
+					Usuario u = (p != null) ? p.getUsuario() : null;
+					if (u == null && pasajeroService != null) {
+						Pasajero pLoaded = pasajeroService.findById(rut).orElse(null);
+						if (pLoaded != null) {
+							p = pLoaded;
+							u = pLoaded.getUsuario();
+						}
+					}
+					String nombre = (u != null) ? (u.getNombre() + " " + u.getApellido()) : ("Pasajero " + rut);
+					String correo = (u != null && u.getCorreoElectronico() != null) ? u.getCorreoElectronico() : "";
+					boolean esTit = (rutTitular != null && rutTitular.equalsIgnoreCase(rut));
+					pasajerosReservaMap.put(rut, new PasajeroReservaInfo(rut, nombre, correo, esTit));
+				}
+			}
+		}
+
+		// 3. Pasajeros en reserva_asiento (garantiza captura de acompañantes con asiento asignado)
+		if (reservaDetalle.getReservaAsientos() != null) {
+			for (ReservaAsiento ra : reservaDetalle.getReservaAsientos()) {
+				if (ra == null) continue;
+				String rut = ra.getRut();
+				if (rut != null && !pasajerosReservaMap.containsKey(rut)) {
+					Pasajero p = ra.getPasajero();
+					Usuario u = (p != null) ? p.getUsuario() : null;
+					if (u == null && pasajeroService != null) {
+						Pasajero pLoaded = pasajeroService.findById(rut).orElse(null);
+						if (pLoaded != null) {
+							p = pLoaded;
+							u = pLoaded.getUsuario();
+						}
+					}
+					String nombre = (u != null) ? (u.getNombre() + " " + u.getApellido()) : ("Pasajero " + rut);
+					String correo = (u != null && u.getCorreoElectronico() != null) ? u.getCorreoElectronico() : "";
+					boolean esTit = (rutTitular != null && rutTitular.equalsIgnoreCase(rut));
+					pasajerosReservaMap.put(rut, new PasajeroReservaInfo(rut, nombre, correo, esTit));
+				}
+
+				// Asignar asiento al pasajero correspondiente
+				if (rut != null && ra.getAsiento() != null && ra.getAsiento().getNumeroAsiento() != null) {
+					PasajeroReservaInfo pInfo = pasajerosReservaMap.get(rut);
+					if (pInfo != null && !pInfo.getAsientos().contains(ra.getAsiento().getNumeroAsiento())) {
+						pInfo.getAsientos().add(ra.getAsiento().getNumeroAsiento());
+					}
+				}
+			}
+		}
+
+		this.listaPasajerosReserva.addAll(this.pasajerosReservaMap.values());
+	}
+
+	public PasajeroReservaInfo getPasajeroParaAsiento(InfoAsientoReservaDTO asientoDTO) {
+		if (asientoDTO == null) return null;
+
+		// 1. Buscar coincidencia exacta por idVuelo e (idAsiento o numeroAsiento) en reservaAsientos
+		if (reservaDetalle != null && reservaDetalle.getReservaAsientos() != null) {
+			for (ReservaAsiento ra : reservaDetalle.getReservaAsientos()) {
+				if (ra == null) continue;
+				boolean matchVuelo = (ra.getVuelo() != null && ra.getVuelo().getIdVuelo() == asientoDTO.getIdVuelo());
+				boolean matchAsiento = false;
+				if (ra.getAsiento() != null) {
+					if (ra.getAsiento().getIdAsiento() == asientoDTO.getIdAsiento()) {
+						matchAsiento = true;
+					} else if (asientoDTO.getNumeroAsiento() != null 
+							&& asientoDTO.getNumeroAsiento().equalsIgnoreCase(ra.getAsiento().getNumeroAsiento())) {
+						matchAsiento = true;
+					}
+				}
+				if (matchVuelo && matchAsiento) {
+					String rut = ra.getRut();
+					if (rut != null && pasajerosReservaMap.containsKey(rut)) {
+						return pasajerosReservaMap.get(rut);
+					}
+					// Construir info si no estaba en el mapa
+					Pasajero p = ra.getPasajero();
+					Usuario u = (p != null) ? p.getUsuario() : null;
+					if (u == null && pasajeroService != null && rut != null) {
+						Pasajero pLoaded = pasajeroService.findById(rut).orElse(null);
+						if (pLoaded != null) u = pLoaded.getUsuario();
+					}
+					String nombre = (u != null) ? (u.getNombre() + " " + u.getApellido()) : ("Pasajero " + rut);
+					String correo = (u != null && u.getCorreoElectronico() != null) ? u.getCorreoElectronico() : "";
+					boolean titular = (reservaDetalle.getPasajero() != null && rut != null && rut.equalsIgnoreCase(reservaDetalle.getPasajero().getRut()));
+					PasajeroReservaInfo info = new PasajeroReservaInfo(rut, nombre, correo, titular);
+					if (rut != null) {
+						pasajerosReservaMap.put(rut, info);
+						listaPasajerosReserva.add(info);
+					}
+					return info;
+				}
+			}
+
+			// Fallback relajado por número de asiento
+			for (ReservaAsiento ra : reservaDetalle.getReservaAsientos()) {
+				if (ra != null && ra.getAsiento() != null && asientoDTO.getNumeroAsiento() != null
+						&& asientoDTO.getNumeroAsiento().equalsIgnoreCase(ra.getAsiento().getNumeroAsiento())) {
+					String rut = ra.getRut();
+					if (rut != null && pasajerosReservaMap.containsKey(rut)) {
+						return pasajerosReservaMap.get(rut);
+					}
+				}
+			}
+		}
+
+		// 2. Fallback al titular
+		if (reservaDetalle != null && reservaDetalle.getPasajero() != null) {
+			String rutTit = reservaDetalle.getPasajero().getRut();
+			if (pasajerosReservaMap.containsKey(rutTit)) {
+				return pasajerosReservaMap.get(rutTit);
+			}
+		}
+
+		return new PasajeroReservaInfo(
+				usuario != null ? usuario.getRut() : "",
+				getNombreTitularReserva(),
+				usuario != null ? usuario.getCorreoElectronico() : "",
+				true
+		);
+	}
+
+	public String getNombrePasajeroAsiento(InfoAsientoReservaDTO asientoDTO) {
+		PasajeroReservaInfo info = getPasajeroParaAsiento(asientoDTO);
+		return (info != null && info.getNombreCompleto() != null) ? info.getNombreCompleto() : getNombreTitularReserva();
+	}
+
+	public String getTipoPasajeroAsiento(InfoAsientoReservaDTO asientoDTO) {
+		PasajeroReservaInfo info = getPasajeroParaAsiento(asientoDTO);
+		return (info != null) ? info.getTipoPasajero() : "Titular de Reserva";
+	}
+
+	public String getRutPasajeroAsiento(InfoAsientoReservaDTO asientoDTO) {
+		PasajeroReservaInfo info = getPasajeroParaAsiento(asientoDTO);
+		return (info != null && info.getRut() != null) ? info.getRut() : "";
+	}
+
+	public List<PasajeroReservaInfo> getListaPasajerosReserva() {
+		return listaPasajerosReserva;
+	}
+
+	public int getCantidadPasajerosReserva() {
+		return !listaPasajerosReserva.isEmpty() ? listaPasajerosReserva.size() : 1;
+	}
+
+	public static class PasajeroReservaInfo implements Serializable {
+		private static final long serialVersionUID = 1L;
+		private String rut;
+		private String nombreCompleto;
+		private String correo;
+		private boolean titular;
+		private List<String> asientos = new ArrayList<>();
+
+		public PasajeroReservaInfo(String rut, String nombreCompleto, String correo, boolean titular) {
+			this.rut = rut;
+			this.nombreCompleto = nombreCompleto;
+			this.correo = correo;
+			this.titular = titular;
+		}
+
+		public String getRut() { return rut; }
+		public String getNombreCompleto() { return nombreCompleto; }
+		public String getCorreo() { return correo; }
+		public boolean isTitular() { return titular; }
+		public String getTipoPasajero() { return titular ? "Titular de Reserva" : "Acompañante"; }
+		public List<String> getAsientos() { return asientos; }
+		public void setAsientos(List<String> asientos) { this.asientos = asientos; }
+		public String getAsientosFormateados() {
+			if (asientos == null || asientos.isEmpty()) return "Sin asignar";
+			return String.join(", ", asientos);
+		}
 	}
 }

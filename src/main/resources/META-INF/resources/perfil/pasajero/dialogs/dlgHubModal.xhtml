@@ -1,0 +1,573 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui">
+
+    <!-- MODAL COMPLETO: CENTRO DE GESTIÓN / HUB DE RESERVA -->
+    <h:form id="formHubModal">
+        <p:dialog header="Centro de Gestión de Reserva"
+                  widgetVar="dlgHubModal"
+                  id="dlgHubModal"
+                  modal="true"
+                  resizable="false"
+                  responsive="true"
+                  onShow="arrancarRelojSalida(#{perfilPasajeroView.segundosTotalesSalida});"
+                  styleClass="skyway-dialog">
+
+            <h:panelGroup rendered="#{not empty perfilPasajeroView.itinerarioSeleccionado}" layout="block" styleClass="p-2">
+
+                <h:panelGroup rendered="#{perfilPasajeroView.reservaCancelada}" layout="block" styleClass="mb-3">
+                    <div class="alert alert-warning d-flex align-items-center" style="background: rgba(234, 179, 8, 0.15); border: 1px solid #eab308; color: #fef08a; border-radius: 8px; padding: 12px;">
+                        <i class="pi pi-exclamation-triangle me-2" style="font-size: 1.2rem;"></i>
+                        <div>
+                            <strong>RESERVA CANCELADA HISTÓRICA</strong>
+                            <div class="small">Esta reserva fue anulada previamente. Los asientos y detalles mostrados son registros históricos del itinerario.</div>
+                        </div>
+                    </div>
+                </h:panelGroup>
+
+                <!-- BANNER DE ESTADO Y LIVE FLIGHT TRACKER -->
+                <div class="p-3 mb-3 rounded d-flex justify-content-between align-items-center shadow-sm"
+                     style="background: #0D172A; border: 1px solid #1E293B;">
+
+                    <!-- ESTADO DEL VUELO -->
+                    <div>
+                        <span class="text-white-50 small d-block mb-1 font-weight-600" style="letter-spacing: 0.5px;">ESTADO EN TIEMPO REAL</span>
+                        <h:panelGroup rendered="#{!perfilPasajeroView.reservaCancelada}">
+                            <span class="badge #{perfilPasajeroView.estadoVueloBadgeClass} font-weight-bold px-3 py-2" style="font-size:0.9rem; border-radius: 6px;">
+                                <i class="pi #{perfilPasajeroView.estadoVueloIcono} me-1" style="font-size:0.75rem;"></i>#{perfilPasajeroView.estadoVueloVisual}
+                            </span>
+                        </h:panelGroup>
+
+                        <h:panelGroup rendered="#{perfilPasajeroView.reservaCancelada}">
+                            <span class="badge bg-danger font-weight-bold px-3 py-2" style="font-size:0.9rem; border-radius: 6px;">
+                                <i class="pi pi-times-circle me-1" style="font-size:0.75rem;"></i>CANCELADO
+                            </span>
+                        </h:panelGroup>
+                    </div>
+
+                    <!-- TIEMPO PARA LA SALIDA EN TIEMPO REAL -->
+                    <div class="text-center px-4" style="border-left: 1px solid #1E293B; border-right: 1px solid #1E293B;">
+                        <span class="text-white-50 small d-block mb-1 font-weight-600" style="letter-spacing: 0.5px;">TIEMPO PARA LA SALIDA</span>
+
+                        <h:panelGroup rendered="#{!perfilPasajeroView.reservaCancelada and perfilPasajeroView.segundosTotalesSalida > 0}">
+                            <strong id="contadorSalidaVivo" class="text-primary font-weight-bold" style="font-size:1.35rem; font-family: monospace; letter-spacing: 1px; color: #38BDF8 !important;">
+                                #{perfilPasajeroView.tiempoRestanteFormateado}
+                            </strong>
+                        </h:panelGroup>
+
+                        <h:panelGroup rendered="#{perfilPasajeroView.reservaCancelada or perfilPasajeroView.segundosTotalesSalida &lt;= 0}">
+                            <strong class="text-muted font-weight-bold" style="font-size:1.1rem;">
+                                #{perfilPasajeroView.tiempoRestanteFormateado}
+                            </strong>
+                        </h:panelGroup>
+                    </div>
+
+                    <!-- CINTA DE EQUIPAJE -->
+                    <div class="text-end">
+                        <span class="text-white-50 small d-block mb-1 font-weight-600" style="letter-spacing: 0.5px;">CINTA DE EQUIPAJE</span>
+                        <strong class="text-white font-weight-bold" style="font-size: 0.95rem;">
+                            <i class="pi pi-box text-primary me-1"></i>#{perfilPasajeroView.cintaEquipaje}
+                        </strong>
+                    </div>
+                </div>
+
+                <!-- FICHA TÉCNICA Y RESUMEN CORPORATIVO DE LA RESERVA -->
+                <div class="reservation-summary-card mb-3">
+                    <div class="row g-3">
+                        <!-- Col 1: Localizador PNR y Pasajeros -->
+                        <div class="col-md-3 col-sm-6">
+                            <span class="summary-label">LOCALIZADOR / PNR</span>
+                            <div class="d-flex align-items-center gap-2 mt-1">
+                                <span class="pnr-code-badge">
+                                    <i class="pi pi-qrcode me-1 text-primary"></i>
+                                    #{not empty perfilPasajeroView.reservaDetalle.codigoReserva ? perfilPasajeroView.reservaDetalle.codigoReserva : ('SW-'.concat(perfilPasajeroView.itinerarioSeleccionado.idReserva))}
+                                </span>
+                                <span class="badge bg-secondary ms-1" style="font-size: 0.72rem;">#{perfilPasajeroView.cantidadPasajerosReserva} #{perfilPasajeroView.cantidadPasajerosReserva == 1 ? 'Pasajero' : 'Pasajeros'}</span>
+                            </div>
+                            <span class="summary-subtext mt-1 d-block text-truncate">
+                                Titular: <strong class="text-white">#{perfilPasajeroView.nombreTitularReserva}</strong>
+                            </span>
+                        </div>
+
+                        <!-- Col 2: Ruta, Vuelo y Aeronave -->
+                        <div class="col-md-3 col-sm-6">
+                            <span class="summary-label">VUELO Y AERONAVE</span>
+                            <div class="d-flex align-items-center gap-1 mt-1">
+                                <span class="font-weight-bold text-white">#{perfilPasajeroView.itinerarioSeleccionado.codigoIataOrigen}</span>
+                                <i class="pi pi-arrow-right text-primary" style="font-size: 0.75rem;"></i>
+                                <span class="font-weight-bold text-white">#{perfilPasajeroView.itinerarioSeleccionado.codigoIataDestino}</span>
+                                <span class="badge bg-secondary ms-1" style="font-size: 0.7rem;">#{perfilPasajeroView.itinerarioDetalle.numeroEscalas == 0 ? 'Directo' : (perfilPasajeroView.itinerarioDetalle.numeroEscalas.toString().concat(' esc.'))}</span>
+                            </div>
+                            <span class="summary-subtext mt-1 d-block text-truncate">
+                                Vuelo #{perfilPasajeroView.listaAsientosReservados != null and !perfilPasajeroView.listaAsientosReservados.isEmpty() ? perfilPasajeroView.getNumeroVuelo(perfilPasajeroView.listaAsientosReservados[0].idVuelo) : 'Comercial'} • #{perfilPasajeroView.modeloAvionItinerario}
+                            </span>
+                        </div>
+
+                        <!-- Col 3: Horarios Salida / Embarque -->
+                        <div class="col-md-3 col-sm-6">
+                            <span class="summary-label">PROGRAMACIÓN HORARIA</span>
+                            <div class="mt-1">
+                                <span class="text-white font-weight-bold" style="font-size: 0.95rem;">
+                                    <h:outputText value="#{perfilPasajeroView.itinerarioSeleccionado.horaSalida}"><f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/Santiago" /></h:outputText> hrs
+                                </span>
+                            </div>
+                            <span class="summary-subtext mt-1 d-block" style="color: #FBBF24;">
+                                <i class="pi pi-sign-in me-1"></i>Embarque estimado: <h:outputText value="#{perfilPasajeroView.horaEmbarqueEstimada}"><f:convertDateTime pattern="HH:mm" timeZone="America/Santiago" /></h:outputText> hrs
+                            </span>
+                        </div>
+
+                        <!-- Col 4: Facturación y Pago -->
+                        <div class="col-md-3 col-sm-6 text-md-end">
+                            <span class="summary-label">FACTURACIÓN Y PAGO</span>
+                            <div class="mt-1">
+                                <strong class="text-white" style="font-size: 1.15rem; font-family: monospace;">
+                                    $ <h:outputText value="#{perfilPasajeroView.reservaDetalle.total}"><f:convertNumber maxFractionDigits="0" groupingUsed="true" /></h:outputText> CLP
+                                </strong>
+                            </div>
+                            <span class="summary-subtext mt-1 d-block">
+                                <i class="pi pi-check-circle text-success me-1"></i>#{perfilPasajeroView.metodoPagoReserva}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CRONOGRAMA / TIMELINE -->
+                <div class="timeline-compact-wrapper mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-white font-weight-bold small">
+                            <i class="pi pi-clock text-primary me-1"></i> Cronograma del Vuelo
+                        </span>
+
+                        <h:panelGroup rendered="#{perfilPasajeroView.checkInCompletado and !perfilPasajeroView.reservaCancelada}">
+                            <p:commandButton value="Ver Tarjetas de Embarque"
+                                             icon="pi pi-ticket"
+                                             iconPos="right"
+                                             styleClass="ui-button-success btn-sm py-1 px-3"
+                                             actionListener="#{perfilPasajeroView.getTicket(perfilPasajeroView.itinerarioSeleccionado)}"
+                                             update=":formDetalleTicket:dlgDetalleTicket :globalGrowl"
+                                             oncomplete="if (!args || !args.checkInInvalido) PF('dlgDetalleTicket').show();" />
+                        </h:panelGroup>
+
+                        <h:panelGroup rendered="#{!perfilPasajeroView.checkInCompletado and perfilPasajeroView.checkInAbierto and !perfilPasajeroView.reservaCancelada}">
+                            <p:commandButton value="Realizar Check-In Ahora"
+                                             icon="pi pi-arrow-right"
+                                             iconPos="right"
+                                             styleClass="btn-skyway-primary btn-sm py-1 px-3"
+                                             actionListener="#{perfilPasajeroView.irACheckIn}" />
+                        </h:panelGroup>
+
+                        <h:panelGroup rendered="#{!perfilPasajeroView.checkInCompletado and !perfilPasajeroView.checkInAbierto and !perfilPasajeroView.reservaCancelada}">
+                            <span class="badge bg-secondary px-2 py-1 small">#{perfilPasajeroView.estadoCheckInTexto}</span>
+                        </h:panelGroup>
+
+                        <h:panelGroup rendered="#{perfilPasajeroView.reservaCancelada}">
+                            <span class="badge bg-dark text-muted border border-secondary px-2 py-1 small">NO DISPONIBLE</span>
+                        </h:panelGroup>
+                    </div>
+
+                    <div class="timeline-compact-grid">
+                        <div class="step-compact-item #{perfilPasajeroView.etapaActualCronograma &gt; 1 ? 'completed' : (perfilPasajeroView.etapaActualCronograma == 1 ? 'active' : '')}">
+                            <i class="pi #{perfilPasajeroView.etapaActualCronograma &gt; 1 ? 'pi-check text-success' : 'pi-desktop'}"></i>
+                            <span>1. Check-In Web</span>
+                            <h:panelGroup rendered="#{perfilPasajeroView.etapaActualCronograma == 1 and !perfilPasajeroView.reservaCancelada}">
+                                <span class="badge-here-compact">AQUÍ</span>
+                            </h:panelGroup>
+                        </div>
+
+                        <div class="step-compact-item #{perfilPasajeroView.etapaActualCronograma &gt; 2 ? 'completed' : (perfilPasajeroView.etapaActualCronograma == 2 ? 'active' : '')}">
+                            <i class="pi #{perfilPasajeroView.etapaActualCronograma &gt; 2 ? 'pi-check text-success' : 'pi-briefcase'}"></i>
+                            <span>2. Entrega Equipaje</span>
+                            <h:panelGroup rendered="#{perfilPasajeroView.etapaActualCronograma == 2 and !perfilPasajeroView.reservaCancelada}">
+                                <span class="badge-here-compact">AQUÍ</span>
+                            </h:panelGroup>
+                        </div>
+
+                        <div class="step-compact-item #{perfilPasajeroView.etapaActualCronograma &gt; 3 ? 'completed' : (perfilPasajeroView.etapaActualCronograma == 3 ? 'active' : '')}">
+                            <i class="pi #{perfilPasajeroView.etapaActualCronograma &gt; 3 ? 'pi-check text-success' : 'pi-sign-in'}"></i>
+                            <span>3. Puerta Embarque</span>
+                            <h:panelGroup rendered="#{perfilPasajeroView.etapaActualCronograma == 3 and !perfilPasajeroView.reservaCancelada}">
+                                <span class="badge-here-compact">AQUÍ</span>
+                            </h:panelGroup>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PESTAÑAS HUB DE RESERVA -->
+                <p:tabView styleClass="skyway-tabs">
+
+                    <!-- TAB 1: ASIENTOS RESERVADOS -->
+                    <p:tab title="Asientos Asignados">
+                        <div class="hub-tab-panel">
+                            <p:dataTable value="#{perfilPasajeroView.listaAsientosReservados}" lazy="false" var="asiento" responsiveLayout="scroll" styleClass="skyway-datatable mt-2">
+                                <p:column headerText="Pasajero">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="pi #{perfilPasajeroView.getTipoPasajeroAsiento(asiento) eq 'Titular de Reserva' ? 'pi-user text-primary' : 'pi-users text-info'}" style="font-size: 1.1rem;"></i>
+                                        <div>
+                                            <strong class="text-white">#{perfilPasajeroView.getNombrePasajeroAsiento(asiento)}</strong>
+                                            <span class="d-block small text-white-50">
+                                                #{perfilPasajeroView.getTipoPasajeroAsiento(asiento)}
+                                                <h:outputText value=" • RUT: #{perfilPasajeroView.getRutPasajeroAsiento(asiento)}" rendered="#{not empty perfilPasajeroView.getRutPasajeroAsiento(asiento)}" />
+                                            </span>
+                                        </div>
+                                    </div>
+                                </p:column>
+
+                                <p:column headerText="Asiento" style="width: 120px;">
+                                    <span class="seat-badge-corporate">
+                                        <i class="pi pi-ticket"></i>
+                                        #{asiento.numeroAsiento}
+                                    </span>
+                                </p:column>
+
+                                <p:column headerText="Ubicación" style="width: 120px;">
+                                    <span class="text-white-50">
+                                        <i class="pi pi-compass me-1 text-primary"></i>#{perfilPasajeroView.getUbicacionAsiento(asiento.numeroAsiento)}
+                                    </span>
+                                </p:column>
+
+                                <p:column headerText="Clase Cabina" style="width: 140px;">
+                                    <span class="badge #{asiento.claseAsiento eq 'Ejecutiva' or asiento.claseAsiento eq 'Primera' ? 'bg-primary' : 'bg-dark border border-secondary'} font-weight-bold" style="border-radius: 4px; font-size: 0.8rem;">
+                                        #{asiento.claseAsiento}
+                                    </span>
+                                </p:column>
+
+                                <p:column headerText="Vuelo N°" style="width: 140px;">
+                                    <span class="font-weight-bold text-white">#{perfilPasajeroView.getNumeroVuelo(asiento.idVuelo)}</span>
+                                </p:column>
+
+                                <p:column headerText="Acción" styleClass="text-center" style="width: 170px;">
+                                    <p:commandButton value="#{perfilPasajeroView.reservaCancelada ? 'No Disponible' : 'Cambiar Asiento'}"
+                                                     icon="#{perfilPasajeroView.reservaCancelada ? 'pi pi-lock' : 'pi pi-refresh'}"
+                                                     styleClass="btn-skyway-action-corporate btn-sm"
+                                                     disabled="#{perfilPasajeroView.reservaCancelada}"
+                                                     actionListener="#{perfilPasajeroView.cambiarAsiento(asiento)}"
+                                                     update=":globalGrowl"/>
+                                </p:column>
+                            </p:dataTable>
+                        </div>
+                    </p:tab>
+
+                    <!-- TAB 2: PASAJEROS EN LA RESERVA -->
+                    <p:tab title="Pasajeros (#{perfilPasajeroView.cantidadPasajerosReserva})">
+                        <div class="hub-tab-panel">
+                            <div class="p-3 mb-3 rounded" style="background: #0B132B; border: 1px solid #1E293B;">
+                                <div class="d-flex align-items-center gap-3">
+                                    <i class="pi pi-users text-primary" style="font-size: 1.4rem;"></i>
+                                    <div>
+                                        <strong class="text-white d-block" style="font-size: 0.88rem;">Pasajeros Registrados en esta Reserva</strong>
+                                        <span class="text-white-50 small">Listado de viajeros asociados al localizador PNR con sus documentos y butacas asignadas.</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p:dataTable value="#{perfilPasajeroView.listaPasajerosReserva}"
+                                         lazy="false"
+                                         var="pax"
+                                         responsiveLayout="scroll"
+                                         styleClass="skyway-datatable mt-2">
+
+                                <p:column headerText="Pasajero">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="pi #{pax.titular ? 'pi-user text-primary' : 'pi-users text-info'}" style="font-size: 1.2rem;"></i>
+                                        <div>
+                                            <strong class="text-white">#{pax.nombreCompleto}</strong>
+                                            <span class="d-block small text-white-50">#{pax.tipoPasajero}</span>
+                                        </div>
+                                    </div>
+                                </p:column>
+
+                                <p:column headerText="RUT / Identificación" style="width: 170px;">
+                                    <span class="font-weight-bold text-white font-monospace">#{pax.rut}</span>
+                                </p:column>
+
+                                <p:column headerText="Correo Electrónico" style="width: 230px;">
+                                    <span class="text-white-50">#{not empty pax.correo ? pax.correo : 'No especificado'}</span>
+                                </p:column>
+
+                                <p:column headerText="Rol" style="width: 140px;">
+                                    <span class="badge #{pax.titular ? 'bg-primary' : 'bg-dark border border-secondary'} font-weight-bold" style="border-radius: 4px; font-size: 0.8rem;">
+                                        #{pax.titular ? 'Titular' : 'Acompañante'}
+                                    </span>
+                                </p:column>
+
+                                <p:column headerText="Asientos en Reserva" style="width: 180px;">
+                                    <span class="seat-badge-corporate">
+                                        <i class="pi pi-ticket"></i>
+                                        #{pax.asientosFormateados}
+                                    </span>
+                                </p:column>
+                            </p:dataTable>
+                        </div>
+                    </p:tab>
+
+                    <!-- TAB 3: INCLUSIONES Y REGLAS DE TARIFA -->
+                    <p:tab title="Tarifa y Beneficios">
+                        <div class="hub-tab-panel">
+
+                            <!-- BANNER DE TARIFA CONTRATADA -->
+                            <div class="tariff-hero-banner">
+                                <div>
+                                    <span class="text-white-50 small d-block uppercase font-weight-bold" style="letter-spacing: 1px;">TARIFA CONTRATADA</span>
+                                    <span class="tariff-badge-title">
+                                        <i class="pi pi-verified text-primary me-2"></i>
+                                        #{perfilPasajeroView.tarifaActual != null ? perfilPasajeroView.tarifaActual.nombre : 'Flexible / Estándar'}
+                                    </span>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-dark border border-secondary px-3 py-2 text-white font-weight-bold" style="border-radius: 6px; font-size: 0.8rem;">
+                                        <i class="pi pi-shield text-success me-1"></i> Cobertura Activa
+                                    </span>
+                                    <p:commandButton value="Ascender Tarifa"
+                                                     icon="pi pi-arrow-circle-up"
+                                                     styleClass="btn btn-sm btn-primary font-weight-bold"
+                                                     style="background: #2563EB !important; border: 1px solid #1D4ED8 !important; border-radius: 6px !important;"
+                                                     disabled="#{perfilPasajeroView.reservaCancelada}"
+                                                     actionListener="#{perfilPasajeroView.prepararUpgrade(perfilPasajeroView.itinerarioSeleccionado)}"
+                                                     update=":formUpgradeTarifa:dlgUpgradeTarifa :globalGrowl"
+                                                     oncomplete="PF('dlgUpgradeTarifa').show();" />
+                                </div>
+                            </div>
+
+                            <!-- RESUMEN INFORMATIVO DE EQUIPAJE INCLUIDO EN LA TARIFA -->
+                            <div class="p-3 mb-3 rounded" style="background: #0B132B; border: 1px solid #1E293B;">
+                                <div class="row align-items-center g-2">
+                                    <div class="col-md-6 d-flex align-items-center gap-3">
+                                        <i class="pi pi-briefcase text-primary" style="font-size: 1.5rem;"></i>
+                                        <div>
+                                            <strong class="text-white d-block" style="font-size: 0.88rem;">Equipaje de Mano Garantizado</strong>
+                                            <span class="text-white-50 small">1 Bolso personal (bajo asiento) + 1 Maleta de cabina (hasta 10 kg).</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 d-flex align-items-center gap-3">
+                                        <i class="pi pi-calendar-plus text-primary" style="font-size: 1.5rem;"></i>
+                                        <div>
+                                            <strong class="text-white d-block" style="font-size: 0.88rem;">Flexibilidad de Modificación</strong>
+                                            <span class="text-white-50 small">Cambios de fecha o asiento permitidos según ventana tarifaria.</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- GRID DE CARACTERÍSTICAS Y BENEFICIOS -->
+                            <h:panelGroup rendered="#{not empty perfilPasajeroView.tarifaCaracteristicas}">
+                                <div class="tariff-grid">
+                                    <ui:repeat value="#{perfilPasajeroView.tarifaCaracteristicas}" var="carac">
+
+                                        <!-- SI ES TIPO BOOLEANO (SÍ / NO) -->
+                                        <h:panelGroup rendered="#{carac.caracteristica.tipoDato eq 'boolean'}">
+                                            <div class="tariff-card-feature #{carac.valorBool ? 'allowed-card' : 'denied-card'}">
+                                                <div class="feature-header-icon">
+                                                    <div class="feature-icon-wrapper">
+                                                        <i class="pi #{carac.valorBool ? 'pi-check' : 'pi-times'}"></i>
+                                                    </div>
+                                                    <span class="badge #{carac.valorBool ? 'bg-success' : 'bg-dark border border-secondary text-white-50'} font-weight-bold small">
+                                                        #{carac.valorBool ? 'INCLUIDO' : 'NO INCLUIDO'}
+                                                    </span>
+                                                </div>
+                                                <div>
+                                                    <div class="feature-title">#{carac.caracteristica.nombre}</div>
+                                                    <div class="feature-value">#{carac.valorBool ? 'Permitido sin costo' : 'Restringido'}</div>
+                                                </div>
+                                            </div>
+                                        </h:panelGroup>
+
+                                        <!-- SI ES TIPO ENTERO (HORAS / DÍAS DE PLAZO) -->
+                                        <h:panelGroup rendered="#{carac.caracteristica.tipoDato eq 'int'}">
+                                            <div class="tariff-card-feature #{carac.valorInt != null ? 'info-card' : 'denied-card'}">
+                                                <div class="feature-header-icon">
+                                                    <div class="feature-icon-wrapper">
+                                                        <i class="pi #{carac.valorInt != null ? 'pi-clock' : 'pi-ban'}"></i>
+                                                    </div>
+                                                    <span class="badge #{carac.valorInt != null ? 'bg-primary' : 'bg-dark border border-secondary text-white-50'} font-weight-bold small">
+                                                        #{carac.valorInt != null ? 'PLAZO LÍMITE' : 'NO DISPONIBLE'}
+                                                    </span>
+                                                </div>
+                                                <div>
+                                                    <div class="feature-title">#{carac.caracteristica.nombre}</div>
+                                                    <div class="feature-value">
+                                                        #{carac.valorInt != null ? 'Hasta '.concat(carac.valorInt).concat('h antes del vuelo') : 'Sin plazo disponible'}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </h:panelGroup>
+
+                                        <!-- SI ES TIPO TEXTO (INFORMACIÓN GENERAL DE EQUIPAJE/DESCRIPCIÓN) -->
+                                        <h:panelGroup rendered="#{carac.caracteristica.tipoDato eq 'text'}">
+                                            <div class="tariff-card-feature info-card">
+                                                <div class="feature-header-icon">
+                                                    <div class="feature-icon-wrapper">
+                                                        <i class="pi pi-info-circle"></i>
+                                                    </div>
+                                                    <span class="badge bg-secondary font-weight-bold small">DETALLE</span>
+                                                </div>
+                                                <div>
+                                                    <div class="feature-title">#{carac.caracteristica.nombre}</div>
+                                                    <div class="feature-value">#{carac.valor}</div>
+                                                </div>
+                                            </div>
+                                        </h:panelGroup>
+
+                                    </ui:repeat>
+                                </div>
+                            </h:panelGroup>
+
+                            <!-- FALLBACK VISUAL EN GRID SI NO HAY DATOS DE BASE DE DATOS -->
+                            <h:panelGroup rendered="#{empty perfilPasajeroView.tarifaCaracteristicas}">
+                                <div class="tariff-grid">
+                                    <div class="tariff-card-feature allowed-card">
+                                        <div class="feature-header-icon">
+                                            <div class="feature-icon-wrapper"><i class="pi pi-user-edit"></i></div>
+                                            <span class="badge bg-success font-weight-bold small">INCLUIDO</span>
+                                        </div>
+                                        <div>
+                                            <div class="feature-title">Cambio de Asiento</div>
+                                            <div class="feature-value">Permitido en la misma clase</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="tariff-card-feature info-card">
+                                        <div class="feature-header-icon">
+                                            <div class="feature-icon-wrapper"><i class="pi pi-clock"></i></div>
+                                            <span class="badge bg-primary font-weight-bold small">48 HORAS</span>
+                                        </div>
+                                        <div>
+                                            <div class="feature-title">Plazo para Modificación</div>
+                                            <div class="feature-value">Hasta 48h antes de la salida</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="tariff-card-feature allowed-card">
+                                        <div class="feature-header-icon">
+                                            <div class="feature-icon-wrapper"><i class="pi pi-briefcase"></i></div>
+                                            <span class="badge bg-success font-weight-bold small">INCLUIDO</span>
+                                        </div>
+                                        <div>
+                                            <div class="feature-title">Equipaje de Mano</div>
+                                            <div class="feature-value">1 bolso personal + 1 maleta de cabina</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="tariff-card-feature allowed-card">
+                                        <div class="feature-header-icon">
+                                            <div class="feature-icon-wrapper"><i class="pi pi-refresh"></i></div>
+                                            <span class="badge bg-success font-weight-bold small">INCLUIDO</span>
+                                        </div>
+                                        <div>
+                                            <div class="feature-title">Cancelación y Reembolso</div>
+                                            <div class="feature-value">Permite anulación según políticas</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </h:panelGroup>
+
+                            <!-- NOTA INFORMATIVA INFERIOR CON ENLACE A LA PÁGINA -->
+                            <div class="tariff-footer-note d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="pi pi-file-pdf text-primary" style="font-size: 1.2rem;"></i>
+                                    <span>Las condiciones contratadas aplican de forma individual por cada tramo y pasajero de la reserva.</span>
+                                </div>
+                                <p:button value="Ver Regulaciones Completas"
+                                          outcome="/perfil/pasajero/regulaciones.xhtml"
+                                          styleClass="btn-skyway-outlined btn-sm" />
+                            </div>
+
+                        </div>
+                    </p:tab>
+
+                    <!-- TAB 3: EQUIPAJE CONTRATADO -->
+                    <p:tab title="Equipaje Contratado">
+                        <div class="hub-tab-panel">
+
+                            <!-- RESUMEN INFORMATIVO DE EQUIPAJE EN CABINA -->
+                            <div class="p-3 mb-3 rounded" style="background: #0B132B; border: 1px solid #1E293B;">
+                                <div class="d-flex align-items-center gap-3">
+                                    <i class="pi pi-box text-primary" style="font-size: 1.4rem;"></i>
+                                    <div>
+                                        <strong class="text-white d-block" style="font-size: 0.88rem;">Equipaje en Cabina Garantizado</strong>
+                                        <span class="text-white-50 small">1 Artículo personal bajo el asiento (mochila o cartera) + 1 Maleta de cabina (hasta 10 kg en compartimento superior).</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <h:panelGroup rendered="#{empty perfilPasajeroView.listaEquipajeReserva}">
+                                <div class="p-4 text-center text-white-50">
+                                    <i class="pi pi-briefcase me-2" style="font-size: 1.8rem; opacity: 0.6;"></i>
+                                    <p class="mb-0 mt-2">Sin piezas adicionales de equipaje en bodega contratadas.</p>
+                                </div>
+                            </h:panelGroup>
+
+                            <p:dataTable value="#{perfilPasajeroView.listaEquipajeReserva}"
+                                         lazy="false"
+                                         var="equipajeItem"
+                                         rendered="#{not empty perfilPasajeroView.listaEquipajeReserva}"
+                                         styleClass="skyway-datatable mt-2">
+
+                                <p:column headerText="Pasajero">
+                                    <h:outputText value="#{equipajeItem.pasajero != null and equipajeItem.pasajero.usuario != null ? equipajeItem.pasajero.usuario.nombre.concat(' ').concat(equipajeItem.pasajero.usuario.apellido) : equipajeItem.pasajero.rut}"/>
+                                </p:column>
+
+                                <p:column headerText="Tipo Equipaje">
+                                    <h:outputText value="#{equipajeItem.tipoEquipaje != null ? equipajeItem.tipoEquipaje.nombre : equipajeItem.tipo}"/>
+                                </p:column>
+
+                                <p:column headerText="Peso Estimado">
+                                    <span class="badge bg-info">#{equipajeItem.peso} kg</span>
+                                </p:column>
+
+                                <p:column headerText="Dimensiones">
+                                    <h:outputText value="#{empty equipajeItem.dimensiones ? 'Estándar' : equipajeItem.dimensiones}"/>
+                                </p:column>
+                            </p:dataTable>
+                        </div>
+                    </p:tab>
+
+                    <!-- TAB 4: ANULACIÓN / CANCELACIÓN -->
+                    <p:tab title="Anulación / Cancelación">
+                        <div class="hub-tab-panel">
+                            <h:panelGroup rendered="#{!perfilPasajeroView.reservaCancelada}">
+                                <div class="alert alert-danger mb-3" style="background: rgba(239,68,68,0.15); border:1px solid #ef4444; border-radius:8px; padding:12px;">
+                                    <h6 class="font-weight-bold text-danger"><i class="pi pi-exclamation-triangle me-2"></i>Atención antes de Cancelar</h6>
+                                    <p class="small m-0 text-white-50">La cancelación es irreversible. Se liberarán los asientos para la venta y se registrará la solicitud de reembolso.</p>
+                                </div>
+
+                                <div class="mb-3">
+                                    <p:outputLabel for="motivo" value="Indica el motivo de la cancelación:" styleClass="field-label" />
+                                    <p:inputTextarea id="motivo" value="#{perfilPasajeroView.motivoCancelacion}" rows="3" placeholder="Escribe aquí el motivo..." styleClass="w-100" />
+                                </div>
+
+                                <p:commandButton value="Confirmar Cancelación de Reserva"
+                                                 icon="pi pi-trash"
+                                                 styleClass="ui-button-danger w-100"
+                                                 actionListener="#{perfilPasajeroView.procesarCancelacion}"
+                                                 update=":formVuelos:tablaItinerarios :formVuelos:scheduleItinerarios :globalGrowl"
+                                                 oncomplete="PF('dlgHubModal').hide();">
+                                    <p:confirm header="Confirmar Cancelación" message="¿Estás seguro de que deseas cancelar esta reserva?" icon="pi pi-exclamation-triangle" />
+                                </p:commandButton>
+                            </h:panelGroup>
+
+                            <h:panelGroup rendered="#{perfilPasajeroView.reservaCancelada}">
+                                <div class="text-center p-4">
+                                    <i class="pi pi-times-circle text-danger mb-2" style="font-size: 2.8rem;"></i>
+                                    <h5 class="text-white font-weight-bold">Reserva Anulada exitosamente</h5>
+                                    <p class="text-white-50 small mb-3">La solicitud de cancelación y liberación de asientos se procesó de forma correcta.</p>
+                                </div>
+                            </h:panelGroup>
+                        </div>
+                    </p:tab>
+
+                </p:tabView>
+            </h:panelGroup>
+        </p:dialog>
+    </h:form>
+
+    <!-- FORMULARIO DE CONFIRMACIÓN GLOBAL -->
+    <h:form id="confirmDlgForm">
+        <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" styleClass="skyway-dialog">
+            <p:commandButton value="No, Cancelar" type="button" styleClass="ui-confirmdialog-no ui-button-outlined ui-button-secondary" />
+            <p:commandButton value="Sí, Confirmar" type="button" styleClass="ui-confirmdialog-yes ui-button-danger" />
+        </p:confirmDialog>
+    </h:form>
+
+</ui:composition>

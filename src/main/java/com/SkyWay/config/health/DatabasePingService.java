@@ -59,7 +59,7 @@ public class DatabasePingService {
 
             // Datos operativos de la instancia
             try (ResultSet rs = stmt.executeQuery("""
-                SELECT 
+                SELECT\s
                     current_database() AS db_nombre,
                     current_schema() AS esquema,
                     current_user AS usuario,
@@ -69,7 +69,7 @@ public class DatabasePingService {
                     current_setting('TimeZone') AS tz,
                     current_setting('ssl') AS ssl,
                     pg_size_pretty(pg_database_size(current_database())) AS tamano
-            """)) {
+           \s""")) {
                 if (rs.next()) {
                     Logger.logInfo(String.format("│ Base de Datos      : %s (Espacio en disco: %s)", rs.getString("db_nombre"), rs.getString("tamano")));
                     Logger.logInfo(String.format("│ Esquema Activo     : %s", rs.getString("esquema")));

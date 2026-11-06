@@ -1,0 +1,54 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui">
+
+    <!-- MODAL ASIENTOS RESERVADOS -->
+    <h:form id="formAsientos">
+        <p:dialog header="Asientos Reservados"
+                  widgetVar="dlgAsientos"
+                  modal="true"
+                  showEffect="fade"
+                  hideEffect="fade"
+                  resizable="false"
+                  responsive="true"
+                  styleClass="skyway-dialog">
+
+            <p:dataTable value="#{perfilPasajeroView.listaAsientosReservados}"
+                         lazy="false"
+                         var="asiento"
+                         id="tablaAsientos"
+                         rows="5"
+                         paginator="true"
+                         paginatorPosition="bottom"
+                         responsiveLayout="scroll"
+                         emptyMessage="No hay asientos registrados para este itinerario."
+                         styleClass="skyway-datatable">
+
+                <p:column headerText="Asiento">
+                    <h:outputText value="#{asiento.numeroAsiento}" styleClass="seat-number font-weight-bold text-primary" />
+                </p:column>
+
+                <p:column headerText="Clase">
+                    <h:outputText value="#{asiento.claseAsiento}" />
+                </p:column>
+
+                <p:column headerText="N° Vuelo">
+                    <h:outputText value="#{perfilPasajeroView.getNumeroVuelo(asiento.idVuelo)}" />
+                </p:column>
+
+                <p:column headerText="Acciones" styleClass="col-center text-center">
+                    <p:commandButton value="#{perfilPasajeroView.reservaCancelada ? 'No Disponible' : 'Cambiar'}"
+                                     icon="#{perfilPasajeroView.reservaCancelada ? 'pi pi-lock' : 'pi pi-refresh'}"
+                                     styleClass="btn-skyway-accent btn-sm"
+                                     disabled="#{perfilPasajeroView.reservaCancelada}"
+                                     update="@form :globalGrowl"
+                                     process="@this"
+                                     actionListener="#{perfilPasajeroView.cambiarAsiento(asiento)}" />
+                </p:column>
+            </p:dataTable>
+        </p:dialog>
+    </h:form>
+
+</ui:composition>

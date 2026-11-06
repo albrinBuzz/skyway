@@ -1,0 +1,187 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui">
+
+    <!-- MODAL TICKET / BOARDING PASS -->
+    <h:form id="formDetalleTicket">
+        <p:dialog header="Tarjetas de Embarque"
+                  widgetVar="dlgDetalleTicket"
+                  modal="true"
+                  resizable="false"
+                  id="dlgDetalleTicket"
+                  showEffect="fade"
+                  hideEffect="fade"
+                  responsive="true"
+                  blockScroll="true"
+                  closeOnEscape="true"
+                  styleClass="skyway-dialog dialog-boarding">
+
+            <!-- Contenedor con Scroll responsivo -->
+            <div class="printable-area ticket-container" style="max-height: 60vh; overflow-y: auto; overflow-x: hidden;">
+                <h:panelGroup rendered="#{not empty perfilPasajeroView.ticketInfos}" layout="block">
+                    <ui:repeat value="#{perfilPasajeroView.ticketInfos}" var="ticket">
+
+                        <!-- TARJETA DE EMBARQUE (DISEÑO TIPO BOARDING PASS) -->
+                        <div class="bp2">
+
+                            <!-- CUERPO PRINCIPAL -->
+                            <div class="bp2-main">
+                                <div class="bp2-header">
+                                    <div class="bp2-brand">
+                                        <h:graphicImage value="#{resource['assets/icons/Logotipo_SkyWay.png']}"
+                                                        style="height: 28px; width: auto; max-width: 130px; object-fit: contain; filter: brightness(0) invert(1) drop-shadow(0 1px 2px rgba(0,0,0,0.25)); display: inline-block; vertical-align: middle;"
+                                                        styleClass="bp2-brand-logo"
+                                                        alt="SkyWay Airlines" />
+                                    </div>
+                                    <span class="bp2-dots"></span>
+                                    <span class="bp2-pnr">PNR: #{ticket.codigoPnr}</span>
+                                    <i class="pi pi-send bp2-plane"></i>
+                                </div>
+
+                                <div class="bp2-body">
+                                    <!-- Pasajero / Origen / Destino / Clase / Terminal -->
+                                    <div class="bp2-col-left">
+                                        <span class="bp2-label"><i class="pi pi-id-card"></i> Pasajero</span>
+                                        <span class="bp2-field">#{ticket.nombre}</span>
+
+                                        <span class="bp2-label"><i class="pi pi-arrow-up-right"></i> Origen</span>
+                                        <span class="bp2-field">#{ticket.origenTramo}</span>
+
+                                        <span class="bp2-label"><i class="pi pi-arrow-down-right"></i> Destino</span>
+                                        <span class="bp2-field">#{ticket.destinoTramo}</span>
+
+                                        <span class="bp2-label"><i class="pi pi-star"></i> Clase</span>
+                                        <span class="bp2-field">#{empty ticket.claseAsiento ? 'Económica' : ticket.claseAsiento}</span>
+
+                                        <span class="bp2-label"><i class="pi pi-building"></i> Terminal</span>
+                                        <span class="bp2-field">#{empty ticket.terminal ? 'TBD' : ticket.terminal}</span>
+                                    </div>
+
+                                    <!-- Fecha / Hora / Llegada / Código QR -->
+                                    <div class="bp2-col-center">
+                                        <div class="bp2-dt">
+                                            <span class="bp2-dt-label">Fecha</span>
+                                            <h:outputText value="#{ticket.horaSalida}" styleClass="bp2-dt-value">
+                                                <f:convertDateTime pattern="dd.MM.yy" timeZone="America/Santiago"/>
+                                            </h:outputText>
+                                        </div>
+                                        <div class="bp2-dt">
+                                            <span class="bp2-dt-label">Salida</span>
+                                            <h:outputText value="#{ticket.horaSalida}" styleClass="bp2-dt-value">
+                                                <f:convertDateTime pattern="HH:mm" timeZone="America/Santiago"/>
+                                            </h:outputText>
+                                        </div>
+                                        <div class="bp2-arrival">
+                                            Llegada:
+                                            <h:outputText value="#{ticket.horaLlegada}">
+                                                <f:convertDateTime pattern="dd.MM.yy HH:mm" timeZone="America/Santiago"/>
+                                            </h:outputText>
+                                        </div>
+                                        <div class="bp2-qr-container">
+                                            <img src="#{perfilPasajeroView.obtenerCodigoBarrasBase64(ticket.codigoQr)}"
+                                                 alt="Código de Embarque BCBP" class="bp2-qr" />
+                                        </div>
+                                    </div>
+
+                                    <!-- Vuelo / Puerta / Asiento -->
+                                    <div class="bp2-col-boxes">
+                                        <div class="bp2-box">
+                                            <span class="bp2-box-label">Vuelo</span>
+                                            <span class="bp2-box-value">#{ticket.numeroVuelo}</span>
+                                        </div>
+                                        <div class="bp2-box">
+                                            <span class="bp2-box-label">Puerta</span>
+                                            <span class="bp2-box-value">#{empty ticket.codigoPuerta ? 'TBD' : ticket.codigoPuerta}</span>
+                                        </div>
+                                        <div class="bp2-box">
+                                            <span class="bp2-box-label">Asiento</span>
+                                            <span class="bp2-box-value">#{ticket.numeroAsiento}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="bp2-note">
+                                    <i class="pi pi-exclamation-circle"></i>
+                                    <strong>Nota importante:</strong>
+                                    Debes estar en la puerta de embarque antes de
+                                    <h:outputText value="#{ticket.horaLimiteEmbarque}">
+                                        <f:convertDateTime pattern="HH:mm" timeZone="America/Santiago"/>
+                                    </h:outputText>
+                                </div>
+                            </div>
+
+                            <!-- TALÓN -->
+                            <div class="bp2-stub">
+                                <div class="bp2-stub-header">
+                                    <span class="bp2-stub-dots">···</span>
+                                    Tarjeta de Embarque
+                                    <span class="bp2-stub-dots">···</span>
+                                </div>
+
+                                <div class="bp2-stub-body">
+                                    <div class="bp2-stub-row">
+                                        <span class="bp2-label"><i class="pi pi-id-card"></i> Pasajero</span>
+                                        <span class="bp2-stub-field">#{ticket.nombre}</span>
+                                    </div>
+                                    <div class="bp2-stub-row">
+                                        <span class="bp2-label"><i class="pi pi-star"></i> Clase</span>
+                                        <span class="bp2-stub-field">#{ticket.claseAsiento}</span>
+                                    </div>
+                                    <div class="bp2-stub-row">
+                                        <span class="bp2-label"><i class="pi pi-ticket"></i> Asiento</span>
+                                        <span class="bp2-stub-field">#{ticket.numeroAsiento}</span>
+                                    </div>
+                                </div>
+
+                                <div class="bp2-stub-route">
+                                    <div class="bp2-stub-flight">
+                                        <span class="bp2-stub-flight-label">Vuelo</span>
+                                        <span class="bp2-stub-flight-value">#{ticket.numeroVuelo}</span>
+                                    </div>
+                                    <div class="bp2-stub-iata">
+                                        #{ticket.origenTramo} <i class="pi pi-arrow-right"></i> #{ticket.destinoTramo}
+                                    </div>
+                                </div>
+
+                                <div class="bp2-stub-brand">
+                                    <h:graphicImage value="#{resource['assets/icons/Logotipo_SkyWay.png']}"
+                                                    style="height: 24px; width: auto; max-width: 110px; object-fit: contain; display: inline-block; vertical-align: middle; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.15));"
+                                                    styleClass="bp2-stub-brand-logo"
+                                                    alt="SkyWay Airlines" />
+                                </div>
+                            </div>
+
+                        </div>
+                    </ui:repeat>
+                </h:panelGroup>
+            </div>
+
+            <f:facet name="footer">
+                <div class="d-flex justify-content-end align-items-center gap-2 flex-wrap">
+                    <p:commandButton value="Resumen (PDF)"
+                                     icon="pi pi-file-pdf"
+                                     styleClass="btn-skyway-outlined"
+                                     ajax="false">
+                        <p:fileDownload value="#{perfilPasajeroView.descargarComprobantePdf()}" />
+                    </p:commandButton>
+
+                    <p:commandButton value="Tarjetas (PDF)"
+                                     icon="pi pi-ticket"
+                                     styleClass="btn-skyway-primary"
+                                     disabled="#{!perfilPasajeroView.checkInCompletado}"
+                                     ajax="false">
+                        <p:fileDownload value="#{perfilPasajeroView.descargarBoardingPassesPdf()}" />
+                    </p:commandButton>
+
+                    <p:commandButton value="Cerrar"
+                                     onclick="PF('dlgDetalleTicket').hide()"
+                                     type="button"
+                                     styleClass="btn-skyway-outlined" />
+                </div>
+            </f:facet>
+        </p:dialog>
+    </h:form>
+
+</ui:composition>
