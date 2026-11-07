@@ -160,18 +160,21 @@
 
             <f:facet name="footer">
                 <div class="d-flex justify-content-end align-items-center gap-2 flex-wrap">
-                    <p:commandButton value="Resumen (PDF)"
+                    <p:commandButton value="Descargar E-Ticket (PDF)"
                                      icon="pi pi-file-pdf"
                                      styleClass="btn-skyway-outlined"
-                                     ajax="false">
+                                     disabled="#{empty perfilPasajeroView.ticketInfos and empty perfilPasajeroView.itinerarioSeleccionado}"
+                                     ajax="false"
+                                     title="Descargar E-Ticket Oficial de Reserva">
                         <p:fileDownload value="#{perfilPasajeroView.descargarComprobantePdf()}" />
                     </p:commandButton>
 
-                    <p:commandButton value="Tarjetas (PDF)"
+                    <p:commandButton value="Descargar Tarjetas (PDF)"
                                      icon="pi pi-ticket"
                                      styleClass="btn-skyway-primary"
-                                     disabled="#{!perfilPasajeroView.checkInCompletado}"
-                                     ajax="false">
+                                     disabled="#{empty perfilPasajeroView.ticketInfos}"
+                                     ajax="false"
+                                     title="Descargar Tarjetas de Embarque en formato PDF">
                         <p:fileDownload value="#{perfilPasajeroView.descargarBoardingPassesPdf()}" />
                     </p:commandButton>
 

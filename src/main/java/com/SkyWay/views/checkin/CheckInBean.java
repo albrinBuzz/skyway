@@ -107,6 +107,14 @@ public class CheckInBean implements Serializable {
                     try { this.idItinerario = Integer.parseInt(it.toString()); } catch (NumberFormatException ignored) {}
                 }
             }
+
+            Map<String, String> requestParams = context.getExternalContext().getRequestParameterMap();
+            if (this.idReserva == null && requestParams != null && requestParams.containsKey("reserva")) {
+                try { this.idReserva = Integer.parseInt(requestParams.get("reserva")); } catch (Exception ignored) {}
+            }
+            if (this.idItinerario == null && requestParams != null && requestParams.containsKey("itinerario")) {
+                try { this.idItinerario = Integer.parseInt(requestParams.get("itinerario")); } catch (Exception ignored) {}
+            }
         }
 
         if (idReserva != null && idItinerario != null) {

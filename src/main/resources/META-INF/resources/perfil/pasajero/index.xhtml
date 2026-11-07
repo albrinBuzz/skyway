@@ -8,9 +8,13 @@
                 template="/template/main.xhtml">
 
     <ui:define name="head">
-        <title>Perfil de Usuario - SkyWay</title>
+        <title>Perfil de Pasajero - SkyWay Airlines</title>
+
+        <!-- ENLACES DE ESTILOS RESILIENTES (DIRECTO, JSF Y CONTEXTPATH) -->
+        <link rel="stylesheet" href="#{resource['resources/css/perfil/pasajero.css']}" />
+        <link rel="stylesheet" href="#{resource['css/perfil/pasajero.css']}" />
+        <link rel="stylesheet" href="#{request.contextPath}/resources/css/perfil/pasajero.css" />
         <h:outputStylesheet library="css" name="perfil/pasajero.css" />
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&amp;display=swap" />
 
         <script type="text/javascript">
             //<![CDATA[
@@ -51,7 +55,6 @@
                 };
             }
 
-            // Parche defensivo para FullCalendar SimpleScrollGrid
             function parchearFullCalendar() {
                 if (window.FullCalendar && FullCalendar.SimpleScrollGrid && FullCalendar.SimpleScrollGrid.prototype) {
                     if (!FullCalendar.SimpleScrollGrid.prototype._patched) {
@@ -71,6 +74,19 @@
             }
             parchearFullCalendar();
             document.addEventListener('DOMContentLoaded', parchearFullCalendar);
+
+            function copiarAlPortapapeles(texto, mensaje) {
+                if (!navigator.clipboard) return;
+                navigator.clipboard.writeText(texto).then(function() {
+                    if (typeof PF !== 'undefined' && PF('globalGrowl')) {
+                        PF('globalGrowl').renderMessage({
+                            severity: 'info',
+                            summary: 'Copiado al Portapapeles',
+                            detail: (mensaje ? mensaje : 'Texto copiado') + ': ' + texto
+                        });
+                    }
+                });
+            }
 
             function ejecutarImpresionTicket() {
                 if (typeof PF !== 'undefined' && PF('globalGrowl')) {
@@ -124,29 +140,749 @@
             //]]>
         </script>
 
+        <!-- ==============================================================
+             ESTILOS NATIVOS CORPORATIVOS DELTA OMNIPRO (DIRECTOS E INMUTABLES)
+             ============================================================== -->
         <style type="text/css">
+            .delta-header-banner {
+                background: #0B132B !important;
+                border: 1px solid #1E293B !important;
+                border-radius: 12px !important;
+                padding: 24px 28px !important;
+                margin-bottom: 24px !important;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45) !important;
+            }
+
             /* ==============================================================
-               ESTILOS NATIVOS PRIMEFACES SCHEDULE (SKYWAY DARK THEME)
+               DISEÑO MOBILE-FIRST Y TOTALMENTE RESPONSIVO
                ============================================================== */
+            .skyway-container {
+                max-width: 1240px;
+                margin: 12px auto;
+                padding: 0 12px;
+            }
+
+            @media (min-width: 768px) {
+                .skyway-container {
+                    margin: 20px auto;
+                    padding: 0 18px;
+                }
+            }
+
+            .delta-header-banner {
+                background: #0B132B !important;
+                border: 1px solid #1E293B !important;
+                border-radius: 12px !important;
+                padding: 16px 18px !important;
+                margin-bottom: 16px !important;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45) !important;
+            }
+
+            @media (min-width: 768px) {
+                .delta-header-banner {
+                    padding: 24px 28px !important;
+                    margin-bottom: 24px !important;
+                }
+            }
+
+            .delta-user-name {
+                font-size: 1.45rem !important;
+                font-weight: 700 !important;
+                color: #FFFFFF !important;
+                letter-spacing: -0.3px !important;
+                line-height: 1.2 !important;
+                margin-bottom: 4px !important;
+                font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            }
+
+            @media (min-width: 768px) {
+                .delta-user-name {
+                    font-size: 1.85rem !important;
+                }
+            }
+
+            /* KPI Strip Mobile-First */
+            .delta-kpi-strip {
+                display: grid !important;
+                grid-template-columns: 1fr !important;
+                gap: 12px !important;
+                background: #070E1E !important;
+                border: 1px solid #1E293B !important;
+                border-radius: 10px !important;
+                padding: 12px 14px !important;
+                margin-top: 14px !important;
+            }
+
+            @media (min-width: 600px) and (max-width: 991px) {
+                .delta-kpi-strip {
+                    grid-template-columns: repeat(2, 1fr) !important;
+                    gap: 12px !important;
+                }
+                .delta-kpi-companions {
+                    grid-column: span 2 !important;
+                }
+            }
+
+            @media (min-width: 992px) {
+                .delta-kpi-strip {
+                    grid-template-columns: 1fr 1fr 1.8fr !important;
+                    gap: 20px !important;
+                    padding: 16px 22px !important;
+                    margin-top: 18px !important;
+                }
+            }
+
+            .delta-kpi-col {
+                border-right: none !important;
+                padding-right: 0 !important;
+            }
+
+            @media (min-width: 992px) {
+                .delta-kpi-col {
+                    border-right: 1px solid #1E293B !important;
+                    padding-right: 16px !important;
+                }
+                .delta-kpi-col:last-child {
+                    border-right: none !important;
+                }
+            }
+
+            .delta-kpi-title {
+                font-size: 0.7rem !important;
+                font-weight: 700 !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.8px !important;
+                color: #64748B !important;
+                margin-bottom: 2px !important;
+            }
+
+            .delta-kpi-val {
+                font-size: 1.05rem !important;
+                font-weight: 800 !important;
+                color: #F8FAFC !important;
+                line-height: 1.2 !important;
+            }
+
+            @media (min-width: 768px) {
+                .delta-kpi-val {
+                    font-size: 1.25rem !important;
+                }
+            }
+
+            .delta-kpi-sub {
+                font-size: 0.72rem !important;
+                color: #94A3B8 !important;
+                margin-top: 2px !important;
+                display: block !important;
+            }
+
+            .delta-avatar-badge {
+                background: #1E293B !important;
+                border: 1px solid #334155 !important;
+                color: #38BDF8 !important;
+                font-weight: 800 !important;
+                font-size: 0.72rem !important;
+                padding: 4px 8px !important;
+                border-radius: 4px !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                letter-spacing: 0.5px !important;
+            }
+
+            .delta-companion-chip {
+                background: #0D172A !important;
+                border: 1px solid #1E293B !important;
+                border-radius: 6px !important;
+                padding: 6px 10px !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                gap: 8px !important;
+                transition: border-color 0.2s ease !important;
+            }
+
+            .delta-companion-chip:hover {
+                border-color: #38BDF8 !important;
+            }
+
+            /* Layout de Itinerarios Full-Width */
+            .delta-main-grid {
+                display: block !important;
+                width: 100% !important;
+                margin-top: 18px !important;
+            }
+
+            .delta-trips-col {
+                width: 100% !important;
+            }
+
+            /* Columna Izquierda: Perfil y Preferencias */
+            .delta-profile-card {
+                background: #0B132B !important;
+                border: 1px solid #1E293B !important;
+                border-radius: 12px !important;
+                padding: 22px !important;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;
+            }
+
+            .delta-section-title {
+                font-size: 0.74rem !important;
+                font-weight: 800 !important;
+                text-transform: uppercase !important;
+                letter-spacing: 1.2px !important;
+                color: #38BDF8 !important;
+                margin-bottom: 12px !important;
+                padding-bottom: 6px !important;
+                border-bottom: 1px solid #1E293B !important;
+            }
+
+            .delta-info-group {
+                margin-bottom: 14px !important;
+            }
+
+            .delta-info-label {
+                font-size: 0.75rem !important;
+                font-weight: 600 !important;
+                color: #64748B !important;
+                display: block !important;
+                margin-bottom: 2px !important;
+            }
+
+            .delta-info-value {
+                font-size: 0.92rem !important;
+                font-weight: 600 !important;
+                color: #F1F5F9 !important;
+                word-break: break-word !important;
+            }
+
+            /* Pestañas de Itinerarios estilo Delta */
+            .ui-tabs.delta-trip-tabs,
+            .ui-tabs.delta-trip-tabs > .ui-tabs-nav,
+            .ui-tabs.delta-trip-tabs > .ui-tabs-panels,
+            .ui-tabs.delta-trip-tabs > .ui-tabs-panels > .ui-tabs-panel {
+                background: transparent !important;
+                background-color: transparent !important;
+                border: none !important;
+                padding: 0 !important;
+            }
+
+            .ui-tabs.delta-trip-tabs > .ui-tabs-nav {
+                background: transparent !important;
+                border: none !important;
+                border-bottom: 2px solid #1E293B !important;
+                padding: 0 0 6px 0 !important;
+                margin-bottom: 16px !important;
+                display: flex !important;
+                flex-wrap: nowrap !important;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                scrollbar-width: none !important;
+                gap: 6px !important;
+            }
+
+            .ui-tabs.delta-trip-tabs > .ui-tabs-nav::-webkit-scrollbar {
+                display: none !important;
+            }
+
+            .ui-tabs.delta-trip-tabs > .ui-tabs-nav li {
+                background: #0D172A !important;
+                border: 1px solid #1E293B !important;
+                border-radius: 8px 8px 0 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                flex: 0 0 auto !important;
+                white-space: nowrap !important;
+                transition: all 0.2s ease !important;
+            }
+
+            .ui-tabs.delta-trip-tabs > .ui-tabs-nav li:hover {
+                background: #1E293B !important;
+                border-color: #38BDF8 !important;
+            }
+
+            .ui-tabs.delta-trip-tabs > .ui-tabs-nav li.ui-tabs-selected,
+            .ui-tabs.delta-trip-tabs > .ui-tabs-nav li.ui-state-active {
+                background: #2563EB !important;
+                border-color: #2563EB !important;
+            }
+
+            .ui-tabs.delta-trip-tabs > .ui-tabs-nav li a {
+                color: #94A3B8 !important;
+                font-weight: 700 !important;
+                padding: 8px 14px !important;
+                font-size: 0.82rem !important;
+                text-shadow: none !important;
+                display: block !important;
+            }
+
+            @media (min-width: 768px) {
+                .ui-tabs.delta-trip-tabs > .ui-tabs-nav {
+                    flex-wrap: wrap !important;
+                    gap: 8px !important;
+                    margin-bottom: 20px !important;
+                }
+                .ui-tabs.delta-trip-tabs > .ui-tabs-nav li a {
+                    padding: 10px 18px !important;
+                    font-size: 0.88rem !important;
+                }
+            }
+
+            .ui-tabs.delta-trip-tabs > .ui-tabs-nav li.ui-tabs-selected a,
+            .ui-tabs.delta-trip-tabs > .ui-tabs-nav li.ui-state-active a {
+                color: #FFFFFF !important;
+            }
+
+            /* Tarjetas de Viaje Estilo Delta Mobile-First */
+            .delta-trip-card {
+                background: #0B132B !important;
+                background-color: #0B132B !important;
+                border: 1px solid #1E293B !important;
+                border-radius: 12px !important;
+                margin-bottom: 16px !important;
+                overflow: hidden !important;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+                transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+                color: #FFFFFF !important;
+            }
+
+            .delta-trip-card:hover {
+                border-color: #2563EB !important;
+                box-shadow: 0 8px 28px rgba(37, 99, 235, 0.2) !important;
+            }
+
+            .delta-trip-header {
+                background: #070E1E !important;
+                padding: 12px 14px !important;
+                border-bottom: 1px solid #1E293B !important;
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                flex-wrap: wrap !important;
+                gap: 8px !important;
+            }
+
+            @media (min-width: 768px) {
+                .delta-trip-header {
+                    padding: 14px 20px !important;
+                    gap: 12px !important;
+                }
+            }
+
+            .delta-card-actions {
+                display: flex !important;
+                align-items: center !important;
+                gap: 6px !important;
+                flex-wrap: wrap !important;
+            }
+
+            @media (max-width: 576px) {
+                .delta-card-actions {
+                    width: 100% !important;
+                }
+                .delta-card-actions .ui-button {
+                    font-size: 0.78rem !important;
+                    padding: 6px 10px !important;
+                }
+                .delta-card-actions .btn-delta-manage,
+                .delta-card-actions .btn-delta-boarding,
+                .delta-card-actions .btn-delta-checkin,
+                .delta-card-actions .btn-delta-eticket {
+                    flex: 1 1 auto !important;
+                    justify-content: center !important;
+                }
+                .delta-card-actions .btn-delta-icon {
+                    flex: 0 0 38px !important;
+                }
+                .delta-eticket-banner {
+                    flex-direction: column !important;
+                    align-items: flex-start !important;
+                    gap: 8px !important;
+                }
+                .delta-eticket-banner .btn-delta-eticket-download {
+                    width: 100% !important;
+                    justify-content: center !important;
+                }
+            }
+
+            .delta-pnr-pill {
+                background: #0F172A !important;
+                border: 1px solid #334155 !important;
+                border-radius: 6px !important;
+                padding: 5px 10px !important;
+                font-family: monospace !important;
+                font-size: 0.9rem !important;
+                color: #FFFFFF !important;
+                cursor: pointer !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                gap: 6px !important;
+                transition: all 0.15s ease !important;
+            }
+
+            .delta-pnr-pill:hover {
+                background: #1E293B !important;
+                border-color: #38BDF8 !important;
+            }
+
+            /* Banner de Acción Operacional en Tiempo Real (Urgencia / Check-In / Puerta) */
+            .delta-trip-alert {
+                padding: 10px 16px !important;
+                border-bottom: 1px solid #1E293B !important;
+                display: flex !important;
+                align-items: center !important;
+                font-size: 0.82rem !important;
+                line-height: 1.35 !important;
+            }
+
+            .delta-trip-alert.alert-critical {
+                background: rgba(220, 38, 38, 0.16) !important;
+                border-left: 4px solid #DC2626 !important;
+                color: #FCA5A5 !important;
+            }
+
+            .delta-trip-alert.alert-urgent {
+                background: rgba(234, 88, 12, 0.18) !important;
+                border-left: 4px solid #F97316 !important;
+                color: #FDBA74 !important;
+            }
+
+            .delta-trip-alert.alert-boarding {
+                background: rgba(234, 179, 8, 0.14) !important;
+                border-left: 4px solid #EAB308 !important;
+                color: #FEF08A !important;
+            }
+
+            .delta-trip-alert.alert-warning {
+                background: rgba(202, 138, 4, 0.14) !important;
+                border-left: 4px solid #FACC15 !important;
+                color: #FEF08A !important;
+            }
+
+            .delta-trip-alert.alert-info {
+                background: rgba(37, 99, 235, 0.14) !important;
+                border-left: 4px solid #38BDF8 !important;
+                color: #BAE6FD !important;
+            }
+
+            .btn-alert-action {
+                background: #2563EB !important;
+                border: 1px solid #3B82F6 !important;
+                color: #FFFFFF !important;
+                font-weight: 700 !important;
+                border-radius: 6px !important;
+                padding: 6px 12px !important;
+                font-size: 0.78rem !important;
+                white-space: nowrap !important;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+            }
+
+            .delta-trip-alert.alert-critical .btn-alert-action,
+            .delta-trip-alert.alert-urgent .btn-alert-action {
+                background: #DC2626 !important;
+                border-color: #EF4444 !important;
+            }
+
+            .delta-trip-body {
+                background: #0B132B !important;
+                padding: 16px 14px !important;
+                color: #FFFFFF !important;
+            }
+
+            @media (min-width: 768px) {
+                .delta-trip-body {
+                    padding: 22px 20px !important;
+                }
+            }
+
+            .delta-date-box {
+                background: #070E1E !important;
+                border: 1px solid #1E293B !important;
+                border-radius: 8px !important;
+                width: 62px !important;
+                height: 62px !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: center !important;
+                flex-shrink: 0 !important;
+            }
+
+            @media (min-width: 768px) {
+                .delta-date-box {
+                    border-radius: 10px !important;
+                    width: 76px !important;
+                    height: 76px !important;
+                }
+            }
+
+            .delta-date-month {
+                font-size: 0.68rem !important;
+                font-weight: 800 !important;
+                color: #38BDF8 !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.8px !important;
+            }
+
+            @media (min-width: 768px) {
+                .delta-date-month {
+                    font-size: 0.75rem !important;
+                    letter-spacing: 1px !important;
+                }
+            }
+
+            .delta-date-day {
+                font-size: 1.45rem !important;
+                font-weight: 700 !important;
+                color: #FFFFFF !important;
+                line-height: 1.1 !important;
+                font-family: 'Nunito', -apple-system, 'Segoe UI', sans-serif !important;
+            }
+
+            @media (min-width: 768px) {
+                .delta-date-day {
+                    font-size: 1.75rem !important;
+                }
+            }
+
+            .delta-route-iata {
+                font-size: 1.1rem !important;
+                font-weight: 800 !important;
+                color: #FFFFFF !important;
+                display: flex !important;
+                align-items: center !important;
+                gap: 8px !important;
+                letter-spacing: 0.5px !important;
+            }
+
+            @media (min-width: 768px) {
+                .delta-route-iata {
+                    font-size: 1.25rem !important;
+                    gap: 10px !important;
+                }
+            }
+
+            .delta-city-title {
+                font-size: 0.86rem !important;
+                font-weight: 600 !important;
+                color: #94A3B8 !important;
+                margin-top: 3px !important;
+            }
+
+            @media (min-width: 768px) {
+                .delta-city-title {
+                    font-size: 0.95rem !important;
+                    margin-top: 4px !important;
+                }
+            }
+
+            .delta-seats-badge {
+                background: #0F172A !important;
+                border: 1px solid #334155 !important;
+                color: #38BDF8 !important;
+                font-weight: 700 !important;
+                border-radius: 6px !important;
+                padding: 4px 8px !important;
+                font-size: 0.76rem !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                gap: 5px !important;
+            }
+
+            @media (min-width: 768px) {
+                .delta-seats-badge {
+                    padding: 4px 10px !important;
+                    font-size: 0.82rem !important;
+                }
+            }
+
+            .delta-time-label {
+                font-size: 0.68rem !important;
+                font-weight: 700 !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.6px !important;
+                color: #64748B !important;
+                display: block !important;
+                margin-bottom: 2px !important;
+            }
+
+            @media (min-width: 768px) {
+                .delta-time-label {
+                    font-size: 0.72rem !important;
+                    letter-spacing: 0.8px !important;
+                }
+            }
+
+            .delta-time-val {
+                font-size: 1.05rem !important;
+                font-weight: 800 !important;
+                color: #F8FAFC !important;
+                display: block !important;
+                font-family: monospace !important;
+            }
+
+            @media (min-width: 768px) {
+                .delta-time-val {
+                    font-size: 1.25rem !important;
+                }
+            }
+
+            .delta-time-sub {
+                font-size: 0.74rem !important;
+                color: #94A3B8 !important;
+                display: block !important;
+            }
+
+            @media (min-width: 768px) {
+                .delta-time-sub {
+                    font-size: 0.78rem !important;
+                }
+            }
+
+            .delta-trip-footer {
+                background: #070E1E !important;
+                padding: 10px 14px !important;
+                border-top: 1px solid #1E293B !important;
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                flex-wrap: wrap !important;
+                gap: 8px !important;
+                font-size: 0.78rem !important;
+            }
+
+            @media (min-width: 768px) {
+                .delta-trip-footer {
+                    padding: 12px 20px !important;
+                    gap: 12px !important;
+                    font-size: 0.82rem !important;
+                }
+            }
+
+            .btn-delta-manage {
+                background: #2563EB !important;
+                border: 1px solid #1D4ED8 !important;
+                color: #FFFFFF !important;
+                font-weight: 700 !important;
+                border-radius: 6px !important;
+                padding: 6px 14px !important;
+                font-size: 0.82rem !important;
+            }
+
+            .btn-delta-boarding {
+                background: #16A34A !important;
+                border: 1px solid #15803D !important;
+                color: #FFFFFF !important;
+                font-weight: 700 !important;
+                border-radius: 6px !important;
+                padding: 6px 14px !important;
+                font-size: 0.82rem !important;
+            }
+
+            .btn-delta-checkin {
+                background: #0284C7 !important;
+                border: 1px solid #0369A1 !important;
+                color: #FFFFFF !important;
+                font-weight: 700 !important;
+                border-radius: 6px !important;
+                padding: 6px 14px !important;
+                font-size: 0.82rem !important;
+            }
+
+            .btn-delta-eticket {
+                background: #0F172A !important;
+                border: 1px solid #38BDF8 !important;
+                color: #38BDF8 !important;
+                font-weight: 700 !important;
+                border-radius: 6px !important;
+                padding: 6px 12px !important;
+                font-size: 0.82rem !important;
+                transition: all 0.2s ease !important;
+            }
+
+            .btn-delta-eticket:hover {
+                background: #0284C7 !important;
+                border-color: #0284C7 !important;
+                color: #FFFFFF !important;
+            }
+
+            .delta-eticket-banner {
+                background: #081021 !important;
+                border-top: 1px solid #1E293B !important;
+                border-bottom: 1px solid #1E293B !important;
+                padding: 10px 16px !important;
+                display: flex !important;
+                align-items: center !important;
+            }
+
+            .btn-delta-eticket-download {
+                background: #0284C7 !important;
+                border: 1px solid #0369A1 !important;
+                color: #FFFFFF !important;
+                font-weight: 700 !important;
+                border-radius: 6px !important;
+                padding: 6px 14px !important;
+                font-size: 0.80rem !important;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+                transition: all 0.2s ease !important;
+            }
+
+            .btn-delta-eticket-download:hover {
+                background: #0369A1 !important;
+                border-color: #38BDF8 !important;
+                color: #FFFFFF !important;
+            }
+
+            .delta-eticket-banner-cancelled {
+                background: rgba(239, 68, 68, 0.06) !important;
+                border-top: 1px solid rgba(239, 68, 68, 0.25) !important;
+                border-bottom: 1px solid rgba(239, 68, 68, 0.25) !important;
+            }
+
+            .btn-delta-regulations {
+                background: transparent !important;
+                border: 1px solid #1E3A5F !important;
+                color: #38BDF8 !important;
+                font-size: 0.76rem !important;
+                padding: 4px 10px !important;
+                border-radius: 6px !important;
+                font-weight: 600 !important;
+                text-decoration: none !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                gap: 5px !important;
+                transition: all 0.2s ease !important;
+            }
+
+            .btn-delta-regulations:hover {
+                background: rgba(56, 189, 248, 0.12) !important;
+                border-color: #38BDF8 !important;
+                color: #FFFFFF !important;
+            }
+
+            .btn-delta-icon {
+                background: #0F172A !important;
+                border: 1px solid #334155 !important;
+                color: #CBD5E1 !important;
+                border-radius: 6px !important;
+                padding: 6px 10px !important;
+            }
+
+            .btn-delta-icon:hover {
+                background: #1E293B !important;
+                color: #38BDF8 !important;
+                border-color: #38BDF8 !important;
+            }
+
+            /* Estilos del Calendario PrimeFaces */
             .skyway-schedule-card {
-                background: linear-gradient(145deg, #0B132B 0%, #0D1B3E 100%);
-                border: 1px solid #1E3A5F;
-                border-radius: 12px;
-                padding: 22px;
-                margin-top: 16px;
-                margin-bottom: 24px;
-                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+                background: #0B132B !important;
+                border: 1px solid #1E293B !important;
+                border-radius: 12px !important;
+                padding: 22px !important;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
             }
 
             .skyway-schedule .fc {
-                color: #E2E8F0;
-                font-family: inherit;
-            }
-
-            .skyway-schedule .fc-toolbar {
-                margin-bottom: 1.25rem !important;
-                flex-wrap: wrap;
-                gap: 10px;
+                color: #E2E8F0 !important;
             }
 
             .skyway-schedule .fc-toolbar-title {
@@ -154,7 +890,6 @@
                 font-weight: 700 !important;
                 color: #38BDF8 !important;
                 text-transform: capitalize;
-                letter-spacing: 0.5px;
             }
 
             .skyway-schedule .fc-button {
@@ -165,14 +900,6 @@
                 font-weight: 600 !important;
                 border-radius: 6px !important;
                 padding: 6px 14px !important;
-                transition: all 0.2s ease !important;
-                box-shadow: none !important;
-            }
-
-            .skyway-schedule .fc-button:hover {
-                background: #1E293B !important;
-                color: #F8FAFC !important;
-                border-color: #38BDF8 !important;
             }
 
             .skyway-schedule .fc-button-active {
@@ -181,9 +908,37 @@
                 border-color: #0284C7 !important;
             }
 
-            .skyway-schedule .fc-theme-standard td,
-            .skyway-schedule .fc-theme-standard th {
-                border-color: #1E293B !important;
+            @media (max-width: 768px) {
+                .skyway-schedule-card {
+                    padding: 12px 10px !important;
+                }
+                .skyway-schedule .fc-header-toolbar {
+                    display: flex !important;
+                    flex-direction: column !important;
+                    gap: 8px !important;
+                    align-items: center !important;
+                }
+                .skyway-schedule .fc-toolbar-chunk {
+                    display: flex !important;
+                    justify-content: center !important;
+                    flex-wrap: wrap !important;
+                    gap: 4px !important;
+                }
+                .skyway-schedule .fc-toolbar-title {
+                    font-size: 1.1rem !important;
+                }
+                .skyway-schedule .fc-button {
+                    padding: 4px 8px !important;
+                    font-size: 0.74rem !important;
+                }
+            }
+
+            .skyway-schedule .fc-daygrid-day {
+                background: #0B132B !important;
+            }
+
+            .skyway-schedule .fc-daygrid-day:hover {
+                background: #0F1F3D !important;
             }
 
             .skyway-schedule .fc-col-header-cell {
@@ -191,88 +946,6 @@
                 padding: 10px 0 !important;
             }
 
-            .skyway-schedule .fc-col-header-cell-cushion {
-                color: #94A3B8 !important;
-                font-size: 0.8rem !important;
-                font-weight: 700 !important;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-            }
-
-            .skyway-schedule .fc-daygrid-day {
-                background: #0B132B !important;
-                transition: background 0.15s ease;
-            }
-
-            .skyway-schedule .fc-daygrid-day:hover {
-                background: #0F1F3D !important;
-            }
-
-            .skyway-schedule .fc-daygrid-day-number {
-                color: #64748B !important;
-                font-size: 0.85rem !important;
-                font-weight: 600 !important;
-                padding: 6px 8px !important;
-            }
-
-            .skyway-schedule .fc-day-today {
-                background: rgba(2, 132, 199, 0.1) !important;
-            }
-
-            .skyway-schedule .fc-day-today .fc-daygrid-day-number {
-                color: #38BDF8 !important;
-                font-weight: 800 !important;
-            }
-
-            .skyway-schedule .fc-event {
-                cursor: pointer !important;
-                border-radius: 6px !important;
-                padding: 3px 6px !important;
-                font-size: 0.8rem !important;
-                font-weight: 600 !important;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25) !important;
-                transition: transform 0.15s ease, box-shadow 0.15s ease !important;
-            }
-
-            .skyway-schedule {
-                width: 100%;
-                display: block;
-            }
-
-            .skyway-schedule .fc-scrollgrid {
-                border-color: #1E293B !important;
-            }
-
-            .skyway-schedule .fc-scrollgrid-section td {
-                border-color: #1E293B !important;
-            }
-
-            .skyway-schedule .fc-daygrid-day-frame {
-                min-height: 95px !important;
-            }
-
-            .skyway-schedule .fc-event-main {
-                color: #FFFFFF !important;
-                padding: 2px 4px;
-            }
-
-            .skyway-schedule .fc-event-title {
-                font-weight: 600;
-                color: #FFFFFF !important;
-            }
-
-            .skyway-schedule .fc-event-time {
-                font-weight: 500;
-                color: #E2E8F0 !important;
-                margin-right: 4px;
-            }
-
-            .skyway-schedule .fc-event:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(56, 189, 248, 0.45) !important;
-            }
-
-            /* Leyenda corporativa inferior */
             .schedule-legend {
                 display: flex;
                 flex-wrap: wrap;
@@ -280,7 +953,7 @@
                 align-items: center;
                 padding-top: 16px;
                 margin-top: 16px;
-                border-top: 1px solid #1E3A5F;
+                border-top: 1px solid #1E293B;
                 font-size: 0.82rem;
                 color: #94A3B8;
             }
@@ -298,18 +971,129 @@
                 display: inline-block;
             }
 
-            /* Selector de vistas */
-            .view-mode-bar {
-                display: flex;
-                align-items: center;
-                gap: 8px;
+            /* ==============================================================
+               CORRECCIÓN INTEGRAL DEL DATEPICKER DE PRIMEFACES (FILTRO FECHAS)
+               ============================================================== */
+            body .ui-datepicker,
+            .ui-datepicker {
+                background: #0B132B !important;
+                background-color: #0B132B !important;
+                border: 1px solid #1E293B !important;
+                box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7) !important;
+                border-radius: 10px !important;
+                padding: 10px !important;
+                z-index: 9999 !important;
             }
 
-            .view-mode-btn {
-                border-radius: 6px !important;
-                padding: 6px 14px !important;
-                font-size: 0.85rem !important;
+            body .ui-datepicker .ui-datepicker-header,
+            .ui-datepicker .ui-datepicker-header {
+                background: #070E1E !important;
+                border-bottom: 1px solid #1E293B !important;
+                color: #F8FAFC !important;
+                padding: 10px 12px !important;
+                border-radius: 8px 8px 0 0 !important;
+            }
+
+            body .ui-datepicker .ui-datepicker-title,
+            .ui-datepicker .ui-datepicker-title {
+                color: #F8FAFC !important;
+                font-weight: 700 !important;
+                font-size: 0.95rem !important;
+            }
+
+            body .ui-datepicker .ui-datepicker-prev,
+            body .ui-datepicker .ui-datepicker-next,
+            .ui-datepicker .ui-datepicker-prev,
+            .ui-datepicker .ui-datepicker-next {
+                color: #94A3B8 !important;
+                cursor: pointer !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                width: 28px !important;
+                height: 28px !important;
+                border-radius: 4px !important;
+            }
+
+            body .ui-datepicker .ui-datepicker-prev:hover,
+            body .ui-datepicker .ui-datepicker-next:hover,
+            .ui-datepicker .ui-datepicker-prev:hover,
+            .ui-datepicker .ui-datepicker-next:hover {
+                color: #38BDF8 !important;
+                background: #1E293B !important;
+            }
+
+            body .ui-datepicker table,
+            .ui-datepicker table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+                margin: 8px 0 0 0 !important;
+            }
+
+            body .ui-datepicker table th,
+            .ui-datepicker table th {
+                color: #94A3B8 !important;
+                font-weight: 700 !important;
+                font-size: 0.8rem !important;
+                padding: 6px 4px !important;
+                text-align: center !important;
+                border: none !important;
+            }
+
+            body .ui-datepicker table td,
+            .ui-datepicker table td {
+                padding: 2px !important;
+                text-align: center !important;
+                border: none !important;
+            }
+
+            /* NÚMEROS DE DÍAS - COLOR BLANCO / LEGIBLE 100% */
+            body .ui-datepicker table td > a,
+            body .ui-datepicker table td > span,
+            .ui-datepicker table td > a,
+            .ui-datepicker table td > span {
+                color: #F8FAFC !important;
                 font-weight: 600 !important;
+                font-size: 0.88rem !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                width: 32px !important;
+                height: 32px !important;
+                margin: auto !important;
+                border-radius: 6px !important;
+                text-decoration: none !important;
+                background: transparent !important;
+                transition: all 0.15s ease !important;
+            }
+
+            /* Hover en días */
+            body .ui-datepicker table td > a:hover,
+            .ui-datepicker table td > a:hover {
+                background: #1E293B !important;
+                color: #38BDF8 !important;
+            }
+
+            /* Día seleccionado / activo */
+            body .ui-datepicker table td > a.ui-state-active,
+            body .ui-datepicker table td > a.ui-state-highlight,
+            body .ui-datepicker table td.ui-datepicker-current-day > a,
+            .ui-datepicker table td > a.ui-state-active,
+            .ui-datepicker table td > a.ui-state-highlight,
+            .ui-datepicker table td.ui-datepicker-current-day > a {
+                background: #2563EB !important;
+                color: #FFFFFF !important;
+                font-weight: 700 !important;
+                box-shadow: 0 0 10px rgba(37, 99, 235, 0.45) !important;
+            }
+
+            /* Días de otros meses (tenues pero legibles) */
+            body .ui-datepicker table td.ui-datepicker-other-month > span,
+            body .ui-datepicker table td.ui-datepicker-other-month > a,
+            .ui-datepicker table td.ui-datepicker-other-month > span,
+            .ui-datepicker table td.ui-datepicker-other-month > a {
+                color: #475569 !important;
+                opacity: 0.55 !important;
             }
         </style>
     </ui:define>
@@ -319,242 +1103,938 @@
 
         <div class="skyway-container layout-content skyway-theme">
 
-            <header class="page-header mb-4 p-3 rounded-3" style="background: rgba(15, 23, 42, 0.6); border-left: 4px solid #38BDF8;">
-                <h2 class="page-title text-white font-weight-bold d-flex align-items-center gap-2" style="font-size: 1.5rem;">
-                    <i class="pi pi-ticket" style="color: #38BDF8;"></i>
-                    Mis Itinerarios y Reservas
-                </h2>
-                <p class="page-subtitle mb-0 mt-1" style="color: #CBD5E1 !important; font-size: 0.9rem; line-height: 1.4;">
-                    Gestiona tus próximos viajes, revisa tu calendario visual, tarjetas de embarque, selección de asientos y equipaje.
-                </p>
-            </header>
-
-            <!-- FILTROS DE BÚSQUEDA Y FECHA -->
-            <h:form id="formFiltroFechas" styleClass="filter-card skyway-card">
-                <div class="ui-fluid form-grid-inline">
-                    <div class="field-item flex-grow-1">
-                        <p:outputLabel for="fechaInicio" value="Desde:" styleClass="field-label" />
-                        <p:datePicker id="fechaInicio"
-                                      value="#{perfilPasajeroView.fechaInicioFiltro}"
-                                      showIcon="true"
-                                      placeholder="dd/mm/aaaa"
-                                      pattern="dd/MM/yyyy"
-                                      readonlyInput="true" />
+            <!-- ==============================================================
+                 1. BANNER PRINCIPAL DELTA OMNIPRO (PASAJERO, STATUS & KPIS)
+                 ============================================================== -->
+            <div class="delta-header-banner">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div>
+                        <h1 class="delta-user-name mb-0">#{perfilPasajeroView.usuario.nombre} #{perfilPasajeroView.usuario.apellido}</h1>
+                        <div class="text-white-50 small mt-2 d-flex align-items-center gap-2 gap-md-3 flex-wrap">
+                            <span><i class="pi pi-id-card text-primary me-1"></i>RUT: <strong class="text-white font-monospace">#{perfilPasajeroView.usuario.rut}</strong></span>
+                            <span class="text-secondary d-none d-sm-inline">•</span>
+                            <span><i class="pi pi-envelope text-primary me-1"></i>#{perfilPasajeroView.usuario.correoElectronico}</span>
+                            <span class="text-secondary d-none d-sm-inline">•</span>
+                            <span><i class="pi pi-calendar text-primary me-1"></i>Miembro desde #{perfilPasajeroView.anioRegistro}</span>
+                        </div>
                     </div>
 
-                    <div class="field-item flex-grow-1">
-                        <p:outputLabel for="fechaFin" value="Hasta:" styleClass="field-label" />
-                        <p:datePicker id="fechaFin"
-                                      value="#{perfilPasajeroView.fechaFinFiltro}"
-                                      showIcon="true"
-                                      placeholder="dd/mm/aaaa"
-                                      pattern="dd/MM/yyyy"
-                                      readonlyInput="true" />
-                    </div>
+                    <!-- LOGO CORPORATIVO OFICIAL SKYWAY Y ACCESO A PERFIL -->
+                    <div class="d-flex align-items-center gap-3">
+                        <p:button value="Mi Perfil"
+                                  outcome="/perfil/index.xhtml"
+                                  icon="pi pi-user-edit"
+                                  styleClass="btn-skyway-outlined btn-sm d-none d-md-inline-flex"
+                                  title="Gestionar datos personales y credenciales de mi cuenta" />
 
-                    <div class="field-actions">
-                        <p:commandButton value="Filtrar"
-                                         actionListener="#{perfilPasajeroView.buscarPorRangoFechas}"
-                                         update=":formVuelos:panelContenidoVuelos :globalGrowl"
-                                         process="@form"
-                                         icon="pi pi-filter"
-                                         styleClass="btn-skyway-primary" />
+                        <h:graphicImage value="#{resource['assets/icons/Logotipo_SkyWay.png']}"
+                                        style="height: 36px; width: auto; max-width: 160px; object-fit: contain; filter: brightness(0) invert(1);"
+                                        alt="SkyWay Airlines" />
                     </div>
                 </div>
-            </h:form>
 
-            <!-- CONTENEDOR PRINCIPAL: CALENDARIO / LISTADO Y ACCIONES -->
-            <h:form id="formVuelos">
-                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-                    <!-- FILTROS RÁPIDOS TEMPORALES -->
-                    <div class="quick-filters">
-                        <p:commandButton value="Hoy"
-                                         action="#{perfilPasajeroView.filtrarVuelosHoy}"
-                                         update="panelContenidoVuelos"
-                                         icon="pi pi-calendar"
-                                         styleClass="btn-skyway-outlined" />
-
-                        <p:commandButton value="Futuros"
-                                         action="#{perfilPasajeroView.filtrarVuelosFuturos}"
-                                         update="panelContenidoVuelos"
-                                         icon="pi pi-clock"
-                                         styleClass="btn-skyway-outlined" />
-
-                        <p:commandButton value="Pasados"
-                                         action="#{perfilPasajeroView.filtrarVuelosPasados}"
-                                         update="panelContenidoVuelos"
-                                         icon="pi pi-history"
-                                         styleClass="btn-skyway-outlined" />
+                <!-- TIRA DE KPIS / RESUMEN DE EXPERIENCIA OPERACIONAL (100% DATOS REALES) -->
+                <div class="delta-kpi-strip">
+                    <!-- KPI 1: Resumen de vuelos -->
+                    <div class="delta-kpi-col">
+                        <div class="delta-kpi-title">Resumen de Viajes</div>
+                        <div class="delta-kpi-val">
+                            #{perfilPasajeroView.totalVuelosFuturos} <span style="font-size: 0.85rem; font-weight: 500; color: #94A3B8;">Próximos</span>
+                            • #{perfilPasajeroView.totalVuelosPasados} <span style="font-size: 0.85rem; font-weight: 500; color: #94A3B8;">Históricos</span>
+                        </div>
+                        <span class="delta-kpi-sub"><i class="pi pi-calendar text-primary me-1"></i>#{perfilPasajeroView.listaItinerarios.size()} Itinerarios Registrados</span>
+                        <div class="mt-2">
+                            <p:button value="Regulaciones y Condiciones"
+                                      outcome="/perfil/pasajero/regulaciones.xhtml"
+                                      icon="pi pi-file-pdf"
+                                      styleClass="btn-delta-regulations"
+                                      title="Consultar regulaciones tarifarias, derechos del pasajero y condiciones generales" />
+                        </div>
                     </div>
 
-                    <!-- SELECTOR DE VISTA: CALENDARIO (SCHEDULE) / LISTA (DATATABLE) -->
-                    <h:panelGroup id="botonesVista" layout="block" styleClass="view-mode-bar">
-                        <p:commandButton value="Calendario"
-                                         icon="pi pi-calendar"
-                                         action="#{perfilPasajeroView.setVistaActiva('calendario')}"
-                                         update="panelContenidoVuelos botonesVista"
-                                         styleClass="view-mode-btn #{perfilPasajeroView.vistaActiva eq 'calendario' ? 'ui-button-primary' : 'ui-button-outlined ui-button-secondary'}" />
+                    <!-- KPI 2: Pasajero ID / RUT -->
+                    <div class="delta-kpi-col">
+                        <div class="delta-kpi-title">SkyWay ID / RUT</div>
+                        <div class="delta-kpi-val d-flex align-items-center gap-2">
+                            <span class="font-monospace" style="cursor: pointer;" onclick="copiarAlPortapapeles('#{perfilPasajeroView.usuario.rut}', 'RUT de Pasajero');" title="Clic para copiar RUT">
+                                #{perfilPasajeroView.usuario.rut}
+                                <i class="pi pi-copy text-primary" style="font-size: 0.8rem;"></i>
+                            </span>
+                        </div>
+                        <span class="delta-kpi-sub">Documento Oficial Registrado</span>
+                    </div>
 
-                        <p:commandButton value="Listado Detallado"
-                                         icon="pi pi-list"
-                                         action="#{perfilPasajeroView.setVistaActiva('lista')}"
-                                         update="panelContenidoVuelos botonesVista"
-                                         styleClass="view-mode-btn #{perfilPasajeroView.vistaActiva eq 'lista' ? 'ui-button-primary' : 'ui-button-outlined ui-button-secondary'}" />
-                    </h:panelGroup>
+                    <!-- KPI 3: Acompañantes en Reserva (Detallado estilo Travel Companions de Delta) -->
+                    <div class="delta-kpi-col delta-kpi-companions">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <div class="delta-kpi-title mb-0">Acompañantes en Reserva</div>
+                            <span class="badge bg-secondary" style="font-size: 0.72rem;">#{perfilPasajeroView.acompanantesHabituales.size()} #{perfilPasajeroView.acompanantesHabituales.size() == 1 ? 'Viajero' : 'Viajeros'}</span>
+                        </div>
+                        <h:panelGroup rendered="#{not empty perfilPasajeroView.acompanantesHabituales}">
+                            <div class="delta-companions-list d-flex gap-2 flex-wrap mt-1">
+                                <ui:repeat value="#{perfilPasajeroView.acompanantesHabituales}" var="acomp">
+                                    <div class="delta-companion-chip">
+                                        <span class="delta-avatar-badge">#{acomp.iniciales}</span>
+                                        <div class="delta-companion-info">
+                                            <strong class="text-white d-block" style="font-size: 0.82rem; line-height: 1.2;">#{acomp.nombreCompleto}</strong>
+                                            <span class="text-white-50 small font-monospace" style="font-size: 0.72rem;">RUT: #{acomp.rut}</span>
+                                            <h:panelGroup rendered="#{not empty acomp.correo}">
+                                                <span class="text-white-50 small d-none d-xl-inline" style="font-size: 0.70rem;"> • #{acomp.correo}</span>
+                                            </h:panelGroup>
+                                        </div>
+                                    </div>
+                                </ui:repeat>
+                            </div>
+                        </h:panelGroup>
+                        <h:panelGroup rendered="#{empty perfilPasajeroView.acompanantesHabituales}">
+                            <div class="delta-kpi-val text-white-50" style="font-size: 0.95rem; font-weight: normal;">
+                                <i class="pi pi-user me-1 text-primary"></i>Solo titular en reservas registradas
+                            </div>
+                            <span class="delta-kpi-sub">Sin acompañantes asociados</span>
+                        </h:panelGroup>
+                    </div>
                 </div>
-
-                <h:panelGroup id="panelContenidoVuelos" layout="block">
-
-                    <!-- VISTA 1: CALENDARIO PRIMEFACES SCHEDULE -->
-                    <h:panelGroup id="seccionCalendario" rendered="#{perfilPasajeroView.vistaActiva eq 'calendario'}" layout="block" styleClass="skyway-schedule-card">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span class="text-white font-weight-bold" style="font-size: 1.05rem;">
-                                <i class="pi pi-calendar-plus text-primary me-2"></i>Calendario Interactivo de Vuelos
-                            </span>
-                            <span class="badge bg-primary px-3 py-1 font-weight-bold" style="border-radius: 20px; font-size: 0.78rem;">
-                                #{perfilPasajeroView.listaItinerariosFiltrados.size()} Vuelos en Calendario
-                            </span>
-                        </div>
-
-                        <p:schedule id="scheduleItinerarios"
-                                    value="#{perfilPasajeroView.scheduleModel}"
-                                    widgetVar="itinerariosSchedule"
-                                    timeZone="America/Santiago"
-                                    clientTimeZone="local"
-                                    locale="es"
-                                    view="dayGridMonth"
-                                    initialDate="#{perfilPasajeroView.fechaInicialSchedule}"
-                                    height="auto"
-                                    leftHeaderTemplate="prev,next today"
-                                    centerHeaderTemplate="title"
-                                    rightHeaderTemplate="dayGridMonth,timeGridWeek,timeGridDay"
-                                    styleClass="skyway-schedule"
-                                    tooltip="true"
-                                    showWeekNumbers="false">
-                            <p:ajax event="eventSelect"
-                                    listener="#{perfilPasajeroView.onEventSelect}"
-                                    update=":formHubModal:dlgHubModal"
-                                    oncomplete="PF('dlgHubModal').show();" />
-                        </p:schedule>
-
-                        <div class="schedule-legend">
-                            <span class="legend-item"><span class="legend-dot" style="background:#0284C7;"></span> Confirmado</span>
-                            <span class="legend-item"><span class="legend-dot" style="background:#10B981;"></span> Check-In Listo</span>
-                            <span class="legend-item"><span class="legend-dot" style="background:#334155;"></span> Finalizado</span>
-                            <span class="legend-item"><span class="legend-dot" style="background:#64748B;"></span> Cancelado</span>
-                            <span class="ms-auto text-white-50"><i class="pi pi-info-circle me-1 text-primary"></i>Haz clic en cualquier vuelo para abrir su centro de control</span>
-                        </div>
-                    </h:panelGroup>
-
-                    <!-- VISTA 2: LISTA DETALLADA (DATATABLE) -->
-                    <h:panelGroup id="seccionLista" rendered="#{perfilPasajeroView.vistaActiva eq 'lista'}" layout="block">
-                        <p:dataTable id="tablaItinerarios"
-                                     var="it"
-                                     value="#{perfilPasajeroView.listaItinerariosFiltrados}"
-                                     rows="10"
-                                     paginator="true"
-                                     paginatorPosition="bottom"
-                                     responsiveLayout="scroll"
-                                     emptyMessage="No tienes itinerarios registrados."
-                                     styleClass="skyway-datatable"
-                                     rowKey="#{it.idItinerario}">
-
-                            <p:column headerText="Origen / Destino" styleClass="col-route">
-                                <span class="iata-code">#{it.codigoIataOrigen}</span>
-                                <i class="pi pi-arrow-right route-icon"></i>
-                                <span class="iata-code">#{it.codigoIataDestino}</span>
-                            </p:column>
-
-                            <p:column headerText="Salida" sortBy="#{it.horaSalida}" styleClass="col-date">
-                                <h:outputText value="#{it.horaSalida}">
-                                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/Santiago"/>
-                                </h:outputText>
-                            </p:column>
-
-                            <p:column headerText="Tarjeta Embarque" styleClass="col-center text-center">
-                                <!-- CASO 1: RESERVA CANCELADA -->
-                                <h:panelGroup rendered="#{perfilPasajeroView.isReservaCanceladaPorItinerario(it.idReserva)}">
-                                    <span class="badge bg-secondary">Cancelada</span>
-                                </h:panelGroup>
-
-                                <!-- CASO 2: CHECK-IN YA REALIZADO -> ACCESO COMPLETO AL TICKET -->
-                                <h:panelGroup rendered="#{!perfilPasajeroView.isReservaCanceladaPorItinerario(it.idReserva) and perfilPasajeroView.isCheckInCompletado(it.idReserva)}">
-                                    <p:commandButton value="Ver Ticket"
-                                                     icon="pi pi-ticket"
-                                                     styleClass="ui-button-success ui-button-sm"
-                                                     actionListener="#{perfilPasajeroView.getTicket(it)}"
-                                                     update=":formDetalleTicket:dlgDetalleTicket :globalGrowl"
-                                                     oncomplete="if (!args || !args.checkInInvalido) PF('dlgDetalleTicket').show();"/>
-                                </h:panelGroup>
-
-                                <!-- CASO 3: CHECK-IN ABIERTO (ENTRE 48H Y 1H) -> BOTÓN PARA REALIZARLO AHORA -->
-                                <h:panelGroup rendered="#{!perfilPasajeroView.isReservaCanceladaPorItinerario(it.idReserva) and !perfilPasajeroView.isCheckInCompletado(it.idReserva) and perfilPasajeroView.isCheckInDisponible(it.horaSalida)}">
-                                    <p:commandButton value="Hacer Check-In"
-                                                     icon="pi pi-check-circle"
-                                                     styleClass="ui-button-info ui-button-sm"
-                                                     actionListener="#{perfilPasajeroView.irACheckIn(it)}"
-                                                     title="Check-In habilitado. Confirma tus datos para obtener tu tarjeta de embarque."/>
-                                </h:panelGroup>
-
-                                <!-- CASO 4: CHECK-IN AÚN NO DISPONIBLE (FALTAN MÁS DE 48H) -> ADVIERTE LA FECHA EXACTA -->
-                                <h:panelGroup rendered="#{!perfilPasajeroView.isReservaCanceladaPorItinerario(it.idReserva) and !perfilPasajeroView.isCheckInCompletado(it.idReserva) and !perfilPasajeroView.isCheckInDisponible(it.horaSalida)}">
-                                    <p:commandButton value="Check-In Pendiente"
-                                                     icon="pi pi-clock"
-                                                     styleClass="ui-button-outlined ui-button-warning ui-button-sm"
-                                                     actionListener="#{perfilPasajeroView.getTicket(it)}"
-                                                     update=":globalGrowl"
-                                                     title="#{perfilPasajeroView.getTextoEstadoCheckIn(it)}"/>
-                                </h:panelGroup>
-                            </p:column>
-
-                            <p:column headerText="Gestión del Vuelo" styleClass="col-actions">
-                                <div class="action-buttons-wrapper">
-                                    <p:commandButton icon="pi pi-info-circle"
-                                                     title="Ver Escalas / Paradas"
-                                                     styleClass="ui-button-outlined ui-button-info"
-                                                     action="#{itinerarioDetalleBean.showParadas(it.idItinerario)}"
-                                                     update=":sidebarParadas"
-                                                     oncomplete="PF('sidebarParadas').show();"/>
-
-                                    <p:commandButton icon="pi pi-user"
-                                                     title="Ver / Cambiar Asientos"
-                                                     styleClass="ui-button-outlined ui-button-warning"
-                                                     disabled="#{perfilPasajeroView.isReservaCanceladaPorItinerario(it.idReserva)}"
-                                                     actionListener="#{perfilPasajeroView.verAsientoItinerario(it)}"
-                                                     update=":formAsientos:tablaAsientos"
-                                                     oncomplete="PF('dlgAsientos').show();" />
-
-                                    <p:commandButton icon="pi pi-arrow-circle-up"
-                                                     title="Ascender Tarifa (Upgrade)"
-                                                     styleClass="ui-button-outlined ui-button-success"
-                                                     disabled="#{perfilPasajeroView.isReservaCanceladaPorItinerario(it.idReserva)}"
-                                                     actionListener="#{perfilPasajeroView.prepararUpgrade(it)}"
-                                                     update=":formUpgradeTarifa:dlgUpgradeTarifa :globalGrowl"
-                                                     oncomplete="PF('dlgUpgradeTarifa').show();" />
-
-                                    <p:commandButton icon="pi pi-dollar"
-                                                     title="Detalle Resumen"
-                                                     styleClass="ui-button-outlined ui-button-secondary"
-                                                     actionListener="#{perfilPasajeroView.verDetalleItinerario(it)}"
-                                                     update=":formDetalle:dlgDetalle"
-                                                     oncomplete="PF('dlgDetalle').show();" />
-
-                                    <p:commandButton icon="pi pi-sliders-h"
-                                                     title="Centro de Control Reserva"
-                                                     styleClass="ui-button-primary"
-                                                     actionListener="#{perfilPasajeroView.verDetalleCompletoReserva(it)}"
-                                                     update=":formHubModal:dlgHubModal"
-                                                     oncomplete="PF('dlgHubModal').show();" />
-                                </div>
-                            </p:column>
-                        </p:dataTable>
-                    </h:panelGroup>
-
-                </h:panelGroup>
-            </h:form>
+            </div>
 
             <!-- ==============================================================
-                 MODALIDADES MODULARIZADAS DE GESTIÓN Y DETALLES DEL PASAJERO
+                 2. SECCIÓN PRINCIPAL DE ITINERARIOS Y VUELOS (FULL WIDTH)
+                 ============================================================== -->
+            <div class="delta-main-grid">
+
+                <div class="delta-trips-col">
+                    <!-- CABECERA DE ITINERARIOS -->
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        <div>
+                            <h2 class="text-white font-weight-bold mb-0 d-flex align-items-center gap-2" style="font-size: 1.45rem;">
+                                <i class="pi pi-compass" style="color: #38BDF8;"></i>
+                                Mis Vuelos e Itinerarios
+                            </h2>
+                            <p class="text-white-50 mb-0 small">
+                                Monitorea tus viajes en tiempo real, administra reservas y gestiona tarjetas de embarque.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- FILTROS POR FECHA RÁPIDOS RESPONSIVOS -->
+                    <h:form id="formFiltroFechas" styleClass="skyway-card mb-3 py-2 px-3">
+                        <div class="ui-fluid row g-2 align-items-end">
+                            <div class="col-6 col-md-4">
+                                <p:outputLabel for="fechaInicio" value="Desde:" styleClass="field-label small mb-1" />
+                                <p:datePicker id="fechaInicio"
+                                              value="#{perfilPasajeroView.fechaInicioFiltro}"
+                                              showIcon="true"
+                                              placeholder="dd/mm/aaaa"
+                                              pattern="dd/MM/yyyy"
+                                              readonlyInput="true" />
+                            </div>
+
+                            <div class="col-6 col-md-4">
+                                <p:outputLabel for="fechaFin" value="Hasta:" styleClass="field-label small mb-1" />
+                                <p:datePicker id="fechaFin"
+                                              value="#{perfilPasajeroView.fechaFinFiltro}"
+                                              showIcon="true"
+                                              placeholder="dd/mm/aaaa"
+                                              pattern="dd/MM/yyyy"
+                                              readonlyInput="true" />
+                            </div>
+
+                            <div class="col-12 col-md-4 d-flex gap-2 mt-2 mt-md-0">
+                                <p:commandButton value="Filtrar"
+                                                 actionListener="#{perfilPasajeroView.buscarPorRangoFechas}"
+                                                 update=":formVuelos:tabVuelos :globalGrowl"
+                                                 process="@form"
+                                                 icon="pi pi-filter"
+                                                 styleClass="btn-skyway-primary btn-sm flex-grow-1" />
+
+                                <p:commandButton value="Restablecer"
+                                                 actionListener="#{perfilPasajeroView.limpiarFiltroFechas}"
+                                                 update=":formFiltroFechas :formVuelos:tabVuelos :globalGrowl"
+                                                 process="@form"
+                                                 icon="pi pi-refresh"
+                                                 styleClass="btn-skyway-outlined btn-sm" />
+                            </div>
+                        </div>
+                    </h:form>
+
+                    <!-- PESTAÑAS DE ITINERARIOS ESTILO DELTA OMNIPRO -->
+                    <h:form id="formVuelos">
+                        <p:tabView id="tabVuelos" styleClass="delta-trip-tabs">
+
+                            <!-- TAB 1: PRÓXIMOS VUELOS -->
+                            <p:tab title="Próximos (#{perfilPasajeroView.totalVuelosFuturos})">
+                                <h:panelGroup rendered="#{empty perfilPasajeroView.listaItinerariosFuturos}">
+                                    <div class="p-5 text-center rounded" style="background: #0B132B; border: 1px dashed #1E293B;">
+                                        <i class="pi pi-calendar-plus text-primary mb-3" style="font-size: 2.5rem; opacity: 0.6;"></i>
+                                        <h5 class="text-white font-weight-bold">No tienes próximos vuelos programados</h5>
+                                        <p class="text-white-50 small mb-3">Encuentra tus próximos destinos y viaja con la excelencia de SkyWay.</p>
+                                        <p:button value="Buscar Vuelos Ahora" outcome="/home/vuelos.xhtml" icon="pi pi-search" styleClass="btn-skyway-primary btn-sm" />
+                                    </div>
+                                </h:panelGroup>
+
+                                <ui:repeat value="#{perfilPasajeroView.listaItinerariosFuturos}" var="it">
+                                    <div class="delta-trip-card">
+                                        <!-- HEADER DE LA TARJETA -->
+                                        <div class="delta-trip-header">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="delta-pnr-pill" onclick="copiarAlPortapapeles('#{perfilPasajeroView.getCodigoPnr(it.idReserva)}', 'PNR Localizador');" title="Haz clic para copiar código PNR">
+                                                    <i class="pi pi-qrcode text-primary"></i>
+                                                    <strong>#{perfilPasajeroView.getCodigoPnr(it.idReserva)}</strong>
+                                                    <i class="pi pi-copy text-white-50" style="font-size: 0.75rem;"></i>
+                                                </div>
+                                                <span class="badge #{perfilPasajeroView.getEstadoBadgeClass(it)} font-weight-bold px-2 py-1 d-inline-flex align-items-center gap-1" style="border-radius: 4px; font-size: 0.78rem;">
+                                                    <i class="pi #{perfilPasajeroView.getEstadoIconClass(it)}" style="font-size: 0.72rem;"></i>
+                                                    #{perfilPasajeroView.getEstadoVueloPorItinerario(it)}
+                                                </span>
+                                            </div>
+
+                                            <div class="delta-card-actions">
+                                                <p:commandButton value="Gestionar Reserva"
+                                                                 icon="pi pi-sliders-h"
+                                                                 styleClass="btn-delta-manage"
+                                                                 actionListener="#{perfilPasajeroView.verDetalleCompletoReserva(it)}"
+                                                                 update=":formHubModal:dlgHubModal"
+                                                                 oncomplete="PF('dlgHubModal').show();" />
+
+                                                
+
+                                                <h:panelGroup rendered="#{perfilPasajeroView.isCheckInCompletado(it.idReserva)}">
+                                                    <p:commandButton value="Tarjeta Embarque"
+                                                                     icon="pi pi-ticket"
+                                                                     styleClass="btn-delta-boarding"
+                                                                     actionListener="#{perfilPasajeroView.getTicket(it)}"
+                                                                     update=":formDetalleTicket:dlgDetalleTicket :globalGrowl"
+                                                                     oncomplete="if (!args || !args.checkInInvalido) PF('dlgDetalleTicket').show();" />
+                                                </h:panelGroup>
+
+                                                <h:panelGroup rendered="#{!perfilPasajeroView.isCheckInCompletado(it.idReserva) and perfilPasajeroView.isCheckInDisponible(it.horaSalida) and !perfilPasajeroView.isReservaCanceladaPorItinerario(it.idReserva)}">
+                                                    <p:commandButton value="Check-In Online"
+                                                                     icon="pi pi-check-circle"
+                                                                     styleClass="btn-delta-checkin"
+                                                                     actionListener="#{perfilPasajeroView.irACheckIn(it)}"
+                                                                         process="@this" />
+                                                </h:panelGroup>
+
+                                                <p:commandButton icon="pi pi-info-circle"
+                                                                 title="Ver Escalas / Paradas"
+                                                                 styleClass="btn-delta-icon"
+                                                                 action="#{itinerarioDetalleBean.showParadas(it.idItinerario)}"
+                                                                 update=":sidebarParadas"
+                                                                 oncomplete="PF('sidebarParadas').show();" />
+
+                                                <p:commandButton icon="pi pi-arrow-circle-up"
+                                                                 title="Ascender Tarifa (Upgrade)"
+                                                                 styleClass="btn-delta-icon"
+                                                                 disabled="#{perfilPasajeroView.isReservaCanceladaPorItinerario(it.idReserva)}"
+                                                                 actionListener="#{perfilPasajeroView.prepararUpgrade(it)}"
+                                                                 update=":formUpgradeTarifa:dlgUpgradeTarifa :globalGrowl"
+                                                                 oncomplete="PF('dlgUpgradeTarifa').show();" />
+                                            </div>
+                                        </div>
+
+                                        <!-- AVISO DE ACCIÓN OPERACIONAL EN TIEMPO REAL (URGENCIA / CHECK-IN / EMBARQUE) -->
+                                        <h:panelGroup rendered="#{perfilPasajeroView.tieneAvisoOperacional(it)}" layout="block" styleClass="delta-trip-alert #{perfilPasajeroView.getTipoAvisoOperacionalClass(it)}">
+                                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 w-100">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <i class="pi #{perfilPasajeroView.getIconoAvisoOperacional(it)}" style="font-size: 1.15rem;"></i>
+                                                    <div>
+                                                        <strong class="d-block" style="font-size: 0.82rem; letter-spacing: 0.3px;">#{perfilPasajeroView.getTituloAvisoOperacional(it)}</strong>
+                                                        <span style="font-size: 0.78rem; opacity: 0.95;">#{perfilPasajeroView.getMensajeAvisoOperacional(it)}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <h:panelGroup rendered="#{!perfilPasajeroView.isCheckInCompletado(it.idReserva) and perfilPasajeroView.isCheckInDisponible(it.horaSalida) and !perfilPasajeroView.isReservaCanceladaPorItinerario(it.idReserva)}">
+                                                        <p:commandButton value="Completar Check-In"
+                                                                         icon="pi pi-check-circle"
+                                                                         styleClass="btn-alert-action"
+                                                                         actionListener="#{perfilPasajeroView.irACheckIn(it)}"
+                                                                         process="@this" />
+                                                    </h:panelGroup>
+                                                    <h:panelGroup rendered="#{perfilPasajeroView.isCheckInCompletado(it.idReserva)}">
+                                                        <p:commandButton value="Ver Tarjeta de Embarque"
+                                                                         icon="pi pi-ticket"
+                                                                         styleClass="btn-alert-action"
+                                                                         actionListener="#{perfilPasajeroView.getTicket(it)}"
+                                                                         update=":formDetalleTicket:dlgDetalleTicket :globalGrowl"
+                                                                         oncomplete="if (!args || !args.checkInInvalido) PF('dlgDetalleTicket').show();" />
+                                                    </h:panelGroup>
+                                                </div>
+                                            </div>
+                                        </h:panelGroup>
+
+                                        <!-- CUERPO DE LA TARJETA -->
+                                        <div class="delta-trip-body">
+                                            <div class="row align-items-center g-3">
+                                                <div class="col-auto">
+                                                    <div class="delta-date-box">
+                                                        <span class="delta-date-month">#{perfilPasajeroView.getFechaMes(it.horaSalida)}</span>
+                                                        <span class="delta-date-day">#{perfilPasajeroView.getFechaDia(it.horaSalida)}</span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col col-md-5">
+                                                    <div class="delta-route-iata">
+                                                        <span>#{it.codigoIataOrigen}</span>
+                                                        <i class="pi pi-arrow-right text-primary" style="font-size: 0.85rem;"></i>
+                                                        <span>#{it.codigoIataDestino}</span>
+                                                        <span class="badge bg-dark border border-secondary text-white-50 ms-1 d-none d-sm-inline-block" style="font-size: 0.7rem;">Itinerario ##{it.idItinerario}</span>
+                                                    </div>
+                                                    <div class="delta-city-title">
+                                                        #{perfilPasajeroView.getCiudadRuta(it.codigoIataOrigen, it.codigoIataDestino)}
+                                                    </div>
+                                                    <div class="mt-2 d-flex flex-wrap gap-2">
+                                                        <span class="delta-seats-badge">
+                                                            <i class="pi pi-ticket"></i>
+                                                            Asientos: #{perfilPasajeroView.getAsientosPorReserva(it.idReserva, it.idItinerario)}
+                                                        </span>
+                                                        <span class="delta-seats-badge" style="background: #0F172A !important; border-color: #334155 !important; color: #94A3B8 !important;">
+                                                            <i class="pi pi-briefcase text-info"></i>
+                                                            #{perfilPasajeroView.getEquipajeResumenPorReserva(it.idReserva)}
+                                                        </span>
+                                                    </div>
+                                                    <div class="mt-2 text-white-50 small d-flex align-items-center gap-2 flex-wrap">
+                                                        <span><i class="pi pi-send text-primary me-1"></i>#{perfilPasajeroView.getNumeroVueloPorItinerario(it.idItinerario)}</span>
+                                                        <span>•</span>
+                                                        <span><i class="pi pi-cog text-info me-1"></i>#{perfilPasajeroView.getModeloAvionPorItinerario(it.idItinerario)}</span>
+                                                        <span>•</span>
+                                                        <span><i class="pi pi-clock text-warning me-1"></i>#{perfilPasajeroView.getDuracionTotalPorItinerario(it.idItinerario)} (#{perfilPasajeroView.getEscalasResumenPorItinerario(it.idItinerario)})</span>
+                                                        <span>•</span>
+                                                        <span><i class="pi pi-sign-in text-info me-1"></i>#{perfilPasajeroView.getPuertaEmbarquePorItinerario(it.idReserva, it.idItinerario)}</span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-6 col-md-3">
+                                                    <span class="delta-time-label">SALIDA (#{it.codigoIataOrigen})</span>
+                                                    <strong class="delta-time-val">
+                                                        <h:outputText value="#{it.horaSalida}">
+                                                             <f:convertDateTime pattern="HH:mm" timeZone="America/Santiago" />
+                                                        </h:outputText> hrs
+                                                    </strong>
+                                                    <span class="delta-time-sub">
+                                                        <h:outputText value="#{it.horaSalida}">
+                                                            <f:convertDateTime pattern="dd/MM/yyyy" timeZone="America/Santiago" />
+                                                        </h:outputText>
+                                                    </span>
+                                                </div>
+
+                                                <div class="col-6 col-md-3">
+                                                    <span class="delta-time-label">LLEGADA ESTIMADA (#{it.codigoIataDestino})</span>
+                                                    <strong class="delta-time-val">
+                                                        <h:outputText value="#{it.horaLlegada != null ? it.horaLlegada : it.horaSalida}">
+                                                            <f:convertDateTime pattern="HH:mm" timeZone="America/Santiago" />
+                                                        </h:outputText> hrs
+                                                    </strong>
+                                                    <span class="delta-time-sub">
+                                                        <h:outputText value="#{it.horaLlegada != null ? it.horaLlegada : it.horaSalida}">
+                                                            <f:convertDateTime pattern="dd/MM/yyyy" timeZone="America/Santiago" />
+                                                        </h:outputText>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- APARTADO DE DOCUMENTACIÓN Y E-TICKET OFICIAL -->
+                                        <h:panelGroup rendered="#{!perfilPasajeroView.isReservaCanceladaPorItinerario(it.idReserva)}" layout="block" styleClass="delta-eticket-banner">
+                                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 w-100">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <i class="pi pi-file-pdf" style="font-size: 1.25rem; color: #38BDF8;"></i>
+                                                    <div>
+                                                        <strong class="d-block" style="font-size: 0.82rem; color: #F8FAFC;">E-Ticket Electrónico Oficial (PNR: #{perfilPasajeroView.getCodigoPnr(it.idReserva)})</strong>
+                                                        <span class="text-white-50" style="font-size: 0.76rem;">Comprobante de reserva e itinerario con validez IATA emitido para #{perfilPasajeroView.getCantidadPasajerosPorReserva(it.idReserva)} pasajero(s).</span>
+                                                    </div>
+                                                </div>
+                                                <p:commandButton value="Descargar E-Ticket (PDF)"
+                                                                 icon="pi pi-download"
+                                                                 styleClass="btn-delta-eticket-download"
+                                                                 ajax="false"
+                                                                 title="Descargar E-Ticket oficial en formato PDF">
+                                                    <p:fileDownload value="#{perfilPasajeroView.descargarComprobantePdf(it.idReserva)}" />
+                                                </p:commandButton>
+                                            </div>
+                                        </h:panelGroup>
+
+                                        <!-- AVISO DE RESERVA CANCELADA (SIN DESCARGA DE E-TICKET) -->
+                                        <h:panelGroup rendered="#{perfilPasajeroView.isReservaCanceladaPorItinerario(it.idReserva)}" layout="block" styleClass="delta-eticket-banner delta-eticket-banner-cancelled">
+                                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 w-100">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <i class="pi pi-ban" style="font-size: 1.25rem; color: #EF4444;"></i>
+                                                    <div>
+                                                        <strong class="d-block text-danger" style="font-size: 0.82rem;">Reserva Cancelada por Pasajero (PNR: #{perfilPasajeroView.getCodigoPnr(it.idReserva)})</strong>
+                                                        <span class="text-white-50" style="font-size: 0.76rem;">Esta reserva fue cancelada a solicitud del pasajero. La descarga del E-Ticket no se encuentra disponible.</span>
+                                                    </div>
+                                                </div>
+                                                <span class="badge bg-danger text-white py-1 px-2" style="font-size: 0.75rem;">
+                                                    <i class="pi pi-lock me-1"></i>E-Ticket No Disponible
+                                                </span>
+                                            </div>
+                                        </h:panelGroup>
+
+                                        <!-- FOOTER DE LA TARJETA (100% DATOS REALES DE BD) -->
+                                        <div class="delta-trip-footer">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <i class="pi pi-users text-primary"></i>
+                                                <span class="text-white font-weight-bold">#{perfilPasajeroView.getCantidadPasajerosPorReserva(it.idReserva)} #{perfilPasajeroView.getCantidadPasajerosPorReserva(it.idReserva) == 1 ? 'Pasajero' : 'Pasajeros'}:</span>
+                                                <span class="text-white-50">#{perfilPasajeroView.getNombresPasajerosPorReserva(it.idReserva)}</span>
+                                            </div>
+                                            <div class="d-flex align-items-center gap-3 text-white-50 small flex-wrap">
+                                                <span><i class="pi pi-tag text-info me-1"></i>Tarifa: <strong class="text-white">#{perfilPasajeroView.getNombreTarifaItinerario(it.idReserva, it.idItinerario)}</strong></span>
+                                                <span><i class="pi pi-wallet text-success me-1"></i>Total: <strong class="text-white">#{perfilPasajeroView.getTotalReservaFormateado(it.idReserva)}</strong></span>
+                                                <span>
+                                                    <i class="pi #{perfilPasajeroView.isCheckInCompletado(it.idReserva) ? 'pi-check-circle text-success' : 'pi-clock text-warning'} me-1"></i>
+                                                    <h:outputText value="#{perfilPasajeroView.isCheckInCompletado(it.idReserva) ? 'Check-in Realizado' : 'Check-in Pendiente'}" />
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </ui:repeat>
+                            </p:tab>
+
+                            <!-- TAB 2: VUELOS DE HOY -->
+                            <p:tab title="Hoy (#{perfilPasajeroView.totalVuelosHoy})">
+                                <h:panelGroup rendered="#{empty perfilPasajeroView.listaItinerariosHoy}">
+                                    <div class="p-5 text-center rounded" style="background: #0B132B; border: 1px dashed #1E293B;">
+                                        <i class="pi pi-send text-primary mb-3" style="font-size: 2.5rem; opacity: 0.6;"></i>
+                                        <h5 class="text-white font-weight-bold">No tienes vuelos programados para el día de hoy</h5>
+                                        <p class="text-white-50 small mb-0">Revisa la pestaña "Próximos" para consultar tus viajes futuros agendados.</p>
+                                    </div>
+                                </h:panelGroup>
+
+                                <ui:repeat value="#{perfilPasajeroView.listaItinerariosHoy}" var="it">
+                                    <div class="delta-trip-card">
+                                        <div class="delta-trip-header">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="delta-pnr-pill" onclick="copiarAlPortapapeles('#{perfilPasajeroView.getCodigoPnr(it.idReserva)}', 'PNR Localizador');">
+                                                    <i class="pi pi-qrcode text-primary"></i>
+                                                    <strong>#{perfilPasajeroView.getCodigoPnr(it.idReserva)}</strong>
+                                                    <i class="pi pi-copy text-white-50" style="font-size: 0.75rem;"></i>
+                                                </div>
+                                                <span class="badge #{perfilPasajeroView.getEstadoBadgeClass(it)} font-weight-bold px-2 py-1 d-inline-flex align-items-center gap-1" style="border-radius: 4px; font-size: 0.78rem;">
+                                                    <i class="pi #{perfilPasajeroView.getEstadoIconClass(it)}" style="font-size: 0.72rem;"></i>
+                                                    #{perfilPasajeroView.getEstadoVueloPorItinerario(it)}
+                                                </span>
+                                            </div>
+
+                                            <div class="delta-card-actions">
+                                                <p:commandButton value="Gestionar Reserva"
+                                                                 icon="pi pi-sliders-h"
+                                                                 styleClass="btn-delta-manage"
+                                                                 actionListener="#{perfilPasajeroView.verDetalleCompletoReserva(it)}"
+                                                                 update=":formHubModal:dlgHubModal"
+                                                                 oncomplete="PF('dlgHubModal').show();" />
+
+                                                <p:commandButton value="E-Ticket"
+                                                                 icon="pi pi-file-pdf"
+                                                                 styleClass="btn-delta-eticket"
+                                                                 ajax="false"
+                                                                 title="Descargar E-Ticket Oficial de Reserva (PDF)">
+                                                    <p:fileDownload value="#{perfilPasajeroView.descargarComprobantePdf(it.idReserva)}" />
+                                                </p:commandButton>
+
+                                                <h:panelGroup rendered="#{perfilPasajeroView.isCheckInCompletado(it.idReserva)}">
+                                                    <p:commandButton value="Tarjeta Embarque"
+                                                                     icon="pi pi-ticket"
+                                                                     styleClass="btn-delta-boarding"
+                                                                     actionListener="#{perfilPasajeroView.getTicket(it)}"
+                                                                     update=":formDetalleTicket:dlgDetalleTicket :globalGrowl"
+                                                                     oncomplete="if (!args || !args.checkInInvalido) PF('dlgDetalleTicket').show();" />
+                                                </h:panelGroup>
+
+                                                <h:panelGroup rendered="#{!perfilPasajeroView.isCheckInCompletado(it.idReserva) and perfilPasajeroView.isCheckInDisponible(it.horaSalida) and !perfilPasajeroView.isReservaCanceladaPorItinerario(it.idReserva)}">
+                                                    <p:commandButton value="Check-In Online"
+                                                                     icon="pi pi-check-circle"
+                                                                     styleClass="btn-delta-checkin"
+                                                                     actionListener="#{perfilPasajeroView.irACheckIn(it)}"
+                                                                         process="@this" />
+                                                </h:panelGroup>
+                                            </div>
+                                        </div>
+
+                                        <!-- AVISO DE ACCIÓN OPERACIONAL EN TIEMPO REAL (URGENCIA / CHECK-IN / EMBARQUE) -->
+                                        <h:panelGroup rendered="#{perfilPasajeroView.tieneAvisoOperacional(it)}" layout="block" styleClass="delta-trip-alert #{perfilPasajeroView.getTipoAvisoOperacionalClass(it)}">
+                                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 w-100">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <i class="pi #{perfilPasajeroView.getIconoAvisoOperacional(it)}" style="font-size: 1.15rem;"></i>
+                                                    <div>
+                                                        <strong class="d-block" style="font-size: 0.82rem; letter-spacing: 0.3px;">#{perfilPasajeroView.getTituloAvisoOperacional(it)}</strong>
+                                                        <span style="font-size: 0.78rem; opacity: 0.95;">#{perfilPasajeroView.getMensajeAvisoOperacional(it)}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <h:panelGroup rendered="#{!perfilPasajeroView.isCheckInCompletado(it.idReserva) and perfilPasajeroView.isCheckInDisponible(it.horaSalida) and !perfilPasajeroView.isReservaCanceladaPorItinerario(it.idReserva)}">
+                                                        <p:commandButton value="Completar Check-In"
+                                                                         icon="pi pi-check-circle"
+                                                                         styleClass="btn-alert-action"
+                                                                         actionListener="#{perfilPasajeroView.irACheckIn(it)}"
+                                                                         process="@this" />
+                                                    </h:panelGroup>
+                                                    <h:panelGroup rendered="#{perfilPasajeroView.isCheckInCompletado(it.idReserva)}">
+                                                        <p:commandButton value="Ver Tarjeta de Embarque"
+                                                                         icon="pi pi-ticket"
+                                                                         styleClass="btn-alert-action"
+                                                                         actionListener="#{perfilPasajeroView.getTicket(it)}"
+                                                                         update=":formDetalleTicket:dlgDetalleTicket :globalGrowl"
+                                                                         oncomplete="if (!args || !args.checkInInvalido) PF('dlgDetalleTicket').show();" />
+                                                    </h:panelGroup>
+                                                </div>
+                                            </div>
+                                        </h:panelGroup>
+
+                                        <div class="delta-trip-body">
+                                            <div class="row align-items-center g-3">
+                                                <div class="col-auto">
+                                                    <div class="delta-date-box" style="border-color: #38BDF8;">
+                                                        <span class="delta-date-month" style="color: #38BDF8;">HOY</span>
+                                                        <span class="delta-date-day">#{perfilPasajeroView.getFechaDia(it.horaSalida)}</span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col col-md-5">
+                                                    <div class="delta-route-iata">
+                                                        <span>#{it.codigoIataOrigen}</span>
+                                                        <i class="pi pi-arrow-right text-primary" style="font-size: 0.85rem;"></i>
+                                                        <span>#{it.codigoIataDestino}</span>
+                                                        <span class="badge bg-dark border border-secondary text-white-50 ms-1 d-none d-sm-inline-block" style="font-size: 0.7rem;">Itinerario ##{it.idItinerario}</span>
+                                                    </div>
+                                                    <div class="delta-city-title">
+                                                        #{perfilPasajeroView.getCiudadRuta(it.codigoIataOrigen, it.codigoIataDestino)}
+                                                    </div>
+                                                    <div class="mt-2 d-flex flex-wrap gap-2">
+                                                        <span class="delta-seats-badge">
+                                                            <i class="pi pi-ticket"></i>
+                                                            Asientos: #{perfilPasajeroView.getAsientosPorReserva(it.idReserva, it.idItinerario)}
+                                                        </span>
+                                                        <span class="delta-seats-badge" style="background: #0F172A !important; border-color: #334155 !important; color: #94A3B8 !important;">
+                                                            <i class="pi pi-briefcase text-info"></i>
+                                                            #{perfilPasajeroView.getEquipajeResumenPorReserva(it.idReserva)}
+                                                        </span>
+                                                    </div>
+                                                    <div class="mt-2 text-white-50 small d-flex align-items-center gap-2 flex-wrap">
+                                                        <span><i class="pi pi-send text-primary me-1"></i>#{perfilPasajeroView.getNumeroVueloPorItinerario(it.idItinerario)}</span>
+                                                        <span>•</span>
+                                                        <span><i class="pi pi-cog text-info me-1"></i>#{perfilPasajeroView.getModeloAvionPorItinerario(it.idItinerario)}</span>
+                                                        <span>•</span>
+                                                        <span><i class="pi pi-clock text-warning me-1"></i>#{perfilPasajeroView.getDuracionTotalPorItinerario(it.idItinerario)} (#{perfilPasajeroView.getEscalasResumenPorItinerario(it.idItinerario)})</span>
+                                                        <span>•</span>
+                                                        <span><i class="pi pi-sign-in text-info me-1"></i>#{perfilPasajeroView.getPuertaEmbarquePorItinerario(it.idReserva, it.idItinerario)}</span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-6 col-md-3">
+                                                    <span class="delta-time-label">SALIDA HOY</span>
+                                                    <strong class="delta-time-val" style="color: #38BDF8;">
+                                                        <h:outputText value="#{it.horaSalida}">
+                                                            <f:convertDateTime pattern="HH:mm" timeZone="America/Santiago" />
+                                                        </h:outputText> hrs
+                                                    </strong>
+                                                </div>
+
+                                                <div class="col-6 col-md-3">
+                                                    <span class="delta-time-label">LLEGADA ESTIMADA</span>
+                                                    <strong class="delta-time-val">
+                                                        <h:outputText value="#{it.horaLlegada != null ? it.horaLlegada : it.horaSalida}">
+                                                            <f:convertDateTime pattern="HH:mm" timeZone="America/Santiago" />
+                                                        </h:outputText> hrs
+                                                    </strong>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- APARTADO DE DOCUMENTACIÓN Y E-TICKET OFICIAL -->
+                                        <h:panelGroup rendered="#{!perfilPasajeroView.isReservaCanceladaPorItinerario(it.idReserva)}" layout="block" styleClass="delta-eticket-banner">
+                                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 w-100">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <i class="pi pi-file-pdf" style="font-size: 1.25rem; color: #38BDF8;"></i>
+                                                    <div>
+                                                        <strong class="d-block" style="font-size: 0.82rem; color: #F8FAFC;">E-Ticket Electrónico Oficial (PNR: #{perfilPasajeroView.getCodigoPnr(it.idReserva)})</strong>
+                                                        <span class="text-white-50" style="font-size: 0.76rem;">Comprobante de reserva e itinerario con validez IATA emitido para #{perfilPasajeroView.getCantidadPasajerosPorReserva(it.idReserva)} pasajero(s).</span>
+                                                    </div>
+                                                </div>
+                                                <p:commandButton value="Descargar E-Ticket (PDF)"
+                                                                 icon="pi pi-download"
+                                                                 styleClass="btn-delta-eticket-download"
+                                                                 ajax="false"
+                                                                 title="Descargar E-Ticket oficial en formato PDF">
+                                                    <p:fileDownload value="#{perfilPasajeroView.descargarComprobantePdf(it.idReserva)}" />
+                                                </p:commandButton>
+                                            </div>
+                                        </h:panelGroup>
+
+                                        <!-- AVISO DE RESERVA CANCELADA (SIN DESCARGA DE E-TICKET) -->
+                                        <h:panelGroup rendered="#{perfilPasajeroView.isReservaCanceladaPorItinerario(it.idReserva)}" layout="block" styleClass="delta-eticket-banner delta-eticket-banner-cancelled">
+                                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 w-100">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <i class="pi pi-ban" style="font-size: 1.25rem; color: #EF4444;"></i>
+                                                    <div>
+                                                        <strong class="d-block text-danger" style="font-size: 0.82rem;">Reserva Cancelada por Pasajero (PNR: #{perfilPasajeroView.getCodigoPnr(it.idReserva)})</strong>
+                                                        <span class="text-white-50" style="font-size: 0.76rem;">Esta reserva fue cancelada a solicitud del pasajero. La descarga del E-Ticket no se encuentra disponible.</span>
+                                                    </div>
+                                                </div>
+                                                <span class="badge bg-danger text-white py-1 px-2" style="font-size: 0.75rem;">
+                                                    <i class="pi pi-lock me-1"></i>E-Ticket No Disponible
+                                                </span>
+                                            </div>
+                                        </h:panelGroup>
+
+                                        <div class="delta-trip-footer">
+                                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                <i class="pi pi-users text-primary"></i>
+                                                <span class="text-white font-weight-bold">#{perfilPasajeroView.getCantidadPasajerosPorReserva(it.idReserva)} Pasajeros:</span>
+                                                <span class="text-white-50">#{perfilPasajeroView.getNombresPasajerosPorReserva(it.idReserva)}</span>
+                                            </div>
+                                            <div class="d-flex align-items-center gap-3 text-white-50 small flex-wrap">
+                                                <span><i class="pi pi-tag text-info me-1"></i>Tarifa: <strong class="text-white">#{perfilPasajeroView.getNombreTarifaItinerario(it.idReserva, it.idItinerario)}</strong></span>
+                                                <span><i class="pi pi-wallet text-success me-1"></i>Total: <strong class="text-white">#{perfilPasajeroView.getTotalReservaFormateado(it.idReserva)}</strong></span>
+                                                <span>
+                                                    <i class="pi #{perfilPasajeroView.isCheckInCompletado(it.idReserva) ? 'pi-check-circle text-success' : 'pi-clock text-warning'} me-1"></i>
+                                                    <h:outputText value="#{perfilPasajeroView.isCheckInCompletado(it.idReserva) ? 'Check-in Realizado' : 'Check-in Pendiente'}" />
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </ui:repeat>
+                            </p:tab>
+
+                            <!-- TAB 3: HISTORIAL DE VIAJES REALIZADOS O CANCELADOS -->
+                            <p:tab title="Historial (#{perfilPasajeroView.totalVuelosPasados})">
+                                <h:panelGroup rendered="#{empty perfilPasajeroView.listaItinerariosPasados}">
+                                    <div class="p-5 text-center rounded" style="background: #0B132B; border: 1px dashed #1E293B;">
+                                        <i class="pi pi-history text-secondary mb-3" style="font-size: 2.5rem; opacity: 0.6;"></i>
+                                        <h5 class="text-white font-weight-bold">Sin registros de vuelos anteriores</h5>
+                                        <p class="text-white-50 small mb-0">Tus viajes finalizados se archivarán en esta sección para consulta histórica.</p>
+                                    </div>
+                                </h:panelGroup>
+
+                                <ui:repeat value="#{perfilPasajeroView.listaItinerariosPasados}" var="it">
+                                    <div class="delta-trip-card" style="opacity: 0.88;">
+                                        <div class="delta-trip-header">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="delta-pnr-pill" onclick="copiarAlPortapapeles('#{perfilPasajeroView.getCodigoPnr(it.idReserva)}', 'PNR Localizador');">
+                                                    <i class="pi pi-qrcode text-primary"></i>
+                                                    <strong>#{perfilPasajeroView.getCodigoPnr(it.idReserva)}</strong>
+                                                    <i class="pi pi-copy text-white-50" style="font-size: 0.75rem;"></i>
+                                                </div>
+                                                <span class="badge #{perfilPasajeroView.getEstadoBadgeClass(it)} font-weight-bold px-2 py-1 d-inline-flex align-items-center gap-1" style="border-radius: 4px; font-size: 0.78rem;">
+                                                    <i class="pi #{perfilPasajeroView.getEstadoIconClass(it)}" style="font-size: 0.72rem;"></i>
+                                                    #{perfilPasajeroView.getEstadoVueloPorItinerario(it)}
+                                                </span>
+                                            </div>
+
+                                            <div class="delta-card-actions">
+                                                <p:commandButton value="Ver Resumen Histórico"
+                                                                 icon="pi pi-sliders-h"
+                                                                 styleClass="btn-delta-manage btn-sm"
+                                                                 actionListener="#{perfilPasajeroView.verDetalleCompletoReserva(it)}"
+                                                                 update=":formHubModal:dlgHubModal"
+                                                                 oncomplete="PF('dlgHubModal').show();" />
+
+                                                <p:commandButton value="E-Ticket"
+                                                                 icon="pi pi-file-pdf"
+                                                                 styleClass="btn-delta-eticket"
+                                                                 ajax="false"
+                                                                 title="Descargar E-Ticket Oficial de Reserva (PDF)">
+                                                    <p:fileDownload value="#{perfilPasajeroView.descargarComprobantePdf(it.idReserva)}" />
+                                                </p:commandButton>
+
+                                                <h:panelGroup rendered="#{perfilPasajeroView.isCheckInCompletado(it.idReserva)}">
+                                                    <p:commandButton value="Comprobante"
+                                                                     icon="pi pi-file-pdf"
+                                                                     styleClass="btn-delta-icon"
+                                                                     actionListener="#{perfilPasajeroView.getTicket(it)}"
+                                                                     update=":formDetalleTicket:dlgDetalleTicket :globalGrowl"
+                                                                     oncomplete="if (!args || !args.checkInInvalido) PF('dlgDetalleTicket').show();" />
+                                                </h:panelGroup>
+                                            </div>
+                                        </div>
+
+                                        <!-- AVISO DE ACCIÓN OPERACIONAL EN TIEMPO REAL (URGENCIA / CHECK-IN / EMBARQUE) -->
+                                        <h:panelGroup rendered="#{perfilPasajeroView.tieneAvisoOperacional(it)}" layout="block" styleClass="delta-trip-alert #{perfilPasajeroView.getTipoAvisoOperacionalClass(it)}">
+                                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 w-100">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <i class="pi #{perfilPasajeroView.getIconoAvisoOperacional(it)}" style="font-size: 1.15rem;"></i>
+                                                    <div>
+                                                        <strong class="d-block" style="font-size: 0.82rem; letter-spacing: 0.3px;">#{perfilPasajeroView.getTituloAvisoOperacional(it)}</strong>
+                                                        <span style="font-size: 0.78rem; opacity: 0.95;">#{perfilPasajeroView.getMensajeAvisoOperacional(it)}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <h:panelGroup rendered="#{!perfilPasajeroView.isCheckInCompletado(it.idReserva) and perfilPasajeroView.isCheckInDisponible(it.horaSalida) and !perfilPasajeroView.isReservaCanceladaPorItinerario(it.idReserva)}">
+                                                        <p:commandButton value="Completar Check-In"
+                                                                         icon="pi pi-check-circle"
+                                                                         styleClass="btn-alert-action"
+                                                                         actionListener="#{perfilPasajeroView.irACheckIn(it)}"
+                                                                         process="@this" />
+                                                    </h:panelGroup>
+                                                    <h:panelGroup rendered="#{perfilPasajeroView.isCheckInCompletado(it.idReserva)}">
+                                                        <p:commandButton value="Ver Tarjeta de Embarque"
+                                                                         icon="pi pi-ticket"
+                                                                         styleClass="btn-alert-action"
+                                                                         actionListener="#{perfilPasajeroView.getTicket(it)}"
+                                                                         update=":formDetalleTicket:dlgDetalleTicket :globalGrowl"
+                                                                         oncomplete="if (!args || !args.checkInInvalido) PF('dlgDetalleTicket').show();" />
+                                                    </h:panelGroup>
+                                                </div>
+                                            </div>
+                                        </h:panelGroup>
+
+                                        <div class="delta-trip-body">
+                                            <div class="row align-items-center g-3">
+                                                <div class="col-auto">
+                                                    <div class="delta-date-box">
+                                                        <span class="delta-date-month">#{perfilPasajeroView.getFechaMes(it.horaSalida)}</span>
+                                                        <span class="delta-date-day">#{perfilPasajeroView.getFechaDia(it.horaSalida)}</span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col col-md-5">
+                                                    <div class="delta-route-iata">
+                                                        <span>#{it.codigoIataOrigen}</span>
+                                                        <i class="pi pi-arrow-right text-primary" style="font-size: 0.85rem;"></i>
+                                                        <span>#{it.codigoIataDestino}</span>
+                                                        <span class="badge bg-dark border border-secondary text-white-50 ms-1 d-none d-sm-inline-block" style="font-size: 0.7rem;">Itinerario ##{it.idItinerario}</span>
+                                                    </div>
+                                                    <div class="delta-city-title">
+                                                        #{perfilPasajeroView.getCiudadRuta(it.codigoIataOrigen, it.codigoIataDestino)}
+                                                    </div>
+                                                    <div class="mt-2 d-flex flex-wrap gap-2">
+                                                        <span class="delta-seats-badge">
+                                                            <i class="pi pi-ticket"></i>
+                                                            Asientos: #{perfilPasajeroView.getAsientosPorReserva(it.idReserva, it.idItinerario)}
+                                                        </span>
+                                                        <span class="delta-seats-badge" style="background: #0F172A !important; border-color: #334155 !important; color: #94A3B8 !important;">
+                                                            <i class="pi pi-briefcase text-info"></i>
+                                                            #{perfilPasajeroView.getEquipajeResumenPorReserva(it.idReserva)}
+                                                        </span>
+                                                    </div>
+                                                    <div class="mt-2 text-white-50 small d-flex align-items-center gap-2 flex-wrap">
+                                                        <span><i class="pi pi-send text-primary me-1"></i>#{perfilPasajeroView.getNumeroVueloPorItinerario(it.idItinerario)}</span>
+                                                        <span>•</span>
+                                                        <span><i class="pi pi-cog text-info me-1"></i>#{perfilPasajeroView.getModeloAvionPorItinerario(it.idItinerario)}</span>
+                                                        <span>•</span>
+                                                        <span><i class="pi pi-clock text-warning me-1"></i>#{perfilPasajeroView.getDuracionTotalPorItinerario(it.idItinerario)} (#{perfilPasajeroView.getEscalasResumenPorItinerario(it.idItinerario)})</span>
+                                                        <span>•</span>
+                                                        <span><i class="pi pi-sign-in text-info me-1"></i>#{perfilPasajeroView.getPuertaEmbarquePorItinerario(it.idReserva, it.idItinerario)}</span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-6 col-md-3">
+                                                    <span class="delta-time-label">FECHA DE SALIDA</span>
+                                                    <strong class="delta-time-val text-white-50">
+                                                        <h:outputText value="#{it.horaSalida}">
+                                                            <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/Santiago" />
+                                                        </h:outputText>
+                                                    </strong>
+                                                </div>
+
+                                                <div class="col-6 col-md-3">
+                                                    <span class="delta-time-label">LLEGADA</span>
+                                                    <strong class="delta-time-val text-white-50">
+                                                        <h:outputText value="#{it.horaLlegada != null ? it.horaLlegada : it.horaSalida}">
+                                                            <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/Santiago" />
+                                                        </h:outputText>
+                                                    </strong>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- APARTADO DE DOCUMENTACIÓN Y E-TICKET HISTÓRICO -->
+                                        <h:panelGroup rendered="#{!perfilPasajeroView.isReservaCanceladaPorItinerario(it.idReserva)}" layout="block" styleClass="delta-eticket-banner">
+                                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 w-100">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <i class="pi pi-file-pdf" style="font-size: 1.25rem; color: #38BDF8;"></i>
+                                                    <div>
+                                                        <strong class="d-block" style="font-size: 0.82rem; color: #F8FAFC;">E-Ticket Electrónico Histórico (PNR: #{perfilPasajeroView.getCodigoPnr(it.idReserva)})</strong>
+                                                        <span class="text-white-50" style="font-size: 0.76rem;">Comprobante de viaje archivado para #{perfilPasajeroView.getCantidadPasajerosPorReserva(it.idReserva)} pasajero(s).</span>
+                                                    </div>
+                                                </div>
+                                                <p:commandButton value="Descargar E-Ticket (PDF)"
+                                                                 icon="pi pi-download"
+                                                                 styleClass="btn-delta-eticket-download"
+                                                                 ajax="false"
+                                                                 title="Descargar E-Ticket en formato PDF">
+                                                    <p:fileDownload value="#{perfilPasajeroView.descargarComprobantePdf(it.idReserva)}" />
+                                                </p:commandButton>
+                                            </div>
+                                        </h:panelGroup>
+
+                                        <!-- AVISO DE RESERVA CANCELADA HISTÓRICA (SIN DESCARGA DE E-TICKET) -->
+                                        <h:panelGroup rendered="#{perfilPasajeroView.isReservaCanceladaPorItinerario(it.idReserva)}" layout="block" styleClass="delta-eticket-banner delta-eticket-banner-cancelled">
+                                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 w-100">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <i class="pi pi-ban" style="font-size: 1.25rem; color: #EF4444;"></i>
+                                                    <div>
+                                                        <strong class="d-block text-danger" style="font-size: 0.82rem;">Reserva Cancelada por Pasajero (PNR: #{perfilPasajeroView.getCodigoPnr(it.idReserva)})</strong>
+                                                        <span class="text-white-50" style="font-size: 0.76rem;">Esta reserva fue cancelada a solicitud del pasajero. La descarga del E-Ticket no se encuentra disponible.</span>
+                                                    </div>
+                                                </div>
+                                                <span class="badge bg-danger text-white py-1 px-2" style="font-size: 0.75rem;">
+                                                    <i class="pi pi-lock me-1"></i>E-Ticket No Disponible
+                                                </span>
+                                            </div>
+                                        </h:panelGroup>
+
+                                        <div class="delta-trip-footer">
+                                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                <i class="pi pi-users text-muted"></i>
+                                                <span class="text-white-50">#{perfilPasajeroView.getCantidadPasajerosPorReserva(it.idReserva)} Pasajeros: #{perfilPasajeroView.getNombresPasajerosPorReserva(it.idReserva)}</span>
+                                            </div>
+                                            <div class="d-flex align-items-center gap-3 text-white-50 small flex-wrap">
+                                                <span><i class="pi pi-tag text-info me-1"></i>Tarifa: <strong class="text-white-50">#{perfilPasajeroView.getNombreTarifaItinerario(it.idReserva, it.idItinerario)}</strong></span>
+                                                <span><i class="pi pi-wallet text-secondary me-1"></i>Total: <strong class="text-white-50">#{perfilPasajeroView.getTotalReservaFormateado(it.idReserva)}</strong></span>
+                                                <span class="badge bg-secondary font-weight-bold">Viaje Histórico</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </ui:repeat>
+                            </p:tab>
+
+                            <!-- TAB 4: CALENDARIO INTERACTIVO (VALOR AGREGADO SKYWAY) -->
+                            <p:tab title="Calendario Interactivo">
+                                <div class="skyway-schedule-card mt-0">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <span class="text-white font-weight-bold" style="font-size: 1.05rem;">
+                                            <i class="pi pi-calendar-plus text-primary me-2"></i>Calendario Visual de Itinerarios
+                                        </span>
+                                        <span class="badge bg-primary px-3 py-1 font-weight-bold" style="border-radius: 20px; font-size: 0.78rem;">
+                                            #{perfilPasajeroView.listaItinerarios.size()} Vuelos Totales
+                                        </span>
+                                    </div>
+
+                                    <p:schedule id="scheduleItinerarios"
+                                                value="#{perfilPasajeroView.scheduleModel}"
+                                                widgetVar="itinerariosSchedule"
+                                                timeZone="America/Santiago"
+                                                clientTimeZone="local"
+                                                locale="es"
+                                                view="dayGridMonth"
+                                                initialDate="#{perfilPasajeroView.fechaInicialSchedule}"
+                                                height="auto"
+                                                leftHeaderTemplate="prev,next today"
+                                                centerHeaderTemplate="title"
+                                                rightHeaderTemplate="dayGridMonth,timeGridWeek,timeGridDay"
+                                                styleClass="skyway-schedule"
+                                                tooltip="true"
+                                                showWeekNumbers="false">
+                                        <p:ajax event="eventSelect"
+                                                listener="#{perfilPasajeroView.onEventSelect}"
+                                                update=":formHubModal:dlgHubModal"
+                                                oncomplete="PF('dlgHubModal').show();" />
+                                    </p:schedule>
+
+                                    <div class="schedule-legend">
+                                        <span class="legend-item"><span class="legend-dot" style="background:#0284C7;"></span> Confirmado</span>
+                                        <span class="legend-item"><span class="legend-dot" style="background:#10B981;"></span> Check-In Listo</span>
+                                        <span class="legend-item"><span class="legend-dot" style="background:#334155;"></span> Finalizado</span>
+                                        <span class="legend-item"><span class="legend-dot" style="background:#64748B;"></span> Cancelado</span>
+                                        <span class="ms-auto text-white-50"><i class="pi pi-info-circle me-1 text-primary"></i>Haz clic en cualquier vuelo para abrir su centro de control</span>
+                                    </div>
+                                </div>
+                            </p:tab>
+
+                            <!-- TAB 5: MODO TABLA COMPLETO -->
+                            <p:tab title="Modo Tabla">
+                                <p:dataTable id="tablaItinerarios"
+                                             var="it"
+                                             value="#{perfilPasajeroView.listaItinerarios}"
+                                             rows="10"
+                                             paginator="true"
+                                             paginatorPosition="bottom"
+                                             responsiveLayout="scroll"
+                                             emptyMessage="No tienes itinerarios registrados."
+                                             styleClass="skyway-datatable mt-2"
+                                             rowKey="#{it.idItinerario}">
+
+                                    <p:column headerText="PNR" style="width: 120px;">
+                                        <span class="font-monospace text-white font-weight-bold">#{perfilPasajeroView.getCodigoPnr(it.idReserva)}</span>
+                                    </p:column>
+
+                                    <p:column headerText="Ruta" styleClass="col-route">
+                                        <span class="iata-code">#{it.codigoIataOrigen}</span>
+                                        <i class="pi pi-arrow-right route-icon"></i>
+                                        <span class="iata-code">#{it.codigoIataDestino}</span>
+                                    </p:column>
+
+                                    <p:column headerText="Salida" sortBy="#{it.horaSalida}" styleClass="col-date">
+                                        <h:outputText value="#{it.horaSalida}">
+                                            <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/Santiago"/>
+                                        </h:outputText>
+                                    </p:column>
+
+                                    <p:column headerText="Estado">
+                                        <span class="badge #{perfilPasajeroView.getEstadoBadgeClass(it)} font-weight-bold d-inline-flex align-items-center gap-1">
+                                            <i class="pi #{perfilPasajeroView.getEstadoIconClass(it)}" style="font-size: 0.72rem;"></i>
+                                            #{perfilPasajeroView.getEstadoVueloPorItinerario(it)}
+                                        </span>
+                                    </p:column>
+
+                                    <p:column headerText="Tarjeta Embarque" styleClass="col-center text-center">
+                                        <h:panelGroup rendered="#{perfilPasajeroView.isReservaCanceladaPorItinerario(it.idReserva)}">
+                                            <span class="badge bg-secondary">Cancelada</span>
+                                        </h:panelGroup>
+
+                                        <h:panelGroup rendered="#{!perfilPasajeroView.isReservaCanceladaPorItinerario(it.idReserva) and perfilPasajeroView.isCheckInCompletado(it.idReserva)}">
+                                            <p:commandButton value="Ver Ticket"
+                                                             icon="pi pi-ticket"
+                                                             styleClass="ui-button-success ui-button-sm"
+                                                             actionListener="#{perfilPasajeroView.getTicket(it)}"
+                                                             update=":formDetalleTicket:dlgDetalleTicket :globalGrowl"
+                                                             oncomplete="if (!args || !args.checkInInvalido) PF('dlgDetalleTicket').show();"/>
+                                        </h:panelGroup>
+
+                                        <h:panelGroup rendered="#{!perfilPasajeroView.isReservaCanceladaPorItinerario(it.idReserva) and !perfilPasajeroView.isCheckInCompletado(it.idReserva) and perfilPasajeroView.isCheckInDisponible(it.horaSalida)}">
+                                            <p:commandButton value="Hacer Check-In"
+                                                             icon="pi pi-check-circle"
+                                                             styleClass="ui-button-info ui-button-sm"
+                                                             actionListener="#{perfilPasajeroView.irACheckIn(it)}"
+                                                                         process="@this" />
+                                        </h:panelGroup>
+
+                                        <h:panelGroup rendered="#{!perfilPasajeroView.isReservaCanceladaPorItinerario(it.idReserva) and !perfilPasajeroView.isCheckInCompletado(it.idReserva) and !perfilPasajeroView.isCheckInDisponible(it.horaSalida)}">
+                                            <span class="badge bg-dark border border-secondary text-white-50 small">Pendiente (48h)</span>
+                                        </h:panelGroup>
+                                    </p:column>
+
+                                    <p:column headerText="E-Ticket" styleClass="col-center text-center" style="width: 140px;">
+                                        <h:panelGroup rendered="#{!perfilPasajeroView.isReservaCanceladaPorItinerario(it.idReserva)}">
+                                            <p:commandButton value="E-Ticket"
+                                                             icon="pi pi-file-pdf"
+                                                             styleClass="ui-button-outlined ui-button-info ui-button-sm"
+                                                             ajax="false"
+                                                             title="Descargar E-Ticket Oficial de Reserva (PDF)">
+                                                <p:fileDownload value="#{perfilPasajeroView.descargarComprobantePdf(it.idReserva)}" />
+                                            </p:commandButton>
+                                        </h:panelGroup>
+                                        <h:panelGroup rendered="#{perfilPasajeroView.isReservaCanceladaPorItinerario(it.idReserva)}">
+                                            <span class="badge bg-dark border border-secondary text-white-50 small" title="Reserva Cancelada">No disponible</span>
+                                        </h:panelGroup>
+                                    </p:column>
+
+                                    <p:column headerText="Acciones" styleClass="col-actions">
+                                        <div class="action-buttons-wrapper">
+                                            <p:commandButton icon="pi pi-info-circle"
+                                                             title="Ver Escalas / Paradas"
+                                                             styleClass="ui-button-outlined ui-button-info"
+                                                             action="#{itinerarioDetalleBean.showParadas(it.idItinerario)}"
+                                                             update=":sidebarParadas"
+                                                             oncomplete="PF('sidebarParadas').show();"/>
+
+                                            <p:commandButton icon="pi pi-sliders-h"
+                                                             title="Centro de Control Reserva"
+                                                             styleClass="ui-button-primary"
+                                                             actionListener="#{perfilPasajeroView.verDetalleCompletoReserva(it)}"
+                                                             update=":formHubModal:dlgHubModal"
+                                                             oncomplete="PF('dlgHubModal').show();" />
+                                        </div>
+                                    </p:column>
+                                </p:dataTable>
+                            </p:tab>
+
+                        </p:tabView>
+                    </h:form>
+
+                </div>
+            </div>
+
+            <!-- ==============================================================
+                 3. MODALES MODULARIZADOS DE GESTIÓN Y DETALLES DEL PASAJERO
                  ============================================================== -->
             <ui:include src="dialogs/dlgDetalle.xhtml" />
             <ui:include src="dialogs/dlgHubModal.xhtml" />

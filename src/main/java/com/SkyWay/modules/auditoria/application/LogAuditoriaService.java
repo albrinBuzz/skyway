@@ -6,15 +6,20 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.lang.management.ManagementFactory;
+import java.net.InetAddress;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Enumeration;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class LogAuditoriaService {
@@ -23,7 +28,7 @@ public class LogAuditoriaService {
     private EntityManager entityManager;
 
     /**
-     * Sobrecarga estándar para llamadas rápidas desde Controllers o Beans.
+     * Registro estándar para operaciones ordinarias del sistema.
      */
     @Transactional
     public void registrarLog(String identificadorUsuario, String accion, String tablaAfectada, Integer idRegistroAfectado, String detalleBase, HttpServletRequest request) {
@@ -31,7 +36,7 @@ public class LogAuditoriaService {
     }
 
     /**
-     * Sobrecarga para registrar errores con captura de StackTrace.
+     * Registro especializado para excepciones y fallos del sistema.
      */
     @Transactional
     public void registrarLogError(String identificadorUsuario, String accion, String tablaAfectada, Integer idRegistroAfectado, Throwable excepcion, HttpServletRequest request) {
@@ -39,7 +44,7 @@ public class LogAuditoriaService {
     }
 
     /**
-     * Método principal que empaqueta la máxima cantidad de información posible.
+     * Método principal de persistencia de auditoría inmutable vía procedimiento almacenado.
      */
     @Transactional
     public void registrarLogExhaustivo(String identificadorUsuario, String accion, String nivel, String tablaAfectada,
@@ -53,8 +58,7 @@ public class LogAuditoriaService {
             userAgent = userAgent.substring(0, 255);
         }
 
-        // Construir reporte exhaustivo de auditoría
-        String detalleExtendido = construirReporteExhaustivo(detalleBase, excepcion, request);
+        String detalleTrazable = construirReporteTrazable(detalleBase, excepcion, request);
 
         entityManager.createNativeQuery(
                         "CALL sp_registrar_log_auditoria(" +
@@ -76,141 +80,171 @@ public class LogAuditoriaService {
                 .setParameter("idRegistro", idRegistroAfectado)
                 .setParameter("datosAnt", datosAnterioresJson)
                 .setParameter("datosNuev", datosNuevosJson)
-                .setParameter("detalle", detalleExtendido)
+                .setParameter("detalle", detalleTrazable)
                 .setParameter("ip", ip)
                 .setParameter("userAgent", userAgent)
                 .executeUpdate();
     }
 
     /**
-     * Genera un bloque estructurado en texto con todos los metadatos técnicos imaginables.
+     * Genera la traza técnica y operativa en formato estandarizado de pares CLAVE: VALOR.
      */
-    private String construirReporteExhaustivo(String detalleBase, Throwable excepcion, HttpServletRequest request) {
+    private String construirReporteTrazable(String detalleBase, Throwable excepcion, HttpServletRequest request) {
         StringBuilder sb = new StringBuilder();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
-        // 1. EVENTO Y NEGOCIO
-        sb.append("=================================================================\n");
-        sb.append("                      DETALLE DE AUDITORÍA                      \n");
-        sb.append("=================================================================\n");
-        sb.append("DESCRIPCIÓN    : ").append(detalleBase != null ? detalleBase.trim() : "Sin descripción").append("\n");
-        sb.append("TIMESTAMP APP  : ").append(LocalDateTime.now().format(formatter)).append("\n\n");
+        // 1. IDENTIFICACIÓN DEL EVENTO
+        sb.append("[EVENTO DE AUDITORIA]\n");
+        sb.append("DESCRIPCION   : ").append(detalleBase != null ? detalleBase.trim() : "Sin descripción").append("\n");
+        sb.append("TIMESTAMP_UTC : ").append(LocalDateTime.now(ZoneId.of("UTC")).format(formatter)).append(" UTC\n");
+        sb.append("TIMESTAMP_LOC : ").append(LocalDateTime.now().format(formatter)).append("\n\n");
+
+        // 2. CONTEXTO DE SEGURIDAD Y ROLES
+        sb.append("[SEGURIDAD & AUTENTICACION]\n");
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+            sb.append("PRINCIPAL     : ").append(auth.getName()).append("\n");
+            sb.append("AUTENTICADO   : SÍ\n");
+            sb.append("ROLES_ASIGNAD : ").append(auth.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .collect(Collectors.joining(", "))).append("\n");
+            sb.append("TIPO_AUTH_CLASS: ").append(auth.getClass().getSimpleName()).append("\n\n");
+        } else {
+            sb.append("PRINCIPAL     : ANONYMOUS\n");
+            sb.append("AUTENTICADO   : NO\n");
+            sb.append("ROLES_ASIGNAD : SIN_ROLES\n\n");
+        }
 
         if (request != null) {
-            // 2. CONTEXTO HTTP Y RED
-            sb.append("-----------------------------------------------------------------\n");
-            sb.append("1. CONTEXTO DE SOLICITUD HTTP (REQUEST)\n");
-            sb.append("-----------------------------------------------------------------\n");
-            sb.append("MÉTODO HTTP    : ").append(request.getMethod()).append("\n");
-            sb.append("URI SOLICITADA : ").append(request.getRequestURI()).append("\n");
-            sb.append("URL COMPLETA   : ").append(request.getRequestURL().toString()).append("\n");
-            sb.append("QUERY STRING   : ").append(request.getQueryString() != null ? request.getQueryString() : "N/A").append("\n");
-            sb.append("ESQUEMA/PROTOCO: ").append(request.getScheme()).append(" / ").append(request.getProtocol()).append("\n");
-            sb.append("PUERTO SERVIDOR: ").append(request.getServerName()).append(":").append(request.getServerPort()).append("\n");
-            sb.append("DIRECCIÓN LOCAL: ").append(request.getLocalAddr()).append(":").append(request.getLocalPort()).append("\n");
+            // 3. CONTEXTO HTTP Y CANAL DE ACCESO AEROLÍNEA
+            sb.append("[PETICION HTTP & CANAL]\n");
+            sb.append("METODO        : ").append(request.getMethod()).append(" ").append(request.getRequestURI()).append("\n");
+            sb.append("CANAL_ACCESO  : ").append(determinarCanal(request)).append("\n");
+            sb.append("URL_COMPLETA  : ").append(request.getRequestURL().toString()).append("\n");
+            sb.append("QUERY_STRING  : ").append(request.getQueryString() != null ? request.getQueryString() : "N/A").append("\n");
+            sb.append("PROTOCOLO     : ").append(request.getScheme().toUpperCase()).append(" / ").append(request.getProtocol()).append("\n");
+            sb.append("PUERTO_SERVER : ").append(request.getServerName()).append(":").append(request.getServerPort()).append("\n");
+            sb.append("DIREC_LOCAL   : ").append(request.getLocalAddr()).append(":").append(request.getLocalPort()).append("\n\n");
 
-            // 3. PARÁMETROS RECIBIDOS EN LA PETICIÓN
-            sb.append("\n-----------------------------------------------------------------\n");
-            sb.append("2. PARÁMETROS DE LA PETICIÓN (HTTP PARAMETERS)\n");
-            sb.append("-----------------------------------------------------------------\n");
+            // 4. PARÁMETROS Y DATOS ENVIADOS
+            sb.append("[PARAMETROS SOLICITUD]\n");
             Map<String, String[]> paramMap = request.getParameterMap();
             if (paramMap.isEmpty()) {
-                sb.append("Sin parámetros adicionales en la solicitud.\n");
+                sb.append("  (Sin parámetros)\n\n");
             } else {
                 for (Map.Entry<String, String[]> entry : paramMap.entrySet()) {
                     String paramName = entry.getKey();
-                    // Ocultar valores sensibles
-                    if ("password".equalsIgnoreCase(paramName) || "contrasena".equalsIgnoreCase(paramName) || "token".equalsIgnoreCase(paramName)) {
-                        sb.append("  - ").append(paramName).append(" = [PROTEGIDO]\n");
+                    if (esCampoSensible(paramName)) {
+                        sb.append("  - ").append(paramName).append(" = [PROTEGIDO/MASKED]\n");
                     } else {
                         sb.append("  - ").append(paramName).append(" = ").append(String.join(", ", entry.getValue())).append("\n");
                     }
                 }
+                sb.append("\n");
             }
 
-            // 4. INFORMACIÓN COMPLETA DE SESIÓN
-            sb.append("\n-----------------------------------------------------------------\n");
-            sb.append("3. ESTADO DE LA SESIÓN HTTP\n");
-            sb.append("-----------------------------------------------------------------\n");
+            // 5. ESTADO DE LA SESIÓN HTTP
+            sb.append("[SESION DE USUARIO]\n");
             HttpSession session = request.getSession(false);
             if (session != null) {
-                sb.append("SESSION ID     : ").append(session.getId()).append("\n");
-                sb.append("ES NUEVA       : ").append(session.isNew() ? "SÍ" : "NO").append("\n");
-                sb.append("CREACIÓN       : ").append(LocalDateTime.ofInstant(Instant.ofEpochMilli(session.getCreationTime()), ZoneId.systemDefault()).format(formatter)).append("\n");
-                sb.append("ÚLTIMO ACCESO  : ").append(LocalDateTime.ofInstant(Instant.ofEpochMilli(session.getLastAccessedTime()), ZoneId.systemDefault()).format(formatter)).append("\n");
-                sb.append("INACTIVIDAD MAX: ").append(session.getMaxInactiveInterval()).append(" segundos\n");
+                sb.append("ID_SESION     : ").append(session.getId()).append("\n");
+                sb.append("ES_NUEVA      : ").append(session.isNew() ? "SÍ" : "NO").append("\n");
+                sb.append("CREACION      : ").append(LocalDateTime.ofInstant(Instant.ofEpochMilli(session.getCreationTime()), ZoneId.systemDefault()).format(formatter)).append("\n");
+                sb.append("ULTIMO_ACCESO : ").append(LocalDateTime.ofInstant(Instant.ofEpochMilli(session.getLastAccessedTime()), ZoneId.systemDefault()).format(formatter)).append("\n");
+                sb.append("TIMEOUT_MAX   : ").append(session.getMaxInactiveInterval()).append(" segundos\n\n");
             } else {
-                sb.append("Estado         : Sin Sesión Activa (Stateless / Anon)\n");
+                sb.append("ESTADO        : Sin sesión activa (Stateless / API)\n\n");
             }
 
-            // 5. ENCABEZADOS DE CLIENTE Y NAVEGADOR (HEADERS)
-            sb.append("\n-----------------------------------------------------------------\n");
-            sb.append("4. NAVEGADOR Y PLATAFORMA CLIENTE\n");
-            sb.append("-----------------------------------------------------------------\n");
-            sb.append("USER AGENT     : ").append(request.getHeader("User-Agent")).append("\n");
-            sb.append("RESUMEN OS/NAV : ").append(extraerInfoCliente(request.getHeader("User-Agent"))).append("\n");
-            sb.append("IDIOMA CLIENTE : ").append(request.getHeader("Accept-Language")).append("\n");
-            sb.append("REFERER        : ").append(request.getHeader("Referer") != null ? request.getHeader("Referer") : "Directo / Sin Referer").append("\n");
-            sb.append("SEC-CH-UA      : ").append(request.getHeader("Sec-Ch-Ua")).append("\n");
-            sb.append("SEC-CH-UA-PLAT : ").append(request.getHeader("Sec-Ch-Ua-Platform")).append("\n");
-            sb.append("SEC-CH-UA-MOB  : ").append(request.getHeader("Sec-Ch-Ua-Mobile")).append("\n");
+            // 6. CLIENTE, NAVEGADOR Y DISPOSITIVO
+            sb.append("[CLIENTE & DISPOSITIVO]\n");
+            sb.append("USER_AGENT    : ").append(request.getHeader("User-Agent") != null ? request.getHeader("User-Agent") : "N/A").append("\n");
+            sb.append("SISTEMA_NAV   : ").append(extraerInfoCliente(request.getHeader("User-Agent"))).append("\n");
+            sb.append("IDIOMA        : ").append(request.getHeader("Accept-Language") != null ? request.getHeader("Accept-Language") : "N/A").append("\n");
+            sb.append("REFERER       : ").append(request.getHeader("Referer") != null ? request.getHeader("Referer") : "Directo").append("\n");
+            sb.append("SEC_CH_UA_PLAT: ").append(request.getHeader("Sec-Ch-Ua-Platform") != null ? request.getHeader("Sec-Ch-Ua-Platform") : "N/A").append("\n\n");
 
-            // 6. DETECCION DE PROXIES / RED
-            sb.append("\n-----------------------------------------------------------------\n");
-            sb.append("5. TRAZA DE RED Y PROXIES\n");
-            sb.append("-----------------------------------------------------------------\n");
-            sb.append("X-Forwarded-For: ").append(request.getHeader("X-Forwarded-For")).append("\n");
-            sb.append("X-Real-IP      : ").append(request.getHeader("X-Real-IP")).append("\n");
-            sb.append("CF-Conn-IP     : ").append(request.getHeader("CF-Connecting-IP")).append("\n");
+            // 7. TRAZA DE RED Y PROXIES (PRODUCCIÓN CLOUD)
+            sb.append("[TRAZA DE RED & PROXIES]\n");
+            sb.append("X_FORWARD_FOR : ").append(request.getHeader("X-Forwarded-For") != null ? request.getHeader("X-Forwarded-For") : "N/A").append("\n");
+            sb.append("X_REAL_IP     : ").append(request.getHeader("X-Real-IP") != null ? request.getHeader("X-Real-IP") : "N/A").append("\n");
+            sb.append("CF_CONN_IP    : ").append(request.getHeader("CF-Connecting-IP") != null ? request.getHeader("CF-Connecting-IP") : "N/A").append("\n\n");
 
-            // 7. COOKIES PRESENTES EN LA SOLICITUD
-            sb.append("\n-----------------------------------------------------------------\n");
-            sb.append("6. COOKIES RECIBIDAS\n");
-            sb.append("-----------------------------------------------------------------\n");
+            // 8. COOKIES RECIBIDAS
+            sb.append("[COOKIES]\n");
             Cookie[] cookies = request.getCookies();
             if (cookies != null && cookies.length > 0) {
                 for (Cookie c : cookies) {
-                    sb.append("  - ").append(c.getName()).append(" (Domain: ").append(c.getDomain()).append(", MaxAge: ").append(c.getMaxAge()).append("s)\n");
+                    sb.append("  - ").append(c.getName()).append(" (MaxAge: ").append(c.getMaxAge()).append("s)\n");
                 }
+                sb.append("\n");
             } else {
-                sb.append("No se recibieron cookies en la petición.\n");
+                sb.append("  (Sin cookies)\n\n");
             }
         }
 
-        // 8. MÉTRICAS DE LA MÁQUINA VIRTUAL DE JAVA (JVM)
-        sb.append("\n-----------------------------------------------------------------\n");
-        sb.append("7. ESTADO Y MÉTRICAS DE SERVIDOR (JVM)\n");
-        sb.append("-----------------------------------------------------------------\n");
+        // 9. NODO DE INFRAESTRUCTURA Y SALUD JVM
+        sb.append("[INFRAESTRUCTURA & RUNTIME]\n");
+        sb.append("HOST_INSTANCIA: ").append(obtenerHostName()).append("\n");
+        sb.append("PID_PROCESO   : ").append(ProcessHandle.current().pid()).append("\n");
+
         Runtime runtime = Runtime.getRuntime();
         long maxMem = runtime.maxMemory() / (1024 * 1024);
         long totalMem = runtime.totalMemory() / (1024 * 1024);
         long freeMem = runtime.freeMemory() / (1024 * 1024);
         long usedMem = totalMem - freeMem;
+        long porcentajeUso = (usedMem * 100) / (maxMem > 0 ? maxMem : totalMem);
 
-        sb.append("MEMORIA USADA  : ").append(usedMem).append(" MB / ").append(totalMem).append(" MB (Max: ").append(maxMem).append(" MB)\n");
-        sb.append("PROCESADORES   : ").append(runtime.availableProcessors()).append(" Cores asignados\n");
+        sb.append("MEMORIA_USADA : ").append(usedMem).append(" MB / ").append(totalMem).append(" MB (Uso: ").append(porcentajeUso).append("%, Máx: ").append(maxMem).append(" MB)\n");
+        sb.append("CPU_CORES     : ").append(runtime.availableProcessors()).append(" Cores asignados\n");
+        sb.append("UPTIME_SERVER : ").append(ManagementFactory.getRuntimeMXBean().getUptime() / 1000).append(" segundos\n");
 
-        // 9. TRAZABILIDAD DEL HILO DE EJECUCIÓN (THREAD)
         Thread currentThread = Thread.currentThread();
-        sb.append("HILO (THREAD)  : ").append(currentThread.getName()).append(" (ID: ").append(currentThread.getId()).append(", Prioridad: ").append(currentThread.getPriority()).append(")\n");
+        sb.append("HILO_EJECUCION: ").append(currentThread.getName()).append(" (ID: ").append(currentThread.getId()).append(")\n");
 
-        // 10. CAPTURA DE EXCEPCIÓN Y STACK TRACE (SI EXISTE)
+        // 10. DIAGNÓSTICO DE EXCEPCIÓN
         if (excepcion != null) {
-            sb.append("\n=================================================================\n");
-            sb.append("8. EXCEPCIÓN Y TRAZA DE ERROR (STACKTRACE)\n");
-            sb.append("=================================================================\n");
-            sb.append("CLASE EXCEPCIÓN: ").append(excepcion.getClass().getName()).append("\n");
-            sb.append("MENSAJE ERROR  : ").append(excepcion.getMessage()).append("\n");
-            sb.append("TRAZA PRINCIPAL:\n");
+            sb.append("\n[DIAGNOSTICO DE EXCEPCION]\n");
+            sb.append("CLASE_ERROR   : ").append(excepcion.getClass().getName()).append("\n");
+            sb.append("MENSAJE_ERROR : ").append(excepcion.getMessage()).append("\n");
+            sb.append("STACKTRACE    :\n");
 
             StackTraceElement[] stackTrace = excepcion.getStackTrace();
-            int limit = Math.min(stackTrace.length, 12); // Guardar los 12 primeros frames relevantes
+            int limit = Math.min(stackTrace.length, 15);
             for (int i = 0; i < limit; i++) {
                 sb.append("   at ").append(stackTrace[i].toString()).append("\n");
             }
         }
 
         return sb.toString();
+    }
+
+    private boolean esCampoSensible(String campo) {
+        if (campo == null) return false;
+        String lower = campo.toLowerCase();
+        return lower.contains("password") || lower.contains("contrasena") ||
+                lower.contains("token") || lower.contains("cvv") ||
+                lower.contains("tarjeta") || lower.contains("secret");
+    }
+
+    private String determinarCanal(HttpServletRequest request) {
+        String channelHeader = request.getHeader("X-SkyWay-Channel");
+        if (channelHeader != null && !channelHeader.isBlank()) {
+            return channelHeader.toUpperCase();
+        }
+        String ua = request.getHeader("User-Agent");
+        if (ua != null) {
+            if (ua.contains("Android") || ua.contains("iPhone")) return "APP_MOVIL";
+        }
+        return "WEB_PORTAL";
+    }
+
+    private String obtenerHostName() {
+        try {
+            return InetAddress.getLocalHost().getHostName();
+        } catch (Exception e) {
+            return "UNKNOWN_HOST";
+        }
     }
 
     private String obtenerRutPorIdentificador(String identificador) {
@@ -259,7 +293,7 @@ public class LogAuditoriaService {
         String os = "SO Desconocido";
 
         if (userAgent.contains("Windows")) os = "Windows";
-        else if (userAgent.contains("Mac")) os = "MacOS";
+        else if (userAgent.contains("Mac")) os = userAgent.contains("OS X") ? "MacOS" : "Mac";
         else if (userAgent.contains("X11") || userAgent.contains("Linux")) os = "Linux";
         else if (userAgent.contains("Android")) os = "Android";
         else if (userAgent.contains("iPhone") || userAgent.contains("iPad")) os = "iOS";

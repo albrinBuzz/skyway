@@ -27,8 +27,21 @@
                     </div>
                 </h:panelGroup>
 
+                <!-- BANNER DE ACCIÓN OPERACIONAL EN TIEMPO REAL -->
+                <h:panelGroup rendered="#{perfilPasajeroView.tieneAvisoOperacional(perfilPasajeroView.itinerarioSeleccionado)}" layout="block" styleClass="mb-3">
+                    <div class="delta-trip-alert #{perfilPasajeroView.getTipoAvisoOperacionalClass(perfilPasajeroView.itinerarioSeleccionado)} rounded p-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="pi #{perfilPasajeroView.getIconoAvisoOperacional(perfilPasajeroView.itinerarioSeleccionado)}" style="font-size: 1.25rem;"></i>
+                            <div>
+                                <strong class="d-block" style="font-size: 0.88rem;">#{perfilPasajeroView.getTituloAvisoOperacional(perfilPasajeroView.itinerarioSeleccionado)}</strong>
+                                <span style="font-size: 0.82rem;">#{perfilPasajeroView.getMensajeAvisoOperacional(perfilPasajeroView.itinerarioSeleccionado)}</span>
+                            </div>
+                        </div>
+                    </div>
+                </h:panelGroup>
+
                 <!-- BANNER DE ESTADO Y LIVE FLIGHT TRACKER -->
-                <div class="p-3 mb-3 rounded d-flex justify-content-between align-items-center shadow-sm"
+                <div class="p-3 mb-3 rounded d-flex justify-content-between align-items-center flex-wrap gap-2 shadow-sm"
                      style="background: #0D172A; border: 1px solid #1E293B;">
 
                     <!-- ESTADO DEL VUELO -->
@@ -42,7 +55,7 @@
 
                         <h:panelGroup rendered="#{perfilPasajeroView.reservaCancelada}">
                             <span class="badge bg-danger font-weight-bold px-3 py-2" style="font-size:0.9rem; border-radius: 6px;">
-                                <i class="pi pi-times-circle me-1" style="font-size:0.75rem;"></i>CANCELADO
+                                <i class="pi pi-times-circle me-1" style="font-size:0.75rem;"></i>CANCELADA POR PASAJERO
                             </span>
                         </h:panelGroup>
                     </div>
@@ -135,36 +148,49 @@
 
                 <!-- CRONOGRAMA / TIMELINE -->
                 <div class="timeline-compact-wrapper mb-3">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
                         <span class="text-white font-weight-bold small">
                             <i class="pi pi-clock text-primary me-1"></i> Cronograma del Vuelo
                         </span>
 
-                        <h:panelGroup rendered="#{perfilPasajeroView.checkInCompletado and !perfilPasajeroView.reservaCancelada}">
-                            <p:commandButton value="Ver Tarjetas de Embarque"
-                                             icon="pi pi-ticket"
-                                             iconPos="right"
-                                             styleClass="ui-button-success btn-sm py-1 px-3"
-                                             actionListener="#{perfilPasajeroView.getTicket(perfilPasajeroView.itinerarioSeleccionado)}"
-                                             update=":formDetalleTicket:dlgDetalleTicket :globalGrowl"
-                                             oncomplete="if (!args || !args.checkInInvalido) PF('dlgDetalleTicket').show();" />
-                        </h:panelGroup>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <h:panelGroup rendered="#{!perfilPasajeroView.reservaCancelada}">
+                                <p:commandButton value="Descargar E-Ticket"
+                                                 icon="pi pi-file-pdf"
+                                                 styleClass="btn-skyway-outlined btn-sm py-1 px-3"
+                                                 ajax="false"
+                                                 title="Descargar E-Ticket Oficial de Reserva (PDF)">
+                                    <p:fileDownload value="#{perfilPasajeroView.descargarComprobantePdf(perfilPasajeroView.itinerarioSeleccionado.idReserva)}" />
+                                </p:commandButton>
+                            </h:panelGroup>
 
-                        <h:panelGroup rendered="#{!perfilPasajeroView.checkInCompletado and perfilPasajeroView.checkInAbierto and !perfilPasajeroView.reservaCancelada}">
-                            <p:commandButton value="Realizar Check-In Ahora"
-                                             icon="pi pi-arrow-right"
-                                             iconPos="right"
-                                             styleClass="btn-skyway-primary btn-sm py-1 px-3"
-                                             actionListener="#{perfilPasajeroView.irACheckIn}" />
-                        </h:panelGroup>
+                            <h:panelGroup rendered="#{perfilPasajeroView.checkInCompletado and !perfilPasajeroView.reservaCancelada}">
+                                <p:commandButton value="Ver Tarjetas de Embarque"
+                                                 icon="pi pi-ticket"
+                                                 iconPos="right"
+                                                 styleClass="ui-button-success btn-sm py-1 px-3"
+                                                 actionListener="#{perfilPasajeroView.getTicket(perfilPasajeroView.itinerarioSeleccionado)}"
+                                                 update=":formDetalleTicket:dlgDetalleTicket :globalGrowl"
+                                                 oncomplete="if (!args || !args.checkInInvalido) PF('dlgDetalleTicket').show();" />
+                            </h:panelGroup>
 
-                        <h:panelGroup rendered="#{!perfilPasajeroView.checkInCompletado and !perfilPasajeroView.checkInAbierto and !perfilPasajeroView.reservaCancelada}">
-                            <span class="badge bg-secondary px-2 py-1 small">#{perfilPasajeroView.estadoCheckInTexto}</span>
-                        </h:panelGroup>
+                            <h:panelGroup rendered="#{!perfilPasajeroView.checkInCompletado and perfilPasajeroView.checkInAbierto and !perfilPasajeroView.reservaCancelada}">
+                                <p:commandButton value="Realizar Check-In Ahora"
+                                                 icon="pi pi-arrow-right"
+                                                 iconPos="right"
+                                                 styleClass="btn-skyway-primary btn-sm py-1 px-3"
+                                                 actionListener="#{perfilPasajeroView.irACheckIn}"
+                                                 process="@this" />
+                            </h:panelGroup>
 
-                        <h:panelGroup rendered="#{perfilPasajeroView.reservaCancelada}">
-                            <span class="badge bg-dark text-muted border border-secondary px-2 py-1 small">NO DISPONIBLE</span>
-                        </h:panelGroup>
+                            <h:panelGroup rendered="#{!perfilPasajeroView.checkInCompletado and !perfilPasajeroView.checkInAbierto and !perfilPasajeroView.reservaCancelada}">
+                                <span class="badge bg-secondary px-2 py-1 small">#{perfilPasajeroView.estadoCheckInTexto}</span>
+                            </h:panelGroup>
+
+                            <h:panelGroup rendered="#{perfilPasajeroView.reservaCancelada}">
+                                <span class="badge bg-dark text-muted border border-secondary px-2 py-1 small">NO DISPONIBLE</span>
+                            </h:panelGroup>
+                        </div>
                     </div>
 
                     <div class="timeline-compact-grid">
@@ -523,7 +549,124 @@
                         </div>
                     </p:tab>
 
-                    <!-- TAB 4: ANULACIÓN / CANCELACIÓN -->
+                    <!-- TAB 5: DOCUMENTACIÓN OFICIAL Y E-TICKET -->
+                    <p:tab title="E-Ticket y Documentos">
+                        <div class="hub-tab-panel">
+                            <div class="row g-3">
+                                <!-- TARJETA 1: E-TICKET ELECTRÓNICO (COMPROBANTE DE COMPRA E ITINERARIO) -->
+                                <div class="col-md-6">
+                                    <div class="p-3 rounded h-100 d-flex flex-column justify-content-between" style="background: #0B132B; border: 1px solid #1E293B;">
+                                        <div>
+                                            <div class="d-flex align-items-center gap-2 mb-2">
+                                                <i class="pi pi-file-pdf text-danger" style="font-size: 1.6rem;"></i>
+                                                <div>
+                                                    <strong class="text-white d-block" style="font-size: 0.95rem;">E-Ticket Oficial de Viaje</strong>
+                                                    <span class="text-white-50 small">Comprobante de reserva e itinerario con validez aeronáutica IATA</span>
+                                                </div>
+                                            </div>
+                                            <div class="my-3 p-2 rounded" style="background: #070E1E; border: 1px solid #1E293B; font-size: 0.82rem;">
+                                                <div class="d-flex justify-content-between py-1 border-bottom border-secondary">
+                                                    <span class="text-white-50">Localizador (PNR):</span>
+                                                    <strong class="text-white font-monospace">#{not empty perfilPasajeroView.reservaDetalle.codigoReserva ? perfilPasajeroView.reservaDetalle.codigoReserva : ('SW-'.concat(perfilPasajeroView.itinerarioSeleccionado.idReserva))}</strong>
+                                                </div>
+                                                <div class="d-flex justify-content-between py-1 border-bottom border-secondary">
+                                                    <span class="text-white-50">Pasajeros incluidos:</span>
+                                                    <strong class="text-white">#{perfilPasajeroView.cantidadPasajerosReserva}</strong>
+                                                </div>
+                                                <div class="d-flex justify-content-between py-1 border-bottom border-secondary">
+                                                    <span class="text-white-50">Monto total facturado:</span>
+                                                    <strong class="text-white font-monospace">$ <h:outputText value="#{perfilPasajeroView.reservaDetalle.total}"><f:convertNumber maxFractionDigits="0" groupingUsed="true" /></h:outputText> CLP</strong>
+                                                </div>
+                                                <div class="d-flex justify-content-between py-1">
+                                                    <span class="text-white-50">Estado del comprobante:</span>
+                                                    <span class="badge #{perfilPasajeroView.reservaCancelada ? 'bg-danger' : 'bg-success'} font-weight-bold">
+                                                        #{perfilPasajeroView.reservaCancelada ? 'Reserva Cancelada' : 'Emitido y Confirmado'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <h:panelGroup rendered="#{!perfilPasajeroView.reservaCancelada}">
+                                            <p:commandButton value="Descargar E-Ticket Oficial (PDF)"
+                                                             icon="pi pi-download"
+                                                             styleClass="btn-skyway-primary w-100 py-2"
+                                                             ajax="false"
+                                                             title="Descargar comprobante oficial de reserva en PDF">
+                                                <p:fileDownload value="#{perfilPasajeroView.descargarComprobantePdf(perfilPasajeroView.itinerarioSeleccionado.idReserva)}" />
+                                            </p:commandButton>
+                                        </h:panelGroup>
+                                        <h:panelGroup rendered="#{perfilPasajeroView.reservaCancelada}">
+                                            <div class="text-center p-2 text-danger small border border-danger rounded">
+                                                <i class="pi pi-ban me-1"></i> E-Ticket no disponible para reservas canceladas.
+                                            </div>
+                                        </h:panelGroup>
+                                    </div>
+                                </div>
+
+                                <!-- TARJETA 2: TARJETA DE EMBARQUE (BOARDING PASS) -->
+                                <div class="col-md-6">
+                                    <div class="p-3 rounded h-100 d-flex flex-column justify-content-between" style="background: #0B132B; border: 1px solid #1E293B;">
+                                        <div>
+                                            <div class="d-flex align-items-center gap-2 mb-2">
+                                                <i class="pi pi-ticket text-success" style="font-size: 1.6rem;"></i>
+                                                <div>
+                                                    <strong class="text-white d-block" style="font-size: 0.95rem;">Tarjetas de Embarque</strong>
+                                                    <span class="text-white-50 small">Pase individual para control aeroportuario y acceso a aeronave</span>
+                                                </div>
+                                            </div>
+                                            <div class="my-3 p-2 rounded" style="background: #070E1E; border: 1px solid #1E293B; font-size: 0.82rem;">
+                                                <div class="d-flex justify-content-between py-1 border-bottom border-secondary">
+                                                    <span class="text-white-50">Estado Check-In:</span>
+                                                    <span class="badge #{perfilPasajeroView.checkInCompletado ? 'bg-success' : 'bg-warning text-dark'} font-weight-bold">
+                                                        #{perfilPasajeroView.checkInCompletado ? 'Check-In Listo' : 'Check-In Pendiente'}
+                                                    </span>
+                                                </div>
+                                                <div class="d-flex justify-content-between py-1 border-bottom border-secondary">
+                                                    <span class="text-white-50">Código BCBP:</span>
+                                                    <span class="text-white font-monospace">#{perfilPasajeroView.checkInCompletado ? 'Generado con QR' : 'Requiere Check-In'}</span>
+                                                </div>
+                                                <div class="d-flex justify-content-between py-1">
+                                                    <span class="text-white-50">Puerta asignada:</span>
+                                                    <strong class="text-white">#{perfilPasajeroView.getPuertaEmbarquePorItinerario(perfilPasajeroView.itinerarioSeleccionado.idReserva, perfilPasajeroView.itinerarioSeleccionado.idItinerario)}</strong>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h:panelGroup rendered="#{perfilPasajeroView.checkInCompletado and !perfilPasajeroView.reservaCancelada}">
+                                                <div class="d-flex gap-2">
+                                                    <p:commandButton value="Ver en Pantalla"
+                                                                     icon="pi pi-eye"
+                                                                     styleClass="btn-skyway-outlined flex-grow-1 py-2"
+                                                                     actionListener="#{perfilPasajeroView.getTicket(perfilPasajeroView.itinerarioSeleccionado)}"
+                                                                     update=":formDetalleTicket:dlgDetalleTicket :globalGrowl"
+                                                                     oncomplete="if (!args || !args.checkInInvalido) PF('dlgDetalleTicket').show();" />
+                                                    <p:commandButton value="Descargar PDF"
+                                                                     icon="pi pi-download"
+                                                                     styleClass="btn-skyway-primary flex-grow-1 py-2"
+                                                                     ajax="false">
+                                                        <p:fileDownload value="#{perfilPasajeroView.descargarBoardingPassesPdf(perfilPasajeroView.itinerarioSeleccionado.idReserva)}" />
+                                                    </p:commandButton>
+                                                </div>
+                                            </h:panelGroup>
+                                            <h:panelGroup rendered="#{!perfilPasajeroView.checkInCompletado and perfilPasajeroView.checkInAbierto and !perfilPasajeroView.reservaCancelada}">
+                                                <p:commandButton value="Realizar Check-In Online"
+                                                                 icon="pi pi-check-circle"
+                                                                 styleClass="btn-skyway-primary w-100 py-2"
+                                                                 actionListener="#{perfilPasajeroView.irACheckIn}"
+                                                                 process="@this" />
+                                            </h:panelGroup>
+                                            <h:panelGroup rendered="#{!perfilPasajeroView.checkInCompletado and !perfilPasajeroView.checkInAbierto}">
+                                                <div class="text-center p-2 text-white-50 small border border-secondary rounded">
+                                                    Check-in disponible entre 48h y 60 min antes del vuelo.
+                                                </div>
+                                            </h:panelGroup>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </p:tab>
+
+                    <!-- TAB 6: ANULACIÓN / CANCELACIÓN -->
                     <p:tab title="Anulación / Cancelación">
                         <div class="hub-tab-panel">
                             <h:panelGroup rendered="#{!perfilPasajeroView.reservaCancelada}">

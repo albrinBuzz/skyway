@@ -1,0 +1,2158 @@
+/* =============================================================
+   1. PALETA CORPORATIVA SKYWAY (DARK THEME SOBRIO & ELEGANTE)
+   ============================================================= */
+:root {
+    --deep-space: #080E1A;
+    --midnight-blue: #101B33;
+    --dark-panel: #0D172A;
+    --slate-glass: #1E3A5C;
+    --border-ui: #334155;
+
+    --aviation-blue: #2563EB;
+    --aviation-hover: #1D4ED8;
+    --text-primary: #FFFFFF;
+    --text-dim: #94A3B8;
+
+    --status-ontime: #166534;
+    --status-delayed: #D97706;
+    --status-cancelled: #DC2626;
+}
+
+body {
+    background-color: var(--deep-space) !important;
+    color: var(--text-primary) !important;
+}
+
+.skyway-container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 0 15px;
+}
+
+/* =============================================================
+   2. CABECERA Y FILTROS DE BÚSQUEDA
+   ============================================================= */
+.page-header {
+    margin-bottom: 1.5rem;
+}
+
+.page-title {
+    color: var(--text-primary);
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+}
+
+.page-subtitle {
+    color: var(--text-dim);
+    margin: 0;
+}
+
+.skyway-card {
+    background-color: var(--midnight-blue) !important;
+    border: 1px solid var(--slate-glass) !important;
+    border-radius: 10px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-grid-inline {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.form-grid-inline .field-item {
+    flex: 1;
+    min-width: 180px;
+}
+
+.field-label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 0.35rem;
+    color: var(--text-dim);
+}
+
+.quick-filters {
+    display: flex;
+    gap: 0.625rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+/* =============================================================
+   3. OVERRIDES GENERALES Y ANULACIÓN DE FONDO BLANCO EN PRIMEFACES
+   ============================================================= */
+.ui-inputfield,
+.ui-datepicker input,
+.ui-inputtextarea {
+    background-color: var(--deep-space) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--slate-glass) !important;
+}
+
+.ui-inputfield.ui-state-focus,
+.ui-datepicker input:focus {
+    border-color: var(--aviation-blue) !important;
+}
+
+body .ui-datepicker,
+.ui-datepicker {
+    background: #0B132B !important;
+    background-color: #0B132B !important;
+    border: 1px solid #1E293B !important;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7) !important;
+    border-radius: 10px !important;
+    padding: 10px !important;
+    z-index: 9999 !important;
+}
+
+body .ui-datepicker .ui-datepicker-header,
+.ui-datepicker .ui-datepicker-header {
+    background: #070E1E !important;
+    border-bottom: 1px solid #1E293B !important;
+    color: #F8FAFC !important;
+    padding: 10px 12px !important;
+    border-radius: 8px 8px 0 0 !important;
+}
+
+body .ui-datepicker .ui-datepicker-title,
+.ui-datepicker .ui-datepicker-title {
+    color: #F8FAFC !important;
+    font-weight: 700 !important;
+    font-size: 0.95rem !important;
+}
+
+body .ui-datepicker .ui-datepicker-prev,
+body .ui-datepicker .ui-datepicker-next,
+.ui-datepicker .ui-datepicker-prev,
+.ui-datepicker .ui-datepicker-next {
+    color: #94A3B8 !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 4px !important;
+}
+
+body .ui-datepicker .ui-datepicker-prev:hover,
+body .ui-datepicker .ui-datepicker-next:hover,
+.ui-datepicker .ui-datepicker-prev:hover,
+.ui-datepicker .ui-datepicker-next:hover {
+    color: #38BDF8 !important;
+    background: #1E293B !important;
+}
+
+body .ui-datepicker table,
+.ui-datepicker table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin: 8px 0 0 0 !important;
+}
+
+body .ui-datepicker table th,
+.ui-datepicker table th {
+    color: #94A3B8 !important;
+    font-weight: 700 !important;
+    font-size: 0.8rem !important;
+    padding: 6px 4px !important;
+    text-align: center !important;
+    border: none !important;
+}
+
+body .ui-datepicker table td,
+.ui-datepicker table td {
+    padding: 2px !important;
+    text-align: center !important;
+    border: none !important;
+}
+
+body .ui-datepicker table td > a,
+body .ui-datepicker table td > span,
+.ui-datepicker table td > a,
+.ui-datepicker table td > span {
+    color: #F8FAFC !important;
+    font-weight: 600 !important;
+    font-size: 0.88rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 32px !important;
+    height: 32px !important;
+    margin: auto !important;
+    border-radius: 6px !important;
+    text-decoration: none !important;
+    background: transparent !important;
+    transition: all 0.15s ease !important;
+}
+
+body .ui-datepicker table td > a:hover,
+.ui-datepicker table td > a:hover {
+    background: #1E293B !important;
+    color: #38BDF8 !important;
+}
+
+body .ui-datepicker table td > a.ui-state-active,
+body .ui-datepicker table td > a.ui-state-highlight,
+body .ui-datepicker table td.ui-datepicker-current-day > a,
+.ui-datepicker table td > a.ui-state-active,
+.ui-datepicker table td > a.ui-state-highlight,
+.ui-datepicker table td.ui-datepicker-current-day > a {
+    background: #2563EB !important;
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+    box-shadow: 0 0 10px rgba(37, 99, 235, 0.45) !important;
+}
+
+body .ui-datepicker table td.ui-datepicker-other-month > span,
+body .ui-datepicker table td.ui-datepicker-other-month > a,
+.ui-datepicker table td.ui-datepicker-other-month > span,
+.ui-datepicker table td.ui-datepicker-other-month > a {
+    color: #475569 !important;
+    opacity: 0.55 !important;
+}
+
+/* TABLA PRINCIPAL Y SECUNDARIAS */
+.skyway-datatable .ui-datatable-header,
+.skyway-datatable th {
+    background: #11263F !important;
+    color: #E6EEF7 !important;
+    border: 1px solid var(--slate-glass) !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+}
+
+.skyway-datatable table,
+.skyway-datatable .ui-datatable-data,
+.skyway-datatable .ui-datatable-data > tr,
+.skyway-datatable .ui-datatable-data > tr > td {
+    background-color: #0D172A !important;
+    background: #0D172A !important;
+    color: #CBD5E1 !important;
+    border: 1px solid #1E293B !important;
+}
+
+.skyway-datatable .ui-datatable-data > tr:hover,
+.skyway-datatable .ui-datatable-data > tr:hover > td {
+    background-color: rgba(30, 41, 59, 0.8) !important;
+    background: rgba(30, 41, 59, 0.8) !important;
+}
+
+.skyway-datatable .ui-paginator {
+    background-color: var(--midnight-blue) !important;
+    border: 1px solid var(--slate-glass) !important;
+}
+
+.skyway-datatable .ui-paginator .ui-paginator-page,
+.skyway-datatable .ui-paginator .ui-paginator-first,
+.skyway-datatable .ui-paginator .ui-paginator-prev,
+.skyway-datatable .ui-paginator .ui-paginator-next,
+.skyway-datatable .ui-paginator .ui-paginator-last {
+    background-color: var(--deep-space) !important;
+    color: var(--text-dim) !important;
+    border: 1px solid var(--border-ui) !important;
+}
+
+.skyway-datatable .ui-paginator .ui-paginator-page.ui-state-active {
+    background-color: var(--aviation-blue) !important;
+    color: var(--text-primary) !important;
+}
+
+.col-route { min-width: 140px; }
+.col-date { color: var(--text-primary); }
+.col-center { text-align: center; }
+.col-actions { text-align: center; }
+
+.iata-code {
+    font-weight: 800;
+    font-size: 1.1em;
+    color: var(--text-primary);
+}
+
+.route-icon {
+    margin: 0 8px;
+    color: #3B82F6;
+}
+
+.action-buttons-wrapper {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* =============================================================
+   4. BOTONES PERSONALIZADOS
+   ============================================================= */
+.btn-skyway-primary.ui-button {
+    background: #2563EB !important;
+    border: none !important;
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+}
+
+.btn-skyway-primary.ui-button:hover {
+    background: #1D4ED8 !important;
+}
+
+.btn-skyway-outlined.ui-button {
+    border: 1px solid var(--slate-glass) !important;
+    color: #94A3B8 !important;
+    background: transparent !important;
+}
+
+.btn-skyway-outlined.ui-button:hover {
+    background: var(--slate-glass) !important;
+    color: #FFFFFF !important;
+}
+
+.btn-skyway-action-corporate.ui-button,
+.btn-skyway-accent.ui-button {
+    background: #1E293B !important;
+    border: 1px solid #3B82F6 !important;
+    color: #F8FAFC !important;
+    font-size: 0.82rem !important;
+    font-weight: 600 !important;
+    padding: 6px 14px !important;
+    border-radius: 6px !important;
+    transition: all 0.2s ease !important;
+    box-shadow: none !important;
+}
+
+.btn-skyway-action-corporate.ui-button:hover,
+.btn-skyway-accent.ui-button:hover {
+    background: #2563EB !important;
+    border-color: #2563EB !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35) !important;
+}
+
+/* =============================================================
+   5. MODALES Y SOLUCIÓN DEFINITIVA A PESTAÑAS (TABVIEW DE PRIMEFACES)
+   ============================================================= */
+body .skyway-dialog.ui-dialog,
+body .skyway-corporate-dialog.ui-dialog {
+    background: #0B132B !important;
+    background-color: #0B132B !important;
+    border: 1px solid #1E3A5C !important;
+    border-radius: 12px !important;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.75) !important;
+    overflow: hidden !important;
+}
+
+body .skyway-dialog.ui-dialog .ui-dialog-titlebar,
+body .skyway-corporate-dialog.ui-dialog .ui-dialog-titlebar {
+    background: #0F1E36 !important;
+    background-color: #0F1E36 !important;
+    color: #FFFFFF !important;
+    border-bottom: 1px solid #1E3A5C !important;
+    padding: 16px 20px !important;
+}
+
+body .skyway-dialog.ui-dialog .ui-dialog-content,
+body .skyway-corporate-dialog.ui-dialog .ui-dialog-content {
+    background: #0B132B !important;
+    background-color: #0B132B !important;
+    color: #E6EEF7 !important;
+    padding: 16px !important;
+}
+
+body .skyway-dialog.ui-dialog .ui-dialog-footer,
+body .skyway-corporate-dialog.ui-dialog .ui-dialog-footer {
+    background: #0F1E36 !important;
+    background-color: #0F1E36 !important;
+    border-top: 1px solid #1E3A5C !important;
+    padding: 14px 20px !important;
+}
+
+/* ANULACIÓN TOTAL DEL FONDO BLANCO EN PRIMEFACES TABVIEW Y CONTENEDORES INTERNOS */
+body .skyway-tabs,
+body .skyway-tabs.ui-tabview,
+body .skyway-tabs .ui-tabview-panels,
+body .skyway-tabs .ui-tabview-panel,
+body .skyway-tabs .ui-widget-content {
+    background-color: #0D172A !important;
+    background: #0D172A !important;
+    border-color: #1E3A5C !important;
+    color: #E6EEF7 !important;
+}
+
+body .skyway-tabs .ui-tabview-panels {
+    border: 1px solid #1E3A5C !important;
+    border-top: none !important;
+    border-radius: 0 0 8px 8px !important;
+    padding: 16px !important;
+}
+
+body .skyway-tabs .ui-tabview-nav {
+    background: #101B33 !important;
+    border: 1px solid #1E3A5C !important;
+    border-radius: 8px 8px 0 0 !important;
+    display: flex;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+body .skyway-tabs .ui-tabview-nav li {
+    background: transparent !important;
+    border: none !important;
+    margin: 0 !important;
+}
+
+body .skyway-tabs .ui-tabview-nav li a {
+    color: #94A3B8 !important;
+    font-weight: 600 !important;
+    padding: 10px 16px !important;
+}
+
+body .skyway-tabs .ui-tabview-nav li.ui-state-active {
+    background: #1E293B !important;
+    border-bottom: 3px solid #3B82F6 !important;
+}
+
+body .skyway-tabs .ui-tabview-nav li.ui-state-active a {
+    color: #FFFFFF !important;
+}
+
+.hub-tab-panel {
+    background: #0D172A !important;
+    color: #E6EEF7 !important;
+}
+
+/* =============================================================
+   6. CRONOGRAMA DE VUELO (TIMELINE EN EL HUB)
+   ============================================================= */
+.timeline-compact-wrapper {
+    background: #0D172A;
+    border: 1px solid #1E293B;
+    border-radius: 8px;
+    padding: 12px 16px;
+}
+
+.timeline-compact-grid {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    gap: 10px;
+}
+
+.timeline-compact-grid::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 10%;
+    right: 10%;
+    height: 2px;
+    background: #1E3A5C;
+    z-index: 1;
+    transform: translateY(-50%);
+}
+
+.step-compact-item {
+    position: relative;
+    z-index: 2;
+    background: #11263F;
+    border: 1px solid #1E3A5C;
+    border-radius: 6px;
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: #94A3B8;
+    font-weight: 600;
+}
+
+.step-compact-item.completed {
+    border-color: #22C55E;
+    color: #86EFAC;
+    background: rgba(34, 197, 94, 0.15);
+}
+
+.step-compact-item.active {
+    border-color: #3B82F6;
+    color: #FFFFFF;
+    background: #1E3A5C;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+}
+
+.badge-here-compact {
+    background: #2563EB;
+    color: #FFFFFF;
+    font-size: 0.6rem;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* =============================================================
+   7. PÍLDORAS DE TARIFA Y BENEFICIOS
+   ============================================================= */
+.feature-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #FFFFFF !important;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    margin-bottom: 8px;
+}
+
+.feature-pill.allowed {
+    border-color: rgba(34, 197, 94, 0.4);
+    background-color: rgba(34, 197, 94, 0.15);
+}
+
+.feature-pill.allowed i {
+    color: #22C55E;
+}
+
+.feature-pill.denied {
+    border-color: rgba(220, 53, 69, 0.4);
+    background-color: rgba(220, 53, 69, 0.15);
+}
+
+.feature-pill.denied i {
+    color: #DC2626;
+}
+
+/* Modal de Tarjetas de Embarque (Responsivo en Desktop y Móvil) */
+body .skyway-dialog.dialog-boarding.ui-dialog {
+    width: 92vw !important;
+    max-width: 860px !important;
+    box-sizing: border-box !important;
+    border-radius: 12px !important;
+    border: 1px solid #1E3A5C !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8) !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+}
+
+body .skyway-dialog.dialog-boarding.ui-dialog .ui-dialog-titlebar {
+    flex: 0 0 auto !important;
+    background: #0B132B !important;
+    border-bottom: 1px solid #1E3A5C !important;
+    padding: 14px 20px !important;
+}
+
+body .skyway-dialog.dialog-boarding.ui-dialog .ui-dialog-content {
+    height: auto !important;
+    max-height: none !important;
+    overflow: hidden !important;
+    padding: 12px 8px 12px 16px !important;
+    background: #080E1A !important;
+}
+
+body .skyway-dialog.dialog-boarding.ui-dialog .ui-dialog-footer {
+    flex: 0 0 auto !important;
+    background: #0B132B !important;
+    border-top: 1px solid #1E3A5C !important;
+    padding: 12px 20px !important;
+}
+
+/* Custom scrollbar para el modal de tickets */
+body .skyway-dialog.dialog-boarding.ui-dialog .ticket-container::-webkit-scrollbar {
+    width: 8px;
+}
+body .skyway-dialog.dialog-boarding.ui-dialog .ticket-container::-webkit-scrollbar-track {
+    background: #0B132B;
+    border-radius: 4px;
+}
+body .skyway-dialog.dialog-boarding.ui-dialog .ticket-container::-webkit-scrollbar-thumb {
+    background: #1E3A5C;
+    border-radius: 4px;
+}
+body .skyway-dialog.dialog-boarding.ui-dialog .ticket-container::-webkit-scrollbar-thumb:hover {
+    background: #38BDF8;
+}
+
+.ticket-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+}
+
+body .skyway-dialog.dialog-boarding.ui-dialog .ticket-container {
+    display: block;
+    max-height: 60vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 8px;
+}
+
+/* =============================================================
+   8. TARJETAS DE EMBARQUE (DARK THEME SOBRIO DE ALTO CONTRASTE)
+   ============================================================= */
+.ticket-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.boarding-pass {
+    background-color: #101B33 !important;
+    border: 1px solid #1E3A5C !important;
+    border-radius: 10px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5) !important;
+    margin-bottom: 20px !important;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif !important;
+}
+
+.boarding-pass .main-section {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    padding: 20px !important;
+    border-right: 2px dashed #1E3A5C !important;
+    background-color: #101B33 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    height: auto !important;
+}
+
+.boarding-pass .stub {
+    flex: 0 0 220px !important;
+    width: 220px !important;
+    max-width: 220px !important;
+    padding: 18px 14px !important;
+    background-color: #080E1A !important;
+    border-left: 1px solid #1E3A5C !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    height: auto !important;
+    min-height: 100% !important;
+    align-items: stretch !important;
+    text-align: center !important;
+}
+
+/* Header */
+.boarding-pass .pass-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    border-bottom: 2px solid #1E3A5C !important;
+    padding-bottom: 8px !important;
+    margin-bottom: 14px !important;
+}
+
+.boarding-pass .airline-brand {
+    font-weight: 900 !important;
+    color: #FFFFFF !important;
+    font-size: 1.15rem !important;
+    letter-spacing: 1px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.boarding-pass .airline-brand i {
+    color: #38BDF8 !important;
+}
+
+.boarding-pass .pnr-badge {
+    background-color: #1E293B !important;
+    color: #FFFFFF !important;
+    border: 1px solid #38BDF8 !important;
+    padding: 3px 8px !important;
+    border-radius: 4px !important;
+    font-weight: 700 !important;
+    font-size: 0.75rem !important;
+    font-family: monospace !important;
+    letter-spacing: 0.5px !important;
+}
+
+.boarding-pass .pass-type {
+    font-size: 0.8rem !important;
+    font-weight: 800 !important;
+    color: #38BDF8 !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* Filas de campos */
+.boarding-pass .pass-row {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    margin-bottom: 12px !important;
+    width: 100% !important;
+}
+
+.boarding-pass .pass-col {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* Labels de campos en plata claro #94A3B8 */
+.boarding-pass .pass-label,
+.boarding-pass .pass-col .label,
+.boarding-pass .label {
+    display: block !important;
+    font-size: 0.65rem !important;
+    color: #94A3B8 !important;
+    text-transform: uppercase !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.5px !important;
+    margin-bottom: 2px !important;
+}
+
+/* Valores de campos en blanco puro #FFFFFF en negrita */
+.boarding-pass .pass-value,
+.boarding-pass .pass-col .value {
+    font-size: 1rem !important;
+    font-weight: 800 !important;
+    color: #FFFFFF !important;
+}
+
+.boarding-pass .passenger-name {
+    font-size: 1.1rem !important;
+    font-weight: 800 !important;
+    color: #FFFFFF !important;
+    text-transform: uppercase !important;
+}
+
+.boarding-pass .flight-number {
+    font-size: 1.25rem !important;
+    font-weight: 900 !important;
+    color: #FFFFFF !important;
+    font-family: monospace !important;
+}
+
+/* Banner de tramo y horarios */
+.boarding-pass .route-banner {
+    background: rgba(30, 58, 92, 0.4) !important;
+    border: 1px solid #1E3A5C !important;
+    border-radius: 6px !important;
+    padding: 10px 14px !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 14px !important;
+}
+
+.boarding-pass .route-text {
+    font-size: 1.15rem !important;
+    font-weight: 900 !important;
+    color: #FFFFFF !important;
+    display: inline-flex !important;
+    align-items: center !important;
+}
+
+.boarding-pass .route-arrow {
+    font-size: 0.85rem !important;
+    color: #38BDF8 !important;
+}
+
+.boarding-pass .time-text {
+    font-size: 0.95rem !important;
+    font-weight: 800 !important;
+    color: #FFFFFF !important;
+    display: block !important;
+}
+
+/* Fila Puerta, Asiento y Clase */
+.boarding-pass .pass-meta-row {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding-top: 10px !important;
+    border-top: 1px dashed #1E3A5C !important;
+}
+
+.boarding-pass .gate-value {
+    font-size: 1.05rem !important;
+    font-weight: 900 !important;
+    color: #FFFFFF !important;
+}
+
+.boarding-pass .terminal-text {
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    color: #94A3B8 !important;
+}
+
+.boarding-pass .cabin-value {
+    font-size: 0.95rem !important;
+    font-weight: 800 !important;
+    color: #FFFFFF !important;
+    text-transform: uppercase !important;
+}
+
+/* Badge de Asiento con fondo azul aviación #2563EB */
+.boarding-pass .seat-badge,
+.seat-badge {
+    background: #2563EB !important;
+    border: 1px solid #3B82F6 !important;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4) !important;
+    padding: 4px 16px !important;
+    border-radius: 6px !important;
+    text-align: center !important;
+    display: inline-block !important;
+}
+
+.boarding-pass .seat-label {
+    display: block !important;
+    font-size: 0.6rem !important;
+    font-weight: 700 !important;
+    color: #CBD5E1 !important;
+    letter-spacing: 0.5px !important;
+}
+
+.boarding-pass .seat-number {
+    font-size: 1.3rem !important;
+    font-weight: 900 !important;
+    color: #FFFFFF !important;
+    line-height: 1.2 !important;
+}
+
+/* Pie de tarjeta */
+.boarding-pass .pass-footer {
+    margin-top: 12px !important;
+    padding-top: 8px !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    font-size: 0.68rem !important;
+    border-top: 1px solid #1E3A5C !important;
+}
+
+.boarding-pass .notice-text {
+    color: #94A3B8 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+}
+
+.boarding-pass .notice-text i {
+    color: #38BDF8 !important;
+}
+
+.boarding-pass .operator-text {
+    font-weight: 700 !important;
+    color: #38BDF8 !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* Stub Derecho */
+.boarding-pass .stub-header {
+    font-size: 0.75rem !important;
+    font-weight: 900 !important;
+    color: #38BDF8 !important;
+    letter-spacing: 1px !important;
+    margin-bottom: 10px !important;
+    border-bottom: 2px solid #1E3A5C !important;
+    padding-bottom: 4px !important;
+}
+
+.boarding-pass .stub-passenger-name {
+    font-size: 0.85rem !important;
+    font-weight: 800 !important;
+    color: #FFFFFF !important;
+    display: block !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.boarding-pass .stub-flight-route {
+    font-size: 0.85rem !important;
+    font-weight: 800 !important;
+    color: #FFFFFF !important;
+    display: block !important;
+}
+
+.boarding-pass .qr-container {
+    display: flex !important;
+    justify-content: center !important;
+    margin: 8px 0 !important;
+}
+
+.boarding-pass .qr-box,
+.qr-box {
+    background: #FFFFFF !important;
+    padding: 6px !important;
+    border-radius: 6px !important;
+    display: inline-block !important;
+    border: 1px solid #1E3A5C !important;
+}
+
+.boarding-pass .qr-img {
+    width: 85px !important;
+    height: 85px !important;
+    display: block !important;
+}
+
+.boarding-pass .stub-footer {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding-top: 6px !important;
+    border-top: 1px dashed #1E3A5C !important;
+    width: 100% !important;
+}
+
+.boarding-pass .stub-gate-val {
+    font-size: 0.85rem !important;
+    font-weight: 800 !important;
+    color: #FFFFFF !important;
+}
+
+.boarding-pass .stub-seat-val {
+    font-size: 1.05rem !important;
+    font-weight: 900 !important;
+    color: #38BDF8 !important;
+}
+
+/* =============================================================
+   9. SIDEBAR Y PARADAS DE VUELO
+   ============================================================= */
+body .sidebar-corporativo.ui-sidebar {
+    width: 480px !important;
+    background-color: #0D172A !important;
+    border-left: 1px solid #1E3A5C !important;
+    padding: 0 !important;
+    color: #FFFFFF !important;
+}
+
+body .sidebar-corporativo .ui-sidebar-content {
+    background-color: #0D172A !important;
+    padding: 0 !important;
+}
+
+.sidebar-scroll-panel {
+    width: 100%;
+    height: calc(100vh - 60px);
+    background: #0D172A !important;
+}
+
+.sidebar-scroll-panel .ui-scrollpanel-content {
+    background: #0D172A !important;
+    padding: 15px !important;
+}
+
+.card-parada {
+    background-color: #11263F !important;
+    border: 1px solid #1E3A5C !important;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.timeline-leg {
+    background-color: #0D172A !important;
+    border-radius: 8px;
+    padding: 12px;
+    border: 1px solid #1E3A5C;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    background-color: #0D172A !important;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #1E3A5C;
+}
+
+.descripcion {
+    background-color: #0D172A !important;
+    padding: 10px;
+    border-radius: 6px;
+    border-left: 3px solid #3B82F6;
+    color: #CBD5E1 !important;
+}
+
+/* =============================================================
+   10. AJUSTES RESPONSIVOS MÓVILES (< 768px)
+   ============================================================= */
+@media (max-width: 768px) {
+    /* Modal de Tarjetas de Embarque en Móviles */
+    body .skyway-dialog.dialog-boarding.ui-dialog {
+        width: 95vw !important;
+        max-width: 95vw !important;
+    }
+
+    body .skyway-dialog.dialog-boarding.ui-dialog .ui-dialog-content {
+        padding: 10px 6px 10px 10px !important;
+        max-height: none !important;
+    }
+
+    body .skyway-dialog.dialog-boarding.ui-dialog .ticket-container {
+        max-height: 55vh;
+    }
+
+    body .skyway-dialog.dialog-boarding.ui-dialog .ui-dialog-footer {
+        padding: 10px 12px !important;
+    }
+
+    body .skyway-dialog.dialog-boarding.ui-dialog .ui-dialog-footer .d-flex {
+        flex-direction: column !important;
+        width: 100% !important;
+        gap: 8px !important;
+    }
+
+    body .skyway-dialog.dialog-boarding.ui-dialog .ui-dialog-footer .d-flex .p-button,
+    body .skyway-dialog.dialog-boarding.ui-dialog .ui-dialog-footer .d-flex button {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+
+    .skyway-container {
+        padding: 10px 8px !important;
+        margin: 10px auto !important;
+    }
+
+    body .skyway-dialog.ui-dialog {
+        width: 95vw !important;
+        max-width: 95vw !important;
+        left: 2.5vw !important;
+        top: 3vh !important;
+        margin: 0 !important;
+    }
+
+    body .skyway-dialog .ui-dialog-content {
+        padding: 10px !important;
+        max-height: 80vh !important;
+        overflow-y: auto !important;
+    }
+
+    body .skyway-tabs .ui-tabview-nav {
+        overflow-x: auto !important;
+        white-space: nowrap !important;
+    }
+
+    #formHubModal .d-flex.justify-content-between.align-items-center {
+        flex-direction: column !important;
+        gap: 12px !important;
+        text-align: center;
+    }
+
+    #formHubModal .text-center.px-4 {
+        border-left: none !important;
+        border-right: none !important;
+        border-top: 1px solid #1E3A5C !important;
+        border-bottom: 1px solid #1E3A5C !important;
+        padding: 10px 0 !important;
+        width: 100% !important;
+    }
+
+    .timeline-compact-grid {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+    }
+
+    .timeline-compact-grid::before {
+        display: none !important;
+    }
+
+    .step-compact-item {
+        justify-content: flex-start !important;
+        width: 100% !important;
+    }
+
+    .boarding-pass {
+        flex-direction: column !important;
+    }
+
+    .boarding-pass .main-section {
+        border-right: none !important;
+        border-bottom: 2px dashed #1E3A5C !important;
+    }
+
+    .boarding-pass .stub {
+        width: 100% !important;
+        max-width: 100% !important;
+        border-left: none !important;
+    }
+
+    .skyway-datatable .ui-datatable-tablewrapper {
+        overflow-x: auto !important;
+    }
+
+    body .sidebar-corporativo.ui-sidebar {
+        width: 100% !important;
+    }
+}
+
+/* IMPRESIÓN */
+@media print {
+    .printable-area.ticket-container { max-height: none !important; overflow: visible !important; }
+    body * { visibility: hidden !important; }
+    .printable-area, .printable-area * { visibility: visible !important; }
+    .printable-area { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
+    .boarding-pass { background: #FFFFFF !important; color: #000000 !important; border: 2px solid #000000 !important; box-shadow: none !important; page-break-inside: avoid !important; margin-bottom: 20px !important; }
+    .boarding-pass * { color: #000000 !important; }
+    .main-section { border-right: 2px dashed #000000 !important; }
+    .stub { background: #F8FAFC !important; }
+    .seat-badge { border: 1px solid #000000 !important; background: transparent !important; }
+    .qr-box { border: 1px solid #000000 !important; }
+    .ui-dialog-titlebar, .ui-dialog-footer { display: none !important; }
+}
+
+/* =============================================================
+   PESTAÑA TARIFA Y BENEFICIOS (DISEÑO PREMIUM EN GRID)
+   ============================================================= */
+/* =============================================================
+   PESTAÑA TARIFA Y BENEFICIOS (DISEÑO CORPORATIVO SOBRIO SKYWAY)
+   ============================================================= */
+.tariff-hero-banner {
+    background: #0F172A;
+    border: 1px solid #1E293B;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tariff-badge-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    letter-spacing: 0.5px;
+}
+
+.tariff-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.tariff-card-feature {
+    background: #0B132B;
+    border: 1px solid #1E293B;
+    border-radius: 8px;
+    padding: 16px 18px;
+    transition: border-color 0.2s ease, background 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.tariff-card-feature:hover {
+    background: #111E38;
+    border-color: #2563EB;
+}
+
+.tariff-card-feature.allowed-card {
+    border-left: 3px solid #10B981;
+}
+
+.tariff-card-feature.denied-card {
+    border-left: 3px solid #64748B;
+}
+
+.tariff-card-feature.info-card {
+    border-left: 3px solid #2563EB;
+}
+
+.feature-header-icon {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.feature-icon-wrapper {
+    width: 34px;
+    height: 34px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+.allowed-card .feature-icon-wrapper {
+    background: rgba(16, 185, 129, 0.12);
+    color: #34D399;
+}
+
+.denied-card .feature-icon-wrapper {
+    background: rgba(100, 116, 139, 0.12);
+    color: #94A3B8;
+}
+
+.info-card .feature-icon-wrapper {
+    background: rgba(37, 99, 235, 0.12);
+    color: #60A5FA;
+}
+
+.feature-title {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #94A3B8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.feature-value {
+    font-size: 0.92rem;
+    font-weight: 700;
+}
+
+.allowed-card .feature-value { color: #FFFFFF; }
+.denied-card .feature-value { color: #94A3B8; }
+.info-card .feature-value { color: #FFFFFF; }
+
+.tariff-footer-note {
+    background: #0B132B;
+    border: 1px solid #1E293B;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 0.82rem;
+    color: #94A3B8;
+}
+
+/* =============================================================
+   FICHA TÉCNICA Y RESUMEN CORPORATIVO DE LA RESERVA (HUB MODAL)
+   ============================================================= */
+.reservation-summary-card {
+    background: #0B132B;
+    border: 1px solid #1E293B;
+    border-radius: 8px;
+    padding: 16px 20px;
+}
+
+.summary-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #94A3B8;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    display: block;
+}
+
+.pnr-code-badge {
+    background: #0F172A;
+    border: 1px solid #334155;
+    color: #FFFFFF;
+    font-family: monospace;
+    font-size: 0.95rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.summary-subtext {
+    font-size: 0.78rem;
+    color: #94A3B8;
+    line-height: 1.35;
+}
+
+.seat-badge-corporate {
+    background: #0F172A;
+    border: 1px solid #334155;
+    color: #38BDF8;
+    font-weight: 700;
+    font-size: 0.95rem;
+    padding: 3px 10px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* =============================================================
+   ESTILOS ENRIQUECIDOS PARA SIDEBAR Y FICHA DE ITINERARIO
+   ============================================================= */
+.summary-hero-card {
+    background: #0B132B;
+    border: 1px solid #1E293B;
+    border-left: 4px solid #2563EB;
+}
+
+.badge-orden {
+    background-color: #2563EB;
+    color: #FFFFFF;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+}
+
+.timeline-leg {
+    background-color: #080E1A !important;
+    border: 1px solid #1E3A5C;
+}
+
+.flight-line {
+    height: 1px;
+    background: #1E3A5C;
+    width: 100%;
+    position: absolute;
+    top: 50%;
+    z-index: 1;
+}
+
+.flight-duration-badge {
+    position: relative;
+    z-index: 2;
+    background: #11263F;
+    border: 1px solid #1E3A5C;
+    color: #94A3B8;
+    font-size: 0.75rem;
+    padding: 2px 10px;
+    border-radius: 12px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    background-color: #080E1A !important;
+    border: 1px solid #1E3A5C;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.info-label {
+    font-size: 0.7rem;
+    color: #64748B;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.info-value {
+    font-size: 0.85rem;
+    color: #E2E8F0;
+}
+
+.layover-card {
+    background: rgba(217, 119, 6, 0.12);
+    border: 1px dashed #D97706;
+}
+/* =============================================================
+   8B. TARJETA DE EMBARQUE - DISEÑO CLARO (BP2)
+   ============================================================= */
+.bp2 {
+    --bp2-blue: #2F8FD8;
+    --bp2-blue-dark: #1A73BE;
+    --bp2-field: #D6E9F8;
+    --bp2-ink: #1F2937;
+    --bp2-value: #2B3A8C;
+    display: flex;
+    width: 100%;
+    gap: 6px;
+    margin-bottom: 18px;
+    font-family: 'Oswald', 'Arial Narrow', 'Roboto Condensed', sans-serif;
+    color: var(--bp2-ink);
+}
+
+.bp2-main,
+.bp2-stub {
+    background-color: #F1F3F5;
+    background-image:
+        radial-gradient(ellipse 38% 55% at 42% 60%, rgba(148, 163, 184, 0.28) 0 60%, transparent 61%),
+        radial-gradient(ellipse 22% 35% at 75% 45%, rgba(148, 163, 184, 0.22) 0 60%, transparent 61%);
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+}
+
+.bp2-main { flex: 1 1 auto; min-width: 0; }
+.bp2-stub { flex: 0 0 280px; }
+
+/* Cabecera azul con franjas diagonales */
+.bp2-header,
+.bp2-stub-header {
+    background: var(--bp2-blue);
+    background-image: repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.07) 0 40px, transparent 40px 80px);
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 18px;
+    min-height: 52px;
+    max-height: 52px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.bp2-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-height: 36px;
+    overflow: hidden;
+}
+
+.bp2-brand-logo {
+    height: 28px !important;
+    width: auto !important;
+    max-width: 130px !important;
+    object-fit: contain !important;
+    display: inline-block !important;
+    filter: brightness(0) invert(1) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25)) !important;
+}
+
+.bp2-stub-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 16px 12px;
+    margin-top: auto;
+    max-height: 40px;
+    overflow: hidden;
+}
+
+.bp2-stub-brand-logo {
+    height: 24px !important;
+    width: auto !important;
+    max-width: 110px !important;
+    object-fit: contain !important;
+    display: inline-block !important;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15)) !important;
+}
+
+.bp2-dots {
+    flex: 1 1 auto;
+    border-top: 3px dotted rgba(255, 255, 255, 0.85);
+    min-width: 20px;
+}
+
+.bp2-pnr {
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-family: 'Courier New', monospace;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    white-space: nowrap;
+}
+
+.bp2-plane { font-size: 1.4rem; transform: rotate(45deg); }
+
+/* Cuerpo */
+.bp2-body {
+    display: grid;
+    grid-template-columns: minmax(145px, 1.1fr) minmax(180px, 1.2fr) minmax(115px, auto);
+    gap: 18px;
+    padding: 16px 18px 8px;
+    align-items: start;
+}
+
+.bp2-col-left { display: flex; flex-direction: column; min-width: 0; }
+
+.bp2-label {
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.3px;
+    color: var(--bp2-ink);
+    margin-top: 8px;
+    margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.bp2-label:first-child { margin-top: 0; }
+.bp2-label i { font-size: 0.85rem; }
+
+.bp2-field,
+.bp2-stub-field {
+    background: var(--bp2-field);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #0F172A;
+    padding: 4px 8px;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+    line-height: 1.25 !important;
+    min-height: 26px;
+    box-sizing: border-box;
+    border-radius: 4px;
+}
+
+.bp2-col-center { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+
+.bp2-dt { display: flex; align-items: baseline; gap: 12px; }
+
+.bp2-dt-label {
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 1.05rem;
+    width: 62px;
+}
+
+.bp2-dt-value {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+    font-size: 2.1rem;
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--bp2-value);
+}
+
+.bp2-arrival {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 6px;
+}
+
+.bp2-qr-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-top: 6px;
+}
+
+.bp2-qr {
+    max-width: 140px;
+    width: 100%;
+    height: auto;
+    max-height: 70px;
+    object-fit: contain;
+    background: #FFFFFF;
+    padding: 4px;
+    border-radius: 6px;
+    display: block;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+/* Columna vertical de cajas azules (Vuelo, Puerta, Asiento) donde estaba el QR */
+.bp2-col-boxes {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 115px;
+    justify-content: space-between;
+}
+
+.bp2-box {
+    background: var(--bp2-blue-dark);
+    color: #FFFFFF;
+    text-align: center;
+    padding: 6px 8px;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 48px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.bp2-box:nth-child(2) { background: var(--bp2-blue); }
+
+.bp2-box-label {
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+}
+
+.bp2-box-value {
+    font-family: 'Oswald', 'Roboto Condensed', sans-serif, monospace;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+    line-height: 1.15 !important;
+    padding: 2px 2px;
+}
+
+.bp2-note {
+    padding: 8px 18px 14px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    color: var(--bp2-ink);
+}
+
+.bp2-note strong {
+    font-family: 'Oswald', 'Arial Narrow', sans-serif;
+    color: var(--bp2-value);
+    text-transform: uppercase;
+    margin-right: 4px;
+}
+
+/* Talón */
+.bp2-stub-header {
+    justify-content: center;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 1.25rem;
+    letter-spacing: 0.5px;
+}
+
+.bp2-stub-dots { letter-spacing: 3px; }
+
+.bp2-stub-body { padding: 14px 16px 6px; display: flex; flex-direction: column; gap: 6px; }
+
+.bp2-stub-row {
+    display: grid;
+    grid-template-columns: 85px 1fr;
+    align-items: center;
+    gap: 6px;
+}
+
+.bp2-stub-row .bp2-label { margin: 0; font-size: 0.8rem; }
+.bp2-stub-field {
+    background: #FFFFFF;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #0F172A;
+    min-width: 0;
+    border: 1px solid #E2E8F0;
+}
+
+.bp2-stub-route {
+    background: var(--bp2-field);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    margin-top: 6px;
+}
+
+.bp2-stub-flight { display: flex; flex-direction: column; }
+
+.bp2-stub-flight-label {
+    background: var(--bp2-blue-dark);
+    color: #FFFFFF;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    padding: 1px 6px;
+    text-align: center;
+}
+
+.bp2-stub-flight-value { font-family: 'Courier New', monospace; font-size: 0.85rem; font-weight: 600; }
+
+.bp2-stub-iata {
+    font-weight: 700;
+    font-size: 1.9rem;
+    color: #111827;
+    white-space: nowrap;
+}
+
+.bp2-stub-iata i { color: var(--bp2-blue); font-size: 1.1rem; }
+
+.bp2-stub-brand {
+    justify-content: center;
+    color: #1F2937;
+    padding: 12px 16px 14px;
+    margin-top: auto;
+    font-size: 1.3rem;
+}
+
+/* Responsivo */
+@media (max-width: 860px) {
+    .bp2 { flex-direction: column; gap: 4px; }
+    .bp2-stub { flex: 1 1 auto; }
+    .bp2-body { grid-template-columns: 1fr 1fr; }
+    .bp2-col-boxes { grid-column: 1 / -1; flex-direction: row; width: 100%; }
+    .bp2-box { flex: 1 1 0; }
+}
+
+@media (max-width: 560px) {
+    .bp2-body { grid-template-columns: 1fr; }
+    .bp2-brand { font-size: 1.1rem; }
+    .bp2-dots, .bp2-plane { display: none; }
+    .bp2-header { justify-content: space-between; }
+    .bp2-dt-value { font-size: 1.8rem; }
+}
+
+@media print {
+    .bp2 { page-break-inside: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+
+/* =============================================================
+   15. ESTILOS CORPORATIVOS PARA ASCENSO DE TARIFA (UPGRADE)
+   ============================================================= */
+.badge-tier-flexible {
+    background: #082F49 !important;
+    color: #38BDF8 !important;
+    border: 1px solid #0369A1 !important;
+}
+.badge-tier-premium {
+    background: #1E1B4B !important;
+    color: #A5B4FC !important;
+    border: 1px solid #4338CA !important;
+}
+.badge-tier-corporate {
+    background: #0F172A !important;
+    color: #94A3B8 !important;
+    border: 1px solid #334155 !important;
+}
+
+/* =============================================================
+   16. DASHBOARD CORPORATIVO ESTILO DELTA OMNIPRO
+   ============================================================= */
+.delta-header-banner {
+    background: #0B132B;
+    border: 1px solid #1E293B;
+    border-radius: 12px;
+    padding: 22px 26px;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.delta-user-name {
+    font-size: 2.1rem;
+    font-weight: 800;
+    color: #FFFFFF;
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+    margin-bottom: 6px;
+    font-family: 'Oswald', sans-serif;
+}
+
+.delta-badge-tier {
+    background: rgba(37, 99, 235, 0.15) !important;
+    border: 1px solid #2563EB !important;
+    color: #93C5FD !important;
+    font-weight: 700;
+    font-size: 0.76rem;
+    padding: 4px 10px;
+    border-radius: 4px;
+}
+
+.delta-kpi-strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 16px;
+    background: #070E1E;
+    border: 1px solid #1E293B;
+    border-radius: 10px;
+    padding: 14px 20px;
+    margin-top: 18px;
+}
+
+.delta-kpi-col {
+    flex: 1 1 180px;
+    border-right: 1px solid #1E293B;
+    padding-right: 14px;
+}
+
+.delta-kpi-col:last-child {
+    border-right: none;
+    padding-right: 0;
+}
+
+.delta-kpi-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #64748B;
+    margin-bottom: 4px;
+}
+
+.delta-kpi-val {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #F8FAFC;
+    line-height: 1.2;
+}
+
+.delta-kpi-sub {
+    font-size: 0.74rem;
+    color: #94A3B8;
+    margin-top: 2px;
+    display: block;
+}
+
+.delta-avatar-badge {
+    background: #1E293B;
+    border: 1px solid #334155;
+    color: #38BDF8;
+    font-weight: 800;
+    font-size: 0.72rem;
+    padding: 3px 8px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    letter-spacing: 0.5px;
+}
+
+/* Columna Izquierda: Perfil y Preferencias */
+.delta-profile-card {
+    background: #0B132B;
+    border: 1px solid #1E293B;
+    border-radius: 12px;
+    padding: 22px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.delta-section-title {
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: #38BDF8;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #1E293B;
+}
+
+.delta-info-group {
+    margin-bottom: 16px;
+}
+
+.delta-info-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748B;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.delta-info-value {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #F1F5F9;
+    word-break: break-word;
+}
+
+/* Tabs de Vuelos / Itinerarios Estilo Delta */
+.delta-trip-tabs .ui-tabs-nav {
+    background: transparent !important;
+    border: none !important;
+    border-bottom: 1px solid #1E293B !important;
+    padding: 0 0 8px 0 !important;
+    margin-bottom: 20px !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+}
+
+.delta-trip-tabs .ui-tabs-header {
+    background: #0D172A !important;
+    border: 1px solid #1E293B !important;
+    border-radius: 8px !important;
+    margin: 0 !important;
+    transition: all 0.2s ease !important;
+}
+
+.delta-trip-tabs .ui-tabs-header:hover {
+    border-color: #38BDF8 !important;
+}
+
+.delta-trip-tabs .ui-tabs-header.ui-state-active {
+    background: #2563EB !important;
+    border-color: #2563EB !important;
+}
+
+.delta-trip-tabs .ui-tabs-header a {
+    color: #94A3B8 !important;
+    font-weight: 700 !important;
+    padding: 8px 18px !important;
+    font-size: 0.86rem !important;
+}
+
+.delta-trip-tabs .ui-tabs-header.ui-state-active a {
+    color: #FFFFFF !important;
+}
+
+.delta-trip-tabs .ui-tabs-panels {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+}
+
+/* Tarjeta de Viaje / Itinerario Estilo Delta */
+.delta-trip-card {
+    background: #0B132B;
+    border: 1px solid #1E293B;
+    border-radius: 12px;
+    margin-bottom: 18px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    transition: border-color 0.2s ease, transform 0.15s ease;
+    overflow: hidden;
+}
+
+.delta-trip-card:hover {
+    border-color: #2563EB;
+}
+
+.delta-trip-header {
+    background: #070E1E;
+    padding: 12px 20px;
+    border-bottom: 1px solid #1E293B;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.delta-pnr-pill {
+    background: #0F172A;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-family: monospace;
+    font-size: 0.95rem;
+    color: #FFFFFF;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.15s ease;
+}
+
+.delta-pnr-pill:hover {
+    background: #1E293B;
+    border-color: #38BDF8;
+}
+
+.delta-trip-body {
+    padding: 20px;
+}
+
+.delta-date-box {
+    background: #070E1E;
+    border: 1px solid #1E293B;
+    border-radius: 8px;
+    width: 72px;
+    height: 72px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.delta-date-month {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #94A3B8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.delta-date-day {
+    font-size: 1.9rem;
+    font-weight: 800;
+    color: #FFFFFF;
+    line-height: 1;
+    font-family: monospace;
+}
+
+.delta-route-iata {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.delta-city-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #94A3B8;
+    margin-top: 3px;
+}
+
+.delta-seats-assigned {
+    font-size: 0.82rem;
+    color: #CBD5E1;
+}
+
+.delta-time-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #64748B;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.delta-time-val {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #F8FAFC;
+    display: block;
+    font-family: monospace;
+}
+
+.delta-time-sub {
+    font-size: 0.78rem;
+    color: #94A3B8;
+    display: block;
+}
+
+.delta-trip-footer {
+    background: #070E1E;
+    padding: 12px 20px;
+    border-top: 1px solid #1E293B;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 0.82rem;
+}
+
+.btn-delta-manage {
+    background: #2563EB !important;
+    border: 1px solid #1D4ED8 !important;
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+    border-radius: 6px !important;
+    padding: 6px 14px !important;
+    font-size: 0.82rem !important;
+}
+
+.btn-delta-manage:hover {
+    background: #1D4ED8 !important;
+}
+
+.btn-delta-boarding {
+    background: #16A34A !important;
+    border: 1px solid #15803D !important;
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+    border-radius: 6px !important;
+    padding: 6px 14px !important;
+    font-size: 0.82rem !important;
+}
+
+.btn-delta-checkin {
+    background: #0284C7 !important;
+    border: 1px solid #0369A1 !important;
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+    border-radius: 6px !important;
+    padding: 6px 14px !important;
+    font-size: 0.82rem !important;
+}
+
+.btn-delta-eticket {
+    background: #0F172A !important;
+    border: 1px solid #38BDF8 !important;
+    color: #38BDF8 !important;
+    font-weight: 700 !important;
+    border-radius: 6px !important;
+    padding: 6px 12px !important;
+    font-size: 0.82rem !important;
+    transition: all 0.2s ease !important;
+}
+
+.btn-delta-eticket:hover {
+    background: #0284C7 !important;
+    border-color: #0284C7 !important;
+    color: #FFFFFF !important;
+}
+
+.delta-eticket-banner {
+    background: #081021 !important;
+    border-top: 1px solid #1E293B !important;
+    border-bottom: 1px solid #1E293B !important;
+    padding: 10px 16px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.btn-delta-eticket-download {
+    background: #0284C7 !important;
+    border: 1px solid #0369A1 !important;
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+    border-radius: 6px !important;
+    padding: 6px 14px !important;
+    font-size: 0.80rem !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+    transition: all 0.2s ease !important;
+}
+
+.btn-delta-eticket-download:hover {
+    background: #0369A1 !important;
+    border-color: #38BDF8 !important;
+    color: #FFFFFF !important;
+}
+
+.delta-eticket-banner-cancelled {
+    background: rgba(239, 68, 68, 0.06) !important;
+    border-top: 1px solid rgba(239, 68, 68, 0.25) !important;
+    border-bottom: 1px solid rgba(239, 68, 68, 0.25) !important;
+}
+
+.btn-delta-regulations {
+    background: transparent !important;
+    border: 1px solid #1E3A5F !important;
+    color: #38BDF8 !important;
+    font-size: 0.76rem !important;
+    padding: 4px 10px !important;
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    transition: all 0.2s ease !important;
+}
+
+.btn-delta-regulations:hover {
+    background: rgba(56, 189, 248, 0.12) !important;
+    border-color: #38BDF8 !important;
+    color: #FFFFFF !important;
+}
+
+.btn-delta-icon {
+    background: #0F172A !important;
+    border: 1px solid #334155 !important;
+    color: #CBD5E1 !important;
+    border-radius: 6px !important;
+    padding: 6px 10px !important;
+}
+
+.btn-delta-icon:hover {
+    background: #1E293B !important;
+    color: #38BDF8 !important;
+    border-color: #38BDF8 !important;
+}
+
+.delta-companion-chip {
+    background: #0D172A !important;
+    border: 1px solid #1E293B !important;
+    border-radius: 6px !important;
+    padding: 6px 10px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    transition: border-color 0.2s ease !important;
+}
+
+.delta-companion-chip:hover {
+    border-color: #38BDF8 !important;
+}
