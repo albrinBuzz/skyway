@@ -19,6 +19,9 @@ import org.locationtech.jts.geom.Point;
  * 
  */
 @Entity
+@Table(name="Aeropuerto")
+@org.hibernate.annotations.SQLDelete(sql = "UPDATE Aeropuerto SET activo = false, fecha_baja = NOW() WHERE id_aeropuerto = ?")
+@org.hibernate.annotations.SQLRestriction("activo = true")
 @NamedQuery(name="Aeropuerto.findAll", query="SELECT a FROM Aeropuerto a")
 public class Aeropuerto implements Serializable {
 	private static final long serialVersionUID = 1L;
@@ -35,6 +38,17 @@ public class Aeropuerto implements Serializable {
 	@Column(name="nombre_aeropuerto")
 	private String nombreAeropuerto;
 
+	@Column(name="activo", nullable=false)
+	private Boolean activo = true;
+
+	@Column(name="fecha_baja")
+	private java.sql.Timestamp fechaBaja;
+
+	public Boolean getActivo() { return this.activo; }
+	public void setActivo(Boolean activo) { this.activo = activo; }
+	public java.sql.Timestamp getFechaBaja() { return this.fechaBaja; }
+	public void setFechaBaja(java.sql.Timestamp fechaBaja) { this.fechaBaja = fechaBaja; }
+
 	@Column(name = "posicion", columnDefinition = "GEOGRAPHY(Point, 4326)")
 	@JdbcTypeCode(SqlTypes.GEOMETRY)
 	private Point posicion;
@@ -42,6 +56,7 @@ public class Aeropuerto implements Serializable {
 	//bi-directional many-to-one association to Ciudad
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name="id_ciudad")
+	@org.hibernate.annotations.NotFound(action = org.hibernate.annotations.NotFoundAction.IGNORE)
 	private Ciudad ciudad;
 
 	//bi-directional many-to-one association to Itinerario

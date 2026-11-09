@@ -18,4 +18,5 @@ public interface ClaseAsientoService {
     ClaseAsiento actualizarClaseAsiento(Integer id, ClaseAsiento claseAsiento);
 
     void eliminarClaseAsiento(Integer id);
+    void reactivarClaseAsiento(Integer id);
 }

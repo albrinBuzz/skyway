@@ -17,12 +17,14 @@ public class TarifaCaracteristica implements Serializable {
     @Column(name = "ID_TARIFA_CARACTERISTICA")
     private Integer idTarifaCaracteristica;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ID_TARIFA", nullable = false)
+    @org.hibernate.annotations.NotFound(action = org.hibernate.annotations.NotFoundAction.IGNORE)
     private Tarifa tarifa;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ID_CARACTERISTICA", nullable = false)
+    @org.hibernate.annotations.NotFound(action = org.hibernate.annotations.NotFoundAction.IGNORE)
     private CaracteristicaTarifa caracteristica;
 
     @Column(name = "Valor", length = 100)

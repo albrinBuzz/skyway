@@ -237,7 +237,7 @@
                             <div class="card-header-label"><i class="pi pi-compass"></i> Especificaciones Operativas</div>
                             <div class="ui-fluid p-formgrid p-grid">
 
-                                <div class="p-field p-col-12 p-md-3">
+                                <div class="p-field p-col-12 p-md-4">
                                     <p:outputLabel for="n_vuelo" value="Código de Vuelo" />
                                     <p:inputText id="n_vuelo" value="#{vueloBean.numeroVuelo}"
                                                  readonly="true" placeholder="[Autogenerado al confirmar]"
@@ -245,7 +245,7 @@
                                     <small style="color: var(--text-dim);">Asignado automáticamente.</small>
                                 </div>
 
-                                <div class="p-field p-col-12 p-md-3">
+                                <div class="p-field p-col-12 p-md-4">
                                     <p:outputLabel for="aerolinea" value="Línea Aérea *" />
                                     <p:selectOneMenu id="aerolinea" value="#{vueloBean.aerolineaId}" required="true" requiredMessage="Seleccione la Aerolínea">
                                         <f:selectItem itemLabel="Seleccione" itemValue="" />
@@ -254,21 +254,7 @@
                                     </p:selectOneMenu>
                                 </div>
 
-                                <div class="p-field p-col-12 p-md-3">
-                                    <p:outputLabel for="avion" value="Aeronave *" />
-                                    <p:selectOneMenu id="avion" value="#{vueloBean.avionId}" required="true" requiredMessage="Seleccione la Aeronave">
-                                        <f:selectItem itemLabel="Seleccione Avión" itemValue="" />
-                                        <f:selectItems value="#{vueloBean.avions}" var="av"
-                                                       itemLabel="#{av.modeloAvion.nombre} [#{av.numeroDeRegistro}] - Cap: #{av.capacidadDePasajeros} pax"
-                                                       itemValue="#{av.idAvion}" />
-                                        <!-- Procesa los valores actuales de 'infoCapacidad' antes de ejecutar ajaxListener -->
-                                        <p:ajax listener="#{vueloBean.ajaxListener}"
-                                                process="@this :formVuelo:infoCapacidad"
-                                                update=":formVuelo:infoCapacidad :formVuelo:panelPaso2 :formVuelo:panelPaso3" />
-                                    </p:selectOneMenu>
-                                </div>
-
-                                <div class="p-field p-col-12 p-md-3">
+                                <div class="p-field p-col-12 p-md-4">
                                     <p:outputLabel for="piloto" value="Comandante / Piloto *" />
                                     <p:selectOneMenu id="piloto" value="#{vueloBean.pilotoId}" required="true" requiredMessage="Seleccione el Comandante" filter="true" filterMatchMode="contains">
                                         <f:selectItem itemLabel="Seleccione Piloto" itemValue="" />
@@ -278,6 +264,79 @@
                                     </p:selectOneMenu>
                                 </div>
 
+                            </div>
+
+                            <!-- SECCIÓN INTERACTIVA DE ASIGNACIÓN DE AERONAVE -->
+                            <div class="avion-picker-container">
+                                <div class="flex justify-content-between align-items-center mb-2">
+                                    <p:outputLabel value="Aeronave Asignada a la Operación *" style="font-weight: 700; color: var(--text-heading); font-size: 0.9rem;" />
+                                    <h:outputText value="Requerido para habilitar la configuración de cabinas y tarifas" style="font-size: 0.8rem; color: var(--text-muted);" />
+                                </div>
+
+                                <h:inputHidden id="avion" value="#{vueloBean.avionId}" required="true" requiredMessage="Debe seleccionar una Aeronave para operar el vuelo." />
+                                <p:message for="avion" />
+
+                                <h:panelGroup id="panelAvionSeleccionado" layout="block">
+                                    <!-- Caso 1: Sin aeronave asignada -->
+                                    <ui:fragment rendered="#{empty vueloBean.avionId or empty vueloBean.avionSeleccionado}">
+                                        <div class="avion-picker-unselected">
+                                            <div class="avion-picker-icon">
+                                                <i class="pi pi-send"></i>
+                                            </div>
+                                            <div class="avion-picker-info">
+                                                <span class="avion-picker-title">Ninguna aeronave asignada</span>
+                                                <span class="avion-picker-subtitle">Seleccione una aeronave disponible de la flota activa mediante el buscador avanzado de modelos y matrículas.</span>
+                                            </div>
+                                            <div class="avion-picker-action">
+                                                <p:commandButton value="Explorar Flota y Asignar"
+                                                                 icon="pi pi-search"
+                                                                 actionListener="#{vueloBean.abrirSelectorAvion}"
+                                                                 process="@this"
+                                                                 update=":formSelectorAvion"
+                                                                 oncomplete="PF('dlgSelectorAvion').show();"
+                                                                 styleClass="btn-primary-custom" />
+                                            </div>
+                                        </div>
+                                    </ui:fragment>
+
+                                    <!-- Caso 2: Aeronave asignada -->
+                                    <ui:fragment rendered="#{not empty vueloBean.avionId and not empty vueloBean.avionSeleccionado}">
+                                        <div class="avion-card-selected">
+                                            <div class="avion-card-main">
+                                                <div class="avion-badge-icon">
+                                                    <i class="pi pi-send"></i>
+                                                </div>
+                                                <div class="avion-details">
+                                                    <div class="avion-model-header">
+                                                        <span class="avion-model-name">#{vueloBean.avionSeleccionado.modeloAvion.nombre}</span>
+                                                        <span class="avion-manufacturer-badge">#{vueloBean.avionSeleccionado.modeloAvion.fabricante.nombre}</span>
+                                                        <span class="avion-reg-badge"><i class="pi pi-tag mr-1"></i>#{vueloBean.avionSeleccionado.numeroDeRegistro}</span>
+                                                    </div>
+                                                    <div class="avion-specs-row">
+                                                        <span class="spec-chip"><i class="pi pi-users mr-1"></i> Capacidad Total: <strong>#{vueloBean.avionSeleccionado.capacidadDePasajeros} pax</strong></span>
+                                                        <span class="spec-chip"><i class="pi pi-check-circle mr-1" style="color: #34d399;"></i> Estado: <strong>#{vueloBean.avionSeleccionado.estadoDeMantenimiento != null ? vueloBean.avionSeleccionado.estadoDeMantenimiento : 'OPERACIONAL'}</strong></span>
+                                                        <span class="spec-chip"><i class="pi pi-th-large mr-1" style="color: #38bdf8;"></i> Matriz de cabina sincronizada</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="avion-card-actions">
+                                                <p:commandButton value="Cambiar Aeronave"
+                                                                 icon="pi pi-sync"
+                                                                 actionListener="#{vueloBean.abrirSelectorAvion}"
+                                                                 process="@this"
+                                                                 update=":formSelectorAvion"
+                                                                 oncomplete="PF('dlgSelectorAvion').show();"
+                                                                 styleClass="btn-secondary-custom mr-2" />
+                                                <p:commandButton value="Quitar"
+                                                                 icon="pi pi-times"
+                                                                 actionListener="#{vueloBean.desasignarAvion}"
+                                                                 process="@this"
+                                                                 update=":formVuelo:panelAvionSeleccionado :formVuelo:avion :formVuelo:infoCapacidad :formVuelo:panelPaso2 :formVuelo:panelPaso3 :msgs"
+                                                                 styleClass="ui-button-danger ui-button-flat" />
+                                            </div>
+                                        </div>
+                                    </ui:fragment>
+                                </h:panelGroup>
                             </div>
                         </div>
                     </div>
@@ -661,12 +720,356 @@
                                          icon="pi pi-check"
                                          actionListener="#{vueloBean.agregarSegmentoEnMemoria}"
                                          process="formSegmentoCrear"
-                                         update=":formVuelo:listaSegmentosPanel :formVuelo:aerolinea :formVuelo:avion :formVuelo:piloto :formVuelo:infoCapacidad formSegmentoCrear:panelExplicacionFisica :msgs"
+                                         update=":formVuelo:listaSegmentosPanel :formVuelo:aerolinea :formVuelo:avion :formVuelo:panelAvionSeleccionado :formVuelo:piloto :formVuelo:infoCapacidad formSegmentoCrear:panelExplicacionFisica :msgs"
                                          oncomplete="if (!args.validationFailed) { PF('dlgNuevoSegmento').hide(); window.renderizarMapaRutaGeneral('#{vueloBean.segmentosJson}'); }"
                                          styleClass="btn-primary-custom" />
                     </div>
 
                 </p:outputPanel>
+            </h:form>
+        </p:dialog>
+
+        <style type="text/css">
+            /* =========================================================
+               ESTILOS CRÍTICOS INLINE - SELECTOR DE FLOTA SKYWAY (DARK NAVY)
+               ELIMINA FONDOS BLANCOS Y NEGRO ABSOLUTO
+               ========================================================= */
+            body .ui-dialog.custom-dialog {
+                background: #0d172a !important;
+                background-color: #0d172a !important;
+                border: 1px solid #1e3a5f !important;
+                border-radius: 12px !important;
+                box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75) !important;
+                overflow: hidden !important;
+            }
+
+            body .ui-dialog.custom-dialog .ui-dialog-titlebar {
+                background: #13223d !important;
+                background-color: #13223d !important;
+                border: none !important;
+                border-bottom: 1px solid #1e3a5f !important;
+                padding: 1.1rem 1.5rem !important;
+                color: #f8fafc !important;
+            }
+
+            body .ui-dialog.custom-dialog .ui-dialog-title {
+                font-size: 1.1rem !important;
+                font-weight: 700 !important;
+                color: #f8fafc !important;
+                letter-spacing: -0.01em !important;
+            }
+
+            body .ui-dialog.custom-dialog .ui-dialog-titlebar-icon {
+                color: #94a3b8 !important;
+                border-radius: 6px !important;
+            }
+
+            body .ui-dialog.custom-dialog .ui-dialog-titlebar-icon:hover {
+                background: #1e3560 !important;
+                color: #ffffff !important;
+            }
+
+            body .ui-dialog.custom-dialog .ui-dialog-content {
+                background: #0b1326 !important;
+                background-color: #0b1326 !important;
+                color: #e2e8f0 !important;
+                padding: 1.25rem 1.5rem 1.5rem 1.5rem !important;
+            }
+
+            /* Buscador de Flota */
+            .flota-search-box {
+                position: relative;
+                margin-bottom: 1rem;
+            }
+
+            .flota-search-box input.ui-inputtext {
+                width: 100% !important;
+                padding: 0.8rem 1rem 0.8rem 2.8rem !important;
+                background: #111f38 !important;
+                background-color: #111f38 !important;
+                border: 1px solid #24395e !important;
+                border-radius: 8px !important;
+                color: #f8fafc !important;
+                font-size: 0.95rem !important;
+                transition: all 0.2s ease !important;
+            }
+
+            .flota-search-box input.ui-inputtext:focus {
+                background: #142544 !important;
+                border-color: #38bdf8 !important;
+                box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2) !important;
+            }
+
+            .flota-search-box i.pi-search {
+                position: absolute;
+                left: 14px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: #38bdf8 !important;
+                font-size: 1.1rem;
+                pointer-events: none;
+                z-index: 2;
+            }
+
+            /* Encabezados de Tabla - Cero Fondo Blanco */
+            body .ui-dialog.custom-dialog .ui-datatable thead th,
+            body .custom-dialog .tabla-flota-skyway.ui-datatable thead th,
+            body .tabla-flota-skyway.ui-datatable thead th,
+            body .tabla-flota-skyway thead th.ui-state-default,
+            body .tabla-flota-skyway thead tr th,
+            body .ui-dialog.custom-dialog .ui-datatable thead tr {
+                background: #13223d !important;
+                background-color: #13223d !important;
+                background-image: none !important;
+                color: #93c5fd !important;
+                border: 1px solid #1e304f !important;
+                font-size: 0.82rem !important;
+                font-weight: 700 !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.05em !important;
+                padding: 0.85rem 0.65rem !important;
+                text-shadow: none !important;
+                box-shadow: none !important;
+            }
+
+            body .tabla-flota-skyway.ui-datatable thead th .ui-column-title,
+            body .custom-dialog .ui-datatable thead th .ui-column-title {
+                color: #93c5fd !important;
+                font-weight: 700 !important;
+            }
+
+            body .tabla-flota-skyway.ui-datatable thead th .ui-sortable-column-icon,
+            body .custom-dialog .ui-datatable thead th .ui-sortable-column-icon {
+                color: #38bdf8 !important;
+            }
+
+            /* Filas - Paleta Corporativa Azul Marino (Sin Negro Absoluto) */
+            body .tabla-flota-skyway.ui-datatable,
+            body .tabla-flota-skyway.ui-datatable .ui-datatable-tablewrapper,
+            body .tabla-flota-skyway.ui-datatable table {
+                background: #0d172a !important;
+                border: 1px solid #1e304f !important;
+                border-radius: 8px !important;
+                overflow: hidden !important;
+            }
+
+            body .tabla-flota-skyway.ui-datatable tbody tr,
+            body .custom-dialog .ui-datatable tbody tr {
+                background: #0d172a !important;
+                background-color: #0d172a !important;
+                color: #e2e8f0 !important;
+                border-bottom: 1px solid #192a47 !important;
+                transition: background-color 0.15s ease !important;
+            }
+
+            body .tabla-flota-skyway.ui-datatable tbody tr.ui-datatable-even,
+            body .custom-dialog .ui-datatable tbody tr.ui-datatable-even {
+                background: #0d172a !important;
+                background-color: #0d172a !important;
+            }
+
+            body .tabla-flota-skyway.ui-datatable tbody tr.ui-datatable-odd,
+            body .custom-dialog .ui-datatable tbody tr.ui-datatable-odd {
+                background: #111e36 !important;
+                background-color: #111e36 !important;
+            }
+
+            body .tabla-flota-skyway.ui-datatable tbody tr:hover,
+            body .tabla-flota-skyway.ui-datatable tbody tr.ui-state-hover,
+            body .custom-dialog .ui-datatable tbody tr:hover,
+            body .custom-dialog .ui-datatable tbody tr.ui-state-hover {
+                background: #1a2f55 !important;
+                background-color: #1a2f55 !important;
+            }
+
+            body .tabla-flota-skyway.ui-datatable tbody td,
+            body .custom-dialog .ui-datatable tbody td {
+                background: transparent !important;
+                color: #e2e8f0 !important;
+                border: 1px solid #192a47 !important;
+                padding: 0.75rem 0.65rem !important;
+            }
+
+            body .tabla-flota-skyway.ui-datatable .ui-datatable-emptymessage td {
+                background: #0d172a !important;
+                color: #94a3b8 !important;
+                padding: 2.5rem 1rem !important;
+                text-align: center !important;
+            }
+
+            /* Paginador - Cero Fondo Blanco */
+            body .ui-dialog.custom-dialog .ui-paginator,
+            body .custom-dialog .ui-paginator,
+            body .custom-dialog .ui-paginator.ui-widget-header,
+            body .tabla-flota-skyway.ui-datatable .ui-paginator,
+            body .tabla-flota-skyway .ui-paginator,
+            body .tabla-flota-skyway .ui-paginator.ui-widget-header {
+                background: #101c33 !important;
+                background-color: #101c33 !important;
+                background-image: none !important;
+                border: 1px solid #1e304f !important;
+                border-top: none !important;
+                padding: 0.65rem !important;
+                color: #cbd5e1 !important;
+            }
+
+            body .tabla-flota-skyway .ui-paginator .ui-paginator-pages,
+            body .custom-dialog .ui-paginator .ui-paginator-pages {
+                background: transparent !important;
+                border: none !important;
+            }
+
+            body .tabla-flota-skyway .ui-paginator .ui-paginator-page,
+            body .tabla-flota-skyway .ui-paginator .ui-paginator-first,
+            body .tabla-flota-skyway .ui-paginator .ui-paginator-prev,
+            body .tabla-flota-skyway .ui-paginator .ui-paginator-next,
+            body .tabla-flota-skyway .ui-paginator .ui-paginator-last,
+            body .custom-dialog .ui-paginator .ui-paginator-page,
+            body .custom-dialog .ui-paginator .ui-paginator-first,
+            body .custom-dialog .ui-paginator .ui-paginator-prev,
+            body .custom-dialog .ui-paginator .ui-paginator-next,
+            body .custom-dialog .ui-paginator .ui-paginator-last {
+                background: #152442 !important;
+                background-color: #152442 !important;
+                background-image: none !important;
+                color: #94a3b8 !important;
+                border: 1px solid #22375e !important;
+                border-radius: 6px !important;
+                margin: 0 3px !important;
+                min-width: 32px !important;
+                height: 32px !important;
+                line-height: 30px !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                text-shadow: none !important;
+                box-shadow: none !important;
+                transition: all 0.2s ease !important;
+            }
+
+            body .tabla-flota-skyway .ui-paginator .ui-paginator-page.ui-state-active,
+            body .custom-dialog .ui-paginator .ui-paginator-page.ui-state-active {
+                background: #2563eb !important;
+                background-color: #2563eb !important;
+                background-image: none !important;
+                color: #ffffff !important;
+                border-color: #3b82f6 !important;
+                font-weight: 700 !important;
+                box-shadow: 0 2px 8px rgba(37, 99, 235, 0.45) !important;
+            }
+
+            body .tabla-flota-skyway .ui-paginator .ui-paginator-page:hover:not(.ui-state-active),
+            body .tabla-flota-skyway .ui-paginator .ui-paginator-first:hover,
+            body .tabla-flota-skyway .ui-paginator .ui-paginator-prev:hover,
+            body .tabla-flota-skyway .ui-paginator .ui-paginator-next:hover,
+            body .tabla-flota-skyway .ui-paginator .ui-paginator-last:hover,
+            body .custom-dialog .ui-paginator .ui-paginator-page:hover:not(.ui-state-active),
+            body .custom-dialog .ui-paginator .ui-paginator-first:hover,
+            body .custom-dialog .ui-paginator .ui-paginator-prev:hover,
+            body .custom-dialog .ui-paginator .ui-paginator-next:hover,
+            body .custom-dialog .ui-paginator .ui-paginator-last:hover {
+                background: #1e345e !important;
+                background-color: #1e345e !important;
+                color: #f8fafc !important;
+                border-color: #3b82f6 !important;
+            }
+
+            .avion-reg-badge {
+                background: #141f36;
+                color: #38bdf8;
+                border: 1px solid #24395e;
+                font-family: monospace;
+                font-size: 0.85rem;
+                font-weight: 700;
+                padding: 3px 8px;
+                border-radius: 4px;
+                letter-spacing: 0.05em;
+            }
+        </style>
+
+        <!-- DIÁLOGO CORPORATIVO SELECTOR DE FLOTA -->
+        <p:dialog widgetVar="dlgSelectorAvion"
+                  header="Asignación de Aeronave de la Flota Operativa"
+                  modal="true"
+                  width="920"
+                  responsive="true"
+                  fitViewport="true"
+                  showEffect="fade"
+                  hideEffect="fade"
+                  styleClass="custom-dialog">
+
+            <h:form id="formSelectorAvion">
+                <div style="margin-bottom: 1.25rem;">
+                    <p style="color: #94a3b8; margin: 0 0 0.75rem 0; font-size: 0.9rem;">
+                        Seleccione una aeronave disponible de la flota activa para operar este vuelo. Filtre en tiempo real por modelo, fabricante o matrícula.
+                    </p>
+                    <div class="flota-search-box">
+                        <i class="pi pi-search"></i>
+                        <p:inputText id="filtroAvionInput"
+                                     value="#{vueloBean.textoBusquedaAvion}"
+                                     placeholder="Buscar por modelo (ej: A320, B787), matrícula (ej: CC-BHA), fabricante (Airbus, Boeing)..."
+                                     autocomplete="off"
+                                     onkeydown="if(event.keyCode==13){event.preventDefault();return false;}">
+                            <p:ajax event="input" delay="250" process="@this" update="tablaAvionesFlota" listener="#{vueloBean.filtrarAvionesModal}" />
+                        </p:inputText>
+                    </div>
+                </div>
+
+                <p:dataTable id="tablaAvionesFlota"
+                             widgetVar="wvTablaAvionesFlota"
+                             value="#{vueloBean.avionesFiltradosModal}"
+                             var="av"
+                             paginator="true"
+                             rows="6"
+                             paginatorPosition="bottom"
+                             emptyMessage="No se encontraron aeronaves que coincidan con la búsqueda."
+                             styleClass="tabla-flota-skyway">
+
+                    <p:column headerText="Fabricante / Modelo" style="width: 32%;">
+                        <div class="flex flex-column">
+                            <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--accent-origen); font-weight: 700; letter-spacing: 0.05em;">
+                                #{av.modeloAvion.fabricante.nombre}
+                            </span>
+                            <strong style="color: var(--text-heading); font-size: 1rem;">
+                                #{av.modeloAvion.nombre}
+                            </strong>
+                        </div>
+                    </p:column>
+
+                    <p:column headerText="Matrícula" style="width: 20%; text-align: center;">
+                        <span class="avion-reg-badge">#{av.numeroDeRegistro}</span>
+                    </p:column>
+
+                    <p:column headerText="Capacidad" sortBy="#{av.capacidadDePasajeros}" style="width: 18%; text-align: center;">
+                        <span style="color: #ffffff; font-weight: 600;">
+                            <i class="pi pi-users mr-1" style="color: #94a3b8;"></i>#{av.capacidadDePasajeros} pax
+                        </span>
+                    </p:column>
+
+                    <p:column headerText="Estado" style="width: 15%; text-align: center;">
+                        <span class="badge-status-activo" style="padding: 3px 8px; font-size: 0.75rem;">
+                            #{av.estadoDeMantenimiento != null ? av.estadoDeMantenimiento : 'OPERACIONAL'}
+                        </span>
+                    </p:column>
+
+                    <p:column headerText="Acción" style="width: 15%; text-align: center;">
+                        <p:commandButton value="Asignar"
+                                         icon="pi pi-check"
+                                         actionListener="#{vueloBean.seleccionarAvionDirecto(av)}"
+                                         process="@this"
+                                         update=":formVuelo:panelAvionSeleccionado :formVuelo:avion :formVuelo:infoCapacidad :formVuelo:panelPaso2 :formVuelo:panelPaso3 :msgs"
+                                         oncomplete="PF('dlgSelectorAvion').hide();"
+                                         styleClass="btn-primary-custom"
+                                         style="padding: 4px 10px !important; font-size: 0.85rem;" />
+                    </p:column>
+
+                </p:dataTable>
+
+                <div class="dialog-footer-fijo">
+                    <p:commandButton value="Cerrar" icon="pi pi-times" type="button"
+                                     onclick="PF('dlgSelectorAvion').hide();"
+                                     styleClass="btn-secondary-custom" />
+                </div>
             </h:form>
         </p:dialog>
 

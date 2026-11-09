@@ -13,6 +13,9 @@ import java.util.List;
  *
  */
 @Entity
+@Table(name="Ciudad")
+@org.hibernate.annotations.SQLDelete(sql = "UPDATE Ciudad SET activo = false, fecha_baja = NOW() WHERE id_ciudad = ?")
+@org.hibernate.annotations.SQLRestriction("activo = true")
 @NamedQuery(name="Ciudad.findAll", query="SELECT c FROM Ciudad c")
 public class Ciudad implements Serializable {
 	private static final long serialVersionUID = 1L;
@@ -25,6 +28,17 @@ public class Ciudad implements Serializable {
 
 	private String nombre;
 
+	@Column(name="activo", nullable=false)
+	private Boolean activo = true;
+
+	@Column(name="fecha_baja")
+	private java.sql.Timestamp fechaBaja;
+
+	public Boolean getActivo() { return this.activo; }
+	public void setActivo(Boolean activo) { this.activo = activo; }
+	public java.sql.Timestamp getFechaBaja() { return this.fechaBaja; }
+	public void setFechaBaja(java.sql.Timestamp fechaBaja) { this.fechaBaja = fechaBaja; }
+
 	//bi-directional many-to-one association to Aeropuerto
 	@OneToMany(mappedBy="ciudad")
 	private List<Aeropuerto> aeropuertos;
@@ -32,6 +46,7 @@ public class Ciudad implements Serializable {
 	//bi-directional many-to-one association to Pai
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name="id_pais")
+	@org.hibernate.annotations.NotFound(action = org.hibernate.annotations.NotFoundAction.IGNORE)
 	private Pai pai;
 
 	public Ciudad() {

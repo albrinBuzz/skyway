@@ -45,6 +45,8 @@ public class ReservaProcesadorService {
     @Autowired private PagoService pagoService; // Inyección para guardar el Pago
     @Autowired private EmailReservaService emailReservaService; // Inyección para enviar el correo con el PDF
     @Autowired private MetodoPagoService metodoPagoService;
+    @Autowired private com.SkyWay.modules.usuario.domain.service.UsuarioService usuarioService;
+    @Autowired private com.SkyWay.modules.usuario.domain.repository.UsuarioRepository usuarioRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -91,7 +93,7 @@ public class ReservaProcesadorService {
         }
 
         // -----------------------------------------------------------------------------------------
-        // 1. REGISTRO Y AUDITORÍA DE PASAJEROS
+        // 1. REGISTRO Y AUDITORÍA DE PASAJEROS (UPSERT RESILIENTE)
         // -----------------------------------------------------------------------------------------
         Logger.logInfo("🔍 --- PASO 1: VERIFICANDO Y ACTUALIZANDO PASAJEROS ---");
         List<Pasajero> pasajerosPersistidos = new ArrayList<>();
@@ -99,27 +101,110 @@ public class ReservaProcesadorService {
         for (int i = 0; i < pasajerosList.size(); i++) {
             Pasajero p = pasajerosList.get(i);
 
-            if ((p.getRut() == null || p.getRut().isBlank()) && p.getNumeroDocumento() != null) {
-                p.setRut(p.getNumeroDocumento().trim());
+            // Sanitización defensiva de respaldo
+            String rutP = (p.getRut() != null && !p.getRut().isBlank()) ? p.getRut().replace(".", "").trim().toUpperCase() : null;
+            if (rutP == null && p.getNumeroDocumento() != null) {
+                rutP = p.getNumeroDocumento().replace(".", "").trim().toUpperCase();
+            }
+            if (rutP == null || rutP.isBlank()) {
+                rutP = "PAS-" + System.currentTimeMillis() + "-" + (i + 1);
+            }
+            p.setRut(rutP);
+
+            String tipoDoc = (p.getTipoDocumento() != null && !p.getTipoDocumento().isBlank()) ? p.getTipoDocumento().trim().toUpperCase() : "CEDULA";
+            p.setTipoDocumento(tipoDoc);
+
+            String numDoc = (p.getNumeroDocumento() != null && !p.getNumeroDocumento().isBlank()) ? p.getNumeroDocumento().replace(".", "").trim().toUpperCase() : rutP;
+            p.setNumeroDocumento(numDoc);
+
+            String nacionalidad = (p.getNacionalidad() != null && !p.getNacionalidad().isBlank()) ? p.getNacionalidad().trim() : "Chilena";
+            p.setNacionalidad(nacionalidad);
+
+            Usuario usrInput = p.getUsuario() != null ? p.getUsuario() : new Usuario();
+            String nombre = (usrInput.getNombre() != null && !usrInput.getNombre().isBlank()) ? usrInput.getNombre().trim() : "Pasajero";
+            String apellido = (usrInput.getApellido() != null && !usrInput.getApellido().isBlank()) ? usrInput.getApellido().trim() : String.valueOf(i + 1);
+            String correo = (usrInput.getCorreoElectronico() != null && !usrInput.getCorreoElectronico().isBlank()) ? usrInput.getCorreoElectronico().trim().toLowerCase() : null;
+            String telefono = (usrInput.getTelefono() != null && !usrInput.getTelefono().isBlank()) ? usrInput.getTelefono().trim() : "+56900000000";
+            Date fechaNac = usrInput.getFechaNacimiento() != null ? usrInput.getFechaNacimiento() : (p.getFechaNacimiento() != null ? p.getFechaNacimiento() : new Date(System.currentTimeMillis() - 630720000000L));
+
+            // 1.1 Persistencia / Upsert Seguro de Usuario
+            Usuario usrPersistido;
+            Optional<Usuario> usrExistenteOpt = usuarioService.findByRut(rutP);
+
+            if (usrExistenteOpt.isPresent()) {
+                usrPersistido = usrExistenteOpt.get();
+                usrPersistido.setNombre(nombre);
+                usrPersistido.setApellido(apellido);
+                usrPersistido.setTelefono(telefono);
+                usrPersistido.setFechaNacimiento(fechaNac);
+
+                // Documento: solo actualizar si no colisiona con otro usuario
+                if (!usuarioRepository.existsByDocumentoIdentidadIgnoreCaseAndRutNot(numDoc, rutP)) {
+                    usrPersistido.setDocumentoIdentidad(numDoc);
+                }
+
+                // Correo: solo actualizar si se envió y no colisiona con otro usuario
+                if (correo != null && !usuarioRepository.existsByCorreoElectronicoIgnoreCaseAndRutNot(correo, rutP)) {
+                    usrPersistido.setCorreoElectronico(correo);
+                }
+                usrPersistido = usuarioRepository.save(usrPersistido);
+            } else {
+                usrPersistido = new Usuario();
+                usrPersistido.setRut(rutP);
+                usrPersistido.setNombre(nombre);
+                usrPersistido.setApellido(apellido);
+                usrPersistido.setTelefono(telefono);
+                usrPersistido.setFechaNacimiento(fechaNac);
+
+                // Evitar colisión de documento con otro usuario
+                if (usuarioRepository.existsByDocumentoIdentidadIgnoreCaseAndRutNot(numDoc, rutP)) {
+                    usrPersistido.setDocumentoIdentidad(rutP);
+                } else {
+                    usrPersistido.setDocumentoIdentidad(numDoc);
+                }
+
+                // Evitar colisión de correo con otro usuario
+                if (correo != null) {
+                    if (usuarioRepository.existsByCorreoElectronicoIgnoreCaseAndRutNot(correo, rutP)) {
+                        usrPersistido.setCorreoElectronico(rutP.replace("-", "").toLowerCase() + "@passenger.skyway.cl");
+                    } else {
+                        usrPersistido.setCorreoElectronico(correo);
+                    }
+                } else {
+                    usrPersistido.setCorreoElectronico(rutP.replace("-", "").toLowerCase() + "@passenger.skyway.cl");
+                }
+
+                usrPersistido.setFechaRegistro(new Timestamp(System.currentTimeMillis()));
+                usrPersistido = usuarioRepository.save(usrPersistido);
             }
 
-            Usuario usr = p.getUsuario() != null ? p.getUsuario() : new Usuario();
-            if (usr.getDocumentoIdentidad() == null || usr.getDocumentoIdentidad().isBlank()) {
-                usr.setDocumentoIdentidad(p.getNumeroDocumento());
-            }
-            usr.setRut(p.getRut());
-            p.setUsuario(usr);
+            // 1.2 Persistencia / Upsert Seguro de Pasajero
+            Pasajero pasPersistido;
+            Optional<Pasajero> pasExistenteOpt = pasajeroService.findById(rutP);
 
-            String nombreCompleto = usr.getNombre() + " " + usr.getApellido();
-            Logger.logInfo(String.format("👤 [PASAJERO %d/%d] RUT/ID: '%s' | Nombre: '%s' | Correo: '%s'",
-                    i + 1, pasajerosList.size(), p.getRut(), nombreCompleto, usr.getCorreoElectronico()));
+            if (pasExistenteOpt.isPresent()) {
+                pasPersistido = pasExistenteOpt.get();
+                pasPersistido.setTipoDocumento(tipoDoc);
+                pasPersistido.setNumeroDocumento(numDoc);
+                pasPersistido.setNacionalidad(nacionalidad);
+                pasPersistido.setFechaNacimiento(fechaNac);
+                pasPersistido.setUsuario(usrPersistido);
+                pasPersistido = pasajeroService.save(pasPersistido);
+            } else {
+                p.setRut(rutP);
+                p.setTipoDocumento(tipoDoc);
+                p.setNumeroDocumento(numDoc);
+                p.setNacionalidad(nacionalidad);
+                p.setFechaNacimiento(fechaNac);
+                p.setUsuario(usrPersistido);
+                pasPersistido = pasajeroService.save(p);
+            }
+
+            pasajerosPersistidos.add(pasPersistido);
 
             if (dto.equipajePorPasajero() != null && i < dto.equipajePorPasajero().size()) {
-                dto.equipajePorPasajero().get(i).setRutPasajero(p.getRut());
+                dto.equipajePorPasajero().get(i).setRutPasajero(rutP);
             }
-
-            Pasajero pasajeroGuardado = pasajeroService.save(p);
-            pasajerosPersistidos.add(pasajeroGuardado);
         }
 
         entityManager.flush();
@@ -262,6 +347,22 @@ public class ReservaProcesadorService {
         } catch (Exception e) {
             Logger.logError("⚠️ Error crítico en el PASO 6 al registrar pago o enviar correo: " + e.getMessage());
             e.printStackTrace();
+        }
+
+        // -----------------------------------------------------------------------------------------
+        // WAL / AUDITORÍA FINAL: REGISTRO DE PERSISTENCIA ATÓMICA EXITOSA
+        // -----------------------------------------------------------------------------------------
+        try {
+            entityManager.createNativeQuery(
+                    "INSERT INTO Log_Auditoria (rut_usuario, accion, nivel, tabla_afectada, id_registro_afectado, detalle, fecha_hora) " +
+                    "VALUES (:rut, 'RESERVA_COMPLETADA_EXITOSA', 'INFO'::tipo_nivel_log, 'Reserva', :idReserva, :detalle, NOW())"
+            )
+            .setParameter("rut", titular.getRut())
+            .setParameter("idReserva", idReservaGenerado)
+            .setParameter("detalle", String.format("Reserva #%d persistida atómicamente con éxito tras confirmación de pago.", idReservaGenerado))
+            .executeUpdate();
+        } catch (Exception logEx) {
+            Logger.logWarn("⚠️ [WAL] Entrada de éxito en Log_Auditoria omitida: " + logEx.getMessage());
         }
 
         SesionReservaUtil.limpiarObjetosSesionReserva();

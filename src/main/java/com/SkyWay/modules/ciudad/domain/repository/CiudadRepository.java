@@ -23,4 +23,16 @@ public interface CiudadRepository extends JpaRepository<Ciudad, Integer> {
 
     @Query("SELECT c FROM Ciudad c JOIN FETCH c.pai WHERE LOWER(c.nombre) = LOWER(:nombre)")
     List<Ciudad> buscarConPaisPorNombre(@Param("nombre") String nombre);
+
+    List<Ciudad> findByActivoTrue();
+
+    @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true)
+    @org.springframework.transaction.annotation.Transactional
+    @org.springframework.data.jpa.repository.Query(value = "UPDATE ciudad SET activo = false, fecha_baja = CURRENT_TIMESTAMP WHERE id_ciudad = :id", nativeQuery = true)
+    void softDeleteById(@Param("id") Integer id);
+
+    @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true)
+    @org.springframework.transaction.annotation.Transactional
+    @org.springframework.data.jpa.repository.Query(value = "UPDATE ciudad SET activo = true, fecha_baja = NULL WHERE id_ciudad = :id", nativeQuery = true)
+    void reactivarById(@Param("id") Integer id);
 }

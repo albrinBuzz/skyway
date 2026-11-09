@@ -7,4 +7,5 @@ public interface AeropuertoMapaProjection {
     String getCiudad();
     Double getLatitud();
     Double getLongitud();
+    Boolean getActivo();
 }

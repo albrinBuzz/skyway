@@ -126,6 +126,8 @@ public class VueloBean implements Serializable {
 
     private List<Vuelo> vuelosFiltrados;
     private Integer idVueloParam;
+    private List<Avion> avionesFiltradosModal;
+    private String textoBusquedaAvion;
 
 
 
@@ -138,6 +140,7 @@ public class VueloBean implements Serializable {
         this.listaAeropuertosJSON = aeropuertoService.findAllConCoordenadas();
         listaAviones = avionService.findAll();
         avions = new ArrayList<>(listaAviones);
+        this.avionesFiltradosModal = new ArrayList<>(listaAviones);
         listaPilotos = pilotoService.findAll();
         listaEstadosVuelo = estadoVueloService.findAll();
 
@@ -582,6 +585,66 @@ public class VueloBean implements Serializable {
         }
     }
 
+    public void seleccionarAvionDirecto(Avion av) {
+        if (av != null) {
+            this.avionId = String.valueOf(av.getIdAvion());
+            this.avionSeleccionado = av;
+            cargarTarifasYCapacidades(av.getIdAvion(), vuelo != null ? vuelo.getIdVuelo() : null);
+            addMessage(FacesMessage.SEVERITY_INFO, "Aeronave Asignada", 
+                av.getModeloAvion().getNombre() + " [" + av.getNumeroDeRegistro() + "] asignada exitosamente.");
+        }
+    }
+
+    public void desasignarAvion() {
+        this.avionId = null;
+        this.avionSeleccionado = null;
+        this.preciosAsientos = new ArrayList<>();
+        addMessage(FacesMessage.SEVERITY_WARN, "Aeronave Removida", "Se ha removido la asignación de la aeronave.");
+    }
+
+    public void filtrarAvionesModal() {
+        if (this.avions == null || this.avions.isEmpty()) {
+            this.avions = avionService.findAll();
+        }
+        if (this.avions == null) {
+            this.avionesFiltradosModal = new ArrayList<>();
+            return;
+        }
+        if (this.textoBusquedaAvion == null || this.textoBusquedaAvion.trim().isEmpty()) {
+            this.avionesFiltradosModal = new ArrayList<>(this.avions);
+            return;
+        }
+        String term = this.textoBusquedaAvion.trim().toLowerCase();
+        this.avionesFiltradosModal = this.avions.stream().filter(a -> {
+            String mod = (a.getModeloAvion() != null && a.getModeloAvion().getNombre() != null)
+                    ? a.getModeloAvion().getNombre().toLowerCase() : "";
+            String fab = (a.getModeloAvion() != null && a.getModeloAvion().getFabricante() != null && a.getModeloAvion().getFabricante().getNombre() != null)
+                    ? a.getModeloAvion().getFabricante().getNombre().toLowerCase() : "";
+            String mat = (a.getNumeroDeRegistro() != null)
+                    ? a.getNumeroDeRegistro().toLowerCase() : "";
+            String cap = a.getCapacidadDePasajeros() != null ? String.valueOf(a.getCapacidadDePasajeros()) : "";
+            String est = (a.getEstadoDeMantenimiento() != null)
+                    ? a.getEstadoDeMantenimiento().toLowerCase() : "operacional";
+            return mod.contains(term) || fab.contains(term) || mat.contains(term) || cap.contains(term) || est.contains(term);
+        }).collect(Collectors.toList());
+    }
+
+    public void abrirSelectorAvion() {
+        this.textoBusquedaAvion = "";
+        if (this.avions == null || this.avions.isEmpty()) {
+            this.avions = avionService.findAll();
+        }
+        this.avionesFiltradosModal = new ArrayList<>(this.avions);
+    }
+
+    public void limpiarFiltroAviones() {
+        this.textoBusquedaAvion = "";
+        if (this.avions == null || this.avions.isEmpty()) {
+            this.avions = avionService.findAll();
+        }
+        this.avionesFiltradosModal = new ArrayList<>(this.avions);
+    }
+
     public void guardarTarifasAsientos() {
         if (preciosAsientos == null || preciosAsientos.isEmpty()) {
             addMessage(FacesMessage.SEVERITY_WARN, "Validación", "No hay clases de asiento para configurar. Seleccione una aeronave primero.");
@@ -887,6 +950,7 @@ public class VueloBean implements Serializable {
 
         this.listaPilotos = pilotosLibres;
         this.avions = avionesLibres;
+        filtrarAvionesModal();
     }
 
     // Método auxiliar para autocalcular la fecha de llegada lógica
@@ -1024,6 +1088,35 @@ public class VueloBean implements Serializable {
     public void setDetalleFisicoExplicacion(String detalleFisicoExplicacion) { this.detalleFisicoExplicacion = detalleFisicoExplicacion; }
     public boolean isMostrarDetalleFisico() { return mostrarDetalleFisico; }
     public void setMostrarDetalleFisico(boolean mostrarDetalleFisico) { this.mostrarDetalleFisico = mostrarDetalleFisico; }
+
+    public Avion getAvionSeleccionado() {
+        if (this.avionSeleccionado == null && this.avionId != null && !this.avionId.isBlank()) {
+            if (this.aviones != null && this.aviones.containsKey(this.avionId)) {
+                this.avionSeleccionado = this.aviones.get(this.avionId);
+            }
+        }
+        return this.avionSeleccionado;
+    }
+    public void setAvionSeleccionado(Avion avionSeleccionado) {
+        this.avionSeleccionado = avionSeleccionado;
+    }
+
+    public List<Avion> getAvionesFiltradosModal() {
+        if (this.avionesFiltradosModal == null && this.avions != null) {
+            this.avionesFiltradosModal = new ArrayList<>(this.avions);
+        }
+        return this.avionesFiltradosModal;
+    }
+    public void setAvionesFiltradosModal(List<Avion> avionesFiltradosModal) {
+        this.avionesFiltradosModal = avionesFiltradosModal;
+    }
+
+    public String getTextoBusquedaAvion() {
+        return textoBusquedaAvion;
+    }
+    public void setTextoBusquedaAvion(String textoBusquedaAvion) {
+        this.textoBusquedaAvion = textoBusquedaAvion;
+    }
 
     public void toggleDetalleFisico() {
         this.mostrarDetalleFisico = !this.mostrarDetalleFisico;

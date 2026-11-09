@@ -9,6 +9,7 @@ import com.SkyWay.modules.tarifaItinerario.domain.repository.ItinerarioTarifaRep
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -51,9 +52,14 @@ public class ItinerarioTarifaService {
         List<TarifaDTO> resultado = new ArrayList<>();
 
         for (ItinerarioTarifa it : tarifasItinerario) {
-            Tarifa tarifa = it.getTarifa(); // Asegúrate que esté cargada con fetch (o usa @EntityGraph en el repo)
+            Tarifa tarifa = it.getTarifa();
+            if (tarifa == null || Boolean.FALSE.equals(tarifa.getActivo())) {
+                continue;
+            }
 
-            List<CaracteristicaDTO> caracteristicasDTO = tarifa.getTarifaCaracteristicas().stream()
+            List<CaracteristicaDTO> caracteristicasDTO = (tarifa.getTarifaCaracteristicas() != null)
+                    ? tarifa.getTarifaCaracteristicas().stream()
+                    .filter(tc -> tc.getCaracteristica() != null && Boolean.TRUE.equals(tc.getCaracteristica().getActivo()))
                     .map(tc -> new CaracteristicaDTO(
                             tc.getCaracteristica().getNombre(),
                             tc.getValor(),
@@ -61,7 +67,8 @@ public class ItinerarioTarifaService {
                             tc.getValorBool(),
                             tc.getValorInt()
                     ))
-                    .collect(Collectors.toList());
+                    .collect(Collectors.toList())
+                    : Collections.emptyList();
 
             TarifaDTO dto = new TarifaDTO();
 

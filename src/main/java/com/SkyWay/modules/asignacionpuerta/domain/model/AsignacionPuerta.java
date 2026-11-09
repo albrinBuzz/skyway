@@ -30,6 +30,7 @@ public class AsignacionPuerta implements Serializable {
 	//bi-directional many-to-one association to PuertaEmbarque
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name="id_puerta")
+	@org.hibernate.annotations.NotFound(action = org.hibernate.annotations.NotFoundAction.IGNORE)
 	private PuertaEmbarque puertaEmbarque;
 
 	//bi-directional many-to-one association to SegmentoVuelo

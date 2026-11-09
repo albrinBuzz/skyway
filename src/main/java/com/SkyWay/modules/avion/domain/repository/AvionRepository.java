@@ -24,6 +24,21 @@ public interface AvionRepository extends JpaRepository<Avion, Integer> {
 
     boolean existsByNumeroDeRegistro(String numeroDeRegistro);
 
+    List<Avion> findByActivoTrue();
+
+    @org.springframework.data.jpa.repository.Query(value = "SELECT * FROM avion ORDER BY id_avion DESC", nativeQuery = true)
+    List<Avion> findAllAdmin();
+
+    @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true)
+    @org.springframework.transaction.annotation.Transactional
+    @org.springframework.data.jpa.repository.Query(value = "UPDATE avion SET activo = false, fecha_baja = CURRENT_TIMESTAMP WHERE id_avion = :id", nativeQuery = true)
+    void softDeleteById(@Param("id") Integer id);
+
+    @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true)
+    @org.springframework.transaction.annotation.Transactional
+    @org.springframework.data.jpa.repository.Query(value = "UPDATE avion SET activo = true, fecha_baja = NULL WHERE id_avion = :id", nativeQuery = true)
+    void reactivarById(@Param("id") Integer id);
+
     @Query("SELECT DISTINCT a FROM Avion a LEFT JOIN FETCH a.modeloAvion m LEFT JOIN FETCH m.fabricante LEFT JOIN FETCH a.capacidadClases1 c LEFT JOIN FETCH c.claseAsiento1 ORDER BY a.idAvion DESC")
     List<Avion> findAllConRelaciones();
 

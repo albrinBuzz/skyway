@@ -360,7 +360,7 @@
 
                     <h:form id="formTabla">
                         <p:dataTable id="dt-tarifas"
-                                     value="#{tarifaBean.listaTarifas}"
+                                     value="#{tarifaBean.listaTarifasAdmin}"
                                      var="tarifa"
                                      styleClass="skyway-ops-table"
                                      paginator="true"
@@ -390,21 +390,48 @@
                                 </ui:repeat>
                             </p:column>
 
-                            <p:column headerText="Acciones" style="width: 120px; text-align: center;">
+                            <p:column headerText="Estado" sortBy="#{tarifa.activo}" style="width: 100px; text-align: center;">
+                                <h:panelGroup rendered="#{tarifa.activo}">
+                                    <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #34d399; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">
+                                        <i class="pi pi-check-circle me-1"></i>Activo
+                                    </span>
+                                </h:panelGroup>
+                                <h:panelGroup rendered="#{not tarifa.activo}">
+                                    <span style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #f87171; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">
+                                        <i class="pi pi-ban me-1"></i>Inactivo
+                                    </span>
+                                </h:panelGroup>
+                            </p:column>
+
+                            <p:column headerText="Acciones" style="width: 130px; text-align: center;">
                                 <div class="flex gap-2 justify-content-center">
                                     <p:commandButton icon="pi pi-pencil"
                                                      actionListener="#{tarifaBean.prepararEdicion(tarifa)}"
                                                      process="@this"
                                                      update=":formDialog:panelTarifa"
                                                      oncomplete="PF('dlgTarifa').show();"
+                                                     rendered="#{tarifa.activo}"
+                                                     title="Editar Tarifa"
                                                      styleClass="ui-button-outlined ui-button-secondary me-1" />
 
                                     <p:commandButton icon="pi pi-trash"
                                                      actionListener="#{tarifaBean.eliminarTarifa(tarifa)}"
                                                      process="@this"
                                                      update=":mainPanel :msgs"
+                                                     rendered="#{tarifa.activo}"
+                                                     title="Dar de baja"
                                                      styleClass="ui-button-outlined ui-button-danger">
-                                        <p:confirm header="Confirmación" message="¿Eliminar la tarifa '#{tarifa.nombre}'?" icon="pi pi-exclamation-triangle" />
+                                        <p:confirm header="Confirmación" message="¿Dar de baja la tarifa '#{tarifa.nombre}'?" icon="pi pi-exclamation-triangle" />
+                                    </p:commandButton>
+
+                                    <p:commandButton icon="pi pi-refresh"
+                                                     actionListener="#{tarifaBean.reactivarTarifa(tarifa)}"
+                                                     process="@this"
+                                                     update=":mainPanel :msgs"
+                                                     rendered="#{not tarifa.activo}"
+                                                     title="Reactivar Tarifa"
+                                                     styleClass="ui-button-outlined ui-button-success">
+                                        <p:confirm header="Confirmación" message="¿Reactivar la tarifa '#{tarifa.nombre}'?" icon="pi pi-check-circle" />
                                     </p:commandButton>
                                 </div>
                             </p:column>
@@ -429,7 +456,7 @@
 
                     <h:form id="formCatalogo">
                         <p:dataTable id="dt-catalogo"
-                                     value="#{tarifaBean.listaCaracteristicasGlobales}"
+                                     value="#{tarifaBean.listaCaracteristicasAdmin}"
                                      var="c"
                                      styleClass="skyway-ops-table"
                                      paginator="true"
@@ -454,6 +481,40 @@
                                     #{c.tipoDato}
                                 </span>
                             </p:column>
+
+                            <p:column headerText="Estado" sortBy="#{c.activo}" style="width: 100px; text-align: center;">
+                                <h:panelGroup rendered="#{c.activo}">
+                                    <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #34d399; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">
+                                        <i class="pi pi-check-circle me-1"></i>Activo
+                                    </span>
+                                </h:panelGroup>
+                                <h:panelGroup rendered="#{not c.activo}">
+                                    <span style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #f87171; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">
+                                        <i class="pi pi-ban me-1"></i>Inactivo
+                                    </span>
+                                </h:panelGroup>
+                            </p:column>
+
+                            <p:column headerText="Acciones" style="width: 100px; text-align: center;">
+                                <p:commandButton icon="pi pi-trash"
+                                                 actionListener="#{tarifaBean.eliminarCaracteristica(c.idCaracteristica)}"
+                                                 process="@this"
+                                                 update=":mainPanel :msgs"
+                                                 rendered="#{c.activo}"
+                                                 title="Dar de baja"
+                                                 styleClass="ui-button-outlined ui-button-danger ui-button-sm">
+                                    <p:confirm header="Confirmación" message="¿Dar de baja el beneficio '#{c.nombre}'?" icon="pi pi-exclamation-triangle" />
+                                </p:commandButton>
+                                <p:commandButton icon="pi pi-refresh"
+                                                 actionListener="#{tarifaBean.reactivarCaracteristica(c.idCaracteristica)}"
+                                                 process="@this"
+                                                 update=":mainPanel :msgs"
+                                                 rendered="#{not c.activo}"
+                                                 title="Reactivar beneficio"
+                                                 styleClass="ui-button-outlined ui-button-success ui-button-sm">
+                                    <p:confirm header="Confirmación" message="¿Reactivar el beneficio '#{c.nombre}'?" icon="pi pi-check-circle" />
+                                </p:commandButton>
+                            </p:column>
                         </p:dataTable>
                     </h:form>
                 </h:panelGroup>
@@ -472,8 +533,13 @@
                 <h:form id="formDialog" styleClass="dark-input">
                     <h:panelGroup id="panelTarifa" layout="block">
                         <div class="mb-4">
-                            <label>Nombre de la Tarifa</label>
-                            <p:inputText value="#{tarifaBean.tarifaSeleccionada.nombre}" placeholder="Ej: Flex, Classic, Basic, Premium" required="true" />
+                            <label for="formDialog:nombreTarifa">Nombre de la Tarifa</label>
+                            <p:inputText id="nombreTarifa"
+                                         value="#{tarifaBean.tarifaSeleccionada.nombre}"
+                                         placeholder="Ej: Flex, Classic, Basic, Premium"
+                                         required="true"
+                                         label="Nombre de la Tarifa"
+                                         requiredMessage="El nombre de la tarifa es obligatorio." />
                         </div>
 
                         <div style="border-top: 1px solid var(--border-subtle); padding-top: 12px;" class="mb-3">
@@ -535,18 +601,27 @@
 
                 <h:form id="formNuevoBeneficio" styleClass="dark-input">
                     <div class="mb-3">
-                        <label>Nombre del Beneficio</label>
-                        <p:inputText value="#{tarifaBean.nuevaCaracteristica.nombre}" placeholder="Ej: Acceso a Salón VIP, Selección de Asiento" required="true" />
+                        <label for="formNuevoBeneficio:nombreBeneficio">Nombre del Beneficio</label>
+                        <p:inputText id="nombreBeneficio"
+                                     value="#{tarifaBean.nuevaCaracteristica.nombre}"
+                                     placeholder="Ej: Acceso a Salón VIP, Selección de Asiento"
+                                     required="true"
+                                     label="Nombre del Beneficio"
+                                     requiredMessage="El nombre del beneficio es obligatorio." />
                     </div>
 
                     <div class="mb-3">
-                        <label>Descripción</label>
-                        <p:inputTextarea value="#{tarifaBean.nuevaCaracteristica.descripcion}" rows="2" placeholder="Detalle..." />
+                        <label for="formNuevoBeneficio:descBeneficio">Descripción</label>
+                        <p:inputTextarea id="descBeneficio" value="#{tarifaBean.nuevaCaracteristica.descripcion}" rows="2" placeholder="Detalle..." />
                     </div>
 
                     <div class="mb-4">
-                        <label>Tipo de Selector</label>
-                        <p:selectOneMenu value="#{tarifaBean.nuevaCaracteristica.tipoDato}" required="true">
+                        <label for="formNuevoBeneficio:tipoSelector">Tipo de Selector</label>
+                        <p:selectOneMenu id="tipoSelector"
+                                         value="#{tarifaBean.nuevaCaracteristica.tipoDato}"
+                                         required="true"
+                                         label="Tipo de Selector"
+                                         requiredMessage="Debe seleccionar un tipo de selector.">
                             <f:selectItem itemLabel="Booleano (Sí / No)" itemValue="boolean" />
                             <f:selectItem itemLabel="Numérico (Cantidades / Enteros)" itemValue="int" />
                             <f:selectItem itemLabel="Texto (Reglas específicas / Comentarios)" itemValue="text" />
@@ -569,7 +644,7 @@
             <h:form id="confirmDlgForm">
                 <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" appendTo="@(body)" styleClass="custom-dialog">
                     <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-flat ui-button-secondary" />
-                    <p:commandButton value="Sí, Eliminar" type="button" styleClass="ui-confirmdialog-yes btn-new" />
+                    <p:commandButton value="Sí, Confirmar" type="button" styleClass="ui-confirmdialog-yes btn-new" />
                 </p:confirmDialog>
             </h:form>
         </div>

@@ -42,7 +42,11 @@ public class PuertaEmbarqueService {
         if (!puertaRepo.existsById(id)) {
             throw new EntityNotFoundException("PuertaEmbarque no encontrada con ID: " + id);
         }
-        puertaRepo.deleteById(id);
+        puertaRepo.softDeleteById(id);
+    }
+
+    public void reactivar(Integer id) {
+        puertaRepo.reactivarById(id);
     }
 
     public List<PuertaEmbarque> findByAeropuerto(Integer idAeropuerto) {

@@ -40,10 +40,12 @@ public class Asiento implements Serializable {
 	// Relaciones JPA existentes intactas
 	@ManyToOne
 	@JoinColumn(name="id_avion")
+	@org.hibernate.annotations.NotFound(action = org.hibernate.annotations.NotFoundAction.IGNORE)
 	private Avion avion;
 
 	@ManyToOne
 	@JoinColumn(name="id_clase")
+	@org.hibernate.annotations.NotFound(action = org.hibernate.annotations.NotFoundAction.IGNORE)
 	private ClaseAsiento claseAsiento;
 
 	@OneToMany(mappedBy="asiento")

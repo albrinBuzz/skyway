@@ -312,6 +312,9 @@ public class ReservaBean implements Serializable {
         }
         Logger.logInfo("==========================================================");
 
+        // 0. SANITIZAR Y NORMALIZAR DATOS DE TODOS LOS PASAJEROS
+        sanitizarPasajeros();
+
         // 1. VALIDACIÓN EN CACHÉ (TTL)
         for (Map.Entry<Integer, List<InfoAsientoDTO>> entry : asientosSeleccionados.entrySet()) {
             Integer idVuelo = entry.getKey();
@@ -325,13 +328,17 @@ public class ReservaBean implements Serializable {
             }
         }
 
-        // 2. VALIDACIÓN DE CAMPOS DE PASAJEROS
+        // 2. VALIDACIÓN DE CAMPOS Y UNICIDAD DE PASAJEROS (EVITAR CONFLICTOS UNIQUE)
         if (!modoDesarrollo) {
             if (!validarPasajerosProfesional()) {
                 return; // Se detiene el proceso si falla alguna validación estricta
             }
         } else {
-            addMessage(FacesMessage.SEVERITY_INFO, "Modo Desarrollo Activo", "Validaciones estrictas de pasajeros omitidas para agilizar pruebas.");
+            // En modo desarrollo siempre se valida la unicidad interna y contra BD para evitar fallos de persistencia
+            if (!validarUnicidadPasajeros()) {
+                return;
+            }
+            addMessage(FacesMessage.SEVERITY_INFO, "Modo Desarrollo Activo", "Validaciones de formato de pasajeros omitidas para agilizar pruebas.");
         }
 
         // 2.1 VERIFICACIÓN DE DUPLICIDAD / ANTI-CHURNING EN EL ITINERARIO
@@ -355,6 +362,18 @@ public class ReservaBean implements Serializable {
             }
         }
 
+        // 2.2 VERIFICACIÓN DE TARIFAS E ITINERARIOS VÁLIDOS
+        if (tarifasItinerarios != null) {
+            for (Map.Entry<Integer, Integer> entry : tarifasItinerarios.entrySet()) {
+                var tarifaItin = itinerarioTarifaService.getByTarifaAndItinerario(entry.getKey(), entry.getValue());
+                if (tarifaItin == null) {
+                    addMessage(FacesMessage.SEVERITY_ERROR, "Tarifa No Disponible",
+                            String.format("La tarifa seleccionada para el itinerario #%d ya no se encuentra disponible.", entry.getKey()));
+                    return;
+                }
+            }
+        }
+
         // 3. VERIFICACIÓN DE DISPONIBILIDAD EN BD
         for (Map.Entry<Integer, List<InfoAsientoDTO>> entry : asientosSeleccionados.entrySet()) {
             Integer idVuelo = entry.getKey();
@@ -374,7 +393,10 @@ public class ReservaBean implements Serializable {
             }
         }
 
-        // 4. PERSISTIR EN SESIÓN Y PAGAR
+        // 4. EXTENDER RETENCIÓN TEMPORAL DE ASIENTOS PARA EL PAGO
+        asientoCacheService.extenderRetencionParaSesion(this.miSessionId, 15 * 60 * 1000L);
+
+        // 5. PERSISTIR EN SESIÓN Y PAGAR
         SolicitudReservaDTO dto = new SolicitudReservaDTO(
                 this.usuario != null ? this.usuario.getRut() : null,
                 this.pasajerosList,
@@ -457,34 +479,215 @@ public class ReservaBean implements Serializable {
 
 
     /**
-     * Validador estricto y profesional para la lista de pasajeros
+     * Sanitiza y normaliza profundamente los datos de cada pasajero y usuario asociado
+     * antes de cualquier validación o persistencia.
      */
-    private boolean validarPasajerosProfesional() {
+    private void sanitizarPasajeros() {
+        if (pasajerosList == null) return;
+
+        for (Pasajero p : pasajerosList) {
+            if (p == null) continue;
+
+            // 1. Sanitizar RUT (eliminar puntos, espacios, mayúsculas)
+            if (p.getRut() != null) {
+                String rutLimpio = p.getRut().replace(".", "").trim().toUpperCase();
+                p.setRut(rutLimpio);
+            }
+
+            // 2. Tipo y Número de Documento
+            if (p.getTipoDocumento() == null || p.getTipoDocumento().isBlank()) {
+                p.setTipoDocumento("CEDULA");
+            } else {
+                p.setTipoDocumento(p.getTipoDocumento().trim().toUpperCase());
+            }
+
+            if (p.getNumeroDocumento() != null && !p.getNumeroDocumento().isBlank()) {
+                p.setNumeroDocumento(p.getNumeroDocumento().replace(".", "").trim().toUpperCase());
+            } else if (p.getRut() != null) {
+                p.setNumeroDocumento(p.getRut());
+            }
+
+            // 3. Nacionalidad
+            if (p.getNacionalidad() == null || p.getNacionalidad().isBlank()) {
+                p.setNacionalidad("Chilena");
+            } else {
+                p.setNacionalidad(p.getNacionalidad().trim());
+            }
+
+            // 4. Usuario asociado
+            Usuario u = p.getUsuario();
+            if (u == null) {
+                u = new Usuario();
+                p.setUsuario(u);
+            }
+
+            u.setRut(p.getRut());
+            u.setDocumentoIdentidad(p.getNumeroDocumento());
+
+            if (u.getNombre() != null) {
+                u.setNombre(u.getNombre().trim().replaceAll("\\s+", " "));
+            }
+            if (u.getApellido() != null) {
+                u.setApellido(u.getApellido().trim().replaceAll("\\s+", " "));
+            }
+            if (u.getCorreoElectronico() != null) {
+                u.setCorreoElectronico(u.getCorreoElectronico().trim().toLowerCase());
+            }
+            if (u.getTelefono() != null) {
+                u.setTelefono(u.getTelefono().trim());
+            }
+
+            // Sincronizar fecha de nacimiento
+            if (u.getFechaNacimiento() != null && p.getFechaNacimiento() == null) {
+                p.setFechaNacimiento(u.getFechaNacimiento());
+            } else if (p.getFechaNacimiento() != null && u.getFechaNacimiento() == null) {
+                u.setFechaNacimiento(p.getFechaNacimiento());
+            }
+        }
+    }
+
+    /**
+     * Valida la unicidad de RUT, Correo Electrónico y Documento de Identidad:
+     * 1. Entre los pasajeros de la misma reserva (evita registros duplicados en la misma orden).
+     * 2. Contra la base de datos (evita colisiones con restricciones UNIQUE de la tabla Usuario).
+     */
+    private boolean validarUnicidadPasajeros() {
+        if (pasajerosList == null || pasajerosList.isEmpty()) {
+            addMessage(FacesMessage.SEVERITY_WARN, "Pasajeros Requeridos", "Debe existir al menos un pasajero en la reserva.");
+            return false;
+        }
+
+        Set<String> rutsVistos = new HashSet<>();
+        Set<String> correosVistos = new HashSet<>();
+        Set<String> docsVistos = new HashSet<>();
+
         for (int i = 0; i < pasajerosList.size(); i++) {
             Pasajero p = pasajerosList.get(i);
             int num = i + 1;
             Usuario u = p.getUsuario();
 
-            if (p.getRut() == null || !validarRutChileno(p.getRut())) {
-                addMessage(FacesMessage.SEVERITY_WARN, "RUT Inválido", "Pasajero " + num + ": El RUT ingresado no es válido.");
+            String rutP = p.getRut();
+            String docP = p.getNumeroDocumento();
+            String correoP = (u != null && u.getCorreoElectronico() != null) ? u.getCorreoElectronico().trim().toLowerCase() : null;
+
+            // --- 1. UNICIDAD INTERNA (Dentro del grupo de pasajeros) ---
+            if (rutP != null && !rutP.isBlank()) {
+                if (!rutsVistos.add(rutP.toUpperCase())) {
+                    addMessage(FacesMessage.SEVERITY_WARN, "RUT Repetido",
+                            String.format("El RUT '%s' fue asignado al Pasajero %d y ya está presente en otro pasajero de esta reserva. Cada pasajero debe ser una persona distinta.", rutP, num));
+                    return false;
+                }
+            }
+
+            if (correoP != null && !correoP.isBlank()) {
+                if (!correosVistos.add(correoP)) {
+                    addMessage(FacesMessage.SEVERITY_WARN, "Correo Repetido",
+                            String.format("El correo '%s' fue asignado al Pasajero %d y ya está en uso por otro pasajero de esta reserva. Ingrese un correo único por pasajero.", correoP, num));
+                    return false;
+                }
+            }
+
+            if (docP != null && !docP.isBlank()) {
+                if (!docsVistos.add(docP.toUpperCase())) {
+                    addMessage(FacesMessage.SEVERITY_WARN, "Documento Repetido",
+                            String.format("El número de documento '%s' fue asignado al Pasajero %d y ya está repetido en esta reserva.", docP, num));
+                    return false;
+                }
+            }
+
+            // --- 2. UNICIDAD EXTERNA (Contra restricciones UNIQUE en Base de Datos) ---
+            if (correoP != null && !correoP.isBlank() && rutP != null && !rutP.isBlank()) {
+                if (usuarioService.existeCorreoEnOtroRut(correoP, rutP)) {
+                    addMessage(FacesMessage.SEVERITY_WARN, "Correo ya Registrado",
+                            String.format("Pasajero %d: El correo '%s' ya pertenece a otro usuario registrado en el sistema. Utilice un correo diferente.", num, correoP));
+                    return false;
+                }
+            }
+
+            if (docP != null && !docP.isBlank() && rutP != null && !rutP.isBlank()) {
+                if (usuarioService.existeDocumentoEnOtroRut(docP, rutP)) {
+                    addMessage(FacesMessage.SEVERITY_WARN, "Documento ya Registrado",
+                            String.format("Pasajero %d: El documento de identidad '%s' ya está registrado en el sistema con otro RUT.", num, docP));
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Validador estricto y profesional para la lista de pasajeros
+     */
+    private boolean validarPasajerosProfesional() {
+        if (!validarUnicidadPasajeros()) {
+            return false;
+        }
+
+        for (int i = 0; i < pasajerosList.size(); i++) {
+            Pasajero p = pasajerosList.get(i);
+            int num = i + 1;
+            Usuario u = p.getUsuario();
+
+            // RUT
+            if (p.getRut() == null || p.getRut().isBlank()) {
+                addMessage(FacesMessage.SEVERITY_WARN, "RUT Requerido", "Pasajero " + num + ": Ingrese el RUT o identificador.");
                 return false;
             }
 
+            if ("CEDULA".equalsIgnoreCase(p.getTipoDocumento())) {
+                if (!validarRutChileno(p.getRut())) {
+                    addMessage(FacesMessage.SEVERITY_WARN, "RUT Inválido", "Pasajero " + num + ": El RUT ingresado ('" + p.getRut() + "') no es un RUT chileno válido.");
+                    return false;
+                }
+            }
+
+            // Nombre y Apellido
             if (u == null || u.getNombre() == null || u.getNombre().trim().length() < 2) {
-                addMessage(FacesMessage.SEVERITY_WARN, "Nombre Inválido", "Pasajero " + num + ": Ingrese un nombre válido.");
+                addMessage(FacesMessage.SEVERITY_WARN, "Nombre Inválido", "Pasajero " + num + ": Ingrese un nombre válido (mínimo 2 letras).");
                 return false;
             }
 
             if (u.getApellido() == null || u.getApellido().trim().length() < 2) {
-                addMessage(FacesMessage.SEVERITY_WARN, "Apellido Inválido", "Pasajero " + num + ": Ingrese un apellido válido.");
+                addMessage(FacesMessage.SEVERITY_WARN, "Apellido Inválido", "Pasajero " + num + ": Ingrese un apellido válido (mínimo 2 letras).");
                 return false;
             }
 
+            // Correo
             if (u.getCorreoElectronico() == null || !EMAIL_PATTERN.matcher(u.getCorreoElectronico()).matches()) {
-                addMessage(FacesMessage.SEVERITY_WARN, "Correo Inválido", "Pasajero " + num + ": Ingrese un correo electrónico válido.");
+                addMessage(FacesMessage.SEVERITY_WARN, "Correo Inválido", "Pasajero " + num + ": Ingrese un correo electrónico válido (ejemplo: nombre@dominio.cl).");
                 return false;
             }
 
+            // Teléfono
+            if (u.getTelefono() == null || u.getTelefono().trim().length() < 8) {
+                addMessage(FacesMessage.SEVERITY_WARN, "Teléfono Requerido", "Pasajero " + num + ": Ingrese un número de teléfono de contacto válido.");
+                return false;
+            }
+
+            // Fecha de Nacimiento (Mayor de 18 años)
+            if (u.getFechaNacimiento() == null) {
+                addMessage(FacesMessage.SEVERITY_WARN, "Fecha Requerida", "Pasajero " + num + ": La fecha de nacimiento es obligatoria.");
+                return false;
+            }
+
+            try {
+                LocalDate fechaNac = u.getFechaNacimiento().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                LocalDate hoy = LocalDate.now();
+                if (!fechaNac.isBefore(hoy)) {
+                    addMessage(FacesMessage.SEVERITY_WARN, "Fecha Inválida", "Pasajero " + num + ": La fecha de nacimiento debe ser en el pasado.");
+                    return false;
+                }
+                int edad = Period.between(fechaNac, hoy).getYears();
+                if (edad < 18) {
+                    addMessage(FacesMessage.SEVERITY_WARN, "Edad Mínima", "Pasajero " + num + ": Debe ser mayor de 18 años (Edad calculada: " + edad + " años).");
+                    return false;
+                }
+            } catch (Exception e) {
+                addMessage(FacesMessage.SEVERITY_WARN, "Fecha Inválida", "Pasajero " + num + ": Formato de fecha de nacimiento incorrecto.");
+                return false;
+            }
+
+            // Tipo de Documento y Número
             if (p.getTipoDocumento() == null || p.getTipoDocumento().isBlank()) {
                 addMessage(FacesMessage.SEVERITY_WARN, "Documento Requerido", "Pasajero " + num + ": Debe seleccionar tipo de documento.");
                 return false;
@@ -497,6 +700,12 @@ public class ReservaBean implements Serializable {
 
             if ("PASAPORTE".equalsIgnoreCase(p.getTipoDocumento()) && !PASAPORTE_PATTERN.matcher(p.getNumeroDocumento()).matches()) {
                 addMessage(FacesMessage.SEVERITY_WARN, "Pasaporte Inválido", "Pasajero " + num + ": Formato de pasaporte incorrecto (6-15 caracteres alfanuméricos).");
+                return false;
+            }
+
+            // Nacionalidad
+            if (p.getNacionalidad() == null || p.getNacionalidad().isBlank()) {
+                addMessage(FacesMessage.SEVERITY_WARN, "Nacionalidad Requerida", "Pasajero " + num + ": Seleccione una nacionalidad.");
                 return false;
             }
         }
@@ -757,5 +966,12 @@ public class ReservaBean implements Serializable {
                 .anyMatch(dto -> dto.getMaletas() != null && !dto.getMaletas().isEmpty());
     }
 
+    public boolean isModoDesarrollo() {
+        return modoDesarrollo;
+    }
+
+    public void setModoDesarrollo(boolean modoDesarrollo) {
+        this.modoDesarrollo = modoDesarrollo;
+    }
 
 }

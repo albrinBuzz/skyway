@@ -19,7 +19,22 @@ public class CaracteristicaTarifaService {
         return caracteristicaTarifaRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
+    public List<CaracteristicaTarifa> findAllAdmin() {
+        return caracteristicaTarifaRepository.findAllAdmin();
+    }
+
     public CaracteristicaTarifa save(CaracteristicaTarifa caracteristicaTarifa){
         return caracteristicaTarifaRepository.save(caracteristicaTarifa);
+    }
+
+    @Transactional
+    public void eliminar(Integer id) {
+        caracteristicaTarifaRepository.softDeleteById(id);
+    }
+
+    @Transactional
+    public void reactivar(Integer id) {
+        caracteristicaTarifaRepository.reactivarById(id);
     }
 }

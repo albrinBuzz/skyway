@@ -30,8 +30,13 @@ public class TarifaBean implements Serializable {
     @Autowired
     private CaracteristicaTarifaService caracteristicaService;
 
-    private List<Tarifa> listaTarifas;
-    private List<CaracteristicaTarifa> listaCaracteristicasGlobales;
+    // Listas Administrativas (Traen TODO: Activos e Inactivos para las tablas de gestión)
+    private List<Tarifa> listaTarifasAdmin;
+    private List<CaracteristicaTarifa> listaCaracteristicasAdmin;
+
+    // Listas Activas (Solo Activos para la asignación comercial a tarifas)
+    private List<Tarifa> listaTarifasActivas;
+    private List<CaracteristicaTarifa> listaCaracteristicasActivas;
 
     private Tarifa tarifaSeleccionada;
     private CaracteristicaTarifa nuevaCaracteristica;
@@ -46,11 +51,13 @@ public class TarifaBean implements Serializable {
     }
 
     public void cargarTarifas() {
-        this.listaTarifas = tarifaService.findAll();
+        this.listaTarifasAdmin = tarifaService.findAllAdmin();
+        this.listaTarifasActivas = tarifaService.findAll();
     }
 
     public void cargarCaracteristicas() {
-        this.listaCaracteristicasGlobales = caracteristicaService.findAll();
+        this.listaCaracteristicasAdmin = caracteristicaService.findAllAdmin();
+        this.listaCaracteristicasActivas = caracteristicaService.findAll();
     }
 
     // --- ACCIÓN: NUEVA TARIFA (GARANTIZA CARACTERÍSTICAS NUEVAS) ---
@@ -62,7 +69,7 @@ public class TarifaBean implements Serializable {
         // Cargar catálogo global de características fresco
         cargarCaracteristicas();
 
-        for (CaracteristicaTarifa cGlobal : listaCaracteristicasGlobales) {
+        for (CaracteristicaTarifa cGlobal : (listaCaracteristicasActivas != null ? listaCaracteristicasActivas : listaCaracteristicasAdmin)) {
             TarifaCaracteristica tc = new TarifaCaracteristica();
             tc.setTarifa(this.tarifaSeleccionada);
             tc.setCaracteristica(cGlobal);
@@ -103,7 +110,7 @@ public class TarifaBean implements Serializable {
 
         List<TarifaCaracteristica> listaSincronizada = new ArrayList<>();
 
-        for (CaracteristicaTarifa cGlobal : listaCaracteristicasGlobales) {
+        for (CaracteristicaTarifa cGlobal : (listaCaracteristicasActivas != null ? listaCaracteristicasActivas : listaCaracteristicasAdmin)) {
             if (mapaExistentes.containsKey(cGlobal.getIdCaracteristica())) {
                 listaSincronizada.add(mapaExistentes.get(cGlobal.getIdCaracteristica()));
             } else {
@@ -166,10 +173,40 @@ public class TarifaBean implements Serializable {
     public void eliminarTarifa(Tarifa tarifa) {
         try {
             tarifaService.deleteById(tarifa.getIdTarifa());
-            addMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Tarifa eliminada.");
+            addMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Tarifa dada de baja exitosamente.");
             cargarTarifas();
         } catch (Exception e) {
             addMessage(FacesMessage.SEVERITY_ERROR, "Error", "No se pudo eliminar la tarifa.");
+        }
+    }
+
+    public void reactivarTarifa(Tarifa tarifa) {
+        try {
+            tarifaService.reactivar(tarifa.getIdTarifa());
+            addMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Tarifa reactivada exitosamente.");
+            cargarTarifas();
+        } catch (Exception e) {
+            addMessage(FacesMessage.SEVERITY_ERROR, "Error", "No se pudo reactivar la tarifa: " + e.getMessage());
+        }
+    }
+
+    public void eliminarCaracteristica(Integer id) {
+        try {
+            caracteristicaService.eliminar(id);
+            addMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Característica dada de baja exitosamente.");
+            cargarCaracteristicas();
+        } catch (Exception e) {
+            addMessage(FacesMessage.SEVERITY_ERROR, "Error", "No se pudo desactivar la característica.");
+        }
+    }
+
+    public void reactivarCaracteristica(Integer id) {
+        try {
+            caracteristicaService.reactivar(id);
+            addMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Característica reactivada exitosamente.");
+            cargarCaracteristicas();
+        } catch (Exception e) {
+            addMessage(FacesMessage.SEVERITY_ERROR, "Error", "No se pudo reactivar la característica: " + e.getMessage());
         }
     }
 
@@ -178,8 +215,17 @@ public class TarifaBean implements Serializable {
     }
 
     // Getters y Setters
-    public List<Tarifa> getListaTarifas() { return listaTarifas; }
-    public List<CaracteristicaTarifa> getListaCaracteristicasGlobales() { return listaCaracteristicasGlobales; }
+    // Getters Listas Administrativas
+    public List<Tarifa> getListaTarifasAdmin() { return listaTarifasAdmin; }
+    public List<CaracteristicaTarifa> getListaCaracteristicasAdmin() { return listaCaracteristicasAdmin; }
+
+    // Getters Listas Activas
+    public List<Tarifa> getListaTarifasActivas() { return listaTarifasActivas; }
+    public List<CaracteristicaTarifa> getListaCaracteristicasActivas() { return listaCaracteristicasActivas; }
+
+    // Compatibilidad
+    public List<Tarifa> getListaTarifas() { return listaTarifasAdmin; }
+    public List<CaracteristicaTarifa> getListaCaracteristicasGlobales() { return listaCaracteristicasAdmin; }
     public Tarifa getTarifaSeleccionada() { return tarifaSeleccionada; }
     public CaracteristicaTarifa getNuevaCaracteristica() { return nuevaCaracteristica; }
     public boolean isEsNuevo() { return esNuevo; }

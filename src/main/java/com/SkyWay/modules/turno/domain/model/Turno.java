@@ -38,6 +38,7 @@ public class Turno implements Serializable {
 	//bi-directional many-to-one association to TipoTurno
 	@ManyToOne
 	@JoinColumn(name="id_tipo_turno")
+	@org.hibernate.annotations.NotFound(action = org.hibernate.annotations.NotFoundAction.IGNORE)
 	private TipoTurno tipoTurno;
 
 	//bi-directional many-to-one association to Vuelo

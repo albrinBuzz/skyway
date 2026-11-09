@@ -53,11 +53,13 @@ public class Itinerario implements Serializable {
 	//bi-directional many-to-one association to Aeropuerto
 	@ManyToOne
 	@JoinColumn(name="destino_aeropuerto")
+	@org.hibernate.annotations.NotFound(action = org.hibernate.annotations.NotFoundAction.IGNORE)
 	private Aeropuerto aeropuertoDestino;
 
 	//bi-directional many-to-one association to Aeropuerto
 	@ManyToOne
 	@JoinColumn(name="origen_aeropuerto")
+	@org.hibernate.annotations.NotFound(action = org.hibernate.annotations.NotFoundAction.IGNORE)
 	private Aeropuerto aeropuertoOrigen;
 
 

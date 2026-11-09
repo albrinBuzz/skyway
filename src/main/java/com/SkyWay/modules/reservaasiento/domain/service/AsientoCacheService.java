@@ -236,6 +236,26 @@ public class AsientoCacheService {
     }
 
     /**
+     * Extiende la ventana de retención temporal de los asientos seleccionados por una sesión
+     * para asegurar que el usuario no sufra expiración ni colisión de asientos mientras completa el pago.
+     */
+    public void extenderRetencionParaSesion(String sessionId, long extensionMs) {
+        if (sessionId == null || sessionId.isBlank()) return;
+        long ahora = System.currentTimeMillis();
+        long delta = (extensionMs > 0) ? Math.max(0, extensionMs - TIEMPO_EXPIRACION_MS) : 0;
+
+        for (Map<Integer, InfoAsientoDTO> asientosMap : mapaVuelos.values()) {
+            for (InfoAsientoDTO asiento : asientosMap.values()) {
+                if ("SELECCIONADO".equalsIgnoreCase(asiento.getEstado()) && sessionId.equals(asiento.getReservadoPor())) {
+                    tiempoSeleccionMap.put(asiento.getIdAsiento(), ahora + delta);
+                }
+            }
+        }
+        long minutosTotal = (extensionMs > 0) ? (extensionMs / 60000) : (TIEMPO_EXPIRACION_MS / 60000);
+        Logger.logInfo(String.format("⏳ [TTL-CACHE] Ventana de retención temporal extendida a %d minutos para sesión: %s", minutosTotal, sessionId));
+    }
+
+    /**
      * Retorna el tiempo restante del PRIMER asiento seleccionado por el usuario.
      * Mantiene un temporizador constante para toda la sesión de compra.
      */

@@ -9,9 +9,11 @@ import java.util.Optional;
 public interface AvionService {
 
 	public List<Avion> findAll();
+	public List<Avion> findAllAdmin();
 	public Optional<Avion> findById(Integer id);
 	public Avion save(Avion vuelo);
 	public boolean deleteById(Integer id);
+	public void reactivar(Integer id);
 	public Avion updateAvion(Avion avion);
 
 	// Método para guardar avión y sincronizar CapacidadClase (que activa el Trigger de Asientos)

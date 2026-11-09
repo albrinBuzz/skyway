@@ -25,6 +25,8 @@ public class MercadoPagoController {
     @Autowired
     private ReservaProcesadorService procesarReservaUseCase;
     @Autowired
+    private com.SkyWay.modules.reserva.domain.service.ReservaWalService reservaWalService;
+    @Autowired
     private UpgradeTarifaService upgradeTarifaService;
     @Autowired
     private com.SkyWay.modules.reservaasiento.domain.service.CambioAsientoProcesadorService cambioAsientoProcesadorService;
@@ -127,14 +129,41 @@ public class MercadoPagoController {
                 return new RedirectView("/home/errorPago.xhtml?reason=EXPIRED_SESSION");
             }
 
+            int idMetodoPagoMP = 1;
+            Long idWal = null;
+            try {
+                idWal = reservaWalService.registrarInicioPago(dto, idMetodoPagoMP, idPago, request.getRemoteAddr(), request.getHeader("User-Agent"));
+            } catch (Exception exWal) {
+                Logger.logWarn("⚠️ Error registrando WAL preliminar Mercado Pago: " + exWal.getMessage());
+            }
+
             try {
                 // Persistir reserva en la BD
-                Integer idReserva = procesarReservaUseCase.ejecutarPersistenciaReserva(dto);
-                session.removeAttribute("SOLICITUD_RESERVA_PENDIENTE");
+                Integer idReserva = procesarReservaUseCase.ejecutarPersistenciaReserva(dto, idMetodoPagoMP);
+
+                if (idWal != null) {
+                    reservaWalService.marcarWalCompletado(idWal, idReserva);
+                }
+
+                session = request.getSession(false);
+                if (session != null) {
+                    session.setAttribute("ULTIMO_ID_RESERVA", idReserva);
+                    session.removeAttribute("SOLICITUD_RESERVA_PENDIENTE");
+                }
+
                 return new RedirectView("/home/pago-exitoso.xhtml?idReserva=" + idReserva);
             } catch (Exception e) {
                 Logger.logError("💥 Error al procesar reserva tras pago Mercado Pago: " + e.getMessage());
-                return new RedirectView("/home/errorPago.xhtml?reason=PERSISTENCE_ERROR");
+                if (idWal != null) {
+                    reservaWalService.marcarWalFallido(idWal, e.getMessage(), e);
+                }
+                session = request.getSession(false);
+                if (session != null) {
+                    session.setAttribute("WAL_FALLO_ID", idWal);
+                    session.setAttribute("WAL_FALLO_MOTIVO", e.getMessage());
+                    session.setAttribute("WAL_FALLO_MONTO", dto.montoTotal());
+                }
+                return new RedirectView("/home/errorPago.xhtml?reason=PERSISTENCE_ERROR" + (idWal != null ? "&walId=" + idWal : ""));
             }
         }
 

@@ -79,6 +79,7 @@ public class Vuelo implements Serializable {
 	@JsonIgnore
 	@ManyToOne
 	@JoinColumn(name="id_avion")
+	@org.hibernate.annotations.NotFound(action = org.hibernate.annotations.NotFoundAction.IGNORE)
 	private Avion avion;
 
 	//bi-directional many-to-one association to EstadoVuelo

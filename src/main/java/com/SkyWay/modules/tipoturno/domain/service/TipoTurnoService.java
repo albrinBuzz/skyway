@@ -12,4 +12,5 @@ public interface TipoTurnoService {
     TipoTurno save(TipoTurno tipoTurno);
     TipoTurno update(Integer id, TipoTurno tipoTurno);
     void deleteById(Integer id);
+    void reactivarById(Integer id);
 }

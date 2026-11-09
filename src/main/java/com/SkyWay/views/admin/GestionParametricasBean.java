@@ -39,12 +39,20 @@ public class GestionParametricasBean implements Serializable {
 
     private int activeTab = 0;
 
-    private List<TipoEquipaje> listaTipoEquipaje;
+    // Listas Administrativas (Traen TODO: Activos e Inactivos)
+    private List<TipoEquipaje> listaTipoEquipajeAdmin;
+    private List<ClaseAsiento> listaClaseAsientoAdmin;
+    private List<TipoTurno> listaTipoTurnoAdmin;
+
+    // Listas Activas (Solo Activos para dropdowns y uso operacional)
+    private List<TipoEquipaje> listaTipoEquipajeActivos;
+    private List<ClaseAsiento> listaClaseAsientoActivos;
+    private List<TipoTurno> listaTipoTurnoActivos;
+
+    // Listas de Estados y Métodos de Pago
     private List<MetodoPago> listaMetodoPago;
     private List<EstadoReserva> listaEstadoReserva;
-    private List<ClaseAsiento> listaClaseAsiento;
     private List<EstadoVuelo> listaEstadoVuelo;
-    private List<TipoTurno> listaTipoTurno;
 
     private Integer idEdicion;
     private String nombreForm;
@@ -57,12 +65,20 @@ public class GestionParametricasBean implements Serializable {
     }
 
     public void cargarListas() {
-        this.listaTipoEquipaje = tipoEquipajeRepository.findAll();
+        // Listas administrativas completas
+        this.listaTipoEquipajeAdmin = tipoEquipajeRepository.findAllAdmin();
+        this.listaClaseAsientoAdmin = claseAsientoRepository.findAllAdmin();
+        this.listaTipoTurnoAdmin = tipoTurnoRepository.findAllAdmin();
+
+        // Listas de sólo activos
+        this.listaTipoEquipajeActivos = tipoEquipajeRepository.findByActivoTrue();
+        this.listaClaseAsientoActivos = claseAsientoRepository.findByActivoTrueOrderByDescripcionAsc();
+        this.listaTipoTurnoActivos = tipoTurnoRepository.findByActivoTrue();
+
+        // Estados y transaccionales
         this.listaMetodoPago = metodoPagoRepository.findAll();
         this.listaEstadoReserva = estadoReservaRepository.findAll();
-        this.listaClaseAsiento = claseAsientoRepository.findAll();
         this.listaEstadoVuelo = estadoVueloRepository.findAll();
-        this.listaTipoTurno = tipoTurnoRepository.findAll();
     }
 
     public void prepararNuevoRegistro() {
@@ -171,8 +187,16 @@ public class GestionParametricasBean implements Serializable {
         try {
             tipoEquipajeRepository.deleteById(id);
             cargarListas();
-            addMessage("Éxito", "Tipo de equipaje eliminado.");
+            addMessage("Éxito", "Tipo de equipaje desactivado.");
         } catch (Exception e) { addErrorMessage("Error", "No se puede eliminar: registro en uso."); }
+    }
+
+    public void reactivarEquipaje(Integer id) {
+        try {
+            tipoEquipajeRepository.reactivarById(id);
+            cargarListas();
+            addMessage("Éxito", "Tipo de equipaje reactivado.");
+        } catch (Exception e) { addErrorMessage("Error", "No se pudo reactivar: " + e.getMessage()); }
     }
 
     public void eliminarMetodoPago(Integer id) {
@@ -195,8 +219,16 @@ public class GestionParametricasBean implements Serializable {
         try {
             claseAsientoRepository.deleteById(id);
             cargarListas();
-            addMessage("Éxito", "Clase de asiento eliminada.");
+            addMessage("Éxito", "Clase de asiento desactivada.");
         } catch (Exception e) { addErrorMessage("Error", "No se puede eliminar: registro en uso."); }
+    }
+
+    public void reactivarClaseAsiento(Integer id) {
+        try {
+            claseAsientoRepository.reactivarById(id);
+            cargarListas();
+            addMessage("Éxito", "Clase de asiento reactivada.");
+        } catch (Exception e) { addErrorMessage("Error", "No se pudo reactivar: " + e.getMessage()); }
     }
 
     public void eliminarEstadoVuelo(Integer id) {
@@ -211,8 +243,16 @@ public class GestionParametricasBean implements Serializable {
         try {
             tipoTurnoRepository.deleteById(id);
             cargarListas();
-            addMessage("Éxito", "Tipo de turno eliminado.");
+            addMessage("Éxito", "Tipo de turno desactivado.");
         } catch (Exception e) { addErrorMessage("Error", "No se puede eliminar: registro en uso."); }
+    }
+
+    public void reactivarTipoTurno(Integer id) {
+        try {
+            tipoTurnoRepository.reactivarById(id);
+            cargarListas();
+            addMessage("Éxito", "Tipo de turno reactivado.");
+        } catch (Exception e) { addErrorMessage("Error", "No se pudo reactivar: " + e.getMessage()); }
     }
 
     private void addMessage(String summary, String detail) {
@@ -226,12 +266,23 @@ public class GestionParametricasBean implements Serializable {
     public int getActiveTab() { return activeTab; }
     public void setActiveTab(int activeTab) { this.activeTab = activeTab; }
 
-    public List<TipoEquipaje> getListaTipoEquipaje() { return listaTipoEquipaje; }
+    // Getters Administrativos
+    public List<TipoEquipaje> getListaTipoEquipajeAdmin() { return listaTipoEquipajeAdmin; }
+    public List<ClaseAsiento> getListaClaseAsientoAdmin() { return listaClaseAsientoAdmin; }
+    public List<TipoTurno> getListaTipoTurnoAdmin() { return listaTipoTurnoAdmin; }
+
+    // Getters Activos
+    public List<TipoEquipaje> getListaTipoEquipajeActivos() { return listaTipoEquipajeActivos; }
+    public List<ClaseAsiento> getListaClaseAsientoActivos() { return listaClaseAsientoActivos; }
+    public List<TipoTurno> getListaTipoTurnoActivos() { return listaTipoTurnoActivos; }
+
+    // Compatibilidad
+    public List<TipoEquipaje> getListaTipoEquipaje() { return listaTipoEquipajeAdmin; }
+    public List<ClaseAsiento> getListaClaseAsiento() { return listaClaseAsientoAdmin; }
+    public List<TipoTurno> getListaTipoTurno() { return listaTipoTurnoAdmin; }
     public List<MetodoPago> getListaMetodoPago() { return listaMetodoPago; }
     public List<EstadoReserva> getListaEstadoReserva() { return listaEstadoReserva; }
-    public List<ClaseAsiento> getListaClaseAsiento() { return listaClaseAsiento; }
     public List<EstadoVuelo> getListaEstadoVuelo() { return listaEstadoVuelo; }
-    public List<TipoTurno> getListaTipoTurno() { return listaTipoTurno; }
 
     public Integer getIdEdicion() { return idEdicion; }
     public void setIdEdicion(Integer idEdicion) { this.idEdicion = idEdicion; }

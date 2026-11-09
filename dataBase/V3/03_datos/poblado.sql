@@ -1587,11 +1587,15 @@ INSERT INTO Tarifa (ID_TARIFA, Nombre) VALUES
                                            (2, 'Flexible'),
                                            (3, 'Premium');
 
+SELECT setval('tarifa_seq', COALESCE((SELECT MAX(ID_TARIFA) FROM Tarifa), 1), true);
+
 -- 2. Insertar Definición de Características
 INSERT INTO Caracteristica_Tarifa (ID_CARACTERISTICA, Nombre, Descripcion, Tipo_Dato) VALUES
 (1, 'Permite cambio de asiento', 'Permite cambiar los asientos luego de la compra', 'boolean'),
 (2, 'Plazo límite para cambio de asiento', 'Horas previas al vuelo para realizar cambios de asiento', 'int'),
 (3, 'Permite cancelación de reserva', 'Permite cancelar la reserva', 'boolean');
+
+SELECT setval('caracteristica_tarifa_seq', COALESCE((SELECT MAX(ID_CARACTERISTICA) FROM Caracteristica_Tarifa), 1), true);
 
 -- 3. Configuración para Tarifa Básica
 -- (Sin cambio de asiento, sí permite cancelación)
@@ -1613,7 +1617,7 @@ INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool, Val
 (3, 2, NULL, 24,   NULL),
 (3, 3, TRUE, NULL, NULL);
 
-
+SELECT setval('tarifa_caracteristica_seq', COALESCE((SELECT MAX(ID_TARIFA_CARACTERISTICA) FROM Tarifa_Caracteristica), 1), true);
 
 
 -- Insertar vuelos con los RUTs de los pilotos correctos y estados de vuelo

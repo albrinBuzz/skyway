@@ -33,10 +33,12 @@ public class ConfiguracionCabina implements Serializable {
 
     @ManyToOne
     @JoinColumn(name="id_modelo")
+    @org.hibernate.annotations.NotFound(action = org.hibernate.annotations.NotFoundAction.IGNORE)
     private ModeloAvion modeloAvion;
 
     @ManyToOne
     @JoinColumn(name="id_clase")
+    @org.hibernate.annotations.NotFound(action = org.hibernate.annotations.NotFoundAction.IGNORE)
     private ClaseAsiento claseAsiento;
 
     public ConfiguracionCabina() {}

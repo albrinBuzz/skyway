@@ -1,0 +1,54 @@
+Cuando aplicamos el Método CORE (Contexto, Objetivo, Reglas, Entregable) a los agentes de Inteligencia Artificial en el desarrollo de software (ya sea construyendo sistemas multiagente o utilizando herramientas como Claude Code, Cursor, Devin o Replit Agent), el marco cambia por completo. Ya no sirve solo para organizar humanos; se convierte en el sistema de orquestación y el prompt maestro que define la autonomía de un agente.
+En el desarrollo de software agéntico, el método CORE se estructura de la siguiente manera:
+
+1. Contexto (Context) — La Base de Conocimiento
+
+Para un agente de software, el contexto no es solo una explicación teórica, sino el acceso a los datos, el estado del sistema y la base de código (codebase).
+• ¿Qué incluye?: El repositorio de código actual, la documentación técnica (APIs, diagramas de arquitectura), el stack tecnológico (ej. Python, React), los issues o reportes de bugs abiertos, y el historial de cambios (Git).
+• Cómo se alimenta: Mediante técnicas de RAG (Generación Aumentada por Recuperación) o inyectando los archivos de especificación (spec-driven development) para que el agente entienda las dependencias actuales del sistema.
+
+2. Objetivo (Objective) — El Prompt del Sistema / Tarea
+
+Define exactamente qué se espera que solucione o construya el agente. Los agentes necesitan objetivos hiper-específicos, sin ambigüedades, para evitar que entren en bucles infinitos o generen código innecesario.
+• ¿Qué incluye?: La descripción de la nueva funcionalidad, la lógica de negocio requerida o el bug que debe corregir.
+• Ejemplo: "Crear un nuevo endpoint REST /api/v1/users que reciba un JSON de registro, valide que el email no exista en la base de datos y devuelva un token JWT con expiración de 24 horas".
+
+3. Reglas (Rules) — Las Guardrails y Restricciones Técnicas
+
+Son los límites operativos, políticas de seguridad y estándares de codificación que el agente debe seguir de forma estricta. Sin reglas claras, un agente podría reescribir un archivo entero rompiendo las convenciones del equipo.
+• ¿Qué incluye?:
+	• Estilo de código: Uso estricto de TypeScript, indentación, reglas de Linter o patrones de diseño específicos (ej. Arquitectura Hexagonal).
+	• Límites de acceso: A qué servidores, ramas de Git (ej. "Solo puedes crear ramas feature/*, nunca escribir en main"), o APIs externas puede llamar.
+	• Políticas de seguridad: Prácticas obligatorias como sanitización de variables o no harcodear credenciales (secrets).
+
+4. Entregable (Result / Outcome) — La Definición de Hecho (Definition of Done)
+
+Es el código funcional e integrado, listo para pasar a revisión humana o despliegue automático. El agente debe saber cómo verificar que terminó su tarea con éxito.
+• ¿Qué incluye?: El código nuevo o modificado que pase exitosamente los tests unitarios creados, la documentación técnica actualizada (README.md), y el Pull Request (PR) redactado de forma automática en GitHub para que un ingeniero humano lo apruebe.
+
+
+para un Agente de IA
+
+En equipos modernos de desarrollo, el método CORE se suele guardar en archivos Markdown (como .agent-task.md o dentro del system prompt) para que el agente lo lea de forma directa antes de actuar.
+markdown
+# TASK: CORE-042 - Sistema de Notificaciones
+
+## 1. Contexto (Context)
+Nuestra aplicación web está perdiendo retención de usuarios. Actualmente no hay forma
+de avisarles cuando reciben un mensaje privado. El sistema backend corre en Node.js
+con Express y la base de datos es PostgreSQL.
+
+## 2. Objetivo (Objective)
+Implementar un microservicio interno de notificaciones push utilizando WebSockets.
+El sistema debe alertar al usuario en tiempo real en cuanto el backend reciba el mensaje.
+
+## 3. Reglas (Rules)
+- Mantener cobertura de pruebas unitarias por encima del 90% (Usar Jest).
+- Prohibido instalar librerías externas de mensajería sin autorización. Usa la API nativa `ws`.
+- No modificar la estructura de la tabla de usuarios existente.
+- Manejar adecuadamente la desconexión de sockets para evitar fugas de memoria.
+
+## 4. Entregable (Result)
+- Carpeta `/services/notifications` con la lógica del WebSocket.
+- Suite de pruebas automatizadas aprobadas (`npm run test`).
+- Pull Request creado apuntando a la rama `staging`.

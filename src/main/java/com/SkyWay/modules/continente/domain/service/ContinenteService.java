@@ -16,4 +16,5 @@ public interface ContinenteService {
     Continente guardar(Continente continente);
 
     void eliminar(Integer id);
+    void reactivar(Integer id);
 }

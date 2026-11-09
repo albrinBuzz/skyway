@@ -26,8 +26,9 @@ public class ItinerarioTarifa implements Serializable {
     @JoinColumn(name = "id_itinerario", nullable = false)
     private Itinerario itinerario;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_tarifa", nullable = false)
+    @org.hibernate.annotations.NotFound(action = org.hibernate.annotations.NotFoundAction.IGNORE)
     private Tarifa tarifa;
 
     @Column(name = "precio", nullable = false, precision = 10, scale = 2)

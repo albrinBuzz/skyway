@@ -26,6 +26,8 @@ public class PayPalController {
     @Autowired
     private ReservaProcesadorService procesarReservaUseCase;
     @Autowired
+    private com.SkyWay.modules.reserva.domain.service.ReservaWalService reservaWalService;
+    @Autowired
     private UpgradeTarifaService upgradeTarifaService;
     @Autowired
     private com.SkyWay.modules.reservaasiento.domain.service.CambioAsientoProcesadorService cambioAsientoProcesadorService;
@@ -131,24 +133,43 @@ public class PayPalController {
                 return new RedirectView("/home/errorPago.xhtml?reason=EXPIRED_SESSION");
             }
 
+            int idMetodoPagoPayPal = 2;
+            Long idWal = null;
             try {
-                // ID_METODO_PAGO = 2 (PayPal según la tabla Metodo_Pago)
-                int idMetodoPagoPayPal = 2;
+                idWal = reservaWalService.registrarInicioPago(dto, idMetodoPagoPayPal, token, request.getRemoteAddr(), request.getHeader("User-Agent"));
+            } catch (Exception exWal) {
+                Logger.logWarn("⚠️ Error registrando WAL preliminar PayPal: " + exWal.getMessage());
+            }
+
+            try {
                 Logger.logInfo("💾 Persistiendo reserva con ID Método de Pago PAYPAL (" + idMetodoPagoPayPal + ")...");
 
                 Integer idReserva = procesarReservaUseCase.ejecutarPersistenciaReserva(dto, idMetodoPagoPayPal);
 
+                if (idWal != null) {
+                    reservaWalService.marcarWalCompletado(idWal, idReserva);
+                }
+
                 session = request.getSession(false);
                 if (session != null) {
                     session.setAttribute("ULTIMO_ID_RESERVA", idReserva);
+                    session.removeAttribute("SOLICITUD_RESERVA_PENDIENTE");
                 }
 
-                session.removeAttribute("SOLICITUD_RESERVA_PENDIENTE");
                 Logger.logInfo("🎉 [PAYPAL-CONTROLLER] Reserva ID: " + idReserva + " procesada con éxito. Redirigiendo a pago-exitoso.xhtml");
                 return new RedirectView("/home/pago-exitoso.xhtml");
             } catch (Exception e) {
                 Logger.logError("💥 Error al escribir la reserva tras pago con PayPal: " + e.getMessage());
-                return new RedirectView("/home/errorPago.xhtml?reason=PERSISTENCE_ERROR");
+                if (idWal != null) {
+                    reservaWalService.marcarWalFallido(idWal, e.getMessage(), e);
+                }
+                session = request.getSession(false);
+                if (session != null) {
+                    session.setAttribute("WAL_FALLO_ID", idWal);
+                    session.setAttribute("WAL_FALLO_MOTIVO", e.getMessage());
+                    session.setAttribute("WAL_FALLO_MONTO", dto.montoTotal());
+                }
+                return new RedirectView("/home/errorPago.xhtml?reason=PERSISTENCE_ERROR" + (idWal != null ? "&walId=" + idWal : ""));
             }
         }
 

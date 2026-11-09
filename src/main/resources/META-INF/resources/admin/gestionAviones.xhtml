@@ -405,16 +405,24 @@
             <h:form id="formDialog">
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <p:outputLabel value="Número de Registro (Matrícula) *" styleClass="fw-bold text-light" />
-                        <p:inputText value="#{gestionAvionesBean.avionSeleccionado.numeroDeRegistro}"
+                        <p:outputLabel for="matriculaAvion" value="Número de Registro (Matrícula) *" styleClass="fw-bold text-light" />
+                        <p:inputText id="matriculaAvion"
+                                     value="#{gestionAvionesBean.avionSeleccionado.numeroDeRegistro}"
                                      required="true"
+                                     label="Matrícula"
+                                     requiredMessage="La matrícula del avión es obligatoria."
                                      placeholder="EJ: CC-BBA / N707SA"
                                      styleClass="w-100 font-monospace text-uppercase mt-1" />
                     </div>
 
                     <div class="col-md-6">
-                        <p:outputLabel value="Modelo de Avión *" styleClass="fw-bold text-light" />
-                        <p:selectOneMenu value="#{gestionAvionesBean.idModeloSeleccionado}" required="true" styleClass="w-100 mt-1">
+                        <p:outputLabel for="modeloAvion" value="Modelo de Avión *" styleClass="fw-bold text-light" />
+                        <p:selectOneMenu id="modeloAvion"
+                                         value="#{gestionAvionesBean.idModeloSeleccionado}"
+                                         required="true"
+                                         label="Modelo de Avión"
+                                         requiredMessage="Debe seleccionar un modelo de avión."
+                                         styleClass="w-100 mt-1">
                             <f:selectItem itemLabel="-- Seleccionar Modelo --" itemValue="" />
                             <f:selectItems value="#{gestionAvionesBean.listaModelos}" var="m" itemLabel="#{m.fabricante.nombre} #{m.nombre}" itemValue="#{m.idModelo}" />
                         </p:selectOneMenu>
@@ -441,8 +449,14 @@
                     </div>
 
                     <div class="col-md-6">
-                        <p:outputLabel value="Próximo Mantenimiento *" styleClass="fw-bold text-light" />
-                        <p:datePicker value="#{gestionAvionesBean.fechaMantenimientoAux}" showIcon="true" required="true" styleClass="w-100 mt-1" />
+                        <p:outputLabel for="fechaMant" value="Próximo Mantenimiento *" styleClass="fw-bold text-light" />
+                        <p:datePicker id="fechaMant"
+                                      value="#{gestionAvionesBean.fechaMantenimientoAux}"
+                                      showIcon="true"
+                                      required="true"
+                                      label="Fecha de Mantenimiento"
+                                      requiredMessage="La fecha de próximo mantenimiento es obligatoria."
+                                      styleClass="w-100 mt-1" />
                     </div>
 
                     <div class="col-12 mt-4">

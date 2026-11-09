@@ -16,6 +16,8 @@ import java.util.List;
  */
 @Entity
 @Table(name="clase_asiento")
+@org.hibernate.annotations.SQLDelete(sql = "UPDATE clase_asiento SET activo = false, fecha_baja = NOW() WHERE id_clase = ?")
+@org.hibernate.annotations.SQLRestriction("activo = true")
 @NamedQuery(name="ClaseAsiento.findAll", query="SELECT c FROM ClaseAsiento c")
 public class ClaseAsiento implements Serializable {
 	private static final long serialVersionUID = 1L;
@@ -27,6 +29,17 @@ public class ClaseAsiento implements Serializable {
 	private Integer idClase;
 
 	private String descripcion;
+
+	@Column(name="activo", nullable=false)
+	private Boolean activo = true;
+
+	@Column(name="fecha_baja")
+	private java.sql.Timestamp fechaBaja;
+
+	public Boolean getActivo() { return this.activo; }
+	public void setActivo(Boolean activo) { this.activo = activo; }
+	public java.sql.Timestamp getFechaBaja() { return this.fechaBaja; }
+	public void setFechaBaja(java.sql.Timestamp fechaBaja) { this.fechaBaja = fechaBaja; }
 
 	//bi-directional many-to-one association to Asiento
 	@OneToMany(mappedBy="claseAsiento")

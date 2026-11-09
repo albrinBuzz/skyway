@@ -238,13 +238,28 @@
 
                 <!-- 0. TIPOS DE EQUIPAJE -->
                 <h:panelGroup rendered="#{gestionParametricasBean.activeTab == 0}" layout="block">
-                    <p:dataTable value="#{gestionParametricasBean.listaTipoEquipaje}" var="e" styleClass="skyway-ops-table">
+                    <p:dataTable value="#{gestionParametricasBean.listaTipoEquipajeAdmin}" var="e" styleClass="skyway-ops-table">
                         <p:column headerText="ID" style="width: 80px; text-align: center;"><span class="id-tag">##{e.idTipo}</span></p:column>
                         <p:column headerText="Tipo de Equipaje"><span class="cell-title">#{e.nombre}</span></p:column>
+                        <p:column headerText="Estado" sortBy="#{e.activo}" style="width: 100px; text-align: center;">
+                            <h:panelGroup rendered="#{e.activo}">
+                                <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #34d399; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">
+                                    <i class="pi pi-check-circle me-1"></i>Activo
+                                </span>
+                            </h:panelGroup>
+                            <h:panelGroup rendered="#{not e.activo}">
+                                <span style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #f87171; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">
+                                    <i class="pi pi-ban me-1"></i>Inactivo
+                                </span>
+                            </h:panelGroup>
+                        </p:column>
                         <p:column headerText="Acciones" style="width: 120px; text-align: center;">
-                            <p:commandButton icon="pi pi-pencil" actionListener="#{gestionParametricasBean.prepararEdicionTipoEquipaje(e)}" process="@this" styleClass="ui-button-outlined ui-button-secondary me-1" />
-                            <p:commandButton icon="pi pi-trash" actionListener="#{gestionParametricasBean.eliminarEquipaje(e.idTipo)}" process="@this" update=":mainPanel :msgs" styleClass="ui-button-outlined ui-button-danger">
-                                <p:confirm header="Confirmación" message="¿Desea eliminar este registro?" icon="pi pi-exclamation-triangle" />
+                            <p:commandButton icon="pi pi-pencil" actionListener="#{gestionParametricasBean.prepararEdicionTipoEquipaje(e)}" process="@this" rendered="#{e.activo}" styleClass="ui-button-outlined ui-button-secondary me-1" title="Editar" />
+                            <p:commandButton icon="pi pi-trash" actionListener="#{gestionParametricasBean.eliminarEquipaje(e.idTipo)}" process="@this" update=":mainPanel :msgs" rendered="#{e.activo}" styleClass="ui-button-outlined ui-button-danger" title="Dar de baja">
+                                <p:confirm header="Confirmación" message="¿Desea dar de baja este tipo de equipaje?" icon="pi pi-exclamation-triangle" />
+                            </p:commandButton>
+                            <p:commandButton icon="pi pi-refresh" actionListener="#{gestionParametricasBean.reactivarEquipaje(e.idTipo)}" process="@this" update=":mainPanel :msgs" rendered="#{not e.activo}" styleClass="ui-button-outlined ui-button-success" title="Reactivar">
+                                <p:confirm header="Confirmación" message="¿Desea reactivar este tipo de equipaje?" icon="pi pi-check-circle" />
                             </p:commandButton>
                         </p:column>
                     </p:dataTable>
@@ -280,13 +295,28 @@
 
                 <!-- 3. CLASES DE ASIENTO -->
                 <h:panelGroup rendered="#{gestionParametricasBean.activeTab == 3}" layout="block">
-                    <p:dataTable value="#{gestionParametricasBean.listaClaseAsiento}" var="ca" styleClass="skyway-ops-table">
+                    <p:dataTable value="#{gestionParametricasBean.listaClaseAsientoAdmin}" var="ca" styleClass="skyway-ops-table">
                         <p:column headerText="ID" style="width: 80px; text-align: center;"><span class="id-tag">##{ca.idClase}</span></p:column>
                         <p:column headerText="Clase / Cabina"><span class="cell-title">#{ca.descripcion}</span></p:column>
+                        <p:column headerText="Estado" sortBy="#{ca.activo}" style="width: 100px; text-align: center;">
+                            <h:panelGroup rendered="#{ca.activo}">
+                                <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #34d399; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">
+                                    <i class="pi pi-check-circle me-1"></i>Activo
+                                </span>
+                            </h:panelGroup>
+                            <h:panelGroup rendered="#{not ca.activo}">
+                                <span style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #f87171; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">
+                                    <i class="pi pi-ban me-1"></i>Inactivo
+                                </span>
+                            </h:panelGroup>
+                        </p:column>
                         <p:column headerText="Acciones" style="width: 120px; text-align: center;">
-                            <p:commandButton icon="pi pi-pencil" actionListener="#{gestionParametricasBean.prepararEdicionClaseAsiento(ca)}" process="@this" styleClass="ui-button-outlined ui-button-secondary me-1" />
-                            <p:commandButton icon="pi pi-trash" actionListener="#{gestionParametricasBean.eliminarClaseAsiento(ca.idClase)}" process="@this" update=":mainPanel :msgs" styleClass="ui-button-outlined ui-button-danger">
-                                <p:confirm header="Confirmación" message="¿Desea eliminar este registro?" icon="pi pi-exclamation-triangle" />
+                            <p:commandButton icon="pi pi-pencil" actionListener="#{gestionParametricasBean.prepararEdicionClaseAsiento(ca)}" process="@this" rendered="#{ca.activo}" styleClass="ui-button-outlined ui-button-secondary me-1" title="Editar" />
+                            <p:commandButton icon="pi pi-trash" actionListener="#{gestionParametricasBean.eliminarClaseAsiento(ca.idClase)}" process="@this" update=":mainPanel :msgs" rendered="#{ca.activo}" styleClass="ui-button-outlined ui-button-danger" title="Dar de baja">
+                                <p:confirm header="Confirmación" message="¿Desea dar de baja esta clase de asiento?" icon="pi pi-exclamation-triangle" />
+                            </p:commandButton>
+                            <p:commandButton icon="pi pi-refresh" actionListener="#{gestionParametricasBean.reactivarClaseAsiento(ca.idClase)}" process="@this" update=":mainPanel :msgs" rendered="#{not ca.activo}" styleClass="ui-button-outlined ui-button-success" title="Reactivar">
+                                <p:confirm header="Confirmación" message="¿Desea reactivar esta clase de asiento?" icon="pi pi-check-circle" />
                             </p:commandButton>
                         </p:column>
                     </p:dataTable>
@@ -309,13 +339,28 @@
 
                 <!-- 5. TIPOS DE TURNO -->
                 <h:panelGroup rendered="#{gestionParametricasBean.activeTab == 5}" layout="block">
-                    <p:dataTable value="#{gestionParametricasBean.listaTipoTurno}" var="tt" styleClass="skyway-ops-table">
+                    <p:dataTable value="#{gestionParametricasBean.listaTipoTurnoAdmin}" var="tt" styleClass="skyway-ops-table">
                         <p:column headerText="ID" style="width: 80px; text-align: center;"><span class="id-tag">##{tt.idTipo}</span></p:column>
                         <p:column headerText="Nombre de Turno"><span class="cell-title">#{tt.nombre}</span></p:column>
+                        <p:column headerText="Estado" sortBy="#{tt.activo}" style="width: 100px; text-align: center;">
+                            <h:panelGroup rendered="#{tt.activo}">
+                                <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #34d399; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">
+                                    <i class="pi pi-check-circle me-1"></i>Activo
+                                </span>
+                            </h:panelGroup>
+                            <h:panelGroup rendered="#{not tt.activo}">
+                                <span style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #f87171; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">
+                                    <i class="pi pi-ban me-1"></i>Inactivo
+                                </span>
+                            </h:panelGroup>
+                        </p:column>
                         <p:column headerText="Acciones" style="width: 120px; text-align: center;">
-                            <p:commandButton icon="pi pi-pencil" actionListener="#{gestionParametricasBean.prepararEdicionTipoTurno(tt)}" process="@this" styleClass="ui-button-outlined ui-button-secondary me-1" />
-                            <p:commandButton icon="pi pi-trash" actionListener="#{gestionParametricasBean.eliminarTipoTurno(tt.idTipo)}" process="@this" update=":mainPanel :msgs" styleClass="ui-button-outlined ui-button-danger">
-                                <p:confirm header="Confirmación" message="¿Desea eliminar este registro?" icon="pi pi-exclamation-triangle" />
+                            <p:commandButton icon="pi pi-pencil" actionListener="#{gestionParametricasBean.prepararEdicionTipoTurno(tt)}" process="@this" rendered="#{tt.activo}" styleClass="ui-button-outlined ui-button-secondary me-1" title="Editar" />
+                            <p:commandButton icon="pi pi-trash" actionListener="#{gestionParametricasBean.eliminarTipoTurno(tt.idTipo)}" process="@this" update=":mainPanel :msgs" rendered="#{tt.activo}" styleClass="ui-button-outlined ui-button-danger" title="Dar de baja">
+                                <p:confirm header="Confirmación" message="¿Desea dar de baja este tipo de turno?" icon="pi pi-exclamation-triangle" />
+                            </p:commandButton>
+                            <p:commandButton icon="pi pi-refresh" actionListener="#{gestionParametricasBean.reactivarTipoTurno(tt.idTipo)}" process="@this" update=":mainPanel :msgs" rendered="#{not tt.activo}" styleClass="ui-button-outlined ui-button-success" title="Reactivar">
+                                <p:confirm header="Confirmación" message="¿Desea reactivar este tipo de turno?" icon="pi pi-check-circle" />
                             </p:commandButton>
                         </p:column>
                     </p:dataTable>
@@ -341,31 +386,31 @@
                 <h:panelGroup rendered="#{gestionParametricasBean.activeTab == 0 or gestionParametricasBean.activeTab == 5}">
                     <div class="mb-3">
                         <label class="mb-2 d-block">Nombre *</label>
-                        <p:inputText value="#{gestionParametricasBean.nombreForm}" required="true" placeholder="Ej: Bodega 23kg / Turno Mañana" />
+                        <p:inputText id="paramNombre1" value="#{gestionParametricasBean.nombreForm}" required="true" label="Nombre" requiredMessage="El nombre es obligatorio." placeholder="Ej: Bodega 23kg / Turno Mañana" />
                     </div>
                 </h:panelGroup>
 
                 <h:panelGroup rendered="#{gestionParametricasBean.activeTab == 1 or gestionParametricasBean.activeTab == 2 or gestionParametricasBean.activeTab == 3}">
                     <div class="mb-3">
                         <label class="mb-2 d-block">Descripción *</label>
-                        <p:inputText value="#{gestionParametricasBean.descripcionForm}" required="true" placeholder="Ej: Tarjeta de Crédito / Confirmada / Ejecutiva" />
+                        <p:inputText id="paramDesc1" value="#{gestionParametricasBean.descripcionForm}" required="true" label="Descripción" requiredMessage="La descripción es obligatoria." placeholder="Ej: Tarjeta de Crédito / Confirmada / Ejecutiva" />
                     </div>
                 </h:panelGroup>
 
                 <h:panelGroup rendered="#{gestionParametricasBean.activeTab == 4}">
                     <div class="mb-3">
                         <label class="mb-2 d-block">Nombre / Estado *</label>
-                        <p:inputText value="#{gestionParametricasBean.nombreForm}" required="true" placeholder="Ej: Demorado" />
+                        <p:inputText id="paramNombre2" value="#{gestionParametricasBean.nombreForm}" required="true" label="Nombre / Estado" requiredMessage="El nombre o estado es obligatorio." placeholder="Ej: Demorado" />
                     </div>
                     <div class="mb-3">
                         <label class="mb-2 d-block">Descripción *</label>
-                        <p:inputText value="#{gestionParametricasBean.descripcionForm}" required="true" placeholder="Ej: El vuelo presenta un retraso menor" />
+                        <p:inputText id="paramDesc2" value="#{gestionParametricasBean.descripcionForm}" required="true" label="Descripción" requiredMessage="La descripción es obligatoria." placeholder="Ej: El vuelo presenta un retraso menor" />
                     </div>
                 </h:panelGroup>
 
                 <div class="flex justify-content-end gap-2 pt-3 mt-3" style="border-top: 1px solid var(--border-subtle);">
                     <p:commandButton value="Cancelar" type="button" onclick="PF('dlgParametrica').hide();" styleClass="ui-button-flat ui-button-secondary" />
-                    <p:commandButton value="Guardar" actionListener="#{gestionParametricasBean.guardar}" process="@form" styleClass="btn-new" icon="pi pi-check" />
+                    <p:commandButton value="Guardar" actionListener="#{gestionParametricasBean.guardar}" process="@form" oncomplete="if (args &amp;&amp; !args.validationFailed) PF('dlgParametrica').hide();" styleClass="btn-new" icon="pi pi-check" />
                 </div>
             </h:form>
         </p:dialog>
@@ -374,7 +419,7 @@
         <h:form id="confirmDlgForm">
             <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" appendTo="@(body)" styleClass="custom-dialog">
                 <p:commandButton value="Cancelar" type="button" styleClass="ui-confirmdialog-no ui-button-flat ui-button-secondary" />
-                <p:commandButton value="Sí, Eliminar" type="button" styleClass="ui-confirmdialog-yes btn-new" />
+                <p:commandButton value="Sí, Confirmar" type="button" styleClass="ui-confirmdialog-yes btn-new" />
             </p:confirmDialog>
         </h:form>
     </ui:define>

@@ -31,4 +31,8 @@ public interface UsuarioService extends UserDetailsService{
 
 	public void crearPasajero(Usuario usuario);
 
+	public boolean existeCorreoEnOtroRut(String correo, String rut);
+
+	public boolean existeDocumentoEnOtroRut(String documento, String rut);
+
 }

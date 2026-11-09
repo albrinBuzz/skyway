@@ -828,3 +828,7 @@ CREATE TRIGGER trg_validar_reserva_duplicada_itinerario
     BEFORE INSERT ON reserva_itinerario
     FOR EACH ROW
 EXECUTE FUNCTION fn_validar_reserva_duplicada_itinerario();
+
+
+
+

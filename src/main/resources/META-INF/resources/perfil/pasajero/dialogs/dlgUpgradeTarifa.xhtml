@@ -1,0 +1,269 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui">
+
+    <!-- MODAL DE ASCENSO DE TARIFA (FARE UPGRADE) -->
+    <h:form id="formUpgradeTarifa">
+        <p:dialog header="Ascenso de Tarifa — SkyWay Upgrade"
+                  widgetVar="dlgUpgradeTarifa"
+                  id="dlgUpgradeTarifa"
+                  modal="true"
+                  resizable="false"
+                  responsive="true"
+                  styleClass="skyway-dialog skyway-corporate-dialog"
+                  width="720">
+
+            <h:panelGroup id="cntUpgrade" layout="block" styleClass="p-2">
+
+                <!-- CASO 1: SIN OPCIONES DE UPGRADE (YA ESTÁ EN LA MÁXIMA TARIFA) -->
+                <h:panelGroup rendered="#{empty perfilPasajeroView.opcionesUpgrade}">
+                    <div class="text-center py-4">
+                        <div class="mb-3">
+                            <i class="pi pi-check-circle text-primary" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="text-white font-weight-bold">Tarifa Máxima Contratada</h5>
+                        <p class="text-white-50 small mb-3">Tu reserva ya dispone de la categoría más alta (#{perfilPasajeroView.tarifaActual != null ? perfilPasajeroView.tarifaActual.nombre : 'Premium'}) y cuenta con todos los beneficios y flexibilidad disponibles.</p>
+                        <p:commandButton value="Cerrar" onclick="PF('dlgUpgradeTarifa').hide(); return false;" styleClass="btn btn-sm btn-outline-secondary px-4" />
+                    </div>
+                </h:panelGroup>
+
+                <!-- CASO 2: HAY OPCIONES DE UPGRADE SUPERIORES -->
+                <h:panelGroup rendered="#{not empty perfilPasajeroView.opcionesUpgrade}">
+                    <div class="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <span class="badge px-2 py-1 mb-1" style="background: rgba(37, 99, 235, 0.15); color: #60A5FA; border: 1px solid #2563EB; font-size: 0.72rem; letter-spacing: 0.5px; font-weight: 600;">SERVICIO DE ASCENSO</span>
+                            <h5 class="text-white font-weight-bold m-0">Eleva tu Categoría de Viaje</h5>
+                            <p class="text-white-50 small mt-1 mb-0">
+                                Abona únicamente la diferencia respecto a tu tarifa original para acceder a mayor flexibilidad y cambio de asiento.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Resumen de Tarifa Actual Contratada -->
+                    <div class="p-3 rounded mb-3" style="background: #0B132B; border: 1px solid #1E293B;">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div>
+                                <span class="text-white-50 small d-block" style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px;">Tarifa Actual de la Reserva</span>
+                                <strong class="text-white">
+                                    <i class="pi pi-bookmark me-1" style="color: #60A5FA;"></i>#{perfilPasajeroView.opcionesUpgrade[0].nombreTarifaActual != null ? perfilPasajeroView.opcionesUpgrade[0].nombreTarifaActual : 'Básica'}
+                                </strong>
+                                <span class="text-white-50 ms-2 small">(Tarifa pagada: #{perfilPasajeroView.opcionesUpgrade[0].precioTarifaActualFormateada})</span>
+                            </div>
+                            <div>
+                                <h:panelGroup rendered="#{perfilPasajeroView.opcionesUpgrade[0].nombreTarifaActual eq 'Flexible'}">
+                                    <span class="badge" style="background: #064E3B; color: #6EE7B7; border: 1px solid #059669; font-size: 0.75rem;">
+                                        <i class="pi pi-check me-1"></i>Permite cambio hasta 48h antes
+                                    </span>
+                                </h:panelGroup>
+                                <h:panelGroup rendered="#{perfilPasajeroView.opcionesUpgrade[0].nombreTarifaActual eq 'Básica'}">
+                                    <span class="badge" style="background: #1E293B; color: #94A3B8; border: 1px solid #334155; font-size: 0.75rem;">
+                                        <i class="pi pi-lock me-1"></i>Sin cambio de asiento
+                                    </span>
+                                </h:panelGroup>
+                                <h:panelGroup rendered="#{perfilPasajeroView.opcionesUpgrade[0].nombreTarifaActual ne 'Básica' and perfilPasajeroView.opcionesUpgrade[0].nombreTarifaActual ne 'Flexible'}">
+                                    <span class="badge" style="background: #172554; color: #93C5FD; border: 1px solid #1E40AF; font-size: 0.75rem;">
+                                        <i class="pi pi-shield me-1"></i>Tarifa Activa
+                                    </span>
+                                </h:panelGroup>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tarjetas de Categorías Superiores Disponibles -->
+                    <div class="row g-3 mb-3">
+                        <ui:repeat value="#{perfilPasajeroView.opcionesUpgrade}" var="op">
+                            <div class="col-md-6">
+                                <div class="p-3 rounded h-100 d-flex flex-column justify-content-between"
+                                     style="background: #{perfilPasajeroView.opcionUpgradeSeleccionada.idItinerarioTarifaNuevo eq op.idItinerarioTarifaNuevo ? '#0F244A' : '#0B132B'}; border: 1px solid #{perfilPasajeroView.opcionUpgradeSeleccionada.idItinerarioTarifaNuevo eq op.idItinerarioTarifaNuevo ? '#2563EB' : '#1E293B'}; box-shadow: #{perfilPasajeroView.opcionUpgradeSeleccionada.idItinerarioTarifaNuevo eq op.idItinerarioTarifaNuevo ? '0 0 12px rgba(37,99,235,0.3)' : 'none'}; border-radius: 8px;">
+
+                                    <div>
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="badge #{op.badgeClass} px-2 py-1 font-weight-bold" style="font-size: 0.75rem;">
+                                                <i class="pi #{op.icono} me-1"></i>#{op.nombreTarifa}
+                                            </span>
+                                            <h:panelGroup rendered="#{perfilPasajeroView.opcionUpgradeSeleccionada.idItinerarioTarifaNuevo eq op.idItinerarioTarifaNuevo}">
+                                                <span class="badge" style="background: #166534; color: #86EFAC; border: 1px solid #22C55E; font-size: 0.72rem;">
+                                                    <i class="pi pi-check me-1"></i>Seleccionada
+                                                </span>
+                                            </h:panelGroup>
+                                        </div>
+
+                                        <div class="mb-2">
+                                            <span class="text-white-50 small d-block" style="font-size: 0.72rem; text-transform: uppercase;">Diferencia a Pagar:</span>
+                                            <strong class="fs-4 d-block" style="color: #38BDF8;">+ #{op.diferenciaFormateada}</strong>
+                                            <span class="text-white-50 small" style="font-size: 0.75rem;">(Valor total nuevo: #{op.precioTotalFormateado})</span>
+                                        </div>
+
+                                        <hr style="border-color: #1E293B; margin: 10px 0;" />
+
+                                        <ul class="list-unstyled small text-white-50 m-0" style="font-size: 0.8rem; line-height: 1.5;">
+                                            <li class="mb-2 d-flex align-items-start gap-2">
+                                                <i class="pi pi-check text-success mt-1" style="font-size: 0.8rem;"></i>
+                                                <span><strong>Cambio de asiento:</strong> Habilitado en mapa de cabina.</span>
+                                            </li>
+                                            <li class="mb-2 d-flex align-items-start gap-2">
+                                                <i class="pi pi-clock text-info mt-1" style="font-size: 0.8rem;"></i>
+                                                <span><strong>Ventana de cambio:</strong> #{op.descripcionPlazo}.</span>
+                                            </li>
+                                            <li class="mb-2 d-flex align-items-start gap-2">
+                                                <i class="pi pi-briefcase text-primary mt-1" style="font-size: 0.8rem;"></i>
+                                                <span><strong>Beneficios:</strong> #{op.detalleEquipaje}.</span>
+                                            </li>
+                                            <li class="d-flex align-items-start gap-2">
+                                                <i class="pi pi-shield text-success mt-1" style="font-size: 0.8rem;"></i>
+                                                <span><strong>Cancelación:</strong> Permitida según términos de tarifa.</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+
+                                    <div class="mt-3 text-center">
+                                        <p:commandButton value="#{perfilPasajeroView.opcionUpgradeSeleccionada.idItinerarioTarifaNuevo eq op.idItinerarioTarifaNuevo ? 'Tarifa Seleccionada' : 'Seleccionar Tarifa'}"
+                                                         actionListener="#{perfilPasajeroView.seleccionarOpcionUpgrade(op)}"
+                                                         update=":formUpgradeTarifa:cntUpgrade"
+                                                         styleClass="btn btn-sm #{perfilPasajeroView.opcionUpgradeSeleccionada.idItinerarioTarifaNuevo eq op.idItinerarioTarifaNuevo ? 'btn-primary' : 'btn-outline-primary'} w-100 py-1"
+                                                         style="#{perfilPasajeroView.opcionUpgradeSeleccionada.idItinerarioTarifaNuevo eq op.idItinerarioTarifaNuevo ? 'background: #2563EB !important; border-color: #2563EB !important;' : 'border-color: #334155 !important; color: #94A3B8 !important;'}" />
+                                    </div>
+                                </div>
+                            </div>
+                        </ui:repeat>
+                    </div>
+
+                    <!-- Pasarela de Pago Corporativa -->
+                    <div class="p-3 rounded mb-3" style="background: #0B132B; border: 1px solid #1E293B;">
+                        <div class="row align-items-center">
+                            <div class="col-md-7">
+                                <span class="text-white-50 small d-block" style="font-size: 0.75rem; text-transform: uppercase;">Pasarela de Pago:</span>
+                                <p:selectOneMenu value="#{perfilPasajeroView.idMetodoPagoUpgrade}" styleClass="w-100 mt-1">
+                                    <f:selectItem itemLabel="Transbank Webpay Plus (Crédito / Débito)" itemValue="1" />
+                                    <f:selectItem itemLabel="PayPal Express Checkout (USD)" itemValue="2" />
+                                </p:selectOneMenu>
+                            </div>
+                            <div class="col-md-5 text-md-end mt-2 mt-md-0">
+                                <span class="text-white-50 small d-block" style="font-size: 0.75rem; text-transform: uppercase;">Total a Cancelar:</span>
+                                <strong class="fs-4" style="color: #38BDF8;">#{perfilPasajeroView.opcionUpgradeSeleccionada != null ? perfilPasajeroView.opcionUpgradeSeleccionada.diferenciaFormateada : '$0 CLP'}</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botones de Acción -->
+                    <div class="d-flex justify-content-end gap-2">
+                        <p:commandButton value="Cancelar"
+                                         onclick="PF('dlgUpgradeTarifa').hide(); return false;"
+                                         styleClass="btn btn-sm btn-outline-secondary px-3"
+                                         style="border-color: #334155; color: #94A3B8;" />
+                        <p:commandButton value="Proceder al Pago en Pasarela"
+                                         icon="pi pi-external-link"
+                                         process="@form"
+                                         actionListener="#{perfilPasajeroView.ejecutarUpgrade}"
+                                         update=":formVuelos:tablaItinerarios :formVuelos:scheduleItinerarios :formHubModal :formUpgradeTarifa:cntUpgrade :globalGrowl"
+                                         styleClass="btn btn-sm btn-primary font-weight-bold px-4"
+                                         style="background: #2563EB !important; border: 1px solid #3B82F6 !important;" />
+                    </div>
+                </h:panelGroup>
+
+            </h:panelGroup>
+        </p:dialog>
+    </h:form>
+
+    <!-- MODAL DE RETROALIMENTACIÓN Y CONFIRMACIÓN DE ASCENSO DE TARIFA (UPGRADE CONFIRMADO EN PERFIL) -->
+    <h:form id="formResultadoUpgradePerfil">
+        <p:dialog header="Ascenso de Tarifa Confirmado — SkyWay Upgrade"
+                  widgetVar="dlgResultadoUpgradePerfil"
+                  id="dlgResultadoUpgradePerfil"
+                  modal="true"
+                  resizable="false"
+                  responsive="true"
+                  width="660"
+                  visible="#{perfilPasajeroView.mostrarModalResultadoUpgrade}"
+                  styleClass="skyway-dialog skyway-corporate-dialog"
+                  closable="true"
+                  onHide="cerrarResultadoUpgradePerfilRemote();">
+
+            <p:remoteCommand name="cerrarResultadoUpgradePerfilRemote" action="#{perfilPasajeroView.cerrarModalResultadoUpgrade}" process="@this" />
+
+            <div class="p-3" style="background: #0B132B; color: #E2E8F0; border-radius: 8px;">
+                <!-- ENCABEZADO DE ÉXITO -->
+                <div class="d-flex align-items-center gap-3 p-3 mb-3 rounded" style="background: rgba(16, 185, 129, 0.1); border: 1px solid #059669;">
+                    <div style="width: 44px; height: 44px; border-radius: 50%; background: #064E3B; border: 1px solid #10B981; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i class="pi pi-check" style="font-size: 1.5rem; color: #34D399;"></i>
+                    </div>
+                    <div>
+                        <h5 class="text-white font-weight-bold m-0" style="font-size: 1.15rem;">¡Ascenso de Tarifa Confirmado!</h5>
+                        <span class="text-white-50 small">Tu itinerario y reserva han sido actualizados con éxito en tu cuenta SkyWay.</span>
+                    </div>
+                </div>
+
+                <!-- DETALLES DEL VUELO E ITINERARIO AFECTADO -->
+                <div class="p-3 mb-3 rounded" style="background: #0F172A; border: 1px solid #1E293B;">
+                    <span class="text-white-50 small d-block mb-2" style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px;">Detalles de la Reserva e Itinerario Afectado</span>
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <span class="text-white-50 d-block" style="font-size: 0.75rem;">Código Reserva (PNR):</span>
+                            <strong class="text-white" style="font-size: 0.95rem; letter-spacing: 1px;">#{perfilPasajeroView.resultadoUpgrade.codigoPnr}</strong>
+                        </div>
+                        <div class="col-md-4">
+                            <span class="text-white-50 d-block" style="font-size: 0.75rem;">Vuelo Asignado:</span>
+                            <strong class="text-info" style="font-size: 0.95rem;">#{perfilPasajeroView.resultadoUpgrade.numeroVuelo}</strong>
+                        </div>
+                        <div class="col-md-4">
+                            <span class="text-white-50 d-block" style="font-size: 0.75rem;">Tramo / Ruta:</span>
+                            <strong class="text-white" style="font-size: 0.95rem;">#{perfilPasajeroView.resultadoUpgrade.rutaCompleta}</strong>
+                        </div>
+                        <div class="col-md-6 mt-2">
+                            <span class="text-white-50 d-block" style="font-size: 0.75rem;">Pasajero:</span>
+                            <span class="text-white small">#{perfilPasajeroView.resultadoUpgrade.nombrePasajero}</span>
+                        </div>
+                        <div class="col-md-6 mt-2">
+                            <span class="text-white-50 d-block" style="font-size: 0.75rem;">Fecha y Hora Programada:</span>
+                            <span class="text-white small">#{perfilPasajeroView.resultadoUpgrade.fechaHoraSalida != null ? perfilPasajeroView.resultadoUpgrade.fechaHoraSalida : 'Horario Confirmado'}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TRANSICIÓN DE TARIFA Y PAGO -->
+                <div class="p-3 mb-3 rounded" style="background: #0F172A; border: 1px solid #1E293B;">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <span class="text-white-50 small d-block" style="font-size: 0.72rem; text-transform: uppercase;">Categoría de Vuelo:</span>
+                            <div class="d-flex align-items-center gap-2 mt-1">
+                                <span class="text-white-50 small">#{perfilPasajeroView.resultadoUpgrade.tarifaAnterior}</span>
+                                <i class="pi pi-arrow-right text-primary" style="font-size: 0.8rem;"></i>
+                                <span class="badge bg-primary px-2 py-1" style="font-size: 0.85rem; font-weight: 700;">#{perfilPasajeroView.resultadoUpgrade.tarifaNueva}</span>
+                            </div>
+                        </div>
+                        <div class="text-md-end">
+                            <span class="text-white-50 small d-block" style="font-size: 0.72rem; text-transform: uppercase;">Diferencia Abonada:</span>
+                            <strong class="text-white fs-4" style="color: #38BDF8 !important;">#{perfilPasajeroView.resultadoUpgrade.montoDiferenciaFormateado}</strong>
+                            <span class="text-white-50 d-block" style="font-size: 0.72rem;">Vía #{perfilPasajeroView.resultadoUpgrade.metodoPago}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NUEVOS BENEFICIOS ACTIVADOS -->
+                <div class="p-3 mb-3 rounded" style="background: #0F172A; border: 1px solid #1E293B;">
+                    <span class="text-white-50 small d-block mb-2" style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px;">Beneficios y Opciones Desbloqueadas</span>
+                    <ul class="list-unstyled m-0" style="font-size: 0.82rem; line-height: 1.6;">
+                        <ui:repeat value="#{perfilPasajeroView.resultadoUpgrade.beneficiosNuevos}" var="b">
+                            <li class="d-flex align-items-start gap-2 mb-1">
+                                <i class="pi pi-check-circle mt-1" style="color: #38BDF8; font-size: 0.85rem;"></i>
+                                <span class="text-white">#{b}</span>
+                            </li>
+                        </ui:repeat>
+                    </ul>
+                </div>
+
+                <!-- BOTONES DE ACCIÓN -->
+                <div class="d-flex justify-content-end gap-2 mt-3 pt-2" style="border-top: 1px solid #1E293B;">
+                    <p:commandButton value="Entendido"
+                                     onclick="PF('dlgResultadoUpgradePerfil').hide();"
+                                     actionListener="#{perfilPasajeroView.cerrarModalResultadoUpgrade}"
+                                     styleClass="btn btn-sm btn-primary font-weight-bold px-4"
+                                     style="background: #2563EB !important; border: 1px solid #3B82F6 !important;" />
+                </div>
+            </div>
+        </p:dialog>
+    </h:form>
+
+</ui:composition>

@@ -50,6 +50,12 @@ public class TipoTurnoServiceImpl implements TipoTurnoService {
     @Override
     @Transactional
     public void deleteById(Integer id) {
-        repository.deleteById(id);
+        repository.softDeleteById(id);
+    }
+
+    @Override
+    @Transactional
+    public void reactivarById(Integer id) {
+        repository.reactivarById(id);
     }
 }

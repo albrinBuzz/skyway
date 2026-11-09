@@ -602,6 +602,9 @@ public class CambioAsientoBean implements Serializable {
                     || asientosFila.stream().anyMatch(a -> Boolean.TRUE.equals(a.getEsEmergencia()));
 
             FilaCabinaDTO filaDTO = new FilaCabinaDTO(numFila, claseFila, esEmergencia);
+            if (!asientosFila.isEmpty()) {
+                filaDTO.setPrecio(asientosFila.get(0).getPrecio());
+            }
 
             // 3. Cabecera dinámica de inicio de clase
             if (claseAnterior == null || !claseAnterior.equalsIgnoreCase(claseFila)) {
