@@ -19,4 +19,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, String>{
 
 	boolean existsByCorreoElectronicoIgnoreCaseAndRutNot(String correo, String rut);
 
+	boolean existsByDocumentoIdentidadIgnoreCaseAndRutNot(String documentoIdentidad, String rut);
+
+	Optional<Usuario> findByDocumentoIdentidadIgnoreCase(String documentoIdentidad);
+
 }

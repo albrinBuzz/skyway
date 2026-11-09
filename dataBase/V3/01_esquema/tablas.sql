@@ -103,6 +103,7 @@ DROP TABLE IF EXISTS Configuracion_Cabina CASCADE;
 DROP TABLE IF EXISTS Cancelacion CASCADE;
 DROP TABLE IF EXISTS Log_Auditoria CASCADE;
 DROP TABLE IF EXISTS Cancelacion_Asiento CASCADE;
+DROP TABLE IF EXISTS Wal_Transaccion_Pago CASCADE;
 
 -- SECUENCIAS INICIALES
 CREATE SEQUENCE rol_seq;
@@ -725,6 +726,31 @@ direccion_ip VARCHAR(45),
 user_agent VARCHAR(255)  -- Navegador/Dispositivo (Chrome, Firefox, Mobile App, etc.)
 );
 
+
+-- ============================================================================
+-- 5. TABLA ESPECIALIZADA: WAL DE TRANSACCIONES DE PAGO Y LEDGER FINANCIERO
+-- ============================================================================
+CREATE TABLE  Wal_Transaccion_Pago (
+                                                    id_wal BIGSERIAL PRIMARY KEY,
+                                                    token_pasarela VARCHAR(255) NOT NULL,
+                                                    metodo_pago VARCHAR(50) NOT NULL,
+                                                    id_metodo_pago INT,
+                                                    monto NUMERIC(12, 2) NOT NULL,
+                                                    moneda VARCHAR(10) DEFAULT 'CLP',
+                                                    rut_titular VARCHAR(15),
+                                                    email_contacto VARCHAR(150),
+                                                    estado VARCHAR(50) NOT NULL DEFAULT 'CAPTURADO',
+                                                    id_reserva INT REFERENCES Reserva(ID_RESERVA) ON DELETE SET NULL,
+                                                    payload_snapshot JSONB NOT NULL,
+                                                    motivo_fallo TEXT,
+                                                    direccion_ip VARCHAR(45),
+                                                    user_agent VARCHAR(255),
+                                                    fecha_captura TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+                                                    fecha_actualizacion TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+
+
 -- 3. Índices Estratégicos para Consultas Rápidas y Paneles de Control (Dashboards)
 CREATE INDEX idx_log_auditoria_fecha ON Log_Auditoria(fecha_hora DESC);
 CREATE INDEX idx_log_auditoria_rut ON Log_Auditoria(rut_usuario);
@@ -837,4 +863,12 @@ CREATE INDEX IF NOT EXISTS idx_tarifa_activo ON Tarifa(id_tarifa) WHERE activo =
 CREATE INDEX IF NOT EXISTS idx_caracteristica_tarifa_activo ON Caracteristica_Tarifa(id_caracteristica) WHERE activo = TRUE;
 CREATE INDEX IF NOT EXISTS idx_tipo_equipaje_activo ON Tipo_Equipaje(id_tipo) WHERE activo = TRUE;
 CREATE INDEX IF NOT EXISTS idx_tipo_turno_activo ON Tipo_Turno(id_tipo) WHERE activo = TRUE;
+
+
+CREATE INDEX IF NOT EXISTS idx_wal_token ON Wal_Transaccion_Pago(token_pasarela);
+CREATE INDEX IF NOT EXISTS idx_wal_estado ON Wal_Transaccion_Pago(estado);
+CREATE INDEX IF NOT EXISTS idx_wal_rut ON Wal_Transaccion_Pago(rut_titular);
+CREATE INDEX IF NOT EXISTS idx_wal_fecha ON Wal_Transaccion_Pago(fecha_captura DESC);
+CREATE INDEX IF NOT EXISTS idx_wal_payload ON Wal_Transaccion_Pago USING gin(payload_snapshot);
+
 

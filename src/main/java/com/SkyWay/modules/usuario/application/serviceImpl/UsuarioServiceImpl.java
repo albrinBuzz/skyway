@@ -420,8 +420,19 @@ public class UsuarioServiceImpl implements UsuarioService{
 		
 		
 	};*/
-	
-	
-	
+
+	@Override
+	public boolean existeCorreoEnOtroRut(String correo, String rut) {
+		if (correo == null || correo.isBlank()) return false;
+		String rutLimpio = (rut != null) ? rut.trim() : "";
+		return usuarioRepository.existsByCorreoElectronicoIgnoreCaseAndRutNot(correo.trim(), rutLimpio);
+	}
+
+	@Override
+	public boolean existeDocumentoEnOtroRut(String documento, String rut) {
+		if (documento == null || documento.isBlank()) return false;
+		String rutLimpio = (rut != null) ? rut.trim() : "";
+		return usuarioRepository.existsByDocumentoIdentidadIgnoreCaseAndRutNot(documento.trim(), rutLimpio);
+	}
 
 }

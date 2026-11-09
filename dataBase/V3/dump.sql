@@ -103,6 +103,7 @@ DROP TABLE IF EXISTS Configuracion_Cabina CASCADE;
 DROP TABLE IF EXISTS Cancelacion CASCADE;
 DROP TABLE IF EXISTS Log_Auditoria CASCADE;
 DROP TABLE IF EXISTS Cancelacion_Asiento CASCADE;
+DROP TABLE IF EXISTS Wal_Transaccion_Pago CASCADE;
 
 -- SECUENCIAS INICIALES
 CREATE SEQUENCE rol_seq;
@@ -725,6 +726,31 @@ CREATE TABLE IF NOT EXISTS Log_Auditoria (
                                              user_agent VARCHAR(255)  -- Navegador/Dispositivo (Chrome, Firefox, Mobile App, etc.)
 );
 
+
+-- ============================================================================
+-- 5. TABLA ESPECIALIZADA: WAL DE TRANSACCIONES DE PAGO Y LEDGER FINANCIERO
+-- ============================================================================
+CREATE TABLE  Wal_Transaccion_Pago (
+                                       id_wal BIGSERIAL PRIMARY KEY,
+                                       token_pasarela VARCHAR(255) NOT NULL,
+                                       metodo_pago VARCHAR(50) NOT NULL,
+                                       id_metodo_pago INT,
+                                       monto NUMERIC(12, 2) NOT NULL,
+                                       moneda VARCHAR(10) DEFAULT 'CLP',
+                                       rut_titular VARCHAR(15),
+                                       email_contacto VARCHAR(150),
+                                       estado VARCHAR(50) NOT NULL DEFAULT 'CAPTURADO',
+                                       id_reserva INT REFERENCES Reserva(ID_RESERVA) ON DELETE SET NULL,
+                                       payload_snapshot JSONB NOT NULL,
+                                       motivo_fallo TEXT,
+                                       direccion_ip VARCHAR(45),
+                                       user_agent VARCHAR(255),
+                                       fecha_captura TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+                                       fecha_actualizacion TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+
+
 -- 3. Índices Estratégicos para Consultas Rápidas y Paneles de Control (Dashboards)
 CREATE INDEX idx_log_auditoria_fecha ON Log_Auditoria(fecha_hora DESC);
 CREATE INDEX idx_log_auditoria_rut ON Log_Auditoria(rut_usuario);
@@ -838,6 +864,12 @@ CREATE INDEX IF NOT EXISTS idx_caracteristica_tarifa_activo ON Caracteristica_Ta
 CREATE INDEX IF NOT EXISTS idx_tipo_equipaje_activo ON Tipo_Equipaje(id_tipo) WHERE activo = TRUE;
 CREATE INDEX IF NOT EXISTS idx_tipo_turno_activo ON Tipo_Turno(id_tipo) WHERE activo = TRUE;
 
+
+CREATE INDEX IF NOT EXISTS idx_wal_token ON Wal_Transaccion_Pago(token_pasarela);
+CREATE INDEX IF NOT EXISTS idx_wal_estado ON Wal_Transaccion_Pago(estado);
+CREATE INDEX IF NOT EXISTS idx_wal_rut ON Wal_Transaccion_Pago(rut_titular);
+CREATE INDEX IF NOT EXISTS idx_wal_fecha ON Wal_Transaccion_Pago(fecha_captura DESC);
+CREATE INDEX IF NOT EXISTS idx_wal_payload ON Wal_Transaccion_Pago USING gin(payload_snapshot);
 
 DO $$
     DECLARE
@@ -1673,61 +1705,6 @@ EXECUTE FUNCTION fn_validar_reserva_duplicada_itinerario();
 
 
 
--- 5. PROCEDIMIENTOS ALMACENADOS DE BAJA LÓGICA CON AUDITORÍA
-CREATE OR REPLACE PROCEDURE sp_darBajaFabricante(IN p_id INT, IN p_rut VARCHAR(12) DEFAULT 'SISTEMA')
-    LANGUAGE plpgsql AS $$
-BEGIN
-    UPDATE Fabricante SET activo = FALSE, fecha_baja = NOW() WHERE id_fabricante = p_id;
-    INSERT INTO Log_Auditoria (rut_usuario, accion, nivel, tabla_afectada, id_registro_afectado, detalle)
-    VALUES (p_rut, 'BAJA_LOGICA_FABRICANTE', 'INFO', 'Fabricante', p_id, FORMAT('Fabricante ID %s dado de baja lógicamente.', p_id));
-END;
-$$;
-
-CREATE OR REPLACE PROCEDURE sp_darBajaModeloAvion(IN p_id INT, IN p_rut VARCHAR(12) DEFAULT 'SISTEMA')
-    LANGUAGE plpgsql AS $$
-BEGIN
-    UPDATE Modelo_Avion SET activo = FALSE, fecha_baja = NOW() WHERE id_modelo = p_id;
-    INSERT INTO Log_Auditoria (rut_usuario, accion, nivel, tabla_afectada, id_registro_afectado, detalle)
-    VALUES (p_rut, 'BAJA_LOGICA_MODELO_AVION', 'INFO', 'Modelo_Avion', p_id, FORMAT('Modelo de avión ID %s dado de baja lógicamente.', p_id));
-END;
-$$;
-
-CREATE OR REPLACE PROCEDURE sp_darBajaAvion(IN p_id INT, IN p_rut VARCHAR(12) DEFAULT 'SISTEMA')
-    LANGUAGE plpgsql AS $$
-BEGIN
-    UPDATE Avion SET activo = FALSE, fecha_baja = NOW() WHERE id_avion = p_id;
-    INSERT INTO Log_Auditoria (rut_usuario, accion, nivel, tabla_afectada, id_registro_afectado, detalle)
-    VALUES (p_rut, 'BAJA_LOGICA_AVION', 'INFO', 'Avion', p_id, FORMAT('Aeronave ID %s dada de baja lógicamente de la flota.', p_id));
-END;
-$$;
-
-CREATE OR REPLACE PROCEDURE sp_darBajaAeropuerto(IN p_id INT, IN p_rut VARCHAR(12) DEFAULT 'SISTEMA')
-    LANGUAGE plpgsql AS $$
-BEGIN
-    UPDATE Aeropuerto SET activo = FALSE, fecha_baja = NOW() WHERE id_aeropuerto = p_id;
-    INSERT INTO Log_Auditoria (rut_usuario, accion, nivel, tabla_afectada, id_registro_afectado, detalle)
-    VALUES (p_rut, 'BAJA_LOGICA_AEROPUERTO', 'INFO', 'Aeropuerto', p_id, FORMAT('Aeropuerto ID %s dado de baja lógicamente.', p_id));
-END;
-$$;
-
-CREATE OR REPLACE PROCEDURE sp_darBajaTarifa(IN p_id INT, IN p_rut VARCHAR(12) DEFAULT 'SISTEMA')
-    LANGUAGE plpgsql AS $$
-BEGIN
-    UPDATE Tarifa SET activo = FALSE, fecha_baja = NOW() WHERE id_tarifa = p_id;
-    INSERT INTO Log_Auditoria (rut_usuario, accion, nivel, tabla_afectada, id_registro_afectado, detalle)
-    VALUES (p_rut, 'BAJA_LOGICA_TARIFA', 'INFO', 'Tarifa', p_id, FORMAT('Tarifa ID %s dada de baja lógicamente.', p_id));
-END;
-$$;
-
--- 6. PROCEDIMIENTOS DE REACTIVACIÓN
-CREATE OR REPLACE PROCEDURE sp_reactivarRegistro(IN p_tabla VARCHAR(50), IN p_id INT, IN p_columna_pk VARCHAR(50), IN p_rut VARCHAR(12) DEFAULT 'SISTEMA')
-    LANGUAGE plpgsql AS $$
-BEGIN
-    EXECUTE FORMAT('UPDATE %I SET activo = TRUE, fecha_baja = NULL WHERE %I = $1', p_tabla, p_columna_pk) USING p_id;
-    INSERT INTO Log_Auditoria (rut_usuario, accion, nivel, tabla_afectada, id_registro_afectado, detalle)
-    VALUES (p_rut, 'REACTIVACION_REGISTRO', 'INFO', p_tabla, p_id, FORMAT('Registro ID %s en tabla %s reactivado exitosamente.', p_id, p_tabla));
-END;
-$$;
 
 CREATE OR REPLACE FUNCTION fnBuscarVuelo(
     p_codigo_origen VARCHAR,
@@ -2689,7 +2666,6 @@ BEGIN
            );
 END;
 $$;
-
 
 -- =========================================================================
 -- 1. MAESTRO DE CONTINENTES
@@ -4632,3 +4608,4 @@ FROM itinerario it
 WHERE it.hora_salida >= NOW()
   AND it.hora_salida < NOW() + INTERVAL '7 days'
 ORDER BY it.hora_salida ASC;
+

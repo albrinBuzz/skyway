@@ -5,53 +5,132 @@
       xmlns:p="http://primefaces.org/ui">
 
 <h:head>
-    <title>Error en el Pago - SkyWay</title>
-    <h:outputStylesheet library="css" name="custom.css" />
+    <title>Reserva y Pago - SkyWay</title>
 </h:head>
 
 <h:body style="background-color: #0f172a; color: #f8fafc; font-family: system-ui, sans-serif;">
 
-    <div style="max-width: 600px; margin: 60px auto; padding: 20px;">
+    <div style="max-width: 650px; margin: 60px auto; padding: 20px;">
         <h:form id="formErrorPago">
+            <p:growl id="growl" showDetail="true" life="5000" />
 
-            <p:card style="background-color: #1e293b; color: #ffffff; border-radius: 12px; border: 1px solid #334155;">
+            <p:card style="background-color: #0b1322; color: #ffffff; border-radius: 12px; border: 1px solid #1c2b44; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
 
-                <!-- Icono y Encabezado de Error -->
-                <div style="text-align: center; padding: 20px 0 10px 0;">
-                    <i class="pi pi-times-circle" style="font-size: 4rem; color: #ef4444;"></i>
-                    <h2 style="color: #f87171; margin-top: 15px; font-size: 1.8rem;">No se pudo procesar el pago</h2>
-                    <p style="color: #94a3b8; font-size: 0.95rem; margin-top: 5px;">
-                        Ocurrió un problema durante la transacción con Webpay o la sesión ha expirado.
-                    </p>
-                </div>
+                <!-- CASO 1: PAGO CONFIRMADO CON CONFLICTO ATÓMICO (REQUIERE ACCIÓN WAL / REEMBOLSO) -->
+                <h:panelGroup rendered="#{errorPagoBean.pagoCapturadoConFallo}">
+                    <div style="text-align: center; padding: 20px 0 10px 0;">
+                        <i class="pi pi-check-circle" style="font-size: 3.8rem; color: #10b981;"></i>
+                        <h2 style="color: #f8fafc; margin-top: 15px; font-size: 1.6rem; font-weight: 700;">
+                            ¡Tu pago fue recibido con éxito!
+                        </h2>
+                        <p style="color: #38bdf8; font-size: 1rem; font-weight: 600; margin-top: 6px;">
+                            Solo necesitamos un paso adicional para confirmar tus asientos
+                        </p>
+                        <p style="color: #94a3b8; font-size: 0.93rem; margin: 12px auto 0 auto; max-width: 520px; line-height: 1.5;">
+                            Confirmamos el cobro de tu compra. Sin embargo, mientras completabas la transacción, uno de los asientos seleccionados fue ocupado en el mismo instante por otro pasajero.
+                        </p>
+                    </div>
 
-                <!-- Bloque Informativo -->
-                <div style="background-color: #0f172a; border-left: 4px solid #ef4444; border-radius: 4px; padding: 15px; margin: 20px 0; font-size: 0.9rem; color: #cbd5e1;">
-                    <p style="margin: 0 0 8px 0;"><strong>Posibles razones:</strong></p>
-                    <ul style="margin: 0; padding-left: 20px; line-height: 1.6; color: #94a3b8;">
-                        <li>La transacción fue rechazada por el banco emisor.</li>
-                        <li>Excediste el tiempo límite establecido para completar el pago.</li>
-                        <li>Fondos insuficientes o problemas de conectividad temporal.</li>
-                    </ul>
-                </div>
+                    <div style="background-color: #080e1a; border: 1px solid #1e2e4a; border-left: 4px solid #10b981; border-radius: 8px; padding: 18px 20px; margin: 20px 0; font-size: 0.92rem; color: #cbd5e1;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="color: #94a3b8;">Comprobante de Pago:</span>
+                            <strong style="color: #38bdf8; font-family: monospace; font-size: 1rem;">##{errorPagoBean.codigoReferencia}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="color: #94a3b8;">Monto Confirmado:</span>
+                            <strong style="color: #34d399; font-size: 1.15rem;">
+                                <h:outputText value="#{errorPagoBean.montoFormateado}" />
+                            </strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <span style="color: #94a3b8;">Garantía de Fondos:</span>
+                            <span style="color: #10b981; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
+                                <i class="pi pi-lock" style="font-size: 0.85rem;"></i> 100% Protegidos y Respaldados
+                            </span>
+                        </div>
+                        <div style="border-top: 1px solid #1e293b; padding-top: 10px; margin-top: 10px; line-height: 1.5; font-size: 0.88rem; color: #cbd5e1;">
+                            <strong>Tu dinero está completamente seguro con nosotros.</strong> Puedes seleccionar un nuevo asiento disponible de inmediato para emitir tus pasajes sin costo adicional, o solicitar la devolución íntegra a tu cuenta.
+                        </div>
+                    </div>
 
-                <!-- Botones de Acción -->
-                <div style="display: flex; gap: 12px; margin-top: 30px;">
-                    <p:button value="Volver al Inicio"
-                              outcome="/home/index.xhtml"
-                              icon="pi pi-home"
-                              styleClass="ui-button-outlined ui-button-secondary"
-                              style="flex: 1;" />
+                    <!-- ACCIONES POST-FALLO WAL -->
+                    <h:panelGroup rendered="#{not errorPagoBean.reembolsoSolicitado}">
+                        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 25px;">
+                            <p:button value="Elegir Nuevos Asientos (Recomendado)"
+                                      outcome="/home/seleccionAsientos.xhtml"
+                                      icon="pi pi-ticket"
+                                      styleClass="ui-button-info"
+                                      style="padding: 12px; font-weight: 700; font-size: 1rem;" />
 
-                    <p:button value="Reintentar Pago"
-                              outcome="/home/reserva.xhtml"
-                              icon="pi pi-refresh"
-                              styleClass="ui-button-danger"
-                              style="flex: 1;" />
-                </div>
+                            <div style="display: flex; gap: 12px;">
+                                <p:commandButton value="Solicitar Devolución del Dinero"
+                                                 actionListener="#{errorPagoBean.solicitarReembolso}"
+                                                 icon="pi pi-dollar"
+                                                 styleClass="ui-button-outlined ui-button-warning"
+                                                 update="@form"
+                                                 style="flex: 1; padding: 10px; font-weight: 600;" />
+
+                                <p:button value="Volver al Inicio"
+                                          outcome="/home/index.xhtml"
+                                          icon="pi pi-home"
+                                          styleClass="ui-button-secondary ui-button-outlined"
+                                          style="flex: 1; padding: 10px; font-weight: 600;" />
+                            </div>
+                        </div>
+                    </h:panelGroup>
+
+                    <h:panelGroup rendered="#{errorPagoBean.reembolsoSolicitado}">
+                        <div style="text-align: center; padding: 25px 20px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; margin-top: 20px;">
+                            <i class="pi pi-check-circle" style="font-size: 2.8rem; color: #10b981;"></i>
+                            <h3 style="color: #34d399; margin: 12px 0 6px 0; font-size: 1.25rem; font-weight: 700;">¡Devolución Solicitada con Éxito!</h3>
+                            <p style="color: #cbd5e1; font-size: 0.95rem; margin: 0 0 10px 0; line-height: 1.5;">
+                                Hemos registrado tu solicitud para el comprobante <strong>##{errorPagoBean.codigoReferencia}</strong> por un monto de <strong>#{errorPagoBean.montoFormateado}</strong>.
+                            </p>
+                            <p style="color: #94a3b8; font-size: 0.88rem; margin: 0;">
+                                El monto será reintegrado a tu medio de pago original. Los tiempos de abono dependen de las políticas de tu entidad financiera.
+                            </p>
+                        </div>
+                        <div style="margin-top: 20px;">
+                            <p:button value="Volver a la Portada" outcome="/home/index.xhtml" icon="pi pi-home" styleClass="ui-button-outlined ui-button-secondary w-100" style="padding: 10px;" />
+                        </div>
+                    </h:panelGroup>
+                </h:panelGroup>
+
+                <!-- CASO 2: PAGO RECHAZADO, CANCELADO O SESIÓN EXPIRADA ANTES DEL PAGO -->
+                <h:panelGroup rendered="#{not errorPagoBean.pagoCapturadoConFallo}">
+                    <div style="text-align: center; padding: 20px 0 10px 0;">
+                        <i class="pi pi-times-circle" style="font-size: 4rem; color: #ef4444;"></i>
+                        <h2 style="color: #f87171; margin-top: 15px; font-size: 1.8rem;">No se pudo procesar el pago</h2>
+                        <p style="color: #94a3b8; font-size: 0.95rem; margin-top: 5px;">
+                            Ocurrió un problema durante la transacción con la pasarela de pago o el banco emisor.
+                        </p>
+                    </div>
+
+                    <div style="background-color: #080e1a; border-left: 4px solid #ef4444; border-radius: 4px; padding: 15px; margin: 20px 0; font-size: 0.9rem; color: #cbd5e1;">
+                        <p style="margin: 0 0 8px 0;"><strong>Posibles razones:</strong></p>
+                        <ul style="margin: 0; padding-left: 20px; line-height: 1.6; color: #94a3b8;">
+                            <li>La transacción fue rechazada o cancelada por el banco emisor.</li>
+                            <li>Excediste el tiempo límite establecido para autorizar el pago.</li>
+                            <li>Fondos insuficientes o fallo de autenticación de seguridad (3D Secure).</li>
+                        </ul>
+                    </div>
+
+                    <div style="display: flex; gap: 12px; margin-top: 30px;">
+                        <p:button value="Volver al Inicio"
+                                  outcome="/home/index.xhtml"
+                                  icon="pi pi-home"
+                                  styleClass="ui-button-outlined ui-button-secondary"
+                                  style="flex: 1;" />
+
+                        <p:button value="Reintentar Pago"
+                                  outcome="/home/reserva.xhtml"
+                                  icon="pi pi-refresh"
+                                  styleClass="ui-button-danger"
+                                  style="flex: 1;" />
+                    </div>
+                </h:panelGroup>
 
             </p:card>
-
         </h:form>
     </div>
 

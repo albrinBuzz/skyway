@@ -36,6 +36,7 @@ public class Pasajero implements Serializable {
 	private String tipoDocumento;
 
 	//bi-directional many-to-one association to Equipaje
+	@com.fasterxml.jackson.annotation.JsonIgnore
 	@OneToMany(mappedBy="pasajero")
 	private List<Equipaje> equipajes;
 
@@ -47,6 +48,7 @@ public class Pasajero implements Serializable {
 
 
 	//bi-directional many-to-one association to Reserva
+	@com.fasterxml.jackson.annotation.JsonIgnore
 	@OneToMany(mappedBy="pasajero",fetch = FetchType.LAZY)
 	private List<Reserva> reservas;
 

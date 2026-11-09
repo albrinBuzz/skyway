@@ -46,6 +46,7 @@ public class Usuario implements Serializable {
 	@Temporal(TemporalType.DATE)
 	private Date fechaNacimiento;
 
+	@com.fasterxml.jackson.annotation.JsonIgnore
 	@Column(name = "Contrasena",  length = 100)
 	private String contrasena;
 
