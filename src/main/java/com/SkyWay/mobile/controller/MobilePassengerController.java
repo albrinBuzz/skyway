@@ -48,6 +48,11 @@ public class MobilePassengerController {
         return ResponseEntity.ok(bookingService.aeropuertos(jwt.getSubject()));
     }
 
+    @GetMapping("/catalogo/equipajes")
+    public ResponseEntity<List<TipoEquipajeCatalogo>> catalogoEquipajes(@AuthenticationPrincipal Jwt jwt) {
+        return ResponseEntity.ok(bookingService.catalogoEquipajes(jwt.getSubject()));
+    }
+
     @GetMapping("/busqueda/itinerarios")
     public ResponseEntity<List<ItinerarioDisponible>> buscarItinerarios(
             @AuthenticationPrincipal Jwt jwt,
@@ -57,11 +62,32 @@ public class MobilePassengerController {
         return ResponseEntity.ok(bookingService.buscar(jwt.getSubject(), origen, destino, fecha));
     }
 
+    @GetMapping("/busqueda/itinerarios/{idItinerario}/vuelos-asientos")
+    public ResponseEntity<List<VueloConAsientos>> obtenerVuelosConAsientos(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable("idItinerario") int idItinerario) {
+        return ResponseEntity.ok(bookingService.vuelosConAsientos(jwt.getSubject(), idItinerario));
+    }
+
     @PostMapping("/reservas")
     public ResponseEntity<ReservaCreada> crearReserva(
             @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody CrearReservaRequest body) {
         return ResponseEntity.ok(bookingService.crear(jwt.getSubject(), body));
+    }
+
+    @PostMapping("/reservas/iniciar-pago")
+    public ResponseEntity<IniciarPagoReservaResponse> iniciarPagoReserva(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody IniciarPagoReservaRequest body) {
+        return ResponseEntity.ok(bookingService.iniciarPago(jwt.getSubject(), body));
+    }
+
+    @PostMapping("/reservas/confirmar-pago")
+    public ResponseEntity<ReservaCreada> confirmarPagoReserva(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody ConfirmarPagoReservaRequest body) {
+        return ResponseEntity.ok(bookingService.confirmarPago(jwt.getSubject(), body));
     }
 
     // ------------------------------------------------------------------
@@ -115,7 +141,7 @@ public class MobilePassengerController {
             @PathVariable("idReserva") int idReserva,
             @PathVariable("idVuelo") int idVuelo,
             @Valid @RequestBody CambioAsientoRequest body) {
-        return ResponseEntity.ok(operationsService.cambiar(jwt.getSubject(), idReserva, idVuelo, body.idAsiento()));
+        return ResponseEntity.ok(operationsService.cambiar(jwt.getSubject(), idReserva, idVuelo, body.idAsiento(), body.idMetodoPago(), body.urlRetornoBase(), null));
     }
 
     // ------------------------------------------------------------------
@@ -134,6 +160,16 @@ public class MobilePassengerController {
             @PathVariable("idReserva") int idReserva,
             @PathVariable("idVuelo") int idVuelo) {
         return ResponseEntity.ok(readService.pase(jwt.getSubject(), idReserva, idVuelo));
+    }
+
+    @GetMapping(value = "/reservas/{idReserva}/pase-abordar/pdf", produces = org.springframework.http.MediaType.APPLICATION_PDF_VALUE)
+    public ResponseEntity<byte[]> descargarPaseAbordarPdf(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable("idReserva") int idReserva) {
+        byte[] pdf = readService.descargarBoardingPassPdf(jwt.getSubject(), idReserva);
+        return ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"boarding-pass-" + idReserva + ".pdf\"")
+                .body(pdf);
     }
 
     // ------------------------------------------------------------------
@@ -175,7 +211,14 @@ public class MobilePassengerController {
             @PathVariable("rut") String rut,
             @Valid @RequestBody CambioAsientoRequest body) {
         return ResponseEntity.ok(groupTicketsService.cambiarAsiento(
-                jwt.getSubject(), idReserva, idVuelo, rut, body.idAsiento()));
+                jwt.getSubject(), idReserva, idVuelo, rut, body.idAsiento(), body.idMetodoPago(), body.urlRetornoBase()));
+    }
+
+    @PostMapping("/reservas/cambio-asiento/confirmar-pago")
+    public ResponseEntity<MapaAsientos> confirmarPagoCambioAsiento(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody ConfirmarPagoCambioAsientoRequest body) {
+        return ResponseEntity.ok(operationsService.confirmarPagoCambio(jwt.getSubject(), body));
     }
 
     // ------------------------------------------------------------------

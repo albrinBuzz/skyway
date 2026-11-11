@@ -4,6 +4,10 @@ import com.SkyWay.mobile.dto.MobileDtos.*;
 import com.SkyWay.modules.reserva.domain.repository.ReservaRepository;
 import com.SkyWay.modules.notificacion.domain.repository.NotificacionRepository;
 import com.SkyWay.modules.notificacion.domain.model.Notificacion;
+import com.SkyWay.util.BarcodeGeneratorUtil;
+import com.SkyWay.util.BoardingPassSecurityService;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -21,6 +25,12 @@ public class MobileReadService {
     private final NotificacionRepository notificaciones;
     private final MobileAuthService auth;
     private final Clock clock;
+
+    @PersistenceContext
+    private EntityManager em;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.SkyWay.modules.reserva.domain.service.ETicketPdfGeneratorService eTicketPdfGeneratorService;
 
     public MobileReadService(ReservaRepository reservas, NotificacionRepository notificaciones, MobileAuthService auth, Clock clock) {
         this.reservas=reservas; this.notificaciones=notificaciones; this.auth=auth; this.clock=clock;
@@ -46,9 +56,12 @@ public class MobileReadService {
         if(!List.of("activas","historial").contains(grupo))
             throw new MobileException(HttpStatus.BAD_REQUEST,"GRUPO_INVALIDO","grupo debe ser activas o historial.");
         boolean active=grupo.equals("activas"); var now=LocalDateTime.now(clock);
-        var data=reservas.mobileReservas(rut,active,now,size,page*size).stream().map(r -> new ResumenReserva(
+        var data=reservas.mobileReservas(rut,active,now,size,page*size).stream().map(r -> {
+            boolean checkinHecho = r[3] != null && r[3].toString().toLowerCase(Locale.ROOT).contains("check-in");
+            return new ResumenReserva(
                 number(r[0]),date(r[1]),new EstadoReservaDto(number(r[2]),text(r[3])),(BigDecimal)r[4],active,
-                date(r[5]),text(r[6]),text(r[7]))).toList();
+                date(r[5]),text(r[6]),text(r[7]), checkinHecho);
+        }).toList();
         return Pagina.of(data,page,size,reservas.mobileCountReservas(rut,active,now));
     }
     public DetalleReserva detalle(String rut,int id) {
@@ -62,7 +75,7 @@ public class MobileReadService {
         }
         Map<Integer,AsientoAsignado> seats=new HashMap<>();
         for(Object[] r:reservas.mobileAsignados(id,rut)) {
-            if(seats.put(number(r[0]),new AsientoAsignado(number(r[1]),number(r[2]),text(r[3]),number(r[4]),text(r[5])))!=null)
+            if(seats.put(number(r[0]),new AsientoAsignado(number(r[1]),number(r[2]),text(r[3]),number(r[4]),text(r[5]),r.length>6?number(r[6]):null))!=null)
                 throw MobileException.conflict("La reserva tiene más de un asiento para el mismo pasajero y vuelo. Solicita su revisión.");
         }
         Map<Integer,List<ConexionDto>> connections=new HashMap<>();
@@ -80,8 +93,48 @@ public class MobileReadService {
                 new TarifaDto(number(r[20]),number(r[21]),text(r[22]),(BigDecimal)r[23],features.getOrDefault(number(r[21]),List.of())),
                 connections.getOrDefault(number(r[1]),List.of()))).toList();
         var bags=reservas.mobileEquipajes(id,rut).stream().map(r->new EquipajeDto(number(r[0]),(BigDecimal)r[1],text(r[2]),text(r[3]),number(r[4]),text(r[5]))).toList();
+
+        CheckinDto chk = checkin(id);
+        boolean checkinDisponible = false;
+        LocalDateTime fechaAperturaCheckin = null;
+        LocalDateTime fechaCierreCheckin = null;
+        String estadoVentanaCheckin = "NO_DISPONIBLE";
+        String mensajeCheckin = null;
+
+        if (chk != null) {
+            estadoVentanaCheckin = "COMPLETADO";
+            mensajeCheckin = "Check-in completado con éxito.";
+        } else {
+            LocalDateTime primerSalida = itineraries.stream()
+                    .flatMap(it -> it.vuelos().stream())
+                    .map(c -> c.vuelo().fechaHoraSalida())
+                    .filter(Objects::nonNull)
+                    .sorted()
+                    .findFirst()
+                    .orElse(null);
+
+            if (primerSalida != null) {
+                fechaAperturaCheckin = primerSalida.minusHours(48);
+                fechaCierreCheckin = primerSalida.minusMinutes(60);
+                LocalDateTime ahora = LocalDateTime.now(clock);
+
+                if (ahora.isBefore(fechaAperturaCheckin)) {
+                    estadoVentanaCheckin = "NO_DISPONIBLE_AUN";
+                    mensajeCheckin = "El check-in se habilitará 48 horas antes del vuelo.";
+                } else if (ahora.isAfter(fechaCierreCheckin)) {
+                    estadoVentanaCheckin = "CERRADO";
+                    mensajeCheckin = "El check-in ha cerrado (cierra 60 minutos antes del vuelo).";
+                } else {
+                    checkinDisponible = true;
+                    estadoVentanaCheckin = "HABILITADO";
+                    mensajeCheckin = "Check-in disponible ahora. Complétalo para activar tu tarjeta de embarque.";
+                }
+            }
+        }
+
         return new DetalleReserva(number(booking[0]),date(booking[1]),new EstadoReservaDto(number(booking[2]),text(booking[3])),
-                (BigDecimal)booking[4],rut.equals(booking[5]),itineraries,bags,checkin(id));
+                (BigDecimal)booking[4],rut.equals(booking[5]),itineraries,bags,chk,
+                checkinDisponible, fechaAperturaCheckin, fechaCierreCheckin, estadoVentanaCheckin, mensajeCheckin);
     }
     CheckinDto checkin(int id) {
         return reservas.mobileCheckins(id).stream().map(r->new CheckinDto(number(r[0]),number(r[1]),date(r[2]),text(r[3]))).findFirst().orElse(null);
@@ -111,21 +164,51 @@ public class MobileReadService {
 
     public PaseAbordar pase(String rut, int idReserva, int flightId) {
         var detail = detalle(rut, idReserva);
-        if (detail.checkin() == null) throw MobileException.conflict("Primero debes completar el check-in.");
+        if (detail.checkin() == null) {
+            throw new MobileException(HttpStatus.CONFLICT, "CHECKIN_PENDIENTE",
+                    "La tarjeta de embarque solo está disponible después de realizar el check-in.");
+        }
 
         var flight = vuelo(detail, flightId);
         if (flight.asiento() == null) throw MobileException.conflict("No tienes asiento asignado.");
 
-        // String codificado formateado para el QR de prueba
-        String qrContenido = String.format("SKYWAY|CH:%d|RES:%d|FL:%d|SEAT:%s|RUT:%s",
-                detail.checkin().idCheckin(),
-                idReserva,
-                flightId,
-                flight.asiento().numeroAsiento(),
-                rut
-        );
+        String pnr = resolverCodigoPnr(idReserva);
+        String numVuelo = flight.numeroVuelo() != null ? flight.numeroVuelo() : "SW-" + flightId;
+        String bcbp = BoardingPassSecurityService.generarCodigoSeguro(pnr, numVuelo, flight.asiento().numeroAsiento(), rut);
+        String barcodeBase64 = BarcodeGeneratorUtil.generarPdf417DataUrl(bcbp);
 
-        return new PaseAbordar(detail.checkin(), auth.perfil(rut).usuario(), flight, qrContenido, true);
+        return new PaseAbordar(detail.checkin(), auth.perfil(rut).usuario(), flight, bcbp, false, pnr, bcbp, barcodeBase64);
+    }
+
+    public byte[] descargarBoardingPassPdf(String rut, int idReserva) {
+        var detail = detalle(rut, idReserva);
+        if (detail.checkin() == null) {
+            throw new MobileException(HttpStatus.CONFLICT, "CHECKIN_PENDIENTE",
+                    "La tarjeta de embarque solo está disponible para descarga después de realizar el check-in.");
+        }
+        if (eTicketPdfGeneratorService == null) {
+            throw new MobileException(HttpStatus.INTERNAL_SERVER_ERROR, "PDF_SERVICE_UNAVAILABLE",
+                    "El generador de PDF no se encuentra disponible.");
+        }
+        var reserva = reservas.findById(idReserva).orElseThrow(MobileException::notFound);
+        byte[] pdf = eTicketPdfGeneratorService.generarPdfBoardingPasses(reserva);
+        if (pdf == null || pdf.length == 0) {
+            throw new MobileException(HttpStatus.INTERNAL_SERVER_ERROR, "ERROR_PDF",
+                    "No se pudo generar la tarjeta de embarque en formato PDF.");
+        }
+        return pdf;
+    }
+
+    private String resolverCodigoPnr(int idReserva) {
+        if (em != null) {
+            try {
+                Object val = em.createNativeQuery("SELECT codigo_reserva FROM reserva WHERE id_reserva = :id")
+                        .setParameter("id", idReserva).getSingleResult();
+                String pnr = text(val);
+                if (pnr != null && !pnr.isBlank()) return pnr.trim().toUpperCase();
+            } catch (Exception ignored) {}
+        }
+        return "RES-" + idReserva;
     }
 
     public static boolean cancelado(VueloDto v) {

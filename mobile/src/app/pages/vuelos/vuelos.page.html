@@ -215,12 +215,23 @@
               </ion-button>
 
               <ion-button
+                *ngIf="checkinCompletado(next.idReserva)"
                 expand="block"
                 class="btn-hero-secondary"
                 [routerLink]="['/vuelos/reservas', next.idReserva, 'vuelos', next.vuelo.idVuelo, 'pase']"
               >
                 <ion-icon name="ticket-outline" slot="start" aria-hidden="true"></ion-icon>
                 Pase de abordar
+              </ion-button>
+
+              <ion-button
+                *ngIf="!checkinCompletado(next.idReserva)"
+                expand="block"
+                class="btn-hero-secondary"
+                [routerLink]="['/vuelos/reservas', next.idReserva]"
+              >
+                <ion-icon name="checkbox-outline" slot="start" aria-hidden="true"></ion-icon>
+                Ir a Check-in
               </ion-button>
             </div>
           </article>
@@ -333,11 +344,17 @@
               </div>
             </div>
 
-            <!-- Indicador de Check-in si ya está confirmado -->
+            <!-- Indicador de Check-in si ya está confirmado o pendiente -->
             <div *ngIf="tieneCheckin(r.idReserva)" class="checkin-badge-row">
               <span class="chip chip-ok chip-sm">
                 <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
                 Check-in realizado · Asientos confirmados
+              </span>
+            </div>
+            <div *ngIf="!tieneCheckin(r.idReserva)" class="checkin-badge-row">
+              <span class="chip chip-warn chip-sm">
+                <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
+                Check-in pendiente
               </span>
             </div>
 

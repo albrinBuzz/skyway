@@ -94,6 +94,7 @@ export interface AsientoAsignado {
   numeroAsiento: string;
   idClase: number | null;
   clase: string | null;
+  precio?: number | null;
 }
 
 export interface Vuelo {
@@ -173,6 +174,7 @@ export interface ResumenReserva {
   proximaSalida: string | null;
   codigoIataOrigen: string | null;
   codigoIataDestino: string | null;
+  checkinRealizado?: boolean;
 }
 
 export interface DetalleReserva {
@@ -184,6 +186,11 @@ export interface DetalleReserva {
   itinerarios: Itinerario[];
   equipajes: Equipaje[];
   checkin: Checkin | null;
+  checkinDisponible?: boolean;
+  fechaAperturaCheckin?: string | null;
+  fechaCierreCheckin?: string | null;
+  estadoVentanaCheckin?: 'HABILITADO' | 'NO_DISPONIBLE_AUN' | 'CERRADO' | string;
+  mensajeCheckin?: string | null;
 }
 
 export interface Asiento {
@@ -194,6 +201,24 @@ export interface Asiento {
   precio: number | null;
   estado: 'libre' | 'ocupado' | 'seleccionado' | 'sin_precio';
   seleccionable: boolean;
+  diferenciaPrecio?: number;
+  cargoGestion?: number;
+  totalPagar?: number;
+  esUpgrade?: boolean;
+  fila?: number | null;
+  letra?: string | null;
+  esPasillo?: boolean;
+  esEmergencia?: boolean;
+}
+
+export interface ConfiguracionCabinaItem {
+  idConfiguracion: number;
+  clase: string;
+  filaInicio: number;
+  filaFin: number;
+  distribucionColumnas: string;
+  letrasColumnas: string;
+  esSalidaEmergencia: boolean;
 }
 
 export interface MapaAsientos {
@@ -202,7 +227,13 @@ export interface MapaAsientos {
   cambioPermitido: boolean;
   motivo: string | null;
   asientoActual: AsientoAsignado | null;
+  precioActual?: number | null;
+  nombreModeloAvion?: string | null;
+  avionDoblePasillo?: boolean;
+  configuracionesCabina?: ConfiguracionCabinaItem[];
   asientos: Asiento[];
+  ordenCompra?: string | null;
+  redirectUrl?: string | null;
 }
 
 export interface Notificacion {
@@ -225,6 +256,9 @@ export interface PaseAbordar {
   vuelo: Vuelo;
   qrContenido: string;
   simulacion: boolean;
+  codigoPnr?: string | null;
+  codigoIataBcbp?: string | null;
+  barcodeBase64?: string | null;
 }
 
 // -------- Reserva de vuelos desde Inicio --------
@@ -249,10 +283,76 @@ export interface ItinerarioDisponible {
   tarifas: TarifaDisponible[];
 }
 
+export interface ItemEquipajeSolicitud {
+  idTipoEquipaje: number;
+  tipo: string;
+  peso: number;
+  dimensiones: string;
+  precio: number;
+}
+
+export interface TipoEquipajeCatalogo {
+  idTipo: number;
+  tipo: string;
+  nombre: string;
+  descripcion: string;
+  precio: number;
+  pesoMaximo: number;
+  dimensiones: string;
+  maximoPermitido: number;
+}
+
+export interface AsientoVueloDisponible {
+  idAsiento: number;
+  numeroAsiento: string;
+  fila: number;
+  letra: string;
+  idClase: number;
+  clase: string;
+  precio: number;
+  estado: string; // 'disponible' | 'ocupado'
+  esPasillo?: boolean;
+  esEmergencia?: boolean;
+}
+
+export interface VueloConAsientos {
+  idVuelo: number;
+  numeroVuelo: string | null;
+  origen: string;
+  destino: string;
+  horaSalida: string | null;
+  horaLlegada: string | null;
+  nombreModeloAvion: string | null;
+  avionDoblePasillo: boolean;
+  configuracionesCabina: ConfiguracionCabinaItem[];
+  asientos: AsientoVueloDisponible[];
+}
+
+export interface AsientoSeleccionadoSolicitud {
+  idVuelo: number;
+  idAsiento: number;
+}
+
+export interface CrearReservaRequest {
+  idItinerario: number;
+  idItinerarioTarifa: number;
+  idMetodoPago?: number;
+  equipaje?: ItemEquipajeSolicitud[];
+  asientos?: AsientoSeleccionadoSolicitud[];
+}
+
 export interface ReservaCreada {
   idReserva: number;
+  codigoPnr?: string | null;
   estado: string;
   total: number;
+  metodoPago?: string | null;
+}
+
+export interface IniciarPagoReservaResponse {
+  ordenCompra: string;
+  pasarela: string;
+  redirectUrl: string;
 }
 
 
@@ -274,4 +374,6 @@ export interface VistaTicket {
   qrContenido: string | null;
   simulacion: boolean;
   codigoPnr: string | null;
+  codigoIataBcbp?: string | null;
+  barcodeBase64?: string | null;
 }

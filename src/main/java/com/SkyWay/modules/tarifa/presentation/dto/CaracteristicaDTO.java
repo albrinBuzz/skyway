@@ -31,6 +31,21 @@ public class CaracteristicaDTO {
     }
 
     public String getValor() {
+        if (valor != null && !valor.isBlank()) {
+            return valor;
+        }
+        if (valorInt != null) {
+            if (nombre != null) {
+                String n = nombre.toLowerCase();
+                if (n.contains("plazo") || n.contains("hora")) {
+                    return valorInt + " hrs";
+                }
+                if (n.contains("porcentaje") || n.contains("cargo") || n.contains("recargo")) {
+                    return valorInt + "%";
+                }
+            }
+            return String.valueOf(valorInt);
+        }
         return valor;
     }
 

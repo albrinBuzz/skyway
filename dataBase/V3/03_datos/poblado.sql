@@ -1593,7 +1593,8 @@ SELECT setval('tarifa_seq', COALESCE((SELECT MAX(ID_TARIFA) FROM Tarifa), 1), tr
 INSERT INTO Caracteristica_Tarifa (ID_CARACTERISTICA, Nombre, Descripcion, Tipo_Dato) VALUES
 (1, 'Permite cambio de asiento', 'Permite cambiar los asientos luego de la compra', 'boolean'),
 (2, 'Plazo límite para cambio de asiento', 'Horas previas al vuelo para realizar cambios de asiento', 'int'),
-(3, 'Permite cancelación de reserva', 'Permite cancelar la reserva', 'boolean');
+(3, 'Permite cancelación de reserva', 'Permite cancelar la reserva', 'boolean'),
+(4, 'Porcentaje cargo por cambio de asiento', 'Porcentaje administrativo a pagar al cambiar de asiento', 'int');
 
 SELECT setval('caracteristica_tarifa_seq', COALESCE((SELECT MAX(ID_CARACTERISTICA) FROM Caracteristica_Tarifa), 1), true);
 
@@ -1604,18 +1605,20 @@ INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool, Val
 (1, 3, TRUE,  NULL, NULL);
 
 -- 4. Configuración para Tarifa Flexible
--- (Permite cambio hasta 48 horas antes, sí permite cancelación)
+-- (Permite cambio hasta 48 horas antes, sí permite cancelación, 15% cargo administrativo)
 INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool, Valor_Int, Valor) VALUES
 (2, 1, TRUE, NULL, NULL),
-(2, 2, NULL, 48,   NULL),
-(2, 3, TRUE, NULL, NULL);
+(2, 2, NULL, 48,   '48 hrs'),
+(2, 3, TRUE, NULL, NULL),
+(2, 4, NULL, 15,   '15%');
 
 -- 5. Configuración para Tarifa Premium
--- (Permite cambio hasta 24 horas antes, sí permite cancelación)
+-- (Permite cambio hasta 24 horas antes, sí permite cancelación, 0% cargo administrativo)
 INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool, Valor_Int, Valor) VALUES
 (3, 1, TRUE, NULL, NULL),
-(3, 2, NULL, 24,   NULL),
-(3, 3, TRUE, NULL, NULL);
+(3, 2, NULL, 24,   '24 hrs'),
+(3, 3, TRUE, NULL, NULL),
+(3, 4, NULL, 0,    '0%');
 
 SELECT setval('tarifa_caracteristica_seq', COALESCE((SELECT MAX(ID_TARIFA_CARACTERISTICA) FROM Tarifa_Caracteristica), 1), true);
 
@@ -1658,8 +1661,8 @@ SELECT
     v.ID_VUELO,
     c.ID_CLASE,
     CASE
-        WHEN c.Descripcion = 'Económica' THEN 53236
-        WHEN c.Descripcion = 'Ejecutiva' THEN 89575
+        WHEN c.ID_CLASE = 1 THEN 53236  -- Económica (por ID para evitar fallas de codificación con tildes)
+        WHEN c.ID_CLASE = 2 THEN 89575  -- Ejecutiva
         ELSE 123658
         END as PRECIO
 FROM Vuelo v

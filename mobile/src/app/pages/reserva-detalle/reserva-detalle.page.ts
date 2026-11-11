@@ -6,7 +6,7 @@ import { ApiService } from '../../core/api.service';
 import { addIcons } from 'ionicons';
 import {
   airplane, alertCircle, briefcaseOutline, businessOutline, calendarOutline, cashOutline, checkmarkCircle,
-  closeCircle, enterOutline, helpCircle, informationCircle, locationOutline, peopleOutline, personCircleOutline,
+  closeCircle, downloadOutline, enterOutline, helpCircle, informationCircle, locationOutline, peopleOutline, personCircleOutline,
   pricetagOutline, refreshOutline, shieldCheckmarkOutline, ticketOutline, timeOutline
 } from 'ionicons/icons';
 import { Caracteristica, DetalleReserva, PasajeroTicket, Vuelo, Tarifa } from '../../core/models';
@@ -15,7 +15,7 @@ import { errorMessage, featureValue, flights } from '../../core/ui';
 // Íconos usados solo por esta pantalla (el resto se registra en AppModule).
 addIcons({
   airplane, alertCircle, briefcaseOutline, businessOutline, calendarOutline, cashOutline, checkmarkCircle,
-  closeCircle, enterOutline, helpCircle, informationCircle, locationOutline, peopleOutline, personCircleOutline,
+  closeCircle, downloadOutline, enterOutline, helpCircle, informationCircle, locationOutline, peopleOutline, personCircleOutline,
   pricetagOutline, refreshOutline, shieldCheckmarkOutline, ticketOutline, timeOutline
 });
 
@@ -38,6 +38,7 @@ export class ReservaDetallePage {
   ticketErrors: Record<number, string> = {};
   busy = false;
   checking = false;
+  descargandoPdf = false;
   error = '';
   featureValue = featureValue;
   private generation = 0;
@@ -107,7 +108,43 @@ export class ReservaDetallePage {
   motivoCheckin(d: DetalleReserva): string | null {
     if (!d.titular) return 'Solo la persona titular de la reserva puede hacer el check-in.';
     if (d.estadoReserva.descripcion !== 'Confirmada') return 'El check-in estará disponible cuando la reserva esté confirmada.';
+    if (d.estadoVentanaCheckin === 'NO_DISPONIBLE_AUN') {
+      return d.mensajeCheckin || 'El check-in se habilitará 48 horas antes de la salida del vuelo.';
+    }
+    if (d.estadoVentanaCheckin === 'CERRADO') {
+      return d.mensajeCheckin || 'El check-in en línea cerró 60 minutos antes de la salida del vuelo.';
+    }
     return null;
+  }
+
+  checkinHabilitado(d: DetalleReserva): boolean {
+    if (!d.titular) return false;
+    if (d.estadoReserva.descripcion !== 'Confirmada') return false;
+    if (d.checkinDisponible !== undefined) return d.checkinDisponible;
+    return true;
+  }
+
+  descargarPdf(): void {
+    if (this.descargandoPdf || !this.data) return;
+    this.descargandoPdf = true;
+    this.error = '';
+    this.api.descargarBoardingPassPdf(this.id).subscribe({
+      next: (blob: Blob) => {
+        this.descargandoPdf = false;
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `BoardingPass_Reserva_${this.id}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => {
+        this.descargandoPdf = false;
+        this.error = errorMessage(err);
+      }
+    });
   }
 
   ionViewWillEnter() { void this.load(); }

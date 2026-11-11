@@ -351,12 +351,31 @@ public class PerfilBean implements Serializable {
 	public void cambiarAsiento(InfoAsientoReservaDTO infoAsientoDTO) throws IOException {
 		FacesContext context = FacesContext.getCurrentInstance();
 
+		// Si no están cargadas las características, cargarlas desde la reserva del DTO
+		if (tarifaCaracteristicas == null && infoAsientoDTO != null && infoAsientoDTO.getIdReserva() > 0) {
+			try {
+				int resId = infoAsientoDTO.getIdReserva();
+				Optional<Reserva> rOpt = reservaService.findById(resId);
+				if (rOpt.isPresent() && rOpt.get().getReservaItinerarios() != null) {
+					for (ReservaItinerario ri : rOpt.get().getReservaItinerarios()) {
+						if (ri.getItinerarioTarifa() != null && ri.getItinerarioTarifa().getTarifa() != null) {
+							tarifaActual = ri.getItinerarioTarifa().getTarifa();
+							tarifaCaracteristicas = tarifaActual.getTarifaCaracteristicas();
+							break;
+						}
+					}
+				}
+			} catch (Exception e) {
+				Logger.logError("Error al cargar tarifa en PerfilBean.cambiarAsiento: " + e.getMessage());
+			}
+		}
+
 		if (tarifaCaracteristicas == null || !tarifaValidator.permiteCambio(tarifaCaracteristicas)) {
 			Logger.logInfo("La tarifa no permite cambios para la reserva/itinerario actual.");
 			context.addMessage(null,
 					new FacesMessage(FacesMessage.SEVERITY_ERROR,
 							"Cambio No Permitido",
-							"Tu tarifa asignada no permite realizar cambios de asiento en este vuelo."));
+							"La tarifa básica no permite cambios de asiento."));
 			return;
 		}
 
@@ -365,10 +384,21 @@ public class PerfilBean implements Serializable {
 			long horasRestantes = Duration.between(LocalDateTime.now(), fechaSalida).toHours();
 
 			if (!tarifaValidator.cumpleHorasMinimasCambio(tarifaCaracteristicas, (int) horasRestantes)) {
+				Integer hMin = tarifaValidator.obtenerHorasMinimasCambio(tarifaCaracteristicas);
+				String tName = (tarifaActual != null && tarifaActual.getNombre() != null) ? tarifaActual.getNombre().toLowerCase(java.util.Locale.ROOT) : "";
+				int h = (hMin != null && hMin > 0) ? hMin : (tName.contains("flex") ? 48 : 24);
+				String msg;
+				if (tName.contains("flex")) {
+					msg = "Solo puedes cambiar el asiento hasta 48 horas antes del vuelo con tarifa flexible.";
+				} else if (tName.contains("prem")) {
+					msg = "Solo puedes cambiar el asiento hasta 24 horas antes del vuelo con tarifa premium.";
+				} else {
+					msg = "Solo puedes cambiar el asiento hasta " + h + " horas antes del vuelo con tu tarifa.";
+				}
 				context.addMessage(null,
 						new FacesMessage(FacesMessage.SEVERITY_WARN,
 								"Plazo Expirado",
-								"El cambio de asiento debe realizarse con mayor anticipación según las políticas de tu tarifa."));
+								msg));
 				return;
 			}
 		}

@@ -80,14 +80,18 @@ public class MobileReservaQueriesImpl implements MobileReservaQueries {
                        WHEN ra.id_reserva = :reserva AND ra.rut = :rut THEN 'seleccionado'
                        WHEN ra.id_reserva_asiento IS NOT NULL THEN 'ocupado'
                        ELSE 'disponible'
-                   END AS estado
+                   END AS estado,
+                   a.fila, a.letra,
+                   COALESCE(a.es_pasillo, FALSE) AS es_pasillo,
+                   COALESCE(a.es_emergencia, FALSE) AS es_emergencia
             FROM vuelo v
             JOIN asiento a ON a.id_avion = v.id_avion
             LEFT JOIN clase_asiento c ON c.id_clase = a.id_clase
             LEFT JOIN precio_asiento pa ON pa.id_vuelo = v.id_vuelo AND pa.id_clase = a.id_clase
             LEFT JOIN reserva_asiento ra ON ra.id_vuelo = v.id_vuelo AND ra.id_asiento = a.id_asiento
             WHERE v.id_vuelo = :vuelo
-            ORDER BY a.fila ASC, a.letra ASC
+            ORDER BY COALESCE(a.fila, NULLIF(regexp_replace(a.numero_asiento, '[^0-9]', '', 'g'), '')::int, 0) ASC,
+                     COALESCE(NULLIF(a.letra, ''), regexp_replace(a.numero_asiento, '[0-9]', '', 'g')) ASC
         """;
         return ejecutarConsulta(sql, "vuelo", vueloId, "reserva", reservaId, "rut", rut);
     }
@@ -131,10 +135,36 @@ public class MobileReservaQueriesImpl implements MobileReservaQueries {
 
     @Override
     public void mobileInsertCheckin(int reservaId, LocalDateTime ahora) {
-        Query qCheckin = em.createNativeQuery("INSERT INTO checkin (id_reserva, fecha_hora, metodo) VALUES (:id, :ahora, 'App')");
-        qCheckin.setParameter("id", reservaId);
-        qCheckin.setParameter("ahora", ahora);
-        qCheckin.executeUpdate();
+        String bpCode = "BP-MOB-" + reservaId + "-" + System.currentTimeMillis();
+        Number idCheckinNum = (Number) em.createNativeQuery("""
+            INSERT INTO checkin (id_reserva, fecha_hora, metodo, estado, codigo_boarding_pass)
+            VALUES (:id, :ahora, 'App', 'COMPLETADO', :bpCode)
+            RETURNING id_checkin
+        """)
+        .setParameter("id", reservaId)
+        .setParameter("ahora", ahora)
+        .setParameter("bpCode", bpCode)
+        .getSingleResult();
+
+        int idCheckin = idCheckinNum.intValue();
+
+        em.createNativeQuery("""
+            INSERT INTO checkin_pasajero (id_checkin, rut, declaracion_equipaje_aceptada, fecha_registro)
+            SELECT :p_checkin, p.rut, TRUE, NOW()
+            FROM (
+                SELECT r.rut_pasajero AS rut FROM reserva r WHERE r.id_reserva = :p_reserva
+                UNION
+                SELECT pr.rut AS rut FROM pasajero_reserva pr WHERE pr.id_reserva = :p_reserva
+                UNION
+                SELECT ra.rut AS rut FROM reserva_asiento ra WHERE ra.id_reserva = :p_reserva
+            ) p
+            JOIN pasajero pas ON pas.rut = p.rut
+            WHERE p.rut IS NOT NULL
+            ON CONFLICT (id_checkin, rut) DO NOTHING
+        """)
+        .setParameter("p_checkin", idCheckin)
+        .setParameter("p_reserva", reservaId)
+        .executeUpdate();
 
         Query qEstado = em.createNativeQuery("""
             UPDATE reserva 
@@ -210,7 +240,7 @@ public class MobileReservaQueriesImpl implements MobileReservaQueries {
     }
 
     @Override public List<Object[]> mobileAsignados(int id, String rut) {
-        return ejecutarConsulta("SELECT ra.id_vuelo, ra.id_reserva_asiento, a.id_asiento, a.numero_asiento, a.id_clase, c.descripcion FROM reserva_asiento ra JOIN asiento a ON a.id_asiento=ra.id_asiento JOIN vuelo v ON v.id_vuelo=ra.id_vuelo AND v.id_avion=a.id_avion LEFT JOIN clase_asiento c ON c.id_clase=a.id_clase WHERE ra.id_reserva=:id AND ra.rut=:rut ORDER BY ra.id_vuelo", "id", id, "rut", rut);
+        return ejecutarConsulta("SELECT ra.id_vuelo, ra.id_reserva_asiento, a.id_asiento, a.numero_asiento, a.id_clase, c.descripcion, pa.precio FROM reserva_asiento ra JOIN asiento a ON a.id_asiento=ra.id_asiento JOIN vuelo v ON v.id_vuelo=ra.id_vuelo AND v.id_avion=a.id_avion LEFT JOIN clase_asiento c ON c.id_clase=a.id_clase LEFT JOIN precio_asiento pa ON pa.id_vuelo=v.id_vuelo AND pa.id_clase=a.id_clase WHERE ra.id_reserva=:id AND ra.rut=:rut ORDER BY ra.id_vuelo", "id", id, "rut", rut);
     }
 
     @Override public List<Object[]> mobileCheckins(int id) {

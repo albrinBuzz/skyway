@@ -8,7 +8,7 @@
   <main class="page inicio-page">
 
     <!-- 1. HERO CARD (Visual language of reserva-detalle) -->
-    <section class="hero-card reveal" aria-label="Encuentra tu próximo vuelo">
+    <section class="hero-card reveal" *ngIf="!itinerarioSeleccionado && !reservaConfirmada" aria-label="Encuentra tu próximo vuelo">
       <div class="hero-top">
         <div class="hero-id">
           <span class="hero-label">SkyWay Airlines</span>
@@ -20,13 +20,13 @@
       </div>
 
       <p class="hero-sub">
-        Busca itinerarios entre las principales ciudades con tarifas transparentes y compra web 100% segura.
+        Busca itinerarios entre las principales ciudades con tarifas transparentes y pago 100% móvil y seguro.
       </p>
 
       <div class="hero-features">
         <div class="hero-pill">
           <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
-          <span>Compra segura en SkyWay web</span>
+          <span>Pago seguro en app móvil</span>
         </div>
         <div class="hero-pill">
           <ion-icon name="pricetag-outline" aria-hidden="true"></ion-icon>
@@ -36,7 +36,7 @@
     </section>
 
     <!-- 2. SEARCH CARD -->
-    <section class="card search-card reveal" aria-label="Buscador de itinerarios">
+    <section class="card search-card reveal" *ngIf="!itinerarioSeleccionado && !reservaConfirmada" aria-label="Buscador de itinerarios">
       <div class="sec-head">
         <span class="sec-icon">
           <ion-icon name="search-outline" aria-hidden="true"></ion-icon>
@@ -357,161 +357,691 @@
       </ng-container>
 
       <!-- ================================================================= -->
-      <!-- PASO 2: VUELO SELECCIONADO Y APERTURA DE SUS TARIFAS             -->
+      <!-- FLUJO SECUENCIAL DE COMPRA: 2. Tarifa -> 3. Asiento -> 4. Equipaje -> 5. Pago -->
       <!-- ================================================================= -->
-      <ng-container *ngIf="itinerarioSeleccionado">
-        <!-- Barra de regreso táctil (>= 48px touch target) -->
-        <div class="selected-nav-bar reveal">
-          <button
-            type="button"
-            class="btn-volver-lista"
-            (click)="deseleccionarItinerario()"
-            aria-label="Volver a la lista de vuelos disponibles"
-          >
-            <ion-icon name="arrow-back-outline" aria-hidden="true"></ion-icon>
-            <span>Ver otros vuelos disponibles</span>
-          </button>
+      <ng-container *ngIf="itinerarioSeleccionado && !reservaConfirmada">
 
-          <button
-            type="button"
-            class="btn-cerrar-vuelo"
-            (click)="deseleccionarItinerario()"
-            aria-label="Cerrar y elegir otro vuelo"
-            title="Elegir otro vuelo"
-          >
-            <ion-icon name="close-outline" aria-hidden="true"></ion-icon>
-          </button>
-        </div>
+        <!-- Stepper / Barra de Progreso Visual de 5 Pasos -->
+        <nav class="booking-stepper reveal" aria-label="Progreso de compra">
+          <ol class="stepper-track">
+            <li class="step-item" [class.active]="pasoActual === 1" [class.done]="pasoActual > 1" (click)="irAPaso(1)">
+              <span class="step-indicator">
+                <ion-icon *ngIf="pasoActual > 1" name="checkmark-circle"></ion-icon>
+                <span *ngIf="pasoActual <= 1">1</span>
+              </span>
+              <span class="step-title">Vuelo</span>
+            </li>
+            <li class="step-connector" [class.done]="pasoActual > 1"></li>
 
-        <!-- Tarjeta del vuelo elegido con badge de selección -->
-        <article class="card itinerary-result-card selected-flight-card reveal">
-          <div class="selected-header-badge">
-            <span class="chip-selected-vuelo">
-              <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
-              Vuelo seleccionado #{{ itinerarioSeleccionado.idItinerario }}
-            </span>
+            <li class="step-item" [class.active]="pasoActual === 2" [class.done]="pasoActual > 2" (click)="irAPaso(2)">
+              <span class="step-indicator">
+                <ion-icon *ngIf="pasoActual > 2" name="checkmark-circle"></ion-icon>
+                <span *ngIf="pasoActual <= 2">2</span>
+              </span>
+              <span class="step-title">Tarifa</span>
+            </li>
+            <li class="step-connector" [class.done]="pasoActual > 2"></li>
+
+            <li class="step-item" [class.active]="pasoActual === 3" [class.done]="pasoActual > 3" (click)="irAPaso(3)">
+              <span class="step-indicator">
+                <ion-icon *ngIf="pasoActual > 3" name="checkmark-circle"></ion-icon>
+                <span *ngIf="pasoActual <= 3">3</span>
+              </span>
+              <span class="step-title">Asiento</span>
+            </li>
+            <li class="step-connector" [class.done]="pasoActual > 3"></li>
+
+            <li class="step-item" [class.active]="pasoActual === 4" [class.done]="pasoActual > 4" (click)="irAPaso(4)">
+              <span class="step-indicator">
+                <ion-icon *ngIf="pasoActual > 4" name="checkmark-circle"></ion-icon>
+                <span *ngIf="pasoActual <= 4">4</span>
+              </span>
+              <span class="step-title">Equipaje</span>
+            </li>
+            <li class="step-connector" [class.done]="pasoActual > 4"></li>
+
+            <li class="step-item" [class.active]="pasoActual === 5" (click)="irAPaso(5)">
+              <span class="step-indicator">
+                <span>5</span>
+              </span>
+              <span class="step-title">Pago</span>
+            </li>
+          </ol>
+        </nav>
+
+        <!-- ================================================================= -->
+        <!-- PASO 2: SELECCIÓN DE TARIFA                                      -->
+        <!-- ================================================================= -->
+        <section class="step-container step-tarifa reveal" *ngIf="pasoActual === 2">
+          <div class="step-nav-bar">
+            <button type="button" class="btn-step-back" (click)="volverAVuelos()">
+              <ion-icon name="arrow-back-outline" aria-hidden="true"></ion-icon>
+              <span>Volver a vuelos</span>
+            </button>
+            <span class="step-badge-counter">Paso 2 de 5</span>
+          </div>
+
+          <!-- Resumen limpio del vuelo elegido -->
+          <div class="card flight-summary-banner">
+            <div class="banner-top">
+              <span class="banner-flight-tag">Vuelo #{{ itinerarioSeleccionado.idItinerario }}</span>
+              <span class="banner-scale-badge chip chip-{{ itinerarioSeleccionado.numeroEscalas === 0 ? 'ok' : 'info' }}">
+                {{ escalasTexto(itinerarioSeleccionado.numeroEscalas) }}
+              </span>
+            </div>
+            <div class="banner-route">
+              <div class="route-city">
+                <span class="iata">{{ itinerarioSeleccionado.origen }}</span>
+                <span class="city">{{ itinerarioSeleccionado.ciudadSalida || itinerarioSeleccionado.origen }}</span>
+              </div>
+              <div class="route-plane-line" aria-hidden="true">
+                <span class="line-dot"></span>
+                <span class="line-dash"></span>
+                <ion-icon name="airplane" class="line-plane"></ion-icon>
+                <span class="line-dash"></span>
+                <span class="line-dot end-dot"></span>
+              </div>
+              <div class="route-city text-end">
+                <span class="iata">{{ itinerarioSeleccionado.destino }}</span>
+                <span class="city">{{ itinerarioSeleccionado.ciudadLlegada || itinerarioSeleccionado.destino }}</span>
+              </div>
+            </div>
+            <div class="banner-datetime">
+              <span><ion-icon name="calendar-outline"></ion-icon> {{ fechaFormateada(itinerarioSeleccionado.horaSalida) }}</span>
+              <span><ion-icon name="time-outline"></ion-icon> {{ horaFormateada(itinerarioSeleccionado.horaSalida) }} → {{ horaFormateada(itinerarioSeleccionado.horaLlegada) }}</span>
+            </div>
+          </div>
+
+          <div class="step-header-text">
+            <h2>Elige tu tarifa</h2>
+            <p>Selecciona la tarifa que mejor se adapte a tus necesidades de viaje.</p>
+          </div>
+
+          <div class="fare-cards-grid" *ngIf="itinerarioSeleccionado.tarifas.length; else sinTarifasTpl">
+            <article class="card fare-choice-card" *ngFor="let tarifa of itinerarioSeleccionado.tarifas">
+              <div class="fare-card-header">
+                <span class="fare-name-pill">Tarifa {{ tarifa.nombre }}</span>
+                <strong class="fare-price-display">{{ clp(tarifa.precio) }}</strong>
+              </div>
+              <ul class="fare-perks-list">
+                <li *ngFor="let perk of caracteristicasTarifa(tarifa.nombre)">
+                  <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
+                  <span>{{ perk }}</span>
+                </li>
+              </ul>
+              <button
+                type="button"
+                class="cta-step-btn"
+                (click)="seleccionarTarifa(tarifa)"
+                [attr.aria-label]="'Elegir tarifa ' + tarifa.nombre + ' y continuar al asiento'"
+              >
+                <span>Elegir tarifa y seleccionar asiento</span>
+                <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
+              </button>
+            </article>
+          </div>
+          <ng-template #sinTarifasTpl>
+            <div class="card note warn">
+              <ion-icon name="information-circle"></ion-icon>
+              <span>No hay tarifas disponibles para este vuelo.</span>
+            </div>
+          </ng-template>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- PASO 3: SELECCIÓN DE ASIENTO                                     -->
+        <!-- ================================================================= -->
+        <section class="step-container step-asiento reveal" *ngIf="pasoActual === 3">
+          <div class="step-nav-bar">
+            <button type="button" class="btn-step-back" (click)="volverATarifas()">
+              <ion-icon name="arrow-back-outline" aria-hidden="true"></ion-icon>
+              <span>Volver a tarifas</span>
+            </button>
+            <span class="step-badge-counter">Paso 3 de 5</span>
+          </div>
+
+          <div class="step-header-text">
+            <h2>Selecciona tu asiento</h2>
+            <p>Elige tu asiento preferido para viajar cómodo en tu vuelo.</p>
+          </div>
+
+          <!-- Selector de tramos si el itinerario tiene múltiples vuelos/escalas -->
+          <div class="segment-tabs-container" *ngIf="vuelosItinerario.length > 1">
             <button
+              *ngFor="let v of vuelosItinerario; let idx = index"
               type="button"
-              class="change-flight-btn"
-              (click)="deseleccionarItinerario()"
-              aria-label="Cambiar este vuelo"
+              class="segment-tab-btn"
+              [class.active]="vueloActivoIndex === idx"
+              (click)="cambiarVueloActivo(idx)"
             >
-              Cambiar vuelo
+              <span class="tab-label">Tramo {{ idx + 1 }}</span>
+              <strong class="tab-route">{{ v.origen }} → {{ v.destino }}</strong>
+              <span class="tab-seat-indicator" *ngIf="asientoSeleccionadoEnVuelo(v.idVuelo)">
+                Asiento: {{ asientoSeleccionadoEnVuelo(v.idVuelo)?.numeroAsiento }}
+              </span>
             </button>
           </div>
 
-          <header class="itinerary-head">
-            <div class="itinerary-id">
-              <span class="label">Itinerario</span>
-              <strong class="number">#{{ itinerarioSeleccionado.idItinerario }}</strong>
-            </div>
-            <span class="chip chip-{{ itinerarioSeleccionado.numeroEscalas === 0 ? 'ok' : 'info' }}">
-              <ion-icon [name]="itinerarioSeleccionado.numeroEscalas === 0 ? 'checkmark-circle' : 'location-outline'" aria-hidden="true"></ion-icon>
-              {{ escalasTexto(itinerarioSeleccionado.numeroEscalas) }}
-            </span>
-          </header>
-
-          <div class="route-codes">
-            <strong class="iata">{{ itinerarioSeleccionado.origen }}</strong>
-            <div class="flight-line" aria-hidden="true">
-              <span class="fl-dot"></span>
-              <span class="fl-dash"></span>
-              <ion-icon name="airplane" class="fl-plane"></ion-icon>
-              <span class="fl-dash"></span>
-              <span class="fl-dot fl-dot-end"></span>
-            </div>
-            <strong class="iata iata-end">{{ itinerarioSeleccionado.destino }}</strong>
+          <!-- Spinner mientras carga el mapa de cabina -->
+          <div *ngIf="cargandoAsientos" class="loading cabin-loading" role="status" aria-live="polite">
+            <ion-spinner></ion-spinner>
+            <p>Cargando cabina del avión…</p>
           </div>
 
-          <div class="route-names">
-            <div>
-              <span class="route-tag">Sales de</span>
-              <strong class="city-title">{{ itinerarioSeleccionado.ciudadSalida || itinerarioSeleccionado.origen }}</strong>
-              <span class="airport">{{ nombreAeropuertoODefecto(itinerarioSeleccionado.origen) }}</span>
-            </div>
-            <div class="end">
-              <span class="route-tag">Llegas a</span>
-              <strong class="city-title">{{ itinerarioSeleccionado.ciudadLlegada || itinerarioSeleccionado.destino }}</strong>
-              <span class="airport">{{ nombreAeropuertoODefecto(itinerarioSeleccionado.destino) }}</span>
-            </div>
-          </div>
-
-          <div class="when">
-            <div class="when-item">
-              <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
-              <div>
-                <span>Fecha de vuelo</span>
-                <strong class="cap">{{ fechaFormateada(itinerarioSeleccionado.horaSalida) }}</strong>
+          <div *ngIf="!cargandoAsientos && vueloActivo" class="cabin-display-wrap">
+            <!-- Modelo de avión -->
+            <div class="aircraft-badge" *ngIf="vueloActivo.nombreModeloAvion">
+              <ion-icon name="airplane" aria-hidden="true"></ion-icon>
+              <div class="aircraft-details">
+                <strong>{{ vueloActivo.nombreModeloAvion }}</strong>
+                <span>{{ vueloActivo.avionDoblePasillo ? 'Fuselaje Ancho · Doble Pasillo' : 'Aeronave de Pasillo Único' }}</span>
               </div>
             </div>
-            <div class="when-item">
-              <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
-              <div>
-                <span>Horario estimado</span>
-                <strong class="big-time">{{ horaFormateada(itinerarioSeleccionado.horaSalida) }} → {{ horaFormateada(itinerarioSeleccionado.horaLlegada) }}</strong>
-                <span class="duration-tag" *ngIf="itinerarioSeleccionado.duracion">
-                  Duración: {{ duracionTexto(itinerarioSeleccionado.duracion) }}
+
+            <!-- Leyenda de asientos -->
+            <div class="seat-legend-card card">
+              <div class="legend-item">
+                <span class="seat-sample available"></span>
+                <span>Disponible</span>
+              </div>
+              <div class="legend-item">
+                <span class="seat-sample selected"></span>
+                <span>Seleccionado</span>
+              </div>
+              <div class="legend-item">
+                <span class="seat-sample occupied"></span>
+                <span>Ocupado</span>
+              </div>
+            </div>
+
+            <!-- Fuselaje y mapa de cabina -->
+            <div class="airplane-fuselage card">
+              <div class="airplane-nose">
+                <ion-icon name="airplane-outline"></ion-icon>
+                <span>Frente / Cabina de mando</span>
+              </div>
+
+              <div class="fuselage-rows">
+                <div *ngFor="let fila of filasActivas; trackBy: trackFila" class="fuselage-row-wrap">
+                  <!-- Divisor de clase y cabecera de columnas -->
+                  <ng-container *ngIf="fila.esPrimeraDeClase">
+                    <div class="cabin-class-divider">
+                      <span class="class-badge-pill">
+                        {{ fila.clase }}
+                        <small *ngIf="fila.precio > 0">· {{ clp(fila.precio) }}</small>
+                        <small *ngIf="fila.precio <= 0">· Incluido</small>
+                      </span>
+                    </div>
+
+                    <div class="row-seats-line col-letters-header">
+                      <span class="row-num left"></span>
+                      <div class="seat-blocks-row">
+                        <ng-container *ngFor="let bloque of fila.bloques; let bIdx = index">
+                          <div class="seat-block">
+                            <span *ngFor="let seat of bloque; trackBy: trackAsiento" class="col-letter-cell">
+                              {{ seat.letra }}
+                            </span>
+                          </div>
+                          <div *ngIf="bIdx < fila.bloques.length - 1" class="aisle-space">
+                            <span>PASILLO</span>
+                          </div>
+                        </ng-container>
+                      </div>
+                      <span class="row-num right"></span>
+                    </div>
+                  </ng-container>
+
+                  <!-- Salida de emergencia si aplica -->
+                  <div *ngIf="fila.esEmergencia" class="emergency-badge">
+                    <span>SALIDA DE EMERGENCIA</span>
+                  </div>
+
+                  <div class="row-seats-line">
+                    <span class="row-num left">{{ fila.numeroFila }}</span>
+
+                    <div class="seat-blocks-row">
+                      <ng-container *ngFor="let bloque of fila.bloques; let bIdx = index">
+                        <div class="seat-block">
+                          <button
+                            *ngFor="let seat of bloque; trackBy: trackAsiento"
+                            type="button"
+                            class="seat-cell-btn"
+                            [class.is-available]="seat.estado === 'disponible'"
+                            [class.is-selected]="isAsientoSeleccionado(vueloActivo.idVuelo, seat.idAsiento)"
+                            [class.is-occupied]="seat.estado === 'ocupado'"
+                            [disabled]="seat.estado === 'ocupado'"
+                            (click)="seleccionarAsiento(vueloActivo.idVuelo, seat)"
+                            [attr.aria-label]="'Asiento ' + seat.numeroAsiento + ', ' + seat.clase + ', ' + seat.estado"
+                          >
+                            <span class="seat-code">{{ seat.letra }}</span>
+                          </button>
+                        </div>
+
+                        <div *ngIf="bIdx < fila.bloques.length - 1" class="aisle-space">
+                          <span>PASILLO</span>
+                        </div>
+                      </ng-container>
+                    </div>
+
+                    <span class="row-num right">{{ fila.numeroFila }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Resumen del asiento seleccionado -->
+            <div class="card selected-seat-info" *ngIf="asientoSeleccionadoEnVuelo(vueloActivo.idVuelo)">
+              <div class="seat-info-icon">
+                <ion-icon name="checkmark-circle"></ion-icon>
+              </div>
+              <div class="seat-info-text">
+                <span class="info-label">Asiento seleccionado en este vuelo</span>
+                <strong class="info-seat-num">
+                  Asiento {{ asientoSeleccionadoEnVuelo(vueloActivo.idVuelo)?.numeroAsiento }}
+                  ({{ asientoSeleccionadoEnVuelo(vueloActivo.idVuelo)?.clase }})
+                </strong>
+                <span class="info-price" *ngIf="asientoSeleccionadoEnVuelo(vueloActivo.idVuelo)?.precio">
+                  + {{ clp(asientoSeleccionadoEnVuelo(vueloActivo.idVuelo)?.precio) }}
+                </span>
+                <span class="info-price included" *ngIf="!asientoSeleccionadoEnVuelo(vueloActivo.idVuelo)?.precio">
+                  Incluido en tu tarifa
                 </span>
               </div>
             </div>
-          </div>
 
-          <!-- Bloque de tarifas exclusivo para el vuelo seleccionado -->
-          <div class="fares-block">
-            <h3 class="fares-title">
-              <ion-icon name="pricetag-outline" aria-hidden="true"></ion-icon>
-              Elige tu paquete o tarifa para continuar
-            </h3>
-            <p class="fares-help">
-              Selecciona tu tarifa preferida. Serás redirigido a SkyWay web para elegir asientos, equipaje y completar la compra con WebPay / Transbank.
-            </p>
-
-            <div class="fare-cards-grid" *ngIf="itinerarioSeleccionado.tarifas.length; else sinTarifasApp">
-              <article class="fare-select-card" *ngFor="let tarifa of itinerarioSeleccionado.tarifas">
-                <div class="fare-card-header">
-                  <span class="fare-name-pill">Tarifa {{ tarifa.nombre }}</span>
-                  <strong class="fare-price-display">{{ clp(tarifa.precio) }}</strong>
-                </div>
-
-                <ul class="fare-perks-list">
-                  <li *ngFor="let perk of caracteristicasTarifa(tarifa.nombre)">
-                    <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
-                    <span>{{ perk }}</span>
-                  </li>
-                </ul>
-
-                <a
-                  class="cta-fare-button"
-                  [href]="urlCompraWeb(itinerarioSeleccionado, tarifa)"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  [attr.aria-label]="'Continuar compra en SkyWay web: tarifa ' + tarifa.nombre + ', ' + clp(tarifa.precio)"
-                >
-                  <span>Continuar compra</span>
-                  <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
-                </a>
-              </article>
+            <!-- Botón para pasar al siguiente tramo si faltan asientos en otro vuelo de escala -->
+            <div
+              class="step-action-bar"
+              *ngIf="asientoSeleccionadoEnVuelo(vueloActivo.idVuelo) && !todosLosAsientosSeleccionados() && siguienteTramoSinAsientoIndex() >= 0"
+            >
+              <button
+                type="button"
+                class="cta-step-btn primary"
+                (click)="irASiguienteTramoSinAsiento()"
+              >
+                <span>
+                  Elegir asiento en Tramo {{ siguienteTramoSinAsientoIndex() + 1 }}
+                  ({{ vuelosItinerario[siguienteTramoSinAsientoIndex()].origen }} → {{ vuelosItinerario[siguienteTramoSinAsientoIndex()].destino }})
+                </span>
+                <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
+              </button>
             </div>
 
-            <ng-template #sinTarifasApp>
-              <div class="note warn">
-                <ion-icon name="information-circle" aria-hidden="true"></ion-icon>
-                <span>Este itinerario aún no tiene tarifas en la app móvil. Puedes revisar las tarifas y disponibilidad directamente en el sitio web de SkyWay.</span>
-              </div>
-            </ng-template>
-
-            <a
-              class="web-alternative-link"
-              [href]="urlResultadosWeb(itinerarioSeleccionado)"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <span>Prefiero elegir la tarifa directamente en la página web</span>
-              <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
-            </a>
+            <!-- Botón de avance (solo aparece cuando ya escogió asiento en todos los tramos correspondientes) -->
+            <div class="step-action-bar" *ngIf="todosLosAsientosSeleccionados()">
+              <button
+                type="button"
+                class="cta-step-btn primary"
+                (click)="continuarAEquipaje()"
+              >
+                <span>Continuar a equipaje</span>
+                <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
+              </button>
+            </div>
           </div>
-        </article>
+
+          <div *ngIf="!cargandoAsientos && !vueloActivo" class="card note warn">
+            <ion-icon name="information-circle"></ion-icon>
+            <span>No se encontraron asientos disponibles para este vuelo.</span>
+          </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- PASO 4: SELECCIÓN DE EQUIPAJE                                    -->
+        <!-- ================================================================= -->
+        <section class="step-container step-equipaje reveal" *ngIf="pasoActual === 4">
+          <div class="step-nav-bar">
+            <button type="button" class="btn-step-back" (click)="volverAAsiento()">
+              <ion-icon name="arrow-back-outline" aria-hidden="true"></ion-icon>
+              <span>Volver a asientos</span>
+            </button>
+            <span class="step-badge-counter">Paso 4 de 5</span>
+          </div>
+
+          <div class="step-header-text">
+            <h2>Equipaje adicional (Opcional)</h2>
+            <p>Agrega maletas de mano o bodega con tarifas preferenciales antes del vuelo.</p>
+          </div>
+
+          <div class="baggage-cards-list">
+            <!-- 1. Equipaje de Cabina -->
+            <article class="card baggage-card">
+              <div class="baggage-card-main">
+                <div class="baggage-icon-circle">
+                  <ion-icon name="bag-handle-outline" aria-hidden="true"></ion-icon>
+                </div>
+                <div class="baggage-desc">
+                  <strong>Equipaje de Cabina (10 kg)</strong>
+                  <span class="baggage-spec">Carry-on 40x30x20 cm · Máx 1 por pasajero</span>
+                  <span class="baggage-price">$15.000 CLP c/u</span>
+                </div>
+              </div>
+              <div class="baggage-counter">
+                <button
+                  type="button"
+                  class="btn-counter-touch"
+                  [disabled]="cantCabina <= 0"
+                  (click)="quitarCabina()"
+                  aria-label="Quitar equipaje de cabina"
+                >
+                  <ion-icon name="remove-outline" aria-hidden="true"></ion-icon>
+                </button>
+                <span class="counter-display">{{ cantCabina }}</span>
+                <button
+                  type="button"
+                  class="btn-counter-touch"
+                  [disabled]="!puedeAgregarCabina()"
+                  (click)="agregarCabina()"
+                  aria-label="Agregar equipaje de cabina"
+                >
+                  <ion-icon name="add-outline" aria-hidden="true"></ion-icon>
+                </button>
+              </div>
+            </article>
+
+            <!-- 2. Maleta de Bodega 15 kg -->
+            <article class="card baggage-card">
+              <div class="baggage-card-main">
+                <div class="baggage-icon-circle">
+                  <ion-icon name="briefcase-outline" aria-hidden="true"></ion-icon>
+                </div>
+                <div class="baggage-desc">
+                  <strong>Maleta de Bodega (15 kg)</strong>
+                  <span class="baggage-spec">Facturada estándar 158 cm · Máx 3 maletas en bodega</span>
+                  <span class="baggage-price">$22.000 CLP c/u</span>
+                </div>
+              </div>
+              <div class="baggage-counter">
+                <button
+                  type="button"
+                  class="btn-counter-touch"
+                  [disabled]="cantBodega15 <= 0"
+                  (click)="quitarBodega15()"
+                  aria-label="Quitar maleta de bodega 15 kg"
+                >
+                  <ion-icon name="remove-outline" aria-hidden="true"></ion-icon>
+                </button>
+                <span class="counter-display">{{ cantBodega15 }}</span>
+                <button
+                  type="button"
+                  class="btn-counter-touch"
+                  [disabled]="!puedeAgregarBodega()"
+                  (click)="agregarBodega15()"
+                  aria-label="Agregar maleta de bodega 15 kg"
+                >
+                  <ion-icon name="add-outline" aria-hidden="true"></ion-icon>
+                </button>
+              </div>
+            </article>
+
+            <!-- 3. Maleta de Bodega 23 kg -->
+            <article class="card baggage-card">
+              <div class="baggage-card-main">
+                <div class="baggage-icon-circle">
+                  <ion-icon name="briefcase-outline" aria-hidden="true"></ion-icon>
+                </div>
+                <div class="baggage-desc">
+                  <strong>Maleta de Bodega (23 kg)</strong>
+                  <span class="baggage-spec">Facturada extra grande 158 cm · Máx 3 maletas en bodega</span>
+                  <span class="baggage-price">$30.000 CLP c/u</span>
+                </div>
+              </div>
+              <div class="baggage-counter">
+                <button
+                  type="button"
+                  class="btn-counter-touch"
+                  [disabled]="cantBodega23 <= 0"
+                  (click)="quitarBodega23()"
+                  aria-label="Quitar maleta de bodega 23 kg"
+                >
+                  <ion-icon name="remove-outline" aria-hidden="true"></ion-icon>
+                </button>
+                <span class="counter-display">{{ cantBodega23 }}</span>
+                <button
+                  type="button"
+                  class="btn-counter-touch"
+                  [disabled]="!puedeAgregarBodega()"
+                  (click)="agregarBodega23()"
+                  aria-label="Agregar maleta de bodega 23 kg"
+                >
+                  <ion-icon name="add-outline" aria-hidden="true"></ion-icon>
+                </button>
+              </div>
+            </article>
+          </div>
+
+          <!-- Subtotal acumulado -->
+          <div class="card subtotal-card">
+            <div class="subtotal-row">
+              <span>Tarifa seleccionada:</span>
+              <span>{{ clp(tarifaSeleccionada?.precio) }}</span>
+            </div>
+            <div class="subtotal-row" *ngIf="totalAsientos() > 0">
+              <span>Asiento(s) seleccionado(s):</span>
+              <span>+ {{ clp(totalAsientos()) }}</span>
+            </div>
+            <div class="subtotal-row" *ngIf="totalEquipaje() > 0">
+              <span>Equipaje adicional:</span>
+              <span>+ {{ clp(totalEquipaje()) }}</span>
+            </div>
+            <div class="subtotal-row total-highlight-row">
+              <strong>Subtotal acumulado:</strong>
+              <strong class="total-number">{{ clp(totalPagar()) }}</strong>
+            </div>
+          </div>
+
+          <div class="step-action-bar">
+            <button type="button" class="cta-step-btn primary" (click)="continuarAlPago()">
+              <span>Continuar al pago</span>
+              <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
+            </button>
+          </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- PASO 5: RESUMEN Y PAGO SEGURO                                    -->
+        <!-- ================================================================= -->
+        <section class="step-container step-pago reveal" *ngIf="pasoActual === 5">
+          <div class="step-nav-bar">
+            <button type="button" class="btn-step-back" (click)="volverAEquipaje()">
+              <ion-icon name="arrow-back-outline" aria-hidden="true"></ion-icon>
+              <span>Volver a equipaje</span>
+            </button>
+            <span class="step-badge-counter">Paso 5 de 5 · Checkout</span>
+          </div>
+
+          <div class="step-header-text">
+            <h2>Resumen y Pago</h2>
+            <p>Revisa el detalle de tu vuelo y completa el pago de forma segura.</p>
+          </div>
+
+          <!-- Desglose de compra -->
+          <article class="card checkout-breakdown-card">
+            <h3 class="breakdown-card-title">
+              <ion-icon name="receipt-outline" aria-hidden="true"></ion-icon>
+              <span>Detalle de tu reserva</span>
+            </h3>
+
+            <div class="breakdown-items-list">
+              <!-- Vuelo -->
+              <div class="item-row flight-item">
+                <div class="item-left">
+                  <strong>Vuelo #{{ itinerarioSeleccionado.idItinerario }} · {{ itinerarioSeleccionado.origen }} → {{ itinerarioSeleccionado.destino }}</strong>
+                  <span class="sub">{{ fechaFormateada(itinerarioSeleccionado.horaSalida) }} · {{ horaFormateada(itinerarioSeleccionado.horaSalida) }}</span>
+                </div>
+              </div>
+
+              <!-- Tarifa -->
+              <div class="item-row">
+                <div class="item-left">
+                  <span>Tarifa {{ tarifaSeleccionada?.nombre }}</span>
+                </div>
+                <strong class="item-right">{{ clp(tarifaSeleccionada?.precio) }}</strong>
+              </div>
+
+              <!-- Asientos -->
+              <div class="item-row" *ngFor="let v of vuelosItinerario">
+                <div class="item-left" *ngIf="asientoSeleccionadoEnVuelo(v.idVuelo)">
+                  <span>Asiento {{ asientoSeleccionadoEnVuelo(v.idVuelo)?.numeroAsiento }} ({{ asientoSeleccionadoEnVuelo(v.idVuelo)?.clase }})</span>
+                  <span class="sub" *ngIf="vuelosItinerario.length > 1">Tramo {{ v.origen }} → {{ v.destino }}</span>
+                </div>
+                <strong class="item-right" *ngIf="asientoSeleccionadoEnVuelo(v.idVuelo)">
+                  {{ asientoSeleccionadoEnVuelo(v.idVuelo)?.precio ? ('+ ' + clp(asientoSeleccionadoEnVuelo(v.idVuelo)?.precio)) : 'Incluido' }}
+                </strong>
+              </div>
+
+              <!-- Equipaje -->
+              <div class="item-row" *ngIf="totalEquipaje() > 0">
+                <div class="item-left">
+                  <span>Equipaje adicional</span>
+                  <span class="sub">
+                    {{ cantCabina ? cantCabina + ' cabina ' : '' }}
+                    {{ cantBodega15 ? cantBodega15 + ' bodega 15kg ' : '' }}
+                    {{ cantBodega23 ? cantBodega23 + ' bodega 23kg' : '' }}
+                  </span>
+                </div>
+                <strong class="item-right">+ {{ clp(totalEquipaje()) }}</strong>
+              </div>
+
+              <!-- Total -->
+              <div class="item-row total-highlight-row">
+                <strong>Total a pagar:</strong>
+                <strong class="total-big-amount">{{ clp(totalPagar()) }}</strong>
+              </div>
+            </div>
+          </article>
+
+          <!-- Selector de Métodos de Pago: Solo Webpay y PayPal -->
+          <div class="card payment-method-card">
+            <h3 class="breakdown-card-title">
+              <ion-icon name="wallet-outline" aria-hidden="true"></ion-icon>
+              <span>Selecciona tu método de pago</span>
+            </h3>
+
+            <div class="payment-options-group">
+              <!-- 1. Webpay Plus / Tarjeta -->
+              <button
+                type="button"
+                class="payment-option-row"
+                [class.is-selected]="metodoPago === 1"
+                (click)="seleccionarMetodoPago(1)"
+                aria-label="Pagar con Webpay Plus o Tarjetas de Débito y Crédito"
+              >
+                <div class="option-radio">
+                  <ion-icon [name]="metodoPago === 1 ? 'checkmark-circle' : 'ellipse-outline'"></ion-icon>
+                </div>
+                <div class="option-content">
+                  <strong>Webpay Plus / Tarjeta</strong>
+                  <span>Tarjetas de débito y crédito emitidas en Chile</span>
+                </div>
+                <div class="option-badge">Transbank</div>
+              </button>
+
+              <!-- 2. PayPal -->
+              <button
+                type="button"
+                class="payment-option-row"
+                [class.is-selected]="metodoPago === 2"
+                (click)="seleccionarMetodoPago(2)"
+                aria-label="Pagar con PayPal"
+              >
+                <div class="option-radio">
+                  <ion-icon [name]="metodoPago === 2 ? 'checkmark-circle' : 'ellipse-outline'"></ion-icon>
+                </div>
+                <div class="option-content">
+                  <strong>PayPal</strong>
+                  <span>Saldo en PayPal o tarjetas internacionales</span>
+                </div>
+                <div class="option-badge">USD / Int</div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Botón de Pago Final -->
+          <div class="step-action-bar">
+            <ion-button
+              expand="block"
+              class="btn-pay-action"
+              [disabled]="procesandoPago"
+              (click)="procesarPago()"
+            >
+              <ion-spinner *ngIf="procesandoPago" name="crescent"></ion-spinner>
+              <ng-container *ngIf="!procesandoPago">
+                <ion-icon name="card-outline" slot="start" aria-hidden="true"></ion-icon>
+                <span>Pagar {{ clp(totalPagar()) }}</span>
+              </ng-container>
+            </ion-button>
+          </div>
+        </section>
       </ng-container>
+
+      <!-- ================================================================= -->
+      <!-- COMPROBANTE DE COMPRA EXITOSA / RESERVA CONFIRMADA               -->
+      <!-- ================================================================= -->
+      <section class="card confirmation-success-card reveal" *ngIf="reservaConfirmada">
+        <div class="success-icon-banner">
+          <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
+        </div>
+
+        <h2 class="success-title">¡Compra completada con éxito!</h2>
+        <p class="success-sub">
+          Tu reserva ha sido pagada y confirmada. Tu asiento fue asignado exitosamente en el sistema.
+        </p>
+
+        <div class="pnr-display-card">
+          <span class="pnr-label">Código de Reserva (PNR)</span>
+          <strong class="pnr-code">{{ reservaConfirmada.codigoPnr || ('#' + reservaConfirmada.idReserva) }}</strong>
+          <span class="pnr-sub">Guarda este código para gestionar tu vuelo y check-in</span>
+        </div>
+
+        <div class="confirmation-summary-details">
+          <div class="detail-row">
+            <span>Número de Reserva:</span>
+            <strong>#{{ reservaConfirmada.idReserva }}</strong>
+          </div>
+          <div class="detail-row">
+            <span>Estado:</span>
+            <span class="chip chip-ok chip-sm">{{ reservaConfirmada.estado }}</span>
+          </div>
+          <div class="detail-row">
+            <span>Monto pagado:</span>
+            <strong>{{ clp(reservaConfirmada.total) }}</strong>
+          </div>
+          <div class="detail-row" *ngIf="reservaConfirmada.metodoPago">
+            <span>Método de pago:</span>
+            <strong>{{ reservaConfirmada.metodoPago }}</strong>
+          </div>
+        </div>
+
+        <div class="confirmation-actions">
+          <ion-button
+            expand="block"
+            class="btn-ver-detalle"
+            (click)="irADetalleReserva(reservaConfirmada.idReserva)"
+          >
+            <ion-icon name="ticket-outline" slot="start" aria-hidden="true"></ion-icon>
+            <span>Ver reserva y pase de abordar</span>
+          </ion-button>
+
+          <ion-button
+            expand="block"
+            fill="outline"
+            class="btn-ver-vuelos"
+            (click)="irAMisVuelos()"
+          >
+            <ion-icon name="airplane-outline" slot="start" aria-hidden="true"></ion-icon>
+            <span>Ver mis vuelos activos</span>
+          </ion-button>
+
+          <button
+            type="button"
+            class="btn-nueva-busqueda"
+            (click)="nuevaBusqueda()"
+          >
+            <span>Buscar otro vuelo</span>
+          </button>
+        </div>
+      </section>
     </section>
 
     <!-- Estado vacío cuando no hay resultados de búsqueda -->

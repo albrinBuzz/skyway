@@ -19,12 +19,27 @@
       <p>Cargando tarjeta de embarque…</p>
     </div>
 
-    <p *ngIf="error" class="error" role="alert">
+    <p *ngIf="error && !checkinPendiente" class="error" role="alert">
       <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
       <span>{{ error }}</span>
     </p>
 
-    <ng-container *ngIf="data as p">
+    <!-- Estado de bloqueo si el check-in no ha sido realizado -->
+    <div *ngIf="checkinPendiente && !busy" class="checkin-blocked-card reveal" role="alert">
+      <div class="blocked-icon-wrap">
+        <ion-icon name="lock-closed-outline" aria-hidden="true"></ion-icon>
+      </div>
+      <h2>Check-in requerido</h2>
+      <p>
+        La tarjeta de embarque con código 2D IATA y la opción de descarga en PDF solo están disponibles una vez realizado el check-in de la reserva.
+      </p>
+      <ion-button expand="block" class="go-checkin-btn" [routerLink]="['/vuelos/reservas', id]">
+        <ion-icon name="checkbox-outline" slot="start" aria-hidden="true"></ion-icon>
+        Ir al detalle y realizar check-in
+      </ion-button>
+    </div>
+
+    <ng-container *ngIf="!checkinPendiente && data as p">
       <!-- Tarjeta física simulada de embarque (Boarding Pass) -->
       <article class="boarding-card reveal" aria-label="Tarjeta de embarque digital">
         
@@ -237,51 +252,78 @@
           </div>
         </section>
 
-        <!-- 4. Segunda Perforación hacia la sección del Código QR -->
+        <!-- 4. Segunda Perforación hacia la sección del Código 2D IATA -->
         <div class="ticket-perforation" aria-hidden="true">
           <span class="perforation-notch notch-left"></span>
           <span class="perforation-line"></span>
           <span class="perforation-notch notch-right"></span>
         </div>
 
-        <!-- 5. Sección de Código QR de Alta Legibilidad -->
-        <section class="qr-section" aria-label="Código QR para escáner de embarque">
-          <div *ngIf="qr; else qrPendiente" class="qr-container">
-            <div class="qr-instructions">
+        <!-- 5. Sección de Código 2D IATA BCBP (PDF417) de Alta Legibilidad -->
+        <section class="barcode-section" aria-label="Código 2D IATA PDF417 para escáner de embarque">
+          <div *ngIf="barcodeUrl || qr; else barcodePendiente" class="barcode-container">
+            <div class="barcode-instructions">
+              <span class="iata-badge">
+                <ion-icon name="barcode-outline" aria-hidden="true"></ion-icon>
+                IATA BCBP 2D · PDF417
+              </span>
               <h3>Presenta este código en la puerta de embarque</h3>
-              <p>Puedes aumentar el brillo de tu pantalla para facilitar la lectura del escáner en el aeropuerto.</p>
+              <p>Código 2D estándar de la Asociación Internacional de Transporte Aéreo (IATA Res. 792) con firma criptográfica digital ECDSA P-256.</p>
             </div>
 
-            <div class="qr-image-wrapper">
+            <!-- Contenedor del Código 2D IATA PDF417 -->
+            <div class="barcode-image-wrapper">
               <img
-                [src]="qr"
-                alt="Código QR de embarque SkyWay"
-                width="240"
-                height="240"
-                class="qr-code-img" />
+                *ngIf="barcodeUrl; else fallbackQr"
+                [src]="barcodeUrl"
+                alt="Código 2D IATA PDF417 de embarque SkyWay"
+                class="iata-barcode-img" />
+              <ng-template #fallbackQr>
+                <img
+                  [src]="qr"
+                  alt="Código de embarque SkyWay"
+                  width="220"
+                  height="220"
+                  class="qr-code-img" />
+              </ng-template>
             </div>
 
-            <div class="qr-footer-info">
-              <strong class="sim-tag">SIMULACIÓN ACADÉMICA · SKYWAY</strong>
-              <p class="sim-note">No válido para embarque comercial en vuelos reales</p>
+            <div class="barcode-footer-info">
+              <strong class="security-tag">
+                <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
+                CÓDIGO 2D IATA AUTÉNTICO · SKYWAY
+              </strong>
+              <p class="sim-note">Legible en escáneres ópticos de puerta y validador de embarque</p>
               <span class="reserva-meta">
-                Reserva #{{ id }} · Check-in #{{ p.checkin?.idCheckin || '—' }}
+                Localizador PNR: <strong>{{ p.codigoPnr || ('RES-' + id) }}</strong> · Check-in #{{ p.checkin?.idCheckin || '—' }}
               </span>
             </div>
           </div>
 
-          <ng-template #qrPendiente>
-            <div class="qr-pending-box">
-              <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
-              <h3>Código QR pendiente</h3>
+          <ng-template #barcodePendiente>
+            <div class="barcode-pending-box">
+              <ion-icon name="barcode-outline" aria-hidden="true"></ion-icon>
+              <h3>Código 2D IATA pendiente</h3>
               <p>
-                El pase con código QR se activa una vez completado el check-in y teniendo un asiento asignado a bordo.
+                La tarjeta de embarque con código 2D IATA BCBP se activa una vez completado el check-in y teniendo un asiento asignado a bordo.
               </p>
             </div>
           </ng-template>
 
           <!-- 6. Botones de Acción (>=48px de altura) -->
           <div class="ticket-actions">
+            <ion-button
+              expand="block"
+              class="download-pdf-btn"
+              (click)="descargarPdf()"
+              [disabled]="descargandoPdf">
+              <ion-spinner *ngIf="descargandoPdf"></ion-spinner>
+              <ng-container *ngIf="!descargandoPdf">
+                <ion-icon name="download-outline" slot="start" aria-hidden="true"></ion-icon>
+                Descargar tarjeta de embarque (PDF)
+              </ng-container>
+            </ion-button>
+
             <ion-button
               expand="block"
               class="seat-change-btn"

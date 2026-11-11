@@ -14,6 +14,7 @@ import {
   businessOutline,
   calendarOutline,
   cashOutline,
+  checkboxOutline,
   checkmarkCircle,
   chevronForwardOutline,
   closeCircle,
@@ -41,6 +42,7 @@ addIcons({
   businessOutline,
   calendarOutline,
   cashOutline,
+  checkboxOutline,
   checkmarkCircle,
   chevronForwardOutline,
   closeCircle,
@@ -228,9 +230,16 @@ export class VuelosPage {
     return d ? d.titular : null;
   }
 
-  tieneCheckin(idReserva: number): boolean | null {
+  tieneCheckin(idReserva: number): boolean {
     const d = this.detalleReservaCache.get(idReserva);
-    return d ? !!d.checkin : null;
+    if (d) return !!d.checkin;
+    const r = this.reservas?.contenido.find(x => x.idReserva === idReserva);
+    if (r && r.checkinRealizado !== undefined) return r.checkinRealizado;
+    return false;
+  }
+
+  checkinCompletado(idReserva: number): boolean {
+    return this.tieneCheckin(idReserva);
   }
 
   async abrirMapaReserva(idReserva: number, idVuelo?: number | null, resumenFallback?: ResumenReserva) {

@@ -286,11 +286,22 @@
                 </div>
               </div>
 
-              <ion-button expand="block" class="ticket-btn"
-                [routerLink]="['/vuelos/reservas', id, 'vuelos', c.vuelo.idVuelo, 'tickets', persona.rut]">
-                <ion-icon name="ticket-outline" slot="start" aria-hidden="true"></ion-icon>
-                Ver ticket
-              </ion-button>
+              <div class="passenger-actions">
+                <ion-button *ngIf="d.checkin" expand="block" class="ticket-btn"
+                  [routerLink]="['/vuelos/reservas', id, 'vuelos', c.vuelo.idVuelo, 'tickets', persona.rut]">
+                  <ion-icon name="ticket-outline" slot="start" aria-hidden="true"></ion-icon>
+                  Ver tarjeta de embarque
+                </ion-button>
+                <div *ngIf="!d.checkin" class="ticket-pending-note">
+                  <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
+                  <span>Tarjeta de embarque disponible tras realizar el check-in</span>
+                </div>
+                <ion-button expand="block" fill="outline" class="seat-action-btn"
+                  [routerLink]="['/vuelos/reservas', id, 'vuelos', c.vuelo.idVuelo, 'tickets', persona.rut, 'asientos']">
+                  <ion-icon name="airplane-outline" slot="start" aria-hidden="true"></ion-icon>
+                  {{ persona.asiento?.numeroAsiento ? 'Cambiar asiento' : 'Elegir asiento' }}
+                </ion-button>
+              </div>
             </article>
 
             <p *ngIf="!personas(c.vuelo.idVuelo).length && !ticketErrors[c.vuelo.idVuelo]" class="empty-state small">
@@ -349,7 +360,15 @@
             El {{ d.checkin.fechaHora | date:"d 'de' MMMM 'de' y" }}, a las {{ d.checkin.fechaHora | date:'HH:mm' }} h.
           </p>
           <p *ngIf="d.checkin.metodo">Realizado por: <strong>{{ d.checkin.metodo }}</strong></p>
-          <p>Ya puedes abrir el ticket de cada pasajero en la sección «Pasajeros y tickets».</p>
+          <p>Ya puedes ver y descargar la tarjeta de embarque oficial con código 2D IATA. Si necesitas modificar tu ubicación a bordo, puedes hacerlo con la opción «Cambiar asiento» (con pago de diferencia si eliges una cabina superior).</p>
+          
+          <ion-button expand="block" class="download-pdf-btn" (click)="descargarPdf()" [disabled]="descargandoPdf">
+            <ion-spinner *ngIf="descargandoPdf"></ion-spinner>
+            <ng-container *ngIf="!descargandoPdf">
+              <ion-icon name="download-outline" slot="start" aria-hidden="true"></ion-icon>
+              Descargar tarjeta de embarque (PDF)
+            </ng-container>
+          </ion-button>
         </div>
       </section>
 
@@ -358,13 +377,14 @@
           <span class="sec-icon"><ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon></span>
           <div>
             <h2>Check-in</h2>
-            <p>Confirma que viajarás para obtener tus tickets de embarque.</p>
+            <p>Confirma que viajarás para activar la vista y descarga de las tarjetas de embarque.</p>
           </div>
         </div>
 
         <ul class="steps">
           <li><ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>Se hace una sola vez para toda la reserva.</li>
           <li><ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>Solo lo puede confirmar la persona titular.</li>
+          <li><ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>Ventana oficial: habilitado desde 48 horas hasta 60 minutos antes del vuelo.</li>
           <li><ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>Cada pasajero necesita un asiento asignado en cada vuelo.</li>
         </ul>
 
@@ -379,7 +399,7 @@
         </p>
 
         <ion-button expand="block" class="checkin-btn" (click)="checkin()"
-          [disabled]="checking || !d.titular || d.estadoReserva.descripcion !== 'Confirmada'">
+          [disabled]="checking || !checkinHabilitado(d)">
           <ion-spinner *ngIf="checking"></ion-spinner>
           <ng-container *ngIf="!checking">
             <ion-icon name="shield-checkmark-outline" slot="start" aria-hidden="true"></ion-icon>

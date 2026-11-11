@@ -590,14 +590,14 @@ ion-content {
   ion-icon { font-size: 17px; color: $blue; flex: 0 0 auto; }
 }
 
-/* 4. Sección de Código QR */
-.qr-section {
-  padding: 12px 14px 20px;
+/* 4. Sección de Código 2D IATA BCBP (PDF417) */
+.barcode-section, .qr-section {
+  padding: 14px 14px 20px;
   background: #ffffff;
   box-sizing: border-box;
 }
 
-.qr-container {
+.barcode-container, .qr-container {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -606,8 +606,30 @@ ion-content {
   box-sizing: border-box;
 }
 
-.qr-instructions {
+.barcode-instructions, .qr-instructions {
   margin-bottom: 12px;
+
+  .iata-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 99px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1e40af;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+
+    ion-icon {
+      font-size: 15px;
+      color: $blue;
+    }
+  }
+
   h3 {
     margin: 0;
     font-size: 15px;
@@ -616,57 +638,89 @@ ion-content {
     letter-spacing: -0.2px;
   }
   p {
-    margin: 3px 0 0;
-    font-size: 12.5px;
+    margin: 4px 0 0;
+    font-size: 12px;
     color: $soft-ink;
     line-height: 1.35;
+    max-width: 320px;
   }
 }
 
-.qr-image-wrapper {
-  padding: 10px;
-  border-radius: 16px;
+.barcode-image-wrapper, .qr-image-wrapper {
+  padding: 10px 14px;
+  border-radius: 14px;
   background: #ffffff;
-  border: 1.5px solid #e2e8f0;
-  box-shadow: 0 6px 18px rgba(16, 30, 59, 0.06);
-  display: inline-block;
-  max-width: min(200px, 68vw);
+  border: 1.5px solid #dbe4f2;
+  box-shadow: 0 4px 14px rgba(16, 30, 59, 0.08);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: 340px;
   box-sizing: border-box;
+
+  .iata-barcode-img {
+    display: block;
+    width: 100%;
+    max-width: 310px;
+    height: auto;
+    object-fit: contain;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
 
   .qr-code-img {
     display: block;
     width: 100%;
-    max-width: 100%;
+    max-width: 200px;
     height: auto;
     border-radius: 6px;
   }
 }
 
-.qr-footer-info {
+.barcode-footer-info, .qr-footer-info {
   margin-top: 12px;
-  .sim-tag {
-    display: block;
+
+  .security-tag, .sim-tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
     font-size: 10.5px;
     font-weight: 800;
     letter-spacing: 0.8px;
-    color: $navy;
+    color: #065f46;
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    padding: 3px 8px;
+    border-radius: 6px;
     text-transform: uppercase;
+
+    ion-icon {
+      font-size: 13px;
+      color: #059669;
+    }
   }
+
   .sim-note {
-    margin: 1px 0 0;
-    font-size: 11.5px;
+    margin: 3px 0 0;
+    font-size: 11px;
     color: #64748b;
   }
   .reserva-meta {
     display: block;
-    margin-top: 3px;
-    font-size: 11px;
+    margin-top: 4px;
+    font-size: 11.5px;
     font-weight: 600;
     color: $soft-ink;
+
+    strong {
+      color: $navy;
+    }
   }
 }
 
-.qr-pending-box {
+.barcode-pending-box, .qr-pending-box {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -678,7 +732,7 @@ ion-content {
   margin-bottom: 12px;
 
   ion-icon {
-    font-size: 32px;
+    font-size: 34px;
     color: $blue;
     margin-bottom: 6px;
   }
@@ -705,6 +759,68 @@ ion-content {
   border-top: 1px solid $line;
   width: 100%;
   box-sizing: border-box;
+}
+
+.checkin-blocked-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 32px 20px;
+  border-radius: 20px;
+  background: #ffffff;
+  border: 1.5px solid #dce4f0;
+  box-shadow: 0 10px 28px rgba(16, 30, 59, 0.08);
+  margin: 16px 0;
+
+  .blocked-icon-wrap {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #fff3e0;
+    color: #e65100;
+    display: grid;
+    place-items: center;
+    font-size: 32px;
+    margin-bottom: 16px;
+  }
+
+  h2 {
+    font-size: 20px;
+    font-weight: 800;
+    color: #101e3b;
+    margin: 0 0 8px;
+  }
+
+  p {
+    font-size: 14px;
+    color: #4a5568;
+    line-height: 1.5;
+    margin: 0 0 20px;
+    max-width: 320px;
+  }
+
+  .go-checkin-btn {
+    width: 100%;
+    max-width: 280px;
+    min-height: 48px;
+    font-size: 15px;
+    font-weight: 800;
+    --border-radius: 14px;
+    --background: linear-gradient(135deg, #2449d8, #1833a6);
+    --box-shadow: 0 8px 20px rgba(36, 73, 216, 0.28);
+  }
+}
+
+.download-pdf-btn {
+  --border-radius: 12px;
+  --background: linear-gradient(135deg, #0b5a42, #14795a);
+  --box-shadow: 0 6px 18px rgba(11, 90, 66, 0.25);
+  --color: #ffffff;
+  min-height: 46px;
+  font-size: 14px;
+  font-weight: 800;
+  ion-icon { font-size: 18px; }
 }
 
 .seat-change-btn {

@@ -1265,7 +1265,7 @@
                                                     <span>+$<h:outputText value="#{asig.diferenciaTarifa}"><f:convertNumber pattern="#,##0"/></h:outputText> CLP</span>
                                                 </div>
                                                 <div class="breakdown-row">
-                                                    <span>Cargo Operativo y Gestión (15%):</span>
+                                                    <span>Cargo Operativo y Gestión (#{asig.porcentajeCargo}%):</span>
                                                     <span>+$<h:outputText value="#{asig.cargoGestion}"><f:convertNumber pattern="#,##0"/></h:outputText> CLP</span>
                                                 </div>
                                             </h:panelGroup>
@@ -1289,7 +1289,7 @@
                                         <span>+$<h:outputText value="#{cambioBean.totalDiferenciaTarifa}"><f:convertNumber pattern="#,##0"/></h:outputText> CLP</span>
                                     </div>
                                     <div class="d-flex justify-content-between text-white-50 small mb-2">
-                                        <span>Gestión Administrativa Aerolínea (15%):</span>
+                                        <span>Gestión Administrativa Aerolínea (#{cambioBean.porcentajeCargoTarifa}%):</span>
                                         <span>+$<h:outputText value="#{cambioBean.totalCargoGestion}"><f:convertNumber pattern="#,##0"/></h:outputText> CLP</span>
                                     </div>
                                     <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary">
@@ -1727,7 +1727,7 @@
                                             <td class="text-end font-weight-bold" style="color: #93C5FD;">
                                                 <h:panelGroup rendered="#{c.esUpgrade()}">
                                                     +$<h:outputText value="#{c.totalAdicional}"><f:convertNumber pattern="#,##0"/></h:outputText> CLP
-                                                    <div class="text-white-50" style="font-size: 0.72rem;">(Incluye 15% gestión)</div>
+                                                    <div class="text-white-50" style="font-size: 0.72rem;">(Incluye #{cambioBean.porcentajeCargoTarifa}% gestión)</div>
                                                 </h:panelGroup>
                                                 <h:panelGroup rendered="#{!c.esUpgrade()}">
                                                     <span class="text-success">$0 CLP</span>
@@ -1744,7 +1744,7 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <span class="text-white font-weight-bold d-block" style="font-size: 1.05rem;">TOTAL GENERAL A ABONAR:</span>
-                                    <span class="text-white-50 small">Suma de diferencias tarifarias + 15% de cargo administrativo operacional</span>
+                                    <span class="text-white-50 small">Suma de diferencias tarifarias + #{cambioBean.porcentajeCargoTarifa}% de cargo administrativo operacional</span>
                                 </div>
                                 <div style="color: #93C5FD; font-size: 1.6rem; font-weight: 800;">
                                     $<h:outputText value="#{cambioBean.granTotalAdicional}"><f:convertNumber pattern="#,##0"/></h:outputText> CLP

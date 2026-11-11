@@ -74,6 +74,7 @@ public class CambioAsientoBean implements Serializable {
     private boolean permiteCambio = true;
     private String mensajeReglaTarifa;
     private String nombreTarifa;
+    private int porcentajeCargoTarifa = 15;
 
     private Vuelo vuelo;
     private InfoAsientoDTO asientoActual;
@@ -194,7 +195,8 @@ public class CambioAsientoBean implements Serializable {
                 Reserva res = optRes.get();
 
             // Validación de seguridad y autorización: el usuario autenticado debe pertenecer a la reserva
-            if (this.rutUsuarioAutenticado != null && !this.rutUsuarioAutenticado.isBlank()) {
+            if (this.rutUsuarioAutenticado != null && !this.rutUsuarioAutenticado.isBlank()
+                    && !"anonymousUser".equalsIgnoreCase(this.rutUsuarioAutenticado)) {
                 String rutTitular = (res.getPasajero() != null) ? res.getPasajero().getRut() : "";
                 boolean tieneAcceso = this.rutUsuarioAutenticado.equalsIgnoreCase(rutTitular);
                 if (!tieneAcceso && res.getReservaAsientos() != null) {
@@ -251,7 +253,8 @@ public class CambioAsientoBean implements Serializable {
             Reserva res = optRes.get();
 
             // Validación de seguridad y autorización: el usuario autenticado debe pertenecer a la reserva
-            if (this.rutUsuarioAutenticado != null && !this.rutUsuarioAutenticado.isBlank()) {
+            if (this.rutUsuarioAutenticado != null && !this.rutUsuarioAutenticado.isBlank()
+                    && !"anonymousUser".equalsIgnoreCase(this.rutUsuarioAutenticado)) {
                 String rutTitular = (res.getPasajero() != null) ? res.getPasajero().getRut() : "";
                 boolean tieneAcceso = this.rutUsuarioAutenticado.equalsIgnoreCase(rutTitular);
                 if (!tieneAcceso && res.getReservaAsientos() != null) {
@@ -283,9 +286,11 @@ public class CambioAsientoBean implements Serializable {
                         this.nombreTarifa = t.getNombre();
                         List<TarifaCaracteristica> caracs = t.getTarifaCaracteristicas();
 
+                        this.porcentajeCargoTarifa = tarifaValidator.obtenerPorcentajeCargoCambio(caracs);
+
                         if (!tarifaValidator.permiteCambio(caracs)) {
                             this.permiteCambio = false;
-                            this.mensajeReglaTarifa = "Tu tarifa contratada (" + this.nombreTarifa + ") no autoriza modificaciones de asiento.";
+                            this.mensajeReglaTarifa = "La tarifa básica no permite cambios de asiento.";
                             return;
                         }
 
@@ -297,9 +302,18 @@ public class CambioAsientoBean implements Serializable {
                         if (fSalida != null) {
                             long diffMillis = fSalida.getTime() - System.currentTimeMillis();
                             int horasRestantes = (int) (diffMillis / (3600 * 1000));
-                            if (!"CHECKIN".equalsIgnoreCase(this.origenRetorno) && !tarifaValidator.cumpleHorasMinimasCambio(caracs, horasRestantes)) {
+                            // El plazo límite de la tarifa aplica siempre, también desde el flujo de check-in
+                            if (!tarifaValidator.cumpleHorasMinimasCambio(caracs, horasRestantes)) {
                                 this.permiteCambio = false;
-                                this.mensajeReglaTarifa = "El plazo límite estipulado por tu tarifa (" + this.nombreTarifa + ") para cambiar asientos ha finalizado.";
+                                Integer hMin = tarifaValidator.obtenerHorasMinimasCambio(caracs);
+                                int h = (hMin != null && hMin > 0) ? hMin : (this.nombreTarifa != null && this.nombreTarifa.toLowerCase().contains("flex") ? 48 : 24);
+                                if (this.nombreTarifa != null && this.nombreTarifa.toLowerCase().contains("flex")) {
+                                    this.mensajeReglaTarifa = "Solo puedes cambiar el asiento hasta " + h + " horas antes del vuelo con tarifa flexible.";
+                                } else if (this.nombreTarifa != null && this.nombreTarifa.toLowerCase().contains("prem")) {
+                                    this.mensajeReglaTarifa = "Solo puedes cambiar el asiento hasta " + h + " horas antes del vuelo con tarifa premium.";
+                                } else {
+                                    this.mensajeReglaTarifa = "Solo puedes cambiar el asiento hasta " + h + " horas antes del vuelo con tu tarifa.";
+                                }
                                 return;
                             }
                         }
@@ -458,6 +472,7 @@ public class CambioAsientoBean implements Serializable {
                         parsedIdVuelo, numVuelo, tramo,
                         idAsiento, numAsiento, clase, precio, rutPasajero, nombrePasajero, esTitular, editable
                 );
+                asig.setPorcentajeCargo(this.porcentajeCargoTarifa);
 
                 listaAsig.add(asig);
             }
@@ -746,8 +761,9 @@ public class CambioAsientoBean implements Serializable {
             return;
         }
 
-        // Regla de Descenso de Categoría (Downgrade no permitido en autoservicio)
-        if (asientoNuevo.getPrecio() < asignacionActiva.getPrecioOriginal()) {
+        // Regla de Descenso de Categoría (Downgrade no permitido en autoservicio): se evalúa por jerarquía de cabina
+        if (com.SkyWay.mobile.service.MobileOperationsService.rangoClase(asientoNuevo.getClase())
+                < com.SkyWay.mobile.service.MobileOperationsService.rangoClase(asignacionActiva.getClaseOriginal())) {
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_WARN,
                             "Descenso de Cabina No Permitido",
@@ -755,8 +771,8 @@ public class CambioAsientoBean implements Serializable {
             return;
         }
 
-        // Asignar el nuevo asiento con cálculo de tarifa y recargo administrativo
-        asignacionActiva.asignarNuevoAsiento(asientoNuevo);
+        // Asignar el nuevo asiento con cálculo de tarifa y recargo administrativo desde BD
+        asignacionActiva.asignarNuevoAsiento(asientoNuevo, this.porcentajeCargoTarifa);
         asientosCambio.put(asignacionActiva.getIdAsientoOriginal(), asientoNuevo);
 
         // Sincronizar en el mapa global por vuelo
@@ -768,12 +784,15 @@ public class CambioAsientoBean implements Serializable {
         }
 
         if (asignacionActiva.esUpgrade()) {
+            String msgCargo = (asignacionActiva.getCargoGestion() > 0)
+                    ? String.format(" + Cargo administrativo (%d%%): $%,d CLP", asignacionActiva.getPorcentajeCargo(), asignacionActiva.getCargoGestion())
+                    : " (Sin cargo administrativo adicional)";
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_INFO,
                             "Ascenso de Cabina Seleccionado",
-                            String.format("Asiento %s (%s) para %s. Diferencia: $%,d CLP + Cargo administrativo (15%%): $%,d CLP.",
+                            String.format("Asiento %s (%s) para %s. Diferencia: $%,d CLP%s.",
                                     asientoNuevo.getNumeroAsiento(), asientoNuevo.getClase(), asignacionActiva.getNombrePasajero(),
-                                    asignacionActiva.getDiferenciaTarifa(), asignacionActiva.getCargoGestion())));
+                                    asignacionActiva.getDiferenciaTarifa(), msgCargo)));
         } else {
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_INFO,
@@ -1073,4 +1092,7 @@ public class CambioAsientoBean implements Serializable {
     public boolean isAvionDoblePasillo() { return avionDoblePasillo; }
     public String getNombreModeloAvion() { return nombreModeloAvion; }
     public List<ConfiguracionCabina> getConfiguracionesModelo() { return configuracionesModelo; }
+
+    public int getPorcentajeCargoTarifa() { return porcentajeCargoTarifa; }
+    public void setPorcentajeCargoTarifa(int porcentajeCargoTarifa) { this.porcentajeCargoTarifa = porcentajeCargoTarifa; }
 }

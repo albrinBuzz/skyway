@@ -130,7 +130,17 @@
             </div>
             <div class="legend-text">
               <strong>Disponible</strong>
-              <span>Tu clase contratada</span>
+              <span>Misma clase ($0)</span>
+            </div>
+          </div>
+
+          <div class="legend-item upgrade-legend">
+            <div class="legend-swatch upgrade-swatch">
+              <ion-icon name="trending-up-outline" aria-hidden="true"></ion-icon>
+            </div>
+            <div class="legend-text">
+              <strong>Ascenso (Upgrade)</strong>
+              <span>Paga diferencia</span>
             </div>
           </div>
 
@@ -180,78 +190,100 @@
         </header>
 
         <!-- Interior de la cabina -->
-        <div class="cabin-body">
+        <div class="cabin-body" [class.wide-body]="map.avionDoblePasillo">
+          
+          <!-- Banner de Modelo de Aeronave Comercial -->
+          <div class="aircraft-model-badge" *ngIf="map.nombreModeloAvion">
+            <ion-icon name="airplane" aria-hidden="true"></ion-icon>
+            <div class="aircraft-info">
+              <strong class="aircraft-name">{{ map.nombreModeloAvion }}</strong>
+              <span class="aircraft-type">{{ map.avionDoblePasillo ? 'Fuselaje Ancho · Doble Pasillo' : 'Aeronave de Pasillo Único' }}</span>
+            </div>
+          </div>
+
           <ng-container *ngFor="let section of sections">
-            <!-- Divisor de clase con insignia -->
+            <!-- Divisor de clase con insignia y precio de clase -->
             <div class="class-divider" [ngClass]="section.kind">
               <span class="class-chip">
-                <ion-icon name="pricetag-outline" aria-hidden="true"></ion-icon>
+                <ion-icon [name]="section.kind === 'first' ? 'star' : (section.kind === 'business' ? 'briefcase-outline' : 'people-outline')" aria-hidden="true"></ion-icon>
                 {{ section.label }}
+              </span>
+              <span class="class-price-tag" *ngIf="section.precio">
+                {{ clp(section.precio) }}
               </span>
             </div>
 
+            <!-- Cabecera de letras de columnas alineadas a los bloques (estilo Web / LATAM) -->
+            <div class="cabin-col-letters-header" aria-hidden="true" *ngIf="section.bloquesLetras.length">
+              <span class="row-marker-space"></span>
+              <div class="row-blocks-container">
+                <ng-container *ngFor="let bLetras of section.bloquesLetras; let bIdx = index">
+                  <div class="letter-block">
+                    <span *ngFor="let letra of bLetras" class="col-letter-pill">{{ letra }}</span>
+                  </div>
+                  <!-- Separador de pasillo en la cabecera -->
+                  <div *ngIf="bIdx < section.bloquesLetras.length - 1" class="aisle-spacer">
+                    <span class="aisle-mini-tag">PASILLO</span>
+                  </div>
+                </ng-container>
+              </div>
+              <span class="row-marker-space"></span>
+            </div>
+
             <!-- Filas de asientos -->
-            <div class="cabin-row" *ngFor="let row of section.rows" [ngClass]="row.kind">
-              <!-- Número de fila lado izquierdo -->
-              <span class="row-badge left-badge" aria-hidden="true">{{ row.label }}</span>
-
-              <!-- Asientos lado izquierdo -->
-              <div class="seat-side left">
-                <button
-                  *ngFor="let seat of row.left; trackBy: trackSeat"
-                  type="button"
-                  class="seat-btn"
-                  [class.is-available]="isAvailable(seat)"
-                  [class.is-current]="isCurrent(seat)"
-                  [class.is-picked]="isPicked(seat)"
-                  [class.is-occupied]="!seat.seleccionable && !isCurrent(seat)"
-                  [disabled]="!seat.seleccionable || saving"
-                  [attr.aria-label]="'Asiento ' + seat.numeroAsiento + ', ' + (seat.clase || 'clase no informada') + ', ' + (isCurrent(seat) ? 'tu asiento actual' : (isPicked(seat) ? 'seleccionado' : (seat.seleccionable ? 'disponible' : 'ocupado')))"
-                  [attr.aria-pressed]="isPicked(seat)"
-                  (click)="choose(seat)">
-                  <span class="seat-indicator" aria-hidden="true">
-                    <ion-icon *ngIf="isCurrent(seat)" name="star"></ion-icon>
-                    <ion-icon *ngIf="isPicked(seat)" name="checkmark-circle"></ion-icon>
-                    <ion-icon *ngIf="!seat.seleccionable && !isCurrent(seat)" name="lock-closed-outline"></ion-icon>
-                    <span *ngIf="isAvailable(seat)" class="avail-dot"></span>
-                  </span>
-                  <strong class="seat-letter">{{ seatLetter(seat) }}</strong>
-                </button>
+            <div *ngFor="let row of section.rows" class="cabin-row-wrapper">
+              
+              <!-- Salida de emergencia si aplica en esta fila -->
+              <div *ngIf="row.esEmergencia" class="emergency-exit-marker" role="note" aria-label="Fila con salida de emergencia">
+                <span class="exit-side"><ion-icon name="arrow-back"></ion-icon> SALIDA DE EMERGENCIA</span>
+                <span class="exit-side">EXIT <ion-icon name="arrow-forward"></ion-icon></span>
               </div>
 
-              <!-- Pasillo central -->
-              <div class="aisle-lane" aria-hidden="true">
-                <span class="aisle-line"></span>
-                <span class="aisle-tag">PASILLO</span>
-                <span class="aisle-line"></span>
-              </div>
+              <!-- Fila con número y bloques de asientos -->
+              <div class="cabin-row" [ngClass]="row.kind">
+                <!-- Número de fila lado izquierdo -->
+                <span class="row-badge left-badge" aria-hidden="true">{{ row.numeroFila }}</span>
 
-              <!-- Asientos lado derecho -->
-              <div class="seat-side right">
-                <button
-                  *ngFor="let seat of row.right; trackBy: trackSeat"
-                  type="button"
-                  class="seat-btn"
-                  [class.is-available]="isAvailable(seat)"
-                  [class.is-current]="isCurrent(seat)"
-                  [class.is-picked]="isPicked(seat)"
-                  [class.is-occupied]="!seat.seleccionable && !isCurrent(seat)"
-                  [disabled]="!seat.seleccionable || saving"
-                  [attr.aria-label]="'Asiento ' + seat.numeroAsiento + ', ' + (seat.clase || 'clase no informada') + ', ' + (isCurrent(seat) ? 'tu asiento actual' : (isPicked(seat) ? 'seleccionado' : (seat.seleccionable ? 'disponible' : 'ocupado')))"
-                  [attr.aria-pressed]="isPicked(seat)"
-                  (click)="choose(seat)">
-                  <span class="seat-indicator" aria-hidden="true">
-                    <ion-icon *ngIf="isCurrent(seat)" name="star"></ion-icon>
-                    <ion-icon *ngIf="isPicked(seat)" name="checkmark-circle"></ion-icon>
-                    <ion-icon *ngIf="!seat.seleccionable && !isCurrent(seat)" name="lock-closed-outline"></ion-icon>
-                    <span *ngIf="isAvailable(seat)" class="avail-dot"></span>
-                  </span>
-                  <strong class="seat-letter">{{ seatLetter(seat) }}</strong>
-                </button>
-              </div>
+                <!-- Bloques de asientos de la fila -->
+                <div class="row-blocks-container">
+                  <ng-container *ngFor="let bloque of row.bloques; let bIdx = index">
+                    <div class="seat-block">
+                      <button
+                        *ngFor="let seat of bloque.asientos; trackBy: trackSeat"
+                        type="button"
+                        class="seat-btn"
+                        [class.is-available]="isAvailable(seat)"
+                        [class.is-upgrade]="isAvailable(seat) && isUpgrade(seat)"
+                        [class.is-current]="isCurrent(seat)"
+                        [class.is-picked]="isPicked(seat)"
+                        [class.is-occupied]="!seat.seleccionable && !isCurrent(seat)"
+                        [disabled]="!seat.seleccionable || saving"
+                        [attr.aria-label]="'Asiento ' + seat.numeroAsiento + ', ' + (seat.clase || 'clase no informada') + ', ' + (isCurrent(seat) ? 'tu asiento actual' : (isPicked(seat) ? 'seleccionado' : (seat.seleccionable ? (isUpgrade(seat) ? 'disponible con ascenso a ' + seat.clase : 'disponible') : 'ocupado')))"
+                        [attr.aria-pressed]="isPicked(seat)"
+                        (click)="choose(seat)">
+                        <span class="seat-indicator" aria-hidden="true">
+                          <ion-icon *ngIf="isCurrent(seat)" name="star"></ion-icon>
+                          <ion-icon *ngIf="isPicked(seat)" name="checkmark-circle"></ion-icon>
+                          <ion-icon *ngIf="!seat.seleccionable && !isCurrent(seat)" name="lock-closed-outline"></ion-icon>
+                          <ion-icon *ngIf="isAvailable(seat) && isUpgrade(seat)" name="trending-up-outline" class="upgrade-icon"></ion-icon>
+                          <span *ngIf="isAvailable(seat) && !isUpgrade(seat)" class="avail-dot"></span>
+                        </span>
+                        <strong class="seat-letter">{{ seatLetter(seat) }}</strong>
+                      </button>
+                    </div>
 
-              <!-- Número de fila lado derecho -->
-              <span class="row-badge right-badge" aria-hidden="true">{{ row.label }}</span>
+                    <!-- Pasillo entre bloques -->
+                    <div *ngIf="bIdx < row.bloques.length - 1" class="aisle-lane" aria-hidden="true">
+                      <span class="aisle-line"></span>
+                      <span class="aisle-tag">{{ row.bloques.length > 2 ? (bIdx === 0 ? 'P1' : 'P2') : 'PASILLO' }}</span>
+                      <span class="aisle-line"></span>
+                    </div>
+                  </ng-container>
+                </div>
+
+                <!-- Número de fila lado derecho -->
+                <span class="row-badge right-badge" aria-hidden="true">{{ row.numeroFila }}</span>
+              </div>
             </div>
           </ng-container>
         </div>
@@ -277,7 +309,9 @@
     <div class="confirmation-panel" *ngIf="selected as seat">
       <div class="confirmation-info">
         <div class="confirmation-text">
-          <span class="confirm-tag">NUEVA SELECCIÓN</span>
+          <span class="confirm-tag" [class.upgrade-tag]="isUpgrade(seat)">
+            {{ isUpgrade(seat) ? '★ ASCENSO DE CLASE (UPGRADE)' : 'NUEVA SELECCIÓN' }}
+          </span>
           <div class="confirm-route-seats">
             <span class="old-seat">{{ map.asientoActual?.numeroAsiento || 'Sin asignar' }}</span>
             <ion-icon name="arrow-forward" aria-hidden="true"></ion-icon>
@@ -286,9 +320,62 @@
           <span class="confirm-class">{{ seat.clase || claseContratada }}</span>
         </div>
 
-        <span *ngIf="seat.precio != null" class="confirm-price">
-          {{ clp(seat.precio) }}
-        </span>
+        <div class="confirm-price-box">
+          <span *ngIf="seat.precio != null" class="confirm-price">
+            {{ clp(seat.precio) }}
+          </span>
+          <span *ngIf="isUpgrade(seat)" class="upgrade-price-badge">
+            Diferencia: +{{ clp(seat.totalPagar ?? 0) }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Desglose de Upgrade si el asiento es de una clase superior -->
+      <div *ngIf="isUpgrade(seat)" class="upgrade-breakdown">
+        <div class="breakdown-header">
+          <ion-icon name="trending-up-outline" aria-hidden="true"></ion-icon>
+          <strong>Desglose de pago por cambio a clase superior</strong>
+        </div>
+        <div class="breakdown-rows">
+          <div class="breakdown-row">
+            <span>Diferencia de cabina ({{ claseContratada }} ➔ {{ seat.clase }}):</span>
+            <strong>+{{ clp(seat.diferenciaPrecio ?? 0) }}</strong>
+          </div>
+          <div class="breakdown-row">
+            <span>Cargo administrativo de gestión:</span>
+            <strong>+{{ clp(seat.cargoGestion ?? 0) }}</strong>
+          </div>
+          <div class="breakdown-row total-row">
+            <span>Total a pagar:</span>
+            <strong class="total-highlight">{{ clp(seat.totalPagar ?? 0) }}</strong>
+          </div>
+        </div>
+
+        <!-- Selector de Método de Pago -->
+        <div class="payment-selector-box">
+          <label class="selector-label">
+            <ion-icon name="wallet-outline" aria-hidden="true"></ion-icon>
+            <span>Selecciona medio de pago:</span>
+          </label>
+          <div class="payment-pills">
+            <button
+              type="button"
+              class="pay-pill"
+              [class.active]="metodoPago === 1"
+              (click)="setMetodoPago(1)">
+              <ion-icon name="card-outline" aria-hidden="true"></ion-icon>
+              <span>Webpay Plus / Tarjeta</span>
+            </button>
+            <button
+              type="button"
+              class="pay-pill"
+              [class.active]="metodoPago === 2"
+              (click)="setMetodoPago(2)">
+              <ion-icon name="cash-outline" aria-hidden="true"></ion-icon>
+              <span>PayPal</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       <div class="confirmation-actions">
@@ -302,12 +389,13 @@
 
         <ion-button
           class="confirm-btn"
+          [class.pay-confirm-btn]="isUpgrade(seat)"
           (click)="save()"
           [disabled]="saving">
           <ion-spinner *ngIf="saving"></ion-spinner>
           <ng-container *ngIf="!saving">
-            <ion-icon name="checkmark-circle" slot="start" aria-hidden="true"></ion-icon>
-            {{ map.asientoActual ? 'Confirmar cambio' : 'Confirmar asiento' }}
+            <ion-icon [name]="isUpgrade(seat) ? 'card-outline' : 'checkmark-circle'" slot="start" aria-hidden="true"></ion-icon>
+            {{ isUpgrade(seat) ? ('Pagar y confirmar (' + clp(seat.totalPagar ?? 0) + ')') : (map.asientoActual ? 'Confirmar cambio' : 'Confirmar asiento') }}
           </ng-container>
         </ion-button>
       </div>

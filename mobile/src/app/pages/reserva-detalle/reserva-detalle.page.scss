@@ -463,12 +463,46 @@ $bg-tint: #eef3ff;
   strong { font-size: 14px; color: $ink; }
 }
 
-.ticket-btn {
+.passenger-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+
+  @media (max-width: 360px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ticket-pending-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: #f1f4f9;
+  border: 1px dashed #c0cbdf;
+  font-size: 12px;
+  color: #43516f;
+  line-height: 1.3;
+  ion-icon {
+    font-size: 16px;
+    color: #e08b1a;
+    flex: 0 0 auto;
+  }
+}
+
+.ticket-btn, .seat-action-btn {
   --border-radius: 12px;
-  margin: 10px 0 0;
+  margin: 0;
   min-height: 44px;
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 700;
+}
+
+.seat-action-btn {
+  --border-color: #2449d8;
+  --color: #2449d8;
 }
 
 /* ---------- f) Equipaje ---------- */
@@ -608,6 +642,19 @@ $bg-tint: #eef3ff;
   h2 { color: #0b5a42; }
 }
 .checkin-icon { flex: 0 0 auto; font-size: 32px; color: $success; }
+
+.download-pdf-btn {
+  margin: 14px 0 0;
+  min-height: 48px;
+  font-size: 14.5px;
+  font-weight: 800;
+  --background: #0b5a42;
+  --background-hover: #084331;
+  --background-activated: #063426;
+  --color: #ffffff;
+  --border-radius: 13px;
+  --box-shadow: 0 8px 18px rgba(11, 90, 66, .25);
+}
 
 /* ---------- Animación de entrada ---------- */
 .reveal { animation: reveal .35s ease-out both; }

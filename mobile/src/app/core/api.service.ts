@@ -20,9 +20,15 @@ import {
   RegistroRequest,
   ReservaCreada,
   ResumenReserva,
+  TipoEquipajeCatalogo,
+  ItemEquipajeSolicitud,
   Vuelo,
   PasajeroTicket,
-  VistaTicket
+  VistaTicket,
+  VueloConAsientos,
+  AsientoSeleccionadoSolicitud,
+  IniciarPagoReservaResponse,
+  CrearReservaRequest
 } from './models';
 
 export const AZURE_CLOUD_HOST = 'https://skyway-gde6a6aza3abb8a6.brazilsouth-01.azurewebsites.net';
@@ -298,8 +304,60 @@ export class ApiService {
     return this.http.get<ItinerarioDisponible[]>(`${this.base}/busqueda/itinerarios`, { params });
   }
 
-  crearReserva(idItinerario: number, idItinerarioTarifa: number) {
-    return this.http.post<ReservaCreada>(`${this.base}/reservas`, { idItinerario, idItinerarioTarifa });
+  catalogoEquipajes() {
+    return this.http.get<TipoEquipajeCatalogo[]>(`${this.base}/catalogo/equipajes`);
+  }
+
+  vuelosAsientosItinerario(idItinerario: number) {
+    return this.http.get<VueloConAsientos[]>(`${this.base}/busqueda/itinerarios/${idItinerario}/vuelos-asientos`);
+  }
+
+  crearReserva(
+    idItinerario: number,
+    idItinerarioTarifa: number,
+    idMetodoPago = 1,
+    equipaje: ItemEquipajeSolicitud[] = [],
+    asientos: AsientoSeleccionadoSolicitud[] = []
+  ) {
+    return this.http.post<ReservaCreada>(`${this.base}/reservas`, {
+      idItinerario,
+      idItinerarioTarifa,
+      idMetodoPago,
+      equipaje,
+      asientos
+    });
+  }
+
+  iniciarPagoReserva(
+    idItinerario: number,
+    idItinerarioTarifa: number,
+    idMetodoPago = 1,
+    equipaje: ItemEquipajeSolicitud[] = [],
+    asientos: AsientoSeleccionadoSolicitud[] = [],
+    urlRetornoBase?: string
+  ) {
+    return this.http.post<IniciarPagoReservaResponse>(`${this.base}/reservas/iniciar-pago`, {
+      idItinerario,
+      idItinerarioTarifa,
+      idMetodoPago,
+      equipaje,
+      asientos,
+      urlRetornoBase
+    });
+  }
+
+  confirmarPagoReserva(
+    ordenCompra: string,
+    pasarela: string,
+    token: string,
+    reserva?: CrearReservaRequest
+  ) {
+    return this.http.post<ReservaCreada>(`${this.base}/reservas/confirmar-pago`, {
+      ordenCompra,
+      pasarela,
+      token,
+      reserva
+    });
   }
 
   reservas(grupo: 'activas' | 'historial', pagina = 0, tamano = 20) {
@@ -320,8 +378,12 @@ export class ApiService {
     return this.http.get<MapaAsientos>(`${this.base}/reservas/${id}/vuelos/${vuelo}/asientos`);
   }
 
-  cambiarAsiento(id: number, vuelo: number, idAsiento: number) {
-    return this.http.put<MapaAsientos>(`${this.base}/reservas/${id}/vuelos/${vuelo}/asiento`, { idAsiento });
+  cambiarAsiento(id: number, vuelo: number, idAsiento: number, idMetodoPago?: number, urlRetornoBase?: string) {
+    return this.http.put<MapaAsientos>(`${this.base}/reservas/${id}/vuelos/${vuelo}/asiento`, {
+      idAsiento,
+      idMetodoPago: idMetodoPago ?? 1,
+      urlRetornoBase
+    });
   }
 
   equipajes(id: number) {
@@ -330,6 +392,12 @@ export class ApiService {
 
   checkin(id: number) {
     return this.http.post<Checkin>(`${this.base}/reservas/${id}/checkin`, {});
+  }
+
+  descargarBoardingPassPdf(idReserva: number): Observable<Blob> {
+    return this.http.get(`${this.base}/reservas/${idReserva}/pase-abordar/pdf`, {
+      responseType: 'blob'
+    });
   }
 
   pase(id: number, vuelo: number) {
@@ -351,8 +419,20 @@ export class ApiService {
     return this.http.get<MapaAsientos>(`${this.base}/reservas/${idReserva}/vuelos/${idVuelo}/tickets/${encodeURIComponent(rut)}/asientos`);
   }
 
-  cambiarAsientoPasajero(idReserva: number, idVuelo: number, rut: string, idAsiento: number) {
-    return this.http.put<MapaAsientos>(`${this.base}/reservas/${idReserva}/vuelos/${idVuelo}/tickets/${encodeURIComponent(rut)}/asiento`, { idAsiento });
+  cambiarAsientoPasajero(idReserva: number, idVuelo: number, rut: string, idAsiento: number, idMetodoPago?: number, urlRetornoBase?: string) {
+    return this.http.put<MapaAsientos>(`${this.base}/reservas/${idReserva}/vuelos/${idVuelo}/tickets/${encodeURIComponent(rut)}/asiento`, {
+      idAsiento,
+      idMetodoPago: idMetodoPago ?? 1,
+      urlRetornoBase
+    });
+  }
+
+  confirmarPagoCambioAsiento(ordenCompra: string, pasarela: string, token: string) {
+    return this.http.post<MapaAsientos>(`${this.base}/reservas/cambio-asiento/confirmar-pago`, {
+      ordenCompra,
+      pasarela,
+      token
+    });
   }
 
   notificaciones(pagina = 0) {

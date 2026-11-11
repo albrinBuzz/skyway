@@ -16,11 +16,13 @@ public class TarifaCaracteristicaValidator {
      * @return true si permite cambio, false si no
      */
     public boolean permiteCambio(List<TarifaCaracteristica> tarifaCaracteristicas) {
+        if (tarifaCaracteristicas == null) return false;
         for (TarifaCaracteristica carac : tarifaCaracteristicas) {
-            if ("Permite cambio de asiento".equalsIgnoreCase(carac.getCaracteristica().getNombre())) {
-                Logger.logInfo(carac.getValorBool().toString());
-                Logger.logInfo(carac.getCaracteristica().getNombre());
-                return carac.getValorBool();
+            if (carac != null && carac.getCaracteristica() != null && carac.getCaracteristica().getNombre() != null) {
+                String nom = carac.getCaracteristica().getNombre().toLowerCase(Locale.ROOT);
+                if (nom.contains("cambio") && nom.contains("asiento")) {
+                    return Boolean.TRUE.equals(carac.getValorBool());
+                }
             }
         }
         return false; // Por defecto no permite cambio si no se encuentra la característica
@@ -33,37 +35,67 @@ public class TarifaCaracteristicaValidator {
      * @return true si cumple con las horas mínimas para cambio
      */
     public boolean cumpleHorasMinimasCambio(List<TarifaCaracteristica> tarifaCaracteristicas, int horasAntesDeVuelo) {
+        Integer horasMinimas = obtenerHorasMinimasCambio(tarifaCaracteristicas);
+        if (horasMinimas != null && horasMinimas > 0) {
+            return horasAntesDeVuelo >= horasMinimas;
+        }
+        return true;
+    }
+
+    /**
+     * Obtiene el plazo límite en horas mínimas previas al vuelo para cambio de asiento.
+     */
+    public Integer obtenerHorasMinimasCambio(List<TarifaCaracteristica> tarifaCaracteristicas) {
+        if (tarifaCaracteristicas == null) return null;
         for (TarifaCaracteristica carac : tarifaCaracteristicas) {
-            if (carac.getCaracteristica() != null &&
-                    "Plazo límite para cambio de asiento".equalsIgnoreCase(carac.getCaracteristica().getNombre())) {
-
-                Integer horasMinimas = null;
-
-                // 1. Intentar leer prioritariamente de la columna Valor_Int
-                if (carac.getValorInt() != null) {
-                    horasMinimas = carac.getValorInt();
-                }
-                // 2. Fallback de seguridad: Si viene en el campo texto 'Valor', extraer únicamente los números
-                else if (carac.getValor() != null && !carac.getValor().isBlank()) {
-                    try {
-                        String soloDigitos = carac.getValor().replaceAll("[^0-9]", "");
-                        if (!soloDigitos.isEmpty()) {
-                            horasMinimas = Integer.parseInt(soloDigitos);
-                        }
-                    } catch (NumberFormatException e) {
-                        Logger.logError("Error al interpretar valor en texto: " + carac.getValor());
+            if (carac != null && carac.getCaracteristica() != null && carac.getCaracteristica().getNombre() != null) {
+                String nom = carac.getCaracteristica().getNombre().toLowerCase(Locale.ROOT);
+                if (nom.contains("plazo") || (nom.contains("horas") && nom.contains("cambio"))) {
+                    if (carac.getValorInt() != null) {
+                        return carac.getValorInt();
                     }
-                }
-
-                // 3. Evaluar la condición de horas
-                if (horasMinimas != null) {
-                    return horasAntesDeVuelo >= horasMinimas;
+                    if (carac.getValor() != null && !carac.getValor().isBlank()) {
+                        try {
+                            String soloDigitos = carac.getValor().replaceAll("[^0-9]", "");
+                            if (!soloDigitos.isEmpty()) {
+                                return Integer.parseInt(soloDigitos);
+                            }
+                        } catch (NumberFormatException e) {
+                            Logger.logError("Error al interpretar plazo en texto: " + carac.getValor());
+                        }
+                    }
                 }
             }
         }
+        return null;
+    }
 
-        // Si la característica no está configurada para la tarifa, no hay restricción
-        return true;
+    /**
+     * Obtiene el porcentaje de recargo administrativo por cambio de asiento desde la BD.
+     * Retorna el valor entero configurado (ej. 15 para 15%, 0 para 0%).
+     */
+    public int obtenerPorcentajeCargoCambio(List<TarifaCaracteristica> tarifaCaracteristicas) {
+        if (tarifaCaracteristicas != null) {
+            for (TarifaCaracteristica carac : tarifaCaracteristicas) {
+                if (carac != null && carac.getCaracteristica() != null && carac.getCaracteristica().getNombre() != null) {
+                    String nom = carac.getCaracteristica().getNombre().toLowerCase(Locale.ROOT);
+                    if (nom.contains("porcentaje") || nom.contains("cargo") || nom.contains("recargo")) {
+                        if (carac.getValorInt() != null) {
+                            return carac.getValorInt();
+                        }
+                        if (carac.getValor() != null && !carac.getValor().isBlank()) {
+                            try {
+                                String soloDigitos = carac.getValor().replaceAll("[^0-9]", "");
+                                if (!soloDigitos.isEmpty()) {
+                                    return Integer.parseInt(soloDigitos);
+                                }
+                            } catch (NumberFormatException ignored) {}
+                        }
+                    }
+                }
+            }
+        }
+        return 15; // Fallback corporativo estándar de SkyWay (15%) si no está explícito en la base de datos
     }
 
     /**

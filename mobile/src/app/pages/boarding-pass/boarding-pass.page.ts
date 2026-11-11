@@ -12,16 +12,20 @@ import {
   airplaneOutline,
   alertCircle,
   arrowBack,
+  barcodeOutline,
   briefcaseOutline,
   businessOutline,
   calendarOutline,
+  checkboxOutline,
   checkmarkCircle,
   closeCircle,
   copyOutline,
+  downloadOutline,
   enterOutline,
   helpCircle,
   informationCircle,
   locationOutline,
+  lockClosedOutline,
   personCircleOutline,
   pricetagOutline,
   qrCodeOutline,
@@ -37,16 +41,20 @@ addIcons({
   airplaneOutline,
   alertCircle,
   arrowBack,
+  barcodeOutline,
   briefcaseOutline,
   businessOutline,
   calendarOutline,
+  checkboxOutline,
   checkmarkCircle,
   closeCircle,
   copyOutline,
+  downloadOutline,
   enterOutline,
   helpCircle,
   informationCircle,
   locationOutline,
+  lockClosedOutline,
   personCircleOutline,
   pricetagOutline,
   qrCodeOutline,
@@ -73,8 +81,12 @@ export class BoardingPassPage {
 
   data: VistaTicket | null = null;
   qr = '';
+  barcodeUrl = '';
+  codigoIataBcbp = '';
   error = '';
   busy = false;
+  checkinPendiente = false;
+  descargandoPdf = false;
 
   get primerSegmento(): Segmento | null {
     return this.data?.vuelo?.segmentos?.[0] ?? null;
@@ -98,8 +110,11 @@ export class BoardingPassPage {
   async load(): Promise<void> {
     this.busy = true;
     this.error = '';
+    this.checkinPendiente = false;
     this.data = null;
     this.qr = '';
+    this.barcodeUrl = '';
+    this.codigoIataBcbp = '';
 
     try {
       if (this.rut) {
@@ -110,11 +125,27 @@ export class BoardingPassPage {
         this.data = {
           ...old,
           equipajes: [],
-          codigoPnr: null
+          codigoPnr: old.codigoPnr ?? null,
+          codigoIataBcbp: old.codigoIataBcbp ?? old.qrContenido,
+          barcodeBase64: old.barcodeBase64 ?? null
         };
       }
 
-      if (this.data.qrContenido) {
+      if (this.data && !this.data.checkin) {
+        this.checkinPendiente = true;
+      }
+
+      if (this.data.barcodeBase64) {
+        this.barcodeUrl = this.data.barcodeBase64;
+      }
+      if (this.data.codigoIataBcbp) {
+        this.codigoIataBcbp = this.data.codigoIataBcbp;
+      } else if (this.data.qrContenido) {
+        this.codigoIataBcbp = this.data.qrContenido;
+      }
+
+      // Fallback a QR si no hubiera imagen barcodeBase64
+      if (!this.barcodeUrl && this.data.qrContenido) {
         this.qr = await QRCode.toDataURL(this.data.qrContenido, {
           width: 260,
           margin: 2,
@@ -125,11 +156,40 @@ export class BoardingPassPage {
           }
         });
       }
-    } catch (e) {
+    } catch (e: any) {
       this.error = errorMessage(e);
+      if (
+        e?.status === 409 ||
+        e?.error?.codigo === 'CHECKIN_PENDIENTE' ||
+        /check-?in/i.test(this.error)
+      ) {
+        this.checkinPendiente = true;
+      }
     } finally {
       this.busy = false;
     }
+  }
+
+  descargarPdf(): void {
+    if (this.descargandoPdf) return;
+    this.descargandoPdf = true;
+    this.api.descargarBoardingPassPdf(this.id).subscribe({
+      next: (blob: Blob) => {
+        this.descargandoPdf = false;
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `BoardingPass_Reserva_${this.id}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => {
+        this.descargandoPdf = false;
+        this.error = errorMessage(err);
+      }
+    });
   }
 
   async copyPnr(pnr: string): Promise<void> {

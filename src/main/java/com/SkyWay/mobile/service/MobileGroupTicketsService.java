@@ -2,6 +2,8 @@ package com.SkyWay.mobile.service;
 
 import com.SkyWay.mobile.dto.MobileDtos.*;
 import com.SkyWay.modules.reserva.domain.repository.ReservaRepository;
+import com.SkyWay.util.BarcodeGeneratorUtil;
+import com.SkyWay.util.BoardingPassSecurityService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.http.HttpStatus;
@@ -43,7 +45,14 @@ public class MobileGroupTicketsService {
 
     public record VistaTicket(UsuarioDto pasajero, VueloDto vuelo, CheckinDto checkin,
                               List<EquipajeDto> equipajes, String qrContenido,
-                              boolean simulacion, String codigoPnr) {}
+                              boolean simulacion, String codigoPnr,
+                              String codigoIataBcbp, String barcodeBase64) {
+        public VistaTicket(UsuarioDto pasajero, VueloDto vuelo, CheckinDto checkin,
+                           List<EquipajeDto> equipajes, String qrContenido,
+                           boolean simulacion, String codigoPnr) {
+            this(pasajero, vuelo, checkin, equipajes, qrContenido, simulacion, codigoPnr, qrContenido, null);
+        }
+    }
 
     private DetalleReserva autorizarReservaYVuelo(String jwtRut, int reserva, int vuelo) {
         // read.detalle valida la pertenencia a la reserva antes de cargar información.
@@ -89,7 +98,7 @@ public class MobileGroupTicketsService {
         return new AsientoAsignado(
                 MobileReadService.number(row[1]), MobileReadService.number(row[2]),
                 MobileReadService.text(row[3]), MobileReadService.number(row[4]),
-                MobileReadService.text(row[5]));
+                MobileReadService.text(row[5]), row.length > 6 ? MobileReadService.number(row[6]) : null);
     }
 
     @SuppressWarnings("unchecked")
@@ -135,6 +144,10 @@ public class MobileGroupTicketsService {
 
     public VistaTicket vista(String jwtRut, int reserva, int vuelo, String pasajeroRut) {
         var detail = autorizarPersona(jwtRut, reserva, vuelo, pasajeroRut);
+        if (detail.checkin() == null) {
+            throw new MobileException(HttpStatus.CONFLICT, "CHECKIN_PENDIENTE",
+                    "La tarjeta de embarque solo está disponible después de realizar el check-in.");
+        }
         var oldFlight = MobileReadService.vuelo(detail, vuelo);
         var seat = asientoAsignado(reserva, vuelo, pasajeroRut);
         // Vuelo inmutable, con el ASIENTO DEL PASAJERO ELEGIDO, nunca el del JWT.
@@ -164,19 +177,18 @@ public class MobileGroupTicketsService {
             codigoPnr = MobileReadService.text(value);
         }
         String qr = null;
+        String bcbp = null;
+        String barcodeBase64 = null;
         if (checkin != null && seat != null) {
-            // Compatible con el formato de codigo_qr en fn_getticket cuando hay PNR.
-            if (codigoPnr != null && !codigoPnr.isBlank() && flight.numeroVuelo() != null) {
-                qr = "SKYWAY-" + codigoPnr + "-" + flight.numeroVuelo() + "-"
-                        + seat.numeroAsiento() + "-" + pasajeroRut;
-            } else {
-                qr = String.format("SKYWAY|CH:%d|RES:%d|FL:%d|SEAT:%s|RUT:%s",
-                        checkin.idCheckin(), reserva, vuelo, seat.numeroAsiento(), pasajeroRut);
-            }
+            String pnr = (codigoPnr != null && !codigoPnr.isBlank()) ? codigoPnr.trim().toUpperCase() : "RES-" + reserva;
+            String numVuelo = flight.numeroVuelo() != null ? flight.numeroVuelo() : "SW-" + vuelo;
+            bcbp = BoardingPassSecurityService.generarCodigoSeguro(pnr, numVuelo, seat.numeroAsiento(), pasajeroRut);
+            barcodeBase64 = BarcodeGeneratorUtil.generarPdf417DataUrl(bcbp);
+            qr = bcbp;
         }
         return new VistaTicket(new UsuarioDto(pasajeroRut, usuarioNombre(reserva, pasajeroRut, true),
                 usuarioNombre(reserva, pasajeroRut, false), null), flight, checkin,
-                baggage, qr, true, codigoPnr);
+                baggage, qr, false, codigoPnr, bcbp, barcodeBase64);
     }
 
     public MapaAsientos mapa(String jwtRut, int reserva, int vuelo, String pasajeroRut) {
@@ -187,9 +199,19 @@ public class MobileGroupTicketsService {
     @Transactional
     public MapaAsientos cambiarAsiento(String jwtRut, int reserva, int vuelo,
                                        String pasajeroRut, int asientoId) {
+        return cambiarAsiento(jwtRut, reserva, vuelo, pasajeroRut, asientoId, 1, null);
+    }
+
+    @Transactional
+    public MapaAsientos cambiarAsiento(String jwtRut, int reserva, int vuelo,
+                                       String pasajeroRut, int asientoId, Integer idMetodoPago) {
+        return cambiarAsiento(jwtRut, reserva, vuelo, pasajeroRut, asientoId, idMetodoPago, null);
+    }
+
+    @Transactional
+    public MapaAsientos cambiarAsiento(String jwtRut, int reserva, int vuelo,
+                                       String pasajeroRut, int asientoId, Integer idMetodoPago, String urlRetornoBase) {
         autorizarPersona(jwtRut, reserva, vuelo, pasajeroRut);
-        // Reutiliza la lógica anterior: tarifa, clase, fecha, ocupación, locks y check-in.
-        // NO hace UPDATE directo sobre reserva_asiento.
-        return operations.cambiar(pasajeroRut, reserva, vuelo, asientoId);
+        return operations.cambiar(jwtRut, reserva, vuelo, asientoId, idMetodoPago, urlRetornoBase, pasajeroRut);
     }
 }

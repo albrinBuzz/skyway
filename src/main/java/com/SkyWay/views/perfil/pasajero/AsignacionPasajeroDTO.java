@@ -29,6 +29,7 @@ public class AsignacionPasajeroDTO implements Serializable {
     private int diferenciaTarifa;
     private int cargoGestion;
     private int totalAdicional;
+    private int porcentajeCargo = 15;
 
     public AsignacionPasajeroDTO() {}
 
@@ -50,13 +51,19 @@ public class AsignacionPasajeroDTO implements Serializable {
     }
 
     public void asignarNuevoAsiento(InfoAsientoDTO nuevo) {
+        asignarNuevoAsiento(nuevo, this.porcentajeCargo);
+    }
+
+    public void asignarNuevoAsiento(InfoAsientoDTO nuevo, int porcentaje) {
         if (nuevo == null || (idAsientoOriginal != null && nuevo.getIdAsiento() == idAsientoOriginal)) {
             deseleccionar();
             return;
         }
+        this.porcentajeCargo = porcentaje;
         this.nuevoAsiento = nuevo;
         this.diferenciaTarifa = Math.max(0, nuevo.getPrecio() - this.precioOriginal);
-        this.cargoGestion = (this.diferenciaTarifa > 0) ? Math.round(this.diferenciaTarifa * 0.15f) : 0;
+        this.cargoGestion = (this.diferenciaTarifa > 0 && this.porcentajeCargo > 0)
+                ? Math.round(this.diferenciaTarifa * (this.porcentajeCargo / 100.0f)) : 0;
         this.totalAdicional = this.diferenciaTarifa + this.cargoGestion;
     }
 
@@ -132,4 +139,7 @@ public class AsignacionPasajeroDTO implements Serializable {
 
     public int getTotalAdicional() { return totalAdicional; }
     public void setTotalAdicional(int totalAdicional) { this.totalAdicional = totalAdicional; }
+
+    public int getPorcentajeCargo() { return porcentajeCargo; }
+    public void setPorcentajeCargo(int porcentajeCargo) { this.porcentajeCargo = porcentajeCargo; }
 }
