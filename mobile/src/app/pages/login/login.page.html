@@ -364,9 +364,33 @@
             <span><strong>Puerta:</strong> {{ res.puerta || 'Por asignar' }}</span>
             <span *ngIf="res.proximaSalida"><strong>Salida:</strong> {{ res.proximaSalida | date:"d MMM · HH:mm" }}</span>
           </div>
-          <div class="pnr-qr" *ngIf="res.checkinRealizado && pnrQrUrl">
-            <img [src]="pnrQrUrl" alt="Código QR Boarding Pass" />
-            <span>Check-in completado · Presenta este QR al embarcar</span>
+          <div class="pnr-qr" *ngIf="res.checkinRealizado && (res.barcodeBase64 || pnrQrUrl)">
+            <span class="pnr-iata-badge">
+              <ion-icon name="barcode-outline" aria-hidden="true"></ion-icon>
+              {{ res.barcodeBase64 ? 'IATA BCBP 2D · PDF417' : 'Código QR de embarque' }}
+            </span>
+            <img
+              [src]="res.barcodeBase64 || pnrQrUrl"
+              [class.is-barcode-2d]="!!res.barcodeBase64"
+              alt="Código 2D IATA de embarque"
+            />
+            <span>Check-in completado · Presenta este código 2D al embarcar</span>
+          </div>
+
+          <div class="pnr-checkin-pending" *ngIf="res.checkinRealizado && !res.barcodeBase64 && !pnrQrUrl">
+            <ion-icon name="information-circle" aria-hidden="true"></ion-icon>
+            <div>
+              <strong>Código 2D no disponible aún</strong>
+              <span>Tu check-in figura registrado, pero falta información de vuelo o asiento para emitir el código 2D.</span>
+            </div>
+          </div>
+
+          <div class="pnr-checkin-pending" *ngIf="!res.checkinRealizado">
+            <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
+            <div>
+              <strong>Check-in pendiente</strong>
+              <span>Falta realizar el check-in para mostrar el código 2D de embarque.</span>
+            </div>
           </div>
         </div>
       </div>

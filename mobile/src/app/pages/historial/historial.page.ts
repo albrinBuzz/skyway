@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../core/api.service';
 import { HapticsService } from '../../core/haptics.service';
+import { ciudadPorIata } from '../../core/iata-catalog';
 import { DetalleReserva, Notificacion, Pagina, ResumenReserva } from '../../core/models';
 import { errorMessage } from '../../core/ui';
 import { addIcons } from 'ionicons';
@@ -101,6 +102,7 @@ export class HistorialPage {
   page = 0;
   busy = false;
   error = '';
+  searchTerm = '';
   private generation = 0;
 
   expandedReservas = new Set<number>();
@@ -143,6 +145,13 @@ export class HistorialPage {
   private readonly detalleReservaCache = new Map<number, DetalleReserva>();
 
   ionViewWillEnter() {
+    this.detalleReservaCache.clear();
+    void this.load(0);
+  }
+
+  onSearchInput(ev: Event) {
+    const val = (ev as CustomEvent<{ value?: string | null }>).detail?.value ?? '';
+    this.searchTerm = val.trim();
     void this.load(0);
   }
 
@@ -167,18 +176,9 @@ export class HistorialPage {
         const data = await firstValueFrom(this.api.notificaciones(page));
         if (generation === this.generation) this.cambios = data;
       } else {
-        const data = await firstValueFrom(this.api.reservas(this.seccion, page));
+        const data = await firstValueFrom(this.api.reservas(this.seccion, page, 20, this.searchTerm));
         if (generation === this.generation) {
           this.reservas = data;
-          // Pre-cargar detalles para rol y check-in
-          for (const r of data.contenido) {
-            if (!this.detalleReservaCache.has(r.idReserva)) {
-              this.api.reserva(r.idReserva).subscribe({
-                next: d => this.detalleReservaCache.set(r.idReserva, d),
-                error: () => {}
-              });
-            }
-          }
         }
       }
     } catch (e) {
@@ -206,15 +206,18 @@ export class HistorialPage {
   ciudadPorIata(iata: string | null | undefined): string {
     if (!iata) return 'Ciudad';
     const code = iata.trim().toUpperCase();
-    return CIUDADES_IATA[code]?.ciudad || code;
+    return CIUDADES_IATA[code]?.ciudad || ciudadPorIata(code);
   }
 
   esTitular(idReserva: number): boolean | null {
     const d = this.detalleReservaCache.get(idReserva);
-    return d ? d.titular : null;
+    if (d) return d.titular;
+    const r = this.reservas?.contenido.find(x => x.idReserva === idReserva);
+    return r?.esTitular ?? null;
   }
 
   tieneCheckin(r: ResumenReserva): boolean {
+    if (r.checkinRealizado !== undefined) return r.checkinRealizado;
     const d = this.detalleReservaCache.get(r.idReserva);
     if (d?.checkin) return true;
     return /check-?in/i.test(r.estadoReserva?.descripcion ?? '');

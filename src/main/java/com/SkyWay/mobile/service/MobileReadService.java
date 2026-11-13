@@ -51,18 +51,33 @@ public class MobileReadService {
         if(page<0 || page>100000 || size<1 || size>100)
             throw new MobileException(HttpStatus.BAD_REQUEST,"PAGINACION_INVALIDA","Usa pagina entre 0 y 100000 y tamano entre 1 y 100.");
     }
+    private static String normRut(String r) {
+        return r == null ? "" : r.replace(".", "").trim().toUpperCase(Locale.ROOT);
+    }
+    private static String normText(String s) {
+        if (s == null) return "";
+        return java.text.Normalizer.normalize(s.trim(), java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "").toLowerCase(Locale.ROOT);
+    }
     public Pagina<ResumenReserva> listar(String rut,String grupo,int page,int size) {
+        return listar(rut, grupo, null, page, size);
+    }
+    public Pagina<ResumenReserva> listar(String rut,String grupo,String q,int page,int size) {
         auth.requirePassenger(rut); pagination(page,size);
         if(!List.of("activas","historial").contains(grupo))
             throw new MobileException(HttpStatus.BAD_REQUEST,"GRUPO_INVALIDO","grupo debe ser activas o historial.");
         boolean active=grupo.equals("activas"); var now=LocalDateTime.now(clock);
-        var data=reservas.mobileReservas(rut,active,now,size,page*size).stream().map(r -> {
-            boolean checkinHecho = r[3] != null && r[3].toString().toLowerCase(Locale.ROOT).contains("check-in");
+        String filtro = q != null && !q.isBlank() ? q.trim() : null;
+        var data=reservas.mobileReservas(rut,active,now,filtro,size,page*size).stream().map(r -> {
+            String pnr = text(r[8]);
+            boolean esTitular = r[9] instanceof Boolean b ? b : "true".equalsIgnoreCase(String.valueOf(r[9]));
+            boolean checkinHecho = r[10] instanceof Boolean b ? b : (r[3] != null && r[3].toString().toLowerCase(Locale.ROOT).contains("check-in"));
+            int totalPax = r[11] != null ? number(r[11]) : 1;
             return new ResumenReserva(
-                number(r[0]),date(r[1]),new EstadoReservaDto(number(r[2]),text(r[3])),(BigDecimal)r[4],active,
-                date(r[5]),text(r[6]),text(r[7]), checkinHecho);
+                number(r[0]), pnr, date(r[1]), new EstadoReservaDto(number(r[2]),text(r[3])), (BigDecimal)r[4], active,
+                date(r[5]), text(r[6]), text(r[7]), esTitular, checkinHecho, totalPax);
         }).toList();
-        return Pagina.of(data,page,size,reservas.mobileCountReservas(rut,active,now));
+        return Pagina.of(data,page,size,reservas.mobileCountReservas(rut,active,now,filtro));
     }
     public DetalleReserva detalle(String rut,int id) {
         auth.requirePassenger(rut);
@@ -105,18 +120,26 @@ public class MobileReadService {
             estadoVentanaCheckin = "COMPLETADO";
             mensajeCheckin = "Check-in completado con éxito.";
         } else {
-            LocalDateTime primerSalida = itineraries.stream()
+            LocalDateTime ahora = LocalDateTime.now(clock);
+            // En reservas ida y vuelta, priorizar el próximo vuelo no partido para no bloquear el regreso tras la ida.
+            LocalDateTime salidaReferencia = itineraries.stream()
                     .flatMap(it -> it.vuelos().stream())
                     .map(c -> c.vuelo().fechaHoraSalida())
                     .filter(Objects::nonNull)
+                    .filter(f -> !f.isBefore(ahora.minusMinutes(60)))
                     .sorted()
                     .findFirst()
-                    .orElse(null);
+                    .orElseGet(() -> itineraries.stream()
+                            .flatMap(it -> it.vuelos().stream())
+                            .map(c -> c.vuelo().fechaHoraSalida())
+                            .filter(Objects::nonNull)
+                            .sorted()
+                            .findFirst()
+                            .orElse(null));
 
-            if (primerSalida != null) {
-                fechaAperturaCheckin = primerSalida.minusHours(48);
-                fechaCierreCheckin = primerSalida.minusMinutes(60);
-                LocalDateTime ahora = LocalDateTime.now(clock);
+            if (salidaReferencia != null) {
+                fechaAperturaCheckin = salidaReferencia.minusHours(48);
+                fechaCierreCheckin = salidaReferencia.minusMinutes(60);
 
                 if (ahora.isBefore(fechaAperturaCheckin)) {
                     estadoVentanaCheckin = "NO_DISPONIBLE_AUN";
@@ -132,8 +155,10 @@ public class MobileReadService {
             }
         }
 
-        return new DetalleReserva(number(booking[0]),date(booking[1]),new EstadoReservaDto(number(booking[2]),text(booking[3])),
-                (BigDecimal)booking[4],rut.equals(booking[5]),itineraries,bags,chk,
+        String pnrReserva = booking.length > 6 ? text(booking[6]) : resolverCodigoPnr(id);
+        boolean esTitular = normRut(rut).equals(normRut(text(booking[5])));
+        return new DetalleReserva(number(booking[0]), pnrReserva, date(booking[1]), new EstadoReservaDto(number(booking[2]),text(booking[3])),
+                (BigDecimal)booking[4], esTitular, itineraries, bags, chk,
                 checkinDisponible, fechaAperturaCheckin, fechaCierreCheckin, estadoVentanaCheckin, mensajeCheckin);
     }
     CheckinDto checkin(int id) {
@@ -150,7 +175,12 @@ public class MobileReadService {
     public Inicio inicio(String rut) {
         Perfil profile=auth.perfil(rut);
         var next=reservas.mobileNext(rut,LocalDateTime.now(clock));
-        ProximoVuelo flight=next.isEmpty()?null:new ProximoVuelo(number(next.get(0)[0]),vuelo(rut,number(next.get(0)[0]),number(next.get(0)[1])));
+        ProximoVuelo flight = null;
+        if (!next.isEmpty()) {
+            int nextResId = number(next.get(0)[0]);
+            int nextFlightId = number(next.get(0)[1]);
+            flight = new ProximoVuelo(nextResId, resolverCodigoPnr(nextResId), vuelo(rut, nextResId, nextFlightId));
+        }
         return new Inicio(profile,flight,notificaciones.countByUsuario_RutAndLeidoFalse(rut));
     }
     static NotificacionDto notification(Notificacion n) {
@@ -191,7 +221,9 @@ public class MobileReadService {
                     "El generador de PDF no se encuentra disponible.");
         }
         var reserva = reservas.findById(idReserva).orElseThrow(MobileException::notFound);
-        byte[] pdf = eTicketPdfGeneratorService.generarPdfBoardingPasses(reserva);
+        // Si quien solicita no es el titular, filtrar el PDF únicamente a sus propios pases de abordar.
+        String filtroPasajero = detail.titular() ? null : rut;
+        byte[] pdf = eTicketPdfGeneratorService.generarPdfBoardingPasses(reserva, filtroPasajero);
         if (pdf == null || pdf.length == 0) {
             throw new MobileException(HttpStatus.INTERNAL_SERVER_ERROR, "ERROR_PDF",
                     "No se pudo generar la tarjeta de embarque en formato PDF.");
@@ -222,8 +254,8 @@ public class MobileReadService {
             throw MobileException.notFound();
         }
         String pnr = codigoPnr.trim().toUpperCase(Locale.ROOT);
-        String ape = apellido.trim().toLowerCase(Locale.ROOT);
-        if (pnr.isBlank() || ape.isBlank()) {
+        String apeNorm = normText(apellido);
+        if (pnr.isBlank() || apeNorm.isBlank()) {
             throw new MobileException(HttpStatus.BAD_REQUEST, "DATOS_INCOMPLETOS", "Ingresa el código PNR y tu apellido.");
         }
 
@@ -234,19 +266,24 @@ public class MobileReadService {
                    u.rut, TRIM(COALESCE(u.nombre, '') || ' ' || COALESCE(u.apellido, ''))
             FROM reserva r
             LEFT JOIN estado_reserva er ON er.id_estado_reserva = r.estado_reserva
-            JOIN pasajero p ON (p.rut = r.rut_pasajero OR EXISTS (
-                SELECT 1 FROM pasajero_reserva pr WHERE pr.id_reserva = r.id_reserva AND pr.rut = p.rut
-            ))
+            JOIN pasajero p ON (
+                REPLACE(UPPER(TRIM(p.rut)), '.', '') = REPLACE(UPPER(TRIM(r.rut_pasajero)), '.', '')
+                OR EXISTS (
+                    SELECT 1 FROM pasajero_reserva pr
+                    WHERE pr.id_reserva = r.id_reserva
+                      AND REPLACE(UPPER(TRIM(pr.rut)), '.', '') = REPLACE(UPPER(TRIM(p.rut)), '.', '')
+                )
+            )
             JOIN usuario u ON u.rut = p.rut
             WHERE (UPPER(TRIM(COALESCE(r.codigo_reserva, ''))) = :pnr
                    OR (:pnr ~ '^[0-9]+$' AND r.id_reserva = CAST(:pnrNum AS INT)))
-              AND LOWER(TRIM(COALESCE(u.apellido, ''))) = :apellido
+              AND LOWER(TRANSLATE(TRIM(COALESCE(u.apellido, '')), 'ÁÉÍÓÚÜÑáéíóúüñ', 'AEIOUUNaeiouun')) = :apellido
             ORDER BY CASE WHEN u.rut = r.rut_pasajero THEN 0 ELSE 1 END, r.id_reserva DESC
             LIMIT 1
         """)
         .setParameter("pnr", pnr)
         .setParameter("pnrNum", pnr.matches("\\d+") ? Integer.parseInt(pnr) : -1)
-        .setParameter("apellido", ape)
+        .setParameter("apellido", apeNorm)
         .getResultList();
 
         if (rows.isEmpty()) {
@@ -267,22 +304,25 @@ public class MobileReadService {
         @SuppressWarnings("unchecked")
         List<Object[]> flightRows = em.createNativeQuery("""
             SELECT v.id_vuelo, v.numero_vuelo, v.fecha_hora_salida,
-                   ao.codigo_iata, ao.ciudad, ad.codigo_iata, ad.ciudad,
+                   ao.codigo_iata, co.nombre, ad.codigo_iata, cd.nombre,
                    pe.codigo_puerta, pe.terminal, a.numero_asiento
             FROM reserva_itinerario ri
             JOIN itinerario_vuelo iv ON iv.id_itinerario = ri.id_itinerario
             JOIN vuelo v ON v.id_vuelo = iv.id_vuelo
             LEFT JOIN LATERAL (
-                SELECT sv.id_aeropuerto_origen FROM segmento_vuelo sv WHERE sv.id_vuelo = v.id_vuelo ORDER BY sv.orden_segmento ASC LIMIT 1
+                SELECT sv.id_aeropuerto_origen, sv.id_segmento FROM segmento_vuelo sv WHERE sv.id_vuelo = v.id_vuelo ORDER BY sv.orden_segmento ASC LIMIT 1
             ) s1 ON true
             LEFT JOIN LATERAL (
-                SELECT sv.id_aeropuerto_destino, sv.id_segmento FROM segmento_vuelo sv WHERE sv.id_vuelo = v.id_vuelo ORDER BY sv.orden_segmento DESC LIMIT 1
+                SELECT sv.id_aeropuerto_destino FROM segmento_vuelo sv WHERE sv.id_vuelo = v.id_vuelo ORDER BY sv.orden_segmento DESC LIMIT 1
             ) s2 ON true
             LEFT JOIN aeropuerto ao ON ao.id_aeropuerto = s1.id_aeropuerto_origen
+            LEFT JOIN ciudad co ON co.id_ciudad = ao.id_ciudad
             LEFT JOIN aeropuerto ad ON ad.id_aeropuerto = s2.id_aeropuerto_destino
-            LEFT JOIN asignacion_puerta ap ON ap.id_vuelo = v.id_vuelo
+            LEFT JOIN ciudad cd ON cd.id_ciudad = ad.id_ciudad
+            LEFT JOIN asignacion_puerta ap ON ap.id_segmento = s1.id_segmento
             LEFT JOIN puerta_embarque pe ON pe.id_puerta = ap.id_puerta
-            LEFT JOIN reserva_asiento ra ON ra.id_reserva = :idReserva AND ra.id_vuelo = v.id_vuelo AND ra.rut = :rut
+            LEFT JOIN reserva_asiento ra ON ra.id_reserva = :idReserva AND ra.id_vuelo = v.id_vuelo
+                 AND REPLACE(UPPER(TRIM(ra.rut)), '.', '') = REPLACE(UPPER(TRIM(:rut)), '.', '')
             LEFT JOIN asiento a ON a.id_asiento = ra.id_asiento
             WHERE ri.id_reserva = :idReserva
             ORDER BY CASE WHEN v.fecha_hora_salida >= :ahora THEN 0 ELSE 1 END, v.fecha_hora_salida ASC

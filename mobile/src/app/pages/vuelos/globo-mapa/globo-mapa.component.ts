@@ -35,6 +35,7 @@ export class GloboMapaComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('container', { static: false }) containerRef!: ElementRef<HTMLDivElement>;
 
   cargando = true;
+  errorWebgl = false;
   estadoCarga = 'Cargando datos geográficos...';
   detallesExpandidos = false;
 
@@ -181,7 +182,9 @@ export class GloboMapaComponent implements OnInit, AfterViewInit, OnDestroy {
       this.cargando = false;
     } catch (err) {
       console.error('Error inicializando globo 3D:', err);
-      this.estadoCarga = 'No se pudo cargar el mapa 3D.';
+      this.errorWebgl = true;
+      this.cargando = false;
+      this.estadoCarga = 'Visualización 3D no disponible en este dispositivo. Mostrando resumen 2D de la ruta.';
     }
   }
 

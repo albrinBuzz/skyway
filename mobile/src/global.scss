@@ -758,10 +758,23 @@ ion-alert .alert-message {
    ========================================================================== */
 body.sky-dark {
   --ion-background-color: #0b1220;
+  --ion-background-color-rgb: 11, 18, 32;
   --ion-text-color: #e6edf8;
+  --ion-text-color-rgb: 230, 237, 248;
   --ion-card-background: #131e33;
+  --ion-item-background: #131e33;
   --ion-toolbar-background: #111a2c;
   --ion-tab-bar-background: #111a2c;
+  --ion-tab-bar-color: #93a7c7;
+  --ion-tab-bar-color-selected: #6c96ff;
+
+  --sky-bg-surface: #131e33;
+  --sky-bg-soft: #192640;
+  --sky-bg-subtle: #1c2c4d;
+  --sky-border: #243454;
+  --sky-text-primary: #f1f5f9;
+  --sky-text-secondary: #9bb0d1;
+
   color: #e6edf8;
   background-color: #0b1220;
 
@@ -776,16 +789,32 @@ body.sky-dark {
     --color: #f1f5f9;
   }
 
+  ion-searchbar {
+    --background: #192640;
+    --color: #f1f5f9;
+    --placeholder-color: #9bb0d1;
+    --icon-color: #9bb0d1;
+    --clear-button-color: #9bb0d1;
+  }
+
   ion-title,
   h1, h2, h3,
-  .sky-acc-title {
+  .sec-head h2,
+  .sky-acc-title,
+  .sky-empty strong,
+  .sky-modal-header h2,
+  .sky-sheet-head h2 {
     color: #f1f5f9;
   }
 
   .eyebrow,
   .muted,
+  .sub-text,
+  .hint,
   .sky-acc-kicker,
+  .sky-acc-eyebrow,
   .sky-acc-summary,
+  .sky-empty p,
   .page-intro .intro-desc {
     color: #9bb0d1;
   }
@@ -795,6 +824,7 @@ body.sky-dark {
   .sky-acc,
   .sky-skeleton-card,
   .empty-state-card,
+  .sky-empty,
   .flight-summary-banner,
   .payment-method-card,
   .checkout-breakdown-card,
@@ -803,6 +833,20 @@ body.sky-dark {
     border-color: #243454 !important;
     color: #e6edf8;
     box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35);
+  }
+
+  .empty-state-card h2,
+  .empty-state-card h3 {
+    color: #f3f7ff !important;
+  }
+
+  .empty-state-card p {
+    color: #a9bee0 !important;
+  }
+
+  .empty-state-card .empty-icon-wrap {
+    background: #1c2c4d !important;
+    color: #82a7ff !important;
   }
 
   .sky-acc.is-open {
@@ -816,6 +860,10 @@ body.sky-dark {
     &:active {
       background: #1a2844;
     }
+  }
+
+  .sky-acc.is-open > .sky-acc-trigger {
+    background: linear-gradient(180deg, #1b2a47 0%, #131e33 100%);
   }
 
   .sky-acc-icon {
@@ -833,7 +881,8 @@ body.sky-dark {
     color: #ffffff;
   }
 
-  .sky-acc-content {
+  .sky-acc-content,
+  .sky-acc-body {
     border-top-color: #223250;
   }
 
@@ -841,11 +890,32 @@ body.sky-dark {
   .fare-perks-toggle,
   .timeline-message-box,
   .airport-card-picker,
+  .airport-touch-btn,
   .date-picker-box,
+  .sky-field-box,
   .payment-option-row {
     background: #192640 !important;
     border-color: #2b3d63 !important;
     color: #e6edf8 !important;
+  }
+
+  .airport-touch-btn:hover {
+    background: #203152 !important;
+    border-color: #5b84ff !important;
+  }
+
+  .airport-touch-btn .airport-touch-code,
+  .airport-touch-btn .code,
+  .airport-touch-btn strong,
+  .airport-card-picker strong {
+    color: #ffffff !important;
+  }
+
+  .airport-touch-btn .airport-touch-sub,
+  .airport-touch-btn .city,
+  .airport-touch-btn .hint-tap,
+  .airport-card-picker span {
+    color: #a3b6d9 !important;
   }
 
   .payment-option-row.is-selected {
@@ -868,17 +938,50 @@ body.sky-dark {
     color: #9bb0d1 !important;
   }
 
+  .sky-btn-ghost {
+    background: #1c2c4d;
+    border-color: rgba(255, 255, 255, 0.14);
+    color: #d6e3fa;
+  }
+
+  .sky-modal-header,
+  .sky-sheet-head {
+    background: #111a2c;
+    border-bottom-color: #21304d;
+  }
+
+  .sky-modal-close {
+    background: #1c2c4d;
+    color: #d6e3fa;
+  }
+
+  .sky-modal-list ion-item {
+    --background: #131e33;
+    --color: #f1f5f9;
+    --border-color: #21304d;
+  }
+
   .seg-bar {
     background: #131e33 !important;
     border-color: #243454 !important;
   }
 
   .seg-btn {
-    color: #9bb0d1 !important;
+    color: #dbe7fc !important;
+
+    span,
+    ion-icon {
+      color: #dbe7fc !important;
+    }
 
     &.is-active {
       background: #2449d8 !important;
       color: #ffffff !important;
+
+      span,
+      ion-icon {
+        color: #ffffff !important;
+      }
     }
   }
 
@@ -886,12 +989,154 @@ body.sky-dark {
   ion-select,
   ion-textarea {
     --color: #f1f5f9;
-    --placeholder-color: #7d92b5;
+    --placeholder-color: #8ea3c6;
   }
 
   ion-modal,
   ion-alert {
     --background: #131e33;
     --color: #e6edf8;
+  }
+
+  ion-modal.airport-modal {
+    --background: #0b1220;
+
+    ion-header ion-toolbar {
+      --background: #111a2c;
+      --color: #f3f7ff;
+      --border-color: #243454;
+    }
+
+    .modal-searchbar-toolbar {
+      --background: #111a2c;
+      --border-color: #243454;
+
+      ion-searchbar {
+        --background: #192640 !important;
+        --color: #f3f7ff !important;
+        --placeholder-color: #9bb0d1 !important;
+        --icon-color: #7ea9ff !important;
+        --clear-button-color: #9bb0d1 !important;
+      }
+
+      ion-searchbar input.searchbar-input {
+        color: #f3f7ff !important;
+        caret-color: #7ea9ff;
+      }
+    }
+
+    .airport-modal-content {
+      --background: #0b1220 !important;
+      background: #0b1220;
+      color: #e6eefc;
+    }
+
+    .airport-modal-header-bar {
+      background: #111a2c !important;
+      border-bottom-color: #243454 !important;
+    }
+
+    .airport-modal-counter {
+      color: #9bb0d1 !important;
+    }
+
+    .modal-clear-btn {
+      background: rgba(244, 63, 94, 0.16);
+      border-color: rgba(251, 113, 133, 0.35);
+      color: #fda4af;
+
+      &:hover {
+        background: rgba(244, 63, 94, 0.25);
+        border-color: rgba(251, 113, 133, 0.55);
+      }
+    }
+
+    .airport-item-row {
+      background: #131e33 !important;
+      border-color: #243454 !important;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.28);
+
+      &:hover {
+        background: #192640 !important;
+        border-color: #4f7cff !important;
+      }
+
+      &.is-selected {
+        background: #1b2e54 !important;
+        border-color: #5b8eff !important;
+
+        .iata-pill {
+          background: #3a6df0 !important;
+          border-color: #5b8eff !important;
+          color: #ffffff !important;
+        }
+      }
+    }
+
+    .iata-pill {
+      background: #1d2d4d !important;
+      border-color: #304773 !important;
+      color: #f3f7ff !important;
+    }
+
+    .item-city {
+      color: #f3f7ff !important;
+    }
+
+    .item-name {
+      color: #b4c3de !important;
+    }
+
+    .item-country,
+    .radio-check-wrap {
+      color: #8fa5c9 !important;
+    }
+
+    .radio-check-wrap .icon-checked {
+      color: #6ea8ff !important;
+    }
+
+    .airport-no-results {
+      color: #9bb0d1 !important;
+
+      ion-icon {
+        color: #7ea9ff !important;
+      }
+
+      h3 {
+        color: #f3f7ff !important;
+      }
+
+      p {
+        color: #b4c3de !important;
+      }
+
+      ion-button {
+        --color: #9bc3ff;
+        --border-color: #4f7cff;
+      }
+    }
+  }
+
+  .reserva-route .route-codes .iata,
+  .reserva-route .iata,
+  .reserva-route .iata-end,
+  .reserva-route .route-names .route-side strong,
+  .route-card .route-codes .iata,
+  .route-card .iata,
+  .route-city .iata,
+  .flight-strip .iata,
+  .itinerary-card .iata {
+    color: #f3f7ff !important;
+  }
+
+  .reserva-route .fl-dot:not(.fl-dot-end),
+  .route-card .fl-dot:not(.fl-dot-end),
+  .flight-line .fl-dot:not(.fl-dot-end) {
+    background: #131e33 !important;
+  }
+
+  .date-input-wrap ion-input input::-webkit-calendar-picker-indicator {
+    filter: invert(0.92) brightness(1.1);
   }
 }

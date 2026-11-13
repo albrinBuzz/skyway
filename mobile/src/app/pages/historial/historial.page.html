@@ -101,6 +101,16 @@
         </div>
       </div>
 
+      <div class="filter-bar-wrap reveal">
+        <ion-searchbar
+          placeholder="Buscar por PNR, IATA, ciudad o #reserva"
+          [debounce]="320"
+          [value]="searchTerm"
+          (ionInput)="onSearchInput($event)"
+          (ionClear)="onSearchInput($event)"
+        ></ion-searchbar>
+      </div>
+
       <div *ngIf="result.contenido.length; else sinReservas" class="historial-acc-list">
         <article
           *ngFor="let r of result.contenido"
@@ -118,8 +128,9 @@
             </span>
             <span class="sky-acc-meta">
               <span class="sky-acc-kicker">
-                Reserva #{{ r.idReserva }}
-                <ng-container *ngIf="esTitular(r.idReserva) !== null"> · {{ esTitular(r.idReserva) ? 'Titular' : 'Acompañante' }}</ng-container>
+                {{ r.codigoPnr ? ('PNR ' + r.codigoPnr + ' · #' + r.idReserva) : ('Reserva #' + r.idReserva) }}
+                <ng-container *ngIf="r.esTitular !== undefined && r.esTitular !== null"> · {{ r.esTitular ? 'Titular' : 'Acompañante' }}</ng-container>
+                <ng-container *ngIf="r.totalPasajeros && r.totalPasajeros > 1"> · {{ r.totalPasajeros }} pax</ng-container>
               </span>
               <strong class="sky-acc-title">{{ r.codigoIataOrigen || '—' }} → {{ r.codigoIataDestino || '—' }}</strong>
               <span class="sky-acc-summary">

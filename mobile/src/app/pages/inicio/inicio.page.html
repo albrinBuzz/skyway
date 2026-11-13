@@ -1164,14 +1164,14 @@
                 <strong class="item-right">{{ clp(totalTarifasBase()) }}</strong>
               </div>
 
-              <!-- Asientos -->
-              <div class="item-row" *ngFor="let v of vuelosItinerario">
-                <div class="item-left" *ngIf="asientoSeleccionadoEnVuelo(v.idVuelo)">
-                  <span>Asiento {{ asientoSeleccionadoEnVuelo(v.idVuelo)?.numeroAsiento }} ({{ asientoSeleccionadoEnVuelo(v.idVuelo)?.clase }})</span>
-                  <span class="sub" *ngIf="vuelosItinerario.length > 1">Tramo {{ v.origen }} → {{ v.destino }}</span>
+              <!-- Asientos de todos los pasajeros -->
+              <div class="item-row" *ngFor="let item of listaResumenAsientos()">
+                <div class="item-left">
+                  <span>Asiento {{ item.numeroAsiento }} ({{ item.clase }}) · {{ item.paxLabel }}</span>
+                  <span class="sub" *ngIf="vuelosItinerario.length > 1">Tramo {{ item.tramoLabel }}</span>
                 </div>
-                <strong class="item-right" *ngIf="asientoSeleccionadoEnVuelo(v.idVuelo)">
-                  {{ asientoSeleccionadoEnVuelo(v.idVuelo)?.precio ? ('+ ' + clp(asientoSeleccionadoEnVuelo(v.idVuelo)?.precio)) : 'Incluido' }}
+                <strong class="item-right">
+                  {{ item.precio > 0 ? ('+ ' + clp(item.precio)) : 'Incluido' }}
                 </strong>
               </div>
 

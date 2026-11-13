@@ -394,10 +394,12 @@ export class ApiService {
     });
   }
 
-  reservas(grupo: 'activas' | 'historial', pagina = 0, tamano = 20) {
-    return this.http.get<Pagina<ResumenReserva>>(`${this.base}/reservas`, {
-      params: { grupo, pagina, tamano }
-    });
+  reservas(grupo: 'activas' | 'historial', pagina = 0, tamano = 20, q?: string) {
+    const params: Record<string, string | number> = { grupo, pagina, tamano };
+    if (q && q.trim()) {
+      params['q'] = q.trim();
+    }
+    return this.http.get<Pagina<ResumenReserva>>(`${this.base}/reservas`, { params });
   }
 
   reserva(id: number) {

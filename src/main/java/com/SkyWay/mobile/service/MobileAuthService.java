@@ -67,7 +67,13 @@ public class MobileAuthService {
         if (correo.isBlank()) {
             throw new MobileException(HttpStatus.BAD_REQUEST, "CORREO_REQUERIDO", "El correo electrónico es obligatorio.");
         }
-        if (usuarios.existsById(cleanRut) || usuarios.existsById(rut) || pasajeros.existsById(cleanRut) || pasajeros.existsById(rut)) {
+        var existingUser = usuarios.findById(cleanRut).or(() -> usuarios.findById(rut)).orElse(null);
+        // Permitir completar el registro cuando el RUT fue creado solo como acompañante sin contraseña ni correo.
+        boolean esAcompananteSinCuenta = existingUser != null
+                && (existingUser.getContrasena() == null || existingUser.getContrasena().isBlank())
+                && (existingUser.getCorreoElectronico() == null || existingUser.getCorreoElectronico().isBlank());
+        if ((existingUser != null && !esAcompananteSinCuenta)
+                || (!esAcompananteSinCuenta && (pasajeros.existsById(cleanRut) || pasajeros.existsById(rut)))) {
             throw new MobileException(HttpStatus.CONFLICT, "RUT_REGISTRADO", "El RUT ya se encuentra registrado en el sistema.");
         }
         if (usuarios.findByCorreoElectronicoIgnoreCase(correo).isPresent()) {
@@ -82,9 +88,10 @@ public class MobileAuthService {
             throw new MobileException(HttpStatus.BAD_REQUEST, "MENOR_DE_EDAD", "Debes tener al menos 18 años para registrarte en SkyWay.");
         }
 
+        String finalRut = esAcompananteSinCuenta ? existingUser.getRut() : cleanRut;
         String doc = request.documentoIdentidad() != null && !request.documentoIdentidad().isBlank()
                 ? request.documentoIdentidad().trim()
-                : cleanRut;
+                : finalRut;
         String tipoDoc = request.tipoDocumento() != null && !request.tipoDocumento().isBlank()
                 ? request.tipoDocumento().trim()
                 : "RUT";
@@ -92,26 +99,44 @@ public class MobileAuthService {
                 ? request.nacionalidad().trim()
                 : "Chilena";
 
-        Usuario nuevo = new Usuario();
-        nuevo.setRut(cleanRut);
-        nuevo.setNombre(request.nombre().trim());
-        nuevo.setApellido(request.apellido().trim());
-        nuevo.setCorreoElectronico(correo);
-        nuevo.setTelefono(request.telefono().trim());
-        nuevo.setDocumentoIdentidad(doc);
-        nuevo.setFechaNacimiento(java.sql.Date.valueOf(request.fechaNacimiento()));
-        nuevo.setContrasena(request.contrasena());
+        if (esAcompananteSinCuenta) {
+            existingUser.setNombre(request.nombre().trim());
+            existingUser.setApellido(request.apellido().trim());
+            existingUser.setCorreoElectronico(correo);
+            existingUser.setTelefono(request.telefono().trim());
+            existingUser.setDocumentoIdentidad(doc);
+            existingUser.setFechaNacimiento(java.sql.Date.valueOf(request.fechaNacimiento()));
+            existingUser.setContrasena(passwords.encode(request.contrasena()));
+            usuarios.save(existingUser);
+            pasajeros.findById(finalRut).ifPresent(p -> {
+                p.setTipoDocumento(tipoDoc);
+                p.setNumeroDocumento(doc);
+                p.setFechaNacimiento(java.sql.Date.valueOf(request.fechaNacimiento()));
+                p.setNacionalidad(nac);
+                pasajeros.save(p);
+            });
+        } else {
+            Usuario nuevo = new Usuario();
+            nuevo.setRut(finalRut);
+            nuevo.setNombre(request.nombre().trim());
+            nuevo.setApellido(request.apellido().trim());
+            nuevo.setCorreoElectronico(correo);
+            nuevo.setTelefono(request.telefono().trim());
+            nuevo.setDocumentoIdentidad(doc);
+            nuevo.setFechaNacimiento(java.sql.Date.valueOf(request.fechaNacimiento()));
+            nuevo.setContrasena(request.contrasena());
 
-        usuarioService.crearPasajeroConDetalle(nuevo, tipoDoc, nac);
+            usuarioService.crearPasajeroConDetalle(nuevo, tipoDoc, nac);
+        }
 
         var now = clock.instant();
         var claims = JwtClaimsSet.builder().issuer(MobileSecurityConfig.ISSUER)
-                .audience(List.of(MobileSecurityConfig.AUDIENCE)).subject(cleanRut)
+                .audience(List.of(MobileSecurityConfig.AUDIENCE)).subject(finalRut)
                 .issuedAt(now).expiresAt(now.plusSeconds(ttl)).id(UUID.randomUUID().toString())
                 .claim("scope", "mobile").build();
         var header = JwsHeader.with(MacAlgorithm.HS256).type("JWT").build();
         return new LoginResponse(tokens.encode(JwtEncoderParameters.from(header, claims)).getTokenValue(),
-                "Bearer", ttl, perfil(cleanRut));
+                "Bearer", ttl, perfil(finalRut));
     }
     public void requirePassenger(String rut) {
         if (!pasajeros.existsById(rut))

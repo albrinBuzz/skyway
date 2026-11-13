@@ -40,8 +40,10 @@ BEGIN
     JOIN ciudad ci2 ON ci2.id_ciudad = arp2.id_ciudad
     WHERE arp1.codigo_iata = p_codigo_origen
       AND arp2.codigo_iata = p_codigo_destino
+      AND it.hora_salida > NOW()
       AND (p_fecha_inicio IS NULL OR (it.hora_salida >= p_fecha_inicio
-      AND it.hora_salida < p_fecha_inicio + INTERVAL '1 day'));
+      AND it.hora_salida < p_fecha_inicio + INTERVAL '1 day'))
+    ORDER BY it.hora_salida ASC;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -419,8 +421,8 @@ SELECT DISTINCT ON (vl.id_vuelo, ast.id_asiento)
     vl.numero_vuelo,
     a_orig.codigo_iata AS origen_tramo,
     a_dest.codigo_iata AS destino_tramo,
-    sgm.hora_salida,
-    sgm.hora_llegada,
+    sgm_ini.hora_salida,
+    sgm_fin.hora_llegada,
     COALESCE(prta.codigo_puerta, 'TBD') AS codigo_puerta,
     COALESCE(prta.terminal, 'TBD') AS terminal,
     ast.numero_asiento,
@@ -433,16 +435,26 @@ FROM reserva rsv
     JOIN pasajero p ON p.rut = rsva.rut
     JOIN usuario us ON us.rut = p.rut
     JOIN vuelo vl ON vl.id_vuelo = rsva.id_vuelo
-    JOIN segmento_vuelo sgm ON sgm.id_vuelo = vl.id_vuelo
-    JOIN aeropuerto a_orig ON a_orig.id_aeropuerto = sgm.id_aeropuerto_origen
-    JOIN aeropuerto a_dest ON a_dest.id_aeropuerto = sgm.id_aeropuerto_destino
-    LEFT JOIN asignacion_puerta asgp ON asgp.id_segmento = sgm.id_segmento
+    JOIN LATERAL (
+        SELECT s.id_segmento, s.id_aeropuerto_origen, s.hora_salida
+        FROM segmento_vuelo s WHERE s.id_vuelo = vl.id_vuelo
+        ORDER BY s.orden_segmento ASC LIMIT 1
+    ) sgm_ini ON true
+    JOIN LATERAL (
+        SELECT s.id_aeropuerto_destino, s.hora_llegada
+        FROM segmento_vuelo s WHERE s.id_vuelo = vl.id_vuelo
+        ORDER BY s.orden_segmento DESC LIMIT 1
+    ) sgm_fin ON true
+    JOIN aeropuerto a_orig ON a_orig.id_aeropuerto = sgm_ini.id_aeropuerto_origen
+    JOIN aeropuerto a_dest ON a_dest.id_aeropuerto = sgm_fin.id_aeropuerto_destino
+    LEFT JOIN asignacion_puerta asgp ON asgp.id_segmento = sgm_ini.id_segmento
     LEFT JOIN puerta_embarque prta ON prta.id_puerta = asgp.id_puerta
     LEFT JOIN asiento ast ON ast.id_asiento = rsva.id_asiento
     LEFT JOIN clase_asiento clas ON clas.id_clase = ast.id_clase
-WHERE (rsv.rut_pasajero = p_rut_pasajero OR rsva.rut = p_rut_pasajero)
+WHERE (REPLACE(UPPER(TRIM(rsv.rut_pasajero)), '.', '') = REPLACE(UPPER(TRIM(p_rut_pasajero)), '.', '')
+       OR REPLACE(UPPER(TRIM(rsva.rut)), '.', '') = REPLACE(UPPER(TRIM(p_rut_pasajero)), '.', ''))
   AND rsv.id_reserva = p_id_reserva
-ORDER BY vl.id_vuelo, ast.id_asiento, sgm.orden_segmento ASC;
+ORDER BY vl.id_vuelo, ast.id_asiento;
 END;
 $$;
 

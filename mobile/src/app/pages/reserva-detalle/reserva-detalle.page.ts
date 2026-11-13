@@ -11,7 +11,7 @@ import {
   pricetagOutline, refreshOutline, shieldCheckmarkOutline, ticketOutline, timeOutline
 } from 'ionicons/icons';
 import { Caracteristica, DetalleReserva, Itinerario, PasajeroTicket, Vuelo, Tarifa } from '../../core/models';
-import { errorMessage, featureValue, flights } from '../../core/ui';
+import { errorMessage, featureValue, flights, saveOrSharePdfBlob } from '../../core/ui';
 
 // Íconos usados solo por esta pantalla (el resto se registra en AppModule).
 addIcons({
@@ -182,16 +182,9 @@ export class ReservaDetallePage {
     this.descargandoPdf = true;
     this.error = '';
     this.api.descargarBoardingPassPdf(this.id).subscribe({
-      next: (blob: Blob) => {
+      next: async (blob: Blob) => {
         this.descargandoPdf = false;
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `BoardingPass_Reserva_${this.id}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
+        await saveOrSharePdfBlob(blob, `BoardingPass_${this.data?.codigoPnr || ('Reserva_' + this.id)}.pdf`);
       },
       error: (err) => {
         this.descargandoPdf = false;

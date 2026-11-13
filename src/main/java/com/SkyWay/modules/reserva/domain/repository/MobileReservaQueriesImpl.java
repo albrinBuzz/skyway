@@ -16,9 +16,29 @@ public class MobileReservaQueriesImpl implements MobileReservaQueries {
     private EntityManager em;
 
     private static final String ES_PASAJERO_RESERVA = """
-        (r.rut_pasajero = :rut OR EXISTS (
-            SELECT 1 FROM pasajero_reserva pr WHERE pr.id_reserva = r.id_reserva AND pr.rut = :rut
+        (REPLACE(UPPER(TRIM(r.rut_pasajero)), '.', '') = REPLACE(UPPER(TRIM(:rut)), '.', '') OR EXISTS (
+            SELECT 1 FROM pasajero_reserva pr WHERE pr.id_reserva = r.id_reserva
+              AND REPLACE(UPPER(TRIM(pr.rut)), '.', '') = REPLACE(UPPER(TRIM(:rut)), '.', '')
         ))
+    """;
+
+    private static final String FILTRO_BUSQUEDA_RESERVA = """
+        (COALESCE(:q, '') = ''
+         OR UPPER(COALESCE(r.codigo_reserva, 'RES-' || r.id_reserva)) LIKE '%' || UPPER(:q) || '%'
+         OR CAST(r.id_reserva AS TEXT) LIKE '%' || :q || '%'
+         OR EXISTS (
+             SELECT 1 FROM reserva_itinerario ri_q
+             JOIN itinerario it_q ON it_q.id_itinerario = ri_q.id_itinerario
+             LEFT JOIN aeropuerto ao_q ON ao_q.id_aeropuerto = it_q.origen_aeropuerto
+             LEFT JOIN aeropuerto ad_q ON ad_q.id_aeropuerto = it_q.destino_aeropuerto
+             LEFT JOIN ciudad co_q ON co_q.id_ciudad = ao_q.id_ciudad
+             LEFT JOIN ciudad cd_q ON cd_q.id_ciudad = ad_q.id_ciudad
+             WHERE ri_q.id_reserva = r.id_reserva
+               AND (UPPER(COALESCE(ao_q.codigo_iata, '')) LIKE '%' || UPPER(:q) || '%'
+                    OR UPPER(COALESCE(ad_q.codigo_iata, '')) LIKE '%' || UPPER(:q) || '%'
+                    OR UPPER(COALESCE(co_q.nombre, '')) LIKE '%' || UPPER(:q) || '%'
+                    OR UPPER(COALESCE(cd_q.nombre, '')) LIKE '%' || UPPER(:q) || '%')
+         ))
     """;
 
     private static final String ES_RESERVA_ACTIVA = """
@@ -43,12 +63,41 @@ public class MobileReservaQueriesImpl implements MobileReservaQueries {
     }
 
     @Override
-    public List<Object[]> mobileReservas(String rut, boolean activas, LocalDateTime ahora, int limit, int offset) {
+    public List<Object[]> mobileReservas(String rut, boolean activas, LocalDateTime ahora, String q, int limit, int offset) {
+        String filtro = (q == null) ? "" : q.trim();
         String sql = """
-            SELECT r.id_reserva, r.fecha_reserva, r.estado_reserva, er.descripcion, r.total,
-                   nx.fecha_hora_salida, ao.codigo_iata AS origen, ad.codigo_iata AS destino
+            SELECT r.id_reserva,
+                   r.fecha_reserva,
+                   r.estado_reserva,
+                   er.descripcion,
+                   r.total,
+                   COALESCE(it_main.hora_salida, nx.fecha_hora_salida) AS proxima_salida,
+                   COALESCE(ao_it.codigo_iata, ao.codigo_iata) AS origen,
+                   COALESCE(ad_it.codigo_iata, ad.codigo_iata) AS destino,
+                   COALESCE(r.codigo_reserva, 'RES-' || r.id_reserva) AS codigo_pnr,
+                   (REPLACE(UPPER(TRIM(r.rut_pasajero)), '.', '') = REPLACE(UPPER(TRIM(:rut)), '.', '')) AS es_titular,
+                   (EXISTS (SELECT 1 FROM checkin ck WHERE ck.id_reserva = r.id_reserva)
+                    OR LOWER(COALESCE(er.descripcion, '')) LIKE '%check-in%') AS checkin_realizado,
+                   GREATEST(1, (
+                       SELECT COUNT(DISTINCT pax.rut_norm) FROM (
+                           SELECT REPLACE(UPPER(TRIM(r.rut_pasajero)), '.', '') AS rut_norm
+                           UNION ALL
+                           SELECT REPLACE(UPPER(TRIM(pr.rut)), '.', '') AS rut_norm
+                           FROM pasajero_reserva pr WHERE pr.id_reserva = r.id_reserva
+                       ) pax WHERE pax.rut_norm <> ''
+                   ))::int AS total_pasajeros
             FROM reserva r
             LEFT JOIN estado_reserva er ON er.id_estado_reserva = r.estado_reserva
+            LEFT JOIN LATERAL (
+                SELECT it.hora_salida, it.origen_aeropuerto, it.destino_aeropuerto
+                FROM reserva_itinerario ri
+                JOIN itinerario it ON it.id_itinerario = ri.id_itinerario
+                WHERE ri.id_reserva = r.id_reserva
+                ORDER BY CASE WHEN it.hora_salida >= :ahora THEN 0 ELSE 1 END, it.hora_salida ASC NULLS LAST
+                LIMIT 1
+            ) it_main ON true
+            LEFT JOIN aeropuerto ao_it ON ao_it.id_aeropuerto = it_main.origen_aeropuerto
+            LEFT JOIN aeropuerto ad_it ON ad_it.id_aeropuerto = it_main.destino_aeropuerto
             LEFT JOIN LATERAL (
                 SELECT v.id_vuelo, v.fecha_hora_salida
                 FROM reserva_itinerario ri 
@@ -66,10 +115,11 @@ public class MobileReservaQueriesImpl implements MobileReservaQueries {
             LEFT JOIN aeropuerto ao ON ao.id_aeropuerto = so.id_aeropuerto_origen
             LEFT JOIN aeropuerto ad ON ad.id_aeropuerto = sd.id_aeropuerto_destino
             WHERE 
-            """ + ES_PASAJERO_RESERVA + " AND " + (activas ? ES_RESERVA_ACTIVA : "NOT " + ES_RESERVA_ACTIVA) +
-                " ORDER BY r.fecha_reserva DESC LIMIT :lim OFFSET :off";
+            """ + ES_PASAJERO_RESERVA + " AND " + (activas ? ES_RESERVA_ACTIVA : "NOT " + ES_RESERVA_ACTIVA)
+                + " AND " + FILTRO_BUSQUEDA_RESERVA
+                + " ORDER BY r.fecha_reserva DESC LIMIT :lim OFFSET :off";
 
-        return ejecutarConsulta(sql, "rut", rut, "ahora", ahora, "lim", limit, "off", offset);
+        return ejecutarConsulta(sql, "rut", rut, "ahora", ahora, "q", filtro, "lim", limit, "off", offset);
     }
 
     @Override
@@ -77,7 +127,7 @@ public class MobileReservaQueriesImpl implements MobileReservaQueries {
         String sql = """
             SELECT a.id_asiento, a.numero_asiento, a.id_clase, c.descripcion, pa.precio,
                    CASE 
-                       WHEN ra.id_reserva = :reserva AND ra.rut = :rut THEN 'seleccionado'
+                       WHEN ra.id_reserva = :reserva AND REPLACE(UPPER(TRIM(ra.rut)), '.', '') = REPLACE(UPPER(TRIM(:rut)), '.', '') THEN 'seleccionado'
                        WHEN ra.id_reserva_asiento IS NOT NULL THEN 'ocupado'
                        ELSE 'disponible'
                    END AS estado,
@@ -176,11 +226,15 @@ public class MobileReservaQueriesImpl implements MobileReservaQueries {
     }
 
     @Override
-    public long mobileCountReservas(String rut, boolean activas, LocalDateTime ahora) {
-        Query q = em.createNativeQuery("SELECT count(*) FROM reserva r LEFT JOIN estado_reserva er ON er.id_estado_reserva=r.estado_reserva WHERE " + ES_PASAJERO_RESERVA + " AND " + (activas ? ES_RESERVA_ACTIVA : "NOT " + ES_RESERVA_ACTIVA));
-        q.setParameter("rut", rut);
-        q.setParameter("ahora", ahora);
-        return ((Number) q.getSingleResult()).longValue();
+    public long mobileCountReservas(String rut, boolean activas, LocalDateTime ahora, String q) {
+        String filtro = (q == null) ? "" : q.trim();
+        Query qr = em.createNativeQuery("SELECT count(*) FROM reserva r LEFT JOIN estado_reserva er ON er.id_estado_reserva=r.estado_reserva WHERE "
+                + ES_PASAJERO_RESERVA + " AND " + (activas ? ES_RESERVA_ACTIVA : "NOT " + ES_RESERVA_ACTIVA)
+                + " AND " + FILTRO_BUSQUEDA_RESERVA);
+        qr.setParameter("rut", rut);
+        qr.setParameter("ahora", ahora);
+        qr.setParameter("q", filtro);
+        return ((Number) qr.getSingleResult()).longValue();
     }
 
     @Override public Object[] mobileReserva(String rut, int id, boolean lock) {
@@ -190,7 +244,7 @@ public class MobileReservaQueriesImpl implements MobileReservaQueries {
             qLock.setParameter("rut", rut);
             if (qLock.getResultList().isEmpty()) throw MobileException.notFound();
         }
-        return ejecutarConsulta("SELECT r.id_reserva, r.fecha_reserva, r.estado_reserva, er.descripcion, r.total, r.rut_pasajero FROM reserva r LEFT JOIN estado_reserva er ON er.id_estado_reserva=r.estado_reserva WHERE r.id_reserva=:id AND " + ES_PASAJERO_RESERVA, "id", id, "rut", rut).stream().findFirst().orElseThrow(MobileException::notFound);
+        return ejecutarConsulta("SELECT r.id_reserva, r.fecha_reserva, r.estado_reserva, er.descripcion, r.total, r.rut_pasajero, COALESCE(r.codigo_reserva, 'RES-' || r.id_reserva) FROM reserva r LEFT JOIN estado_reserva er ON er.id_estado_reserva=r.estado_reserva WHERE r.id_reserva=:id AND " + ES_PASAJERO_RESERVA, "id", id, "rut", rut).stream().findFirst().orElseThrow(MobileException::notFound);
     }
 
     @Override public List<Object[]> mobileItinerarios(int id) {
@@ -236,11 +290,11 @@ public class MobileReservaQueriesImpl implements MobileReservaQueries {
     }
 
     @Override public List<Object[]> mobileEquipajes(int id, String rut) {
-        return ejecutarConsulta("SELECT e.id_equipaje, e.peso, e.dimensiones, e.tipo, e.id_tipo, t.nombre FROM equipaje e LEFT JOIN tipo_equipaje t ON t.id_tipo=e.id_tipo WHERE e.id_reserva=:id AND e.rut_pasajero=:rut ORDER BY e.id_equipaje", "id", id, "rut", rut);
+        return ejecutarConsulta("SELECT e.id_equipaje, e.peso, e.dimensiones, e.tipo, e.id_tipo, t.nombre FROM equipaje e LEFT JOIN tipo_equipaje t ON t.id_tipo=e.id_tipo WHERE e.id_reserva=:id AND REPLACE(UPPER(TRIM(e.rut_pasajero)), '.', '')=REPLACE(UPPER(TRIM(:rut)), '.', '') ORDER BY e.id_equipaje", "id", id, "rut", rut);
     }
 
     @Override public List<Object[]> mobileAsignados(int id, String rut) {
-        return ejecutarConsulta("SELECT ra.id_vuelo, ra.id_reserva_asiento, a.id_asiento, a.numero_asiento, a.id_clase, c.descripcion, pa.precio FROM reserva_asiento ra JOIN asiento a ON a.id_asiento=ra.id_asiento JOIN vuelo v ON v.id_vuelo=ra.id_vuelo AND v.id_avion=a.id_avion LEFT JOIN clase_asiento c ON c.id_clase=a.id_clase LEFT JOIN precio_asiento pa ON pa.id_vuelo=v.id_vuelo AND pa.id_clase=a.id_clase WHERE ra.id_reserva=:id AND ra.rut=:rut ORDER BY ra.id_vuelo", "id", id, "rut", rut);
+        return ejecutarConsulta("SELECT ra.id_vuelo, ra.id_reserva_asiento, a.id_asiento, a.numero_asiento, a.id_clase, c.descripcion, pa.precio FROM reserva_asiento ra JOIN asiento a ON a.id_asiento=ra.id_asiento JOIN vuelo v ON v.id_vuelo=ra.id_vuelo AND v.id_avion=a.id_avion LEFT JOIN clase_asiento c ON c.id_clase=a.id_clase LEFT JOIN precio_asiento pa ON pa.id_vuelo=v.id_vuelo AND pa.id_clase=a.id_clase WHERE ra.id_reserva=:id AND REPLACE(UPPER(TRIM(ra.rut)), '.', '')=REPLACE(UPPER(TRIM(:rut)), '.', '') ORDER BY ra.id_vuelo", "id", id, "rut", rut);
     }
 
     @Override public List<Object[]> mobileCheckins(int id) {

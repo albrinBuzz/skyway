@@ -125,11 +125,13 @@ public class MobileOperationsService {
     public MapaAsientos mapa(String rut,int id,int flightId) {
         var detail=read.detalle(rut,id); var flight=vuelo(detail,flightId); String reason=reason(detail,flight);
 
+        final List<Object[]> rawMapRows = reservas.mobileMapa(flightId, id, rut);
+
         Integer precioActual = null;
         if (flight.asiento() != null) {
             precioActual = flight.asiento().precio();
             if (precioActual == null && flight.asiento().idClase() != null) {
-                precioActual = reservas.mobileMapa(flightId, id, rut).stream()
+                precioActual = rawMapRows.stream()
                         .filter(r -> Objects.equals(number(r[2]), flight.asiento().idClase()) && r[4] != null)
                         .map(r -> number(r[4]))
                         .findFirst().orElse(null);
@@ -137,10 +139,18 @@ public class MobileOperationsService {
         }
 
         final Integer basePrice = precioActual;
+        final int precioEconomicaBase = rawMapRows.stream()
+                .filter(r -> rangoClase(text(r[3])) == 1 && r[4] != null)
+                .map(r -> number(r[4]))
+                .min(Integer::compareTo)
+                .orElse(0);
 
         int pctCargo = 15;
         if (detail.itinerarios() != null) {
             for (var it : detail.itinerarios()) {
+                boolean perteneceAlVuelo = it.vuelos() != null && it.vuelos().stream()
+                        .anyMatch(c -> c.vuelo() != null && Objects.equals(c.vuelo().idVuelo(), flightId));
+                if (!perteneceAlVuelo) continue;
                 if (it.tarifa() != null && it.tarifa().caracteristicas() != null) {
                     for (var c : it.tarifa().caracteristicas()) {
                         if (c.nombre() != null && (c.nombre().toLowerCase().contains("porcentaje") || c.nombre().toLowerCase().contains("cargo"))) {
@@ -151,6 +161,7 @@ public class MobileOperationsService {
                         }
                     }
                 }
+                break;
             }
         }
         final int porcentajeCargoTarifa = pctCargo;
@@ -196,7 +207,7 @@ public class MobileOperationsService {
             } catch (Exception ignored) {}
         }
 
-        var seats=reservas.mobileMapa(flightId,id,rut).stream().map(r->{
+        var seats = rawMapRows.stream().map(r -> {
             Integer seatId = number(r[0]);
             String numSeat = text(r[1]);
             Integer classId = number(r[2]);
@@ -226,8 +237,17 @@ public class MobileOperationsService {
             boolean selectable = false;
 
             if (reason == null && "libre".equalsIgnoreCase(state) && price != null) {
-                if (basePrice == null && flight.asiento() == null) {
-                    selectable = true;
+                if (flight.asiento() == null) {
+                    int rankNuevo = rangoClase(className);
+                    if (rankNuevo <= 1) {
+                        selectable = true;
+                    } else {
+                        diff = Math.max(0, price - precioEconomicaBase);
+                        fee = (diff > 0 && porcentajeCargoTarifa > 0) ? Math.round(diff * (porcentajeCargoTarifa / 100.0f)) : 0;
+                        total = diff + fee;
+                        isUpgrade = total > 0;
+                        selectable = true;
+                    }
                 } else {
                     int rankActual = rangoClase(flight.asiento() != null ? flight.asiento().clase() : null);
                     int rankNuevo = rangoClase(className);
@@ -285,10 +305,20 @@ public class MobileOperationsService {
                         "El servicio de pasarela de pago no está disponible.");
             }
 
-            String ordenCompra = "SEAT-" + (System.currentTimeMillis() % 1000000000L);
+            String ordenCompra = "SEAT-" + UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase(Locale.ROOT);
             String base = (urlRetornoBase != null && !urlRetornoBase.isBlank())
                     ? urlRetornoBase.trim().replaceAll("/+$", "")
                     : "http://localhost:8101";
+
+            if (asientoCacheService != null) {
+                var dto = new com.SkyWay.modules.asiento.presentation.dto.InfoAsientoDTO();
+                dto.setIdAsiento(seatId);
+                var lockRes = asientoCacheService.seleccionarOliberarAsiento(flightId, dto, ordenCompra);
+                if (lockRes == com.SkyWay.modules.reservaasiento.domain.service.AsientoCacheService.ResultadoSeleccion.FALLO_ASIENTO_NO_DISPONIBLE
+                        || lockRes == com.SkyWay.modules.reservaasiento.domain.service.AsientoCacheService.ResultadoSeleccion.FALLO_BLOQUEADO_POR_OTRO) {
+                    throw MobileException.conflict("Este asiento acaba de ser seleccionado por otro pasajero.");
+                }
+            }
 
             SolicitudPagoDTO solicitud = new SolicitudPagoDTO();
             solicitud.setOrdenCompra(ordenCompra);
@@ -331,6 +361,7 @@ public class MobileOperationsService {
                         ordenCompra, redirectUrl
                 );
             } catch (Exception ex) {
+                liberarAsientoCambioEnCache(flightId, seatId, ordenCompra);
                 Logger.logError("Error iniciando pago de ascenso en pasarela " + metodoEnum + ": " + ex.getMessage());
                 throw new MobileException(HttpStatus.BAD_GATEWAY, "ERROR_PASARELA",
                         "No fue posible conectar con " + (metodo == 2 ? "PayPal" : "Webpay Plus") + ". Intenta nuevamente.");
@@ -347,7 +378,8 @@ public class MobileOperationsService {
             if (reservaAsientoService != null) {
                 try {
                     exito = reservaAsientoService.cambiarAsiento(seatId, id, orgSeatId);
-                } catch (Exception ignored) {
+                } catch (Exception spEx) {
+                    Logger.logWarn("Fallback a mobileCambiarAsiento tras SP en reserva " + id + ": " + spEx.getMessage());
                     exito = false;
                 }
             }
@@ -356,12 +388,6 @@ public class MobileOperationsService {
             }
             if (!exito) {
                 throw MobileException.conflict("La asignación cambió. Actualiza el mapa e inténtalo otra vez.");
-            }
-
-            // Sincronizar check-in para que la tarjeta de embarque y QR reflejen el nuevo asiento
-            if (em != null) {
-                em.createNativeQuery("UPDATE checkin SET fecha_hora = NOW() WHERE id_reserva = :id")
-                        .setParameter("id", id).executeUpdate();
             }
 
             if (asientoCacheService != null) {
@@ -377,7 +403,7 @@ public class MobileOperationsService {
     public MapaAsientos confirmarPagoCambio(String rut, ConfirmarPagoCambioAsientoRequest request) {
         if (auth != null) auth.requirePassenger(rut);
         SolicitudPagoPendienteCambio pendiente = pagosPendientesCambio.remove(request.ordenCompra());
-        if (pendiente == null) {
+        if (pendiente == null || !normRutOp(pendiente.rutTitular()).equals(normRutOp(rut))) {
             throw new MobileException(HttpStatus.BAD_REQUEST, "PAGO_NO_ENCONTRADO",
                     "No se encontró el cambio de asiento pendiente para confirmar.");
         }
@@ -387,6 +413,7 @@ public class MobileOperationsService {
                 : MetodoPagoEnum.WEBPAY;
 
         if (pagoFactoryService == null) {
+            liberarAsientoCambioEnCache(pendiente.idVuelo(), pendiente.idAsientoNuevo(), request.ordenCompra());
             throw new MobileException(HttpStatus.INTERNAL_SERVER_ERROR, "PASARELA_NO_DISPONIBLE",
                     "El servicio de pasarela de pago no está disponible.");
         }
@@ -394,6 +421,7 @@ public class MobileOperationsService {
         PasarelaPagoStrategy estrategia = pagoFactoryService.obtenerEstrategia(metodoEnum);
         boolean autorizado = estrategia.confirmarPago(request.token());
         if (!autorizado) {
+            liberarAsientoCambioEnCache(pendiente.idVuelo(), pendiente.idAsientoNuevo(), request.ordenCompra());
             throw new MobileException(HttpStatus.BAD_REQUEST, "PAGO_RECHAZADO",
                     "La transacción no fue autorizada o fue rechazada por " + (metodoEnum == MetodoPagoEnum.PAYPAL ? "PayPal" : "Webpay Plus") + ".");
         }
@@ -403,37 +431,56 @@ public class MobileOperationsService {
         reservas.mobileLockVuelo(pendiente.idVuelo());
 
         boolean exito = false;
-        if (reservaAsientoService != null) {
-            try {
-                exito = reservaAsientoService.cambiarAsiento(pendiente.idAsientoNuevo(), pendiente.idReserva(), pendiente.idAsientoOriginal());
-            } catch (Exception ignored) {
-                exito = false;
+        if (pendiente.idAsientoOriginal() == 0) {
+            exito = (reservas.mobileAsignarAsiento(pendiente.idReserva(), pendiente.idVuelo(), pendiente.rutPasajero(), pendiente.idAsientoNuevo()) == 1);
+        } else {
+            if (reservaAsientoService != null) {
+                try {
+                    exito = reservaAsientoService.cambiarAsiento(pendiente.idAsientoNuevo(), pendiente.idReserva(), pendiente.idAsientoOriginal());
+                } catch (Exception spEx) {
+                    Logger.logWarn("Fallback a mobileCambiarAsiento tras SP en confirmación pago reserva " + pendiente.idReserva() + ": " + spEx.getMessage());
+                    exito = false;
+                }
+            }
+            if (!exito) {
+                exito = (reservas.mobileCambiarAsiento(pendiente.idReservaAsiento(), pendiente.idReserva(), pendiente.idVuelo(), pendiente.rutPasajero(), pendiente.idAsientoNuevo()) == 1);
             }
         }
         if (!exito) {
-            exito = (reservas.mobileCambiarAsiento(pendiente.idReservaAsiento(), pendiente.idReserva(), pendiente.idVuelo(), pendiente.rutPasajero(), pendiente.idAsientoNuevo()) == 1);
-        }
-        if (!exito) {
+            liberarAsientoCambioEnCache(pendiente.idVuelo(), pendiente.idAsientoNuevo(), request.ordenCompra());
             throw MobileException.conflict("No fue posible reasignar la butaca tras el pago. Contacta a soporte.");
         }
 
         // Registrar pago de la diferencia en la tabla Pago
         registrarPagoDiferencia(pendiente.idReserva(), pendiente.monto(), pendiente.idMetodoPago());
 
-        // Sincronizar check-in para que la tarjeta de embarque y QR reflejen el nuevo asiento
-        if (em != null) {
-            em.createNativeQuery("UPDATE checkin SET fecha_hora = NOW() WHERE id_reserva = :id")
-                    .setParameter("id", pendiente.idReserva()).executeUpdate();
-        }
-
         // Sincronizar websocket y cache
         if (asientoCacheService != null) {
             try {
-                asientoCacheService.actualizarCambioAsiento(pendiente.idVuelo(), pendiente.idAsientoOriginal(), pendiente.idAsientoNuevo());
+                asientoCacheService.actualizarCambioAsiento(
+                        pendiente.idVuelo(),
+                        pendiente.idAsientoOriginal() > 0 ? pendiente.idAsientoOriginal() : null,
+                        pendiente.idAsientoNuevo()
+                );
             } catch (Exception ignored) {}
         }
 
         return mapa(pendiente.rutPasajero(), pendiente.idReserva(), pendiente.idVuelo());
+    }
+
+    private void liberarAsientoCambioEnCache(int idVuelo, int idAsiento, String ordenCompra) {
+        if (asientoCacheService == null) return;
+        try {
+            if (asientoCacheService.validarPertenenciaYSeleccion(idVuelo, idAsiento, ordenCompra)) {
+                var dto = new com.SkyWay.modules.asiento.presentation.dto.InfoAsientoDTO();
+                dto.setIdAsiento(idAsiento);
+                asientoCacheService.seleccionarOliberarAsiento(idVuelo, dto, ordenCompra);
+            }
+        } catch (Exception ignored) {}
+    }
+
+    private static String normRutOp(String r) {
+        return r == null ? "" : r.replace(".", "").trim().toUpperCase(Locale.ROOT);
     }
 
     private void registrarPagoDiferencia(int idReserva, int monto, int idMetodoPago) {

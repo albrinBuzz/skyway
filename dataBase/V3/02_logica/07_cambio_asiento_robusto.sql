@@ -46,10 +46,11 @@ BEGIN
     SELECT numero_asiento, id_clase INTO v_num_asiento_nuevo, v_id_clase_nueva
     FROM asiento WHERE id_asiento = p_id_asiento;
 
-    -- 4. Actualizar asignación de butaca
+    -- 4. Actualizar asignación de butaca restringido al mismo vuelo
     UPDATE reserva_asiento
     SET id_asiento = p_id_asiento
     WHERE id_reserva = p_id_reserva
+      AND id_vuelo = v_id_vuelo
       AND id_asiento = p_id_asiento_org;
 
     -- 5. Sincronizar Check-in para forzar actualización de tarjeta de embarque y QR

@@ -70,4 +70,12 @@ export class OfflinePassService {
       return [];
     }
   }
+
+  clear(): void {
+    try {
+      localStorage.removeItem(OFFLINE_PASSES_KEY);
+    } catch {
+      // Ignorar
+    }
+  }
 }

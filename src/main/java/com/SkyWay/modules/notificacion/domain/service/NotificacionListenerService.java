@@ -27,6 +27,10 @@ public class NotificacionListenerService {
     @Autowired
     private JavaMailSender mailSender;
 
+    @Autowired
+    @org.springframework.context.annotation.Lazy
+    private NotificacionListenerService self;
+
     private final ExecutorService listenerExecutor = Executors.newSingleThreadExecutor();
     private volatile boolean running = true;
 
@@ -67,7 +71,11 @@ public class NotificacionListenerService {
                         for (PGNotification notification : notifications) {
                             String idNotificacion = notification.getParameter();
                             Logger.logInfo("🔔 Notificación recibida desde PG_NOTIFY -> ID = " + idNotificacion);
-                            procesarNotificacion(idNotificacion);
+                            if (self != null) {
+                                self.procesarNotificacion(idNotificacion);
+                            } else {
+                                procesarNotificacion(idNotificacion);
+                            }
                         }
                     }
 
@@ -85,7 +93,7 @@ public class NotificacionListenerService {
     }
 
     @Async
-    protected void procesarNotificacion(String idNotificacion) {
+    public void procesarNotificacion(String idNotificacion) {
         String query = """
             SELECT n.id_notificacion, n.titulo, n.mensaje, u.correo_electronico
             FROM notificacion n

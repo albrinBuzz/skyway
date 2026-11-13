@@ -5,8 +5,14 @@ import java.util.List;
 
 /** Fragmento incorporado a ReservaRepository; solo SQL parametrizado y tablas V3. */
 public interface MobileReservaQueries {
-    List<Object[]> mobileReservas(String rut, boolean activas, LocalDateTime ahora, int limit, int offset);
-    long mobileCountReservas(String rut, boolean activas, LocalDateTime ahora);
+    List<Object[]> mobileReservas(String rut, boolean activas, LocalDateTime ahora, String q, int limit, int offset);
+    long mobileCountReservas(String rut, boolean activas, LocalDateTime ahora, String q);
+    default List<Object[]> mobileReservas(String rut, boolean activas, LocalDateTime ahora, int limit, int offset) {
+        return mobileReservas(rut, activas, ahora, null, limit, offset);
+    }
+    default long mobileCountReservas(String rut, boolean activas, LocalDateTime ahora) {
+        return mobileCountReservas(rut, activas, ahora, null);
+    }
     Object[] mobileReserva(String rut, int id, boolean lock);
     List<Object[]> mobileItinerarios(int id);
     List<Object[]> mobileConexiones(int id);

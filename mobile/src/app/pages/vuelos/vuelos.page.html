@@ -173,7 +173,7 @@
                 <ion-icon name="ticket-outline" aria-hidden="true"></ion-icon>
                 <div>
                   <span>Código de reserva</span>
-                  <strong>#{{ next.idReserva }}</strong>
+                  <strong>{{ next.codigoPnr ? (next.codigoPnr + ' · #' + next.idReserva) : ('#' + next.idReserva) }}</strong>
                 </div>
               </div>
 
@@ -316,13 +316,29 @@
           <span class="sec-icon"><ion-icon name="ticket-outline" aria-hidden="true"></ion-icon></span>
           <div>
             <h2>Tus reservas activas</h2>
-            <p>Consulta los detalles, equipaje, selección de asientos y check-in de cada reserva.</p>
+            <p>Busca por PNR, ciudad o aeropuerto y consulta check-in y asientos.</p>
           </div>
         </div>
 
-        <div *ngIf="result.contenido.length; else sinReservas" class="vuelos-acc-list">
+        <div class="filter-bar-wrap reveal">
+          <ion-searchbar
+            placeholder="Buscar por PNR (ej. FNXQKX), IATA o ciudad"
+            [debounce]="320"
+            [value]="searchTerm"
+            (ionInput)="onSearchInput($event)"
+            (ionClear)="onSearchInput($event)"
+          ></ion-searchbar>
+          <div class="filter-chips-row">
+            <button type="button" class="filter-chip" [class.is-active]="filtroEstado === 'todas'" (click)="setFiltroEstado('todas')">Todas</button>
+            <button type="button" class="filter-chip" [class.is-active]="filtroEstado === 'checkin_ok'" (click)="setFiltroEstado('checkin_ok')">Con check-in</button>
+            <button type="button" class="filter-chip" [class.is-active]="filtroEstado === 'checkin_pend'" (click)="setFiltroEstado('checkin_pend')">Pendiente check-in</button>
+            <button type="button" class="filter-chip" [class.is-active]="filtroEstado === 'titular'" (click)="setFiltroEstado('titular')">Titular</button>
+          </div>
+        </div>
+
+        <div *ngIf="reservasVisibles.length; else sinReservas" class="vuelos-acc-list">
           <article
-            *ngFor="let r of result.contenido"
+            *ngFor="let r of reservasVisibles"
             class="sky-acc reveal"
             [class.is-open]="isReservaOpen(r.idReserva)"
           >
@@ -337,8 +353,9 @@
               </span>
               <span class="sky-acc-meta">
                 <span class="sky-acc-kicker">
-                  Reserva #{{ r.idReserva }}
-                  <ng-container *ngIf="esTitular(r.idReserva) !== null"> · {{ esTitular(r.idReserva) ? 'Titular' : 'Acompañante' }}</ng-container>
+                  {{ r.codigoPnr ? ('PNR ' + r.codigoPnr + ' · #' + r.idReserva) : ('Reserva #' + r.idReserva) }}
+                  <ng-container *ngIf="r.esTitular !== undefined && r.esTitular !== null"> · {{ r.esTitular ? 'Titular' : 'Acompañante' }}</ng-container>
+                  <ng-container *ngIf="r.totalPasajeros && r.totalPasajeros > 1"> · {{ r.totalPasajeros }} pax</ng-container>
                 </span>
                 <strong class="sky-acc-title">{{ r.codigoIataOrigen || '—' }} → {{ r.codigoIataDestino || '—' }}</strong>
                 <span class="sky-acc-summary">

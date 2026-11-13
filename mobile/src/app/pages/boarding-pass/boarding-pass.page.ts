@@ -7,7 +7,7 @@ import { ApiService } from '../../core/api.service';
 import { HapticsService } from '../../core/haptics.service';
 import { OfflinePassService } from '../../core/offline-pass.service';
 import { PaseAbordar, Segmento, VistaTicket } from '../../core/models';
-import { errorMessage } from '../../core/ui';
+import { errorMessage, saveOrSharePdfBlob } from '../../core/ui';
 import { addIcons } from 'ionicons';
 import {
   airplane,
@@ -234,16 +234,9 @@ export class BoardingPassPage {
     if (this.descargandoPdf) return;
     this.descargandoPdf = true;
     this.api.descargarBoardingPassPdf(this.id).subscribe({
-      next: (blob: Blob) => {
+      next: async (blob: Blob) => {
         this.descargandoPdf = false;
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `BoardingPass_Reserva_${this.id}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
+        await saveOrSharePdfBlob(blob, `BoardingPass_${this.data?.codigoPnr || ('Reserva_' + this.id)}.pdf`);
       },
       error: (err) => {
         this.descargandoPdf = false;

@@ -6,6 +6,23 @@
     <p class="loader-sub">{{ estadoCarga }}</p>
   </div>
 
+  <!-- Respaldo 2D si WebGL no está disponible -->
+  <div class="globe-fallback" *ngIf="errorWebgl && ruta">
+    <div class="fallback-card">
+      <span class="fallback-badge">Vista de Ruta 2D</span>
+      <h3>{{ ruta.codigoOrigen }} → {{ ruta.codigoDestino }}</h3>
+      <p>{{ estadoCarga }}</p>
+      <div class="fallback-stops" *ngIf="ruta.paradas?.length">
+        <div class="fallback-stop" *ngFor="let p of ruta.paradas; let last = last">
+          <strong>{{ p.codigoIata }}</strong>
+          <span>{{ p.ciudad || p.nombreAeropuerto }}</span>
+          <em *ngIf="!last">→</em>
+        </div>
+      </div>
+      <small>{{ ruta.duracionTotal }} · {{ ruta.distanciaKm | number:'1.0-0' }} km</small>
+    </div>
+  </div>
+
   <!-- Canvas WebGL 3D -->
   <canvas #canvas3d class="globe-canvas"></canvas>
 

@@ -69,10 +69,33 @@ public class PayPalPaymentStrategy implements PasarelaPagoStrategy {
 
     @Override
     public boolean confirmarPago(String tokenOrderPayPal) {
+        if (tokenOrderPayPal == null || tokenOrderPayPal.isBlank()) {
+            return false;
+        }
         try {
             OrdersCaptureRequest request = new OrdersCaptureRequest(tokenOrderPayPal);
             HttpResponse<Order> response = payPalClient.execute(request);
-            return "COMPLETED".equals(response.result().status());
+            Order order = response.result();
+            if (order == null || !"COMPLETED".equalsIgnoreCase(order.status())) {
+                return false;
+            }
+            // Verificar que exista al menos una captura completada con monto > 0
+            if (order.purchaseUnits() == null || order.purchaseUnits().isEmpty()) {
+                return false;
+            }
+            for (PurchaseUnit pu : order.purchaseUnits()) {
+                if (pu.payments() != null && pu.payments().captures() != null) {
+                    for (Capture cap : pu.payments().captures()) {
+                        if ("COMPLETED".equalsIgnoreCase(cap.status())
+                                && cap.amount() != null
+                                && cap.amount().value() != null
+                                && new java.math.BigDecimal(cap.amount().value()).signum() > 0) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
         } catch (Exception e) {
             return false;
         }

@@ -45,9 +45,13 @@ public class BoardingPassSecurityService {
         PrivateKey priv = null;
         PublicKey pub = null;
         try {
+            String envPriv = System.getenv("SKYWAY_BP_EC_PRIVATE_KEY");
+            String envPub = System.getenv("SKYWAY_BP_EC_PUBLIC_KEY");
+            String privB64 = (envPriv != null && !envPriv.isBlank()) ? envPriv.trim() : DEFAULT_EC_PRIVATE_KEY_B64;
+            String pubB64 = (envPub != null && !envPub.isBlank()) ? envPub.trim() : DEFAULT_EC_PUBLIC_KEY_B64;
             KeyFactory kf = KeyFactory.getInstance("EC");
-            byte[] privBytes = Base64.getDecoder().decode(DEFAULT_EC_PRIVATE_KEY_B64);
-            byte[] pubBytes = Base64.getDecoder().decode(DEFAULT_EC_PUBLIC_KEY_B64);
+            byte[] privBytes = Base64.getDecoder().decode(privB64);
+            byte[] pubBytes = Base64.getDecoder().decode(pubB64);
             priv = kf.generatePrivate(new PKCS8EncodedKeySpec(privBytes));
             pub = kf.generatePublic(new X509EncodedKeySpec(pubBytes));
             Logger.logInfo("🔐 [SEGURIDAD CRIPTOGRÁFICA] Claves asimétricas ECDSA NIST P-256 cargadas con éxito.");

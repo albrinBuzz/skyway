@@ -15,6 +15,9 @@ public interface ItinerarioTarifaRepository extends JpaRepository<ItinerarioTari
     @Query("SELECT it FROM ItinerarioTarifa it LEFT JOIN FETCH it.tarifa t WHERE it.itinerario.idItinerario = :idItinerario AND (t.activo = true OR t IS NULL)")
     List<ItinerarioTarifa> findByItinerarioIdItinerario(@Param("idItinerario") Integer idItinerario);
 
+    @Query("SELECT it FROM ItinerarioTarifa it LEFT JOIN FETCH it.tarifa t WHERE it.itinerario.idItinerario IN :ids AND (t.activo = true OR t IS NULL)")
+    List<ItinerarioTarifa> findByItinerarioIdItinerarioIn(@Param("ids") List<Integer> ids);
+
 
     List<ItinerarioTarifa> findByTarifaIdTarifa(Integer idTarifa);
 

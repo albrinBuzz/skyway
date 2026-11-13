@@ -39,8 +39,9 @@
       <section class="hero-card reveal" aria-label="Resumen de la reserva">
         <div class="hero-top">
           <div class="hero-id">
-            <span class="hero-label">Reserva</span>
-            <strong class="hero-number">#{{ d.idReserva }}</strong>
+            <span class="hero-label">{{ d.codigoPnr ? 'Código de reserva (PNR)' : 'Reserva' }}</span>
+            <strong class="hero-number">{{ d.codigoPnr || ('#' + d.idReserva) }}</strong>
+            <span class="hero-sub-id" *ngIf="d.codigoPnr">Reserva #{{ d.idReserva }}</span>
           </div>
           <span *ngIf="estadoReserva(d.estadoReserva.descripcion) as st" class="chip chip-{{ st.tono }}">
             <ion-icon [name]="st.icono" aria-hidden="true"></ion-icon>

@@ -80,7 +80,12 @@ public final class MobileDtos {
             String tipo,
             BigDecimal peso,
             String dimensiones,
-            Integer precio) {}
+            Integer precio,
+            String rutPasajero) {
+        public ItemEquipajeSolicitud(Integer idTipoEquipaje, String tipo, BigDecimal peso, String dimensiones, Integer precio) {
+            this(idTipoEquipaje, tipo, peso, dimensiones, precio, null);
+        }
+    }
     public record TipoEquipajeCatalogo(
             Integer idTipo,
             String tipo,
@@ -224,17 +229,25 @@ public final class MobileDtos {
     public record EquipajeDto(Integer idEquipaje, BigDecimal peso, String dimensiones, String tipo,
                              Integer idTipo, String nombreTipo) {}
     public record CheckinDto(Integer idCheckin, Integer idReserva, LocalDateTime fechaHora, String metodo) {}
-    public record ResumenReserva(Integer idReserva, LocalDateTime fechaReserva, EstadoReservaDto estadoReserva,
+    public record ResumenReserva(Integer idReserva, String codigoPnr, LocalDateTime fechaReserva, EstadoReservaDto estadoReserva,
                                  BigDecimal total, boolean activa, LocalDateTime proximaSalida,
                                  String codigoIataOrigen, String codigoIataDestino,
-                                 boolean checkinRealizado) {
+                                 boolean esTitular, boolean checkinRealizado, int totalPasajeros) {
+        public ResumenReserva(Integer idReserva, LocalDateTime fechaReserva, EstadoReservaDto estadoReserva,
+                              BigDecimal total, boolean activa, LocalDateTime proximaSalida,
+                              String codigoIataOrigen, String codigoIataDestino,
+                              boolean checkinRealizado) {
+            this(idReserva, null, fechaReserva, estadoReserva, total, activa, proximaSalida,
+                 codigoIataOrigen, codigoIataDestino, true, checkinRealizado, 1);
+        }
         public ResumenReserva(Integer idReserva, LocalDateTime fechaReserva, EstadoReservaDto estadoReserva,
                               BigDecimal total, boolean activa, LocalDateTime proximaSalida,
                               String codigoIataOrigen, String codigoIataDestino) {
-            this(idReserva, fechaReserva, estadoReserva, total, activa, proximaSalida, codigoIataOrigen, codigoIataDestino, false);
+            this(idReserva, null, fechaReserva, estadoReserva, total, activa, proximaSalida,
+                 codigoIataOrigen, codigoIataDestino, true, false, 1);
         }
     }
-    public record DetalleReserva(Integer idReserva, LocalDateTime fechaReserva, EstadoReservaDto estadoReserva,
+    public record DetalleReserva(Integer idReserva, String codigoPnr, LocalDateTime fechaReserva, EstadoReservaDto estadoReserva,
                                  BigDecimal total, boolean titular, List<ItinerarioDto> itinerarios,
                                  List<EquipajeDto> equipajes, CheckinDto checkin,
                                  boolean checkinDisponible, LocalDateTime fechaAperturaCheckin,
@@ -242,8 +255,17 @@ public final class MobileDtos {
                                  String mensajeCheckin) {
         public DetalleReserva(Integer idReserva, LocalDateTime fechaReserva, EstadoReservaDto estadoReserva,
                               BigDecimal total, boolean titular, List<ItinerarioDto> itinerarios,
+                              List<EquipajeDto> equipajes, CheckinDto checkin,
+                              boolean checkinDisponible, LocalDateTime fechaAperturaCheckin,
+                              LocalDateTime fechaCierreCheckin, String estadoVentanaCheckin,
+                              String mensajeCheckin) {
+            this(idReserva, null, fechaReserva, estadoReserva, total, titular, itinerarios, equipajes, checkin,
+                 checkinDisponible, fechaAperturaCheckin, fechaCierreCheckin, estadoVentanaCheckin, mensajeCheckin);
+        }
+        public DetalleReserva(Integer idReserva, LocalDateTime fechaReserva, EstadoReservaDto estadoReserva,
+                              BigDecimal total, boolean titular, List<ItinerarioDto> itinerarios,
                               List<EquipajeDto> equipajes, CheckinDto checkin) {
-            this(idReserva, fechaReserva, estadoReserva, total, titular, itinerarios, equipajes, checkin,
+            this(idReserva, null, fechaReserva, estadoReserva, total, titular, itinerarios, equipajes, checkin,
                     false, null, null, "NO_DISPONIBLE", null);
         }
     }
@@ -297,7 +319,11 @@ public final class MobileDtos {
     }
     public record NotificacionDto(Integer idNotificacion, String titulo, String mensaje,
                                   Boolean leido, LocalDateTime fecha) {}
-    public record ProximoVuelo(Integer idReserva, VueloDto vuelo) {}
+    public record ProximoVuelo(Integer idReserva, String codigoPnr, VueloDto vuelo) {
+        public ProximoVuelo(Integer idReserva, VueloDto vuelo) {
+            this(idReserva, null, vuelo);
+        }
+    }
     public record Inicio(Perfil perfil, ProximoVuelo proximoVuelo, long notificacionesSinLeer) {}
     public record PaseAbordar(CheckinDto checkin, UsuarioDto pasajero, VueloDto vuelo,
                              String qrContenido, boolean simulacion,

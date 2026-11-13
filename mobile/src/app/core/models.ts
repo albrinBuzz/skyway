@@ -174,7 +174,10 @@ export interface ResumenReserva {
   proximaSalida: string | null;
   codigoIataOrigen: string | null;
   codigoIataDestino: string | null;
+  codigoPnr?: string | null;
+  esTitular?: boolean;
   checkinRealizado?: boolean;
+  totalPasajeros?: number | null;
 }
 
 export interface DetalleReserva {
@@ -183,6 +186,7 @@ export interface DetalleReserva {
   estadoReserva: EstadoReserva;
   total: number | null;
   titular: boolean;
+  codigoPnr?: string | null;
   itinerarios: Itinerario[];
   equipajes: Equipaje[];
   checkin: Checkin | null;
@@ -246,7 +250,7 @@ export interface Notificacion {
 
 export interface Inicio {
   perfil: Perfil;
-  proximoVuelo: { idReserva: number; vuelo: Vuelo } | null;
+  proximoVuelo: { idReserva: number; codigoPnr?: string | null; vuelo: Vuelo } | null;
   notificacionesSinLeer: number;
 }
 
@@ -289,6 +293,7 @@ export interface ItemEquipajeSolicitud {
   peso: number;
   dimensiones: string;
   precio: number;
+  rutPasajero?: string;
 }
 
 export interface TipoEquipajeCatalogo {

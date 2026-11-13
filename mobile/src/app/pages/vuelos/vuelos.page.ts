@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../core/api.service';
 import { HapticsService } from '../../core/haptics.service';
+import { ciudadPorIata } from '../../core/iata-catalog';
 import { Aeropuerto, DetalleReserva, Inicio, Itinerario, Pagina, ResumenReserva, Vuelo } from '../../core/models';
 import { NotificationsLiveService } from '../../core/notifications-live.service';
 import { errorMessage } from '../../core/ui';
@@ -131,6 +132,8 @@ export class VuelosPage {
   page = 0;
   busy = false;
   error = '';
+  searchTerm = '';
+  filtroEstado: 'todas' | 'checkin_ok' | 'checkin_pend' | 'titular' = 'todas';
   private generation = 0;
 
   // Modal del Globo 3D
@@ -186,11 +189,37 @@ export class VuelosPage {
   readonly detalleReservaCache = new Map<number, DetalleReserva>();
 
   ionViewWillEnter() {
+    this.detalleReservaCache.clear();
     void this.load();
   }
 
   cambiarSeccion(value: unknown) {
     if (value === 'proximo' || value === 'reservas') this.seccion = value;
+  }
+
+  onSearchInput(ev: Event) {
+    const val = (ev as CustomEvent<{ value?: string | null }>).detail?.value ?? '';
+    this.searchTerm = val.trim();
+    void this.load(0);
+  }
+
+  setFiltroEstado(filtro: 'todas' | 'checkin_ok' | 'checkin_pend' | 'titular') {
+    this.haptics.light();
+    this.filtroEstado = filtro;
+  }
+
+  get reservasVisibles(): ResumenReserva[] {
+    const lista = this.reservas?.contenido ?? [];
+    if (this.filtroEstado === 'checkin_ok') {
+      return lista.filter(r => this.tieneCheckin(r.idReserva));
+    }
+    if (this.filtroEstado === 'checkin_pend') {
+      return lista.filter(r => !this.tieneCheckin(r.idReserva));
+    }
+    if (this.filtroEstado === 'titular') {
+      return lista.filter(r => this.esTitular(r.idReserva) === true);
+    }
+    return lista;
   }
 
   irADetalleReserva(idReserva: number, event?: Event) {
@@ -213,28 +242,12 @@ export class VuelosPage {
     try {
       const [inicio, reservas] = await Promise.all([
         firstValueFrom(this.api.inicio()),
-        firstValueFrom(this.api.reservas('activas', page))
+        firstValueFrom(this.api.reservas('activas', page, 20, this.searchTerm))
       ]);
       if (generation !== this.generation) return;
       this.inicio = inicio;
       this.reservas = reservas;
       this.liveNotif.setUnreadCount(inicio.notificacionesSinLeer ?? 0);
-
-      // Pre-cargar en segundo plano los detalles en memoria mientras el token está vigente
-      for (const r of reservas.contenido) {
-        if (!this.detalleReservaCache.has(r.idReserva)) {
-          this.api.reserva(r.idReserva).subscribe({
-            next: d => this.detalleReservaCache.set(r.idReserva, d),
-            error: () => {}
-          });
-        }
-      }
-      if (inicio.proximoVuelo && !this.detalleReservaCache.has(inicio.proximoVuelo.idReserva)) {
-        this.api.reserva(inicio.proximoVuelo.idReserva).subscribe({
-          next: d => this.detalleReservaCache.set(inicio.proximoVuelo!.idReserva, d),
-          error: () => {}
-        });
-      }
     } catch (e) {
       if (generation === this.generation) this.error = errorMessage(e);
     } finally {
@@ -271,18 +284,20 @@ export class VuelosPage {
   ciudadPorIata(iata: string | null | undefined): string {
     if (!iata) return 'Ciudad';
     const code = iata.trim().toUpperCase();
-    return CIUDADES_IATA[code]?.ciudad || code;
+    return CIUDADES_IATA[code]?.ciudad || ciudadPorIata(code);
   }
 
   aeropuertoPorIata(iata: string | null | undefined): string {
     if (!iata) return 'Aeropuerto';
     const code = iata.trim().toUpperCase();
-    return CIUDADES_IATA[code]?.aeropuerto || `Aeropuerto ${code}`;
+    return CIUDADES_IATA[code]?.aeropuerto || `Aeropuerto ${ciudadPorIata(code)} (${code})`;
   }
 
   esTitular(idReserva: number): boolean | null {
     const d = this.detalleReservaCache.get(idReserva);
-    return d ? d.titular : null;
+    if (d) return d.titular;
+    const r = this.reservas?.contenido.find(x => x.idReserva === idReserva);
+    return r?.esTitular ?? null;
   }
 
   tieneCheckin(idReserva: number): boolean {

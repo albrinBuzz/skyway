@@ -957,24 +957,86 @@ ion-content {
 
 .pnr-qr {
   margin-top: 12px;
-  padding: 10px;
+  padding: 12px;
   border-radius: 10px;
   background: #ffffff;
+  border: 1px solid #dbe4f2;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+
+  .pnr-iata-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    border-radius: 99px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1e40af;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+
+    ion-icon {
+      font-size: 14px;
+      color: $blue;
+    }
+  }
 
   img {
     width: 164px;
     height: 164px;
+
+    &.is-barcode-2d {
+      width: 100%;
+      max-width: 280px;
+      height: auto;
+      object-fit: contain;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+    }
   }
 
-  span {
+  span:not(.pnr-iata-badge) {
     font-size: 11.5px;
     font-weight: 700;
     color: #0f6e52;
+  }
+}
+
+.pnr-checkin-pending {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fff6e5;
+  border: 1px dashed #e6bd73;
+  color: #6b4600;
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 12px;
+  line-height: 1.4;
+
+  ion-icon {
+    flex: 0 0 auto;
+    font-size: 18px;
+    color: #b7791f;
+    margin-top: 1px;
+  }
+
+  strong {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 800;
+  }
+
+  span {
+    display: block;
+    margin-top: 1px;
   }
 }
 
@@ -983,6 +1045,26 @@ ion-content {
   .pnr-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.login-panel,
+.pnr-acc-card {
+  color: $ink;
+}
+
+.pnr-input {
+  --background: #f4f7fb;
+  --color: #{$ink};
+  --placeholder-color: #6d809d;
+  color: $ink;
+  color-scheme: light;
+}
+
+.input-container ion-input,
+.server-input {
+  --color: #{$ink};
+  --placeholder-color: #7b8ca8;
+  color-scheme: light;
 }
 
 :host-context(body.sky-dark) {
@@ -996,19 +1078,112 @@ ion-content {
   .keep-session-row ion-checkbox,
   .field-label,
   .panel-header h2,
-  .pnr-result {
+  .sky-acc-title,
+  .pnr-result,
+  .server-box-header {
     color: #e6eefc;
+  }
+
+  .panel-header .panel-sub,
+  .field-hint,
+  .sky-acc-eyebrow,
+  .sky-acc-sub,
+  .pnr-passenger,
+  .server-box-sub {
+    color: #9cb0d1;
+  }
+
+  .pnr-code {
+    color: #7ea9ff;
+  }
+
+  .pnr-status {
+    background: rgba(18, 132, 99, 0.25);
+    color: #6ee7b7;
+  }
+
+  .pnr-submit-btn {
+    --color: #9bc3ff;
+    --border-color: #4f7cff;
+  }
+
+  .register-container .register-prompt {
+    color: #9cb0d1;
+  }
+
+  .register-container .register-link {
+    color: #6ea8ff;
+    text-decoration-color: rgba(110, 168, 255, 0.6);
+
+    ion-icon {
+      color: #6ea8ff;
+    }
+
+    &:hover {
+      background: rgba(110, 168, 255, 0.14);
+      color: #9bc3ff;
+    }
+  }
+
+  .server-config {
+    border-top-color: #263554;
   }
 
   .input-container,
-  .pnr-input {
+  .pnr-input,
+  .server-box {
     background: #1b2740;
     border-color: #2f4269;
     color: #e6eefc;
   }
 
+  .input-container:focus-within,
+  .input-container.has-error {
+    background: #1b2740 !important;
+  }
+
+  .pnr-input {
+    --background: #1b2740 !important;
+    --color: #e6eefc !important;
+    --placeholder-color: #9bb0d1 !important;
+    color: #e6eefc !important;
+    -webkit-text-fill-color: #e6eefc !important;
+    caret-color: #6ea8ff;
+    color-scheme: dark;
+
+    input {
+      color: #e6eefc !important;
+      -webkit-text-fill-color: #e6eefc !important;
+    }
+  }
+
+  .input-container ion-input,
+  .server-input {
+    --color: #e6eefc !important;
+    --placeholder-color: #9bb0d1 !important;
+    color: #e6eefc !important;
+    -webkit-text-fill-color: #e6eefc !important;
+    caret-color: #6ea8ff;
+    color-scheme: dark;
+
+    input {
+      color: #e6eefc !important;
+      -webkit-text-fill-color: #e6eefc !important;
+    }
+  }
+
   .pnr-result {
     background: #1b2740;
     border-color: #2f4269;
+  }
+
+  .pnr-checkin-pending {
+    background: rgba(245, 158, 11, 0.14);
+    border-color: rgba(251, 191, 36, 0.45);
+    color: #fde68a;
+
+    ion-icon {
+      color: #fbbf24;
+    }
   }
 }

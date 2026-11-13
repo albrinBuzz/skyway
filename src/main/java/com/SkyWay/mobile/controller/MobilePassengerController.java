@@ -78,10 +78,19 @@ public class MobilePassengerController {
         return ResponseEntity.ok(bookingService.vuelosConAsientos(jwt.getSubject(), idItinerario));
     }
 
+    @org.springframework.beans.factory.annotation.Value("${skyway.mobile.allow-direct-booking:false}")
+    private boolean allowDirectBooking;
+
     @PostMapping("/reservas")
     public ResponseEntity<ReservaCreada> crearReserva(
             @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody CrearReservaRequest body) {
+        if (!allowDirectBooking) {
+            throw new com.SkyWay.mobile.service.MobileException(
+                    org.springframework.http.HttpStatus.PAYMENT_REQUIRED,
+                    "PAGO_PASARELA_REQUERIDO",
+                    "Las reservas deben procesarse mediante /reservas/iniciar-pago y /reservas/confirmar-pago.");
+        }
         return ResponseEntity.ok(bookingService.crear(jwt.getSubject(), body));
     }
 
@@ -106,9 +115,10 @@ public class MobilePassengerController {
     public ResponseEntity<Pagina<ResumenReserva>> listarReservas(
             @AuthenticationPrincipal Jwt jwt,
             @RequestParam(defaultValue = "activas") String grupo,
+            @RequestParam(required = false) String q,
             @RequestParam(defaultValue = "0") int pagina,
             @RequestParam(defaultValue = "20") int tamano) {
-        return ResponseEntity.ok(readService.listar(jwt.getSubject(), grupo, pagina, tamano));
+        return ResponseEntity.ok(readService.listar(jwt.getSubject(), grupo, q, pagina, tamano));
     }
 
     @GetMapping("/reservas/{idReserva}")

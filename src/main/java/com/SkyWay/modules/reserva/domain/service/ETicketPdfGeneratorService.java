@@ -435,25 +435,39 @@ public class ETicketPdfGeneratorService {
     }
 
     public byte[] generarPdfBoardingPasses(Reserva reserva) {
+        return generarPdfBoardingPasses(reserva, null);
+    }
+
+    public byte[] generarPdfBoardingPasses(Reserva reserva, String filtroRutPasajero) {
         if (reserva == null) return new byte[0];
 
         List<TicketInfo> tickets = new ArrayList<>();
-        String rutTitular = (reserva.getPasajero() != null) ? reserva.getPasajero().getRut() : null;
+        String filtroNorm = normalizarRutPdf(filtroRutPasajero);
+        String rutQuery = (filtroRutPasajero != null && !filtroRutPasajero.isBlank())
+                ? filtroRutPasajero.trim()
+                : ((reserva.getPasajero() != null) ? reserva.getPasajero().getRut() : null);
 
         // Intentar obtener tickets con datos operacionales completos via función nativa fn_getticket
-        if (em != null && reserva.getIdReserva() != null && rutTitular != null && reserva.getReservaItinerarios() != null) {
+        if (em != null && reserva.getIdReserva() != null && rutQuery != null && reserva.getReservaItinerarios() != null) {
             try {
                 for (ReservaItinerario ri : reserva.getReservaItinerarios()) {
                     if (ri.getItinerario() != null) {
                         Query query = em.createNativeQuery(
                                 "SELECT * FROM fn_getticket(:p_rut, :p_reserva, :p_idItinerario);",
                                 TicketInfo.class);
-                        query.setParameter("p_rut", rutTitular);
+                        query.setParameter("p_rut", rutQuery);
                         query.setParameter("p_reserva", reserva.getIdReserva());
                         query.setParameter("p_idItinerario", ri.getItinerario().getIdItinerario());
                         @SuppressWarnings("unchecked")
                         List<TicketInfo> rList = query.getResultList();
                         if (rList != null && !rList.isEmpty()) {
+                            if (filtroNorm != null) {
+                                String qSuffix = filtroNorm;
+                                rList = rList.stream()
+                                        .filter(tk -> tk.getCodigoQr() != null
+                                                && normalizarRutPdf(tk.getCodigoQr()).contains(qSuffix))
+                                        .toList();
+                            }
                             tickets.addAll(rList);
                         }
                     }
@@ -466,6 +480,11 @@ public class ETicketPdfGeneratorService {
         // Respaldo resiliente a partir del grafo de entidades JPA
         if (tickets.isEmpty()) {
             List<PasajeroInfo> pasajeros = obtenerListaPasajeros(reserva);
+            if (filtroNorm != null) {
+                pasajeros = pasajeros.stream()
+                        .filter(p -> filtroNorm.equals(normalizarRutPdf(p.rut)))
+                        .toList();
+            }
             if (reserva.getReservaItinerarios() != null) {
                 for (ReservaItinerario ri : reserva.getReservaItinerarios()) {
                     Itinerario it = ri.getItinerario();
@@ -861,6 +880,11 @@ public class ETicketPdfGeneratorService {
         }
     }
 
+    private static String normalizarRutPdf(String rut) {
+        if (rut == null || rut.isBlank()) return null;
+        return rut.replace(".", "").trim().toUpperCase(Locale.ROOT);
+    }
+
     private List<PasajeroInfo> obtenerListaPasajeros(Reserva reserva) {
         Map<String, PasajeroInfo> map = new LinkedHashMap<>();
         Pasajero t = reserva.getPasajero();
@@ -881,20 +905,40 @@ public class ETicketPdfGeneratorService {
                 }
             }
         }
+        if (em != null && reserva.getIdReserva() != null) {
+            try {
+                @SuppressWarnings("unchecked")
+                List<Object[]> extraPax = em.createNativeQuery("""
+                    SELECT pr.rut, TRIM(COALESCE(u.nombre, '') || ' ' || COALESCE(u.apellido, '')), u.correo_electronico
+                    FROM pasajero_reserva pr
+                    LEFT JOIN usuario u ON u.rut = pr.rut
+                    WHERE pr.id_reserva = :idRes
+                """).setParameter("idRes", reserva.getIdReserva()).getResultList();
+                for (Object[] row : extraPax) {
+                    String prRut = row[0] != null ? row[0].toString() : null;
+                    if (prRut != null && !map.containsKey(prRut)) {
+                        String nombre = row[1] != null && !row[1].toString().isBlank() ? row[1].toString() : "Pasajero " + prRut;
+                        String email = row[2] != null ? row[2].toString() : "N/A";
+                        map.put(prRut, new PasajeroInfo(prRut, nombre, email, false));
+                    }
+                }
+            } catch (Exception ignored) {}
+        }
         return new ArrayList<>(map.values());
     }
 
     private String obtenerAsientoEspecifico(Reserva reserva, Integer idVuelo, String rut) {
         if (reserva != null && reserva.getReservaAsientos() != null) {
+            String rutNorm = normalizarRutPdf(rut);
             for (ReservaAsiento ra : reserva.getReservaAsientos()) {
                 boolean cV = (idVuelo == null) || (ra.getVuelo() != null && idVuelo.equals(ra.getVuelo().getIdVuelo()));
-                boolean cR = (rut != null && rut.equals(ra.getRut()));
+                boolean cR = (rutNorm != null && rutNorm.equals(normalizarRutPdf(ra.getRut())));
                 if (cV && cR && ra.getAsiento() != null) {
                     return ra.getAsiento().getNumeroAsiento();
                 }
             }
         }
-        return "1A";
+        return null;
     }
 
     private Paragraph createHeader(String t, Font f) {

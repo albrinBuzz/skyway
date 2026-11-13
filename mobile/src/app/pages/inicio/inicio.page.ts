@@ -3,6 +3,7 @@ import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import { firstValueFrom } from 'rxjs';
+import { registrarAeropuertosIata } from '../../core/iata-catalog';
 import { addIcons } from 'ionicons';
 import {
   addOutline,
@@ -401,6 +402,7 @@ export class InicioPage {
           this.form.patchValue(snap.formValues);
         }
         this.resultados = snap.resultados || [];
+        this.resultadosRegreso = snap.resultadosRegreso || [];
         this.busquedaRealizada = Boolean(this.resultados.length);
         this.itinerarioSeleccionado = snap.itinerarioSeleccionado || null;
         this.itinerarioRegreso = snap.itinerarioRegreso || null;
@@ -461,6 +463,7 @@ export class InicioPage {
     this.error = '';
     try {
       this.aeropuertos = await firstValueFrom(this.api.aeropuertos());
+      registrarAeropuertosIata(this.aeropuertos);
       this.actualizarListaAeropuertos();
     } catch (e) {
       this.error = errorMessage(e);
@@ -619,31 +622,68 @@ export class InicioPage {
     const n = (nombre || '').toLowerCase();
     if (n.includes('basic') || n.includes('básic') || n.includes('zero') || n.includes('promo')) {
       return [
-        'Bolso de mano o mochila pequeña bajo el asiento',
-        'Asiento asignado al azar',
-        'Check-in digital disponible 48 h antes'
+        'Artículo personal bajo el asiento incluido',
+        'Selección de asiento con cargo adicional en cabina estándar',
+        'Check-in digital disponible dentro de la ventana habilitada (48 h a 60 min)'
       ];
     }
     if (n.includes('light') || n.includes('classic') || n.includes('estándar') || n.includes('plus')) {
       return [
-        'Bolso de mano + equipaje de mano de 10 kg',
-        'Elección de asiento estándar incluida',
-        'Cambios de fecha con cargo preferencial'
+        'Artículo personal + equipaje de mano sujeto a tarifa contratada',
+        'Cambios de asiento o vuelo sujetos a condiciones y tarifa',
+        'Check-in digital disponible 48 h antes del vuelo'
       ];
     }
     if (n.includes('premium') || n.includes('flex') || n.includes('top') || n.includes('ejecutiv')) {
       return [
-        'Equipaje en bodega (23 kg) + equipaje de mano (10 kg)',
-        'Elección de asiento preferente o con más espacio',
-        'Cambios y devoluciones flexibles sin penalización',
-        'Embarque prioritario'
+        'Mayor flexibilidad en cambios según reglas de la tarifa seleccionada',
+        'Opción de elegir asientos preferentes (sujeto a tarifa de cabina)',
+        'Equipaje adicional configurable en el siguiente paso'
       ];
     }
     return [
-      'Equipaje de mano incluido',
-      'Check-in online disponible',
-      'Atención y asistencia durante el vuelo'
+      'Condiciones sujetas a la tarifa contratada',
+      'Check-in online disponible 48 h antes del vuelo',
+      'Asistencia durante el viaje'
     ];
+  }
+
+  etiquetaPasajeroResumen(paxIdx: number): string {
+    if (paxIdx === 0) return 'Titular';
+    const acomp = this.acompanantes[paxIdx - 1];
+    const nombre = `${acomp?.nombre || ''} ${acomp?.apellido || ''}`.trim();
+    return nombre || `Pasajero ${paxIdx + 1}`;
+  }
+
+  listaResumenAsientos(): Array<{
+    paxLabel: string;
+    tramoLabel: string;
+    numeroAsiento: string;
+    clase: string;
+    precio: number;
+  }> {
+    const filas: Array<{
+      paxLabel: string;
+      tramoLabel: string;
+      numeroAsiento: string;
+      clase: string;
+      precio: number;
+    }> = [];
+    for (let p = 0; p < this.cantidadPasajeros; p++) {
+      const paxLabel = this.etiquetaPasajeroResumen(p);
+      for (const v of this.vuelosItinerario) {
+        const asiento = this.asientoPorPasajeroYVuelo(p, v.idVuelo);
+        if (!asiento) continue;
+        filas.push({
+          paxLabel,
+          tramoLabel: `${v.origen} → ${v.destino}`,
+          numeroAsiento: asiento.numeroAsiento,
+          clase: asiento.clase || 'Estándar',
+          precio: Number(asiento.precio || 0)
+        });
+      }
+    }
+    return filas;
   }
 
   trackAeropuerto(_indice: number, aeropuerto: AeropuertoCatalogo): string {
@@ -1236,7 +1276,11 @@ export class InicioPage {
         // Ignorar si sessionStorage no está disponible
       }
 
-      const urlBase = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8101';
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      const urlBase =
+        origin.startsWith('http://') || origin.startsWith('https://')
+          ? origin
+          : this.api.getWebBaseUrl();
       const inicioPago = await firstValueFrom(
         this.api.iniciarPagoReserva(
           this.itinerarioSeleccionado.idItinerario,
@@ -1256,20 +1300,7 @@ export class InicioPage {
         return;
       }
 
-      const res = await firstValueFrom(
-        this.api.crearReserva(
-          this.itinerarioSeleccionado.idItinerario,
-          this.tarifaSeleccionada.idItinerarioTarifa,
-          this.metodoPago,
-          equipaje,
-          asientosSolicitud,
-          idItinerarioRegreso,
-          idItinerarioTarifaRegreso,
-          acompanantesPayload
-        )
-      );
-      this.haptics.success();
-      this.reservaConfirmada = res;
+      this.error = 'No se recibió una URL válida desde la pasarela de pago. Intenta nuevamente.';
     } catch (e) {
       this.error = errorMessage(e);
     } finally {

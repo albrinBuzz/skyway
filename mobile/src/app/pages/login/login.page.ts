@@ -10,6 +10,7 @@ import {
   alertCircle,
   alertCircleOutline,
   arrowForwardOutline,
+  barcodeOutline,
   checkmarkCircle,
   chevronDownOutline,
   closeOutline,
@@ -52,6 +53,7 @@ addIcons({
   alertCircle,
   alertCircleOutline,
   arrowForwardOutline,
+  barcodeOutline,
   checkmarkCircle,
   chevronDownOutline,
   closeOutline,
@@ -144,7 +146,7 @@ export class LoginPage {
       const { codigoPnr, apellido } = this.pnrForm.getRawValue();
       const res = await firstValueFrom(this.api.consultarPnr(codigoPnr.trim(), apellido.trim()));
       this.pnrResult = res;
-      if (res.checkinRealizado && res.qrContenido) {
+      if (res.checkinRealizado && !res.barcodeBase64 && res.qrContenido) {
         this.pnrQrUrl = await QRCode.toDataURL(res.qrContenido, {
           width: 200,
           margin: 1,

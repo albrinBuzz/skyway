@@ -64,6 +64,9 @@ public class MobileBookingService {
     @Autowired(required = false)
     private PagoFactoryService pagoFactoryService;
 
+    @Autowired(required = false)
+    private com.SkyWay.modules.reservaasiento.domain.service.AsientoCacheService asientoCacheService;
+
     private record SolicitudPagoPendienteMovil(String rut, CrearReservaRequest request, BigDecimal totalFinal) {}
     private final java.util.concurrent.ConcurrentHashMap<String, SolicitudPagoPendienteMovil> pagosPendientes =
             new java.util.concurrent.ConcurrentHashMap<>();
@@ -124,11 +127,22 @@ public class MobileBookingService {
 
         try {
             String fechaStr = fecha != null ? fecha.toString() : null;
-            return itinerarios.buscarItinerarios(from, to, fechaStr).stream()
+            LocalDateTime ahora = LocalDateTime.now(clock);
+            var dtos = itinerarios.buscarItinerarios(from, to, fechaStr);
+            if (dtos.isEmpty()) return List.of();
+            List<Integer> ids = dtos.stream().map(com.SkyWay.modules.itinerario.presentation.dto.ItinerarioDTO::getItinerario).toList();
+            var tarifasMap = tarifas.findByItinerarioIdItinerarioIn(ids).stream()
+                    .filter(t -> t.getItinerario() != null && t.getTarifa() != null)
+                    .collect(java.util.stream.Collectors.groupingBy(t -> t.getItinerario().getIdItinerario()));
+
+            return dtos.stream()
                     .map(dto -> {
                         var entity = itinerarios.findById(dto.getItinerario());
-                        if (entity == null) return null;
-                        var opciones = tarifas.findByItinerarioIdItinerario(entity.getIdItinerario()).stream()
+                        if (entity == null || entity.getHoraSalida() == null) return null;
+                        LocalDateTime salida = entity.getHoraSalida().toLocalDateTime();
+                        if (!salida.isAfter(ahora)) return null;
+                        LocalDateTime llegada = entity.getHoraLlegada() == null ? null : entity.getHoraLlegada().toLocalDateTime();
+                        var opciones = tarifasMap.getOrDefault(entity.getIdItinerario(), List.of()).stream()
                                 .map(t -> new TarifaDisponible(
                                         t.getIdItinerarioTarifa(),
                                         t.getTarifa().getIdTarifa(),
@@ -136,8 +150,6 @@ public class MobileBookingService {
                                         t.getPrecio()))
                                 .sorted(Comparator.comparing(TarifaDisponible::precio))
                                 .toList();
-                        LocalDateTime salida = entity.getHoraSalida() == null ? null : entity.getHoraSalida().toLocalDateTime();
-                        LocalDateTime llegada = entity.getHoraLlegada() == null ? null : entity.getHoraLlegada().toLocalDateTime();
                         return new ItinerarioDisponible(
                                 entity.getIdItinerario(),
                                 dto.getOrigen(), dto.getDestino(),
@@ -167,17 +179,16 @@ public class MobileBookingService {
             LocalDate dia = base.plusDays(offset);
             if (dia.isBefore(hoy)) continue;
             try {
-                var encontrados = itinerarios.buscarItinerarios(from, to, dia.toString());
+                var disponibles = buscar(rut, from, to, dia);
                 BigDecimal minPrecio = null;
-                for (var dto : encontrados) {
-                    var ops = tarifas.findByItinerarioIdItinerario(dto.getItinerario());
-                    for (var t : ops) {
-                        if (t.getPrecio() != null && (minPrecio == null || t.getPrecio().compareTo(minPrecio) < 0)) {
-                            minPrecio = t.getPrecio();
+                for (var it : disponibles) {
+                    for (var t : it.tarifas()) {
+                        if (t.precio() != null && (minPrecio == null || t.precio().compareTo(minPrecio) < 0)) {
+                            minPrecio = t.precio();
                         }
                     }
                 }
-                dias.add(new DiaTarifaFlexible(dia, encontrados.size(), minPrecio));
+                dias.add(new DiaTarifaFlexible(dia, disponibles.size(), minPrecio));
             } catch (Exception ex) {
                 dias.add(new DiaTarifaFlexible(dia, 0, null));
             }
@@ -377,14 +388,12 @@ public class MobileBookingService {
         long cantBodega = 0;
         for (var item : itemsEquipaje) {
             String tipo = item.tipo() != null ? item.tipo().toUpperCase() : "";
-            if (tipo.contains("CABINA")) {
+            if (tipo.contains("CABINA") || Integer.valueOf(1).equals(item.idTipoEquipaje())) {
                 cantCabina++;
-            } else if (tipo.contains("BODEGA")) {
+            } else {
                 cantBodega++;
             }
-            int precioItem = item.precio() != null && item.precio() > 0 ? item.precio() :
-                    (tipo.contains("23") ? 30000 : (tipo.contains("15") ? 22000 : 15000));
-            totalEquipaje = totalEquipaje.add(BigDecimal.valueOf(precioItem));
+            totalEquipaje = totalEquipaje.add(BigDecimal.valueOf(precioEquipajeCatalogo(item)));
         }
 
         if (cantCabina > totalPasajeros) {
@@ -396,10 +405,20 @@ public class MobileBookingService {
                     "Máximo 3 maletas de bodega por pasajero.");
         }
 
+        java.util.Set<Integer> vuelosValidos = vuelosPermitidos(request.idItinerario(), request.idItinerarioRegreso());
+        java.util.Set<String> asientosUnicosPorVuelo = new java.util.HashSet<>();
         BigDecimal totalAsientos = BigDecimal.ZERO;
         if (request.asientos() != null && !request.asientos().isEmpty()) {
             for (var sel : request.asientos()) {
                 if (sel.idVuelo() != null && sel.idAsiento() != null && em != null) {
+                    if (!vuelosValidos.isEmpty() && !vuelosValidos.contains(sel.idVuelo())) {
+                        throw new MobileException(HttpStatus.BAD_REQUEST, "VUELO_INVALIDO",
+                                "Uno de los vuelos seleccionados no pertenece al itinerario.");
+                    }
+                    if (!asientosUnicosPorVuelo.add(sel.idVuelo() + "::" + sel.idAsiento())) {
+                        throw new MobileException(HttpStatus.BAD_REQUEST, "ASIENTO_DUPLICADO",
+                                "No puedes asignar el mismo asiento a dos pasajeros en el mismo vuelo.");
+                    }
                     List<?> rows = em.createNativeQuery("""
                         SELECT a.id_asiento, a.id_clase, COALESCE(pa.precio, 0)
                         FROM vuelo v
@@ -430,10 +449,12 @@ public class MobileBookingService {
         BigDecimal totalBase = totalIda.add(tarifaRegresoPrecio).multiply(BigDecimal.valueOf(totalPasajeros));
         BigDecimal totalFinal = totalBase.add(totalEquipaje).add(totalAsientos);
 
-        String ordenCompra = "MOB-" + (System.currentTimeMillis() % 1000000000L);
+        String ordenCompra = "MOB-" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase(Locale.ROOT);
         String base = (request.urlRetornoBase() != null && !request.urlRetornoBase().isBlank())
                 ? request.urlRetornoBase().trim().replaceAll("/+$", "")
                 : "http://localhost:8101";
+
+        retenerAsientosEnCache(request.asientos(), ordenCompra);
 
         SolicitudPagoDTO solicitud = new SolicitudPagoDTO();
         solicitud.setOrdenCompra(ordenCompra);
@@ -456,6 +477,7 @@ public class MobileBookingService {
         }
 
         if (pagoFactoryService == null) {
+            liberarAsientosEnCache(request.asientos(), ordenCompra);
             throw new MobileException(HttpStatus.INTERNAL_SERVER_ERROR, "PASARELA_NO_DISPONIBLE",
                     "El servicio de pasarela de pago no está disponible.");
         }
@@ -476,6 +498,7 @@ public class MobileBookingService {
             pagosPendientes.put(ordenCompra, new SolicitudPagoPendienteMovil(rut, crearReq, totalFinal));
             return new IniciarPagoReservaResponse(ordenCompra, pasarelaCode, redirectUrl);
         } catch (Exception ex) {
+            liberarAsientosEnCache(request.asientos(), ordenCompra);
             Logger.logError("Error iniciando pago móvil en pasarela " + metodoEnum + ": " + ex.getMessage());
             throw new MobileException(HttpStatus.BAD_GATEWAY, "ERROR_PASARELA",
                     "No fue posible conectar con " + (idMetodo == 2 ? "PayPal" : "Webpay Plus") + ". Intenta nuevamente.");
@@ -485,11 +508,18 @@ public class MobileBookingService {
     @Transactional
     public ReservaCreada confirmarPago(String rut, ConfirmarPagoReservaRequest request) {
         auth.requirePassenger(rut);
+        SolicitudPagoPendienteMovil pendiente = pagosPendientes.remove(request.ordenCompra());
+        if (pendiente == null || !normalizarRut(pendiente.rut()).equals(normalizarRut(rut))) {
+            throw new MobileException(HttpStatus.BAD_REQUEST, "PAGO_NO_ENCONTRADO",
+                    "No se encontró una orden de pago válida para confirmar esta reserva.");
+        }
+
         MetodoPagoEnum metodoEnum = ("paypal".equalsIgnoreCase(request.pasarela()) || "2".equals(request.pasarela()))
                 ? MetodoPagoEnum.PAYPAL
                 : MetodoPagoEnum.WEBPAY;
 
         if (pagoFactoryService == null) {
+            liberarAsientosEnCache(pendiente.request().asientos(), request.ordenCompra());
             throw new MobileException(HttpStatus.INTERNAL_SERVER_ERROR, "PASARELA_NO_DISPONIBLE",
                     "El servicio de pasarela de pago no está disponible.");
         }
@@ -497,17 +527,14 @@ public class MobileBookingService {
         PasarelaPagoStrategy estrategia = pagoFactoryService.obtenerEstrategia(metodoEnum);
         boolean autorizado = estrategia.confirmarPago(request.token());
         if (!autorizado) {
+            liberarAsientosEnCache(pendiente.request().asientos(), request.ordenCompra());
             throw new MobileException(HttpStatus.BAD_REQUEST, "PAGO_RECHAZADO",
                     "La transacción no fue autorizada o fue rechazada por " + (metodoEnum == MetodoPagoEnum.PAYPAL ? "PayPal" : "Webpay Plus") + ".");
         }
 
-        SolicitudPagoPendienteMovil pendiente = pagosPendientes.remove(request.ordenCompra());
-        CrearReservaRequest reservaReq = pendiente != null ? pendiente.request() : request.reserva();
-        if (reservaReq == null) {
-            throw new MobileException(HttpStatus.BAD_REQUEST, "DATOS_RESERVA_FALTANTES",
-                    "No se encontraron los datos de la reserva pendiente para confirmar.");
-        }
-        return crear(rut, reservaReq);
+        ReservaCreada creada = crear(rut, pendiente.request());
+        confirmarAsientosEnCache(pendiente.request().asientos());
+        return creada;
     }
 
     @Transactional
@@ -550,14 +577,12 @@ public class MobileBookingService {
 
         for (var item : itemsEquipaje) {
             String tipo = item.tipo() != null ? item.tipo().toUpperCase() : "";
-            if (tipo.contains("CABINA")) {
+            if (tipo.contains("CABINA") || Integer.valueOf(1).equals(item.idTipoEquipaje())) {
                 cantCabina++;
-            } else if (tipo.contains("BODEGA")) {
+            } else {
                 cantBodega++;
             }
-            int precioItem = item.precio() != null && item.precio() > 0 ? item.precio() :
-                    (tipo.contains("23") ? 30000 : (tipo.contains("15") ? 22000 : 15000));
-            totalEquipaje = totalEquipaje.add(BigDecimal.valueOf(precioItem));
+            totalEquipaje = totalEquipaje.add(BigDecimal.valueOf(precioEquipajeCatalogo(item)));
         }
 
         if (cantCabina > totalPasajeros) {
@@ -570,14 +595,24 @@ public class MobileBookingService {
         }
 
         // 3. Validación y cálculo de asientos seleccionados (soporta múltiples pasajeros y regreso)
+        java.util.Set<Integer> vuelosValidos = vuelosPermitidos(request.idItinerario(), request.idItinerarioRegreso());
+        java.util.Set<String> asientosUnicosPorVuelo = new java.util.HashSet<>();
         BigDecimal totalAsientos = BigDecimal.ZERO;
         java.util.Map<String, Integer> asientosSeleccionados = new java.util.HashMap<>();
         if (request.asientos() != null && !request.asientos().isEmpty()) {
             for (var sel : request.asientos()) {
                 if (sel.idVuelo() != null && sel.idAsiento() != null) {
+                    if (!vuelosValidos.isEmpty() && !vuelosValidos.contains(sel.idVuelo())) {
+                        throw new MobileException(HttpStatus.BAD_REQUEST, "VUELO_INVALIDO",
+                                "Uno de los vuelos seleccionados no pertenece al itinerario.");
+                    }
+                    if (!asientosUnicosPorVuelo.add(sel.idVuelo() + "::" + sel.idAsiento())) {
+                        throw new MobileException(HttpStatus.BAD_REQUEST, "ASIENTO_DUPLICADO",
+                                "No puedes asignar el mismo asiento a dos pasajeros en el mismo vuelo.");
+                    }
                     String paxRut = (sel.rutPasajero() != null && !sel.rutPasajero().isBlank())
                             ? normalizarRut(sel.rutPasajero())
-                            : rut;
+                            : normalizarRut(rut);
                     if (em != null) {
                         List<?> rows = em.createNativeQuery("""
                             SELECT a.id_asiento, a.id_clase, COALESCE(pa.precio, 0)
@@ -686,16 +721,26 @@ public class MobileBookingService {
             }
         }
 
-        // 9. Registro de Equipaje en BD
+        // 9. Registro de Equipaje en BD (asigna al pasajero indicado si forma parte de la reserva)
         if (em != null && !itemsEquipaje.isEmpty()) {
+            java.util.Set<String> rutsNorm = rutsReserva.stream().map(MobileBookingService::normalizarRut).collect(java.util.stream.Collectors.toSet());
             for (var item : itemsEquipaje) {
                 BigDecimal peso = item.peso() != null ? item.peso() : BigDecimal.valueOf(15);
                 String dimensiones = item.dimensiones() != null ? item.dimensiones() : "Estándar";
                 String tipoStr = item.tipo() != null ? item.tipo() : "BODEGA";
                 int idTipo = item.idTipoEquipaje() != null ? item.idTipoEquipaje() :
-                        (tipoStr.toUpperCase().contains("CABINA") ? 1 : 2);
+                        (tipoStr.toUpperCase().contains("CABINA") ? 1 : (tipoStr.contains("23") ? 3 : 2));
                 if (idTipo < 1 || idTipo > 3) {
                     idTipo = 2;
+                }
+                String rutBag = rut;
+                if (item.rutPasajero() != null && !item.rutPasajero().isBlank()) {
+                    String candNorm = normalizarRut(item.rutPasajero());
+                    if (rutsNorm.contains(candNorm)) {
+                        rutBag = rutsReserva.stream()
+                                .filter(r -> normalizarRut(r).equals(candNorm))
+                                .findFirst().orElse(rut);
+                    }
                 }
                 em.createNativeQuery(
                     "INSERT INTO equipaje (peso, dimensiones, tipo, id_reserva, rut_pasajero, id_tipo) " +
@@ -705,7 +750,7 @@ public class MobileBookingService {
                 .setParameter("dimensiones", dimensiones)
                 .setParameter("tipo", tipoStr)
                 .setParameter("idReserva", reserva.getIdReserva())
-                .setParameter("rut", rut)
+                .setParameter("rut", rutBag)
                 .setParameter("idTipo", idTipo)
                 .executeUpdate();
             }
@@ -796,7 +841,7 @@ public class MobileBookingService {
         for (Object row : vuelosItinerario) {
             int idVuelo = ((Number) row).intValue();
             for (String paxRut : rutsReserva) {
-                Integer selected = asientosSeleccionados.get(idVuelo + "::" + paxRut);
+                Integer selected = asientosSeleccionados.get(idVuelo + "::" + normalizarRut(paxRut));
                 if (selected != null) {
                     em.createNativeQuery(
                         "INSERT INTO reserva_asiento (id_reserva, id_asiento, id_vuelo, rut) VALUES (:idReserva, :idAsiento, :idVuelo, :rut)"
@@ -918,6 +963,81 @@ public class MobileBookingService {
         }
         return pasajeros.findById(cleanRut).orElseThrow(() ->
                 new MobileException(HttpStatus.INTERNAL_SERVER_ERROR, "ERROR_ACOMPANANTE", "No se pudo registrar al acompañante " + cleanRut));
+    }
+
+    private static int precioEquipajeCatalogo(ItemEquipajeSolicitud item) {
+        if (item == null) return 15000;
+        if (Integer.valueOf(3).equals(item.idTipoEquipaje())) return 30000;
+        if (Integer.valueOf(2).equals(item.idTipoEquipaje())) return 22000;
+        if (Integer.valueOf(1).equals(item.idTipoEquipaje())) return 15000;
+        String tipo = item.tipo() != null ? item.tipo().toUpperCase(Locale.ROOT) : "";
+        if (tipo.contains("23")) return 30000;
+        if (tipo.contains("15") || tipo.contains("BODEGA")) return 22000;
+        return 15000;
+    }
+
+    private java.util.Set<Integer> vuelosPermitidos(Integer idItinIda, Integer idItinRegreso) {
+        java.util.Set<Integer> validos = new java.util.HashSet<>();
+        if (em == null) return validos;
+        List<Integer> itins = new java.util.ArrayList<>();
+        if (idItinIda != null) itins.add(idItinIda);
+        if (idItinRegreso != null) itins.add(idItinRegreso);
+        if (itins.isEmpty()) return validos;
+        @SuppressWarnings("unchecked")
+        List<Number> rows = em.createNativeQuery("SELECT DISTINCT iv.id_vuelo FROM itinerario_vuelo iv WHERE iv.id_itinerario IN (:ids)")
+                .setParameter("ids", itins)
+                .getResultList();
+        for (Number n : rows) {
+            if (n != null) validos.add(n.intValue());
+        }
+        return validos;
+    }
+
+    private void retenerAsientosEnCache(List<AsientoSeleccionadoSolicitud> asientos, String sessionKey) {
+        if (asientoCacheService == null || asientos == null || asientos.isEmpty()) return;
+        List<AsientoSeleccionadoSolicitud> retenidos = new java.util.ArrayList<>();
+        for (var sel : asientos) {
+            if (sel.idVuelo() == null || sel.idAsiento() == null) continue;
+            var dto = new com.SkyWay.modules.asiento.presentation.dto.InfoAsientoDTO();
+            dto.setIdAsiento(sel.idAsiento());
+            var res = asientoCacheService.seleccionarOliberarAsiento(sel.idVuelo(), dto, sessionKey);
+            if (res == com.SkyWay.modules.reservaasiento.domain.service.AsientoCacheService.ResultadoSeleccion.FALLO_ASIENTO_NO_DISPONIBLE
+                    || res == com.SkyWay.modules.reservaasiento.domain.service.AsientoCacheService.ResultadoSeleccion.FALLO_BLOQUEADO_POR_OTRO) {
+                liberarAsientosEnCache(retenidos, sessionKey);
+                throw new MobileException(HttpStatus.CONFLICT, "ASIENTO_OCUPADO",
+                        "Uno de los asientos seleccionados está siendo reservado por otro pasajero.");
+            }
+            retenidos.add(sel);
+        }
+    }
+
+    private void liberarAsientosEnCache(List<AsientoSeleccionadoSolicitud> asientos, String sessionKey) {
+        if (asientoCacheService == null || asientos == null) return;
+        for (var sel : asientos) {
+            if (sel.idVuelo() == null || sel.idAsiento() == null) continue;
+            var dto = new com.SkyWay.modules.asiento.presentation.dto.InfoAsientoDTO();
+            dto.setIdAsiento(sel.idAsiento());
+            try {
+                if (asientoCacheService.validarPertenenciaYSeleccion(sel.idVuelo(), sel.idAsiento(), sessionKey)) {
+                    asientoCacheService.seleccionarOliberarAsiento(sel.idVuelo(), dto, sessionKey);
+                }
+            } catch (Exception ignored) {}
+        }
+    }
+
+    private void confirmarAsientosEnCache(List<AsientoSeleccionadoSolicitud> asientos) {
+        if (asientoCacheService == null || asientos == null || asientos.isEmpty()) return;
+        java.util.Map<Integer, List<Integer>> porVuelo = new java.util.HashMap<>();
+        for (var sel : asientos) {
+            if (sel.idVuelo() != null && sel.idAsiento() != null) {
+                porVuelo.computeIfAbsent(sel.idVuelo(), k -> new java.util.ArrayList<>()).add(sel.idAsiento());
+            }
+        }
+        porVuelo.forEach((vId, seatIds) -> {
+            try {
+                asientoCacheService.confirmarReservaDefinitiva(vId, seatIds);
+            } catch (Exception ignored) {}
+        });
     }
 
     private static String normalizarRut(String raw) {
