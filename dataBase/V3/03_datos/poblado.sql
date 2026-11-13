@@ -1751,41 +1751,40 @@ SELECT setval('asignacion_puerta_seq', COALESCE((SELECT MAX(ID_ASIGNACION) FROM 
 
 -- 10. Itinerarios (IDs hardcoded)
 INSERT INTO Itinerario ( ORIGEN_AEROPUERTO, DESTINO_AEROPUERTO, DURACION_TOTAL, NUMERO_ESCALAS,Precio_Base) VALUES
-(1, 5, '1 day 22:20:00'::interval, 3,874231), -- Itinerario 1: SCL -> MVD -> GRU -> JFK -> LAX
-(1, 6, '03:50:00'::interval, 0,210000),       -- Itinerario 2: SCL -> LIM (directo)
+(1, 5, '22:20:00'::interval, 3,874231),       -- Itinerario 1: SCL -> MVD -> GRU -> JFK -> LAX
+(1, 6, '02:50:00'::interval, 0,210000),       -- Itinerario 2: SCL -> LIM (directo)
 (1, 4, '17:16:00'::interval, 2,350000),       -- Itinerario 3: SCL -> LIM -> ATL -> JFK
-(1, 4, '1 day 03:30:00'::interval, 2,450000), -- Itinerario 4: SCL -> MVD -> GRU -> JFK
-(1, 7, '12:00:00'::interval, 1,750000),       -- Itinerario 5: SCL -> LIM -> ATL
-(3, 4, '5:30:00'::interval, 0,650000),        -- Itinerario 6: GRU -> JFK (directo)
-(5, 1, '1 day 04:00:00'::interval, 2,930000), -- LAX -> ATL -> LIM -> SCL
-(9, 1, '7 hours 00 minutes'::interval, 0,550000), -- Itinerario 8: MIA -> SCL (directo)
-(3, 4, '13:00:00'::interval, 2,570000), -- GRU -> JFK con 2 escalas (en BOG, MIA)
-( 8, 9, '03:00:00'::interval, 0,450000),
+(1, 4, '17:00:00'::interval, 4,450000),       -- Itinerario 4: SCL -> MVD -> GRU -> BOG -> MIA -> JFK
+(1, 7, '12:25:00'::interval, 1,750000),       -- Itinerario 5: SCL -> LIM -> ATL
+(3, 4, '08:45:00'::interval, 0,650000),       -- Itinerario 6: GRU -> JFK (directo)
+(5, 1, '1 day 04:00:00'::interval, 2,930000), -- Itinerario 7: LAX -> ATL -> LIM -> SCL
+(9, 1, '04:30:00'::interval, 0,550000),       -- Itinerario 8: MIA -> SCL (directo)
+(3, 4, '13:00:00'::interval, 2,570000),       -- Itinerario 9: GRU -> BOG -> MIA -> JFK
+(8, 9, '03:00:00'::interval, 0,450000),       -- Itinerario 10: BOG -> MIA (directo)
 -- Itinerario 11: Vuelo directo SCL -> JFK
-( 1, 4, '09:35:00'::interval, 0, 690000),
-
+(1, 4, '09:35:00'::interval, 0, 690000),
 -- Itinerario 12: SCL -> BOG -> JFK
-( 1, 4, '13:00:00'::interval, 1, 460000);
+(1, 4, '13:00:00'::interval, 1, 460000);
 
 INSERT INTO Itinerario (ORIGEN_AEROPUERTO,DESTINO_AEROPUERTO,HORA_SALIDA,HORA_LLEGADA,DURACION_TOTAL,NUMERO_ESCALAS, Precio_Base
 )
 VALUES (
            5, -- LAX
            1, -- SCL
-           '2025-08-10 07:00',
-           '2025-08-11 05:00',
-           INTERVAL '21 hours',
+           NOW() + INTERVAL '3 days 08 hours',
+           NOW() + INTERVAL '3 days 23 hours 30 min',
+           INTERVAL '15 hours 30 minutes',
            1,
            1120540
        );
 
 
 INSERT INTO Itinerario_Vuelo (ID_ITINERARIO, ID_VUELO, ORDEN, TIEMPO_ESPERA, TIPO_CONEXION) VALUES
--- Itinerario 1: SCL -> MVD -> GRU -> JFK -> LAX
-(1, 1, 1, '1 hour 10 minutes'::interval, 'Escala en Montevideo'),    -- Vuelo 1: SCL -> MVD
---(1, 1, 2, '1 hour 20 minutes'::interval, 'Cambio de avión en GRU'),  -- Vuelo 2: MVD -> GRU
-(1, 3, 3, '2 hour 20 minutes'::interval, 'Cambio de avión en JFK'),  -- Vuelo 3: GRU -> JFK
-(1, 4, 4, '0'::interval, 'Vuelo Final'),                             -- Vuelo 4: JFK -> LAX
+-- Itinerario 1: SCL -> MVD -> GRU -> JFK -> LAX (cadena continua sin saltos)
+(1, 1, 1, '1 hour 10 minutes'::interval, 'Escala en Montevideo (MVD)'),    -- Vuelo 1: SCL -> MVD
+(1, 2, 2, '1 hour 20 minutes'::interval, 'Escala en São Paulo (GRU)'),     -- Vuelo 2: MVD -> GRU
+(1, 3, 3, '2 hours 20 minutes'::interval, 'Escala en Nueva York (JFK)'),   -- Vuelo 3: GRU -> JFK
+(1, 4, 4, '0'::interval, 'Vuelo Final hacia LAX'),                         -- Vuelo 4: JFK -> LAX
 
 -- Itinerario 2: SCL -> LIM (directo)
 (2, 5, 1, '0'::interval, 'Vuelo directo SCL a LIM'),
@@ -1795,39 +1794,40 @@ INSERT INTO Itinerario_Vuelo (ID_ITINERARIO, ID_VUELO, ORDEN, TIEMPO_ESPERA, TIP
 (3, 6, 2, '2 hours 15 minutes'::interval, 'Cambio de avión en Atlanta (ATL)'), -- Vuelo 6: LIM -> ATL
 (3, 7, 3, '0'::interval, 'Vuelo final hacia JFK'),                         -- Vuelo 7: ATL -> JFK
 
--- Itinerario 4: SCL -> MVD -> GRU -> JFK
-(4, 12, 1, '2 hours 0 minutes'::interval, 'Escala en Montevideo'), -- Vuelo 12: SCL -> MVD
-(4, 13, 2, '1 hour 30 minutes'::interval, 'Escala en GRU'),        -- Vuelo 13: MVD -> GRU
-(4, 14, 3, '0'::interval, 'Escala en Bogotá, Miami antes de JFK'),  -- Vuelo 14: GRU -> JFK
+-- Itinerario 4: SCL -> MVD -> GRU -> (BOG -> MIA ->) JFK
+(4, 12, 1, '1 hour 0 minutes'::interval, 'Escala en Montevideo (MVD)'),    -- Vuelo 12: SCL -> MVD
+(4, 13, 2, '1 hour 0 minutes'::interval, 'Escala en São Paulo (GRU)'),     -- Vuelo 13: MVD -> GRU
+(4, 14, 3, '0'::interval, 'Vuelo multi-tramo vía BOG y MIA hacia JFK'),    -- Vuelo 14: GRU -> BOG -> MIA -> JFK
 
 -- Itinerario 5: SCL -> LIM -> ATL
-(5, 5, 1, '1 hour 20 minutes'::interval, 'Escala en Lima'),        -- Vuelo 5: SCL -> LIM
-(5, 6, 2, '0'::interval, 'Vuelo final'),                           -- Vuelo 6: LIM -> ATL
+(5, 5, 1, '1 hour 20 minutes'::interval, 'Escala en Lima (LIM)'),          -- Vuelo 5: SCL -> LIM
+(5, 6, 2, '0'::interval, 'Vuelo final hacia ATL'),                         -- Vuelo 6: LIM -> ATL
 
 -- Itinerario 6: GRU -> JFK (directo)
-(6, 14, 1, '0'::interval, 'Vuelo directo GRU a JFK'),
+(6, 3, 1, '0'::interval, 'Vuelo directo GRU a JFK'),
 
--- Itinerario 7: GRU -> LAX -> ATL -> LIM -> SCL (directo)
-(7, 15, 1, '2 hours'::interval, 'Escala en Atlanta'),
-(7, 16, 2, '8 hours'::interval, 'Escala en Lima'),
-(7, 17, 3, NULL, 'Destino Final'),
+-- Itinerario 7: LAX -> ATL -> LIM -> SCL
+(7, 15, 1, '2 hours'::interval, 'Escala en Atlanta (ATL)'),
+(7, 16, 2, '8 hours'::interval, 'Escala en Lima (LIM)'),
+(7, 17, 3, '0'::interval, 'Vuelo final hacia SCL'),
 
 -- Vuelo directo desde Miami hasta Santiago
 (8, 18, 1, '0'::interval, 'Vuelo directo MIA -> SCL'),
 
-(9, 19, 1, '1 hour 30 minutes'::interval, 'Escala en Bogotá (BOG)'), -- GRU -> BOG
-(9, 20, 2, '2 hours'::interval, 'Escala en Miami (MIA)'),           -- BOG -> MIA
-(9, 21, 3, '0'::interval, 'Vuelo final a Nueva York (JFK)'),        -- MIA -> JFK
+-- Itinerario 9: GRU -> BOG -> MIA -> JFK
+(9, 19, 1, '1 hour 30 minutes'::interval, 'Escala en Bogotá (BOG)'),       -- GRU -> BOG
+(9, 20, 2, '2 hours'::interval, 'Escala en Miami (MIA)'),                  -- BOG -> MIA
+(9, 21, 3, '0'::interval, 'Vuelo final a Nueva York (JFK)'),               -- MIA -> JFK
 
--- Vuelo directo desde Bogotá a Miami
-(10, 19, 1, '0'::interval, 'Vuelo directo BOG a MIA'),
+-- Itinerario 10: Vuelo directo desde Bogotá a Miami
+(10, 20, 1, '0'::interval, 'Vuelo directo BOG a MIA'),
 
 -- Itinerario 11: Vuelo directo SCL -> JFK
 (11, 22, 1, '0'::interval, 'Vuelo directo SCL -> JFK'),
 
 -- Itinerario 12: SCL -> BOG -> JFK
-(12, 23, 1, '2 hours'::interval, 'Escala en Bogotá'),
-(12, 24, 2, '0'::interval, 'Vuelo final');
+(12, 23, 1, '2 hours'::interval, 'Escala en Bogotá (BOG)'),
+(12, 24, 2, '0'::interval, 'Vuelo final hacia JFK');
 
 INSERT INTO Itinerario_Vuelo (ID_ITINERARIO,ID_VUELO,ORDEN,TIEMPO_ESPERA,TIPO_CONEXION)
 VALUES

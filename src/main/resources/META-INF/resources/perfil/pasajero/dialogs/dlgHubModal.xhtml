@@ -12,8 +12,12 @@
                   modal="true"
                   resizable="false"
                   responsive="true"
-                  onShow="arrancarRelojSalida(#{perfilPasajeroView.segundosTotalesSalida});"
-                  styleClass="skyway-dialog">
+                  fitViewport="true"
+                  blockScroll="true"
+                  position="center"
+                  width="1150"
+                  onShow="arrancarRelojSalida(#{perfilPasajeroView.segundosTotalesSalida}); if(window.PF &amp;&amp; PF('dlgHubModal')) { PF('dlgHubModal').jq.find('.ui-dialog-content').scrollTop(0); }"
+                  styleClass="skyway-dialog hub-modal-dialog">
 
             <h:panelGroup rendered="#{not empty perfilPasajeroView.itinerarioSeleccionado}" layout="block" styleClass="p-2">
 
