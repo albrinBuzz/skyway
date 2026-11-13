@@ -438,6 +438,8 @@ ion-alert.skyway-exit-alert {
   .alert-message {
     color: #4a5a75;
     font-size: 14px;
+    line-height: 1.5;
+    white-space: pre-line;
   }
 
   .alert-button {
@@ -493,5 +495,233 @@ ion-modal.airport-modal {
       border-radius: 20px;
       height: min(720px, 90vh);
     }
+  }
+}
+
+/* Mantener saltos de línea limpios en alertas nativas de Ionic sin etiquetas HTML */
+ion-alert .alert-message {
+  white-space: pre-line;
+  line-height: 1.5;
+}
+
+/* ============================================================================
+   Sistema Global de Tarjetas Desplegables / Acordeones SkyWay (.sky-acc)
+   ============================================================================ */
+.sky-acc {
+  background: #ffffff;
+  border: 1px solid #e2e8f4;
+  border-radius: 18px;
+  box-shadow: 0 6px 20px rgba(16, 30, 59, 0.05);
+  margin-bottom: 12px;
+  overflow: hidden;
+  transition: border-color 0.22s ease, box-shadow 0.22s ease, transform 0.16s ease;
+
+  &.is-open {
+    border-color: #c2d1fb;
+    box-shadow: 0 12px 28px rgba(36, 73, 216, 0.09);
+  }
+
+  &.is-highlight {
+    border-color: #b7d7ff;
+    background: linear-gradient(180deg, #fafcff 0%, #ffffff 48px);
+  }
+}
+
+.sky-acc-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 14px;
+  min-height: 62px;
+  background: transparent;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.18s ease;
+
+  &:active {
+    background-color: #f4f7fd;
+  }
+}
+
+.sky-acc.is-open > .sky-acc-trigger {
+  background: linear-gradient(180deg, #f8faff 0%, #ffffff 100%);
+}
+
+.sky-acc-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.sky-acc-icon {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #eef3ff 0%, #e1f6f1 100%);
+  color: #2449d8;
+  font-size: 19px;
+  border: 1px solid rgba(36, 73, 216, 0.1);
+
+  &.tone-ok {
+    background: linear-gradient(135deg, #dff6ee 0%, #eafaf4 100%);
+    color: #128463;
+    border-color: rgba(18, 132, 99, 0.18);
+  }
+
+  &.tone-warn {
+    background: linear-gradient(135deg, #fff3dc 0%, #fff9eb 100%);
+    color: #9a6400;
+    border-color: rgba(154, 100, 0, 0.18);
+  }
+
+  &.tone-bad {
+    background: linear-gradient(135deg, #fde8ec 0%, #fff2f4 100%);
+    color: #b83449;
+    border-color: rgba(184, 52, 73, 0.18);
+  }
+
+  &.tone-navy {
+    background: linear-gradient(135deg, #101e3b 0%, #2449d8 100%);
+    color: #ffffff;
+    border-color: transparent;
+  }
+}
+
+.sky-acc-meta {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.sky-acc-kicker {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: #5b6d8a;
+  margin-bottom: 2px;
+}
+
+.sky-acc-title {
+  display: block;
+  font-size: 15px;
+  font-weight: 800;
+  color: #101e3b;
+  letter-spacing: -0.2px;
+  line-height: 1.25;
+}
+
+.sky-acc-summary {
+  display: block;
+  margin-top: 3px;
+  font-size: 12.8px;
+  font-weight: 550;
+  color: #4a5a75;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.sky-acc-right {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sky-acc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 750;
+  background: #eef3ff;
+  color: #1d3bb0;
+  border: 1px solid #d4e0fc;
+  white-space: nowrap;
+
+  &.is-ok {
+    background: #dff6ee;
+    color: #0b6248;
+    border-color: #b4e6d4;
+  }
+
+  &.is-warn {
+    background: #fff1d6;
+    color: #7a4f00;
+    border-color: #f4d493;
+  }
+
+  &.is-bad {
+    background: #fde6ea;
+    color: #962236;
+    border-color: #f4bcc7;
+  }
+
+  &.is-neutral {
+    background: #eef1f6;
+    color: #354360;
+    border-color: #d9dfea;
+  }
+}
+
+.sky-acc-chevron {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: #f1f5fb;
+  color: #344767;
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.2s ease, color 0.2s ease;
+}
+
+.sky-acc.is-open > .sky-acc-trigger .sky-acc-chevron {
+  transform: rotate(180deg);
+  background: #e5edff;
+  color: #2449d8;
+}
+
+.sky-acc-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sky-acc.is-open > .sky-acc-body {
+  grid-template-rows: 1fr;
+}
+
+.sky-acc-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.sky-acc-content {
+  padding: 13px 14px 15px;
+  border-top: 1px solid #edf1f8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sky-acc-body,
+  .sky-acc-chevron {
+    transition: none;
   }
 }

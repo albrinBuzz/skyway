@@ -28,11 +28,11 @@
     </p>
 
     <ng-container *ngIf="data as map">
-      <!-- 1. Hero Card: Vuelo, Pasajero y Comparación de Asientos -->
-      <section class="hero-card reveal" aria-label="Resumen de selección de asiento">
+      <!-- 1. Hero Card Compacto: Vuelo, Pasajero y Comparación de Asientos -->
+      <section class="hero-card hero-compact reveal" aria-label="Resumen de selección de asiento">
         <div class="hero-top">
           <div class="hero-flight">
-            <span class="hero-label">VUELO</span>
+            <span class="hero-label">{{ rutaLabel || 'VUELO' }}</span>
             <strong class="hero-number">{{ vueloLabel }}</strong>
           </div>
           <span class="chip chip-info hero-class-chip">
@@ -41,29 +41,16 @@
           </span>
         </div>
 
-        <div class="hero-route" *ngIf="rutaLabel">
-          <ion-icon name="airplane" class="route-icon" aria-hidden="true"></ion-icon>
-          <div class="route-details">
-            <strong class="route-iata">{{ rutaLabel }}</strong>
-            <span class="route-cities" *ngIf="origenCiudad && destinoCiudad">
-              {{ origenCiudad }} hacia {{ destinoCiudad }}
-            </span>
-          </div>
-        </div>
-
-        <div class="hero-passenger" *ngIf="nombrePasajero || rut">
+        <div class="hero-passenger-inline" *ngIf="nombrePasajero || rut">
           <ion-icon name="person-circle-outline" aria-hidden="true"></ion-icon>
-          <div class="passenger-text">
-            <span>Pasajero</span>
-            <strong>{{ nombrePasajero || 'Pasajero de la reserva' }}</strong>
-            <small *ngIf="rut" class="rut-tag">RUT: {{ rut }}</small>
-          </div>
+          <span>{{ nombrePasajero || 'Pasajero de la reserva' }}</span>
+          <small *ngIf="rut">· {{ rut }}</small>
         </div>
 
         <!-- Comparación Asiento Actual vs Nuevo Asiento -->
         <div class="seat-comparison">
           <div class="seat-badge-box current-box">
-            <span class="box-label">Tu asiento actual</span>
+            <span class="box-label">Actual</span>
             <strong class="box-seat">{{ map.asientoActual?.numeroAsiento || 'Sin asignar' }}</strong>
             <span class="box-sub">{{ map.asientoActual?.clase || 'Pendiente' }}</span>
           </div>
@@ -73,104 +60,82 @@
           </div>
 
           <div class="seat-badge-box new-box" [class.has-selection]="!!selected">
-            <span class="box-label">Nuevo asiento</span>
+            <span class="box-label">Nuevo</span>
             <strong class="box-seat">{{ selected ? selected.numeroAsiento : '—' }}</strong>
             <span class="box-sub">{{ selected ? (selected.clase || claseContratada) : 'Por elegir' }}</span>
           </div>
         </div>
       </section>
 
-      <!-- 2. Tarjeta de Instrucciones para Adultos Mayores -->
-      <section class="card guide-card reveal" aria-label="Instrucciones para cambiar asiento">
-        <div class="sec-head">
-          <span class="sec-icon"><ion-icon name="information-circle" aria-hidden="true"></ion-icon></span>
-          <div>
-            <h2>Cómo elegir tu asiento</h2>
-            <p>Sigue estos tres sencillos pasos para asegurar tu comodidad:</p>
-          </div>
-        </div>
+      <!-- Aviso de restricción / regla si existe -->
+      <div *ngIf="map.motivo" class="note warn motivo-banner reveal">
+        <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
+        <span>{{ map.motivo }}</span>
+      </div>
 
-        <ol class="step-list">
-          <li class="step-item">
-            <span class="step-num" aria-hidden="true">1</span>
-            <div class="step-body">
-              <strong>Toca un asiento disponible</strong>
-              <p>Busca un asiento en color azul dentro de tu clase contratada ({{ claseContratada }}).</p>
-            </div>
-          </li>
-          <li class="step-item">
-            <span class="step-num" aria-hidden="true">2</span>
-            <div class="step-body">
-              <strong>Revisa tu selección</strong>
-              <p>Tu nuevo número de asiento aparecerá destacado en la tarjeta inferior.</p>
-            </div>
-          </li>
-          <li class="step-item">
-            <span class="step-num" aria-hidden="true">3</span>
-            <div class="step-body">
-              <strong>Confirma el cambio</strong>
-              <p>Toca el botón «Confirmar asiento» para guardar tu elección en la reserva.</p>
-            </div>
-          </li>
-        </ol>
-
-        <div *ngIf="map.motivo" class="note warn">
-          <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
-          <span>{{ map.motivo }}</span>
-        </div>
-      </section>
-
-      <!-- 3. Leyenda Visual Clara (Forma + Ícono + Color + Texto) -->
-      <section class="card legend-card reveal" aria-label="Leyenda de disponibilidad de asientos">
-        <h3 class="legend-title">Referencia de colores y símbolos</h3>
-        <div class="legend-grid">
-          <div class="legend-item available">
-            <div class="legend-swatch available-swatch">
-              <ion-icon name="checkmark" aria-hidden="true"></ion-icon>
-            </div>
-            <div class="legend-text">
-              <strong>Disponible</strong>
-              <span>Misma clase ($0)</span>
+      <!-- 2. Desplegable Único: Guía + Referencia de Colores -->
+      <section class="sky-acc reveal" [class.is-open]="showGuide" aria-label="Guía y leyenda de asientos">
+        <button type="button" class="sky-acc-trigger" (click)="toggleGuide()" [attr.aria-expanded]="showGuide">
+          <div class="sky-acc-left">
+            <span class="sky-acc-icon"><ion-icon name="information-circle" aria-hidden="true"></ion-icon></span>
+            <div class="sky-acc-meta">
+              <span class="sky-acc-kicker">Instrucciones y símbolos</span>
+              <strong class="sky-acc-title">Guía y colores del mapa</strong>
+              <span class="sky-acc-summary mini-legend-summary">
+                <span class="mini-dot avail"></span>Disponible
+                <span class="mini-dot upg"></span>Ascenso
+                <span class="mini-dot cur"></span>Actual
+                <span class="mini-dot occ"></span>Ocupado
+              </span>
             </div>
           </div>
-
-          <div class="legend-item upgrade-legend">
-            <div class="legend-swatch upgrade-swatch">
-              <ion-icon name="trending-up-outline" aria-hidden="true"></ion-icon>
-            </div>
-            <div class="legend-text">
-              <strong>Ascenso (Upgrade)</strong>
-              <span>Paga diferencia</span>
-            </div>
+          <div class="sky-acc-right">
+            <span class="sky-acc-chevron" aria-hidden="true"><ion-icon name="chevron-down-outline"></ion-icon></span>
           </div>
+        </button>
 
-          <div class="legend-item current">
-            <div class="legend-swatch current-swatch">
-              <ion-icon name="star" aria-hidden="true"></ion-icon>
-            </div>
-            <div class="legend-text">
-              <strong>Tu asiento actual</strong>
-              <span>Asignado a ti</span>
-            </div>
-          </div>
+        <div class="sky-acc-body">
+          <div class="sky-acc-inner">
+            <div class="sky-acc-content">
+              <ol class="step-list compact-steps">
+                <li class="step-item">
+                  <span class="step-num" aria-hidden="true">1</span>
+                  <div class="step-body">
+                    <strong>Toca un asiento disponible</strong>
+                    <p>Azul para tu misma clase ($0) o morado para ascenso con pago de diferencia.</p>
+                  </div>
+                </li>
+                <li class="step-item">
+                  <span class="step-num" aria-hidden="true">2</span>
+                  <div class="step-body">
+                    <strong>Revisa tu selección y confirma</strong>
+                    <p>Tu nuevo asiento aparecerá abajo en la barra de confirmación.</p>
+                  </div>
+                </li>
+              </ol>
 
-          <div class="legend-item picked">
-            <div class="legend-swatch picked-swatch">
-              <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
-            </div>
-            <div class="legend-text">
-              <strong>Seleccionado</strong>
-              <span>Listo para confirmar</span>
-            </div>
-          </div>
-
-          <div class="legend-item occupied">
-            <div class="legend-swatch occupied-swatch">
-              <ion-icon name="close" aria-hidden="true"></ion-icon>
-            </div>
-            <div class="legend-text">
-              <strong>No disponible</strong>
-              <span>Ocupado u otra clase</span>
+              <div class="legend-grid compact-legend">
+                <div class="legend-item available">
+                  <div class="legend-swatch available-swatch"><ion-icon name="checkmark" aria-hidden="true"></ion-icon></div>
+                  <div class="legend-text"><strong>Disponible</strong><span>Misma clase ($0)</span></div>
+                </div>
+                <div class="legend-item upgrade-legend">
+                  <div class="legend-swatch upgrade-swatch"><ion-icon name="trending-up-outline" aria-hidden="true"></ion-icon></div>
+                  <div class="legend-text"><strong>Ascenso</strong><span>Paga diferencia</span></div>
+                </div>
+                <div class="legend-item current">
+                  <div class="legend-swatch current-swatch"><ion-icon name="star" aria-hidden="true"></ion-icon></div>
+                  <div class="legend-text"><strong>Actual</strong><span>Asignado a ti</span></div>
+                </div>
+                <div class="legend-item picked">
+                  <div class="legend-swatch picked-swatch"><ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon></div>
+                  <div class="legend-text"><strong>Elegido</strong><span>Por confirmar</span></div>
+                </div>
+                <div class="legend-item occupied">
+                  <div class="legend-swatch occupied-swatch"><ion-icon name="close" aria-hidden="true"></ion-icon></div>
+                  <div class="legend-text"><strong>No disponible</strong><span>Ocupado / bloqueado</span></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -332,11 +297,18 @@
 
       <!-- Desglose de Upgrade si el asiento es de una clase superior -->
       <div *ngIf="isUpgrade(seat)" class="upgrade-breakdown">
-        <div class="breakdown-header">
-          <ion-icon name="trending-up-outline" aria-hidden="true"></ion-icon>
-          <strong>Desglose de pago por cambio a clase superior</strong>
-        </div>
-        <div class="breakdown-rows">
+        <button type="button" class="breakdown-toggle-btn" (click)="toggleUpgradeBreakdown()" [attr.aria-expanded]="showUpgradeBreakdown">
+          <div class="bt-left">
+            <ion-icon name="trending-up-outline" aria-hidden="true"></ion-icon>
+            <span>Desglose de pago ({{ clp(seat.totalPagar ?? 0) }})</span>
+          </div>
+          <span class="bt-right">
+            <span>{{ showUpgradeBreakdown ? 'Ocultar' : 'Ver detalle' }}</span>
+            <ion-icon name="chevron-down-outline" [class.rotated]="showUpgradeBreakdown" aria-hidden="true"></ion-icon>
+          </span>
+        </button>
+
+        <div class="breakdown-rows" *ngIf="showUpgradeBreakdown">
           <div class="breakdown-row">
             <span>Diferencia de cabina ({{ claseContratada }} ➔ {{ seat.clase }}):</span>
             <strong>+{{ clp(seat.diferenciaPrecio ?? 0) }}</strong>
@@ -355,7 +327,7 @@
         <div class="payment-selector-box">
           <label class="selector-label">
             <ion-icon name="wallet-outline" aria-hidden="true"></ion-icon>
-            <span>Selecciona medio de pago:</span>
+            <span>Medio de pago:</span>
           </label>
           <div class="payment-pills">
             <button
@@ -364,7 +336,7 @@
               [class.active]="metodoPago === 1"
               (click)="setMetodoPago(1)">
               <ion-icon name="card-outline" aria-hidden="true"></ion-icon>
-              <span>Webpay Plus / Tarjeta</span>
+              <span>Webpay Plus</span>
             </button>
             <button
               type="button"

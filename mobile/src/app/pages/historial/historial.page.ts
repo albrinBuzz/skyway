@@ -12,6 +12,7 @@ import {
   calendarOutline,
   cashOutline,
   checkmarkCircle,
+  chevronDownOutline,
   closeCircle,
   documentTextOutline,
   enterOutline,
@@ -36,6 +37,7 @@ addIcons({
   calendarOutline,
   cashOutline,
   checkmarkCircle,
+  chevronDownOutline,
   closeCircle,
   documentTextOutline,
   enterOutline,
@@ -98,6 +100,33 @@ export class HistorialPage {
   busy = false;
   error = '';
   private generation = 0;
+
+  expandedReservas = new Set<number>();
+  expandedCambios = new Set<number>();
+
+  isReservaOpen(id: number): boolean {
+    return this.expandedReservas.has(id);
+  }
+
+  toggleReserva(id: number): void {
+    if (this.expandedReservas.has(id)) {
+      this.expandedReservas.delete(id);
+    } else {
+      this.expandedReservas.add(id);
+    }
+  }
+
+  isCambioOpen(id: number): boolean {
+    return this.expandedCambios.has(id);
+  }
+
+  toggleCambio(id: number): void {
+    if (this.expandedCambios.has(id)) {
+      this.expandedCambios.delete(id);
+    } else {
+      this.expandedCambios.add(id);
+    }
+  }
 
   // Caché de detalles para verificar titularidad y check-in
   private readonly detalleReservaCache = new Map<number, DetalleReserva>();

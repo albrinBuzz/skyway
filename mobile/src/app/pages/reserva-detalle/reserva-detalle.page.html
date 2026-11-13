@@ -25,7 +25,7 @@
     </p>
 
     <ng-container *ngIf="data as d">
-      <!-- a) Resumen de la reserva -->
+      <!-- a) Hero Compacto con Resumen Principal -->
       <section class="hero-card reveal" aria-label="Resumen de la reserva">
         <div class="hero-top">
           <div class="hero-id">
@@ -38,19 +38,45 @@
           </span>
         </div>
 
-        <div class="hero-meta">
+        <div class="hero-route-strip" *ngIf="d.itinerarios[0] as firstIt">
+          <div class="strip-codes">
+            <strong>{{ firstIt.origen?.codigoIata || '—' }}</strong>
+            <span class="strip-arrow">
+              <span class="dot"></span>
+              <span class="line"></span>
+              <ion-icon name="airplane" aria-hidden="true"></ion-icon>
+              <span class="line"></span>
+              <span class="dot end"></span>
+            </span>
+            <strong>{{ firstIt.destino?.codigoIata || '—' }}</strong>
+          </div>
+          <div class="strip-sub" *ngIf="firstIt.horaSalida">
+            <span>{{ firstIt.horaSalida | date:"EEE d 'de' MMM · HH:mm 'h'" }}</span>
+            <span>·</span>
+            <span>{{ escalas(firstIt.numeroEscalas) }}</span>
+          </div>
+        </div>
+
+        <div class="hero-meta hero-meta-compact">
           <div class="hero-meta-item">
             <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
             <div>
-              <span>Reservada el</span>
-              <strong>{{ d.fechaReserva | date:"d 'de' MMMM 'de' y" }}</strong>
+              <span>Reservada</span>
+              <strong>{{ d.fechaReserva | date:"d 'de' MMM, y" }}</strong>
             </div>
           </div>
           <div class="hero-meta-item">
             <ion-icon name="person-circle-outline" aria-hidden="true"></ion-icon>
             <div>
               <span>Tu rol</span>
-              <strong>{{ d.titular ? 'Titular de la reserva' : 'Acompañante' }}</strong>
+              <strong>{{ d.titular ? 'Titular' : 'Acompañante' }}</strong>
+            </div>
+          </div>
+          <div class="hero-meta-item">
+            <ion-icon name="cash-outline" aria-hidden="true"></ion-icon>
+            <div>
+              <span>Total</span>
+              <strong>{{ clp(d.total) }}</strong>
             </div>
           </div>
         </div>
@@ -61,315 +87,383 @@
         <span>No hay itinerarios disponibles en esta reserva.</span>
       </p>
 
-      <ng-container *ngFor="let itinerary of d.itinerarios; let i = index">
-        <!-- b) Ruta del viaje -->
-        <section class="block reveal" aria-label="Ruta del viaje">
-          <div class="sec-head">
-            <span class="sec-icon"><ion-icon name="location-outline" aria-hidden="true"></ion-icon></span>
-            <div>
-              <h2>{{ d.itinerarios.length > 1 ? 'Viaje ' + (i + 1) + ' de ' + d.itinerarios.length : 'Tu viaje' }}</h2>
-              <p>Desde dónde sales y a dónde llegas.</p>
-            </div>
-          </div>
+      <!-- Secciones Desplegables con Resumen -->
+      <div class="accordions-stack" *ngFor="let itinerary of d.itinerarios; let i = index">
+        <div class="itinerary-divider" *ngIf="d.itinerarios.length > 1">
+          <span>Itinerario {{ i + 1 }} de {{ d.itinerarios.length }}</span>
+        </div>
 
-          <div class="card route-card">
-            <div class="route-codes">
-              <strong class="iata">{{ itinerary.origen?.codigoIata || '—' }}</strong>
-              <div class="flight-line" aria-hidden="true">
-                <span class="fl-dot"></span>
-                <span class="fl-dash"></span>
-                <ion-icon name="airplane" class="fl-plane"></ion-icon>
-                <span class="fl-dash"></span>
-                <span class="fl-dot fl-dot-end"></span>
-              </div>
-              <strong class="iata iata-end">{{ itinerary.destino?.codigoIata || '—' }}</strong>
-            </div>
-
-            <div class="route-names">
-              <div>
-                <span class="route-tag">Sales de</span>
-                <strong *ngIf="itinerary.origen?.ciudad">{{ itinerary.origen?.ciudad }}</strong>
-                <span class="airport">{{ itinerary.origen?.nombreAeropuerto || 'Aeropuerto por confirmar' }}</span>
-              </div>
-              <div class="end">
-                <span class="route-tag">Llegas a</span>
-                <strong *ngIf="itinerary.destino?.ciudad">{{ itinerary.destino?.ciudad }}</strong>
-                <span class="airport">{{ itinerary.destino?.nombreAeropuerto || 'Aeropuerto por confirmar' }}</span>
+        <!-- 1. Ruta del viaje -->
+        <section class="sky-acc reveal" [class.is-open]="isOpen('viaje-' + i)">
+          <button type="button" class="sky-acc-trigger" (click)="toggleSection('viaje-' + i)" [attr.aria-expanded]="isOpen('viaje-' + i)">
+            <div class="sky-acc-left">
+              <span class="sky-acc-icon"><ion-icon name="location-outline" aria-hidden="true"></ion-icon></span>
+              <div class="sky-acc-meta">
+                <span class="sky-acc-kicker">Ruta e itinerario</span>
+                <strong class="sky-acc-title">{{ d.itinerarios.length > 1 ? 'Viaje ' + (i + 1) : 'Tu viaje' }}</strong>
+                <span class="sky-acc-summary">{{ resumenViaje(itinerary) }}</span>
               </div>
             </div>
+            <div class="sky-acc-right">
+              <span class="sky-acc-badge" [class.is-ok]="itinerary.numeroEscalas === 0">
+                {{ itinerary.numeroEscalas === 0 ? 'Directo' : escalas(itinerary.numeroEscalas) }}
+              </span>
+              <span class="sky-acc-chevron" aria-hidden="true"><ion-icon name="chevron-down-outline"></ion-icon></span>
+            </div>
+          </button>
 
-            <div class="when">
-              <div class="when-item">
-                <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
-                <div>
-                  <span>Fecha de salida</span>
-                  <strong class="cap" *ngIf="itinerary.horaSalida; else porConfirmar">
-                    {{ itinerary.horaSalida | date:"EEEE d 'de' MMMM 'de' y" }}
-                  </strong>
+          <div class="sky-acc-body">
+            <div class="sky-acc-inner">
+              <div class="sky-acc-content">
+                <div class="route-codes">
+                  <strong class="iata">{{ itinerary.origen?.codigoIata || '—' }}</strong>
+                  <div class="flight-line" aria-hidden="true">
+                    <span class="fl-dot"></span>
+                    <span class="fl-dash"></span>
+                    <ion-icon name="airplane" class="fl-plane"></ion-icon>
+                    <span class="fl-dash"></span>
+                    <span class="fl-dot fl-dot-end"></span>
+                  </div>
+                  <strong class="iata iata-end">{{ itinerary.destino?.codigoIata || '—' }}</strong>
+                </div>
+
+                <div class="route-names">
+                  <div>
+                    <span class="route-tag">Sales de</span>
+                    <strong *ngIf="itinerary.origen?.ciudad">{{ itinerary.origen?.ciudad }}</strong>
+                    <span class="airport">{{ itinerary.origen?.nombreAeropuerto || 'Aeropuerto por confirmar' }}</span>
+                  </div>
+                  <div class="end">
+                    <span class="route-tag">Llegas a</span>
+                    <strong *ngIf="itinerary.destino?.ciudad">{{ itinerary.destino?.ciudad }}</strong>
+                    <span class="airport">{{ itinerary.destino?.nombreAeropuerto || 'Aeropuerto por confirmar' }}</span>
+                  </div>
+                </div>
+
+                <div class="when">
+                  <div class="when-item">
+                    <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+                    <div>
+                      <span>Fecha de salida</span>
+                      <strong class="cap" *ngIf="itinerary.horaSalida; else porConfirmar">
+                        {{ itinerary.horaSalida | date:"EEEE d 'de' MMMM 'de' y" }}
+                      </strong>
+                    </div>
+                  </div>
+                  <div class="when-item">
+                    <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
+                    <div>
+                      <span>Hora de salida</span>
+                      <strong class="big-time" *ngIf="itinerary.horaSalida; else porConfirmar">
+                        {{ itinerary.horaSalida | date:'HH:mm' }} h
+                      </strong>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div class="when-item">
-                <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
-                <div>
-                  <span>Hora de salida</span>
-                  <strong class="big-time" *ngIf="itinerary.horaSalida; else porConfirmar">
-                    {{ itinerary.horaSalida | date:'HH:mm' }} h
-                  </strong>
-                </div>
-              </div>
             </div>
-
-            <span class="chip chip-{{ itinerary.numeroEscalas === 0 ? 'ok' : 'info' }} stops">
-              <ion-icon [name]="itinerary.numeroEscalas === 0 ? 'checkmark-circle' : 'location-outline'" aria-hidden="true"></ion-icon>
-              {{ escalas(itinerary.numeroEscalas) }}
-            </span>
           </div>
         </section>
 
-        <!-- c) Vuelos y tramos -->
-        <section class="block reveal" aria-label="Vuelos">
-          <div class="sec-head">
-            <span class="sec-icon"><ion-icon name="airplane" aria-hidden="true"></ion-icon></span>
-            <div>
-              <h2>{{ itinerary.vuelos.length > 1 ? 'Tus vuelos' : 'Tu vuelo' }}</h2>
-              <p>Horarios, puerta y terminal de embarque.</p>
-            </div>
-          </div>
-
-          <article class="card flight-card" *ngFor="let c of itinerary.vuelos">
-            <header class="flight-head">
-              <div>
-                <span class="label">Número de vuelo</span>
-                <strong class="flight-number">{{ c.vuelo.numeroVuelo || c.vuelo.idVuelo }}</strong>
+        <!-- 2. Vuelos y tramos -->
+        <section class="sky-acc reveal" [class.is-open]="isOpen('vuelos-' + i)">
+          <button type="button" class="sky-acc-trigger" (click)="toggleSection('vuelos-' + i)" [attr.aria-expanded]="isOpen('vuelos-' + i)">
+            <div class="sky-acc-left">
+              <span class="sky-acc-icon"><ion-icon name="airplane" aria-hidden="true"></ion-icon></span>
+              <div class="sky-acc-meta">
+                <span class="sky-acc-kicker">Horarios y puertas</span>
+                <strong class="sky-acc-title">{{ itinerary.vuelos.length > 1 ? 'Tus vuelos' : 'Tu vuelo' }}</strong>
+                <span class="sky-acc-summary">{{ resumenVuelos(itinerary) }}</span>
               </div>
-              <span *ngIf="estadoVuelo(c.vuelo) as st" class="chip chip-{{ st.tono }}">
-                <ion-icon [name]="st.icono" aria-hidden="true"></ion-icon>
+            </div>
+            <div class="sky-acc-right">
+              <span *ngIf="itinerary.vuelos[0] && estadoVuelo(itinerary.vuelos[0].vuelo) as st" class="sky-acc-badge is-{{ st.tono }}">
                 {{ st.texto }}
               </span>
-            </header>
+              <span class="sky-acc-chevron" aria-hidden="true"><ion-icon name="chevron-down-outline"></ion-icon></span>
+            </div>
+          </button>
 
-            <ol class="segments">
-              <li class="segment-item" *ngFor="let s of c.vuelo.segmentos; let si = index">
-                <span class="label seg-label" *ngIf="c.vuelo.segmentos.length > 1">Tramo {{ si + 1 }}</span>
-                <div class="timeline">
-                  <div class="tl-stop">
-                    <span class="tl-dot" aria-hidden="true"></span>
-                    <div class="tl-time">
-                      <strong>{{ s.horaSalida ? (s.horaSalida | date:'HH:mm') + ' h' : 'Por confirmar' }}</strong>
-                      <span class="cap" *ngIf="s.horaSalida">{{ s.horaSalida | date:"EEE d 'de' MMM" }}</span>
+          <div class="sky-acc-body">
+            <div class="sky-acc-inner">
+              <div class="sky-acc-content">
+                <article class="inner-flight-card" *ngFor="let c of itinerary.vuelos">
+                  <header class="flight-head">
+                    <div>
+                      <span class="label">Número de vuelo</span>
+                      <strong class="flight-number">{{ c.vuelo.numeroVuelo || c.vuelo.idVuelo }}</strong>
                     </div>
-                    <div class="tl-place">
-                      <span class="sr-only">Sale de</span>
-                      <strong>{{ s.origen?.codigoIata || '—' }}</strong>
-                      <span>{{ s.origen?.ciudad || s.origen?.nombreAeropuerto }}</span>
-                    </div>
-                  </div>
-
-                  <div class="pills">
-                    <span class="pill" [class.pill-muted]="!s.puerta?.codigoPuerta">
-                      <ion-icon name="enter-outline" aria-hidden="true"></ion-icon>
-                      Puerta: <strong>{{ s.puerta?.codigoPuerta || 'Por asignar' }}</strong>
+                    <span *ngIf="estadoVuelo(c.vuelo) as st" class="chip chip-{{ st.tono }} chip-sm">
+                      <ion-icon [name]="st.icono" aria-hidden="true"></ion-icon>
+                      {{ st.texto }}
                     </span>
-                    <span class="pill" [class.pill-muted]="!s.puerta?.terminal">
-                      <ion-icon name="business-outline" aria-hidden="true"></ion-icon>
-                      Terminal: <strong>{{ s.puerta?.terminal || 'Por asignar' }}</strong>
-                    </span>
-                  </div>
+                  </header>
 
-                  <div class="tl-stop">
-                    <span class="tl-dot tl-dot-end" aria-hidden="true"></span>
-                    <div class="tl-time">
-                      <strong>{{ s.horaLlegada ? (s.horaLlegada | date:'HH:mm') + ' h' : 'Por confirmar' }}</strong>
-                      <span class="cap" *ngIf="s.horaLlegada">{{ s.horaLlegada | date:"EEE d 'de' MMM" }}</span>
-                    </div>
-                    <div class="tl-place">
-                      <span class="sr-only">Llega a</span>
-                      <strong>{{ s.destino?.codigoIata || '—' }}</strong>
-                      <span>{{ s.destino?.ciudad || s.destino?.nombreAeropuerto }}</span>
-                    </div>
-                  </div>
-                </div>
-              </li>
-            </ol>
-            <p class="soft" *ngIf="!c.vuelo.segmentos.length">Los horarios de este vuelo aún no están disponibles.</p>
-          </article>
-        </section>
+                  <ol class="segments">
+                    <li class="segment-item" *ngFor="let s of c.vuelo.segmentos; let si = index">
+                      <span class="label seg-label" *ngIf="c.vuelo.segmentos.length > 1">Tramo {{ si + 1 }}</span>
+                      <div class="timeline">
+                        <div class="tl-stop">
+                          <span class="tl-dot" aria-hidden="true"></span>
+                          <div class="tl-time">
+                            <strong>{{ s.horaSalida ? (s.horaSalida | date:'HH:mm') + ' h' : 'Por confirmar' }}</strong>
+                            <span class="cap" *ngIf="s.horaSalida">{{ s.horaSalida | date:"EEE d 'de' MMM" }}</span>
+                          </div>
+                          <div class="tl-place">
+                            <span class="sr-only">Sale de</span>
+                            <strong>{{ s.origen?.codigoIata || '—' }}</strong>
+                            <span>{{ s.origen?.ciudad || s.origen?.nombreAeropuerto }}</span>
+                          </div>
+                        </div>
 
-        <!-- d) Tarifa -->
-        <section class="block reveal" aria-label="Tu tarifa">
-          <div class="sec-head">
-            <span class="sec-icon"><ion-icon name="pricetag-outline" aria-hidden="true"></ion-icon></span>
-            <div>
-              <h2>Tu tarifa</h2>
-              <p>Lo que incluye y lo que permite tu pasaje.</p>
+                        <div class="pills">
+                          <span class="pill" [class.pill-muted]="!s.puerta?.codigoPuerta">
+                            <ion-icon name="enter-outline" aria-hidden="true"></ion-icon>
+                            Puerta: <strong>{{ s.puerta?.codigoPuerta || 'Por asignar' }}</strong>
+                          </span>
+                          <span class="pill" [class.pill-muted]="!s.puerta?.terminal">
+                            <ion-icon name="business-outline" aria-hidden="true"></ion-icon>
+                            Terminal: <strong>{{ s.puerta?.terminal || 'Por asignar' }}</strong>
+                          </span>
+                        </div>
+
+                        <div class="tl-stop">
+                          <span class="tl-dot tl-dot-end" aria-hidden="true"></span>
+                          <div class="tl-time">
+                            <strong>{{ s.horaLlegada ? (s.horaLlegada | date:'HH:mm') + ' h' : 'Por confirmar' }}</strong>
+                            <span class="cap" *ngIf="s.horaLlegada">{{ s.horaLlegada | date:"EEE d 'de' MMM" }}</span>
+                          </div>
+                          <div class="tl-place">
+                            <span class="sr-only">Llega a</span>
+                            <strong>{{ s.destino?.codigoIata || '—' }}</strong>
+                            <span>{{ s.destino?.ciudad || s.destino?.nombreAeropuerto }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </li>
+                  </ol>
+                  <p class="soft" *ngIf="!c.vuelo.segmentos.length">Los horarios de este vuelo aún no están disponibles.</p>
+                </article>
+              </div>
             </div>
           </div>
+        </section>
 
-          <div class="card fare-card">
-            <div class="fare-top">
-              <span class="fare-badge">
-                <ion-icon name="pricetag-outline" aria-hidden="true"></ion-icon>
-                Tarifa {{ itinerary.tarifa.nombre }}
+        <!-- 3. Tu tarifa -->
+        <section class="sky-acc reveal" [class.is-open]="isOpen('tarifa-' + i)">
+          <button type="button" class="sky-acc-trigger" (click)="toggleSection('tarifa-' + i)" [attr.aria-expanded]="isOpen('tarifa-' + i)">
+            <div class="sky-acc-left">
+              <span class="sky-acc-icon"><ion-icon name="pricetag-outline" aria-hidden="true"></ion-icon></span>
+              <div class="sky-acc-meta">
+                <span class="sky-acc-kicker">Condiciones del pasaje</span>
+                <strong class="sky-acc-title">Tu tarifa</strong>
+                <span class="sky-acc-summary">{{ resumenTarifa(itinerary) }}</span>
+              </div>
+            </div>
+            <div class="sky-acc-right">
+              <span class="sky-acc-badge">{{ clp(itinerary.tarifa.precio) }}</span>
+              <span class="sky-acc-chevron" aria-hidden="true"><ion-icon name="chevron-down-outline"></ion-icon></span>
+            </div>
+          </button>
+
+          <div class="sky-acc-body">
+            <div class="sky-acc-inner">
+              <div class="sky-acc-content">
+                <div class="fare-top">
+                  <span class="fare-badge">
+                    <ion-icon name="pricetag-outline" aria-hidden="true"></ion-icon>
+                    Tarifa {{ itinerary.tarifa.nombre }}
+                  </span>
+                  <div class="fare-price">
+                    <span class="label">Precio de la tarifa</span>
+                    <strong>{{ clp(itinerary.tarifa.precio) }}</strong>
+                  </div>
+                </div>
+
+                <ul class="checklist" *ngIf="itinerary.tarifa.caracteristicas.length">
+                  <li *ngFor="let c of itinerary.tarifa.caracteristicas">
+                    <ng-container *ngIf="rasgo(c) as r">
+                      <ion-icon [name]="r.icono" class="tone-{{ r.tono }}" aria-hidden="true"></ion-icon>
+                      <div>
+                        <span class="check-name">{{ c.nombre }}</span>
+                        <strong class="check-value tone-{{ r.tono }}">{{ r.texto }}</strong>
+                      </div>
+                    </ng-container>
+                  </li>
+                </ul>
+
+                <p class="note" *ngIf="!hasBaggage(itinerary.tarifa)">
+                  <ion-icon name="information-circle" aria-hidden="true"></ion-icon>
+                  <span>Esta tarifa no tiene una franquicia de equipaje especificada.</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 4. Pasajeros y tickets -->
+        <section class="sky-acc is-highlight reveal" [class.is-open]="isOpen('pasajeros-' + i)">
+          <button type="button" class="sky-acc-trigger" (click)="toggleSection('pasajeros-' + i)" [attr.aria-expanded]="isOpen('pasajeros-' + i)">
+            <div class="sky-acc-left">
+              <span class="sky-acc-icon tone-navy"><ion-icon name="people-outline" aria-hidden="true"></ion-icon></span>
+              <div class="sky-acc-meta">
+                <span class="sky-acc-kicker">Asientos y pases</span>
+                <strong class="sky-acc-title">Pasajeros y tickets</strong>
+                <span class="sky-acc-summary">{{ resumenPasajeros(itinerary) }}</span>
+              </div>
+            </div>
+            <div class="sky-acc-right">
+              <span class="sky-acc-badge" [class.is-ok]="!!d.checkin" [class.is-warn]="!d.checkin">
+                {{ d.checkin ? 'Ticket listo' : 'Gestionar' }}
               </span>
-              <div class="fare-price">
-                <span class="label">Precio de la tarifa</span>
-                <strong>{{ clp(itinerary.tarifa.precio) }}</strong>
-              </div>
+              <span class="sky-acc-chevron" aria-hidden="true"><ion-icon name="chevron-down-outline"></ion-icon></span>
             </div>
+          </button>
 
-            <ul class="checklist" *ngIf="itinerary.tarifa.caracteristicas.length">
-              <li *ngFor="let c of itinerary.tarifa.caracteristicas">
-                <ng-container *ngIf="rasgo(c) as r">
-                  <ion-icon [name]="r.icono" class="tone-{{ r.tono }}" aria-hidden="true"></ion-icon>
-                  <div>
-                    <span class="check-name">{{ c.nombre }}</span>
-                    <strong class="check-value tone-{{ r.tono }}">{{ r.texto }}</strong>
-                  </div>
-                </ng-container>
-              </li>
-            </ul>
+          <div class="sky-acc-body">
+            <div class="sky-acc-inner">
+              <div class="sky-acc-content">
+                <div class="flight-group" *ngFor="let c of itinerary.vuelos">
+                  <h3 class="group-title" *ngIf="itinerary.vuelos.length > 1">
+                    <ion-icon name="airplane" aria-hidden="true"></ion-icon>
+                    Vuelo {{ c.vuelo.numeroVuelo || c.vuelo.idVuelo }}
+                  </h3>
 
-            <p class="note" *ngIf="!hasBaggage(itinerary.tarifa)">
-              <ion-icon name="information-circle" aria-hidden="true"></ion-icon>
-              <span>Esta tarifa no tiene una franquicia de equipaje especificada.</span>
-            </p>
-          </div>
-        </section>
-
-        <!-- e) Pasajeros y tickets -->
-        <section class="block reveal" aria-label="Pasajeros y tickets">
-          <div class="sec-head">
-            <span class="sec-icon"><ion-icon name="people-outline" aria-hidden="true"></ion-icon></span>
-            <div>
-              <h2>Pasajeros y tickets</h2>
-              <p>Cada pasajero tiene su propio asiento y ticket. Toca «Ver ticket» para abrirlo.</p>
-            </div>
-          </div>
-
-          <div class="flight-group" *ngFor="let c of itinerary.vuelos">
-            <h3 class="group-title" *ngIf="itinerary.vuelos.length > 1">
-              <ion-icon name="airplane" aria-hidden="true"></ion-icon>
-              Vuelo {{ c.vuelo.numeroVuelo || c.vuelo.idVuelo }}
-            </h3>
-
-            <p *ngIf="ticketErrors[c.vuelo.idVuelo]" class="error" role="alert">
-              <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
-              <span>No fue posible cargar los pasajeros: {{ ticketErrors[c.vuelo.idVuelo] }}</span>
-            </p>
-
-            <article class="card passenger-card" *ngFor="let persona of personas(c.vuelo.idVuelo)">
-              <div class="passenger-top">
-                <span class="avatar" aria-hidden="true">{{ iniciales(persona) }}</span>
-                <div class="passenger-info">
-                  <strong class="passenger-name">{{ persona.nombre }} {{ persona.apellido }}</strong>
-                  <span class="chip chip-{{ persona.titular ? 'info' : 'neutral' }} chip-sm">
-                    <ion-icon [name]="persona.titular ? 'shield-checkmark-outline' : 'people-outline'" aria-hidden="true"></ion-icon>
-                    {{ persona.titular ? 'Titular' : 'Acompañante' }}
-                  </span>
-                </div>
-              </div>
-
-              <div class="passenger-seat">
-                <div class="seat-badge" *ngIf="persona.asiento?.numeroAsiento; else sinAsiento">
-                  <span>Asiento</span>
-                  <strong>{{ persona.asiento?.numeroAsiento }}</strong>
-                </div>
-                <ng-template #sinAsiento>
-                  <span class="chip chip-warn">
+                  <p *ngIf="ticketErrors[c.vuelo.idVuelo]" class="error" role="alert">
                     <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
-                    Sin asiento
-                  </span>
-                </ng-template>
-                <div class="seat-class" *ngIf="persona.asiento?.clase">
-                  <span>Clase</span>
-                  <strong>{{ persona.asiento?.clase }}</strong>
+                    <span>No fue posible cargar los pasajeros: {{ ticketErrors[c.vuelo.idVuelo] }}</span>
+                  </p>
+
+                  <article class="inner-passenger-card" *ngFor="let persona of personas(c.vuelo.idVuelo)">
+                    <div class="passenger-top">
+                      <span class="avatar" aria-hidden="true">{{ iniciales(persona) }}</span>
+                      <div class="passenger-info">
+                        <strong class="passenger-name">{{ persona.nombre }} {{ persona.apellido }}</strong>
+                        <span class="chip chip-{{ persona.titular ? 'info' : 'neutral' }} chip-sm">
+                          <ion-icon [name]="persona.titular ? 'shield-checkmark-outline' : 'people-outline'" aria-hidden="true"></ion-icon>
+                          {{ persona.titular ? 'Titular' : 'Acompañante' }}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="passenger-seat">
+                      <div class="seat-badge" *ngIf="persona.asiento?.numeroAsiento; else sinAsiento">
+                        <span>Asiento</span>
+                        <strong>{{ persona.asiento?.numeroAsiento }}</strong>
+                      </div>
+                      <ng-template #sinAsiento>
+                        <span class="chip chip-warn">
+                          <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
+                          Sin asiento
+                        </span>
+                      </ng-template>
+                      <div class="seat-class" *ngIf="persona.asiento?.clase">
+                        <span>Clase</span>
+                        <strong>{{ persona.asiento?.clase }}</strong>
+                      </div>
+                    </div>
+
+                    <div class="passenger-actions">
+                      <ion-button *ngIf="d.checkin" expand="block" class="ticket-btn"
+                        [routerLink]="['/vuelos/reservas', id, 'vuelos', c.vuelo.idVuelo, 'tickets', persona.rut]">
+                        <ion-icon name="ticket-outline" slot="start" aria-hidden="true"></ion-icon>
+                        Ver tarjeta de embarque
+                      </ion-button>
+                      <div *ngIf="!d.checkin" class="ticket-pending-note">
+                        <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
+                        <span>Tarjeta de embarque disponible tras realizar el check-in</span>
+                      </div>
+                      <ion-button expand="block" fill="outline" class="seat-action-btn"
+                        [routerLink]="['/vuelos/reservas', id, 'vuelos', c.vuelo.idVuelo, 'tickets', persona.rut, 'asientos']">
+                        <ion-icon name="airplane-outline" slot="start" aria-hidden="true"></ion-icon>
+                        {{ persona.asiento?.numeroAsiento ? 'Cambiar asiento' : 'Elegir asiento' }}
+                      </ion-button>
+                    </div>
+                  </article>
+
+                  <p *ngIf="!personas(c.vuelo.idVuelo).length && !ticketErrors[c.vuelo.idVuelo]" class="empty-state small">
+                    <ion-icon name="people-outline" aria-hidden="true"></ion-icon>
+                    <span>No hay pasajeros registrados para este vuelo.</span>
+                  </p>
                 </div>
               </div>
-
-              <div class="passenger-actions">
-                <ion-button *ngIf="d.checkin" expand="block" class="ticket-btn"
-                  [routerLink]="['/vuelos/reservas', id, 'vuelos', c.vuelo.idVuelo, 'tickets', persona.rut]">
-                  <ion-icon name="ticket-outline" slot="start" aria-hidden="true"></ion-icon>
-                  Ver tarjeta de embarque
-                </ion-button>
-                <div *ngIf="!d.checkin" class="ticket-pending-note">
-                  <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
-                  <span>Tarjeta de embarque disponible tras realizar el check-in</span>
-                </div>
-                <ion-button expand="block" fill="outline" class="seat-action-btn"
-                  [routerLink]="['/vuelos/reservas', id, 'vuelos', c.vuelo.idVuelo, 'tickets', persona.rut, 'asientos']">
-                  <ion-icon name="airplane-outline" slot="start" aria-hidden="true"></ion-icon>
-                  {{ persona.asiento?.numeroAsiento ? 'Cambiar asiento' : 'Elegir asiento' }}
-                </ion-button>
-              </div>
-            </article>
-
-            <p *ngIf="!personas(c.vuelo.idVuelo).length && !ticketErrors[c.vuelo.idVuelo]" class="empty-state small">
-              <ion-icon name="people-outline" aria-hidden="true"></ion-icon>
-              <span>No hay pasajeros registrados para este vuelo.</span>
-            </p>
+            </div>
           </div>
         </section>
-      </ng-container>
+      </div>
 
-      <!-- f) Equipaje -->
-      <section class="block reveal" aria-label="Equipaje">
-        <div class="sec-head">
-          <span class="sec-icon"><ion-icon name="briefcase-outline" aria-hidden="true"></ion-icon></span>
-          <div>
-            <h2>Tu equipaje registrado</h2>
-            <p>Maletas asociadas a esta reserva.</p>
-          </div>
-        </div>
-
-        <div class="card">
-          <ul class="bags" *ngIf="d.equipajes.length; else sinEquipaje">
-            <li *ngFor="let bag of d.equipajes">
-              <span class="bag-icon"><ion-icon name="briefcase-outline" aria-hidden="true"></ion-icon></span>
-              <div class="bag-info">
-                <strong>{{ bag.nombreTipo || bag.tipo }}</strong>
-                <span *ngIf="bag.dimensiones">Medidas: {{ bag.dimensiones }}</span>
-              </div>
-              <span class="bag-weight" aria-label="Peso">{{ bag.peso | number:'1.0-2' }} kg</span>
-            </li>
-          </ul>
-          <ng-template #sinEquipaje>
-            <div class="empty-state small">
-              <ion-icon name="briefcase-outline" aria-hidden="true"></ion-icon>
-              <span>No tienes equipaje registrado en esta reserva.</span>
+      <!-- 5. Equipaje registrado -->
+      <section class="sky-acc reveal" [class.is-open]="isOpen('equipaje')">
+        <button type="button" class="sky-acc-trigger" (click)="toggleSection('equipaje')" [attr.aria-expanded]="isOpen('equipaje')">
+          <div class="sky-acc-left">
+            <span class="sky-acc-icon tone-ok"><ion-icon name="briefcase-outline" aria-hidden="true"></ion-icon></span>
+            <div class="sky-acc-meta">
+              <span class="sky-acc-kicker">Maletas asociadas</span>
+              <strong class="sky-acc-title">Equipaje registrado</strong>
+              <span class="sky-acc-summary">{{ resumenEquipaje(d) }}</span>
             </div>
-          </ng-template>
-        </div>
-      </section>
+          </div>
+          <div class="sky-acc-right">
+            <span class="sky-acc-badge" [class.is-ok]="d.equipajes.length > 0" [class.is-neutral]="!d.equipajes.length">
+              {{ d.equipajes.length }}
+            </span>
+            <span class="sky-acc-chevron" aria-hidden="true"><ion-icon name="chevron-down-outline"></ion-icon></span>
+          </div>
+        </button>
 
-      <!-- g) Total -->
-      <section class="total-card reveal" aria-label="Total de la reserva">
-        <span class="total-icon"><ion-icon name="cash-outline" aria-hidden="true"></ion-icon></span>
-        <div>
-          <span class="total-label">Total de la reserva</span>
-          <strong class="total-amount">{{ clp(d.total) }}</strong>
+        <div class="sky-acc-body">
+          <div class="sky-acc-inner">
+            <div class="sky-acc-content">
+              <ul class="bags" *ngIf="d.equipajes.length; else sinEquipaje">
+                <li *ngFor="let bag of d.equipajes">
+                  <span class="bag-icon"><ion-icon name="briefcase-outline" aria-hidden="true"></ion-icon></span>
+                  <div class="bag-info">
+                    <strong>{{ bag.nombreTipo || bag.tipo }}</strong>
+                    <span *ngIf="bag.dimensiones">Medidas: {{ bag.dimensiones }}</span>
+                  </div>
+                  <span class="bag-weight" aria-label="Peso">{{ bag.peso | number:'1.0-2' }} kg</span>
+                </li>
+              </ul>
+              <ng-template #sinEquipaje>
+                <div class="empty-state small">
+                  <ion-icon name="briefcase-outline" aria-hidden="true"></ion-icon>
+                  <span>No tienes equipaje registrado en esta reserva.</span>
+                </div>
+              </ng-template>
+            </div>
+          </div>
         </div>
       </section>
 
       <!-- h) Check-in -->
       <section *ngIf="d.checkin" class="checkin-card checkin-done reveal" aria-label="Check-in realizado">
-        <ion-icon name="checkmark-circle" class="checkin-icon" aria-hidden="true"></ion-icon>
-        <div>
-          <h2>Check-in realizado</h2>
-          <p *ngIf="d.checkin.fechaHora">
-            El {{ d.checkin.fechaHora | date:"d 'de' MMMM 'de' y" }}, a las {{ d.checkin.fechaHora | date:'HH:mm' }} h.
-          </p>
-          <p *ngIf="d.checkin.metodo">Realizado por: <strong>{{ d.checkin.metodo }}</strong></p>
-          <p>Ya puedes ver y descargar la tarjeta de embarque oficial con código 2D IATA. Si necesitas modificar tu ubicación a bordo, puedes hacerlo con la opción «Cambiar asiento» (con pago de diferencia si eliges una cabina superior).</p>
-          
-          <ion-button expand="block" class="download-pdf-btn" (click)="descargarPdf()" [disabled]="descargandoPdf">
-            <ion-spinner *ngIf="descargandoPdf"></ion-spinner>
-            <ng-container *ngIf="!descargandoPdf">
-              <ion-icon name="download-outline" slot="start" aria-hidden="true"></ion-icon>
-              Descargar tarjeta de embarque (PDF)
-            </ng-container>
-          </ion-button>
+        <div class="checkin-done-head">
+          <ion-icon name="checkmark-circle" class="checkin-icon" aria-hidden="true"></ion-icon>
+          <div class="checkin-done-info">
+            <h2>Check-in realizado</h2>
+            <p *ngIf="d.checkin.fechaHora">
+              {{ d.checkin.fechaHora | date:"d 'de' MMM, y · HH:mm" }} h
+              <span *ngIf="d.checkin.metodo"> · {{ d.checkin.metodo }}</span>
+            </p>
+          </div>
         </div>
+
+        <button type="button" class="inline-collapse-btn" (click)="toggleSection('checkin-info')" [attr.aria-expanded]="isOpen('checkin-info')">
+          <span>{{ isOpen('checkin-info') ? 'Ocultar detalles de embarque' : 'Ver información sobre tarjeta y asientos' }}</span>
+          <ion-icon name="chevron-down-outline" [class.rotated]="isOpen('checkin-info')" aria-hidden="true"></ion-icon>
+        </button>
+
+        <p class="checkin-extra-copy" *ngIf="isOpen('checkin-info')">
+          Ya puedes ver y descargar la tarjeta de embarque oficial con código 2D IATA. Si necesitas modificar tu ubicación a bordo, puedes hacerlo con «Cambiar asiento» dentro de «Pasajeros y tickets».
+        </p>
+
+        <ion-button expand="block" class="download-pdf-btn" (click)="descargarPdf()" [disabled]="descargandoPdf">
+          <ion-spinner *ngIf="descargandoPdf"></ion-spinner>
+          <ng-container *ngIf="!descargandoPdf">
+            <ion-icon name="download-outline" slot="start" aria-hidden="true"></ion-icon>
+            Descargar tarjeta de embarque (PDF)
+          </ng-container>
+        </ion-button>
       </section>
 
       <section *ngIf="!d.checkin" class="checkin-card checkin-cta reveal" aria-label="Check-in">
@@ -377,11 +471,16 @@
           <span class="sec-icon"><ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon></span>
           <div>
             <h2>Check-in</h2>
-            <p>Confirma que viajarás para activar la vista y descarga de las tarjetas de embarque.</p>
+            <p>Confirma tu viaje para activar tus tarjetas de embarque.</p>
           </div>
         </div>
 
-        <ul class="steps">
+        <button type="button" class="inline-collapse-btn" (click)="toggleSection('checkin-rules')" [attr.aria-expanded]="isOpen('checkin-rules')">
+          <span>{{ isOpen('checkin-rules') ? 'Ocultar requisitos' : 'Ver requisitos y ventana de check-in (4)' }}</span>
+          <ion-icon name="chevron-down-outline" [class.rotated]="isOpen('checkin-rules')" aria-hidden="true"></ion-icon>
+        </button>
+
+        <ul class="steps" *ngIf="isOpen('checkin-rules')">
           <li><ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>Se hace una sola vez para toda la reserva.</li>
           <li><ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>Solo lo puede confirmar la persona titular.</li>
           <li><ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>Ventana oficial: habilitado desde 48 horas hasta 60 minutos antes del vuelo.</li>

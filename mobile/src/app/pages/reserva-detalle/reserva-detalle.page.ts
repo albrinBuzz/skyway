@@ -6,16 +6,16 @@ import { ApiService } from '../../core/api.service';
 import { addIcons } from 'ionicons';
 import {
   airplane, alertCircle, briefcaseOutline, businessOutline, calendarOutline, cashOutline, checkmarkCircle,
-  closeCircle, downloadOutline, enterOutline, helpCircle, informationCircle, locationOutline, peopleOutline, personCircleOutline,
+  chevronDownOutline, closeCircle, downloadOutline, enterOutline, helpCircle, informationCircle, locationOutline, peopleOutline, personCircleOutline,
   pricetagOutline, refreshOutline, shieldCheckmarkOutline, ticketOutline, timeOutline
 } from 'ionicons/icons';
-import { Caracteristica, DetalleReserva, PasajeroTicket, Vuelo, Tarifa } from '../../core/models';
+import { Caracteristica, DetalleReserva, Itinerario, PasajeroTicket, Vuelo, Tarifa } from '../../core/models';
 import { errorMessage, featureValue, flights } from '../../core/ui';
 
 // Íconos usados solo por esta pantalla (el resto se registra en AppModule).
 addIcons({
   airplane, alertCircle, briefcaseOutline, businessOutline, calendarOutline, cashOutline, checkmarkCircle,
-  closeCircle, downloadOutline, enterOutline, helpCircle, informationCircle, locationOutline, peopleOutline, personCircleOutline,
+  chevronDownOutline, closeCircle, downloadOutline, enterOutline, helpCircle, informationCircle, locationOutline, peopleOutline, personCircleOutline,
   pricetagOutline, refreshOutline, shieldCheckmarkOutline, ticketOutline, timeOutline
 });
 
@@ -41,11 +41,63 @@ export class ReservaDetallePage {
   descargandoPdf = false;
   error = '';
   featureValue = featureValue;
+  openSections = new Set<string>();
   private generation = 0;
+
+  isOpen(key: string): boolean { return this.openSections.has(key); }
+
+  toggleSection(key: string): void {
+    if (this.openSections.has(key)) {
+      this.openSections.delete(key);
+    } else {
+      this.openSections.add(key);
+    }
+  }
 
   get vuelos(): Vuelo[] { return this.data ? flights(this.data) : []; }
   hasBaggage(tarifa: Tarifa) { return tarifa.caracteristicas.some(c => /equipaje|maleta|franquicia/i.test(c.nombre)); }
   personas(idVuelo: number): PasajeroTicket[] { return this.tickets[idVuelo] ?? []; }
+
+  resumenViaje(itinerary: Itinerario): string {
+    const orig = itinerary.origen?.codigoIata || '—';
+    const dest = itinerary.destino?.codigoIata || '—';
+    const esc = this.escalas(itinerary.numeroEscalas);
+    if (!itinerary.horaSalida) return `${orig} → ${dest} · ${esc}`;
+    const d = new Date(itinerary.horaSalida);
+    const fecha = Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('es-CL', { day: 'numeric', month: 'short' });
+    const hora = Number.isNaN(d.getTime()) ? '' : d.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+    return `${orig} → ${dest}${fecha ? ' · ' + fecha : ''}${hora ? ' · ' + hora + ' h' : ''} · ${esc}`;
+  }
+
+  resumenVuelos(itinerary: Itinerario): string {
+    const codigos = itinerary.vuelos.map(x => x.vuelo.numeroVuelo || `#${x.vuelo.idVuelo}`).join(', ');
+    const tramos = itinerary.vuelos.reduce((acc, x) => acc + (x.vuelo.segmentos?.length || 0), 0);
+    const tramoTxt = tramos > 0 ? `${tramos} ${tramos === 1 ? 'tramo' : 'tramos'}` : `${itinerary.vuelos.length} ${itinerary.vuelos.length === 1 ? 'vuelo' : 'vuelos'}`;
+    return `${codigos || 'Sin vuelos'} · ${tramoTxt}`;
+  }
+
+  resumenTarifa(itinerary: Itinerario): string {
+    const count = itinerary.tarifa.caracteristicas?.length ?? 0;
+    return `Tarifa ${itinerary.tarifa.nombre} · ${count} ${count === 1 ? 'condición' : 'condiciones'}`;
+  }
+
+  resumenPasajeros(itinerary: Itinerario): string {
+    const firstFlight = itinerary.vuelos[0]?.vuelo?.idVuelo;
+    const list = firstFlight ? this.personas(firstFlight) : [];
+    if (!list.length) return 'Toca para ver pasajeros, asientos y tickets';
+    const countTxt = list.length === 1 ? list[0].nombre + ' ' + list[0].apellido : `${list.length} pasajeros`;
+    const seats = [...new Set(
+      itinerary.vuelos.flatMap(x => this.personas(x.vuelo.idVuelo).map(p => p.asiento?.numeroAsiento).filter(Boolean))
+    )];
+    const seatTxt = seats.length ? `Asiento ${seats.join(', ')}` : 'Asiento pendiente';
+    return `${countTxt} · ${seatTxt}`;
+  }
+
+  resumenEquipaje(d: DetalleReserva): string {
+    if (!d.equipajes?.length) return 'Sin equipaje adicional registrado';
+    const totalKg = d.equipajes.reduce((acc, b) => acc + (b.peso || 0), 0);
+    return `${d.equipajes.length} ${d.equipajes.length === 1 ? 'maleta' : 'maletas'} · ${Math.round(totalKg * 10) / 10} kg totales`;
+  }
 
   // ---- Helpers de presentación (no alteran datos ni reglas) ----
   estadoReserva(descripcion: string | null): Etiqueta {

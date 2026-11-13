@@ -16,6 +16,7 @@ import {
   cashOutline,
   checkboxOutline,
   checkmarkCircle,
+  chevronDownOutline,
   chevronForwardOutline,
   closeCircle,
   documentTextOutline,
@@ -44,6 +45,7 @@ addIcons({
   cashOutline,
   checkboxOutline,
   checkmarkCircle,
+  chevronDownOutline,
   chevronForwardOutline,
   closeCircle,
   documentTextOutline,
@@ -127,6 +129,22 @@ export class VuelosPage {
   mostrarModalGlobo = false;
   cargandoRutaMapa = false;
   rutaSeleccionada: RutaVuelo3D | null = null;
+
+  // Desplegables de UI
+  showNextDetails = false;
+  expandedReservas = new Set<number>();
+
+  isReservaOpen(id: number): boolean {
+    return this.expandedReservas.has(id);
+  }
+
+  toggleReserva(id: number): void {
+    if (this.expandedReservas.has(id)) {
+      this.expandedReservas.delete(id);
+    } else {
+      this.expandedReservas.add(id);
+    }
+  }
 
   // Caché en memoria para evitar peticiones repetidas a la BD
   readonly detalleReservaCache = new Map<number, DetalleReserva>();

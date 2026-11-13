@@ -204,51 +204,79 @@
             </div>
           </div>
 
-          <!-- Tramos / Escalas (si aplica más de 1 tramo) -->
-          <div class="segments-detail" *ngIf="p.vuelo.segmentos.length > 1">
-            <h3 class="section-title">
-              <ion-icon name="airplane" aria-hidden="true"></ion-icon>
-              Tramos de tu vuelo
-            </h3>
-            <div class="segment-card" *ngFor="let s of p.vuelo.segmentos; let idx = index">
-              <div class="segment-head">
-                <span class="segment-idx">Tramo {{ idx + 1 }}</span>
-                <strong>{{ s.origen?.codigoIata }} → {{ s.destino?.codigoIata }}</strong>
+          <!-- Tramos / Escalas desplegables (si aplica más de 1 tramo) -->
+          <div class="sky-acc inner-acc" [class.is-open]="showSegments" *ngIf="p.vuelo.segmentos.length > 1">
+            <button type="button" class="sky-acc-trigger" (click)="showSegments = !showSegments" [attr.aria-expanded]="showSegments">
+              <div class="sky-acc-left">
+                <span class="sky-acc-icon"><ion-icon name="airplane" aria-hidden="true"></ion-icon></span>
+                <div class="sky-acc-meta">
+                  <strong class="sky-acc-title">Tramos y escalas</strong>
+                  <span class="sky-acc-summary">{{ p.vuelo.segmentos.length }} tramos programados · Toca para ver puertas</span>
+                </div>
               </div>
-              <div class="segment-meta">
-                <span>Salida: <strong>{{ s.horaSalida | date:'dd MMM · HH:mm' }} h</strong></span>
-                <span>Llegada: <strong>{{ s.horaLlegada | date:'dd MMM · HH:mm' }} h</strong></span>
-                <span>Puerta: <strong>{{ s.puerta?.codigoPuerta || 'Por asignar' }}</strong> (Term. {{ s.puerta?.terminal || 'T1' }})</span>
+              <div class="sky-acc-right">
+                <span class="sky-acc-chevron" aria-hidden="true"><ion-icon name="chevron-down-outline"></ion-icon></span>
+              </div>
+            </button>
+            <div class="sky-acc-body">
+              <div class="sky-acc-inner">
+                <div class="sky-acc-content">
+                  <div class="segment-card" *ngFor="let s of p.vuelo.segmentos; let idx = index">
+                    <div class="segment-head">
+                      <span class="segment-idx">Tramo {{ idx + 1 }}</span>
+                      <strong>{{ s.origen?.codigoIata }} → {{ s.destino?.codigoIata }}</strong>
+                    </div>
+                    <div class="segment-meta">
+                      <span>Salida: <strong>{{ s.horaSalida | date:'dd MMM · HH:mm' }} h</strong></span>
+                      <span>Llegada: <strong>{{ s.horaLlegada | date:'dd MMM · HH:mm' }} h</strong></span>
+                      <span>Puerta: <strong>{{ s.puerta?.codigoPuerta || 'Por asignar' }}</strong> (Term. {{ s.puerta?.terminal || 'T1' }})</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- Equipaje del Pasajero -->
-          <div class="baggage-card">
-            <h3 class="section-title">
-              <ion-icon name="briefcase-outline" aria-hidden="true"></ion-icon>
-              Equipaje registrado del pasajero
-            </h3>
-
-            <ul class="bag-list" *ngIf="p.equipajes.length; else sinBolsas">
-              <li class="bag-item" *ngFor="let bag of p.equipajes">
-                <div class="bag-icon-box">
-                  <ion-icon name="briefcase-outline" aria-hidden="true"></ion-icon>
+          <!-- Equipaje del Pasajero desplegable -->
+          <div class="sky-acc inner-acc" [class.is-open]="showBaggage">
+            <button type="button" class="sky-acc-trigger" (click)="showBaggage = !showBaggage" [attr.aria-expanded]="showBaggage">
+              <div class="sky-acc-left">
+                <span class="sky-acc-icon tone-ok"><ion-icon name="briefcase-outline" aria-hidden="true"></ion-icon></span>
+                <div class="sky-acc-meta">
+                  <strong class="sky-acc-title">Equipaje registrado</strong>
+                  <span class="sky-acc-summary">{{ resumenEquipaje() }}</span>
                 </div>
-                <div class="bag-desc">
-                  <strong>{{ bag.nombreTipo || bag.tipo }}</strong>
-                  <span *ngIf="bag.dimensiones">Medidas: {{ bag.dimensiones }}</span>
-                </div>
-                <span class="bag-kilos">{{ bag.peso | number:'1.0-2' }} kg</span>
-              </li>
-            </ul>
+              </div>
+              <div class="sky-acc-right">
+                <span class="sky-acc-badge" [class.is-ok]="p.equipajes.length > 0" [class.is-neutral]="!p.equipajes.length">{{ p.equipajes.length }}</span>
+                <span class="sky-acc-chevron" aria-hidden="true"><ion-icon name="chevron-down-outline"></ion-icon></span>
+              </div>
+            </button>
+            <div class="sky-acc-body">
+              <div class="sky-acc-inner">
+                <div class="sky-acc-content">
+                  <ul class="bag-list" *ngIf="p.equipajes.length; else sinBolsas">
+                    <li class="bag-item" *ngFor="let bag of p.equipajes">
+                      <div class="bag-icon-box">
+                        <ion-icon name="briefcase-outline" aria-hidden="true"></ion-icon>
+                      </div>
+                      <div class="bag-desc">
+                        <strong>{{ bag.nombreTipo || bag.tipo }}</strong>
+                        <span *ngIf="bag.dimensiones">Medidas: {{ bag.dimensiones }}</span>
+                      </div>
+                      <span class="bag-kilos">{{ bag.peso | number:'1.0-2' }} kg</span>
+                    </li>
+                  </ul>
 
-            <ng-template #sinBolsas>
-              <p class="no-baggage-note">
-                <ion-icon name="information-circle" aria-hidden="true"></ion-icon>
-                <span>No hay maletas ni equipajes adicionales registrados para este pasajero.</span>
-              </p>
-            </ng-template>
+                  <ng-template #sinBolsas>
+                    <p class="no-baggage-note">
+                      <ion-icon name="information-circle" aria-hidden="true"></ion-icon>
+                      <span>No hay maletas ni equipajes adicionales registrados para este pasajero.</span>
+                    </p>
+                  </ng-template>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -267,8 +295,7 @@
                 <ion-icon name="barcode-outline" aria-hidden="true"></ion-icon>
                 IATA BCBP 2D · PDF417
               </span>
-              <h3>Presenta este código en la puerta de embarque</h3>
-              <p>Código 2D estándar de la Asociación Internacional de Transporte Aéreo (IATA Res. 792) con firma criptográfica digital ECDSA P-256.</p>
+              <h3>Presenta este código en puerta</h3>
             </div>
 
             <!-- Contenedor del Código 2D IATA PDF417 -->
@@ -288,15 +315,29 @@
               </ng-template>
             </div>
 
-            <div class="barcode-footer-info">
-              <strong class="security-tag">
-                <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
-                CÓDIGO 2D IATA AUTÉNTICO · SKYWAY
-              </strong>
-              <p class="sim-note">Legible en escáneres ópticos de puerta y validador de embarque</p>
-              <span class="reserva-meta">
-                Localizador PNR: <strong>{{ p.codigoPnr || ('RES-' + id) }}</strong> · Check-in #{{ p.checkin?.idCheckin || '—' }}
-              </span>
+            <!-- Desplegable de certificación técnica -->
+            <div class="sky-acc inner-acc iata-info-acc" [class.is-open]="showIataInfo">
+              <button type="button" class="sky-acc-trigger" (click)="showIataInfo = !showIataInfo" [attr.aria-expanded]="showIataInfo">
+                <div class="sky-acc-left">
+                  <span class="sky-acc-icon tone-ok"><ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon></span>
+                  <div class="sky-acc-meta">
+                    <strong class="sky-acc-title">Código 2D IATA auténtico</strong>
+                    <span class="sky-acc-summary">PNR: {{ p.codigoPnr || ('RES-' + id) }} · Check-in #{{ p.checkin?.idCheckin || '—' }}</span>
+                  </div>
+                </div>
+                <div class="sky-acc-right">
+                  <span class="sky-acc-chevron" aria-hidden="true"><ion-icon name="chevron-down-outline"></ion-icon></span>
+                </div>
+              </button>
+              <div class="sky-acc-body">
+                <div class="sky-acc-inner">
+                  <div class="sky-acc-content">
+                    <p class="iata-tech-note">
+                      Código 2D estándar de la Asociación Internacional de Transporte Aéreo (IATA Res. 792) con firma criptográfica digital ECDSA P-256, legible en escáneres ópticos de puerta.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 

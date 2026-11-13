@@ -15,6 +15,7 @@ import {
   checkmarkCircleOutline,
   checkmarkDoneOutline,
   chevronBackOutline,
+  chevronDownOutline,
   chevronForwardOutline,
   closeCircle,
   enterOutline,
@@ -41,6 +42,7 @@ addIcons({
   checkmarkCircleOutline,
   checkmarkDoneOutline,
   chevronBackOutline,
+  chevronDownOutline,
   chevronForwardOutline,
   closeCircle,
   enterOutline,
@@ -78,6 +80,19 @@ export class AlertasPage {
   error = '';
   page = 0;
   saving = new Set<number>();
+  expandedIds = new Set<number>();
+
+  isExpanded(id: number): boolean {
+    return this.expandedIds.has(id);
+  }
+
+  toggleAlert(id: number): void {
+    if (this.expandedIds.has(id)) {
+      this.expandedIds.delete(id);
+    } else {
+      this.expandedIds.add(id);
+    }
+  }
 
   get visibles(): Notificacion[] {
     const items = this.data?.contenido ?? [];

@@ -23,8 +23,8 @@
       <span>{{ error }}</span>
     </div>
 
-    <!-- a) Hero resumen de alertas (Identidad SkyWay: azul marino a azul con brillo teal) -->
-    <section class="hero-card reveal" aria-label="Resumen de alertas">
+    <!-- a) Hero resumen compacto de alertas -->
+    <section class="hero-card hero-compact reveal" aria-label="Resumen de alertas">
       <div class="hero-top">
         <div>
           <span class="hero-label">Centro de notificaciones</span>
@@ -32,27 +32,23 @@
         </div>
         <span class="chip" [ngClass]="totalNuevas > 0 ? 'chip-warn' : 'chip-ok'">
           <ion-icon [name]="totalNuevas > 0 ? 'notifications' : 'checkmark-circle'" aria-hidden="true"></ion-icon>
-          {{ totalNuevas > 0 ? (totalNuevas === 1 ? '1 aviso nuevo' : totalNuevas + ' avisos nuevos') : 'Todo al día' }}
+          {{ totalNuevas > 0 ? (totalNuevas === 1 ? '1 nueva' : totalNuevas + ' nuevas') : 'Al día' }}
         </span>
       </div>
-
-      <p class="hero-desc">
-        Avisos importantes sobre tus vuelos, puertas de embarque, cambios de horario y confirmaciones de reservas.
-      </p>
 
       <div class="hero-meta">
         <div class="hero-meta-item">
           <ion-icon name="sparkles" aria-hidden="true"></ion-icon>
           <div>
-            <span>Nuevas por revisar</span>
-            <strong>{{ totalNuevas === 0 ? '0 pendientes' : (totalNuevas === 1 ? '1 por revisar' : totalNuevas + ' por revisar') }}</strong>
+            <span>Por revisar</span>
+            <strong>{{ totalNuevas === 0 ? '0 pendientes' : (totalNuevas === 1 ? '1 pendiente' : totalNuevas + ' pendientes') }}</strong>
           </div>
         </div>
         <div class="hero-meta-item">
           <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
           <div>
-            <span>Total registradas</span>
-            <strong>{{ totalTodas }} {{ totalTodas === 1 ? 'notificación' : 'notificaciones' }}</strong>
+            <span>Total</span>
+            <strong>{{ totalTodas }} {{ totalTodas === 1 ? 'aviso' : 'avisos' }}</strong>
           </div>
         </div>
       </div>
@@ -101,71 +97,85 @@
       </button>
     </section>
 
-    <!-- c) Lista de notificaciones -->
+    <!-- c) Lista de notificaciones desplegables -->
     <ng-container *ngIf="data as result">
       <div class="alertas-list" *ngIf="visibles.length > 0">
         <article
           *ngFor="let n of visibles"
-          class="card alerta-card reveal"
-          [class.is-unread]="!n.leido"
+          class="sky-acc reveal"
+          [class.is-open]="isExpanded(n.idNotificacion)"
+          [class.is-highlight]="!n.leido"
           [attr.aria-label]="n.titulo || 'Alerta de vuelo'"
         >
-          <div *ngIf="clasificarAlerta(n) as meta" class="alerta-inner tone-border-{{ meta.tono }}">
-            <!-- Encabezado de la tarjeta -->
-            <header class="alerta-head">
-              <div class="alerta-meta-tag">
-                <span class="alerta-type-icon tone-bg-{{ meta.tono }}">
+          <ng-container *ngIf="clasificarAlerta(n) as meta">
+            <button
+              type="button"
+              class="sky-acc-trigger"
+              (click)="toggleAlert(n.idNotificacion)"
+              [attr.aria-expanded]="isExpanded(n.idNotificacion)"
+            >
+              <div class="sky-acc-left">
+                <span class="sky-acc-icon tone-{{ meta.tono }}">
                   <ion-icon [name]="meta.icono" aria-hidden="true"></ion-icon>
                 </span>
-                <div>
-                  <span class="label">{{ meta.tipo }}</span>
-                  <span class="alerta-date" *ngIf="n.fecha">
-                    <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
-                    {{ n.fecha | date:"d 'de' MMMM 'de' y · HH:mm" }} h
+                <div class="sky-acc-meta">
+                  <span class="sky-acc-kicker">
+                    {{ meta.tipo }}<ng-container *ngIf="n.fecha"> · {{ n.fecha | date:'d MMM, HH:mm' }}</ng-container>
                   </span>
+                  <strong class="sky-acc-title">{{ n.titulo || 'Aviso operacional' }}</strong>
+                  <span class="sky-acc-summary" *ngIf="!isExpanded(n.idNotificacion)">{{ n.mensaje }}</span>
                 </div>
               </div>
 
-              <span class="chip chip-sm" [ngClass]="n.leido ? 'chip-neutral' : 'chip-info'">
-                <ion-icon [name]="n.leido ? 'checkmark-done-outline' : 'sparkles'" aria-hidden="true"></ion-icon>
-                {{ n.leido ? 'Leída' : 'Nueva' }}
-              </span>
-            </header>
+              <div class="sky-acc-right">
+                <span class="sky-acc-badge" [class.is-ok]="false" [class.is-neutral]="n.leido">
+                  {{ n.leido ? 'Leída' : 'Nueva' }}
+                </span>
+                <span class="sky-acc-chevron" aria-hidden="true">
+                  <ion-icon name="chevron-down-outline"></ion-icon>
+                </span>
+              </div>
+            </button>
 
-            <!-- Título y mensaje legible >= 16px -->
-            <div class="alerta-body">
-              <h2 class="alerta-title">{{ n.titulo || 'Aviso operacional' }}</h2>
-              <p class="alerta-mensaje">{{ n.mensaje }}</p>
+            <div class="sky-acc-body">
+              <div class="sky-acc-inner">
+                <div class="sky-acc-content">
+                  <div class="alerta-date-full" *ngIf="n.fecha">
+                    <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+                    <span>{{ n.fecha | date:"EEEE d 'de' MMMM 'de' y · HH:mm" }} h</span>
+                  </div>
+                  <p class="alerta-mensaje">{{ n.mensaje }}</p>
+
+                  <footer class="alerta-actions">
+                    <ion-button
+                      *ngIf="!n.leido"
+                      fill="outline"
+                      class="btn-mark-read"
+                      (click)="leer(n)"
+                      [disabled]="saving.has(n.idNotificacion)"
+                      aria-label="Marcar como leída esta notificación"
+                    >
+                      <ion-spinner *ngIf="saving.has(n.idNotificacion)" name="crescent" slot="start"></ion-spinner>
+                      <ion-icon *ngIf="!saving.has(n.idNotificacion)" name="checkmark-circle-outline" slot="start" aria-hidden="true"></ion-icon>
+                      <span>{{ saving.has(n.idNotificacion) ? 'Guardando…' : 'Marcar como leída' }}</span>
+                    </ion-button>
+
+                    <ion-button
+                      *ngIf="reservaId(n) as rId"
+                      fill="solid"
+                      class="btn-view-reserva"
+                      [routerLink]="['/vuelos/reservas', rId]"
+                      aria-label="Ver detalle de la reserva asociada"
+                    >
+                      <ion-icon name="airplane" slot="start" aria-hidden="true"></ion-icon>
+                      <span>Ver reserva #{{ rId }}</span>
+                      <ion-icon name="arrow-forward-outline" slot="end" aria-hidden="true"></ion-icon>
+                    </ion-button>
+                  </footer>
+                </div>
+              </div>
             </div>
-
-            <!-- Acciones claras >= 44px -->
-            <footer class="alerta-actions">
-              <ion-button
-                *ngIf="!n.leido"
-                fill="outline"
-                class="btn-mark-read"
-                (click)="leer(n)"
-                [disabled]="saving.has(n.idNotificacion)"
-                aria-label="Marcar como leída esta notificación"
-              >
-                <ion-spinner *ngIf="saving.has(n.idNotificacion)" name="crescent" slot="start"></ion-spinner>
-                <ion-icon *ngIf="!saving.has(n.idNotificacion)" name="checkmark-circle-outline" slot="start" aria-hidden="true"></ion-icon>
-                <span>{{ saving.has(n.idNotificacion) ? 'Guardando…' : 'Marcar como leída' }}</span>
-              </ion-button>
-
-              <ion-button
-                *ngIf="reservaId(n) as rId"
-                fill="solid"
-                class="btn-view-reserva"
-                [routerLink]="['/vuelos/reservas', rId]"
-                aria-label="Ver detalle de la reserva asociada"
-              >
-                <ion-icon name="airplane" slot="start" aria-hidden="true"></ion-icon>
-                <span>Ver reserva #{{ rId }}</span>
-                <ion-icon name="arrow-forward-outline" slot="end" aria-hidden="true"></ion-icon>
-              </ion-button>
-            </footer>
-          </div>
+          </ng-container>
         </article>
       </div>
 

@@ -11,14 +11,11 @@
 
 <ion-content>
   <main class="page historial-page">
-    <!-- Encabezado Hero institucional con identidad visual SkyWay -->
+    <!-- Encabezado Hero compacto -->
     <header class="page-intro reveal">
-      <div class="hero-card hero-header">
+      <div class="hero-card hero-header compact">
         <span class="hero-label">SKYWAY · TRAZABILIDAD Y REGISTROS</span>
         <h1 class="hero-title">Tu historial de vuelo</h1>
-        <p class="hero-desc">
-          Consulta tus reservas activas, viajes concluidos o cancelados y las actualizaciones operacionales de tus vuelos.
-        </p>
       </div>
     </header>
 
@@ -94,110 +91,116 @@
         </div>
       </div>
 
-      <div *ngIf="result.contenido.length; else sinReservas" class="reservas-list">
+      <div *ngIf="result.contenido.length; else sinReservas" class="historial-acc-list">
         <article
           *ngFor="let r of result.contenido"
-          class="card reserva-card reveal"
-          button
-          [routerLink]="['/vuelos/reservas', r.idReserva]"
-          aria-label="Ver detalle de la reserva"
+          class="sky-acc reveal"
+          [class.is-open]="isReservaOpen(r.idReserva)"
         >
-          <!-- Fila superior: ID y Estados -->
-          <div class="reserva-card-top">
-            <div class="reserva-id-group">
-              <span class="reserva-label">Reserva</span>
-              <strong class="reserva-number">#{{ r.idReserva }}</strong>
-            </div>
-
-            <div class="reserva-badges">
-              <span *ngIf="estadoReserva(r.estadoReserva.descripcion) as st" class="chip chip-{{ st.tono }}">
-                <ion-icon [name]="st.icono" aria-hidden="true"></ion-icon>
+          <button
+            type="button"
+            class="sky-acc-trigger"
+            (click)="toggleReserva(r.idReserva)"
+            [attr.aria-expanded]="isReservaOpen(r.idReserva)"
+          >
+            <span class="sky-acc-icon">
+              <ion-icon name="airplane" aria-hidden="true"></ion-icon>
+            </span>
+            <span class="sky-acc-meta">
+              <span class="sky-acc-kicker">
+                Reserva #{{ r.idReserva }}
+                <ng-container *ngIf="esTitular(r.idReserva) !== null"> · {{ esTitular(r.idReserva) ? 'Titular' : 'Acompañante' }}</ng-container>
+              </span>
+              <strong class="sky-acc-title">{{ r.codigoIataOrigen || '—' }} → {{ r.codigoIataDestino || '—' }}</strong>
+              <span class="sky-acc-summary">
+                {{ r.proximaSalida ? (r.proximaSalida | date:"d MMM · HH:mm 'h'") : (r.fechaReserva | date:'d MMM y') }} · {{ clp(r.total) }}
+              </span>
+            </span>
+            <span class="sky-acc-right">
+              <span *ngIf="estadoReserva(r.estadoReserva.descripcion) as st" class="sky-acc-badge chip-{{ st.tono }}">
                 {{ st.texto }}
               </span>
-
-              <span
-                *ngIf="esTitular(r.idReserva) !== null"
-                class="chip chip-sm"
-                [class.chip-info]="esTitular(r.idReserva)"
-                [class.chip-neutral]="!esTitular(r.idReserva)"
-              >
-                <ion-icon [name]="esTitular(r.idReserva) ? 'shield-checkmark-outline' : 'people-outline'" aria-hidden="true"></ion-icon>
-                {{ esTitular(r.idReserva) ? 'Titular' : 'Acompañante' }}
-              </span>
-            </div>
-          </div>
-
-          <!-- Trazado de ruta visual -->
-          <div class="reserva-route">
-            <div class="route-codes">
-              <strong class="iata">{{ r.codigoIataOrigen || '—' }}</strong>
-              <div class="flight-line" aria-hidden="true">
-                <span class="fl-dot"></span>
-                <span class="fl-dash"></span>
-                <ion-icon name="airplane" class="fl-plane"></ion-icon>
-                <span class="fl-dash"></span>
-                <span class="fl-dot fl-dot-end"></span>
-              </div>
-              <strong class="iata iata-end">{{ r.codigoIataDestino || '—' }}</strong>
-            </div>
-
-            <div class="route-names">
-              <div class="route-side">
-                <span class="route-tag">Origen</span>
-                <strong>{{ ciudadPorIata(r.codigoIataOrigen) }}</strong>
-              </div>
-              <div class="route-side end">
-                <span class="route-tag">Destino</span>
-                <strong>{{ ciudadPorIata(r.codigoIataDestino) }}</strong>
-              </div>
-            </div>
-          </div>
-
-          <!-- Fila de Metadatos: Horario y Total en CLP -->
-          <div class="reserva-meta-grid">
-            <div class="meta-item">
-              <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
-              <div>
-                <span class="meta-label">
-                  {{ r.proximaSalida ? 'Salida de vuelo' : 'Fecha de reserva' }}
-                </span>
-                <strong class="meta-value cap">
-                  {{ r.proximaSalida ? (r.proximaSalida | date:"EEEE d 'de' MMMM · HH:mm 'h'") : (r.fechaReserva | date:"d 'de' MMMM 'de' y") }}
-                </strong>
-              </div>
-            </div>
-
-            <div class="meta-item total-item">
-              <ion-icon name="cash-outline" aria-hidden="true"></ion-icon>
-              <div>
-                <span class="meta-label">Total pagado</span>
-                <strong class="meta-value price">{{ clp(r.total) }}</strong>
-              </div>
-            </div>
-          </div>
-
-          <!-- Indicador de Check-in -->
-          <div class="checkin-indicator-row">
-            <span *ngIf="tieneCheckin(r)" class="chip chip-ok chip-sm">
-              <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
-              Check-in confirmado
+              <ion-icon name="chevron-down-outline" class="sky-acc-chevron" aria-hidden="true"></ion-icon>
             </span>
-            <span *ngIf="!tieneCheckin(r) && seccion === 'activas' && !((r.estadoReserva.descripcion || '').toLowerCase().includes('cancel'))" class="chip chip-warn chip-sm">
-              <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
-              Check-in disponible antes de la salida
-            </span>
-          </div>
+          </button>
 
-          <!-- Botón de Acción Principal (>=48px de altura) -->
-          <div class="reserva-actions">
-            <ion-button
-              expand="block"
-              class="btn-ver-reserva"
-              [routerLink]="['/vuelos/reservas', r.idReserva]"
-            >
-              <ion-icon name="document-text-outline" slot="start" aria-hidden="true"></ion-icon>
-              Ver detalle de reserva
-            </ion-button>
+          <div class="sky-acc-body">
+            <div class="sky-acc-inner">
+              <div class="sky-acc-content">
+                <!-- Trazado de ruta visual -->
+                <div class="reserva-route">
+                  <div class="route-codes">
+                    <strong class="iata">{{ r.codigoIataOrigen || '—' }}</strong>
+                    <div class="flight-line" aria-hidden="true">
+                      <span class="fl-dot"></span>
+                      <span class="fl-dash"></span>
+                      <ion-icon name="airplane" class="fl-plane"></ion-icon>
+                      <span class="fl-dash"></span>
+                      <span class="fl-dot fl-dot-end"></span>
+                    </div>
+                    <strong class="iata iata-end">{{ r.codigoIataDestino || '—' }}</strong>
+                  </div>
+
+                  <div class="route-names">
+                    <div class="route-side">
+                      <span class="route-tag">Origen</span>
+                      <strong>{{ ciudadPorIata(r.codigoIataOrigen) }}</strong>
+                    </div>
+                    <div class="route-side end">
+                      <span class="route-tag">Destino</span>
+                      <strong>{{ ciudadPorIata(r.codigoIataDestino) }}</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Fila de Metadatos: Horario y Total en CLP -->
+                <div class="reserva-meta-grid">
+                  <div class="meta-item">
+                    <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+                    <div>
+                      <span class="meta-label">
+                        {{ r.proximaSalida ? 'Salida de vuelo' : 'Fecha de reserva' }}
+                      </span>
+                      <strong class="meta-value cap">
+                        {{ r.proximaSalida ? (r.proximaSalida | date:"EEEE d 'de' MMMM · HH:mm 'h'") : (r.fechaReserva | date:"d 'de' MMMM 'de' y") }}
+                      </strong>
+                    </div>
+                  </div>
+
+                  <div class="meta-item total-item">
+                    <ion-icon name="cash-outline" aria-hidden="true"></ion-icon>
+                    <div>
+                      <span class="meta-label">Total pagado</span>
+                      <strong class="meta-value price">{{ clp(r.total) }}</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Indicador de Check-in -->
+                <div class="checkin-indicator-row">
+                  <span *ngIf="tieneCheckin(r)" class="chip chip-ok chip-sm">
+                    <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
+                    Check-in confirmado
+                  </span>
+                  <span *ngIf="!tieneCheckin(r) && seccion === 'activas' && !((r.estadoReserva.descripcion || '').toLowerCase().includes('cancel'))" class="chip chip-warn chip-sm">
+                    <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
+                    Check-in disponible antes de la salida
+                  </span>
+                </div>
+
+                <!-- Botón de Acción Principal -->
+                <div class="reserva-actions">
+                  <ion-button
+                    expand="block"
+                    class="btn-ver-reserva"
+                    [routerLink]="['/vuelos/reservas', r.idReserva]"
+                  >
+                    <ion-icon name="document-text-outline" slot="start" aria-hidden="true"></ion-icon>
+                    Ver detalle de reserva
+                  </ion-button>
+                </div>
+              </div>
+            </div>
           </div>
         </article>
       </div>
@@ -254,46 +257,60 @@
         </div>
       </div>
 
-      <div *ngIf="result.contenido.length; else sinCambios" class="timeline-list">
+      <div *ngIf="result.contenido.length; else sinCambios" class="historial-acc-list">
         <article
           *ngFor="let n of result.contenido"
-          class="timeline-card reveal"
-          [class.is-unread]="!n.leido"
+          class="sky-acc reveal"
+          [class.is-open]="isCambioOpen(n.idNotificacion)"
         >
-          <!-- Indicador visual del evento (círculo con ícono según tono) -->
-          <div class="timeline-badge badge-{{ tipoCambio(n).tono }}" aria-hidden="true">
-            <ion-icon [name]="tipoCambio(n).icono"></ion-icon>
-          </div>
-
-          <!-- Contenido del cambio con formato claro para adultos mayores -->
-          <div class="timeline-body">
-            <div class="timeline-top">
-              <div class="timeline-tags">
-                <span class="chip chip-sm chip-{{ tipoCambio(n).tono }}">
-                  <ion-icon [name]="tipoCambio(n).icono" aria-hidden="true"></ion-icon>
-                  {{ tipoCambio(n).etiqueta }}
-                </span>
-
-                <span *ngIf="extraerNumeroVuelo(n) as numVuelo" class="flight-pill">
-                  <ion-icon name="airplane" aria-hidden="true"></ion-icon>
-                  {{ numVuelo }}
-                </span>
-              </div>
-
-              <span class="read-status-badge" [class.unread]="!n.leido">
-                {{ n.leido ? 'Leída' : 'Nuevo aviso' }}
+          <button
+            type="button"
+            class="sky-acc-trigger"
+            (click)="toggleCambio(n.idNotificacion)"
+            [attr.aria-expanded]="isCambioOpen(n.idNotificacion)"
+          >
+            <span class="sky-acc-icon">
+              <ion-icon [name]="tipoCambio(n).icono" aria-hidden="true"></ion-icon>
+            </span>
+            <span class="sky-acc-meta">
+              <span class="sky-acc-kicker">
+                {{ tipoCambio(n).etiqueta }}
+                <ng-container *ngIf="extraerNumeroVuelo(n) as numVuelo"> · {{ numVuelo }}</ng-container>
               </span>
-            </div>
+              <strong class="sky-acc-title">{{ n.titulo || 'Actualización de tu vuelo' }}</strong>
+              <span class="sky-acc-summary">{{ n.fecha | date:"d MMM y · HH:mm 'h'" }} — {{ n.mensaje }}</span>
+            </span>
+            <span class="sky-acc-right">
+              <span class="sky-acc-badge" [class.chip-warn]="!n.leido" [class.chip-neutral]="n.leido">
+                {{ n.leido ? 'Leída' : 'Nuevo' }}
+              </span>
+              <ion-icon name="chevron-down-outline" class="sky-acc-chevron" aria-hidden="true"></ion-icon>
+            </span>
+          </button>
 
-            <time class="timeline-date" [attr.datetime]="n.fecha">
-              <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
-              {{ n.fecha | date:"d 'de' MMMM 'de' y · HH:mm 'h'" }}
-            </time>
+          <div class="sky-acc-body">
+            <div class="sky-acc-inner">
+              <div class="sky-acc-content">
+                <div class="cambio-meta-tags">
+                  <span class="chip chip-sm chip-{{ tipoCambio(n).tono }}">
+                    <ion-icon [name]="tipoCambio(n).icono" aria-hidden="true"></ion-icon>
+                    {{ tipoCambio(n).etiqueta }}
+                  </span>
+                  <span *ngIf="extraerNumeroVuelo(n) as numVuelo" class="flight-pill">
+                    <ion-icon name="airplane" aria-hidden="true"></ion-icon>
+                    {{ numVuelo }}
+                  </span>
+                </div>
 
-            <h3 class="timeline-title">{{ n.titulo || 'Actualización de tu vuelo' }}</h3>
+                <time class="timeline-date" [attr.datetime]="n.fecha">
+                  <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+                  {{ n.fecha | date:"d 'de' MMMM 'de' y · HH:mm 'h'" }}
+                </time>
 
-            <div class="timeline-message-box">
-              <p class="timeline-message">{{ n.mensaje }}</p>
+                <div class="timeline-message-box">
+                  <p class="timeline-message">{{ n.mensaje }}</p>
+                </div>
+              </div>
             </div>
           </div>
         </article>

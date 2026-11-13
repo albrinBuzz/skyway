@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AlertController, IonicSafeString, ToastController } from '@ionic/angular';
+import { AlertController, ToastController } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../core/api.service';
 import { Asiento, ConfiguracionCabinaItem, MapaAsientos, Vuelo } from '../../core/models';
@@ -17,6 +17,7 @@ import {
   cashOutline,
   checkmark,
   checkmarkCircle,
+  chevronDownOutline,
   close,
   closeCircle,
   helpCircle,
@@ -47,6 +48,7 @@ addIcons({
   cashOutline,
   checkmark,
   checkmarkCircle,
+  chevronDownOutline,
   close,
   closeCircle,
   helpCircle,
@@ -121,6 +123,16 @@ export class AsientosPage {
   error = '';
   nombrePasajero = '';
   metodoPago = 1; // 1: Webpay Plus / Tarjetas, 2: PayPal
+  showGuide = false;
+  showUpgradeBreakdown = false;
+
+  toggleGuide(): void {
+    this.showGuide = !this.showGuide;
+  }
+
+  toggleUpgradeBreakdown(): void {
+    this.showUpgradeBreakdown = !this.showUpgradeBreakdown;
+  }
 
   get vueloLabel(): string {
     if (this.vueloInfo?.numeroVuelo) return `Vuelo ${this.vueloInfo.numeroVuelo}`;
@@ -464,12 +476,12 @@ export class AsientosPage {
     if (isInitial) {
       msg = `Se asignará el asiento ${seat.numeroAsiento} (${seat.clase ?? 'clase por confirmar'}) a este vuelo.`;
     } else if (upgrade) {
-      msg = `Has seleccionado un ascenso a ${seat.clase ?? 'Clase Superior'}.<br><br>` +
-            `• Diferencia de tarifa: <strong>${this.clp(diffTarifa)}</strong><br>` +
-            `• Cargo de gestión: <strong>${this.clp(cargoGestion)}</strong><br>` +
-            `• <strong>Total a pagar: ${this.clp(totalPagar)}</strong><br><br>` +
-            `Método de pago: <strong>${metodoNombre}</strong>.<br>` +
-            `¿Deseas confirmar y procesar el pago de la diferencia?`;
+      msg = `Has seleccionado un ascenso a ${seat.clase ?? 'Clase Superior'}.\n\n` +
+            `• Diferencia de tarifa: ${this.clp(diffTarifa)}\n` +
+            `• Cargo de gestión: ${this.clp(cargoGestion)}\n` +
+            `• Total a pagar: ${this.clp(totalPagar)}\n\n` +
+            `Método de pago: ${metodoNombre}.\n` +
+            `¿Deseas confirmar y procesar el pago en la pasarela?`;
     } else {
       msg = `El cambio conservará las condiciones de tu pasaje (${this.claseContratada}) sin costo adicional.`;
     }
@@ -480,7 +492,7 @@ export class AsientosPage {
         : upgrade
           ? `Ascenso al asiento ${seat.numeroAsiento}`
           : `Cambiar al asiento ${seat.numeroAsiento}`,
-      message: new IonicSafeString(msg),
+      message: msg,
       buttons: [
         { text: 'Volver', role: 'cancel' },
         { text: upgrade ? `Pagar y confirmar (${this.clp(totalPagar)})` : 'Confirmar', role: 'confirm' }

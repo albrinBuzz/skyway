@@ -91,30 +91,8 @@
           </div>
         </div>
 
-        <div class="hero-meta">
-          <div class="hero-meta-item">
-            <ion-icon name="card-outline" aria-hidden="true"></ion-icon>
-            <div>
-              <span>Documento de viaje</span>
-              <strong>{{ p.pasajero.tipoDocumento || 'RUT' }}: {{ p.pasajero.numeroDocumento || p.usuario.rut }}</strong>
-            </div>
-          </div>
-
-          <div class="hero-meta-item">
-            <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
-            <div>
-              <span>Fecha de nacimiento</span>
-              <strong>{{ p.pasajero.fechaNacimiento ? (p.pasajero.fechaNacimiento | date:"d 'de' MMMM 'de' y") : 'No informada' }}</strong>
-            </div>
-          </div>
-
-          <div class="hero-meta-item hero-meta-full">
-            <ion-icon name="mail-outline" aria-hidden="true"></ion-icon>
-            <div>
-              <span>Correo de contacto principal</span>
-              <strong class="email-text">{{ p.usuario.correoElectronico || 'Sin correo registrado' }}</strong>
-            </div>
-          </div>
+        <div class="hero-quick-summary">
+          <span><ion-icon name="mail-outline" aria-hidden="true"></ion-icon> {{ p.usuario.correoElectronico || 'Sin correo registrado' }}</span>
         </div>
       </section>
 
@@ -287,41 +265,107 @@
         </div>
       </section>
 
-      <!-- b) Sección 1: Cambiar correo electrónico -->
-      <section class="block reveal" aria-label="Cambiar correo electrónico">
-        <div class="sec-head">
-          <span class="sec-icon"><ion-icon name="mail-outline" aria-hidden="true"></ion-icon></span>
-          <div>
-            <h2>Cambiar correo electrónico</h2>
-            <p>Aquí recibirás tus tarjetas de embarque, recibos y avisos de vuelo.</p>
+      <!-- b) Desplegable 1: Datos personales y documento -->
+      <section class="sky-acc reveal" [class.is-open]="openSection === 'datos'" aria-label="Datos personales del pasajero">
+        <button type="button" class="sky-acc-trigger" (click)="toggleSection('datos')" [attr.aria-expanded]="openSection === 'datos'">
+          <div class="sky-acc-left">
+            <span class="sky-acc-icon"><ion-icon name="card-outline" aria-hidden="true"></ion-icon></span>
+            <div class="sky-acc-meta">
+              <span class="sky-acc-kicker">Identidad de viaje</span>
+              <strong class="sky-acc-title">Datos personales y documento</strong>
+              <span class="sky-acc-summary">
+                {{ p.pasajero.tipoDocumento || 'RUT' }}: {{ p.pasajero.numeroDocumento || p.usuario.rut }}
+                {{ p.pasajero.nacionalidad ? ' · ' + p.pasajero.nacionalidad : '' }}
+              </span>
+            </div>
+          </div>
+          <div class="sky-acc-right">
+            <span class="sky-acc-chevron" aria-hidden="true"><ion-icon name="chevron-down-outline"></ion-icon></span>
+          </div>
+        </button>
+
+        <div class="sky-acc-body">
+          <div class="sky-acc-inner">
+            <div class="sky-acc-content">
+              <div class="perfil-datos-grid">
+                <div class="dato-box">
+                  <ion-icon name="card-outline" aria-hidden="true"></ion-icon>
+                  <div>
+                    <span>Documento de viaje</span>
+                    <strong>{{ p.pasajero.tipoDocumento || 'RUT' }}: {{ p.pasajero.numeroDocumento || p.usuario.rut }}</strong>
+                  </div>
+                </div>
+                <div class="dato-box">
+                  <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+                  <div>
+                    <span>Fecha de nacimiento</span>
+                    <strong>{{ p.pasajero.fechaNacimiento ? (p.pasajero.fechaNacimiento | date:"d 'de' MMMM 'de' y") : 'No informada' }}</strong>
+                  </div>
+                </div>
+                <div class="dato-box">
+                  <ion-icon name="globe-outline" aria-hidden="true"></ion-icon>
+                  <div>
+                    <span>Nacionalidad</span>
+                    <strong>{{ p.pasajero.nacionalidad || 'No informada' }}</strong>
+                  </div>
+                </div>
+                <div class="dato-box">
+                  <ion-icon name="mail-outline" aria-hidden="true"></ion-icon>
+                  <div>
+                    <span>Correo principal</span>
+                    <strong class="email-text">{{ p.usuario.correoElectronico || 'Sin correo registrado' }}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+      </section>
 
-        <div class="card form-card">
-          <!-- Correo actual destacado -->
-          <div class="current-email-box">
-            <div class="icon-circle">
-              <ion-icon name="mail-outline" aria-hidden="true"></ion-icon>
+      <!-- c) Desplegable 2: Cambiar correo electrónico -->
+      <section class="sky-acc reveal" [class.is-open]="openSection === 'email'" aria-label="Cambiar correo electrónico">
+        <button type="button" class="sky-acc-trigger" (click)="toggleSection('email')" [attr.aria-expanded]="openSection === 'email'">
+          <div class="sky-acc-left">
+            <span class="sky-acc-icon"><ion-icon name="mail-outline" aria-hidden="true"></ion-icon></span>
+            <div class="sky-acc-meta">
+              <span class="sky-acc-kicker">Contacto y notificaciones</span>
+              <strong class="sky-acc-title">Cambiar correo electrónico</strong>
+              <span class="sky-acc-summary">Actual: {{ p.usuario.correoElectronico || 'Sin correo registrado' }}</span>
             </div>
-            <div>
-              <span class="label">Correo registrado actualmente</span>
-              <strong class="current-email-text">{{ p.usuario.correoElectronico || 'No tienes correo registrado' }}</strong>
-            </div>
           </div>
-
-          <!-- Alerta de éxito -->
-          <div *ngIf="emailSuccess" class="alert-banner alert-success" role="status">
-            <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
-            <span>{{ emailSuccess }}</span>
+          <div class="sky-acc-right">
+            <span class="sky-acc-badge" *ngIf="emailSuccess" [class.is-ok]="true">Actualizado</span>
+            <span class="sky-acc-chevron" aria-hidden="true"><ion-icon name="chevron-down-outline"></ion-icon></span>
           </div>
+        </button>
 
-          <!-- Alerta de error -->
-          <div *ngIf="emailError" class="alert-banner alert-danger" role="alert">
-            <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
-            <span>{{ emailError }}</span>
-          </div>
+        <div class="sky-acc-body">
+          <div class="sky-acc-inner">
+            <div class="sky-acc-content">
+              <!-- Correo actual destacado -->
+              <div class="current-email-box">
+                <div class="icon-circle">
+                  <ion-icon name="mail-outline" aria-hidden="true"></ion-icon>
+                </div>
+                <div>
+                  <span class="label">Correo registrado actualmente</span>
+                  <strong class="current-email-text">{{ p.usuario.correoElectronico || 'No tienes correo registrado' }}</strong>
+                </div>
+              </div>
 
-          <form [formGroup]="emailForm" (ngSubmit)="guardarCorreo()" novalidate>
+              <!-- Alerta de éxito -->
+              <div *ngIf="emailSuccess" class="alert-banner alert-success" role="status">
+                <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
+                <span>{{ emailSuccess }}</span>
+              </div>
+
+              <!-- Alerta de error -->
+              <div *ngIf="emailError" class="alert-banner alert-danger" role="alert">
+                <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
+                <span>{{ emailError }}</span>
+              </div>
+
+              <form [formGroup]="emailForm" (ngSubmit)="guardarCorreo()" novalidate>
             <!-- Campo oculto de nombre de usuario para gestores de contraseñas (elimina advertencia de accesibilidad DOM) -->
             <input
               type="text"
@@ -396,47 +440,58 @@
               <span>{{ savingEmail ? 'Guardando nuevo correo…' : 'Guardar correo electrónico' }}</span>
             </ion-button>
           </form>
+            </div>
+          </div>
         </div>
       </section>
 
-      <!-- c) Sección 2: Cambiar contraseña -->
-      <section class="block reveal" aria-label="Cambiar contraseña">
-        <div class="sec-head">
-          <span class="sec-icon"><ion-icon name="lock-closed-outline" aria-hidden="true"></ion-icon></span>
-          <div>
-            <h2>Cambiar contraseña</h2>
-            <p>Protege tu cuenta con una clave personal, segura y fácil de recordar para ti.</p>
-          </div>
-        </div>
-
-        <div class="card form-card">
-          <!-- Requisitos de seguridad claros -->
-          <div class="security-rules-box">
-            <div class="security-head">
-              <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
-              <strong>Requisitos para tu nueva contraseña</strong>
+      <!-- d) Desplegable 3: Seguridad y contraseña -->
+      <section class="sky-acc reveal" [class.is-open]="openSection === 'password'" aria-label="Cambiar contraseña">
+        <button type="button" class="sky-acc-trigger" (click)="toggleSection('password')" [attr.aria-expanded]="openSection === 'password'">
+          <div class="sky-acc-left">
+            <span class="sky-acc-icon"><ion-icon name="lock-closed-outline" aria-hidden="true"></ion-icon></span>
+            <div class="sky-acc-meta">
+              <span class="sky-acc-kicker">Seguridad de la cuenta</span>
+              <strong class="sky-acc-title">Cambiar contraseña</strong>
+              <span class="sky-acc-summary">Actualiza tu clave personal (mínimo 8 caracteres)</span>
             </div>
-            <ul class="rules-list">
-              <li>
-                <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
-                <span>Mínimo 8 caracteres de longitud.</span>
-              </li>
-              <li>
-                <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
-                <span>Debe ser diferente a tu contraseña actual.</span>
-              </li>
-              <li>
-                <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
-                <span>No la compartas con personas desconocidas.</span>
-              </li>
-            </ul>
           </div>
+          <div class="sky-acc-right">
+            <span class="sky-acc-badge" *ngIf="passwordSuccess" [class.is-ok]="true">Actualizada</span>
+            <span class="sky-acc-chevron" aria-hidden="true"><ion-icon name="chevron-down-outline"></ion-icon></span>
+          </div>
+        </button>
 
-          <!-- Alerta de éxito -->
-          <div *ngIf="passwordSuccess" class="alert-banner alert-success" role="status">
-            <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
-            <span>{{ passwordSuccess }}</span>
-          </div>
+        <div class="sky-acc-body">
+          <div class="sky-acc-inner">
+            <div class="sky-acc-content">
+              <!-- Requisitos de seguridad claros -->
+              <div class="security-rules-box">
+                <div class="security-head">
+                  <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
+                  <strong>Requisitos para tu nueva contraseña</strong>
+                </div>
+                <ul class="rules-list">
+                  <li>
+                    <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
+                    <span>Mínimo 8 caracteres de longitud.</span>
+                  </li>
+                  <li>
+                    <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
+                    <span>Debe ser diferente a tu contraseña actual.</span>
+                  </li>
+                  <li>
+                    <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
+                    <span>No la compartas con personas desconocidas.</span>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Alerta de éxito -->
+              <div *ngIf="passwordSuccess" class="alert-banner alert-success" role="status">
+                <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
+                <span>{{ passwordSuccess }}</span>
+              </div>
 
           <!-- Alerta de error -->
           <div *ngIf="passwordError" class="alert-banner alert-danger" role="alert">
@@ -558,39 +613,24 @@
               <span>{{ savingPassword ? 'Actualizando contraseña…' : 'Actualizar contraseña' }}</span>
             </ion-button>
           </form>
+            </div>
+          </div>
         </div>
       </section>
 
-      <!-- d) Sección 3: Cerrar sesión -->
-      <section class="block reveal" aria-label="Cerrar sesión">
-        <div class="sec-head">
-          <span class="sec-icon sec-icon-danger"><ion-icon name="log-out-outline" aria-hidden="true"></ion-icon></span>
-          <div>
-            <h2>Cerrar sesión</h2>
-            <p>Finaliza tu sesión actual en este teléfono o tablet.</p>
-          </div>
-        </div>
-
-        <div class="card logout-card">
-          <div class="logout-note">
-            <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
-            <p>
-              Al salir de la aplicación, necesitarás tu <strong>RUT</strong> y tu <strong>contraseña</strong> para volver a iniciar sesión.
-            </p>
-          </div>
-
-          <ion-button
-            type="button"
-            expand="block"
-            fill="outline"
-            class="logout-button"
-            (click)="auth.logout()"
-            aria-label="Cerrar sesión en este dispositivo"
-          >
-            <ion-icon name="log-out-outline" slot="start" aria-hidden="true"></ion-icon>
-            <span>Cerrar sesión en este dispositivo</span>
-          </ion-button>
-        </div>
+      <!-- e) Cerrar sesión compacto -->
+      <section class="logout-compact-section reveal" aria-label="Cerrar sesión">
+        <ion-button
+          type="button"
+          expand="block"
+          fill="outline"
+          class="logout-button"
+          (click)="auth.logout()"
+          aria-label="Cerrar sesión en este dispositivo"
+        >
+          <ion-icon name="log-out-outline" slot="start" aria-hidden="true"></ion-icon>
+          <span>Cerrar sesión en este dispositivo</span>
+        </ion-button>
       </section>
     </ng-container>
   </main>

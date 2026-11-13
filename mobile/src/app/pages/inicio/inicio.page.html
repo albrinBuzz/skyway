@@ -7,8 +7,8 @@
 <ion-content>
   <main class="page inicio-page">
 
-    <!-- 1. HERO CARD (Visual language of reserva-detalle) -->
-    <section class="hero-card reveal" *ngIf="!itinerarioSeleccionado && !reservaConfirmada" aria-label="Encuentra tu próximo vuelo">
+    <!-- 1. HERO COMPACTO -->
+    <section class="hero-card compact reveal" *ngIf="!itinerarioSeleccionado && !reservaConfirmada" aria-label="Encuentra tu próximo vuelo">
       <div class="hero-top">
         <div class="hero-id">
           <span class="hero-label">SkyWay Airlines</span>
@@ -17,21 +17,6 @@
         <span class="hero-plane-badge" aria-hidden="true">
           <ion-icon name="airplane"></ion-icon>
         </span>
-      </div>
-
-      <p class="hero-sub">
-        Busca itinerarios entre las principales ciudades con tarifas transparentes y pago 100% móvil y seguro.
-      </p>
-
-      <div class="hero-features">
-        <div class="hero-pill">
-          <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
-          <span>Pago seguro en app móvil</span>
-        </div>
-        <div class="hero-pill">
-          <ion-icon name="pricetag-outline" aria-hidden="true"></ion-icon>
-          <span>Precios en pesos chilenos (CLP)</span>
-        </div>
       </div>
     </section>
 
@@ -463,12 +448,25 @@
                 <span class="fare-name-pill">Tarifa {{ tarifa.nombre }}</span>
                 <strong class="fare-price-display">{{ clp(tarifa.precio) }}</strong>
               </div>
-              <ul class="fare-perks-list">
+
+              <button
+                type="button"
+                class="fare-perks-toggle"
+                [class.is-open]="isTarifaOpen(tarifa.nombre)"
+                (click)="toggleTarifa(tarifa.nombre)"
+                [attr.aria-expanded]="isTarifaOpen(tarifa.nombre)"
+              >
+                <span>Ver {{ caracteristicasTarifa(tarifa.nombre).length }} beneficios incluidos</span>
+                <ion-icon name="chevron-down-outline" aria-hidden="true"></ion-icon>
+              </button>
+
+              <ul class="fare-perks-list" *ngIf="isTarifaOpen(tarifa.nombre)">
                 <li *ngFor="let perk of caracteristicasTarifa(tarifa.nombre)">
                   <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
                   <span>{{ perk }}</span>
                 </li>
               </ul>
+
               <button
                 type="button"
                 class="cta-step-btn"
@@ -855,14 +853,31 @@
             <p>Revisa el detalle de tu vuelo y completa el pago de forma segura.</p>
           </div>
 
-          <!-- Desglose de compra -->
+          <!-- Desglose de compra desplegable -->
           <article class="card checkout-breakdown-card">
-            <h3 class="breakdown-card-title">
-              <ion-icon name="receipt-outline" aria-hidden="true"></ion-icon>
-              <span>Detalle de tu reserva</span>
-            </h3>
+            <button
+              type="button"
+              class="checkout-summary-trigger"
+              [class.is-open]="showCheckoutDetail"
+              (click)="showCheckoutDetail = !showCheckoutDetail"
+              [attr.aria-expanded]="showCheckoutDetail"
+            >
+              <span class="cs-left">
+                <span class="cs-title">
+                  <ion-icon name="receipt-outline" aria-hidden="true"></ion-icon>
+                  Detalle de tu reserva
+                </span>
+                <span class="cs-sub">
+                  {{ itinerarioSeleccionado.origen }} → {{ itinerarioSeleccionado.destino }} · Tarifa {{ tarifaSeleccionada?.nombre }}
+                </span>
+              </span>
+              <span class="cs-right">
+                <strong>{{ clp(totalPagar()) }}</strong>
+                <ion-icon name="chevron-down-outline" aria-hidden="true"></ion-icon>
+              </span>
+            </button>
 
-            <div class="breakdown-items-list">
+            <div class="breakdown-items-list" *ngIf="showCheckoutDetail" style="margin-top: 12px; padding-top: 10px; border-top: 1px solid #e2e8f0;">
               <!-- Vuelo -->
               <div class="item-row flight-item">
                 <div class="item-left">

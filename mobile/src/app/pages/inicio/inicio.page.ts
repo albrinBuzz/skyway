@@ -21,6 +21,7 @@ import {
   checkmarkCircleOutline,
   checkmarkDoneOutline,
   chevronBackOutline,
+  chevronDownOutline,
   chevronForwardOutline,
   closeCircleOutline,
   closeOutline,
@@ -80,6 +81,7 @@ addIcons({
   checkmarkCircleOutline,
   checkmarkDoneOutline,
   chevronBackOutline,
+  chevronDownOutline,
   chevronForwardOutline,
   closeCircleOutline,
   closeOutline,
@@ -159,6 +161,22 @@ export class InicioPage {
   buscando = false;
   busquedaRealizada = false;
   error = '';
+
+  // Desplegables de UI
+  expandedTarifas = new Set<string>();
+  showCheckoutDetail = false;
+
+  isTarifaOpen(nombre: string): boolean {
+    return this.expandedTarifas.has(nombre);
+  }
+
+  toggleTarifa(nombre: string): void {
+    if (this.expandedTarifas.has(nombre)) {
+      this.expandedTarifas.delete(nombre);
+    } else {
+      this.expandedTarifas.add(nombre);
+    }
+  }
 
   readonly hoy = this.fechaLocal(new Date());
 

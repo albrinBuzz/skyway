@@ -136,6 +136,13 @@ export class PerfilPage {
   showAvatarSelector = false;
   avatarSuccess = '';
 
+  // Secciones desplegables de perfil y seguridad
+  openSection: 'datos' | 'email' | 'password' | null = null;
+
+  toggleSection(sec: 'datos' | 'email' | 'password'): void {
+    this.openSection = this.openSection === sec ? null : sec;
+  }
+
   // 12 personajes ilustrados y animados con temática de viaje SkyWay
   readonly characterAvatars: CharacterAvatar[] = [
     // --- 1. Perros ---

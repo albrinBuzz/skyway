@@ -18,6 +18,7 @@ import {
   calendarOutline,
   checkboxOutline,
   checkmarkCircle,
+  chevronDownOutline,
   closeCircle,
   copyOutline,
   downloadOutline,
@@ -47,6 +48,7 @@ addIcons({
   calendarOutline,
   checkboxOutline,
   checkmarkCircle,
+  chevronDownOutline,
   closeCircle,
   copyOutline,
   downloadOutline,
@@ -87,6 +89,16 @@ export class BoardingPassPage {
   busy = false;
   checkinPendiente = false;
   descargandoPdf = false;
+  showSegments = false;
+  showBaggage = false;
+  showIataInfo = false;
+
+  resumenEquipaje(): string {
+    const list = this.data?.equipajes ?? [];
+    if (!list.length) return 'Sin equipaje adicional registrado';
+    const kg = list.reduce((acc, b) => acc + (b.peso || 0), 0);
+    return `${list.length} ${list.length === 1 ? 'maleta' : 'maletas'} · ${Math.round(kg * 10) / 10} kg`;
+  }
 
   get primerSegmento(): Segmento | null {
     return this.data?.vuelo?.segmentos?.[0] ?? null;
