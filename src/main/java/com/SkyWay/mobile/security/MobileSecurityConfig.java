@@ -99,6 +99,7 @@ public class MobileSecurityConfig {
                 .requestMatchers(new AntPathRequestMatcher("/api/v1/mobile/**", HttpMethod.OPTIONS.name())).permitAll()
                 .requestMatchers(new AntPathRequestMatcher("/api/v1/mobile/auth/login", "POST")).permitAll()
                 .requestMatchers(new AntPathRequestMatcher("/api/v1/mobile/auth/registro", "POST")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/api/v1/mobile/auth/consulta-pnr", "POST")).permitAll()
                 .anyRequest().hasAuthority("SCOPE_mobile"))
             .exceptionHandling(e -> e.authenticationEntryPoint(entry).accessDeniedHandler(denied))
             .oauth2ResourceServer(o -> o.jwt(j -> j.decoder(decoder)).authenticationEntryPoint(entry).accessDeniedHandler(denied));

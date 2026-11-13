@@ -27,6 +27,9 @@ import {
   VistaTicket,
   VueloConAsientos,
   AsientoSeleccionadoSolicitud,
+  AcompananteSolicitud,
+  DiaTarifaFlexible,
+  ConsultaPnrResponse,
   IniciarPagoReservaResponse,
   CrearReservaRequest
 } from './models';
@@ -268,8 +271,19 @@ export class ApiService {
     return environment.apiUrl.replace(/\/$/, '');
   }
 
-  login(correoElectronico: string, contrasena: string) {
-    return this.http.post<LoginResponse>(`${this.base}/auth/login`, { correoElectronico, contrasena });
+  login(correoElectronico: string, contrasena: string, recordarSesion = false) {
+    return this.http.post<LoginResponse>(`${this.base}/auth/login`, {
+      correoElectronico,
+      contrasena,
+      recordarSesion
+    });
+  }
+
+  consultarPnr(codigoPnr: string, apellido: string) {
+    return this.http.post<ConsultaPnrResponse>(`${this.base}/auth/consulta-pnr`, {
+      codigoPnr,
+      apellido
+    });
   }
 
   registro(data: RegistroRequest): Observable<LoginResponse> {
@@ -304,6 +318,14 @@ export class ApiService {
     return this.http.get<ItinerarioDisponible[]>(`${this.base}/busqueda/itinerarios`, { params });
   }
 
+  calendarioFlexible(origen: string, destino: string, fecha?: string | null) {
+    const params: Record<string, string> = { origen, destino };
+    if (fecha && fecha.trim().length > 0) {
+      params['fecha'] = fecha.trim();
+    }
+    return this.http.get<DiaTarifaFlexible[]>(`${this.base}/busqueda/calendario`, { params });
+  }
+
   catalogoEquipajes() {
     return this.http.get<TipoEquipajeCatalogo[]>(`${this.base}/catalogo/equipajes`);
   }
@@ -317,14 +339,20 @@ export class ApiService {
     idItinerarioTarifa: number,
     idMetodoPago = 1,
     equipaje: ItemEquipajeSolicitud[] = [],
-    asientos: AsientoSeleccionadoSolicitud[] = []
+    asientos: AsientoSeleccionadoSolicitud[] = [],
+    idItinerarioRegreso?: number,
+    idItinerarioTarifaRegreso?: number,
+    acompanantes: AcompananteSolicitud[] = []
   ) {
     return this.http.post<ReservaCreada>(`${this.base}/reservas`, {
       idItinerario,
       idItinerarioTarifa,
       idMetodoPago,
       equipaje,
-      asientos
+      asientos,
+      idItinerarioRegreso,
+      idItinerarioTarifaRegreso,
+      acompanantes
     });
   }
 
@@ -334,7 +362,10 @@ export class ApiService {
     idMetodoPago = 1,
     equipaje: ItemEquipajeSolicitud[] = [],
     asientos: AsientoSeleccionadoSolicitud[] = [],
-    urlRetornoBase?: string
+    urlRetornoBase?: string,
+    idItinerarioRegreso?: number,
+    idItinerarioTarifaRegreso?: number,
+    acompanantes: AcompananteSolicitud[] = []
   ) {
     return this.http.post<IniciarPagoReservaResponse>(`${this.base}/reservas/iniciar-pago`, {
       idItinerario,
@@ -342,7 +373,10 @@ export class ApiService {
       idMetodoPago,
       equipaje,
       asientos,
-      urlRetornoBase
+      urlRetornoBase,
+      idItinerarioRegreso,
+      idItinerarioTarifaRegreso,
+      acompanantes
     });
   }
 
@@ -435,9 +469,9 @@ export class ApiService {
     });
   }
 
-  notificaciones(pagina = 0) {
+  notificaciones(pagina = 0, tamano = 20) {
     return this.http.get<Pagina<Notificacion>>(`${this.base}/notificaciones`, {
-      params: { pagina, tamano: 20 }
+      params: { pagina, tamano }
     });
   }
 

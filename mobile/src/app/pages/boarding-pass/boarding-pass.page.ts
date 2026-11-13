@@ -4,6 +4,8 @@ import { ToastController } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
 import QRCode from 'qrcode';
 import { ApiService } from '../../core/api.service';
+import { HapticsService } from '../../core/haptics.service';
+import { OfflinePassService } from '../../core/offline-pass.service';
 import { PaseAbordar, Segmento, VistaTicket } from '../../core/models';
 import { errorMessage } from '../../core/ui';
 import { addIcons } from 'ionicons';
@@ -76,6 +78,8 @@ export class BoardingPassPage {
   private readonly api = inject(ApiService);
   private readonly route = inject(ActivatedRoute);
   private readonly toasts = inject(ToastController);
+  private readonly offline = inject(OfflinePassService);
+  private readonly haptics = inject(HapticsService);
 
   get id(): number { return Number(this.route.snapshot.paramMap.get('id')); }
   get vuelo(): number { return Number(this.route.snapshot.paramMap.get('vuelo')); }
@@ -89,6 +93,8 @@ export class BoardingPassPage {
   busy = false;
   checkinPendiente = false;
   descargandoPdf = false;
+  modoOffline = false;
+  offlineSavedAt: number | null = null;
   showSegments = false;
   showBaggage = false;
   showIataInfo = false;
@@ -123,6 +129,8 @@ export class BoardingPassPage {
     this.busy = true;
     this.error = '';
     this.checkinPendiente = false;
+    this.modoOffline = false;
+    this.offlineSavedAt = null;
     this.data = null;
     this.qr = '';
     this.barcodeUrl = '';
@@ -168,18 +176,58 @@ export class BoardingPassPage {
           }
         });
       }
+
+      if (this.data && this.data.checkin) {
+        this.offline.save(this.id, this.vuelo, this.rut, this.data, this.qr, this.barcodeUrl);
+      }
     } catch (e: any) {
-      this.error = errorMessage(e);
-      if (
+      const esErrorLogico =
+        e?.status === 401 ||
+        e?.status === 403 ||
         e?.status === 409 ||
         e?.error?.codigo === 'CHECKIN_PENDIENTE' ||
-        /check-?in/i.test(this.error)
-      ) {
-        this.checkinPendiente = true;
+        /check-?in/i.test(errorMessage(e));
+
+      const cached = !esErrorLogico ? this.offline.get(this.id, this.vuelo, this.rut) : null;
+      if (cached) {
+        this.data = cached.data;
+        this.qr = cached.qrDataUrl || '';
+        this.barcodeUrl = cached.barcodeUrl || cached.data.barcodeBase64 || '';
+        this.codigoIataBcbp = cached.data.codigoIataBcbp || cached.data.qrContenido || '';
+        this.modoOffline = true;
+        this.offlineSavedAt = cached.savedAt;
+        this.error = '';
+      } else {
+        this.error = errorMessage(e);
+        if (
+          e?.status === 409 ||
+          e?.error?.codigo === 'CHECKIN_PENDIENTE' ||
+          /check-?in/i.test(this.error)
+        ) {
+          this.checkinPendiente = true;
+        }
       }
     } finally {
       this.busy = false;
     }
+  }
+
+  async descargarImagenQr(): Promise<void> {
+    const imgSrc = this.barcodeUrl || this.qr;
+    if (!imgSrc) return;
+    this.haptics.light();
+    const a = document.createElement('a');
+    a.href = imgSrc;
+    a.download = `Pase_QR_SkyWay_${this.data?.codigoPnr || this.id}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    const t = await this.toasts.create({
+      message: 'Imagen del pase guardada para uso sin conexión.',
+      duration: 2400,
+      color: 'success'
+    });
+    await t.present();
   }
 
   descargarPdf(): void {

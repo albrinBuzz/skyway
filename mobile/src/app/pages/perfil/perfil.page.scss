@@ -1105,3 +1105,127 @@ $bg-tint: #eef3ff;
 .logout-compact-section {
   margin-top: 18px;
 }
+
+/* Preferencias de la aplicación & Dark Mode */
+.pref-inner-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pref-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pref-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 800;
+  color: $ink;
+
+  ion-icon {
+    font-size: 16px;
+    color: $blue;
+  }
+}
+
+.theme-chips {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.theme-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 6px 8px;
+  border-radius: 12px;
+  border: 1.5px solid #d4def2;
+  background: #f6f9ff;
+  color: $ink;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &.is-active {
+    background: $navy;
+    border-color: $navy;
+    color: #ffffff;
+  }
+}
+
+.pref-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e6edf8;
+}
+
+.pref-toggle-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+
+  ion-icon {
+    font-size: 19px;
+    color: $blue;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 750;
+    color: $ink;
+  }
+
+  span {
+    display: block;
+    font-size: 11.5px;
+    color: $soft-ink;
+    line-height: 1.35;
+    margin-top: 2px;
+  }
+}
+
+:host-context(body.sky-dark) {
+  .pref-label,
+  .pref-toggle-info strong,
+  .dato-box strong,
+  .input-shell ion-input {
+    color: #e6eefc;
+  }
+
+  .pref-toggle-info span,
+  .dato-box span {
+    color: #9cb0d1;
+  }
+
+  .dato-box,
+  .theme-chip {
+    background: #1b2740;
+    border-color: #2f4269;
+    color: #e6eefc;
+  }
+
+  .theme-chip.is-active {
+    background: #2449d8;
+    border-color: #4f73ff;
+    color: #ffffff;
+  }
+
+  .pref-toggle-row {
+    border-top-color: #263554;
+  }
+}

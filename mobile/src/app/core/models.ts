@@ -331,6 +331,41 @@ export interface VueloConAsientos {
 export interface AsientoSeleccionadoSolicitud {
   idVuelo: number;
   idAsiento: number;
+  rutPasajero?: string;
+}
+
+export interface AcompananteSolicitud {
+  rut: string;
+  nombre: string;
+  apellido: string;
+  fechaNacimiento?: string;
+  nacionalidad?: string;
+}
+
+export interface DiaTarifaFlexible {
+  fecha: string;
+  disponibles: number;
+  precioMinimo: number | null;
+}
+
+export interface ConsultaPnrResponse {
+  idReserva: number;
+  codigoPnr: string;
+  estadoReserva: string;
+  nombrePasajero: string;
+  codigoIataOrigen: string | null;
+  codigoIataDestino: string | null;
+  ciudadOrigen: string | null;
+  ciudadDestino: string | null;
+  proximaSalida: string | null;
+  numeroVuelo: string | null;
+  asiento: string | null;
+  puerta: string | null;
+  terminal: string | null;
+  checkinRealizado: boolean;
+  qrContenido: string | null;
+  codigoIataBcbp: string | null;
+  barcodeBase64: string | null;
 }
 
 export interface CrearReservaRequest {
@@ -339,6 +374,9 @@ export interface CrearReservaRequest {
   idMetodoPago?: number;
   equipaje?: ItemEquipajeSolicitud[];
   asientos?: AsientoSeleccionadoSolicitud[];
+  idItinerarioRegreso?: number;
+  idItinerarioTarifaRegreso?: number;
+  acompanantes?: AcompananteSolicitud[];
 }
 
 export interface ReservaCreada {

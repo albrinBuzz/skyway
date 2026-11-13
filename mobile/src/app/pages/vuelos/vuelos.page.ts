@@ -2,7 +2,9 @@ import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../core/api.service';
+import { HapticsService } from '../../core/haptics.service';
 import { Aeropuerto, DetalleReserva, Inicio, Itinerario, Pagina, ResumenReserva, Vuelo } from '../../core/models';
+import { NotificationsLiveService } from '../../core/notifications-live.service';
 import { errorMessage } from '../../core/ui';
 import { ParadaRuta, RutaVuelo3D, TramoRuta } from './globo.models';
 import { addIcons } from 'ionicons';
@@ -22,6 +24,7 @@ import {
   documentTextOutline,
   earthOutline,
   enterOutline,
+  flashOutline,
   globeOutline,
   helpCircle,
   informationCircle,
@@ -29,6 +32,7 @@ import {
   peopleOutline,
   personCircleOutline,
   pricetagOutline,
+  qrCodeOutline,
   refreshOutline,
   shieldCheckmarkOutline,
   ticketOutline,
@@ -51,6 +55,7 @@ addIcons({
   documentTextOutline,
   earthOutline,
   enterOutline,
+  flashOutline,
   globeOutline,
   helpCircle,
   informationCircle,
@@ -58,6 +63,7 @@ addIcons({
   peopleOutline,
   personCircleOutline,
   pricetagOutline,
+  qrCodeOutline,
   refreshOutline,
   shieldCheckmarkOutline,
   ticketOutline,
@@ -116,6 +122,8 @@ const COORDENADAS_FALLBACK: Record<string, { lat: number; lon: number; ciudad: s
 export class VuelosPage {
   private readonly api = inject(ApiService);
   private readonly router = inject(Router);
+  private readonly liveNotif = inject(NotificationsLiveService);
+  private readonly haptics = inject(HapticsService);
 
   seccion: 'proximo' | 'reservas' = 'proximo';
   inicio: Inicio | null = null;
@@ -139,11 +147,39 @@ export class VuelosPage {
   }
 
   toggleReserva(id: number): void {
+    this.haptics.light();
     if (this.expandedReservas.has(id)) {
       this.expandedReservas.delete(id);
     } else {
       this.expandedReservas.add(id);
     }
+  }
+
+  async doRefresh(event: CustomEvent) {
+    this.haptics.light();
+    this.detalleReservaCache.clear();
+    await this.load(this.page);
+    (event.target as HTMLIonRefresherElement | null)?.complete();
+  }
+
+  esModoAeropuerto(iso?: string | null): boolean {
+    if (!iso) return false;
+    const diffMs = new Date(iso).getTime() - Date.now();
+    return diffMs > -3600_000 && diffMs <= 24 * 3600_000;
+  }
+
+  tiempoHastaVuelo(iso?: string | null): string {
+    if (!iso) return '';
+    const diffMs = new Date(iso).getTime() - Date.now();
+    if (diffMs <= -3600_000) return 'Vuelo finalizado';
+    if (diffMs <= 0) return 'En hora de embarque';
+    const totalMin = Math.floor(diffMs / 60_000);
+    const dias = Math.floor(totalMin / 1440);
+    const horas = Math.floor((totalMin % 1440) / 60);
+    const mins = totalMin % 60;
+    if (dias > 0) return `En ${dias}d ${horas}h`;
+    if (horas > 0) return `En ${horas}h ${mins}m`;
+    return `En ${mins} min`;
   }
 
   // Caché en memoria para evitar peticiones repetidas a la BD
@@ -182,6 +218,7 @@ export class VuelosPage {
       if (generation !== this.generation) return;
       this.inicio = inicio;
       this.reservas = reservas;
+      this.liveNotif.setUnreadCount(inicio.notificacionesSinLeer ?? 0);
 
       // Pre-cargar en segundo plano los detalles en memoria mientras el token está vigente
       for (const r of reservas.contenido) {

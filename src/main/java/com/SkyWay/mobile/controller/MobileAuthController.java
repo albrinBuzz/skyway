@@ -2,6 +2,7 @@ package com.SkyWay.mobile.controller;
 
 import com.SkyWay.mobile.dto.MobileDtos.*;
 import com.SkyWay.mobile.service.MobileAuthService;
+import com.SkyWay.mobile.service.MobileReadService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -12,9 +13,18 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/mobile/auth")
 public class MobileAuthController {
     private final MobileAuthService auth;
-    public MobileAuthController(MobileAuthService auth) { this.auth=auth; }
+    private final MobileReadService readService;
+    public MobileAuthController(MobileAuthService auth, MobileReadService readService) {
+        this.auth = auth;
+        this.readService = readService;
+    }
 
     @PostMapping("/login") public LoginResponse login(@Valid @RequestBody LoginRequest body) { return auth.login(body); }
+
+    @PostMapping("/consulta-pnr")
+    public ResponseEntity<ConsultaPnrResponse> consultarPnr(@Valid @RequestBody PnrLookupRequest body) {
+        return ResponseEntity.ok(readService.consultarPorPnr(body.codigoPnr(), body.apellido()));
+    }
 
     @PostMapping("/registro")
     public ResponseEntity<LoginResponse> registro(@Valid @RequestBody RegistroRequest body) {

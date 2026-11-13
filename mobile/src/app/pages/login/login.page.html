@@ -109,6 +109,12 @@
         </div>
 
         <!-- Botón de ingresar accesible (>=52px touch target) -->
+        <div class="keep-session-row">
+          <ion-checkbox formControlName="recordarSesion" labelPlacement="end">
+            Mantener sesión iniciada (24 h)
+          </ion-checkbox>
+        </div>
+
         <ion-button
           type="submit"
           expand="block"
@@ -266,6 +272,104 @@
         </div>
 
       </form>
+    </section>
+
+    <!-- Acceso rápido Offline al último Pase de Abordar guardado (Step 1) -->
+    <section class="offline-pass-banner" *ngIf="ultimoPaseOffline as offPass">
+      <div class="offline-pass-head">
+        <div>
+          <span class="offline-badge">DISPONIBLE SIN CONEXIÓN</span>
+          <strong>
+            {{ offPass.data.vuelo.numeroVuelo || ('Vuelo #' + offPass.idVuelo) }} ·
+            {{ offPass.data.vuelo.segmentos[0]?.origen?.codigoIata || '—' }} →
+            {{ offPass.data.vuelo.segmentos[offPass.data.vuelo.segmentos.length - 1]?.destino?.codigoIata || '—' }}
+          </strong>
+          <small>
+            Pasajero: {{ offPass.data.pasajero.nombre }} {{ offPass.data.pasajero.apellido }}
+            <ng-container *ngIf="offPass.data.vuelo.asiento?.numeroAsiento as seat"> · Asiento {{ seat }}</ng-container>
+          </small>
+        </div>
+        <button type="button" class="offline-toggle-btn" (click)="togglePaseOffline()">
+          <ion-icon [name]="mostrarPaseOffline ? 'close-outline' : 'qr-code-outline'" aria-hidden="true"></ion-icon>
+          <span>{{ mostrarPaseOffline ? 'Ocultar' : 'Ver pase' }}</span>
+        </button>
+      </div>
+
+      <div class="offline-qr-box" *ngIf="mostrarPaseOffline">
+        <img *ngIf="offPass.qrDataUrl" [src]="offPass.qrDataUrl" alt="Código QR pase offline" />
+        <div class="offline-qr-meta">
+          <span><strong>Reserva:</strong> #{{ offPass.idReserva }} <ng-container *ngIf="offPass.data.codigoPnr">({{ offPass.data.codigoPnr }})</ng-container></span>
+          <span><strong>Puerta:</strong> {{ offPass.data.vuelo.segmentos[0]?.puerta?.codigoPuerta || 'Por asignar' }}</span>
+          <span *ngIf="offPass.data.codigoIataBcbp"><strong>BCBP:</strong> {{ offPass.data.codigoIataBcbp }}</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Consulta rápida PNR sin iniciar sesión (Step 2) -->
+    <section class="sky-acc pnr-acc-card">
+      <button
+        type="button"
+        class="sky-acc-trigger"
+        [class.is-open]="pnrOpen"
+        (click)="togglePnrLookup()"
+        [attr.aria-expanded]="pnrOpen"
+      >
+        <div class="sky-acc-summary">
+          <div class="sky-acc-eyebrow">CONSULTA RÁPIDA SIN LOGIN</div>
+          <div class="sky-acc-title">Buscar reserva por código PNR</div>
+          <div class="sky-acc-sub">Revisa estado de vuelo, puerta y tu pase QR al instante</div>
+        </div>
+        <ion-icon name="chevron-down-outline" class="sky-acc-chevron" aria-hidden="true"></ion-icon>
+      </button>
+
+      <div class="sky-acc-body" *ngIf="pnrOpen">
+        <form [formGroup]="pnrForm" (ngSubmit)="consultarPnr()" class="pnr-form">
+          <div class="pnr-fields">
+            <ion-input
+              label="Código PNR o # Reserva"
+              labelPlacement="stacked"
+              formControlName="codigoPnr"
+              placeholder="Ej: SKY123 o 14"
+              class="pnr-input"
+            ></ion-input>
+            <ion-input
+              label="Apellido del pasajero"
+              labelPlacement="stacked"
+              formControlName="apellido"
+              placeholder="Ej: Pérez"
+              class="pnr-input"
+            ></ion-input>
+          </div>
+          <ion-button type="submit" expand="block" fill="outline" class="pnr-submit-btn" [disabled]="pnrBusy">
+            <ion-spinner *ngIf="pnrBusy" name="dots" slot="start"></ion-spinner>
+            <ion-icon *ngIf="!pnrBusy" name="search-outline" slot="start" aria-hidden="true"></ion-icon>
+            {{ pnrBusy ? 'Buscando reserva…' : 'Consultar viaje' }}
+          </ion-button>
+        </form>
+
+        <p *ngIf="pnrError" class="pnr-error" role="alert">{{ pnrError }}</p>
+
+        <div class="pnr-result" *ngIf="pnrResult as res">
+          <div class="pnr-result-top">
+            <div>
+              <span class="pnr-code">PNR {{ res.codigoPnr }}</span>
+              <strong>{{ res.codigoIataOrigen || '—' }} → {{ res.codigoIataDestino || '—' }}</strong>
+            </div>
+            <span class="pnr-status">{{ res.estadoReserva }}</span>
+          </div>
+          <p class="pnr-passenger">{{ res.nombrePasajero }}</p>
+          <div class="pnr-grid">
+            <span><strong>Vuelo:</strong> {{ res.numeroVuelo || 'Por confirmar' }}</span>
+            <span><strong>Asiento:</strong> {{ res.asiento || 'Sin asignar' }}</span>
+            <span><strong>Puerta:</strong> {{ res.puerta || 'Por asignar' }}</span>
+            <span *ngIf="res.proximaSalida"><strong>Salida:</strong> {{ res.proximaSalida | date:"d MMM · HH:mm" }}</span>
+          </div>
+          <div class="pnr-qr" *ngIf="res.checkinRealizado && pnrQrUrl">
+            <img [src]="pnrQrUrl" alt="Código QR Boarding Pass" />
+            <span>Check-in completado · Presenta este QR al embarcar</span>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- Footer con seguridad y marca -->

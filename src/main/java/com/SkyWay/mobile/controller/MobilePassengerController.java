@@ -62,6 +62,15 @@ public class MobilePassengerController {
         return ResponseEntity.ok(bookingService.buscar(jwt.getSubject(), origen, destino, fecha));
     }
 
+    @GetMapping("/busqueda/calendario")
+    public ResponseEntity<List<DiaTarifaFlexible>> calendarioFlexible(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestParam String origen,
+            @RequestParam String destino,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha) {
+        return ResponseEntity.ok(bookingService.calendarioFlexible(jwt.getSubject(), origen, destino, fecha));
+    }
+
     @GetMapping("/busqueda/itinerarios/{idItinerario}/vuelos-asientos")
     public ResponseEntity<List<VueloConAsientos>> obtenerVuelosConAsientos(
             @AuthenticationPrincipal Jwt jwt,

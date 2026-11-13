@@ -3137,3 +3137,274 @@ ion-modal.airport-modal {
     transform: rotate(180deg);
   }
 }
+
+/* ---------- Step 3: Ida y vuelta, pasajeros, calendario flexible, filtros y dark mode ---------- */
+.trip-controls-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.trip-type-pills {
+  display: inline-flex;
+  background: #eaf0fa;
+  border: 1px solid #d4def7;
+  border-radius: 12px;
+  padding: 3px;
+  gap: 3px;
+}
+
+.trip-type-pill {
+  border: 0;
+  background: transparent;
+  color: $ink;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 7px 12px;
+  border-radius: 9px;
+  cursor: pointer;
+
+  &.is-active {
+    background: $navy;
+    color: #ffffff;
+  }
+}
+
+.pax-stepper-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f4f7fc;
+  border: 1px solid #d4def7;
+  border-radius: 12px;
+  padding: 4px 8px;
+
+  ion-icon {
+    font-size: 16px;
+    color: $blue;
+  }
+}
+
+.pax-step-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: 1px solid #cfd9ee;
+  background: #ffffff;
+  color: $navy;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.pax-count-label {
+  font-size: 12px;
+  font-weight: 750;
+  color: $ink;
+  min-width: 68px;
+  text-align: center;
+}
+
+.flex-cal-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px 10px;
+  margin-bottom: 8px;
+}
+
+.flex-cal-pill {
+  flex: 0 0 auto;
+  min-width: 92px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid #d4def7;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+
+  .fc-date {
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
+  }
+
+  .fc-price {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: $navy;
+  }
+
+  &.is-active {
+    background: $blue;
+    border-color: $blue;
+
+    .fc-date,
+    .fc-price {
+      color: #ffffff;
+    }
+  }
+
+  &.is-empty {
+    opacity: 0.55;
+  }
+}
+
+.quick-filters-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.qf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid #d4def7;
+  background: #ffffff;
+  color: $ink;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &.is-active {
+    background: $navy;
+    border-color: $navy;
+    color: #ffffff;
+  }
+}
+
+.outbound-picked-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  background: #eef4ff;
+  border: 1px solid #c7d9ff;
+
+  .op-badge {
+    font-size: 10px;
+    font-weight: 800;
+    color: $blue;
+    letter-spacing: 0.6px;
+  }
+
+  strong {
+    font-size: 14px;
+    color: $navy;
+  }
+
+  span {
+    font-size: 12px;
+    color: #475569;
+  }
+}
+
+.fare-choice-card.is-picked {
+  border: 2px solid $blue;
+  box-shadow: 0 6px 18px rgba(36, 73, 216, 0.14);
+}
+
+.pax-tabs-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.pax-tab-chip {
+  border: 1.5px solid #d4def7;
+  background: #ffffff;
+  color: $ink;
+  border-radius: 12px;
+  padding: 7px 12px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &.is-active {
+    background: $navy;
+    border-color: $navy;
+    color: #ffffff;
+  }
+}
+
+.companions-card {
+  margin-bottom: 14px;
+}
+
+.companion-form-block {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.companion-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  color: $blue;
+  margin-bottom: 6px;
+}
+
+.companion-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+
+  ion-input {
+    --background: #f4f7fc;
+    --padding-start: 8px;
+    --padding-end: 8px;
+    border: 1px solid #d4def7;
+    border-radius: 10px;
+    font-size: 12.5px;
+  }
+}
+
+@media (max-width: 520px) {
+  .companion-fields {
+    grid-template-columns: 1fr;
+  }
+}
+
+:host-context(body.sky-dark) {
+  .trip-type-pills,
+  .pax-stepper-box,
+  .flex-cal-pill,
+  .qf-chip,
+  .pax-tab-chip,
+  .outbound-picked-strip {
+    background: #17233b;
+    border-color: #293c61;
+    color: #e6eefc;
+  }
+
+  .trip-type-pill,
+  .pax-count-label,
+  .flex-cal-pill .fc-price,
+  .outbound-picked-strip strong {
+    color: #e6eefc;
+  }
+
+  .companion-fields ion-input {
+    --background: #1b2740;
+    border-color: #2f4269;
+    color: #e6eefc;
+  }
+}

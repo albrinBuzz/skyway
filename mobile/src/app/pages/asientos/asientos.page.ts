@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AlertController, ToastController } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../core/api.service';
+import { HapticsService } from '../../core/haptics.service';
 import { Asiento, ConfiguracionCabinaItem, MapaAsientos, Vuelo } from '../../core/models';
 import { errorMessage } from '../../core/ui';
 import { addIcons } from 'ionicons';
@@ -106,6 +107,7 @@ export class AsientosPage {
   private readonly router = inject(Router);
   private readonly alerts = inject(AlertController);
   private readonly toasts = inject(ToastController);
+  private readonly haptics = inject(HapticsService);
 
   // Parámetros de ruta:
   // /vuelos/reservas/:id/vuelos/:vuelo/asientos
@@ -447,6 +449,7 @@ export class AsientosPage {
 
   choose(seat: Asiento): void {
     if (!seat.seleccionable || this.saving) return;
+    this.haptics.light();
     this.selected = this.isPicked(seat) ? null : seat;
   }
 
@@ -531,6 +534,7 @@ export class AsientosPage {
       }
 
       this.setData(res);
+      this.haptics.success();
       const toast = await this.toasts.create({
         message: isInitial
           ? 'Asiento asignado correctamente.'

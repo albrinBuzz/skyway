@@ -1,5 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { AppLifecycleService } from './core/app-lifecycle.service';
+import { NotificationsLiveService } from './core/notifications-live.service';
+import { ThemeService } from './core/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -8,8 +10,8 @@ import { AppLifecycleService } from './core/app-lifecycle.service';
 })
 export class AppComponent {
   constructor() {
-    // Botón/gesto "Atrás" de Android, confirmación de salida y expiración
-    // de sesión tras 5 minutos con la app en segundo plano.
+    inject(ThemeService).init();
     inject(AppLifecycleService).init();
+    inject(NotificationsLiveService).start();
   }
 }

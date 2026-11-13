@@ -3,6 +3,8 @@ import { Perfil, LoginResponse } from './models';
 
 const SESSION_CACHE_KEY = 'skyway_session_cache';
 const BACKGROUND_SINCE_KEY = 'skyway_bg_since';
+const KEEP_SESSION_KEY = 'skyway_keep_session';
+const LAST_EMAIL_KEY = 'skyway_last_email';
 const BACKGROUND_SESSION_MS = 5 * 60 * 1000;
 
 interface CachedSession {
@@ -32,9 +34,9 @@ export class AuthStore {
       const raw = localStorage.getItem(SESSION_CACHE_KEY);
       if (!raw) return;
 
-      // Verificar si estuvo fuera de la app por más de 5 minutos
+      // Verificar si estuvo fuera de la app por más de 5 minutos (salvo si activó sesión persistente)
       const bgSince = Number(localStorage.getItem(BACKGROUND_SINCE_KEY) || 0);
-      if (bgSince > 0 && Date.now() - bgSince >= BACKGROUND_SESSION_MS) {
+      if (!this.keepSession && bgSince > 0 && Date.now() - bgSince >= BACKGROUND_SESSION_MS) {
         this.clear();
         return;
       }
@@ -89,6 +91,40 @@ export class AuthStore {
   setPerfil(perfil: Perfil) {
     this.perfil = perfil;
     this.guardarEnCache();
+  }
+
+  get keepSession(): boolean {
+    try {
+      return localStorage.getItem(KEEP_SESSION_KEY) === '1';
+    } catch {
+      return false;
+    }
+  }
+
+  setKeepSession(value: boolean): void {
+    try {
+      localStorage.setItem(KEEP_SESSION_KEY, value ? '1' : '0');
+    } catch {
+      // Ignorar
+    }
+  }
+
+  get lastEmail(): string {
+    try {
+      return localStorage.getItem(LAST_EMAIL_KEY) || '';
+    } catch {
+      return '';
+    }
+  }
+
+  setLastEmail(correo: string): void {
+    try {
+      if (correo && correo.trim()) {
+        localStorage.setItem(LAST_EMAIL_KEY, correo.trim());
+      }
+    } catch {
+      // Ignorar
+    }
   }
 
   get accessToken() {

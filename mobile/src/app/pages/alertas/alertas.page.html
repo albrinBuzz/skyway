@@ -10,11 +10,21 @@
 </ion-header>
 
 <ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
+    <ion-refresher-content pullingText="Desliza para actualizar avisos" refreshingSpinner="crescent"></ion-refresher-content>
+  </ion-refresher>
   <main class="page alertas-page">
-    <!-- Estado de carga -->
-    <div *ngIf="busy" class="loading" role="status" aria-live="polite">
-      <ion-spinner></ion-spinner>
-      <p>Cargando avisos operacionales…</p>
+    <!-- Estado de carga Skeleton -->
+    <div *ngIf="busy" class="sky-skeleton-stack" role="status" aria-live="polite" aria-label="Cargando avisos">
+      <div class="sky-skeleton-card">
+        <ion-skeleton-text animated style="width: 42%; height: 14px;"></ion-skeleton-text>
+        <ion-skeleton-text animated style="width: 78%; height: 22px; margin-top: 10px;"></ion-skeleton-text>
+        <ion-skeleton-text animated style="width: 64%; height: 14px; margin-top: 8px;"></ion-skeleton-text>
+      </div>
+      <div class="sky-skeleton-card">
+        <ion-skeleton-text animated style="width: 34%; height: 14px;"></ion-skeleton-text>
+        <ion-skeleton-text animated style="width: 85%; height: 18px; margin-top: 10px;"></ion-skeleton-text>
+      </div>
     </div>
 
     <!-- Mensaje de error -->

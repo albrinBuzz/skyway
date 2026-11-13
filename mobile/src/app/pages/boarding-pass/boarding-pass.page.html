@@ -14,9 +14,20 @@
 
 <ion-content>
   <main class="page ticket-page">
-    <div *ngIf="busy" class="loading" role="status" aria-live="polite">
-      <ion-spinner></ion-spinner>
-      <p>Cargando tarjeta de embarque…</p>
+    <div *ngIf="busy" class="sky-skeleton-stack" role="status" aria-live="polite" aria-label="Cargando tarjeta de embarque">
+      <div class="sky-skeleton-card">
+        <ion-skeleton-text animated style="width: 45%; height: 14px;"></ion-skeleton-text>
+        <ion-skeleton-text animated style="width: 85%; height: 32px;"></ion-skeleton-text>
+        <ion-skeleton-text animated style="width: 65%; height: 16px;"></ion-skeleton-text>
+      </div>
+      <div class="sky-skeleton-card">
+        <ion-skeleton-text animated style="width: 100%; height: 160px;"></ion-skeleton-text>
+      </div>
+    </div>
+
+    <div *ngIf="modoOffline" class="offline-banner reveal" role="status" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:14px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;margin-bottom:12px;font-size:12.5px;font-weight:700;">
+      <ion-icon name="information-circle" style="font-size:18px;flex-shrink:0;" aria-hidden="true"></ion-icon>
+      <span>Modo sin conexión · Mostrando copia guardada{{ offlineSavedAt ? (' (' + (offlineSavedAt | date:'dd MMM HH:mm') + ')') : '' }}.</span>
     </div>
 
     <p *ngIf="error && !checkinPendiente" class="error" role="alert">
@@ -357,12 +368,22 @@
               expand="block"
               class="download-pdf-btn"
               (click)="descargarPdf()"
-              [disabled]="descargandoPdf">
+              [disabled]="descargandoPdf || modoOffline">
               <ion-spinner *ngIf="descargandoPdf"></ion-spinner>
               <ng-container *ngIf="!descargandoPdf">
                 <ion-icon name="download-outline" slot="start" aria-hidden="true"></ion-icon>
                 Descargar tarjeta de embarque (PDF)
               </ng-container>
+            </ion-button>
+
+            <ion-button
+              *ngIf="barcodeUrl || qr"
+              expand="block"
+              fill="outline"
+              class="back-btn"
+              (click)="descargarImagenQr()">
+              <ion-icon name="qr-code-outline" slot="start" aria-hidden="true"></ion-icon>
+              Guardar imagen QR para aeropuerto
             </ion-button>
 
             <ion-button

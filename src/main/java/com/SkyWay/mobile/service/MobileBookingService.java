@@ -153,6 +153,38 @@ public class MobileBookingService {
         }
     }
 
+    public List<DiaTarifaFlexible> calendarioFlexible(String rut, String origen, String destino, LocalDate fechaCentro) {
+        auth.requirePassenger(rut);
+        String from = normalizarIata(origen, "origen");
+        String to = normalizarIata(destino, "destino");
+        if (from.equals(to)) {
+            throw new MobileException(HttpStatus.BAD_REQUEST, "RUTA_INVALIDA", "El origen y el destino deben ser distintos.");
+        }
+        LocalDate hoy = LocalDate.now(clock);
+        LocalDate base = (fechaCentro != null && !fechaCentro.isBefore(hoy)) ? fechaCentro : hoy;
+        List<DiaTarifaFlexible> dias = new java.util.ArrayList<>();
+        for (int offset = -3; offset <= 3; offset++) {
+            LocalDate dia = base.plusDays(offset);
+            if (dia.isBefore(hoy)) continue;
+            try {
+                var encontrados = itinerarios.buscarItinerarios(from, to, dia.toString());
+                BigDecimal minPrecio = null;
+                for (var dto : encontrados) {
+                    var ops = tarifas.findByItinerarioIdItinerario(dto.getItinerario());
+                    for (var t : ops) {
+                        if (t.getPrecio() != null && (minPrecio == null || t.getPrecio().compareTo(minPrecio) < 0)) {
+                            minPrecio = t.getPrecio();
+                        }
+                    }
+                }
+                dias.add(new DiaTarifaFlexible(dia, encontrados.size(), minPrecio));
+            } catch (Exception ex) {
+                dias.add(new DiaTarifaFlexible(dia, 0, null));
+            }
+        }
+        return dias;
+    }
+
     public List<TipoEquipajeCatalogo> catalogoEquipajes(String rut) {
         auth.requirePassenger(rut);
         return List.of(
@@ -316,6 +348,23 @@ public class MobileBookingService {
             throw new MobileException(HttpStatus.BAD_REQUEST, "TARIFA_INVALIDA", "La tarifa no pertenece al itinerario seleccionado.");
         }
 
+        BigDecimal tarifaRegresoPrecio = BigDecimal.ZERO;
+        if (request.idItinerarioRegreso() != null) {
+            if (request.idItinerarioTarifaRegreso() == null) {
+                throw new MobileException(HttpStatus.BAD_REQUEST, "TARIFA_REGRESO_REQUERIDA", "Selecciona una tarifa para el vuelo de regreso.");
+            }
+            var itinReg = itinerarios.findById(request.idItinerarioRegreso());
+            if (itinReg == null) throw MobileException.notFound();
+            var tarReg = tarifas.findById(request.idItinerarioTarifaRegreso()).orElseThrow(MobileException::notFound);
+            if (tarReg.getItinerario() == null || !request.idItinerarioRegreso().equals(tarReg.getItinerario().getIdItinerario())) {
+                throw new MobileException(HttpStatus.BAD_REQUEST, "TARIFA_INVALIDA", "La tarifa de regreso no pertenece al itinerario de regreso.");
+            }
+            tarifaRegresoPrecio = tarReg.getPrecio() != null ? tarReg.getPrecio() : BigDecimal.ZERO;
+        }
+
+        List<AcompananteSolicitud> acompanantes = normalizarAcompanantes(rut, request.acompanantes());
+        int totalPasajeros = 1 + acompanantes.size();
+
         int idMetodo = request.idMetodoPago() != null ? request.idMetodoPago() : 1;
         if (idMetodo != 1 && idMetodo != 2) {
             throw new MobileException(HttpStatus.BAD_REQUEST, "METODO_PAGO_INVALIDO",
@@ -338,13 +387,13 @@ public class MobileBookingService {
             totalEquipaje = totalEquipaje.add(BigDecimal.valueOf(precioItem));
         }
 
-        if (cantCabina > 1) {
+        if (cantCabina > totalPasajeros) {
             throw new MobileException(HttpStatus.BAD_REQUEST, "LIMITE_EQUIPAJE",
-                    "Solo se permite un máximo de 1 equipaje de cabina por pasajero.");
+                    "Máximo 1 equipaje de cabina por pasajero.");
         }
-        if (cantBodega > 3) {
+        if (cantBodega > 3L * totalPasajeros) {
             throw new MobileException(HttpStatus.BAD_REQUEST, "LIMITE_EQUIPAJE",
-                    "Solo se permite un máximo de 3 maletas de bodega en total.");
+                    "Máximo 3 maletas de bodega por pasajero.");
         }
 
         BigDecimal totalAsientos = BigDecimal.ZERO;
@@ -377,7 +426,8 @@ public class MobileBookingService {
             }
         }
 
-        BigDecimal totalBase = tarifa.getPrecio() != null ? tarifa.getPrecio() : BigDecimal.ZERO;
+        BigDecimal totalIda = tarifa.getPrecio() != null ? tarifa.getPrecio() : BigDecimal.ZERO;
+        BigDecimal totalBase = totalIda.add(tarifaRegresoPrecio).multiply(BigDecimal.valueOf(totalPasajeros));
         BigDecimal totalFinal = totalBase.add(totalEquipaje).add(totalAsientos);
 
         String ordenCompra = "MOB-" + (System.currentTimeMillis() % 1000000000L);
@@ -418,7 +468,10 @@ public class MobileBookingService {
                     request.idItinerarioTarifa(),
                     idMetodo,
                     itemsEquipaje,
-                    request.asientos() != null ? request.asientos() : List.of()
+                    request.asientos() != null ? request.asientos() : List.of(),
+                    request.idItinerarioRegreso(),
+                    request.idItinerarioTarifaRegreso(),
+                    acompanantes
             );
             pagosPendientes.put(ordenCompra, new SolicitudPagoPendienteMovil(rut, crearReq, totalFinal));
             return new IniciarPagoReservaResponse(ordenCompra, pasarelaCode, redirectUrl);
@@ -470,6 +523,25 @@ public class MobileBookingService {
             throw new MobileException(HttpStatus.BAD_REQUEST, "TARIFA_INVALIDA", "La tarifa no pertenece al itinerario seleccionado.");
         }
 
+        com.SkyWay.modules.itinerario.domain.model.Itinerario itinerarioRegreso = null;
+        com.SkyWay.modules.tarifaItinerario.domain.model.ItinerarioTarifa tarifaRegreso = null;
+        BigDecimal precioRegreso = BigDecimal.ZERO;
+        if (request.idItinerarioRegreso() != null) {
+            if (request.idItinerarioTarifaRegreso() == null) {
+                throw new MobileException(HttpStatus.BAD_REQUEST, "TARIFA_REGRESO_REQUERIDA", "Selecciona una tarifa para el vuelo de regreso.");
+            }
+            itinerarioRegreso = itinerarios.findById(request.idItinerarioRegreso());
+            if (itinerarioRegreso == null) throw MobileException.notFound();
+            tarifaRegreso = tarifas.findById(request.idItinerarioTarifaRegreso()).orElseThrow(MobileException::notFound);
+            if (tarifaRegreso.getItinerario() == null || !request.idItinerarioRegreso().equals(tarifaRegreso.getItinerario().getIdItinerario())) {
+                throw new MobileException(HttpStatus.BAD_REQUEST, "TARIFA_INVALIDA", "La tarifa de regreso no pertenece al itinerario de regreso.");
+            }
+            precioRegreso = tarifaRegreso.getPrecio() != null ? tarifaRegreso.getPrecio() : BigDecimal.ZERO;
+        }
+
+        List<AcompananteSolicitud> acompanantes = normalizarAcompanantes(rut, request.acompanantes());
+        int totalPasajeros = 1 + acompanantes.size();
+
         // 2. Validación de límites y cálculo de equipaje adicional
         BigDecimal totalEquipaje = BigDecimal.ZERO;
         List<ItemEquipajeSolicitud> itemsEquipaje = request.equipaje() != null ? request.equipaje() : List.of();
@@ -488,21 +560,24 @@ public class MobileBookingService {
             totalEquipaje = totalEquipaje.add(BigDecimal.valueOf(precioItem));
         }
 
-        if (cantCabina > 1) {
+        if (cantCabina > totalPasajeros) {
             throw new MobileException(HttpStatus.BAD_REQUEST, "LIMITE_EQUIPAJE",
-                    "Solo se permite un máximo de 1 equipaje de cabina por pasajero.");
+                    "Máximo 1 equipaje de cabina por pasajero.");
         }
-        if (cantBodega > 3) {
+        if (cantBodega > 3L * totalPasajeros) {
             throw new MobileException(HttpStatus.BAD_REQUEST, "LIMITE_EQUIPAJE",
-                    "Solo se permite un máximo de 3 maletas de bodega en total.");
+                    "Máximo 3 maletas de bodega por pasajero.");
         }
 
-        // 3. Validación y cálculo de asientos seleccionados por el usuario
+        // 3. Validación y cálculo de asientos seleccionados (soporta múltiples pasajeros y regreso)
         BigDecimal totalAsientos = BigDecimal.ZERO;
-        java.util.Map<Integer, Integer> asientosSeleccionadosPorVuelo = new java.util.HashMap<>();
+        java.util.Map<String, Integer> asientosSeleccionados = new java.util.HashMap<>();
         if (request.asientos() != null && !request.asientos().isEmpty()) {
             for (var sel : request.asientos()) {
                 if (sel.idVuelo() != null && sel.idAsiento() != null) {
+                    String paxRut = (sel.rutPasajero() != null && !sel.rutPasajero().isBlank())
+                            ? normalizarRut(sel.rutPasajero())
+                            : rut;
                     if (em != null) {
                         List<?> rows = em.createNativeQuery("""
                             SELECT a.id_asiento, a.id_clase, COALESCE(pa.precio, 0)
@@ -527,12 +602,14 @@ public class MobileBookingService {
                         int p = pNum != null ? pNum.intValue() : 0;
                         totalAsientos = totalAsientos.add(BigDecimal.valueOf(p));
                     }
-                    asientosSeleccionadosPorVuelo.put(sel.idVuelo(), sel.idAsiento());
+                    asientosSeleccionados.put(sel.idVuelo() + "::" + paxRut, sel.idAsiento());
                 }
             }
         }
 
-        BigDecimal totalBase = tarifa.getPrecio() != null ? tarifa.getPrecio() : BigDecimal.ZERO;
+        BigDecimal totalBase = (tarifa.getPrecio() != null ? tarifa.getPrecio() : BigDecimal.ZERO)
+                .add(precioRegreso)
+                .multiply(BigDecimal.valueOf(totalPasajeros));
         BigDecimal totalFinal = totalBase.add(totalEquipaje).add(totalAsientos);
 
         // 4. Estado Confirmada (ID: 2)
@@ -564,95 +641,48 @@ public class MobileBookingService {
         reserva.setCodigoReserva(pnr);
         reserva = reservas.saveAndFlush(reserva);
 
-        // 7. Asociar Itinerario y Pasajero
+        // 7. Asociar Itinerario(s) y Pasajero(s)
         var ri = new ReservaItinerario();
         ri.setReserva(reserva);
         ri.setItinerario(itinerario);
         ri.setItinerarioTarifa(tarifa);
         reservaItinerarios.saveAndFlush(ri);
 
+        if (itinerarioRegreso != null && tarifaRegreso != null) {
+            var riReg = new ReservaItinerario();
+            riReg.setReserva(reserva);
+            riReg.setItinerario(itinerarioRegreso);
+            riReg.setItinerarioTarifa(tarifaRegreso);
+            reservaItinerarios.saveAndFlush(riReg);
+        }
+
+        List<String> rutsReserva = new java.util.ArrayList<>();
+        rutsReserva.add(rut);
         if (pasajerosReservas.findByReservaAndPasajero(reserva, pasajero).isEmpty()) {
             var pr = new PasajeroReserva();
             pr.setReserva(reserva);
             pr.setPasajero(pasajero);
             pasajerosReservas.saveAndFlush(pr);
         }
-
-        // 8. Asignación de asientos seleccionados o fallback automático por vuelo
-        if (em != null) {
-            List<?> vuelosItinerario = em.createNativeQuery(
-                    "SELECT iv.id_vuelo FROM itinerario_vuelo iv WHERE iv.id_itinerario = :idItin ORDER BY iv.orden"
-            )
-            .setParameter("idItin", itinerario.getIdItinerario())
-            .getResultList();
-
-            String nombreTarifa = tarifa.getTarifa() != null && tarifa.getTarifa().getNombre() != null
-                    ? tarifa.getTarifa().getNombre().toUpperCase() : "";
-            int idClasePreferente = 1;
-            if (nombreTarifa.contains("PREMIUM") || nombreTarifa.contains("PRIMERA")) {
-                idClasePreferente = 3;
-            } else if (nombreTarifa.contains("FLEXIBLE") || nombreTarifa.contains("EJECUTIVA")) {
-                idClasePreferente = 2;
+        for (var acomp : acompanantes) {
+            var acompPax = asegurarAcompanante(acomp);
+            String acompRut = acompPax.getRut();
+            if (!rutsReserva.contains(acompRut)) {
+                rutsReserva.add(acompRut);
             }
+            if (pasajerosReservas.findByReservaAndPasajero(reserva, acompPax).isEmpty()) {
+                var prAcomp = new PasajeroReserva();
+                prAcomp.setReserva(reserva);
+                prAcomp.setPasajero(acompPax);
+                pasajerosReservas.saveAndFlush(prAcomp);
+            }
+        }
 
-            for (Object row : vuelosItinerario) {
-                int idVuelo = ((Number) row).intValue();
-
-                if (asientosSeleccionadosPorVuelo.containsKey(idVuelo)) {
-                    int idAsiento = asientosSeleccionadosPorVuelo.get(idVuelo);
-                    em.createNativeQuery(
-                        "INSERT INTO reserva_asiento (id_reserva, id_asiento, id_vuelo, rut) VALUES (:idReserva, :idAsiento, :idVuelo, :rut)"
-                    )
-                    .setParameter("idReserva", reserva.getIdReserva())
-                    .setParameter("idAsiento", idAsiento)
-                    .setParameter("idVuelo", idVuelo)
-                    .setParameter("rut", rut)
-                    .executeUpdate();
-                } else {
-                    List<?> asientosLibres = em.createNativeQuery("""
-                        SELECT a.id_asiento
-                        FROM vuelo v
-                        JOIN asiento a ON a.id_avion = v.id_avion
-                        WHERE v.id_vuelo = :idVuelo
-                          AND a.id_clase = :idClase
-                          AND NOT EXISTS (
-                              SELECT 1 FROM reserva_asiento ra WHERE ra.id_vuelo = v.id_vuelo AND ra.id_asiento = a.id_asiento
-                          )
-                        ORDER BY a.numero_asiento
-                        LIMIT 1
-                    """)
-                    .setParameter("idVuelo", idVuelo)
-                    .setParameter("idClase", idClasePreferente)
-                    .getResultList();
-
-                    if (asientosLibres.isEmpty()) {
-                        asientosLibres = em.createNativeQuery("""
-                            SELECT a.id_asiento
-                            FROM vuelo v
-                            JOIN asiento a ON a.id_avion = v.id_avion
-                            WHERE v.id_vuelo = :idVuelo
-                              AND NOT EXISTS (
-                                  SELECT 1 FROM reserva_asiento ra WHERE ra.id_vuelo = v.id_vuelo AND ra.id_asiento = a.id_asiento
-                              )
-                            ORDER BY a.id_clase, a.numero_asiento
-                            LIMIT 1
-                        """)
-                        .setParameter("idVuelo", idVuelo)
-                        .getResultList();
-                    }
-
-                    if (!asientosLibres.isEmpty()) {
-                        int idAsiento = ((Number) asientosLibres.get(0)).intValue();
-                        em.createNativeQuery(
-                            "INSERT INTO reserva_asiento (id_reserva, id_asiento, id_vuelo, rut) VALUES (:idReserva, :idAsiento, :idVuelo, :rut)"
-                        )
-                        .setParameter("idReserva", reserva.getIdReserva())
-                        .setParameter("idAsiento", idAsiento)
-                        .setParameter("idVuelo", idVuelo)
-                        .setParameter("rut", rut)
-                        .executeUpdate();
-                    }
-                }
+        // 8. Asignación de asientos seleccionados o fallback automático por vuelo y pasajero
+        if (em != null) {
+            asignarAsientosItinerario(reserva.getIdReserva(), itinerario.getIdItinerario(), tarifa, rutsReserva, asientosSeleccionados);
+            if (itinerarioRegreso != null && tarifaRegreso != null) {
+                asignarAsientosItinerario(reserva.getIdReserva(), itinerarioRegreso.getIdItinerario(), tarifaRegreso, rutsReserva, asientosSeleccionados);
             }
         }
 
@@ -740,6 +770,160 @@ public class MobileBookingService {
         }
 
         return new ReservaCreada(reserva.getIdReserva(), pnr, estado.getDescripcion(), totalFinal, descMetodo);
+    }
+
+    private void asignarAsientosItinerario(
+            int idReserva,
+            int idItinerario,
+            com.SkyWay.modules.tarifaItinerario.domain.model.ItinerarioTarifa tarifa,
+            List<String> rutsReserva,
+            java.util.Map<String, Integer> asientosSeleccionados) {
+        List<?> vuelosItinerario = em.createNativeQuery(
+                "SELECT iv.id_vuelo FROM itinerario_vuelo iv WHERE iv.id_itinerario = :idItin ORDER BY iv.orden"
+        )
+        .setParameter("idItin", idItinerario)
+        .getResultList();
+
+        String nombreTarifa = tarifa.getTarifa() != null && tarifa.getTarifa().getNombre() != null
+                ? tarifa.getTarifa().getNombre().toUpperCase() : "";
+        int idClasePreferente = 1;
+        if (nombreTarifa.contains("PREMIUM") || nombreTarifa.contains("PRIMERA")) {
+            idClasePreferente = 3;
+        } else if (nombreTarifa.contains("FLEXIBLE") || nombreTarifa.contains("EJECUTIVA")) {
+            idClasePreferente = 2;
+        }
+
+        for (Object row : vuelosItinerario) {
+            int idVuelo = ((Number) row).intValue();
+            for (String paxRut : rutsReserva) {
+                Integer selected = asientosSeleccionados.get(idVuelo + "::" + paxRut);
+                if (selected != null) {
+                    em.createNativeQuery(
+                        "INSERT INTO reserva_asiento (id_reserva, id_asiento, id_vuelo, rut) VALUES (:idReserva, :idAsiento, :idVuelo, :rut)"
+                    )
+                    .setParameter("idReserva", idReserva)
+                    .setParameter("idAsiento", selected)
+                    .setParameter("idVuelo", idVuelo)
+                    .setParameter("rut", paxRut)
+                    .executeUpdate();
+                } else {
+                    List<?> asientosLibres = em.createNativeQuery("""
+                        SELECT a.id_asiento
+                        FROM vuelo v
+                        JOIN asiento a ON a.id_avion = v.id_avion
+                        WHERE v.id_vuelo = :idVuelo
+                          AND a.id_clase = :idClase
+                          AND NOT EXISTS (
+                              SELECT 1 FROM reserva_asiento ra WHERE ra.id_vuelo = v.id_vuelo AND ra.id_asiento = a.id_asiento
+                          )
+                        ORDER BY a.numero_asiento
+                        LIMIT 1
+                    """)
+                    .setParameter("idVuelo", idVuelo)
+                    .setParameter("idClase", idClasePreferente)
+                    .getResultList();
+
+                    if (asientosLibres.isEmpty()) {
+                        asientosLibres = em.createNativeQuery("""
+                            SELECT a.id_asiento
+                            FROM vuelo v
+                            JOIN asiento a ON a.id_avion = v.id_avion
+                            WHERE v.id_vuelo = :idVuelo
+                              AND NOT EXISTS (
+                                  SELECT 1 FROM reserva_asiento ra WHERE ra.id_vuelo = v.id_vuelo AND ra.id_asiento = a.id_asiento
+                              )
+                            ORDER BY a.id_clase, a.numero_asiento
+                            LIMIT 1
+                        """)
+                        .setParameter("idVuelo", idVuelo)
+                        .getResultList();
+                    }
+
+                    if (!asientosLibres.isEmpty()) {
+                        int idAsiento = ((Number) asientosLibres.get(0)).intValue();
+                        em.createNativeQuery(
+                            "INSERT INTO reserva_asiento (id_reserva, id_asiento, id_vuelo, rut) VALUES (:idReserva, :idAsiento, :idVuelo, :rut)"
+                        )
+                        .setParameter("idReserva", idReserva)
+                        .setParameter("idAsiento", idAsiento)
+                        .setParameter("idVuelo", idVuelo)
+                        .setParameter("rut", paxRut)
+                        .executeUpdate();
+                    }
+                }
+            }
+        }
+    }
+
+    private List<AcompananteSolicitud> normalizarAcompanantes(String titularRut, List<AcompananteSolicitud> raw) {
+        if (raw == null || raw.isEmpty()) return List.of();
+        if (raw.size() > 3) {
+            throw new MobileException(HttpStatus.BAD_REQUEST, "LIMITE_PASAJEROS", "Máximo 3 acompañantes por reserva móvil (4 pasajeros en total).");
+        }
+        String titularNorm = normalizarRut(titularRut);
+        java.util.LinkedHashMap<String, AcompananteSolicitud> unicos = new java.util.LinkedHashMap<>();
+        for (var a : raw) {
+            if (a == null) continue;
+            String rutNorm = normalizarRut(a.rut());
+            if (rutNorm.isBlank() || rutNorm.equals(titularNorm)) continue;
+            String nom = a.nombre() != null ? a.nombre().trim() : "";
+            String ape = a.apellido() != null ? a.apellido().trim() : "";
+            if (nom.isBlank() || ape.isBlank()) {
+                throw new MobileException(HttpStatus.BAD_REQUEST, "ACOMPANANTE_INVALIDO", "Cada acompañante debe tener RUT/documento, nombre y apellido.");
+            }
+            unicos.putIfAbsent(rutNorm, new AcompananteSolicitud(rutNorm, nom, ape, a.fechaNacimiento(), a.nacionalidad()));
+        }
+        return new java.util.ArrayList<>(unicos.values());
+    }
+
+    private com.SkyWay.modules.pasajero.domain.model.Pasajero asegurarAcompanante(AcompananteSolicitud acomp) {
+        String cleanRut = normalizarRut(acomp.rut());
+        var existing = pasajeros.findById(cleanRut);
+        if (existing.isPresent()) {
+            return existing.get();
+        }
+        LocalDate fnac = acomp.fechaNacimiento() != null ? acomp.fechaNacimiento() : LocalDate.of(1995, 1, 1);
+        String nac = (acomp.nacionalidad() != null && !acomp.nacionalidad().isBlank()) ? acomp.nacionalidad().trim() : "Chilena";
+        if (em != null) {
+            em.createNativeQuery("""
+                INSERT INTO Usuario (RUT, Nombre, Apellido, Correo_Electronico, Telefono, Documento_Identidad, Fecha_Nacimiento, Contrasena, Fecha_Registro)
+                VALUES (:rut, :nombre, :apellido, NULL, 'Sin teléfono', :doc, :fnac, NULL, NOW())
+                ON CONFLICT (RUT) DO NOTHING
+            """)
+            .setParameter("rut", cleanRut)
+            .setParameter("nombre", acomp.nombre())
+            .setParameter("apellido", acomp.apellido())
+            .setParameter("doc", cleanRut)
+            .setParameter("fnac", java.sql.Date.valueOf(fnac))
+            .executeUpdate();
+
+            em.createNativeQuery("""
+                INSERT INTO Pasajero (RUT, Tipo_Documento, Numero_Documento, Fecha_Nacimiento, Nacionalidad)
+                VALUES (:rut, 'RUT', :doc, :fnac, :nac)
+                ON CONFLICT (RUT) DO NOTHING
+            """)
+            .setParameter("rut", cleanRut)
+            .setParameter("doc", cleanRut)
+            .setParameter("fnac", java.sql.Date.valueOf(fnac))
+            .setParameter("nac", nac)
+            .executeUpdate();
+
+            em.createNativeQuery("""
+                INSERT INTO RolUsuario (id_rol, rut_usuario)
+                SELECT id_rol, :rut FROM Roles WHERE nombre = 'Pasajero'
+                ON CONFLICT (id_rol, rut_usuario) DO NOTHING
+            """)
+            .setParameter("rut", cleanRut)
+            .executeUpdate();
+        }
+        return pasajeros.findById(cleanRut).orElseThrow(() ->
+                new MobileException(HttpStatus.INTERNAL_SERVER_ERROR, "ERROR_ACOMPANANTE", "No se pudo registrar al acompañante " + cleanRut));
+    }
+
+    private static String normalizarRut(String raw) {
+        if (raw == null) return "";
+        String clean = raw.replace(".", "").trim().toUpperCase(Locale.ROOT);
+        return clean.length() > 12 ? clean.substring(0, 12) : clean;
     }
 
     private static String normalizarIata(String value, String campo) {

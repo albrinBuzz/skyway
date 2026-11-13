@@ -13,10 +13,20 @@
 </ion-header>
 
 <ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
+    <ion-refresher-content pullingText="Desliza para actualizar reserva" refreshingSpinner="crescent"></ion-refresher-content>
+  </ion-refresher>
   <main class="page detalle">
-    <div *ngIf="busy" class="loading" role="status" aria-live="polite">
-      <ion-spinner></ion-spinner>
-      <p>Cargando tu reserva…</p>
+    <div *ngIf="busy" class="sky-skeleton-stack" role="status" aria-live="polite" aria-label="Cargando reserva">
+      <div class="sky-skeleton-card">
+        <ion-skeleton-text animated style="width: 40%; height: 14px;"></ion-skeleton-text>
+        <ion-skeleton-text animated style="width: 75%; height: 26px; margin-top: 10px;"></ion-skeleton-text>
+        <ion-skeleton-text animated style="width: 85%; height: 16px; margin-top: 10px;"></ion-skeleton-text>
+      </div>
+      <div class="sky-skeleton-card">
+        <ion-skeleton-text animated style="width: 50%; height: 16px;"></ion-skeleton-text>
+        <ion-skeleton-text animated style="width: 90%; height: 20px; margin-top: 10px;"></ion-skeleton-text>
+      </div>
     </div>
 
     <p *ngIf="error" class="error" role="alert">

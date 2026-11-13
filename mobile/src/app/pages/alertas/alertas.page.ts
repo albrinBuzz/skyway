@@ -1,4 +1,6 @@
 import { Component, inject } from '@angular/core';
+import { HapticsService } from '../../core/haptics.service';
+import { NotificationsLiveService } from '../../core/notifications-live.service';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../core/api.service';
 import { Notificacion, Pagina } from '../../core/models';
@@ -115,6 +117,15 @@ export class AlertasPage {
     if (value === 'todas' || value === 'nuevas') this.filtro = value;
   }
 
+  private readonly liveNotif = inject(NotificationsLiveService);
+  private readonly haptics = inject(HapticsService);
+
+  async doRefresh(event: CustomEvent) {
+    this.haptics.light();
+    await this.load(this.page);
+    (event.target as HTMLIonRefresherElement | null)?.complete();
+  }
+
   async load(page = this.page) {
     this.busy = true;
     this.error = '';
@@ -122,6 +133,7 @@ export class AlertasPage {
     this.data = null;
     try {
       this.data = await firstValueFrom(this.api.notificaciones(page));
+      void this.liveNotif.syncNow(true);
     } catch (e) {
       this.error = errorMessage(e);
     } finally {
@@ -136,6 +148,10 @@ export class AlertasPage {
     try {
       const updated = await firstValueFrom(this.api.leerNotificacion(n.idNotificacion));
       n.leido = updated.leido;
+      if (updated.leido) {
+        this.haptics.light();
+        this.liveNotif.decrementUnread();
+      }
     } catch (e) {
       this.error = errorMessage(e);
     } finally {

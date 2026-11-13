@@ -1,4 +1,5 @@
 import { Component, inject } from '@angular/core';
+import { HapticsService } from '../../core/haptics.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AlertController } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
@@ -199,6 +200,14 @@ export class ReservaDetallePage {
     });
   }
 
+  private readonly haptics = inject(HapticsService);
+
+  async doRefresh(event: CustomEvent) {
+    this.haptics.light();
+    await this.load();
+    (event.target as HTMLIonRefresherElement | null)?.complete();
+  }
+
   ionViewWillEnter() { void this.load(); }
 
   async load() {
@@ -242,6 +251,7 @@ export class ReservaDetallePage {
     this.error = '';
     try {
       await firstValueFrom(this.api.checkin(this.id));
+      this.haptics.success();
       await this.load();
       const flight = this.vuelos[0];
       const pasajero = flight && this.personas(flight.idVuelo).find(p => p.asiento);

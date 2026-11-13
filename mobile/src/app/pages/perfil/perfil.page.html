@@ -618,6 +618,116 @@
         </div>
       </section>
 
+      <!-- d.2) Preferencias de la app (Tema oscuro, alertas en vivo, hápticos, sesión) -->
+      <section class="security-section reveal" aria-label="Preferencias de la aplicación">
+        <div class="sky-acc" [class.is-open]="openSection === 'preferencias'">
+          <button
+            type="button"
+            class="sky-acc-trigger"
+            [class.is-open]="openSection === 'preferencias'"
+            (click)="toggleSection('preferencias')"
+            [attr.aria-expanded]="openSection === 'preferencias'"
+          >
+            <div class="sky-acc-icon">
+              <ion-icon name="options-outline" aria-hidden="true"></ion-icon>
+            </div>
+            <div class="sky-acc-summary">
+              <div class="sky-acc-eyebrow">EXPERIENCIA DE LA APP</div>
+              <div class="sky-acc-title">Preferencias de la aplicación</div>
+              <div class="sky-acc-sub">
+                Tema {{ temaLabel() }} · Alertas {{ liveNotif.pushEnabled ? 'activas' : 'pausadas' }}
+              </div>
+            </div>
+            <ion-icon name="chevron-down-outline" class="sky-acc-chevron" aria-hidden="true"></ion-icon>
+          </button>
+
+          <div class="sky-acc-body" *ngIf="openSection === 'preferencias'">
+            <div class="form-card acc-inner-card pref-inner-card">
+              <div class="pref-group">
+                <span class="pref-label">
+                  <ion-icon name="color-palette-outline" aria-hidden="true"></ion-icon>
+                  Apariencia visual
+                </span>
+                <div class="theme-chips" role="radiogroup" aria-label="Modo de tema">
+                  <button
+                    type="button"
+                    class="theme-chip"
+                    [class.is-active]="theme.mode === 'light'"
+                    (click)="cambiarTema('light')"
+                  >
+                    <ion-icon name="sunny-outline" aria-hidden="true"></ion-icon>
+                    <span>Claro</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="theme-chip"
+                    [class.is-active]="theme.mode === 'dark'"
+                    (click)="cambiarTema('dark')"
+                  >
+                    <ion-icon name="moon-outline" aria-hidden="true"></ion-icon>
+                    <span>Oscuro</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="theme-chip"
+                    [class.is-active]="theme.mode === 'system'"
+                    (click)="cambiarTema('system')"
+                  >
+                    <ion-icon name="contrast-outline" aria-hidden="true"></ion-icon>
+                    <span>Sistema</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="pref-toggle-row">
+                <div class="pref-toggle-info">
+                  <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
+                  <div>
+                    <strong>Alertas y recordatorios de check-in</strong>
+                    <span>Avisos en vivo por cambios de puerta, hora y apertura 48h antes</span>
+                  </div>
+                </div>
+                <ion-toggle
+                  [checked]="liveNotif.pushEnabled"
+                  (ionChange)="togglePushAlerts($event)"
+                  aria-label="Activar alertas de vuelos"
+                ></ion-toggle>
+              </div>
+
+              <div class="pref-toggle-row">
+                <div class="pref-toggle-info">
+                  <ion-icon name="phone-portrait-outline" aria-hidden="true"></ion-icon>
+                  <div>
+                    <strong>Respuesta háptica (vibración)</strong>
+                    <span>Confirmación táctil al seleccionar asientos o completar acciones</span>
+                  </div>
+                </div>
+                <ion-toggle
+                  [checked]="haptics.enabled"
+                  (ionChange)="toggleHaptics($event)"
+                  aria-label="Activar vibración háptica"
+                ></ion-toggle>
+              </div>
+
+              <div class="pref-toggle-row">
+                <div class="pref-toggle-info">
+                  <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
+                  <div>
+                    <strong>Mantener sesión iniciada</strong>
+                    <span>Evita el cierre automático rápido al minimizar la aplicación</span>
+                  </div>
+                </div>
+                <ion-toggle
+                  [checked]="keepSessionEnabled"
+                  (ionChange)="toggleKeepSession($event)"
+                  aria-label="Mantener sesión iniciada"
+                ></ion-toggle>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- e) Cerrar sesión compacto -->
       <section class="logout-compact-section reveal" aria-label="Cerrar sesión">
         <ion-button

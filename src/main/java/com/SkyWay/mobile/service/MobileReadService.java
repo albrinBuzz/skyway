@@ -216,4 +216,112 @@ public class MobileReadService {
         String desc=Objects.toString(v.estado().descripcion(),"").toLowerCase(Locale.ROOT);
         return List.of("cancelado","inactivo").contains(status)||List.of("cancelado","vuelo cancelado").contains(desc);
     }
+
+    public ConsultaPnrResponse consultarPorPnr(String codigoPnr, String apellido) {
+        if (em == null || codigoPnr == null || apellido == null) {
+            throw MobileException.notFound();
+        }
+        String pnr = codigoPnr.trim().toUpperCase(Locale.ROOT);
+        String ape = apellido.trim().toLowerCase(Locale.ROOT);
+        if (pnr.isBlank() || ape.isBlank()) {
+            throw new MobileException(HttpStatus.BAD_REQUEST, "DATOS_INCOMPLETOS", "Ingresa el código PNR y tu apellido.");
+        }
+
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = em.createNativeQuery("""
+            SELECT r.id_reserva, COALESCE(r.codigo_reserva, 'RES-' || r.id_reserva),
+                   COALESCE(er.descripcion, 'Confirmada'),
+                   u.rut, TRIM(COALESCE(u.nombre, '') || ' ' || COALESCE(u.apellido, ''))
+            FROM reserva r
+            LEFT JOIN estado_reserva er ON er.id_estado_reserva = r.estado_reserva
+            JOIN pasajero p ON (p.rut = r.rut_pasajero OR EXISTS (
+                SELECT 1 FROM pasajero_reserva pr WHERE pr.id_reserva = r.id_reserva AND pr.rut = p.rut
+            ))
+            JOIN usuario u ON u.rut = p.rut
+            WHERE (UPPER(TRIM(COALESCE(r.codigo_reserva, ''))) = :pnr
+                   OR (:pnr ~ '^[0-9]+$' AND r.id_reserva = CAST(:pnrNum AS INT)))
+              AND LOWER(TRIM(COALESCE(u.apellido, ''))) = :apellido
+            ORDER BY CASE WHEN u.rut = r.rut_pasajero THEN 0 ELSE 1 END, r.id_reserva DESC
+            LIMIT 1
+        """)
+        .setParameter("pnr", pnr)
+        .setParameter("pnrNum", pnr.matches("\\d+") ? Integer.parseInt(pnr) : -1)
+        .setParameter("apellido", ape)
+        .getResultList();
+
+        if (rows.isEmpty()) {
+            throw new MobileException(HttpStatus.NOT_FOUND, "RESERVA_NO_ENCONTRADA",
+                    "No encontramos ninguna reserva con ese código y apellido.");
+        }
+
+        Object[] row = rows.get(0);
+        int idReserva = number(row[0]);
+        String pnrOficial = text(row[1]);
+        String estadoReserva = text(row[2]);
+        String rutMatch = text(row[3]);
+        String nombrePasajero = text(row[4]);
+
+        var chk = checkin(idReserva);
+        boolean checkinHecho = chk != null;
+
+        @SuppressWarnings("unchecked")
+        List<Object[]> flightRows = em.createNativeQuery("""
+            SELECT v.id_vuelo, v.numero_vuelo, v.fecha_hora_salida,
+                   ao.codigo_iata, ao.ciudad, ad.codigo_iata, ad.ciudad,
+                   pe.codigo_puerta, pe.terminal, a.numero_asiento
+            FROM reserva_itinerario ri
+            JOIN itinerario_vuelo iv ON iv.id_itinerario = ri.id_itinerario
+            JOIN vuelo v ON v.id_vuelo = iv.id_vuelo
+            LEFT JOIN LATERAL (
+                SELECT sv.id_aeropuerto_origen FROM segmento_vuelo sv WHERE sv.id_vuelo = v.id_vuelo ORDER BY sv.orden_segmento ASC LIMIT 1
+            ) s1 ON true
+            LEFT JOIN LATERAL (
+                SELECT sv.id_aeropuerto_destino, sv.id_segmento FROM segmento_vuelo sv WHERE sv.id_vuelo = v.id_vuelo ORDER BY sv.orden_segmento DESC LIMIT 1
+            ) s2 ON true
+            LEFT JOIN aeropuerto ao ON ao.id_aeropuerto = s1.id_aeropuerto_origen
+            LEFT JOIN aeropuerto ad ON ad.id_aeropuerto = s2.id_aeropuerto_destino
+            LEFT JOIN asignacion_puerta ap ON ap.id_vuelo = v.id_vuelo
+            LEFT JOIN puerta_embarque pe ON pe.id_puerta = ap.id_puerta
+            LEFT JOIN reserva_asiento ra ON ra.id_reserva = :idReserva AND ra.id_vuelo = v.id_vuelo AND ra.rut = :rut
+            LEFT JOIN asiento a ON a.id_asiento = ra.id_asiento
+            WHERE ri.id_reserva = :idReserva
+            ORDER BY CASE WHEN v.fecha_hora_salida >= :ahora THEN 0 ELSE 1 END, v.fecha_hora_salida ASC
+            LIMIT 1
+        """)
+        .setParameter("idReserva", idReserva)
+        .setParameter("rut", rutMatch)
+        .setParameter("ahora", LocalDateTime.now(clock))
+        .getResultList();
+
+        String origIata = null, origCiudad = null, destIata = null, destCiudad = null;
+        String numVuelo = null, asiento = null, puerta = null, terminal = null;
+        LocalDateTime proximaSalida = null;
+
+        if (!flightRows.isEmpty()) {
+            Object[] f = flightRows.get(0);
+            numVuelo = text(f[1]);
+            proximaSalida = date(f[2]);
+            origIata = text(f[3]);
+            origCiudad = text(f[4]);
+            destIata = text(f[5]);
+            destCiudad = text(f[6]);
+            puerta = text(f[7]);
+            terminal = text(f[8]);
+            asiento = text(f[9]);
+        }
+
+        String bcbp = null;
+        String barcodeBase64 = null;
+        if (checkinHecho && numVuelo != null && asiento != null) {
+            bcbp = BoardingPassSecurityService.generarCodigoSeguro(pnrOficial, numVuelo, asiento, rutMatch);
+            barcodeBase64 = BarcodeGeneratorUtil.generarPdf417DataUrl(bcbp);
+        }
+
+        return new ConsultaPnrResponse(
+                idReserva, pnrOficial, estadoReserva, nombrePasajero,
+                origIata, destIata, origCiudad, destCiudad,
+                proximaSalida, numVuelo, asiento, puerta, terminal,
+                checkinHecho, bcbp, bcbp, barcodeBase64
+        );
+    }
 }

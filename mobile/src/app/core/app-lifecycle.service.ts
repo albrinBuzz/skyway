@@ -291,6 +291,7 @@ export class AppLifecycleService {
     this.limpiarMarcaSegundoPlano();
 
     if (!desde || !this.store.authenticated) return;
+    if (this.store.keepSession) return;
     if (Date.now() - desde < BACKGROUND_SESSION_MS) return;
 
     // Más de 5 minutos fuera de la app: cerrar sesión y pedir login nuevamente.

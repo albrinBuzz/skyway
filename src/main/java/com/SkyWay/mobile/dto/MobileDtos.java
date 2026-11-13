@@ -10,7 +10,39 @@ import java.util.List;
 public final class MobileDtos {
     private MobileDtos() {}
     public record LoginRequest(@NotBlank @Email @Size(max=100) String correoElectronico,
-                               @NotBlank @Size(max=72) String contrasena) {}
+                               @NotBlank @Size(max=72) String contrasena,
+                               Boolean recordarSesion) {
+        public LoginRequest(String correoElectronico, String contrasena) {
+            this(correoElectronico, contrasena, false);
+        }
+    }
+    public record PnrLookupRequest(@NotBlank @Size(max=20) String codigoPnr,
+                                   @NotBlank @Size(max=100) String apellido) {}
+    public record ConsultaPnrResponse(
+            Integer idReserva,
+            String codigoPnr,
+            String estadoReserva,
+            String nombrePasajero,
+            String codigoIataOrigen,
+            String codigoIataDestino,
+            String ciudadOrigen,
+            String ciudadDestino,
+            LocalDateTime proximaSalida,
+            String numeroVuelo,
+            String asiento,
+            String puerta,
+            String terminal,
+            boolean checkinRealizado,
+            String qrContenido,
+            String codigoIataBcbp,
+            String barcodeBase64) {}
+    public record DiaTarifaFlexible(LocalDate fecha, int disponibles, BigDecimal precioMinimo) {}
+    public record AcompananteSolicitud(
+            @NotBlank @Size(max=20) String rut,
+            @NotBlank @Size(max=100) String nombre,
+            @NotBlank @Size(max=100) String apellido,
+            LocalDate fechaNacimiento,
+            @Size(max=50) String nacionalidad) {}
     public record RegistroRequest(
             @NotBlank @Size(max=20) String rut,
             @NotBlank @Size(max=255) String nombre,
@@ -60,18 +92,30 @@ public final class MobileDtos {
             Integer maximoPermitido) {}
     public record AsientoSeleccionadoSolicitud(
             @NotNull Integer idVuelo,
-            @NotNull Integer idAsiento) {}
+            @NotNull Integer idAsiento,
+            String rutPasajero) {
+        public AsientoSeleccionadoSolicitud(Integer idVuelo, Integer idAsiento) {
+            this(idVuelo, idAsiento, null);
+        }
+    }
     public record CrearReservaRequest(
             @NotNull @Positive Integer idItinerario,
             @NotNull @Positive Integer idItinerarioTarifa,
             Integer idMetodoPago,
             List<ItemEquipajeSolicitud> equipaje,
-            List<AsientoSeleccionadoSolicitud> asientos) {
+            List<AsientoSeleccionadoSolicitud> asientos,
+            Integer idItinerarioRegreso,
+            Integer idItinerarioTarifaRegreso,
+            List<AcompananteSolicitud> acompanantes) {
         public CrearReservaRequest(Integer idItinerario, Integer idItinerarioTarifa) {
-            this(idItinerario, idItinerarioTarifa, 1, List.of(), List.of());
+            this(idItinerario, idItinerarioTarifa, 1, List.of(), List.of(), null, null, List.of());
         }
         public CrearReservaRequest(Integer idItinerario, Integer idItinerarioTarifa, Integer idMetodoPago, List<ItemEquipajeSolicitud> equipaje) {
-            this(idItinerario, idItinerarioTarifa, idMetodoPago, equipaje, List.of());
+            this(idItinerario, idItinerarioTarifa, idMetodoPago, equipaje, List.of(), null, null, List.of());
+        }
+        public CrearReservaRequest(Integer idItinerario, Integer idItinerarioTarifa, Integer idMetodoPago,
+                                   List<ItemEquipajeSolicitud> equipaje, List<AsientoSeleccionadoSolicitud> asientos) {
+            this(idItinerario, idItinerarioTarifa, idMetodoPago, equipaje, asientos, null, null, List.of());
         }
     }
     public record IniciarPagoReservaRequest(
@@ -80,7 +124,16 @@ public final class MobileDtos {
             Integer idMetodoPago,
             List<ItemEquipajeSolicitud> equipaje,
             List<AsientoSeleccionadoSolicitud> asientos,
-            String urlRetornoBase) {}
+            String urlRetornoBase,
+            Integer idItinerarioRegreso,
+            Integer idItinerarioTarifaRegreso,
+            List<AcompananteSolicitud> acompanantes) {
+        public IniciarPagoReservaRequest(Integer idItinerario, Integer idItinerarioTarifa, Integer idMetodoPago,
+                                         List<ItemEquipajeSolicitud> equipaje, List<AsientoSeleccionadoSolicitud> asientos,
+                                         String urlRetornoBase) {
+            this(idItinerario, idItinerarioTarifa, idMetodoPago, equipaje, asientos, urlRetornoBase, null, null, List.of());
+        }
+    }
     public record IniciarPagoReservaResponse(
             String ordenCompra,
             String pasarela,

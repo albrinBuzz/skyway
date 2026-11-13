@@ -10,6 +10,9 @@
 </ion-header>
 
 <ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
+    <ion-refresher-content pullingText="Desliza para actualizar" refreshingSpinner="crescent"></ion-refresher-content>
+  </ion-refresher>
   <main class="page vuelos-page">
     <!-- Encabezado Hero compacto -->
     <header class="page-intro compact reveal">
@@ -45,10 +48,19 @@
       </div>
     </div>
 
-    <!-- Indicador de carga -->
-    <div *ngIf="busy" class="loading" role="status" aria-live="polite">
-      <ion-spinner></ion-spinner>
-      <p>Cargando información de tus vuelos…</p>
+    <!-- Indicador de carga Skeleton -->
+    <div *ngIf="busy" class="sky-skeleton-stack" role="status" aria-live="polite" aria-label="Cargando vuelos">
+      <div class="sky-skeleton-card">
+        <ion-skeleton-text animated style="width: 38%; height: 14px;"></ion-skeleton-text>
+        <ion-skeleton-text animated style="width: 72%; height: 28px; margin-top: 10px;"></ion-skeleton-text>
+        <ion-skeleton-text animated style="width: 90%; height: 14px; margin-top: 10px;"></ion-skeleton-text>
+        <ion-skeleton-text animated style="width: 60%; height: 42px; margin-top: 14px;"></ion-skeleton-text>
+      </div>
+      <div class="sky-skeleton-card">
+        <ion-skeleton-text animated style="width: 45%; height: 14px;"></ion-skeleton-text>
+        <ion-skeleton-text animated style="width: 82%; height: 22px; margin-top: 10px;"></ion-skeleton-text>
+        <ion-skeleton-text animated style="width: 55%; height: 14px; margin-top: 8px;"></ion-skeleton-text>
+      </div>
     </div>
 
     <!-- Alerta de error -->
@@ -66,12 +78,40 @@
       <!-- ============================================== -->
       <section *ngIf="seccion === 'proximo'" class="proximo-section">
         <div *ngIf="d.proximoVuelo as next; else sinVuelo" class="proximo-wrap reveal">
+          <!-- Franja Modo Aeropuerto (cuenta regresiva y acceso directo al pase) -->
+          <div class="airport-mode-strip" [class.is-active]="esModoAeropuerto(next.vuelo.fechaHoraSalida)">
+            <div class="airport-mode-left">
+              <ion-icon name="flash-outline" aria-hidden="true"></ion-icon>
+              <div>
+                <strong>{{ esModoAeropuerto(next.vuelo.fechaHoraSalida) ? 'Modo Aeropuerto activo' : 'Próximo embarque' }}</strong>
+                <span>
+                  {{ tiempoHastaVuelo(next.vuelo.fechaHoraSalida) }}
+                  · Puerta {{ next.vuelo.segmentos[0]?.puerta?.codigoPuerta || 'Por asignar' }}
+                  · Asiento {{ next.vuelo.asiento?.numeroAsiento || 'Por asignar' }}
+                </span>
+              </div>
+            </div>
+            <button
+              *ngIf="checkinCompletado(next.idReserva)"
+              type="button"
+              class="airport-pass-btn"
+              [routerLink]="['/vuelos/reservas', next.idReserva, 'vuelos', next.vuelo.idVuelo, 'pase']"
+            >
+              <ion-icon name="qr-code-outline" aria-hidden="true"></ion-icon>
+              <span>Abrir pase</span>
+            </button>
+          </div>
+
           <!-- Hero Card del Próximo Vuelo con gradiente azul y resplandor verde menta -->
           <article class="hero-card" aria-label="Información de tu próximo vuelo">
             <div class="hero-top">
               <div class="hero-id">
                 <span class="hero-label">Próximo vuelo</span>
                 <strong class="hero-number">{{ next.vuelo.numeroVuelo || ('Vuelo #' + next.vuelo.idVuelo) }}</strong>
+                <div class="hero-countdown-chip" *ngIf="next.vuelo.fechaHoraSalida">
+                  <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
+                  <span>{{ tiempoHastaVuelo(next.vuelo.fechaHoraSalida) }}</span>
+                </div>
               </div>
               <span *ngIf="estadoVuelo(next.vuelo) as st" class="chip chip-{{ st.tono }}">
                 <ion-icon [name]="st.icono" aria-hidden="true"></ion-icon>
@@ -234,8 +274,8 @@
                 class="btn-hero-secondary"
                 [routerLink]="['/vuelos/reservas', next.idReserva, 'vuelos', next.vuelo.idVuelo, 'pase']"
               >
-                <ion-icon name="ticket-outline" slot="start" aria-hidden="true"></ion-icon>
-                Pase de abordar
+                <ion-icon name="qr-code-outline" slot="start" aria-hidden="true"></ion-icon>
+                Abrir pase de abordar
               </ion-button>
 
               <ion-button

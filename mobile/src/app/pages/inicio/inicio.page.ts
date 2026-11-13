@@ -27,10 +27,12 @@ import {
   closeOutline,
   cubeOutline,
   ellipseOutline,
+  funnelOutline,
   informationCircle,
   informationCircleOutline,
   layersOutline,
   locationOutline,
+  peopleOutline,
   personOutline,
   pricetagOutline,
   radioButtonOn,
@@ -51,11 +53,14 @@ import {
   walletOutline
 } from 'ionicons/icons';
 import { ApiService } from '../../core/api.service';
+import { HapticsService } from '../../core/haptics.service';
 import {
+  AcompananteSolicitud,
   AeropuertoCatalogo,
   AsientoSeleccionadoSolicitud,
   AsientoVueloDisponible,
   ConfiguracionCabinaItem,
+  DiaTarifaFlexible,
   ItemEquipajeSolicitud,
   ItinerarioDisponible,
   ReservaCreada,
@@ -87,10 +92,12 @@ addIcons({
   closeOutline,
   cubeOutline,
   ellipseOutline,
+  funnelOutline,
   informationCircle,
   informationCircleOutline,
   layersOutline,
   locationOutline,
+  peopleOutline,
   personOutline,
   pricetagOutline,
   radioButtonOn,
@@ -132,6 +139,7 @@ export class InicioPage {
   private readonly api = inject(ApiService);
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
+  private readonly haptics = inject(HapticsService);
 
   aeropuertos: AeropuertoCatalogo[] = [];
   aeropuertosFiltrados: AeropuertoCatalogo[] = [];
@@ -140,16 +148,29 @@ export class InicioPage {
   codigoSeleccionado = '';
   textoAeropuerto = '';
   resultados: ItinerarioDisponible[] = [];
+  resultadosRegreso: ItinerarioDisponible[] = [];
+  calendarioIda: DiaTarifaFlexible[] = [];
+
+  // Tipo de viaje, pasajeros y filtros (Step 3)
+  tipoViaje: 'solo_ida' | 'ida_vuelta' = 'solo_ida';
+  cantidadPasajeros = 1;
+  acompanantes: AcompananteSolicitud[] = [];
+  pasajeroActivoIndex = 0;
+  filtroSoloDirectos = false;
+  ordenResultados: 'precio' | 'hora' = 'precio';
 
   // Stepper: 1: Vuelo, 2: Tarifa, 3: Asiento, 4: Equipaje, 5: Pago
   pasoActual = 1;
   itinerarioSeleccionado: ItinerarioDisponible | null = null;
+  itinerarioRegreso: ItinerarioDisponible | null = null;
   tarifaSeleccionada: TarifaDisponible | null = null;
+  tarifaRegreso: TarifaDisponible | null = null;
   vuelosItinerario: VueloConAsientos[] = [];
   filasActivas: FilaAsientosView[] = [];
   vueloActivoIndex = 0;
   cargandoAsientos = false;
   asientosSeleccionadosPorVuelo: { [idVuelo: number]: AsientoVueloDisponible } = {};
+  asientosAcompanantes: { [key: string]: AsientoVueloDisponible } = {};
 
   cantCabina = 0;
   cantBodega15 = 0;
@@ -183,8 +204,84 @@ export class InicioPage {
   readonly form = this.fb.nonNullable.group({
     origen: ['', [Validators.required, Validators.pattern(/^[A-Za-z]{3}$/)]],
     destino: ['', [Validators.required, Validators.pattern(/^[A-Za-z]{3}$/)]],
-    fecha: ['']
+    fecha: [''],
+    fechaRegreso: ['']
   });
+
+  cambiarTipoViaje(tipo: 'solo_ida' | 'ida_vuelta'): void {
+    this.haptics.light();
+    this.tipoViaje = tipo;
+    if (tipo === 'solo_ida') {
+      this.form.controls.fechaRegreso.setValue('');
+      this.itinerarioRegreso = null;
+      this.tarifaRegreso = null;
+      this.resultadosRegreso = [];
+    }
+  }
+
+  cambiarCantidadPasajeros(delta: number): void {
+    const siguiente = Math.max(1, Math.min(4, this.cantidadPasajeros + delta));
+    if (siguiente === this.cantidadPasajeros) return;
+    this.haptics.light();
+    this.cantidadPasajeros = siguiente;
+    const needed = siguiente - 1;
+    while (this.acompanantes.length < needed) {
+      this.acompanantes.push({ rut: '', nombre: '', apellido: '' });
+    }
+    if (this.acompanantes.length > needed) {
+      this.acompanantes = this.acompanantes.slice(0, needed);
+    }
+    if (this.pasajeroActivoIndex >= this.cantidadPasajeros) {
+      this.pasajeroActivoIndex = 0;
+    }
+  }
+
+  get indicesPasajeros(): number[] {
+    return Array.from({ length: this.cantidadPasajeros }, (_, idx) => idx);
+  }
+
+  etiquetaPasajero(paxIdx: number): string {
+    if (paxIdx === 0) return 'Titular';
+    const a = this.acompanantes[paxIdx - 1];
+    const full = `${a?.nombre || ''} ${a?.apellido || ''}`.trim();
+    return full || `Pasajero ${paxIdx + 1}`;
+  }
+
+  acompanantesValidos(): boolean {
+    if (this.cantidadPasajeros <= 1) return true;
+    return this.acompanantes.length === this.cantidadPasajeros - 1 &&
+      this.acompanantes.every(a => a.rut.trim().length >= 5 && a.nombre.trim().length >= 2 && a.apellido.trim().length >= 2);
+  }
+
+  get resultadosFiltradosIda(): ItinerarioDisponible[] {
+    return this.filtrarYOrdenarResultados(this.resultados);
+  }
+
+  get resultadosFiltradosRegreso(): ItinerarioDisponible[] {
+    return this.filtrarYOrdenarResultados(this.resultadosRegreso);
+  }
+
+  private filtrarYOrdenarResultados(lista: ItinerarioDisponible[]): ItinerarioDisponible[] {
+    const base = this.filtroSoloDirectos ? lista.filter(i => i.numeroEscalas === 0) : [...lista];
+    return base.sort((a, b) => {
+      if (this.ordenResultados === 'hora') {
+        return new Date(a.horaSalida || 0).getTime() - new Date(b.horaSalida || 0).getTime();
+      }
+      return (this.precioMinimo(a) ?? Number.MAX_SAFE_INTEGER) - (this.precioMinimo(b) ?? Number.MAX_SAFE_INTEGER);
+    });
+  }
+
+  elegirDiaFlexible(fecha: string): void {
+    this.haptics.light();
+    this.form.controls.fecha.setValue(fecha);
+    void this.buscar();
+  }
+
+  limpiarFechaRegreso(event?: Event): void {
+    event?.stopPropagation();
+    event?.preventDefault();
+    this.form.controls.fechaRegreso.setValue('');
+  }
 
   get tieneSeleccionOBusqueda(): boolean {
     return Boolean(
@@ -198,7 +295,7 @@ export class InicioPage {
   }
 
   limpiarBusqueda(): void {
-    this.form.patchValue({ origen: '', destino: '', fecha: '' });
+    this.form.patchValue({ origen: '', destino: '', fecha: '', fechaRegreso: '' });
     this.form.markAsPristine();
     this.form.markAsUntouched();
     this.form.controls.origen.markAsPristine();
@@ -208,17 +305,24 @@ export class InicioPage {
     this.form.controls.fecha.markAsPristine();
     this.form.controls.fecha.markAsUntouched();
     this.resultados = [];
+    this.resultadosRegreso = [];
+    this.calendarioIda = [];
+    this.filtroSoloDirectos = false;
 
 
     this.busquedaRealizada = false;
     this.error = '';
     this.codigoSeleccionado = '';
     this.itinerarioSeleccionado = null;
+    this.itinerarioRegreso = null;
     this.tarifaSeleccionada = null;
+    this.tarifaRegreso = null;
     this.vuelosItinerario = [];
     this.filasActivas = [];
     this.vueloActivoIndex = 0;
+    this.pasajeroActivoIndex = 0;
     this.asientosSeleccionadosPorVuelo = {};
+    this.asientosAcompanantes = {};
     this.pasoActual = 1;
     this.reservaConfirmada = null;
     this.cantCabina = 0;
@@ -299,9 +403,15 @@ export class InicioPage {
         this.resultados = snap.resultados || [];
         this.busquedaRealizada = Boolean(this.resultados.length);
         this.itinerarioSeleccionado = snap.itinerarioSeleccionado || null;
+        this.itinerarioRegreso = snap.itinerarioRegreso || null;
         this.tarifaSeleccionada = snap.tarifaSeleccionada || null;
+        this.tarifaRegreso = snap.tarifaRegreso || null;
+        this.tipoViaje = snap.tipoViaje || 'solo_ida';
+        this.cantidadPasajeros = snap.cantidadPasajeros || 1;
+        this.acompanantes = snap.acompanantes || [];
         this.vuelosItinerario = snap.vuelosItinerario || [];
         this.asientosSeleccionadosPorVuelo = snap.asientosSeleccionadosPorVuelo || {};
+        this.asientosAcompanantes = snap.asientosAcompanantes || {};
         this.cantCabina = snap.cantCabina || 0;
         this.cantBodega15 = snap.cantBodega15 || 0;
         this.cantBodega23 = snap.cantBodega23 || 0;
@@ -558,7 +668,7 @@ export class InicioPage {
       return;
     }
 
-    const { origen, destino, fecha } = this.form.getRawValue();
+    const { origen, destino, fecha, fechaRegreso } = this.form.getRawValue();
     if (!origen || !destino) {
       this.form.markAllAsTouched();
       return;
@@ -567,20 +677,34 @@ export class InicioPage {
       this.error = 'El aeropuerto de origen y destino deben ser distintos.';
       return;
     }
+    if (this.tipoViaje === 'ida_vuelta' && fecha && fechaRegreso && fechaRegreso < fecha) {
+      this.error = 'La fecha de regreso no puede ser anterior a la fecha de salida.';
+      return;
+    }
 
     this.buscando = true;
     this.error = '';
     this.busquedaRealizada = true;
     const fechaFiltro = fecha && fecha.trim().length > 0 ? fecha.trim() : null;
+    const fechaRegresoFiltro = fechaRegreso && fechaRegreso.trim().length > 0 ? fechaRegreso.trim() : null;
     this.itinerarioSeleccionado = null;
+    this.itinerarioRegreso = null;
+    this.tarifaSeleccionada = null;
+    this.tarifaRegreso = null;
     this.resultados = [];
-
-
+    this.resultadosRegreso = [];
 
     try {
-      this.resultados = await firstValueFrom(
-        this.api.buscarItinerarios(origen.toUpperCase(), destino.toUpperCase(), fechaFiltro)
-      );
+      const [idaRes, calRes, vueltaRes] = await Promise.all([
+        firstValueFrom(this.api.buscarItinerarios(origen.toUpperCase(), destino.toUpperCase(), fechaFiltro)),
+        firstValueFrom(this.api.calendarioFlexible(origen.toUpperCase(), destino.toUpperCase(), fechaFiltro)).catch(() => []),
+        this.tipoViaje === 'ida_vuelta'
+          ? firstValueFrom(this.api.buscarItinerarios(destino.toUpperCase(), origen.toUpperCase(), fechaRegresoFiltro))
+          : Promise.resolve([] as ItinerarioDisponible[])
+      ]);
+      this.resultados = idaRes;
+      this.calendarioIda = calRes;
+      this.resultadosRegreso = vueltaRes;
     } catch (e) {
       this.error = errorMessage(e);
     } finally {
@@ -589,23 +713,54 @@ export class InicioPage {
   }
 
   async seleccionarItinerario(itinerario: ItinerarioDisponible): Promise<void> {
+    this.haptics.light();
     this.itinerarioSeleccionado = itinerario;
+    this.itinerarioRegreso = null;
     this.tarifaSeleccionada = null;
+    this.tarifaRegreso = null;
     this.vuelosItinerario = [];
     this.filasActivas = [];
     this.asientosSeleccionadosPorVuelo = {};
+    this.asientosAcompanantes = {};
     this.vueloActivoIndex = 0;
-    this.pasoActual = 2; // Avanza al Paso 2: Tarifa
+    this.pasajeroActivoIndex = 0;
     this.error = '';
 
-    // Cargar vuelos y mapa de asientos en segundo plano
+    if (this.tipoViaje === 'ida_vuelta') {
+      this.pasoActual = 1;
+      return;
+    }
+
+    this.pasoActual = 2; // Avanza al Paso 2: Tarifa
     void this.cargarVuelosAsientos(itinerario.idItinerario);
   }
 
-  async cargarVuelosAsientos(idItinerario: number): Promise<void> {
+  async seleccionarItinerarioRegreso(itinerarioReg: ItinerarioDisponible): Promise<void> {
+    if (!this.itinerarioSeleccionado) return;
+    this.haptics.light();
+    this.itinerarioRegreso = itinerarioReg;
+    this.tarifaRegreso = null;
+    this.vuelosItinerario = [];
+    this.filasActivas = [];
+    this.asientosSeleccionadosPorVuelo = {};
+    this.asientosAcompanantes = {};
+    this.vueloActivoIndex = 0;
+    this.pasajeroActivoIndex = 0;
+    this.pasoActual = 2;
+    this.error = '';
+    void this.cargarVuelosAsientos(this.itinerarioSeleccionado.idItinerario, itinerarioReg.idItinerario);
+  }
+
+  async cargarVuelosAsientos(idItinerario: number, idItinerarioRegreso?: number): Promise<void> {
     this.cargandoAsientos = true;
     try {
-      this.vuelosItinerario = await firstValueFrom(this.api.vuelosAsientosItinerario(idItinerario));
+      const [idaVuelos, vueltaVuelos] = await Promise.all([
+        firstValueFrom(this.api.vuelosAsientosItinerario(idItinerario)),
+        idItinerarioRegreso
+          ? firstValueFrom(this.api.vuelosAsientosItinerario(idItinerarioRegreso))
+          : Promise.resolve([] as VueloConAsientos[])
+      ]);
+      this.vuelosItinerario = [...idaVuelos, ...vueltaVuelos];
       this.recalcularFilasVueloActivo();
     } catch (e) {
       console.warn('Error al cargar vuelos con asientos:', e);
@@ -617,11 +772,22 @@ export class InicioPage {
 
   deseleccionarItinerario(): void {
     this.itinerarioSeleccionado = null;
+    this.itinerarioRegreso = null;
     this.tarifaSeleccionada = null;
+    this.tarifaRegreso = null;
     this.vuelosItinerario = [];
     this.filasActivas = [];
     this.asientosSeleccionadosPorVuelo = {};
+    this.asientosAcompanantes = {};
     this.vueloActivoIndex = 0;
+    this.pasajeroActivoIndex = 0;
+    this.pasoActual = 1;
+  }
+
+  volverAElegirIda(): void {
+    this.haptics.light();
+    this.itinerarioSeleccionado = null;
+    this.itinerarioRegreso = null;
     this.pasoActual = 1;
   }
 
@@ -633,30 +799,44 @@ export class InicioPage {
   }
 
   seleccionarTarifa(tarifa: TarifaDisponible): void {
+    this.haptics.light();
     this.tarifaSeleccionada = tarifa;
     this.error = '';
     this.asientosSeleccionadosPorVuelo = {};
+    this.asientosAcompanantes = {};
 
     if (this.vuelosItinerario.length) {
       this.recalcularFilasVueloActivo();
     } else if (!this.cargandoAsientos && this.itinerarioSeleccionado) {
-      void this.cargarVuelosAsientos(this.itinerarioSeleccionado.idItinerario);
+      void this.cargarVuelosAsientos(this.itinerarioSeleccionado.idItinerario, this.itinerarioRegreso?.idItinerario);
     }
 
-    this.pasoActual = 3; // Avanza al Paso 3: Asiento
+    if (this.tipoViaje === 'solo_ida' || this.tarifaRegreso) {
+      this.pasoActual = 3; // Avanza al Paso 3: Asiento
+    }
+  }
+
+  seleccionarTarifaRegreso(tarifa: TarifaDisponible): void {
+    this.haptics.light();
+    this.tarifaRegreso = tarifa;
+    this.error = '';
+    if (this.tarifaSeleccionada) {
+      this.pasoActual = 3;
+    }
   }
 
   // Navegación entre pasos
   irAPaso(paso: number): void {
+    const tarifaOk = Boolean(this.tarifaSeleccionada) && (this.tipoViaje === 'solo_ida' || Boolean(this.tarifaRegreso));
     if (paso === 1) {
       this.deseleccionarItinerario();
-    } else if (paso === 2 && this.itinerarioSeleccionado) {
+    } else if (paso === 2 && this.itinerarioSeleccionado && (this.tipoViaje === 'solo_ida' || this.itinerarioRegreso)) {
       this.pasoActual = 2;
-    } else if (paso === 3 && this.itinerarioSeleccionado && this.tarifaSeleccionada) {
+    } else if (paso === 3 && this.itinerarioSeleccionado && tarifaOk) {
       this.pasoActual = 3;
-    } else if (paso === 4 && this.itinerarioSeleccionado && this.tarifaSeleccionada && this.todosLosAsientosSeleccionados()) {
+    } else if (paso === 4 && this.itinerarioSeleccionado && tarifaOk && this.todosLosAsientosSeleccionados()) {
       this.pasoActual = 4;
-    } else if (paso === 5 && this.itinerarioSeleccionado && this.tarifaSeleccionada && this.todosLosAsientosSeleccionados()) {
+    } else if (paso === 5 && this.itinerarioSeleccionado && tarifaOk && this.todosLosAsientosSeleccionados()) {
       this.pasoActual = 5;
     }
   }
@@ -699,21 +879,53 @@ export class InicioPage {
     }
   }
 
+  cambiarPasajeroActivo(idx: number): void {
+    if (idx >= 0 && idx < this.cantidadPasajeros) {
+      this.haptics.light();
+      this.pasajeroActivoIndex = idx;
+    }
+  }
+
+  asientoPorPasajeroYVuelo(paxIdx: number, idVuelo: number): AsientoVueloDisponible | undefined {
+    if (paxIdx === 0) return this.asientosSeleccionadosPorVuelo[idVuelo];
+    return this.asientosAcompanantes[`${paxIdx}_${idVuelo}`];
+  }
+
   asientoSeleccionadoEnVuelo(idVuelo: number): AsientoVueloDisponible | undefined {
-    return this.asientosSeleccionadosPorVuelo[idVuelo];
+    return this.asientoPorPasajeroYVuelo(this.pasajeroActivoIndex, idVuelo);
+  }
+
+  isAsientoOcupadoPorOtroPasajero(vueloId: number, idAsiento: number): boolean {
+    for (let p = 0; p < this.cantidadPasajeros; p++) {
+      if (p === this.pasajeroActivoIndex) continue;
+      if (this.asientoPorPasajeroYVuelo(p, vueloId)?.idAsiento === idAsiento) {
+        return true;
+      }
+    }
+    return false;
   }
 
   seleccionarAsiento(vueloId: number, asiento: AsientoVueloDisponible): void {
-    if (asiento.estado === 'ocupado') return;
-    if (this.asientosSeleccionadosPorVuelo[vueloId]?.idAsiento === asiento.idAsiento) {
-      delete this.asientosSeleccionadosPorVuelo[vueloId];
+    if (asiento.estado === 'ocupado' || this.isAsientoOcupadoPorOtroPasajero(vueloId, asiento.idAsiento)) return;
+    this.haptics.light();
+    if (this.pasajeroActivoIndex === 0) {
+      if (this.asientosSeleccionadosPorVuelo[vueloId]?.idAsiento === asiento.idAsiento) {
+        delete this.asientosSeleccionadosPorVuelo[vueloId];
+      } else {
+        this.asientosSeleccionadosPorVuelo[vueloId] = asiento;
+      }
+      return;
+    }
+    const key = `${this.pasajeroActivoIndex}_${vueloId}`;
+    if (this.asientosAcompanantes[key]?.idAsiento === asiento.idAsiento) {
+      delete this.asientosAcompanantes[key];
     } else {
-      this.asientosSeleccionadosPorVuelo[vueloId] = asiento;
+      this.asientosAcompanantes[key] = asiento;
     }
   }
 
   isAsientoSeleccionado(vueloId: number, idAsiento: number): boolean {
-    return this.asientosSeleccionadosPorVuelo[vueloId]?.idAsiento === idAsiento;
+    return this.asientoPorPasajeroYVuelo(this.pasajeroActivoIndex, vueloId)?.idAsiento === idAsiento;
   }
 
   requiereSeleccionAsiento(v: VueloConAsientos): boolean {
@@ -723,11 +935,47 @@ export class InicioPage {
   todosLosAsientosSeleccionados(): boolean {
     if (this.cargandoAsientos) return false;
     if (!this.vuelosItinerario.length) return true;
-    return this.vuelosItinerario.every(v => !this.requiereSeleccionAsiento(v) || !!this.asientosSeleccionadosPorVuelo[v.idVuelo]);
+    for (let p = 0; p < this.cantidadPasajeros; p++) {
+      for (const v of this.vuelosItinerario) {
+        if (this.requiereSeleccionAsiento(v) && !this.asientoPorPasajeroYVuelo(p, v.idVuelo)) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 
   siguienteTramoSinAsientoIndex(): number {
-    return this.vuelosItinerario.findIndex(v => this.requiereSeleccionAsiento(v) && !this.asientosSeleccionadosPorVuelo[v.idVuelo]);
+    return this.vuelosItinerario.findIndex(
+      v => this.requiereSeleccionAsiento(v) && !this.asientoPorPasajeroYVuelo(this.pasajeroActivoIndex, v.idVuelo)
+    );
+  }
+
+  siguientePasajeroSinAsientoIndex(): number {
+    for (let p = 0; p < this.cantidadPasajeros; p++) {
+      for (const v of this.vuelosItinerario) {
+        if (this.requiereSeleccionAsiento(v) && !this.asientoPorPasajeroYVuelo(p, v.idVuelo)) {
+          return p;
+        }
+      }
+    }
+    return -1;
+  }
+
+  irASiguientePendiente(): void {
+    const idxTramo = this.siguienteTramoSinAsientoIndex();
+    if (idxTramo >= 0) {
+      this.cambiarVueloActivo(idxTramo);
+      return;
+    }
+    const idxPax = this.siguientePasajeroSinAsientoIndex();
+    if (idxPax >= 0) {
+      this.pasajeroActivoIndex = idxPax;
+      const firstMissing = this.vuelosItinerario.findIndex(
+        v => this.requiereSeleccionAsiento(v) && !this.asientoPorPasajeroYVuelo(idxPax, v.idVuelo)
+      );
+      if (firstMissing >= 0) this.cambiarVueloActivo(firstMissing);
+    }
   }
 
   irASiguienteTramoSinAsiento(): void {
@@ -811,11 +1059,11 @@ export class InicioPage {
 
   // Métodos de equipaje
   puedeAgregarCabina(): boolean {
-    return this.cantCabina < 1;
+    return this.cantCabina < this.cantidadPasajeros;
   }
 
   puedeAgregarBodega(): boolean {
-    return (this.cantBodega15 + this.cantBodega23) < 3;
+    return (this.cantBodega15 + this.cantBodega23) < (3 * this.cantidadPasajeros);
   }
 
   agregarCabina(): void {
@@ -857,10 +1105,12 @@ export class InicioPage {
   // Totales
   totalAsientos(): number {
     let tot = 0;
-    for (const v of this.vuelosItinerario) {
-      const a = this.asientosSeleccionadosPorVuelo[v.idVuelo];
-      if (a && a.precio) {
-        tot += a.precio;
+    for (let p = 0; p < this.cantidadPasajeros; p++) {
+      for (const v of this.vuelosItinerario) {
+        const a = this.asientoPorPasajeroYVuelo(p, v.idVuelo);
+        if (a && a.precio) {
+          tot += a.precio;
+        }
       }
     }
     return tot;
@@ -870,23 +1120,37 @@ export class InicioPage {
     return this.cantCabina * 15000 + this.cantBodega15 * 22000 + this.cantBodega23 * 30000;
   }
 
+  totalTarifasBase(): number {
+    const ida = this.tarifaSeleccionada ? Number(this.tarifaSeleccionada.precio) : 0;
+    const vuelta = (this.tipoViaje === 'ida_vuelta' && this.tarifaRegreso) ? Number(this.tarifaRegreso.precio) : 0;
+    return (ida + vuelta) * this.cantidadPasajeros;
+  }
+
   totalPagar(): number {
-    const precioBase = this.tarifaSeleccionada ? Number(this.tarifaSeleccionada.precio) : 0;
-    return precioBase + this.totalAsientos() + this.totalEquipaje();
+    return this.totalTarifasBase() + this.totalAsientos() + this.totalEquipaje();
   }
 
   seleccionarMetodoPago(id: number): void {
+    this.haptics.light();
     this.metodoPago = id;
   }
 
   async procesarPago(): Promise<void> {
     if (!this.itinerarioSeleccionado || !this.tarifaSeleccionada || this.procesandoPago) return;
+    if (this.tipoViaje === 'ida_vuelta' && (!this.itinerarioRegreso || !this.tarifaRegreso)) {
+      this.error = 'Selecciona el vuelo y la tarifa de regreso antes de pagar.';
+      return;
+    }
+    if (!this.acompanantesValidos()) {
+      this.error = 'Completa RUT, nombre y apellido de cada acompañante antes de pagar.';
+      return;
+    }
 
     this.procesandoPago = true;
     this.error = '';
 
     const equipaje: ItemEquipajeSolicitud[] = [];
-    if (this.cantCabina > 0) {
+    for (let i = 0; i < this.cantCabina; i++) {
       equipaje.push({
         idTipoEquipaje: 1,
         tipo: 'CABINA',
@@ -915,19 +1179,35 @@ export class InicioPage {
     }
 
     const asientosSolicitud: AsientoSeleccionadoSolicitud[] = [];
-    for (const v of this.vuelosItinerario) {
-      const a = this.asientosSeleccionadosPorVuelo[v.idVuelo];
-      if (a) {
-        asientosSolicitud.push({ idVuelo: v.idVuelo, idAsiento: a.idAsiento });
+    for (let p = 0; p < this.cantidadPasajeros; p++) {
+      const rutPasajero = p > 0 ? this.acompanantes[p - 1]?.rut?.trim() : undefined;
+      for (const v of this.vuelosItinerario) {
+        const a = this.asientoPorPasajeroYVuelo(p, v.idVuelo);
+        if (a) {
+          asientosSolicitud.push({
+            idVuelo: v.idVuelo,
+            idAsiento: a.idAsiento,
+            ...(rutPasajero ? { rutPasajero } : {})
+          });
+        }
       }
     }
+
+    const idItinerarioRegreso = this.tipoViaje === 'ida_vuelta' ? this.itinerarioRegreso?.idItinerario : undefined;
+    const idItinerarioTarifaRegreso = this.tipoViaje === 'ida_vuelta' ? this.tarifaRegreso?.idItinerarioTarifa : undefined;
+    const acompanantesPayload = this.cantidadPasajeros > 1
+      ? this.acompanantes.map(a => ({ rut: a.rut.trim(), nombre: a.nombre.trim(), apellido: a.apellido.trim() }))
+      : [];
 
     const reservaPayload = {
       idItinerario: this.itinerarioSeleccionado.idItinerario,
       idItinerarioTarifa: this.tarifaSeleccionada.idItinerarioTarifa,
       idMetodoPago: this.metodoPago,
       equipaje,
-      asientos: asientosSolicitud
+      asientos: asientosSolicitud,
+      idItinerarioRegreso,
+      idItinerarioTarifaRegreso,
+      acompanantes: acompanantesPayload
     };
 
     try {
@@ -935,10 +1215,17 @@ export class InicioPage {
         sessionStorage.setItem('skyway_mobile_checkout_pending', JSON.stringify({
           formValues: this.form.getRawValue(),
           resultados: this.resultados,
+          resultadosRegreso: this.resultadosRegreso,
+          tipoViaje: this.tipoViaje,
+          cantidadPasajeros: this.cantidadPasajeros,
+          acompanantes: acompanantesPayload,
           itinerarioSeleccionado: this.itinerarioSeleccionado,
+          itinerarioRegreso: this.itinerarioRegreso,
           tarifaSeleccionada: this.tarifaSeleccionada,
+          tarifaRegreso: this.tarifaRegreso,
           vuelosItinerario: this.vuelosItinerario,
           asientosSeleccionadosPorVuelo: this.asientosSeleccionadosPorVuelo,
+          asientosAcompanantes: this.asientosAcompanantes,
           cantCabina: this.cantCabina,
           cantBodega15: this.cantBodega15,
           cantBodega23: this.cantBodega23,
@@ -957,7 +1244,10 @@ export class InicioPage {
           this.metodoPago,
           equipaje,
           asientosSolicitud,
-          urlBase
+          urlBase,
+          idItinerarioRegreso,
+          idItinerarioTarifaRegreso,
+          acompanantesPayload
         )
       );
 
@@ -972,9 +1262,13 @@ export class InicioPage {
           this.tarifaSeleccionada.idItinerarioTarifa,
           this.metodoPago,
           equipaje,
-          asientosSolicitud
+          asientosSolicitud,
+          idItinerarioRegreso,
+          idItinerarioTarifaRegreso,
+          acompanantesPayload
         )
       );
+      this.haptics.success();
       this.reservaConfirmada = res;
     } catch (e) {
       this.error = errorMessage(e);

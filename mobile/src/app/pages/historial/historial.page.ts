@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../core/api.service';
+import { HapticsService } from '../../core/haptics.service';
 import { DetalleReserva, Notificacion, Pagina, ResumenReserva } from '../../core/models';
 import { errorMessage } from '../../core/ui';
 import { addIcons } from 'ionicons';
@@ -92,6 +93,7 @@ const CIUDADES_IATA: Record<string, { ciudad: string; aeropuerto: string }> = {
 })
 export class HistorialPage {
   private readonly api = inject(ApiService);
+  private readonly haptics = inject(HapticsService);
 
   seccion: 'activas' | 'historial' | 'cambios' = 'activas';
   reservas: Pagina<ResumenReserva> | null = null;
@@ -109,6 +111,7 @@ export class HistorialPage {
   }
 
   toggleReserva(id: number): void {
+    this.haptics.light();
     if (this.expandedReservas.has(id)) {
       this.expandedReservas.delete(id);
     } else {
@@ -121,11 +124,19 @@ export class HistorialPage {
   }
 
   toggleCambio(id: number): void {
+    this.haptics.light();
     if (this.expandedCambios.has(id)) {
       this.expandedCambios.delete(id);
     } else {
       this.expandedCambios.add(id);
     }
+  }
+
+  async doRefresh(event: CustomEvent) {
+    this.haptics.light();
+    this.detalleReservaCache.clear();
+    await this.load(this.page);
+    (event.target as HTMLIonRefresherElement | null)?.complete();
   }
 
   // Caché de detalles para verificar titularidad y check-in

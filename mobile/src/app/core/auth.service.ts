@@ -10,7 +10,11 @@ export class AuthService {
   private api = inject(ApiService);
   private store = inject(AuthStore);
   private router = inject(Router);
-  login(correo: string, password: string) { return this.api.login(correo, password).pipe(tap(data => this.store.set(data))); }
+  login(correo: string, password: string, recordarSesion = false) {
+    this.store.setKeepSession(recordarSesion);
+    this.store.setLastEmail(correo);
+    return this.api.login(correo, password, recordarSesion).pipe(tap(data => this.store.set(data)));
+  }
   registro(data: RegistroRequest) { return this.api.registro(data).pipe(tap(res => this.store.set(res))); }
   logout() { this.store.clear(); void this.router.navigateByUrl('/login', { replaceUrl: true }); }
 }

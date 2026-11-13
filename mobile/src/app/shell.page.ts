@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { addIcons } from 'ionicons';
 import {
   airplane,
@@ -12,6 +12,7 @@ import {
   time,
   timeOutline
 } from 'ionicons/icons';
+import { NotificationsLiveService } from './core/notifications-live.service';
 
 addIcons({
   airplane,
@@ -50,6 +51,9 @@ addIcons({
         <ion-tab-button tab="alertas" routerLink="/alertas" routerDirection="root" aria-label="Ir a Notificaciones y alertas de vuelo">
           <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
           <ion-label>Alertas</ion-label>
+          <ion-badge class="tab-alert-badge" *ngIf="(unreadCount$ | async) as n">
+            {{ n > 9 ? '9+' : n }}
+          </ion-badge>
         </ion-tab-button>
 
         <ion-tab-button tab="perfil" routerLink="/perfil" routerDirection="root" aria-label="Ir a Mi Perfil de pasajero">
@@ -167,6 +171,38 @@ addIcons({
         max-width: 180px;
       }
     }
+
+    .tab-alert-badge {
+      position: absolute;
+      top: 5px;
+      right: calc(50% - 20px);
+      font-size: 9.5px;
+      font-weight: 800;
+      padding: 2px 5px;
+      border-radius: 999px;
+      --background: #e11d48;
+      --color: #ffffff;
+      min-width: 16px;
+      line-height: 1.1;
+    }
+
+    :host-context(body.sky-dark) .skyway-tab-bar {
+      --background: #111a2c;
+      --border: 1px solid #21304d;
+      border-top-color: #21304d;
+    }
+
+    :host-context(body.sky-dark) ion-tab-button {
+      --color: #8fa5c9;
+      --color-selected: #82a7ff;
+    }
+
+    :host-context(body.sky-dark) ion-tab-button.tab-selected ion-icon,
+    :host-context(body.sky-dark) ion-tab-button.tab-selected ion-label {
+      color: #82a7ff;
+    }
   `]
 })
-export class ShellPage {}
+export class ShellPage {
+  readonly unreadCount$ = inject(NotificationsLiveService).unreadCount$;
+}

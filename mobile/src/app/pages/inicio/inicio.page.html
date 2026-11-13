@@ -44,6 +44,51 @@
       </div>
 
       <form [formGroup]="form" (ngSubmit)="buscar()" novalidate>
+        <!-- Selector Tipo de Viaje y Cantidad de Pasajeros (Step 3) -->
+        <div class="trip-controls-bar">
+          <div class="trip-type-pills" role="radiogroup" aria-label="Tipo de viaje">
+            <button
+              type="button"
+              class="trip-type-pill"
+              [class.is-active]="tipoViaje === 'solo_ida'"
+              (click)="cambiarTipoViaje('solo_ida')"
+            >
+              Solo ida
+            </button>
+            <button
+              type="button"
+              class="trip-type-pill"
+              [class.is-active]="tipoViaje === 'ida_vuelta'"
+              (click)="cambiarTipoViaje('ida_vuelta')"
+            >
+              Ida y vuelta
+            </button>
+          </div>
+
+          <div class="pax-stepper-box" aria-label="Cantidad de pasajeros">
+            <ion-icon name="people-outline" aria-hidden="true"></ion-icon>
+            <button
+              type="button"
+              class="pax-step-btn"
+              [disabled]="cantidadPasajeros <= 1"
+              (click)="cambiarCantidadPasajeros(-1)"
+              aria-label="Reducir pasajeros"
+            >
+              <ion-icon name="remove-outline" aria-hidden="true"></ion-icon>
+            </button>
+            <span class="pax-count-label">{{ cantidadPasajeros }} {{ cantidadPasajeros === 1 ? 'pasajero' : 'pasajeros' }}</span>
+            <button
+              type="button"
+              class="pax-step-btn"
+              [disabled]="cantidadPasajeros >= 4"
+              (click)="cambiarCantidadPasajeros(1)"
+              aria-label="Aumentar pasajeros"
+            >
+              <ion-icon name="add-outline" aria-hidden="true"></ion-icon>
+            </button>
+          </div>
+        </div>
+
         <!-- Selector táctil de Origen y Destino -->
         <div class="airports-selection-box">
           <!-- Origen -->
@@ -182,6 +227,41 @@
           </div>
         </div>
 
+        <!-- Fecha de regreso cuando es Ida y vuelta -->
+        <div class="date-picker-box" *ngIf="tipoViaje === 'ida_vuelta'">
+          <div class="date-label-bar">
+            <span class="picker-label">
+              <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+              Fecha de regreso <span class="optional-badge">(Opcional)</span>
+            </span>
+            <span class="date-friendly-hint hint-muted" *ngIf="!form.controls.fechaRegreso.value">
+              Cualquier regreso disponible
+            </span>
+            <span class="date-friendly-hint" *ngIf="form.controls.fechaRegreso.value">
+              {{ fechaFormateada(form.controls.fechaRegreso.value) }}
+            </span>
+          </div>
+
+          <div class="date-input-wrap">
+            <ion-input
+              formControlName="fechaRegreso"
+              type="date"
+              [min]="form.controls.fecha.value || hoy"
+              aria-label="Fecha de regreso del vuelo"
+            ></ion-input>
+            <button
+              *ngIf="form.controls.fechaRegreso.value"
+              type="button"
+              class="clear-date-btn"
+              (click)="limpiarFechaRegreso($event)"
+              aria-label="Quitar fecha de regreso"
+            >
+              <ion-icon name="close-circle-outline" aria-hidden="true"></ion-icon>
+              <span>Quitar</span>
+            </button>
+          </div>
+        </div>
+
         <!-- Mensajes de validación -->
         <div class="error" *ngIf="form.touched && form.invalid" role="alert">
           <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
@@ -227,38 +307,82 @@
       <p>Cargando aeropuertos disponibles…</p>
     </div>
 
-    <!-- Spinner buscando vuelos -->
-    <div *ngIf="buscando" class="loading search-loading reveal" role="status" aria-live="polite">
-      <ion-spinner></ion-spinner>
-      <p>Buscando las mejores opciones de vuelo para ti…</p>
+    <!-- Skeleton buscando vuelos -->
+    <div *ngIf="buscando" class="sky-skeleton-stack reveal" role="status" aria-live="polite" aria-label="Buscando vuelos">
+      <div class="sky-skeleton-card">
+        <ion-skeleton-text animated style="width: 34%; height: 14px;"></ion-skeleton-text>
+        <ion-skeleton-text animated style="width: 78%; height: 26px; margin-top: 10px;"></ion-skeleton-text>
+        <ion-skeleton-text animated style="width: 56%; height: 14px; margin-top: 8px;"></ion-skeleton-text>
+      </div>
+      <div class="sky-skeleton-card">
+        <ion-skeleton-text animated style="width: 40%; height: 14px;"></ion-skeleton-text>
+        <ion-skeleton-text animated style="width: 82%; height: 26px; margin-top: 10px;"></ion-skeleton-text>
+        <ion-skeleton-text animated style="width: 50%; height: 14px; margin-top: 8px;"></ion-skeleton-text>
+      </div>
     </div>
 
     <!-- 3. RESULTADOS DE VUELOS DISPONIBLES (LISTA O SELECCIONADO) -->
     <section *ngIf="resultados.length && !buscando" class="results-section reveal" aria-label="Resultados de búsqueda">
 
       <!-- ================================================================= -->
-      <!-- PASO 1: LISTA COMPACTA DE VUELOS (Ningún vuelo seleccionado aún)   -->
+      <!-- PASO 1A: LISTA COMPACTA DE VUELOS DE IDA                          -->
       <!-- ================================================================= -->
       <ng-container *ngIf="!itinerarioSeleccionado">
+        <!-- Calendario flexible +/-3 días -->
+        <div class="flex-cal-strip" *ngIf="calendarioIda.length" aria-label="Tarifas flexibles por fecha">
+          <button
+            type="button"
+            class="flex-cal-pill"
+            *ngFor="let dia of calendarioIda"
+            [class.is-active]="form.controls.fecha.value === dia.fecha"
+            [class.is-empty]="dia.disponibles === 0"
+            (click)="elegirDiaFlexible(dia.fecha)"
+          >
+            <span class="fc-date">{{ dia.fecha | date:'d MMM' }}</span>
+            <strong class="fc-price">{{ dia.precioMinimo !== null ? clp(dia.precioMinimo) : 'Sin cupo' }}</strong>
+          </button>
+        </div>
+
         <div class="sec-head">
           <span class="sec-icon">
             <ion-icon name="airplane" aria-hidden="true"></ion-icon>
           </span>
           <div class="results-head-text">
             <div class="row align-center">
-              <h2>Vuelos disponibles</h2>
+              <h2>{{ tipoViaje === 'ida_vuelta' ? 'Vuelos de ida' : 'Vuelos disponibles' }}</h2>
               <span class="chip chip-ok chip-sm">
                 <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
-                {{ resultados.length }} {{ resultados.length === 1 ? 'vuelo disponible' : 'vuelos disponibles' }}
+                {{ resultadosFiltradosIda.length }} {{ resultadosFiltradosIda.length === 1 ? 'vuelo disponible' : 'vuelos disponibles' }}
               </span>
             </div>
-            <p>Toca el vuelo que prefieras para ver sus tarifas y paquetes.</p>
+            <p>Toca el vuelo que prefieras para continuar.</p>
           </div>
+        </div>
+
+        <!-- Filtros rápidos -->
+        <div class="quick-filters-bar">
+          <button
+            type="button"
+            class="qf-chip"
+            [class.is-active]="filtroSoloDirectos"
+            (click)="filtroSoloDirectos = !filtroSoloDirectos"
+          >
+            <ion-icon name="funnel-outline" aria-hidden="true"></ion-icon>
+            <span>Solo directos</span>
+          </button>
+          <button
+            type="button"
+            class="qf-chip"
+            [class.is-active]="ordenResultados === 'precio'"
+            (click)="ordenResultados = ordenResultados === 'precio' ? 'hora' : 'precio'"
+          >
+            <span>Orden: {{ ordenResultados === 'precio' ? 'Menor precio' : 'Más temprano' }}</span>
+          </button>
         </div>
 
         <div class="itineraries-list" role="list">
           <article
-            *ngFor="let i of resultados"
+            *ngFor="let i of resultadosFiltradosIda"
             class="card itinerary-result-card compact-flight-card reveal"
             role="button"
             tabindex="0"
@@ -342,9 +466,89 @@
       </ng-container>
 
       <!-- ================================================================= -->
+      <!-- PASO 1B: SELECCIÓN DE VUELO DE REGRESO (IDA Y VUELTA)             -->
+      <!-- ================================================================= -->
+      <ng-container *ngIf="itinerarioSeleccionado && tipoViaje === 'ida_vuelta' && !itinerarioRegreso && !reservaConfirmada">
+        <div class="step-nav-bar">
+          <button type="button" class="btn-step-back" (click)="volverAElegirIda()">
+            <ion-icon name="arrow-back-outline" aria-hidden="true"></ion-icon>
+            <span>Cambiar vuelo de ida</span>
+          </button>
+          <span class="step-badge-counter">Paso 1 · Regreso</span>
+        </div>
+
+        <div class="card outbound-picked-strip">
+          <span class="op-badge">IDA ELEGIDA</span>
+          <strong>
+            #{{ itinerarioSeleccionado.idItinerario }} · {{ itinerarioSeleccionado.origen }} → {{ itinerarioSeleccionado.destino }}
+          </strong>
+          <span>{{ fechaFormateada(itinerarioSeleccionado.horaSalida) }} · {{ horaFormateada(itinerarioSeleccionado.horaSalida) }}</span>
+        </div>
+
+        <div class="sec-head">
+          <span class="sec-icon">
+            <ion-icon name="airplane" aria-hidden="true"></ion-icon>
+          </span>
+          <div class="results-head-text">
+            <h2>Elige tu vuelo de regreso</h2>
+            <p>{{ itinerarioSeleccionado.destino }} → {{ itinerarioSeleccionado.origen }} · {{ resultadosFiltradosRegreso.length }} opciones</p>
+          </div>
+        </div>
+
+        <div *ngIf="resultadosFiltradosRegreso.length; else sinRegresoTpl" class="itineraries-list" role="list">
+          <article
+            *ngFor="let i of resultadosFiltradosRegreso"
+            class="card itinerary-result-card compact-flight-card reveal"
+            role="button"
+            tabindex="0"
+            (click)="seleccionarItinerarioRegreso(i)"
+            (keyup.enter)="seleccionarItinerarioRegreso(i)"
+          >
+            <header class="itinerary-head">
+              <div class="itinerary-id">
+                <span class="label">Regreso</span>
+                <strong class="number">#{{ i.idItinerario }}</strong>
+              </div>
+              <span class="chip chip-{{ i.numeroEscalas === 0 ? 'ok' : 'info' }}">
+                {{ escalasTexto(i.numeroEscalas) }}
+              </span>
+            </header>
+            <div class="route-codes">
+              <strong class="iata">{{ i.origen }}</strong>
+              <div class="flight-line" aria-hidden="true">
+                <span class="fl-dot"></span>
+                <span class="fl-dash"></span>
+                <ion-icon name="airplane" class="fl-plane"></ion-icon>
+                <span class="fl-dash"></span>
+                <span class="fl-dot fl-dot-end"></span>
+              </div>
+              <strong class="iata iata-end">{{ i.destino }}</strong>
+            </div>
+            <div class="compact-footer">
+              <div class="price-from-box" *ngIf="precioMinimo(i) !== null">
+                <span class="price-from-label">{{ fechaFormateada(i.horaSalida) }}</span>
+                <strong class="price-from-val">{{ clp(precioMinimo(i)) }}</strong>
+              </div>
+              <div class="cta-select-pill">
+                <span>Elegir regreso</span>
+                <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <ng-template #sinRegresoTpl>
+          <div class="card note warn">
+            <ion-icon name="information-circle" aria-hidden="true"></ion-icon>
+            <span>No encontramos vuelos de regreso disponibles con esos filtros. Puedes cambiar a "Solo ida" o probar otra fecha.</span>
+          </div>
+        </ng-template>
+      </ng-container>
+
+      <!-- ================================================================= -->
       <!-- FLUJO SECUENCIAL DE COMPRA: 2. Tarifa -> 3. Asiento -> 4. Equipaje -> 5. Pago -->
       <!-- ================================================================= -->
-      <ng-container *ngIf="itinerarioSeleccionado && !reservaConfirmada">
+      <ng-container *ngIf="itinerarioSeleccionado && (tipoViaje === 'solo_ida' || itinerarioRegreso) && !reservaConfirmada">
 
         <!-- Stepper / Barra de Progreso Visual de 5 Pasos -->
         <nav class="booking-stepper reveal" aria-label="Progreso de compra">
@@ -443,7 +647,11 @@
           </div>
 
           <div class="fare-cards-grid" *ngIf="itinerarioSeleccionado.tarifas.length; else sinTarifasTpl">
-            <article class="card fare-choice-card" *ngFor="let tarifa of itinerarioSeleccionado.tarifas">
+            <article
+              class="card fare-choice-card"
+              [class.is-picked]="tarifaSeleccionada?.idItinerarioTarifa === tarifa.idItinerarioTarifa"
+              *ngFor="let tarifa of itinerarioSeleccionado.tarifas"
+            >
               <div class="fare-card-header">
                 <span class="fare-name-pill">Tarifa {{ tarifa.nombre }}</span>
                 <strong class="fare-price-display">{{ clp(tarifa.precio) }}</strong>
@@ -471,13 +679,45 @@
                 type="button"
                 class="cta-step-btn"
                 (click)="seleccionarTarifa(tarifa)"
-                [attr.aria-label]="'Elegir tarifa ' + tarifa.nombre + ' y continuar al asiento'"
+                [attr.aria-label]="'Elegir tarifa ' + tarifa.nombre + ' y continuar'"
               >
-                <span>Elegir tarifa y seleccionar asiento</span>
+                <span>
+                  {{ tipoViaje === 'ida_vuelta'
+                    ? (tarifaSeleccionada?.idItinerarioTarifa === tarifa.idItinerarioTarifa ? 'Tarifa de ida elegida' : 'Elegir tarifa de ida')
+                    : 'Elegir tarifa y seleccionar asiento' }}
+                </span>
                 <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
               </button>
             </article>
           </div>
+
+          <!-- Tarifa de Regreso (cuando es Ida y Vuelta) -->
+          <ng-container *ngIf="tipoViaje === 'ida_vuelta' && itinerarioRegreso as vuelta">
+            <div class="step-header-text" style="margin-top: 18px;">
+              <h2>Elige tu tarifa de regreso</h2>
+              <p>Vuelo #{{ vuelta.idItinerario }} · {{ vuelta.origen }} → {{ vuelta.destino }}</p>
+            </div>
+            <div class="fare-cards-grid" *ngIf="vuelta.tarifas.length">
+              <article
+                class="card fare-choice-card"
+                [class.is-picked]="tarifaRegreso?.idItinerarioTarifa === tarifa.idItinerarioTarifa"
+                *ngFor="let tarifa of vuelta.tarifas"
+              >
+                <div class="fare-card-header">
+                  <span class="fare-name-pill">Regreso · {{ tarifa.nombre }}</span>
+                  <strong class="fare-price-display">{{ clp(tarifa.precio) }}</strong>
+                </div>
+                <button
+                  type="button"
+                  class="cta-step-btn"
+                  (click)="seleccionarTarifaRegreso(tarifa)"
+                >
+                  <span>{{ tarifaRegreso?.idItinerarioTarifa === tarifa.idItinerarioTarifa ? 'Tarifa de regreso elegida' : 'Elegir regreso y continuar' }}</span>
+                  <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
+                </button>
+              </article>
+            </div>
+          </ng-container>
           <ng-template #sinTarifasTpl>
             <div class="card note warn">
               <ion-icon name="information-circle"></ion-icon>
@@ -500,7 +740,27 @@
 
           <div class="step-header-text">
             <h2>Selecciona tu asiento</h2>
-            <p>Elige tu asiento preferido para viajar cómodo en tu vuelo.</p>
+            <p>
+              {{ cantidadPasajeros > 1
+                ? 'Asigna un asiento por cada pasajero y tramo de tu viaje.'
+                : 'Elige tu asiento preferido para viajar cómodo en tu vuelo.' }}
+            </p>
+          </div>
+
+          <!-- Selector de pasajero cuando viajan múltiples personas -->
+          <div class="pax-tabs-bar" *ngIf="cantidadPasajeros > 1">
+            <button
+              type="button"
+              class="pax-tab-chip"
+              *ngFor="let pIdx of indicesPasajeros"
+              [class.is-active]="pasajeroActivoIndex === pIdx"
+              (click)="cambiarPasajeroActivo(pIdx)"
+            >
+              <span>{{ etiquetaPasajero(pIdx) }}</span>
+              <strong *ngIf="vueloActivo && asientoPorPasajeroYVuelo(pIdx, vueloActivo.idVuelo) as seat">
+                · {{ seat.numeroAsiento }}
+              </strong>
+            </button>
           </div>
 
           <!-- Selector de tramos si el itinerario tiene múltiples vuelos/escalas -->
@@ -604,10 +864,10 @@
                             *ngFor="let seat of bloque; trackBy: trackAsiento"
                             type="button"
                             class="seat-cell-btn"
-                            [class.is-available]="seat.estado === 'disponible'"
+                            [class.is-available]="seat.estado === 'disponible' && !isAsientoOcupadoPorOtroPasajero(vueloActivo.idVuelo, seat.idAsiento)"
                             [class.is-selected]="isAsientoSeleccionado(vueloActivo.idVuelo, seat.idAsiento)"
-                            [class.is-occupied]="seat.estado === 'ocupado'"
-                            [disabled]="seat.estado === 'ocupado'"
+                            [class.is-occupied]="seat.estado === 'ocupado' || isAsientoOcupadoPorOtroPasajero(vueloActivo.idVuelo, seat.idAsiento)"
+                            [disabled]="seat.estado === 'ocupado' || isAsientoOcupadoPorOtroPasajero(vueloActivo.idVuelo, seat.idAsiento)"
                             (click)="seleccionarAsiento(vueloActivo.idVuelo, seat)"
                             [attr.aria-label]="'Asiento ' + seat.numeroAsiento + ', ' + seat.clase + ', ' + seat.estado"
                           >
@@ -647,20 +907,17 @@
               </div>
             </div>
 
-            <!-- Botón para pasar al siguiente tramo si faltan asientos en otro vuelo de escala -->
+            <!-- Botón para pasar al siguiente tramo o pasajero pendiente -->
             <div
               class="step-action-bar"
-              *ngIf="asientoSeleccionadoEnVuelo(vueloActivo.idVuelo) && !todosLosAsientosSeleccionados() && siguienteTramoSinAsientoIndex() >= 0"
+              *ngIf="asientoSeleccionadoEnVuelo(vueloActivo.idVuelo) && !todosLosAsientosSeleccionados()"
             >
               <button
                 type="button"
                 class="cta-step-btn primary"
-                (click)="irASiguienteTramoSinAsiento()"
+                (click)="irASiguientePendiente()"
               >
-                <span>
-                  Elegir asiento en Tramo {{ siguienteTramoSinAsientoIndex() + 1 }}
-                  ({{ vuelosItinerario[siguienteTramoSinAsientoIndex()].origen }} → {{ vuelosItinerario[siguienteTramoSinAsientoIndex()].destino }})
-                </span>
+                <span>Elegir siguiente asiento pendiente</span>
                 <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
               </button>
             </div>
@@ -811,8 +1068,8 @@
           <!-- Subtotal acumulado -->
           <div class="card subtotal-card">
             <div class="subtotal-row">
-              <span>Tarifa seleccionada:</span>
-              <span>{{ clp(tarifaSeleccionada?.precio) }}</span>
+              <span>Tarifa(s) ({{ cantidadPasajeros }} {{ cantidadPasajeros === 1 ? 'pasajero' : 'pasajeros' }}):</span>
+              <span>{{ clp(totalTarifasBase()) }}</span>
             </div>
             <div class="subtotal-row" *ngIf="totalAsientos() > 0">
               <span>Asiento(s) seleccionado(s):</span>
@@ -868,7 +1125,9 @@
                   Detalle de tu reserva
                 </span>
                 <span class="cs-sub">
-                  {{ itinerarioSeleccionado.origen }} → {{ itinerarioSeleccionado.destino }} · Tarifa {{ tarifaSeleccionada?.nombre }}
+                  {{ itinerarioSeleccionado.origen }} → {{ itinerarioSeleccionado.destino }}
+                  <ng-container *ngIf="itinerarioRegreso"> (Ida y vuelta)</ng-container>
+                  · {{ cantidadPasajeros }} pax
                 </span>
               </span>
               <span class="cs-right">
@@ -881,17 +1140,28 @@
               <!-- Vuelo -->
               <div class="item-row flight-item">
                 <div class="item-left">
-                  <strong>Vuelo #{{ itinerarioSeleccionado.idItinerario }} · {{ itinerarioSeleccionado.origen }} → {{ itinerarioSeleccionado.destino }}</strong>
+                  <strong>Ida #{{ itinerarioSeleccionado.idItinerario }} · {{ itinerarioSeleccionado.origen }} → {{ itinerarioSeleccionado.destino }}</strong>
                   <span class="sub">{{ fechaFormateada(itinerarioSeleccionado.horaSalida) }} · {{ horaFormateada(itinerarioSeleccionado.horaSalida) }}</span>
+                </div>
+              </div>
+
+              <div class="item-row flight-item" *ngIf="itinerarioRegreso as vuelta">
+                <div class="item-left">
+                  <strong>Regreso #{{ vuelta.idItinerario }} · {{ vuelta.origen }} → {{ vuelta.destino }}</strong>
+                  <span class="sub">{{ fechaFormateada(vuelta.horaSalida) }} · {{ horaFormateada(vuelta.horaSalida) }}</span>
                 </div>
               </div>
 
               <!-- Tarifa -->
               <div class="item-row">
                 <div class="item-left">
-                  <span>Tarifa {{ tarifaSeleccionada?.nombre }}</span>
+                  <span>
+                    Tarifa {{ tarifaSeleccionada?.nombre }}
+                    <ng-container *ngIf="tarifaRegreso"> + {{ tarifaRegreso.nombre }}</ng-container>
+                    ({{ cantidadPasajeros }} {{ cantidadPasajeros === 1 ? 'pasajero' : 'pasajeros' }})
+                  </span>
                 </div>
-                <strong class="item-right">{{ clp(tarifaSeleccionada?.precio) }}</strong>
+                <strong class="item-right">{{ clp(totalTarifasBase()) }}</strong>
               </div>
 
               <!-- Asientos -->
@@ -925,6 +1195,37 @@
               </div>
             </div>
           </article>
+
+          <!-- Datos de acompañantes cuando viaja más de 1 pasajero -->
+          <div class="card companions-card" *ngIf="cantidadPasajeros > 1">
+            <h3 class="breakdown-card-title">
+              <ion-icon name="people-outline" aria-hidden="true"></ion-icon>
+              <span>Datos de acompañantes ({{ acompanantes.length }})</span>
+            </h3>
+            <div class="companion-form-block" *ngFor="let a of acompanantes; let idx = index">
+              <span class="companion-label">Pasajero {{ idx + 2 }}</span>
+              <div class="companion-fields">
+                <ion-input
+                  label="RUT"
+                  labelPlacement="stacked"
+                  [(ngModel)]="a.rut"
+                  placeholder="Ej: 18.456.789-2"
+                ></ion-input>
+                <ion-input
+                  label="Nombre"
+                  labelPlacement="stacked"
+                  [(ngModel)]="a.nombre"
+                  placeholder="Nombre"
+                ></ion-input>
+                <ion-input
+                  label="Apellido"
+                  labelPlacement="stacked"
+                  [(ngModel)]="a.apellido"
+                  placeholder="Apellido"
+                ></ion-input>
+              </div>
+            </div>
+          </div>
 
           <!-- Selector de Métodos de Pago: Solo Webpay y PayPal -->
           <div class="card payment-method-card">

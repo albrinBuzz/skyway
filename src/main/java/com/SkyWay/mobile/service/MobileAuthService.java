@@ -43,14 +43,15 @@ public class MobileAuthService {
         boolean valid = passwords.matches(request.contrasena(), hash);
         if (!valid || usuario == null || !pasajeros.existsById(usuario.getRut()))
             throw new MobileException(HttpStatus.UNAUTHORIZED, "CREDENCIALES_INVALIDAS", "Correo o contraseña incorrectos.");
+        long sessionTtl = Boolean.TRUE.equals(request.recordarSesion()) ? 86400L : ttl;
         var now = clock.instant();
         var claims = JwtClaimsSet.builder().issuer(MobileSecurityConfig.ISSUER)
                 .audience(List.of(MobileSecurityConfig.AUDIENCE)).subject(usuario.getRut())
-                .issuedAt(now).expiresAt(now.plusSeconds(ttl)).id(UUID.randomUUID().toString())
+                .issuedAt(now).expiresAt(now.plusSeconds(sessionTtl)).id(UUID.randomUUID().toString())
                 .claim("scope", "mobile").build();
         var header = JwsHeader.with(MacAlgorithm.HS256).type("JWT").build();
         return new LoginResponse(tokens.encode(JwtEncoderParameters.from(header, claims)).getTokenValue(),
-                "Bearer", ttl, perfil(usuario.getRut()));
+                "Bearer", sessionTtl, perfil(usuario.getRut()));
     }
     @Transactional
     public LoginResponse registrar(RegistroRequest request) {

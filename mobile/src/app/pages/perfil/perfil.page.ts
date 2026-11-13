@@ -1,4 +1,26 @@
 import { Component, inject } from '@angular/core';
+import { HapticsService } from '../../core/haptics.service';
+import { NotificationsLiveService } from '../../core/notifications-live.service';
+import { ThemeMode, ThemeService } from '../../core/theme.service';
+import {
+  colorPaletteOutline,
+  contrastOutline,
+  moonOutline,
+  notificationsOutline,
+  optionsOutline,
+  phonePortraitOutline,
+  sunnyOutline
+} from 'ionicons/icons';
+
+addIcons({
+  colorPaletteOutline,
+  contrastOutline,
+  moonOutline,
+  notificationsOutline,
+  optionsOutline,
+  phonePortraitOutline,
+  sunnyOutline
+});
 import { FormBuilder, Validators } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ToastController } from '@ionic/angular';
@@ -109,6 +131,9 @@ export class PerfilPage {
   private readonly toasts = inject(ToastController);
   private readonly sanitizer = inject(DomSanitizer);
   readonly auth = inject(AuthService);
+  readonly theme = inject(ThemeService);
+  readonly liveNotif = inject(NotificationsLiveService);
+  readonly haptics = inject(HapticsService);
 
   perfil: Perfil | null = null;
   busy = false;
@@ -136,11 +161,45 @@ export class PerfilPage {
   showAvatarSelector = false;
   avatarSuccess = '';
 
-  // Secciones desplegables de perfil y seguridad
-  openSection: 'datos' | 'email' | 'password' | null = null;
+  // Secciones desplegables de perfil, preferencias y seguridad
+  openSection: 'datos' | 'email' | 'password' | 'preferencias' | null = null;
 
-  toggleSection(sec: 'datos' | 'email' | 'password'): void {
+  toggleSection(sec: 'datos' | 'email' | 'password' | 'preferencias'): void {
+    this.haptics.light();
     this.openSection = this.openSection === sec ? null : sec;
+  }
+
+  get keepSessionEnabled(): boolean {
+    return this.store.keepSession;
+  }
+
+  cambiarTema(mode: ThemeMode): void {
+    this.haptics.light();
+    this.theme.setMode(mode);
+  }
+
+  togglePushAlerts(ev: CustomEvent): void {
+    const enabled = Boolean((ev.detail as { checked?: boolean })?.checked);
+    this.haptics.light();
+    this.liveNotif.setPushEnabled(enabled);
+  }
+
+  toggleHaptics(ev: CustomEvent): void {
+    const enabled = Boolean((ev.detail as { checked?: boolean })?.checked);
+    this.haptics.setEnabled(enabled);
+    if (enabled) this.haptics.medium();
+  }
+
+  toggleKeepSession(ev: CustomEvent): void {
+    const enabled = Boolean((ev.detail as { checked?: boolean })?.checked);
+    this.haptics.light();
+    this.store.setKeepSession(enabled);
+  }
+
+  temaLabel(): string {
+    if (this.theme.mode === 'dark') return 'Oscuro';
+    if (this.theme.mode === 'system') return 'Automático';
+    return 'Claro';
   }
 
   // 12 personajes ilustrados y animados con temática de viaje SkyWay

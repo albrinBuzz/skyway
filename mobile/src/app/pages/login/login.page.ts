@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import QRCode from 'qrcode';
 import { firstValueFrom } from 'rxjs';
 import { addIcons } from 'ionicons';
 import {
@@ -10,6 +11,7 @@ import {
   alertCircleOutline,
   arrowForwardOutline,
   checkmarkCircle,
+  chevronDownOutline,
   closeOutline,
   cloudOutline,
   desktopOutline,
@@ -22,9 +24,12 @@ import {
   lockClosedOutline,
   mailOutline,
   openOutline,
+  qrCodeOutline,
   refreshOutline,
+  searchOutline,
   serverOutline,
   shieldCheckmarkOutline,
+  ticketOutline,
   timeOutline,
   wifiOutline
 } from 'ionicons/icons';
@@ -36,6 +41,9 @@ import {
 } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
 import { AuthStore } from '../../core/auth.store';
+import { HapticsService } from '../../core/haptics.service';
+import { ConsultaPnrResponse } from '../../core/models';
+import { CachedBoardingPass, OfflinePassService } from '../../core/offline-pass.service';
 import { errorMessage } from '../../core/ui';
 
 addIcons({
@@ -45,6 +53,7 @@ addIcons({
   alertCircleOutline,
   arrowForwardOutline,
   checkmarkCircle,
+  chevronDownOutline,
   closeOutline,
   cloudOutline,
   desktopOutline,
@@ -57,9 +66,12 @@ addIcons({
   lockClosedOutline,
   mailOutline,
   openOutline,
+  qrCodeOutline,
   refreshOutline,
+  searchOutline,
   serverOutline,
   shieldCheckmarkOutline,
+  ticketOutline,
   timeOutline,
   wifiOutline
 });
@@ -85,11 +97,67 @@ export class LoginPage {
   probandoConexion = false;
   estadoConexion: { ok: boolean; mensaje: string } | null = null;
 
+  private readonly offlinePasses = inject(OfflinePassService);
+  private readonly haptics = inject(HapticsService);
+
+  ultimoPaseOffline: CachedBoardingPass | null = this.offlinePasses.latest();
+  mostrarPaseOffline = false;
+  pnrOpen = false;
+  pnrBusy = false;
+  pnrError = '';
+  pnrResult: ConsultaPnrResponse | null = null;
+  pnrQrUrl = '';
+
+  pnrForm = inject(FormBuilder).nonNullable.group({
+    codigoPnr: ['', [Validators.required, Validators.maxLength(20)]],
+    apellido: ['', [Validators.required, Validators.maxLength(80)]]
+  });
+
   form = inject(FormBuilder).nonNullable.group({
     servidor: [this.api.getServerHost()],
-    correoElectronico: ['', [Validators.required, Validators.email, Validators.maxLength(100)]],
-    contrasena: ['', [Validators.required, Validators.maxLength(72)]]
+    correoElectronico: [this.store.lastEmail || '', [Validators.required, Validators.email, Validators.maxLength(100)]],
+    contrasena: ['', [Validators.required, Validators.maxLength(72)]],
+    recordarSesion: [this.store.keepSession]
   });
+
+  togglePaseOffline() {
+    this.haptics.light();
+    this.mostrarPaseOffline = !this.mostrarPaseOffline;
+  }
+
+  togglePnrLookup() {
+    this.haptics.light();
+    this.pnrOpen = !this.pnrOpen;
+  }
+
+  async consultarPnr() {
+    if (this.pnrForm.invalid || this.pnrBusy) {
+      this.pnrForm.markAllAsTouched();
+      return;
+    }
+    this.haptics.light();
+    this.pnrBusy = true;
+    this.pnrError = '';
+    this.pnrResult = null;
+    this.pnrQrUrl = '';
+    try {
+      const { codigoPnr, apellido } = this.pnrForm.getRawValue();
+      const res = await firstValueFrom(this.api.consultarPnr(codigoPnr.trim(), apellido.trim()));
+      this.pnrResult = res;
+      if (res.checkinRealizado && res.qrContenido) {
+        this.pnrQrUrl = await QRCode.toDataURL(res.qrContenido, {
+          width: 200,
+          margin: 1,
+          color: { dark: '#101e3b', light: '#ffffff' }
+        });
+      }
+      this.haptics.success();
+    } catch (e) {
+      this.pnrError = errorMessage(e);
+    } finally {
+      this.pnrBusy = false;
+    }
+  }
 
   busy = false;
   error = '';
@@ -250,6 +318,7 @@ export class LoginPage {
   }
 
   ionViewWillEnter() {
+    this.ultimoPaseOffline = this.offlinePasses.latest();
     this.modoServidor = this.api.getServerMode();
     if (this.modoServidor === 'azure') {
       this.form.controls.servidor.setValue(this.azureHost);
@@ -343,7 +412,8 @@ export class LoginPage {
     this.busy = true;
     this.error = '';
     try {
-      await firstValueFrom(this.auth.login(data.correoElectronico.trim(), data.contrasena));
+      await firstValueFrom(this.auth.login(data.correoElectronico.trim(), data.contrasena, data.recordarSesion));
+      this.haptics.success();
       this.form.controls.contrasena.reset();
       const targetUrl = this.getSafeReturnUrl();
       await this.router.navigateByUrl(targetUrl, { replaceUrl: true });
