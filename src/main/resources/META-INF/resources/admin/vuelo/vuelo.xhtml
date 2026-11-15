@@ -24,8 +24,12 @@
             window.coordsPorIata = {};
             window.infoPorIata = {};
             window.modoActual = 'ORIGEN';
+            window.origenEncadenadoActual = false;
 
             window.cambiarModo = function(modo) {
+                if (window.origenEncadenadoActual && modo === 'ORIGEN') {
+                    return;
+                }
                 window.modoActual = modo;
                 var btnOri = document.getElementById('btnModoOrigen');
                 var btnDes = document.getElementById('btnModoDestino');
@@ -33,9 +37,21 @@
                 if (btnDes) btnDes.classList.toggle('activo', modo === 'DESTINO');
             };
 
-            window.initMapaSelectorAeropuertos = function(aeropuertosJson, origenDefecto, destinoDefecto) {
+            window.initMapaSelectorDesdeDom = function(aeropuertosJson) {
+                var inOri = document.getElementById('formSegmentoCrear:inOrigen');
+                var inDes = document.getElementById('formSegmentoCrear:inDestino');
+                var inEnc = document.getElementById('inOrigenEncadenadoDom');
+                var oriVal = inOri ? inOri.value : '';
+                var desVal = inDes ? inDes.value : '';
+                var encVal = inEnc ? (inEnc.value === 'true') : false;
+                window.initMapaSelectorAeropuertos(aeropuertosJson, oriVal, desVal, encVal);
+            };
+
+            window.initMapaSelectorAeropuertos = function(aeropuertosJson, origenDefecto, destinoDefecto, origenEncadenado) {
                 var container = document.getElementById('mapaSelectorAeropuertos');
                 if (!container) return;
+
+                window.origenEncadenadoActual = (origenEncadenado === true || origenEncadenado === 'true');
 
                 if (window.mapaSelector) {
                     window.mapaSelector.remove();
@@ -62,13 +78,21 @@
                         .bindTooltip(window.infoPorIata[a.codigoIata], { direction: 'top' });
 
                     marker.on('click', function () {
-                        if (window.modoActual === 'ORIGEN') {
+                        if (!window.origenEncadenadoActual && window.modoActual === 'ORIGEN') {
                             window.asignarOrigen(a.codigoIata);
                         } else {
                             window.asignarDestino(a.codigoIata);
                         }
                     });
                 });
+
+                if (window.origenEncadenadoActual) {
+                    window.cambiarModo('DESTINO');
+                } else if (origenDefecto && origenDefecto !== '' && origenDefecto !== 'null' && (!destinoDefecto || destinoDefecto === '' || destinoDefecto === 'null')) {
+                    window.cambiarModo('DESTINO');
+                } else {
+                    window.cambiarModo('ORIGEN');
+                }
 
                 setTimeout(function() {
                     if (window.mapaSelector) {
@@ -79,6 +103,8 @@
                         }
                         if (destinoDefecto && destinoDefecto !== '' && destinoDefecto !== 'null') {
                             window.pintarMarcadorSeleccionado(destinoDefecto, 'DESTINO');
+                        } else if (origenDefecto && window.coordsPorIata[origenDefecto]) {
+                            window.mapaSelector.setView(window.coordsPorIata[origenDefecto], 4);
                         }
                     }
                 }, 350);
@@ -109,21 +135,21 @@
             var icono = L.divIcon({
                 className: 'marker-seleccionado',
                 html: tipo === 'ORIGEN'
-                    ? '<i class="pi pi-circle-fill" style="color:#38bdf8; font-size:1.7rem; filter: drop-shadow(0px 3px 6px rgba(0,0,0,0.8));"></i>'
-                    : '<i class="pi pi-flag-fill" style="color:#34d399; font-size:1.7rem; filter: drop-shadow(0px 3px 6px rgba(0,0,0,0.8));"></i>'
+                    ? '<i class="pi pi-circle-fill" style="color:#6488b8; font-size:1.7rem; filter: drop-shadow(0px 3px 6px rgba(0,0,0,0.8));"></i>'
+                    : '<i class="pi pi-flag-fill" style="color:#5f8f7f; font-size:1.7rem; filter: drop-shadow(0px 3px 6px rgba(0,0,0,0.8));"></i>'
             });
 
             if (tipo === 'ORIGEN') {
                 if (window.markerOrigen) window.mapaSelector.removeLayer(window.markerOrigen);
                 window.markerOrigen = L.marker(coords, { icon: icono, zIndexOffset: 1000 })
                     .addTo(window.mapaSelector)
-                    .bindPopup('<b style="color:#38bdf8;">🛫 ORIGEN DE TRAMO</b><br/><span style="font-size:0.85rem;">' + infoTexto + '</span>')
+                    .bindPopup('<b style="color:#9bb5d8;">ORIGEN DE TRAMO</b><br/><span style="font-size:0.85rem;">' + infoTexto + '</span>')
                     .openPopup();
             } else {
                 if (window.markerDestino) window.mapaSelector.removeLayer(window.markerDestino);
                 window.markerDestino = L.marker(coords, { icon: icono, zIndexOffset: 1000 })
                     .addTo(window.mapaSelector)
-                    .bindPopup('<b style="color:#34d399;">🛬 DESTINO DE TRAMO</b><br/><span style="font-size:0.85rem;">' + infoTexto + '</span>')
+                    .bindPopup('<b style="color:#8cb8aa;">DESTINO DE TRAMO</b><br/><span style="font-size:0.85rem;">' + infoTexto + '</span>')
                     .openPopup();
             }
 
@@ -137,18 +163,21 @@
             }
             if (window.markerOrigen && window.markerDestino && window.mapaSelector) {
                 var latlngs = [window.markerOrigen.getLatLng(), window.markerDestino.getLatLng()];
-                window.lineaSegmento = L.polyline(latlngs, { color: '#38bdf8', weight: 2.5, dashArray: '5, 8', opacity: 0.85 }).addTo(window.mapaSelector);
+                window.lineaSegmento = L.polyline(latlngs, { color: '#6488b8', weight: 2.5, dashArray: '5, 8', opacity: 0.85 }).addTo(window.mapaSelector);
                 window.mapaSelector.fitBounds(L.latLngBounds(latlngs), { padding: [40, 40] });
             }
         };
 
             window.resetearMapaVisual = function() {
                 if (window.mapaSelector) {
-                    if (window.markerOrigen) { window.mapaSelector.removeLayer(window.markerOrigen); window.markerOrigen = null; }
+                    if (!window.origenEncadenadoActual && window.markerOrigen) {
+                        window.mapaSelector.removeLayer(window.markerOrigen);
+                        window.markerOrigen = null;
+                    }
                     if (window.markerDestino) { window.mapaSelector.removeLayer(window.markerDestino); window.markerDestino = null; }
                     if (window.lineaSegmento) { window.mapaSelector.removeLayer(window.lineaSegmento); window.lineaSegmento = null; }
                 }
-                window.cambiarModo('ORIGEN');
+                window.cambiarModo(window.origenEncadenadoActual ? 'DESTINO' : 'ORIGEN');
             };
 
             window.renderizarMapaRutaGeneral = function(segmentosJson) {
@@ -223,139 +252,376 @@
                             <i class="pi pi-plus-circle mr-2"></i>
                             #{vueloBean.vueloCreado ? 'Ajustes de Vuelo: '.concat(vueloBean.numeroVuelo != null ? vueloBean.numeroVuelo : '') : 'Programación de Nueva Ruta'}
                         </h2>
-                        <p style="color: var(--text-dim); margin: 4px 0 0 0;">Defina la cabecera, tarifas y escalas antes de confirmar la publicación del vuelo.</p>
+                        <p style="color: var(--text-dim); margin: 4px 0 0 0;">Defina el trayecto directo y horarios del vuelo; luego asigne comandante y aeronave disponibles, y configure las tarifas base. Las escalas se arman en Itinerarios.</p>
+                        <ui:fragment rendered="#{vueloBean.vueloCreado and not empty vueloBean.numeroVuelo}">
+                            <div class="flight-created-pill mt-2">
+                                <i class="pi pi-check-circle"></i>
+                                <span>Vuelo registrado · Código asignado: <strong>#{vueloBean.numeroVuelo}</strong></span>
+                            </div>
+                        </ui:fragment>
                     </div>
                     <p:button outcome="/admin/index.xhtml" value="Volver Al Panel" icon="pi pi-arrow-left" styleClass="btn-secondary-custom" />
                 </div>
 
-                <!-- PASO 1: ESPECIFICACIONES -->
-                <!-- PASO 1: ESPECIFICACIONES -->
+                <!-- PASO 1: TRAYECTO ÚNICO (ORIGEN, DESTINO Y HORARIOS) -->
                 <div class="step-wrapper">
                     <div class="step-number">1</div>
                     <div class="step-content">
                         <div class="glass-card">
-                            <div class="card-header-label"><i class="pi pi-compass"></i> Especificaciones Operativas</div>
-                            <div class="ui-fluid p-formgrid p-grid">
-
-                                <div class="p-field p-col-12 p-md-4">
-                                    <p:outputLabel for="n_vuelo" value="Código de Vuelo" />
-                                    <p:inputText id="n_vuelo" value="#{vueloBean.numeroVuelo}"
-                                                 readonly="true" placeholder="[Autogenerado al confirmar]"
-                                                 style="background: #1e293b !important; color: #38bdf8 !important; font-weight: bold;" />
-                                    <small style="color: var(--text-dim);">Asignado automáticamente.</small>
+                            <div class="flex justify-content-between align-items-center mb-4">
+                                <div>
+                                    <div class="card-header-label m-0">
+                                        <i class="pi pi-map text-primary"></i> Ruta Directa del Vuelo (Segmento Único)
+                                    </div>
+                                    <small style="color: var(--text-muted);">Cada vuelo opera un trayecto directo (origen a destino). Para unir vuelos con escalas utilice Itinerarios.</small>
                                 </div>
-
-                                <div class="p-field p-col-12 p-md-4">
-                                    <p:outputLabel for="aerolinea" value="Línea Aérea *" />
-                                    <p:selectOneMenu id="aerolinea" value="#{vueloBean.aerolineaId}" required="true" requiredMessage="Seleccione la Aerolínea">
-                                        <f:selectItem itemLabel="Seleccione" itemValue="" />
-                                        <f:selectItems value="#{vueloBean.aerolineas}" var="a" itemLabel="#{a.nombre}" itemValue="#{a.idAerolinea}" />
-                                        <p:ajax update=":formVuelo:panelPaso2 :formVuelo:panelPaso3" />
-                                    </p:selectOneMenu>
-                                </div>
-
-                                <div class="p-field p-col-12 p-md-4">
-                                    <p:outputLabel for="piloto" value="Comandante / Piloto *" />
-                                    <p:selectOneMenu id="piloto" value="#{vueloBean.pilotoId}" required="true" requiredMessage="Seleccione el Comandante" filter="true" filterMatchMode="contains">
-                                        <f:selectItem itemLabel="Seleccione Piloto" itemValue="" />
-                                        <f:selectItems value="#{vueloBean.listaPilotos}" var="pl"
-                                                       itemLabel="#{pl.usuario.nombre} #{pl.usuario.apellido} (Lic: #{pl.licencia})" itemValue="#{pl.rut}" />
-                                        <p:ajax update=":formVuelo:panelPaso2 :formVuelo:panelPaso3" />
-                                    </p:selectOneMenu>
-                                </div>
-
-                            </div>
-
-                            <!-- SECCIÓN INTERACTIVA DE ASIGNACIÓN DE AERONAVE -->
-                            <div class="avion-picker-container">
-                                <div class="flex justify-content-between align-items-center mb-2">
-                                    <p:outputLabel value="Aeronave Asignada a la Operación *" style="font-weight: 700; color: var(--text-heading); font-size: 0.9rem;" />
-                                    <h:outputText value="Requerido para habilitar la configuración de cabinas y tarifas" style="font-size: 0.8rem; color: var(--text-muted);" />
-                                </div>
-
-                                <h:inputHidden id="avion" value="#{vueloBean.avionId}" required="true" requiredMessage="Debe seleccionar una Aeronave para operar el vuelo." />
-                                <p:message for="avion" />
-
-                                <h:panelGroup id="panelAvionSeleccionado" layout="block">
-                                    <!-- Caso 1: Sin aeronave asignada -->
-                                    <ui:fragment rendered="#{empty vueloBean.avionId or empty vueloBean.avionSeleccionado}">
-                                        <div class="avion-picker-unselected">
-                                            <div class="avion-picker-icon">
-                                                <i class="pi pi-send"></i>
-                                            </div>
-                                            <div class="avion-picker-info">
-                                                <span class="avion-picker-title">Ninguna aeronave asignada</span>
-                                                <span class="avion-picker-subtitle">Seleccione una aeronave disponible de la flota activa mediante el buscador avanzado de modelos y matrículas.</span>
-                                            </div>
-                                            <div class="avion-picker-action">
-                                                <p:commandButton value="Explorar Flota y Asignar"
-                                                                 icon="pi pi-search"
-                                                                 actionListener="#{vueloBean.abrirSelectorAvion}"
-                                                                 process="@this"
-                                                                 update=":formSelectorAvion"
-                                                                 oncomplete="PF('dlgSelectorAvion').show();"
-                                                                 styleClass="btn-primary-custom" />
-                                            </div>
-                                        </div>
-                                    </ui:fragment>
-
-                                    <!-- Caso 2: Aeronave asignada -->
-                                    <ui:fragment rendered="#{not empty vueloBean.avionId and not empty vueloBean.avionSeleccionado}">
-                                        <div class="avion-card-selected">
-                                            <div class="avion-card-main">
-                                                <div class="avion-badge-icon">
-                                                    <i class="pi pi-send"></i>
-                                                </div>
-                                                <div class="avion-details">
-                                                    <div class="avion-model-header">
-                                                        <span class="avion-model-name">#{vueloBean.avionSeleccionado.modeloAvion.nombre}</span>
-                                                        <span class="avion-manufacturer-badge">#{vueloBean.avionSeleccionado.modeloAvion.fabricante.nombre}</span>
-                                                        <span class="avion-reg-badge"><i class="pi pi-tag mr-1"></i>#{vueloBean.avionSeleccionado.numeroDeRegistro}</span>
-                                                    </div>
-                                                    <div class="avion-specs-row">
-                                                        <span class="spec-chip"><i class="pi pi-users mr-1"></i> Capacidad Total: <strong>#{vueloBean.avionSeleccionado.capacidadDePasajeros} pax</strong></span>
-                                                        <span class="spec-chip"><i class="pi pi-check-circle mr-1" style="color: #34d399;"></i> Estado: <strong>#{vueloBean.avionSeleccionado.estadoDeMantenimiento != null ? vueloBean.avionSeleccionado.estadoDeMantenimiento : 'OPERACIONAL'}</strong></span>
-                                                        <span class="spec-chip"><i class="pi pi-th-large mr-1" style="color: #38bdf8;"></i> Matriz de cabina sincronizada</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="avion-card-actions">
-                                                <p:commandButton value="Cambiar Aeronave"
-                                                                 icon="pi pi-sync"
-                                                                 actionListener="#{vueloBean.abrirSelectorAvion}"
-                                                                 process="@this"
-                                                                 update=":formSelectorAvion"
-                                                                 oncomplete="PF('dlgSelectorAvion').show();"
-                                                                 styleClass="btn-secondary-custom mr-2" />
-                                                <p:commandButton value="Quitar"
-                                                                 icon="pi pi-times"
-                                                                 actionListener="#{vueloBean.desasignarAvion}"
-                                                                 process="@this"
-                                                                 update=":formVuelo:panelAvionSeleccionado :formVuelo:avion :formVuelo:infoCapacidad :formVuelo:panelPaso2 :formVuelo:panelPaso3 :msgs"
-                                                                 styleClass="ui-button-danger ui-button-flat" />
-                                            </div>
-                                        </div>
-                                    </ui:fragment>
+                                <h:panelGroup id="panelBtnDefinirRuta" layout="block">
+                                    <p:commandButton value="Definir Ruta y Horarios"
+                                                     icon="pi pi-plus"
+                                                     process="@this"
+                                                     rendered="#{empty vueloBean.segmentos}"
+                                                     actionListener="#{vueloBean.openNewSegmento}"
+                                                     oncomplete="PF('dlgNuevoSegmento').show(); setTimeout(function(){ window.initMapaSelectorDesdeDom('#{vueloBean.aeropuertosMapaJson}'); }, 300);"
+                                                     styleClass="btn-secondary-custom"
+                                                     update=":formSegmentoCrear:manage-segmento-content" />
                                 </h:panelGroup>
                             </div>
+
+                            <!-- MAPA GENERAL DE VISTA RÁPIDA DE RUTA -->
+                            <div id="mapaRutaGeneralContainer" style="width:100%; height:320px; border-radius:12px; border:1px solid #26354d; margin-bottom:1.5rem; display:none;"></div>
+
+                            <!-- LISTA DE SEGMENTOS DE VUELO -->
+                            <h:panelGroup id="listaSegmentosPanel" layout="block">
+                                <h:outputText value="Defina el origen, destino, puerta de embarque y fechas del vuelo para consultar comandantes y aeronaves disponibles."
+                                              rendered="#{empty vueloBean.segmentos}"
+                                              style="color: var(--text-muted); font-style: italic; display: block; text-align: center; padding: 2.5rem 0; background: #090e1a; border-radius: 8px; border: 1px dashed #1e293b;"/>
+
+                                <ui:repeat var="seg" value="#{vueloBean.segmentos}" varStatus="status">
+                                    <div class="flight-segment-card">
+
+                                        <!-- HEADER DE TRAMO CON BOTONES DISCRETOS -->
+                                        <div class="segment-header-bar">
+                                            <div class="flex gap-2">
+                                                <p:commandButton value="Editar"
+                                                                 icon="pi pi-pencil"
+                                                                 actionListener="#{vueloBean.prepararEdicion(seg)}"
+                                                                 process="@this"
+                                                                 update=":formSegmentoCrear:manage-segmento-content"
+                                                                 oncomplete="PF('dlgNuevoSegmento').show(); setTimeout(function(){ window.initMapaSelectorDesdeDom('#{vueloBean.aeropuertosMapaJson}'); }, 300);"
+                                                                 styleClass="ui-button-flat ui-button-secondary btn-sm" />
+
+                                                <p:commandButton value="Eliminar"
+                                                                 icon="pi pi-trash"
+                                                                 actionListener="#{vueloBean.eliminarSegmento(seg)}"
+                                                                 process="@this"
+                                                                 update=":formVuelo:panelBtnDefinirRuta :formVuelo:listaSegmentosPanel :formVuelo:stepBadge2 :formVuelo:panelPaso2 :formVuelo:stepBadge3 :formVuelo:panelPaso3 :msgs"
+                                                                 oncomplete="window.renderizarMapaRutaGeneral('#{vueloBean.segmentosJson}');"
+                                                                 styleClass="ui-button-flat ui-button-danger btn-sm"/>
+                                            </div>
+                                        </div>
+
+                                        <!-- TABLERO DE RUTA -->
+                                        <div class="flight-route-display">
+                                            <!-- ORIGEN -->
+                                            <div class="airport-block">
+                                                <span class="iata-code-corporate">#{seg.aeropuertoOrigen.codigoIata}</span>
+                                                <span class="airport-full-name">#{seg.aeropuertoOrigen.nombreAeropuerto}</span>
+                                                <span class="airport-location-sub">
+                                    <i class="pi pi-map-marker"></i>
+                                                    #{seg.aeropuertoOrigen.ciudad != null ? seg.aeropuertoOrigen.ciudad.nombre : ''}
+                                                    <h:panelGroup rendered="#{seg.aeropuertoOrigen.ciudad != null and seg.aeropuertoOrigen.ciudad.pai != null}">
+                                        , #{seg.aeropuertoOrigen.ciudad.pai.nombre}
+                                    </h:panelGroup>
+                                </span>
+                                            </div>
+
+                                            <!-- LÍNEA / CONECTOR DE TRAYECTO -->
+                                            <div class="flight-path-connector">
+                                                <span style="color: #64748b; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.5px;">DIRECTO</span>
+                                                <div class="flight-path-line"></div>
+                                                <div class="flight-path-icon">
+                                                    <i class="pi pi-send"></i>
+                                                </div>
+                                            </div>
+
+                                            <!-- DESTINO -->
+                                            <div class="airport-block text-end">
+                                                <span class="iata-code-corporate">#{seg.aeropuertoDestino.codigoIata}</span>
+                                                <span class="airport-full-name">#{seg.aeropuertoDestino.nombreAeropuerto}</span>
+                                                <span class="airport-location-sub">
+                                    <i class="pi pi-map-marker"></i>
+                                                    #{seg.aeropuertoDestino.ciudad != null ? seg.aeropuertoDestino.ciudad.nombre : ''}
+                                                    <h:panelGroup rendered="#{seg.aeropuertoDestino.ciudad != null and seg.aeropuertoDestino.ciudad.pai != null}">
+                                        , #{seg.aeropuertoDestino.ciudad.pai.nombre}
+                                    </h:panelGroup>
+                                </span>
+                                            </div>
+                                        </div>
+
+                                        <!-- DETALLES OPERATIVOS -->
+                                        <div class="grid p-fluid">
+                                            <!-- PUERTA DE EMBARQUE / GATE -->
+                                            <div class="col-12 md:col-4">
+                                                <div class="ops-info-tile">
+                                                    <span class="ops-tile-label"><i class="pi pi-sign-in me-1"></i> Puerta de Embarque</span>
+                                                    <div class="ops-tile-value text-gate">
+                                                        <h:outputText value="#{vueloBean.obtenerPuertaEmbarqueTexto(seg)}" />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- HORA SALIDA ORIGEN -->
+                                            <div class="col-12 md:col-4">
+                                                <div class="ops-info-tile">
+                                                    <span class="ops-tile-label"><i class="pi pi-clock me-1 text-info"></i> Salida Estimada</span>
+                                                    <div class="ops-tile-value text-salida">
+                                                        <h:outputText value="#{seg.horaSalida}">
+                                                            <f:convertDateTime pattern="dd/MM/yyyy — HH:mm 'hrs'" type="both" timeZone="America/Santiago" />
+                                                        </h:outputText>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- HORA LLEGADA DESTINO -->
+                                            <div class="col-12 md:col-4">
+                                                <div class="ops-info-tile">
+                                                    <span class="ops-tile-label"><i class="pi pi-clock me-1 text-success"></i> Llegada Estimada</span>
+                                                    <div class="ops-tile-value text-llegada">
+                                                        <h:outputText value="#{seg.horaLlegada}">
+                                                            <f:convertDateTime pattern="dd/MM/yyyy — HH:mm 'hrs'" type="both" timeZone="America/Santiago" />
+                                                        </h:outputText>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </ui:repeat>
+                            </h:panelGroup>
+
+                            <!-- SCRIPT DEL MAPA GENERAL -->
+                            <h:panelGroup id="scriptRutaScript">
+                                <script type="text/javascript">
+                                    setTimeout(function() {
+                                        window.renderizarMapaRutaGeneral('#{vueloBean.segmentosJson}');
+                                    }, 200);
+                                </script>
+                            </h:panelGroup>
                         </div>
                     </div>
                 </div>
 
-                <!-- PASO 2: TARIFAS Y PRECIOS POR CLASE DE ASIENTO -->
-                <!-- PASO 2: TARIFAS Y PRECIOS -->
+                <!-- PASO 2: ESPECIFICACIONES OPERATIVAS Y RECURSOS DISPONIBLES -->
                 <div class="step-wrapper">
-                    <div class="step-number" style="#{vueloBean.paso1Completo ? '' : 'background: #334155; color: #94a3b8;'}">2</div>
+                    <h:panelGroup id="stepBadge2" layout="block" styleClass="step-number" style="#{vueloBean.paso1Completo ? '' : 'background: #334155; color: #94a3b8;'}">2</h:panelGroup>
                     <div class="step-content">
                         <h:panelGroup id="panelPaso2" layout="block" styleClass="#{vueloBean.paso1Completo ? '' : 'step-disabled'}">
                             <div class="glass-card">
-                                <div class="card-header-label"><i class="pi pi-ticket"></i> Tarifario Base y Capacidad por Clase</div>
+                                <div class="card-header-label"><i class="pi pi-compass"></i> Especificaciones Operativas y Recursos Disponibles</div>
 
-                                <h:outputText value="Complete la cabecera en el Paso 1 (Aerolínea, Avión y Piloto) para habilitar la configuración de tarifas."
+                                <h:outputText value="Agregue al menos un tramo y sus horarios en el Paso 1 para consultar comandantes y aeronaves disponibles."
                                               rendered="#{!vueloBean.paso1Completo}"
+                                              style="color: #94a3b8; font-style: italic; display: block; padding: 1rem 0;" />
+
+                                <h:panelGroup id="panelEspecificacionesContent" layout="block" rendered="#{vueloBean.paso1Completo}">
+                                    <div class="ui-fluid p-formgrid p-grid">
+
+                                        <div class="p-field p-col-12 p-md-6">
+                                            <p:outputLabel for="n_vuelo" value="Código de Vuelo" />
+                                            <p:inputText id="n_vuelo" value="#{vueloBean.numeroVuelo}"
+                                                         readonly="true" placeholder="[Autogenerado al confirmar]"
+                                                         style="background: #162238 !important; color: #a9c1e2 !important; font-weight: bold;" />
+                                            <small style="color: var(--text-dim);">Asignado automáticamente.</small>
+                                        </div>
+
+                                        <div class="p-field p-col-12 p-md-6">
+                                            <p:outputLabel for="aerolinea" value="Línea Aérea *" />
+                                            <p:selectOneMenu id="aerolinea" value="#{vueloBean.aerolineaId}" required="true" requiredMessage="Seleccione la Aerolínea">
+                                                <f:selectItem itemLabel="Seleccione" itemValue="" />
+                                                <f:selectItems value="#{vueloBean.aerolineas}" var="a" itemLabel="#{a.nombre}" itemValue="#{a.idAerolinea}" />
+                                                <p:ajax update=":formVuelo:stepBadge3 :formVuelo:panelPaso3" />
+                                            </p:selectOneMenu>
+                                        </div>
+
+                                    </div>
+
+                                    <!-- SECCIÓN INTERACTIVA DE ASIGNACIÓN DE COMANDANTE / PILOTO -->
+                                    <div class="avion-picker-container">
+                                        <div class="flex justify-content-between align-items-center mb-2">
+                                            <p:outputLabel value="Comandante / Piloto Asignado *" style="font-weight: 700; color: var(--text-heading); font-size: 0.9rem;" />
+                                            <h:outputText value="Filtrado según disponibilidad para las fechas del Paso 1" style="font-size: 0.8rem; color: var(--text-muted);" />
+                                        </div>
+
+                                        <h:inputHidden id="piloto" value="#{vueloBean.pilotoId}" required="true" requiredMessage="Debe seleccionar un Comandante / Piloto para el vuelo." />
+                                        <p:message for="piloto" />
+
+                                        <h:panelGroup id="panelPilotoSeleccionado" layout="block">
+                                            <!-- Caso 1: Sin piloto asignado -->
+                                            <ui:fragment rendered="#{empty vueloBean.pilotoId or empty vueloBean.pilotoSeleccionado}">
+                                                <div class="avion-picker-unselected">
+                                                    <div class="avion-picker-icon piloto-picker-icon">
+                                                        <i class="pi pi-user"></i>
+                                                    </div>
+                                                    <div class="avion-picker-info">
+                                                        <span class="avion-picker-title">Ningún comandante asignado</span>
+                                                        <span class="avion-picker-subtitle">Seleccione un piloto comandante disponible para este rango horario mediante el buscador de experiencia y especializaciones.</span>
+                                                    </div>
+                                                    <div class="avion-picker-action">
+                                                        <p:commandButton value="Explorar Pilotos y Asignar"
+                                                                         icon="pi pi-search"
+                                                                         actionListener="#{vueloBean.abrirSelectorPiloto}"
+                                                                         process="@this"
+                                                                         update=":formSelectorPiloto"
+                                                                         oncomplete="PF('dlgSelectorPiloto').show();"
+                                                                         styleClass="btn-primary-custom" />
+                                                    </div>
+                                                </div>
+                                            </ui:fragment>
+
+                                            <!-- Caso 2: Piloto asignado -->
+                                            <ui:fragment rendered="#{not empty vueloBean.pilotoId and not empty vueloBean.pilotoSeleccionado}">
+                                                <div class="avion-card-selected piloto-card-selected #{vueloBean.pilotoEnConflicto ? 'resource-card-conflict' : ''}">
+                                                    <div class="avion-card-main">
+                                                        <div class="avion-badge-icon piloto-badge-icon">
+                                                            <i class="pi pi-id-card"></i>
+                                                        </div>
+                                                        <div class="avion-details">
+                                                            <div class="avion-model-header">
+                                                                <span class="avion-model-name">
+                                                                    #{vueloBean.pilotoSeleccionado.usuario.nombre} #{vueloBean.pilotoSeleccionado.usuario.apellido}
+                                                                </span>
+                                                                <span class="avion-reg-badge"><i class="pi pi-id-card mr-1"></i>#{vueloBean.pilotoSeleccionado.rut}</span>
+                                                            </div>
+                                                            <div class="avion-specs-row">
+                                                                <span class="spec-chip"><i class="pi pi-briefcase" style="color: #8ab4a7;"></i> Trayectoria: <strong>#{vueloBean.pilotoSeleccionado.experienciaAnos} años de servicio</strong></span>
+                                                                <span class="spec-chip"><i class="pi pi-shield" style="color: #8aa7cf;"></i> Especialización: <strong>#{not empty vueloBean.pilotoSeleccionado.especializaciones ? vueloBean.pilotoSeleccionado.especializaciones : 'Operación Comercial Estándar'}</strong></span>
+                                                                <span class="spec-chip"><i class="pi pi-envelope" style="color: #94a3b8;"></i> Contacto: <strong>#{vueloBean.pilotoSeleccionado.usuario.correoElectronico}</strong></span>
+                                                            </div>
+                                                            <ui:fragment rendered="#{vueloBean.pilotoEnConflicto}">
+                                                                <div class="resource-conflict-banner">
+                                                                    <i class="pi pi-exclamation-triangle"></i>
+                                                                    <span>Conflicto de horario detectado para la ruta programada. Presione "Cambiar Piloto" para elegir un comandante disponible.</span>
+                                                                </div>
+                                                            </ui:fragment>
+                                                        </div>
+                                                    </div>
+                                                    <div class="avion-card-actions">
+                                                        <p:commandButton value="Cambiar Piloto"
+                                                                         icon="pi pi-sync"
+                                                                         actionListener="#{vueloBean.abrirSelectorPiloto}"
+                                                                         process="@this"
+                                                                         update=":formSelectorPiloto"
+                                                                         oncomplete="PF('dlgSelectorPiloto').show();"
+                                                                         styleClass="btn-secondary-custom mr-2" />
+                                                        <p:commandButton value="Quitar"
+                                                                         icon="pi pi-times"
+                                                                         actionListener="#{vueloBean.desasignarPiloto}"
+                                                                         process="@this"
+                                                                         update=":formVuelo:panelPilotoSeleccionado :formVuelo:piloto :formVuelo:stepBadge3 :formVuelo:panelPaso3 :msgs"
+                                                                         styleClass="ui-button-danger ui-button-flat" />
+                                                    </div>
+                                                </div>
+                                            </ui:fragment>
+                                        </h:panelGroup>
+                                    </div>
+
+                                    <!-- SECCIÓN INTERACTIVA DE ASIGNACIÓN DE AERONAVE -->
+                                    <div class="avion-picker-container">
+                                        <div class="flex justify-content-between align-items-center mb-2">
+                                            <p:outputLabel value="Aeronave Asignada a la Operación *" style="font-weight: 700; color: var(--text-heading); font-size: 0.9rem;" />
+                                            <h:outputText value="Filtrada según disponibilidad horaria para habilitar el tarifario por cabinas" style="font-size: 0.8rem; color: var(--text-muted);" />
+                                        </div>
+
+                                        <h:inputHidden id="avion" value="#{vueloBean.avionId}" required="true" requiredMessage="Debe seleccionar una Aeronave para operar el vuelo." />
+                                        <p:message for="avion" />
+
+                                        <h:panelGroup id="panelAvionSeleccionado" layout="block">
+                                            <!-- Caso 1: Sin aeronave asignada -->
+                                            <ui:fragment rendered="#{empty vueloBean.avionId or empty vueloBean.avionSeleccionado}">
+                                                <div class="avion-picker-unselected">
+                                                    <div class="avion-picker-icon">
+                                                        <i class="pi pi-send"></i>
+                                                    </div>
+                                                    <div class="avion-picker-info">
+                                                        <span class="avion-picker-title">Ninguna aeronave asignada</span>
+                                                        <span class="avion-picker-subtitle">Seleccione una aeronave disponible de la flota activa para las fechas de la ruta mediante el buscador avanzado.</span>
+                                                    </div>
+                                                    <div class="avion-picker-action">
+                                                        <p:commandButton value="Explorar Flota y Asignar"
+                                                                         icon="pi pi-search"
+                                                                         actionListener="#{vueloBean.abrirSelectorAvion}"
+                                                                         process="@this"
+                                                                         update=":formSelectorAvion"
+                                                                         oncomplete="PF('dlgSelectorAvion').show();"
+                                                                         styleClass="btn-primary-custom" />
+                                                    </div>
+                                                </div>
+                                            </ui:fragment>
+
+                                            <!-- Caso 2: Aeronave asignada -->
+                                            <ui:fragment rendered="#{not empty vueloBean.avionId and not empty vueloBean.avionSeleccionado}">
+                                                <div class="avion-card-selected #{vueloBean.avionEnConflicto ? 'resource-card-conflict' : ''}">
+                                                    <div class="avion-card-main">
+                                                        <div class="avion-badge-icon">
+                                                            <i class="pi pi-send"></i>
+                                                        </div>
+                                                        <div class="avion-details">
+                                                            <div class="avion-model-header">
+                                                                <span class="avion-model-name">#{vueloBean.avionSeleccionado.modeloAvion.nombre}</span>
+                                                                <span class="avion-manufacturer-badge">#{vueloBean.avionSeleccionado.modeloAvion.fabricante.nombre}</span>
+                                                                <span class="avion-reg-badge"><i class="pi pi-tag mr-1"></i>#{vueloBean.avionSeleccionado.numeroDeRegistro}</span>
+                                                            </div>
+                                                            <div class="avion-specs-row">
+                                                                <span class="spec-chip"><i class="pi pi-users mr-1"></i> Capacidad Total: <strong>#{vueloBean.avionSeleccionado.capacidadDePasajeros} pax</strong></span>
+                                                                <span class="spec-chip"><i class="pi pi-check-circle mr-1" style="color: #8ab4a7;"></i> Estado: <strong>#{vueloBean.avionSeleccionado.estadoDeMantenimiento != null ? vueloBean.avionSeleccionado.estadoDeMantenimiento : 'OPERACIONAL'}</strong></span>
+                                                                <span class="spec-chip"><i class="pi pi-th-large mr-1" style="color: #8aa7cf;"></i> Matriz de cabina sincronizada</span>
+                                                            </div>
+                                                            <ui:fragment rendered="#{vueloBean.avionEnConflicto}">
+                                                                <div class="resource-conflict-banner">
+                                                                    <i class="pi pi-exclamation-triangle"></i>
+                                                                    <span>Conflicto de horario detectado para la ruta programada. Presione "Cambiar Aeronave" para elegir una unidad disponible.</span>
+                                                                </div>
+                                                            </ui:fragment>
+                                                        </div>
+                                                    </div>
+                                                    <div class="avion-card-actions">
+                                                        <p:commandButton value="Cambiar Aeronave"
+                                                                         icon="pi pi-sync"
+                                                                         actionListener="#{vueloBean.abrirSelectorAvion}"
+                                                                         process="@this"
+                                                                         update=":formSelectorAvion"
+                                                                         oncomplete="PF('dlgSelectorAvion').show();"
+                                                                         styleClass="btn-secondary-custom mr-2" />
+                                                        <p:commandButton value="Quitar"
+                                                                         icon="pi pi-times"
+                                                                         actionListener="#{vueloBean.desasignarAvion}"
+                                                                         process="@this"
+                                                                         update=":formVuelo:panelAvionSeleccionado :formVuelo:avion :formVuelo:stepBadge3 :formVuelo:panelPaso3 :msgs"
+                                                                         styleClass="ui-button-danger ui-button-flat" />
+                                                    </div>
+                                                </div>
+                                            </ui:fragment>
+                                        </h:panelGroup>
+                                    </div>
+                                </h:panelGroup>
+                            </div>
+                        </h:panelGroup>
+                    </div>
+                </div>
+
+                <!-- PASO 3: TARIFARIO BASE POR CABINA Y CONFIRMACIÓN -->
+                <div class="step-wrapper">
+                    <h:panelGroup id="stepBadge3" layout="block" styleClass="step-number" style="#{vueloBean.paso2Completo ? '' : 'background: #334155; color: #94a3b8;'}">3</h:panelGroup>
+                    <div class="step-content">
+                        <h:panelGroup id="panelPaso3" layout="block" styleClass="#{vueloBean.paso2Completo ? '' : 'step-disabled'}">
+                            <div class="glass-card">
+                                <div class="card-header-label"><i class="pi pi-ticket"></i> Tarifario Base por Cabina y Confirmación</div>
+
+                                <h:outputText value="Complete la aerolínea, comandante y aeronave disponibles en el Paso 2 para configurar las tarifas de cabina y confirmar el vuelo."
+                                              rendered="#{!vueloBean.paso2Completo}"
                                               style="color: #94a3b8; font-style: italic; display: block; padding: 1rem 0;"/>
 
-                                <h:panelGroup id="infoCapacidad" layout="block" rendered="#{vueloBean.paso1Completo}">
+                                <h:panelGroup id="infoCapacidad" layout="block" rendered="#{vueloBean.paso2Completo}">
                                     <p:outputPanel rendered="#{not empty vueloBean.preciosAsientos}">
                                         <div class="pricing-container">
                                             <ui:repeat var="cap" value="#{vueloBean.preciosAsientos}">
@@ -369,7 +635,7 @@
                                                     <p:outputLabel value="Tarifa Base (CLP) *" />
                                                     <p:inputNumber value="#{cap.precio}" mode="currency" currencySymbol="$ " locale="es_CL" decimalPlaces="0" required="true" requiredMessage="Ingrese el precio para la clase #{cap.clase}"
                                                                    inputStyle="width: 100%; background: #0f172a; border: 1px solid var(--border-color); color: var(--success-green); font-weight: bold; font-size: 1.1rem; text-align: right;">
-                                                        <p:ajax event="blur" update=":formVuelo:panelPaso3" />
+                                                        <p:ajax event="blur" update=":formVuelo:panelConfirmarVuelo" />
                                                     </p:inputNumber>
                                                 </div>
                                             </ui:repeat>
@@ -380,187 +646,41 @@
                                                              icon="pi pi-check"
                                                              actionListener="#{vueloBean.guardarTarifasAsientos}"
                                                              process="infoCapacidad"
-                                                             update=":msgs :formVuelo:panelPaso3"
+                                                             update=":msgs :formVuelo:panelConfirmarVuelo"
                                                              styleClass="btn-primary-custom" />
                                         </div>
                                     </p:outputPanel>
                                 </h:panelGroup>
-                            </div>
-                        </h:panelGroup>
-                    </div>
-                </div>
-
-
-
-                <!-- PASO 3: HOJA DE RUTA Y MAPA GENERAL -->
-
-                <!-- PASO 3: HOJA DE RUTA Y MAPA GENERAL -->
-                <div class="step-wrapper">
-                    <div class="step-number" style="#{vueloBean.paso2Completo ? '' : 'background: #334155; color: #94a3b8;'}">3</div>
-                    <div class="step-content">
-                        <h:panelGroup id="panelPaso3" layout="block" styleClass="#{vueloBean.paso2Completo ? '' : 'step-disabled'}">
-                            <div class="glass-card">
-
-                                <div class="flex justify-content-between align-items-center mb-4">
-                                    <div class="card-header-label m-0">
-                                        <i class="pi pi-map text-primary"></i> Hoja de Ruta y Segmentos del Vuelo
-                                    </div>
-                                    <p:commandButton value="Añadir Nueva Escala"
-                                                     icon="pi pi-plus"
-                                                     process="@this"
-                                                     disabled="#{!vueloBean.paso2Completo}"
-                                                     actionListener="#{vueloBean.openNewSegmento}"
-                                                     oncomplete="PF('dlgNuevoSegmento').show(); setTimeout(function(){ window.initMapaSelectorAeropuertos('#{vueloBean.aeropuertosMapaJson}', '#{vueloBean.aeropuertoOrigen}', '#{vueloBean.aeropuertoDestino}'); }, 300);"
-                                                     styleClass="btn-secondary-custom"
-                                                     update=":formSegmentoCrear:manage-segmento-content" />
-                                </div>
-
-                                <!-- MENSAJE INFORMATIVO SI NO HA COMPLETADO EL PASO 2 -->
-                                <h:outputText value="Complete las especificaciones en el Paso 1 y configure las tarifas en el Paso 2 para habilitar la creación de escalas."
-                                              rendered="#{!vueloBean.paso2Completo}"
-                                              style="color: var(--text-muted); font-style: italic; display: block; text-align: center; padding: 2rem 0; background: #080d1a; border-radius: 8px; border: 1px dashed #1e293b;"/>
-
-                                <!-- CONTENIDO ACTIVO SÓLO SI EL PASO 2 ESTÁ COMPLETO -->
-                                <h:panelGroup rendered="#{vueloBean.paso2Completo}">
-                                    <!-- MAPA GENERAL DE VISTA RÁPIDA DE RUTA -->
-                                    <div id="mapaRutaGeneralContainer" style="width:100%; height:320px; border-radius:12px; border:1px solid rgba(56,189,248,0.3); margin-bottom:1.5rem; display:none;"></div>
-
-                                    <!-- LISTA DE SEGMENTOS DE VUELO -->
-                                    <h:panelGroup id="listaSegmentosPanel" layout="block">
-                                        <h:outputText value="No se han agregado tramos/escalas a esta ruta aún."
-                                                      rendered="#{empty vueloBean.segmentos}"
-                                                      style="color: var(--text-muted); font-style: italic; display: block; text-align: center; padding: 2.5rem 0; background: #090e1a; border-radius: 8px; border: 1px dashed #1e293b;"/>
-
-                                        <ui:repeat var="seg" value="#{vueloBean.segmentos}" varStatus="status">
-                                            <div class="flight-segment-card">
-
-                                                <!-- HEADER DE TRAMO CON BOTONES DISCRETOS -->
-                                                <div class="segment-header-bar">
-                                                    <div class="d-flex align-items-center gap-2">
-                                                        <span class="segment-badge-number">Tramo #{seg.ordenSegmento}</span>
-                                                        <span class="segment-id-text">| ID: ##{seg.idSegmento != null ? seg.idSegmento : 'MEMORIA'}</span>
-                                                    </div>
-
-                                                    <div class="flex gap-2">
-                                                        <p:commandButton value="Editar"
-                                                                         icon="pi pi-pencil"
-                                                                         actionListener="#{vueloBean.prepararEdicion(seg)}"
-                                                                         process="@this"
-                                                                         update=":formSegmentoCrear:manage-segmento-content"
-                                                                         oncomplete="PF('dlgNuevoSegmento').show(); setTimeout(function(){ window.initMapaSelectorAeropuertos('#{vueloBean.aeropuertosMapaJson}', '#{vueloBean.aeropuertoOrigen}', '#{vueloBean.aeropuertoDestino}'); }, 300);"
-                                                                         styleClass="ui-button-flat ui-button-secondary btn-sm" />
-
-                                                        <p:commandButton value="Eliminar"
-                                                                         icon="pi pi-trash"
-                                                                         actionListener="#{vueloBean.eliminarSegmento(seg)}"
-                                                                         process="@this"
-                                                                         update=":formVuelo:listaSegmentosPanel :msgs"
-                                                                         oncomplete="window.renderizarMapaRutaGeneral('#{vueloBean.segmentosJson}');"
-                                                                         styleClass="ui-button-flat ui-button-danger btn-sm"/>
-                                                    </div>
-                                                </div>
-
-                                                <!-- TABLERO DE RUTA -->
-                                                <div class="flight-route-display">
-                                                    <!-- ORIGEN -->
-                                                    <div class="airport-block">
-                                                        <span class="iata-code-corporate">#{seg.aeropuertoOrigen.codigoIata}</span>
-                                                        <span class="airport-full-name">#{seg.aeropuertoOrigen.nombreAeropuerto}</span>
-                                                        <span class="airport-location-sub">
-                                            <i class="pi pi-map-marker"></i>
-                                                            #{seg.aeropuertoOrigen.ciudad != null ? seg.aeropuertoOrigen.ciudad.nombre : ''}
-                                                            <h:panelGroup rendered="#{seg.aeropuertoOrigen.ciudad != null and seg.aeropuertoOrigen.ciudad.pai != null}">
-                                                , #{seg.aeropuertoOrigen.ciudad.pai.nombre}
-                                            </h:panelGroup>
-                                        </span>
-                                                    </div>
-
-                                                    <!-- LÍNEA / CONECTOR DE TRAYECTO -->
-                                                    <div class="flight-path-connector">
-                                                        <span style="color: #64748b; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.5px;">DIRECTO</span>
-                                                        <div class="flight-path-line"></div>
-                                                        <div class="flight-path-icon">
-                                                            <i class="pi pi-send"></i>
-                                                        </div>
-                                                    </div>
-
-                                                    <!-- DESTINO -->
-                                                    <div class="airport-block text-end">
-                                                        <span class="iata-code-corporate">#{seg.aeropuertoDestino.codigoIata}</span>
-                                                        <span class="airport-full-name">#{seg.aeropuertoDestino.nombreAeropuerto}</span>
-                                                        <span class="airport-location-sub">
-                                            <i class="pi pi-map-marker"></i>
-                                                            #{seg.aeropuertoDestino.ciudad != null ? seg.aeropuertoDestino.ciudad.nombre : ''}
-                                                            <h:panelGroup rendered="#{seg.aeropuertoDestino.ciudad != null and seg.aeropuertoDestino.ciudad.pai != null}">
-                                                , #{seg.aeropuertoDestino.ciudad.pai.nombre}
-                                            </h:panelGroup>
-                                        </span>
-                                                    </div>
-                                                </div>
-
-                                                <!-- DETALLES OPERATIVOS -->
-                                                <div class="grid p-fluid">
-                                                    <!-- PUERTA DE EMBARQUE / GATE -->
-                                                    <div class="col-12 md:col-4">
-                                                        <div class="ops-info-tile">
-                                                            <span class="ops-tile-label"><i class="pi pi-sign-in me-1"></i> Puerta de Embarque</span>
-                                                            <div class="ops-tile-value text-gate">
-                                                                <h:outputText value="#{vueloBean.obtenerPuertaEmbarqueTexto(seg)}" />
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <!-- HORA SALIDA ORIGEN -->
-                                                    <div class="col-12 md:col-4">
-                                                        <div class="ops-info-tile">
-                                                            <span class="ops-tile-label"><i class="pi pi-clock me-1 text-info"></i> Salida Estimada</span>
-                                                            <div class="ops-tile-value text-salida">
-                                                                <h:outputText value="#{seg.horaSalida}">
-                                                                    <f:convertDateTime pattern="dd/MM/yyyy — HH:mm 'hrs'" type="both" timeZone="America/Santiago" />
-                                                                </h:outputText>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <!-- HORA LLEGADA DESTINO -->
-                                                    <div class="col-12 md:col-4">
-                                                        <div class="ops-info-tile">
-                                                            <span class="ops-tile-label"><i class="pi pi-clock me-1 text-success"></i> Llegada Estimada</span>
-                                                            <div class="ops-tile-value text-llegada">
-                                                                <h:outputText value="#{seg.horaLlegada}">
-                                                                    <f:convertDateTime pattern="dd/MM/yyyy — HH:mm 'hrs'" type="both" timeZone="America/Santiago" />
-                                                                </h:outputText>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                            </div>
-                                        </ui:repeat>
-                                    </h:panelGroup>
-
-                                    <!-- SCRIPT DEL MAPA GENERAL -->
-                                    <h:panelGroup id="scriptRutaScript">
-                                        <script type="text/javascript">
-                                            setTimeout(function() {
-                                                window.renderizarMapaRutaGeneral('#{vueloBean.segmentosJson}');
-                                            }, 200);
-                                        </script>
-                                    </h:panelGroup>
-                                </h:panelGroup>
 
                                 <!-- BOTÓN PRINCIPAL DE CONFIRMACIÓN -->
-                                <div class="flex justify-content-center mt-5 pt-4 border-top-1 border-white-alpha-10">
-                                    <p:commandButton value="Confirmar y Guardar Vuelo Completo"
-                                                     actionListener="#{vueloBean.confirmarYGuardarVueloCompleto}"
-                                                     icon="pi pi-send"
-                                                     disabled="#{!vueloBean.paso2Completo}"
-                                                     process="@form"
-                                                     update=":formVuelo :msgs"
-                                                     oncomplete="window.renderizarMapaRutaGeneral('#{vueloBean.segmentosJson}');"
-                                                     styleClass="btn-confirm-vuelo" />
-                                </div>
+                                <h:panelGroup id="panelConfirmarVuelo" layout="block" styleClass="mt-5 pt-4 border-top-1 border-white-alpha-10">
+                                    <ui:fragment rendered="#{vueloBean.vueloCreado}">
+                                        <div class="flight-created-banner mb-4">
+                                            <div class="flight-created-banner-icon">
+                                                <i class="pi pi-check-circle"></i>
+                                            </div>
+                                            <div class="flight-created-banner-text">
+                                                <span class="flight-created-banner-label">VUELO REGISTRADO EN EL SISTEMA</span>
+                                                <strong class="flight-created-banner-title">El vuelo quedó confirmado y listo para comercialización.</strong>
+                                            </div>
+                                            <div class="flight-created-code-box">
+                                                <span class="flight-created-code-label">N° DE VUELO</span>
+                                                <strong class="flight-created-code-value">#{not empty vueloBean.numeroVuelo ? vueloBean.numeroVuelo : '#'.concat(vueloBean.vuelo.idVuelo)}</strong>
+                                            </div>
+                                        </div>
+                                    </ui:fragment>
 
+                                    <div class="flex justify-content-center">
+                                        <p:commandButton value="Confirmar y Guardar Vuelo Completo"
+                                                         actionListener="#{vueloBean.confirmarYGuardarVueloCompleto}"
+                                                         icon="pi pi-send"
+                                                         disabled="#{!vueloBean.paso3Completo}"
+                                                         process="@form"
+                                                         update=":formVuelo :msgs"
+                                                         oncomplete="window.renderizarMapaRutaGeneral('#{vueloBean.segmentosJson}');"
+                                                         styleClass="btn-confirm-vuelo" />
+                                    </div>
+                                </h:panelGroup>
                             </div>
                         </h:panelGroup>
                     </div>
@@ -569,10 +689,9 @@
             </div>
         </h:form>
 
-        <!-- DIÁLOGO CORPORATIVO PROGRAMACIÓN DE ESCALAS -->
-        <!-- DIÁLOGO CORPORATIVO PROGRAMACIÓN DE ESCALAS -->
+        <!-- DIÁLOGO CORPORATIVO DEFINICIÓN DE TRAYECTO DIRECTO -->
         <p:dialog widgetVar="dlgNuevoSegmento"
-                  header="#{vueloBean.segmentoActual.idSegmento == null ? 'Programar Nueva Escala' : 'Editar Escala N° ' += vueloBean.segmentoActual.ordenSegmento}"
+                  header="#{empty vueloBean.segmentos ? 'Definir Ruta del Vuelo' : 'Editar Ruta del Vuelo'}"
                   modal="true"
                   width="760"
                   responsive="true"
@@ -603,19 +722,20 @@
                     <h:inputHidden id="inSegmentoId" value="#{vueloBean.segmentoActual.idSegmento}" />
                     <h:inputHidden id="inOrigen" value="#{vueloBean.aeropuertoOrigen}" />
                     <h:inputHidden id="inDestino" value="#{vueloBean.aeropuertoDestino}" />
+                    <input type="hidden" id="inOrigenEncadenadoDom" value="#{vueloBean.origenEncadenado}" />
 
                     <div class="dialog-scroll-body p-1">
 
                         <!-- BOX DESPLEGABLE TÉCNICO DE VALIDACIÓN FÍSICA (DENTRO DEL MODAL) -->
                         <h:panelGroup id="panelExplicacionFisica">
-                            <p:outputPanel rendered="#{not empty vueloBean.detalleFisicoExplicacion}" style="margin-bottom: 1rem; background: #1e293b; padding: 12px; border-radius: 6px; border-left: 4px solid #38bdf8;">
+                            <p:outputPanel rendered="#{not empty vueloBean.detalleFisicoExplicacion}" style="margin-bottom: 1rem; background: #162238; padding: 12px; border-radius: 6px; border-left: 4px solid #6488b8;">
                                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <span style="color: #38bdf8; font-size: 12px; font-weight: bold;"><i class="pi pi-info-circle mr-1"></i> ¿Por qué la física rechaza este horario?</span>
+                                    <span style="color: #a9c1e2; font-size: 12px; font-weight: bold;"><i class="pi pi-info-circle mr-1"></i> ¿Por qué la física rechaza este horario?</span>
                                     <p:commandLink value="#{vueloBean.mostrarDetalleFisico ? 'Ocultar detalles' : 'Ver explicación técnica'}"
                                                    action="#{vueloBean.toggleDetalleFisico}"
                                                    process="@this"
                                                    update="formSegmentoCrear:panelExplicacionFisica"
-                                                   style="color: #60a5fa; font-size: 11px; text-decoration: underline;" />
+                                                   style="color: #9bb5d8; font-size: 11px; text-decoration: underline;" />
                                 </div>
 
                                 <p:outputPanel rendered="#{vueloBean.mostrarDetalleFisico}" style="margin-top: 8px; color: #cbd5e1; font-size: 11px; white-space: pre-line; line-height: 1.5;">
@@ -629,12 +749,22 @@
                             <!-- PASO 1: BARRA DE SELECCIÓN DE MODO -->
                             <div class="p-field p-col-12 mb-3">
                                 <div class="segment-mode-bar">
-                                    <button type="button" id="btnModoOrigen" class="segment-mode-btn modo-origen activo" onclick="window.cambiarModo('ORIGEN')">
-                                        <i class="pi pi-upload"></i> 1. Marcar Origen
-                                    </button>
-                                    <button type="button" id="btnModoDestino" class="segment-mode-btn modo-destino" onclick="window.cambiarModo('DESTINO')">
-                                        <i class="pi pi-download"></i> 2. Marcar Destino
-                                    </button>
+                                    <ui:fragment rendered="#{!vueloBean.origenEncadenado}">
+                                        <button type="button" id="btnModoOrigen" class="segment-mode-btn modo-origen activo" onclick="window.cambiarModo('ORIGEN')">
+                                            <i class="pi pi-upload"></i> 1. Marcar Origen
+                                        </button>
+                                        <button type="button" id="btnModoDestino" class="segment-mode-btn modo-destino" onclick="window.cambiarModo('DESTINO')">
+                                            <i class="pi pi-download"></i> 2. Marcar Destino
+                                        </button>
+                                    </ui:fragment>
+                                    <ui:fragment rendered="#{vueloBean.origenEncadenado}">
+                                        <button type="button" id="btnModoOrigen" class="segment-mode-btn modo-origen" disabled="disabled" title="El origen corresponde automáticamente a la llegada del tramo anterior">
+                                            <i class="pi pi-lock"></i> 1. Origen Fijado (#{vueloBean.aeropuertoOrigen})
+                                        </button>
+                                        <button type="button" id="btnModoDestino" class="segment-mode-btn modo-destino activo" onclick="window.cambiarModo('DESTINO')">
+                                            <i class="pi pi-download"></i> 2. Marcar Destino en Mapa
+                                        </button>
+                                    </ui:fragment>
                                 </div>
                             </div>
 
@@ -645,7 +775,12 @@
                                     <div class="col-12 md:col-6">
                                         <div class="flight-strip-card card-origen">
                                             <div style="min-width: 0;">
-                                                <span class="strip-label origen"><i class="pi pi-circle-fill me-1" style="font-size:0.5rem;"></i> Origen de Tramo</span>
+                                                <span class="strip-label origen">
+                                                    <i class="pi pi-circle-fill me-1" style="font-size:0.5rem;"></i> Origen de Tramo
+                                                    <ui:fragment rendered="#{vueloBean.origenEncadenado}">
+                                                        <span class="strip-chain-badge"><i class="pi pi-link"></i> Escala Anterior</span>
+                                                    </ui:fragment>
+                                                </span>
                                                 <div class="d-flex align-items-center mt-1">
                                                     <h:panelGroup rendered="#{not empty vueloBean.aeropuertoOrigen}">
                                                         <span class="strip-iata-badge origen">#{vueloBean.aeropuertoOrigen}</span>
@@ -716,11 +851,11 @@
                     <!-- FOOTER CON BOTONES CONTRATADOS -->
                     <div class="dialog-footer-fijo">
                         <p:commandButton value="Cancelar" icon="pi pi-times" onclick="PF('dlgNuevoSegmento').hide()" type="button" styleClass="ui-button-flat btn-secondary-custom" />
-                        <p:commandButton value="Añadir a la Ruta"
+                        <p:commandButton value="Guardar Trayecto"
                                          icon="pi pi-check"
                                          actionListener="#{vueloBean.agregarSegmentoEnMemoria}"
                                          process="formSegmentoCrear"
-                                         update=":formVuelo:listaSegmentosPanel :formVuelo:aerolinea :formVuelo:avion :formVuelo:panelAvionSeleccionado :formVuelo:piloto :formVuelo:infoCapacidad formSegmentoCrear:panelExplicacionFisica :msgs"
+                                         update=":formVuelo:panelBtnDefinirRuta :formVuelo:listaSegmentosPanel :formVuelo:stepBadge2 :formVuelo:panelPaso2 :formVuelo:stepBadge3 :formVuelo:panelPaso3 formSegmentoCrear:panelExplicacionFisica :msgs"
                                          oncomplete="if (!args.validationFailed) { PF('dlgNuevoSegmento').hide(); window.renderizarMapaRutaGeneral('#{vueloBean.segmentosJson}'); }"
                                          styleClass="btn-primary-custom" />
                     </div>
@@ -737,10 +872,11 @@
             body .ui-dialog.custom-dialog {
                 background: #0d172a !important;
                 background-color: #0d172a !important;
-                border: 1px solid #1e3a5f !important;
-                border-radius: 12px !important;
-                box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75) !important;
+                border: 1px solid #2b3f5e !important;
+                border-radius: 10px !important;
+                box-shadow: 0 20px 50px rgba(0, 0, 0, 0.72) !important;
                 overflow: hidden !important;
+                max-width: 96vw !important;
             }
 
             body .ui-dialog.custom-dialog .ui-dialog-titlebar {
@@ -796,8 +932,8 @@
 
             .flota-search-box input.ui-inputtext:focus {
                 background: #142544 !important;
-                border-color: #38bdf8 !important;
-                box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2) !important;
+                border-color: #4b70a3 !important;
+                box-shadow: 0 0 0 3px rgba(75, 112, 163, 0.22) !important;
             }
 
             .flota-search-box i.pi-search {
@@ -805,8 +941,8 @@
                 left: 14px;
                 top: 50%;
                 transform: translateY(-50%);
-                color: #38bdf8 !important;
-                font-size: 1.1rem;
+                color: #7c98be !important;
+                font-size: 1.05rem;
                 pointer-events: none;
                 z-index: 2;
             }
@@ -821,26 +957,26 @@
                 background: #13223d !important;
                 background-color: #13223d !important;
                 background-image: none !important;
-                color: #93c5fd !important;
+                color: #a9c1e2 !important;
                 border: 1px solid #1e304f !important;
-                font-size: 0.82rem !important;
+                font-size: 0.78rem !important;
                 font-weight: 700 !important;
                 text-transform: uppercase !important;
                 letter-spacing: 0.05em !important;
-                padding: 0.85rem 0.65rem !important;
+                padding: 0.8rem 0.55rem !important;
                 text-shadow: none !important;
                 box-shadow: none !important;
             }
 
             body .tabla-flota-skyway.ui-datatable thead th .ui-column-title,
             body .custom-dialog .ui-datatable thead th .ui-column-title {
-                color: #93c5fd !important;
+                color: #a9c1e2 !important;
                 font-weight: 700 !important;
             }
 
             body .tabla-flota-skyway.ui-datatable thead th .ui-sortable-column-icon,
             body .custom-dialog .ui-datatable thead th .ui-sortable-column-icon {
-                color: #38bdf8 !important;
+                color: #7c98be !important;
             }
 
             /* Filas - Paleta Corporativa Azul Marino (Sin Negro Absoluto) */
@@ -850,7 +986,9 @@
                 background: #0d172a !important;
                 border: 1px solid #1e304f !important;
                 border-radius: 8px !important;
-                overflow: hidden !important;
+                overflow-x: auto !important;
+                width: 100% !important;
+                table-layout: fixed !important;
             }
 
             body .tabla-flota-skyway.ui-datatable tbody tr,
@@ -949,13 +1087,13 @@
 
             body .tabla-flota-skyway .ui-paginator .ui-paginator-page.ui-state-active,
             body .custom-dialog .ui-paginator .ui-paginator-page.ui-state-active {
-                background: #2563eb !important;
-                background-color: #2563eb !important;
+                background: #1e4b8f !important;
+                background-color: #1e4b8f !important;
                 background-image: none !important;
                 color: #ffffff !important;
-                border-color: #3b82f6 !important;
+                border-color: #3668ad !important;
                 font-weight: 700 !important;
-                box-shadow: 0 2px 8px rgba(37, 99, 235, 0.45) !important;
+                box-shadow: none !important;
             }
 
             body .tabla-flota-skyway .ui-paginator .ui-paginator-page:hover:not(.ui-state-active),
@@ -971,19 +1109,193 @@
                 background: #1e345e !important;
                 background-color: #1e345e !important;
                 color: #f8fafc !important;
-                border-color: #3b82f6 !important;
+                border-color: #3668ad !important;
             }
 
             .avion-reg-badge {
-                background: #141f36;
-                color: #38bdf8;
-                border: 1px solid #24395e;
+                background: #141e30;
+                color: #cbd5e1;
+                border: 1px solid #2b3c59;
                 font-family: monospace;
-                font-size: 0.85rem;
+                font-size: 0.82rem;
                 font-weight: 700;
                 padding: 3px 8px;
                 border-radius: 4px;
+                letter-spacing: 0.04em;
+                white-space: nowrap;
+            }
+
+            .flight-created-pill {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                background: #112421;
+                border: 1px solid #2d5a50;
+                color: #9ec9be;
+                padding: 0.35rem 0.85rem;
+                border-radius: 6px;
+                font-size: 0.85rem;
+            }
+
+            .flight-created-pill strong {
+                color: #f8fafc;
+                font-family: monospace;
+                font-size: 0.92rem;
+                letter-spacing: 0.04em;
+            }
+
+            .flight-created-banner {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 1rem;
+                flex-wrap: wrap;
+                background: #0f1f24;
+                border: 1px solid #2d5a50;
+                border-radius: 10px;
+                padding: 0.95rem 1.25rem;
+            }
+
+            .flight-created-banner-icon {
+                width: 40px;
+                height: 40px;
+                border-radius: 8px;
+                background: #17342f;
+                border: 1px solid #2d5a50;
+                color: #8ab4a7;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.25rem;
+                flex-shrink: 0;
+            }
+
+            .flight-created-banner-text {
+                flex: 1;
+                min-width: 220px;
+                display: flex;
+                flex-direction: column;
+                gap: 2px;
+            }
+
+            .flight-created-banner-label {
+                font-size: 0.72rem;
+                font-weight: 700;
+                letter-spacing: 0.07em;
+                color: #8ab4a7;
+            }
+
+            .flight-created-banner-title {
+                color: #e2e8f0;
+                font-size: 0.95rem;
+            }
+
+            .flight-created-code-box {
+                background: #0b1322;
+                border: 1px solid #2c4770;
+                border-radius: 8px;
+                padding: 0.45rem 1rem;
+                text-align: center;
+                min-width: 150px;
+            }
+
+            .flight-created-code-label {
+                display: block;
+                font-size: 0.68rem;
+                font-weight: 700;
+                letter-spacing: 0.08em;
+                color: #94a3b8;
+            }
+
+            .flight-created-code-value {
+                display: block;
+                font-family: monospace;
+                font-size: 1.25rem;
+                font-weight: 800;
+                color: #f8fafc;
                 letter-spacing: 0.05em;
+            }
+
+            .flota-filters-row {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.75rem;
+                margin-bottom: 0.9rem;
+            }
+
+            .flota-filters-row .flota-search-box {
+                flex: 1;
+                min-width: 280px;
+                margin-bottom: 0 !important;
+            }
+
+            .filtro-clases-group {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                background: #0b1426;
+                border: 1px solid #1e304f;
+                padding: 0.3rem 0.55rem;
+                border-radius: 8px;
+            }
+
+            .filtro-clases-label {
+                font-size: 0.78rem;
+                font-weight: 700;
+                color: #94a3b8;
+                white-space: nowrap;
+            }
+
+            body .filtro-clases-buttons.ui-selectonebutton .ui-button {
+                background: #132038 !important;
+                border: 1px solid #24385b !important;
+                color: #cbd5e1 !important;
+                font-size: 0.78rem !important;
+                font-weight: 600 !important;
+                padding: 0.35rem 0.65rem !important;
+                box-shadow: none !important;
+            }
+
+            body .filtro-clases-buttons.ui-selectonebutton .ui-button.ui-state-active {
+                background: #1e4b8f !important;
+                border-color: #3668ad !important;
+                color: #ffffff !important;
+            }
+
+            .clase-count-pill {
+                display: inline-block;
+                background: #162844;
+                border: 1px solid #2c4875;
+                color: #cbd5e1;
+                font-size: 0.72rem;
+                font-weight: 700;
+                padding: 2px 7px;
+                border-radius: 4px;
+                margin-bottom: 4px;
+            }
+
+            .clase-count-pill.three-classes {
+                background: #122a27;
+                border-color: #2d5a50;
+                color: #9ec9be;
+            }
+
+            .clase-chips-wrap {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 4px;
+            }
+
+            .clase-chip-mini {
+                background: #0d1626;
+                border: 1px solid #1f314f;
+                color: #94a3b8;
+                font-size: 0.71rem;
+                padding: 1px 6px;
+                border-radius: 4px;
+                white-space: nowrap;
             }
         </style>
 
@@ -991,7 +1303,7 @@
         <p:dialog widgetVar="dlgSelectorAvion"
                   header="Asignación de Aeronave de la Flota Operativa"
                   modal="true"
-                  width="920"
+                  width="1060"
                   responsive="true"
                   fitViewport="true"
                   showEffect="fade"
@@ -999,19 +1311,40 @@
                   styleClass="custom-dialog">
 
             <h:form id="formSelectorAvion">
-                <div style="margin-bottom: 1.25rem;">
+                <div style="margin-bottom: 1rem;">
                     <p style="color: #94a3b8; margin: 0 0 0.75rem 0; font-size: 0.9rem;">
-                        Seleccione una aeronave disponible de la flota activa para operar este vuelo. Filtre en tiempo real por modelo, fabricante o matrícula.
+                        Seleccione una aeronave disponible de la flota activa para operar este vuelo. Filtre por configuración de cabinas (ej. solo 3 clases) o busque por modelo y matrícula.
                     </p>
-                    <div class="flota-search-box">
-                        <i class="pi pi-search"></i>
-                        <p:inputText id="filtroAvionInput"
-                                     value="#{vueloBean.textoBusquedaAvion}"
-                                     placeholder="Buscar por modelo (ej: A320, B787), matrícula (ej: CC-BHA), fabricante (Airbus, Boeing)..."
-                                     autocomplete="off"
-                                     onkeydown="if(event.keyCode==13){event.preventDefault();return false;}">
-                            <p:ajax event="input" delay="250" process="@this" update="tablaAvionesFlota" listener="#{vueloBean.filtrarAvionesModal}" />
-                        </p:inputText>
+                    <ui:fragment rendered="#{not empty vueloBean.segmentos}">
+                        <div class="modal-availability-banner">
+                            <i class="pi pi-calendar-times"></i>
+                            <span>Disponibilidad filtrada automáticamente para el rango de la ruta: <strong>#{vueloBean.rangoHorarioRutaTexto}</strong></span>
+                        </div>
+                    </ui:fragment>
+                    <div class="flota-filters-row">
+                        <div class="flota-search-box">
+                            <i class="pi pi-search"></i>
+                            <p:inputText id="filtroAvionInput"
+                                         value="#{vueloBean.textoBusquedaAvion}"
+                                         placeholder="Buscar por modelo (ej: B787), matrícula, fabricante o cabina..."
+                                         autocomplete="off"
+                                         onkeydown="if(event.keyCode==13){event.preventDefault();return false;}">
+                                <p:ajax event="keyup" delay="250" process="@this" update="tablaAvionesFlota" listener="#{vueloBean.filtrarAvionesModal}" oncomplete="if(PF('wvTablaAvionesFlota') &amp;&amp; PF('wvTablaAvionesFlota').getPaginator()){PF('wvTablaAvionesFlota').getPaginator().setPage(0);}" />
+                            </p:inputText>
+                        </div>
+
+                        <div class="filtro-clases-group">
+                            <span class="filtro-clases-label"><i class="pi pi-th-large mr-1"></i>Cabinas:</span>
+                            <p:selectOneButton id="filtroClasesAvion"
+                                               value="#{vueloBean.filtroClasesAvion}"
+                                               styleClass="filtro-clases-buttons">
+                                <f:selectItem itemLabel="Todas" itemValue="TODAS" />
+                                <f:selectItem itemLabel="Solo 3 Clases" itemValue="3" />
+                                <f:selectItem itemLabel="2 Clases" itemValue="2" />
+                                <f:selectItem itemLabel="1 Clase" itemValue="1" />
+                                <p:ajax event="change" process="@this" update="tablaAvionesFlota" listener="#{vueloBean.filtrarAvionesModal}" oncomplete="if(PF('wvTablaAvionesFlota') &amp;&amp; PF('wvTablaAvionesFlota').getPaginator()){PF('wvTablaAvionesFlota').getPaginator().setPage(0);}" />
+                            </p:selectOneButton>
+                        </div>
                     </div>
                 </div>
 
@@ -1022,45 +1355,61 @@
                              paginator="true"
                              rows="6"
                              paginatorPosition="bottom"
-                             emptyMessage="No se encontraron aeronaves que coincidan con la búsqueda."
+                             emptyMessage="No hay aeronaves disponibles para el filtro de cabinas o rango horario seleccionado."
                              styleClass="tabla-flota-skyway">
 
-                    <p:column headerText="Fabricante / Modelo" style="width: 32%;">
+                    <p:column headerText="Fabricante / Modelo" style="width: 24%;">
                         <div class="flex flex-column">
-                            <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--accent-origen); font-weight: 700; letter-spacing: 0.05em;">
+                            <span style="font-size: 0.73rem; text-transform: uppercase; color: var(--accent-origen); font-weight: 700; letter-spacing: 0.05em;">
                                 #{av.modeloAvion.fabricante.nombre}
                             </span>
-                            <strong style="color: var(--text-heading); font-size: 1rem;">
+                            <strong style="color: var(--text-heading); font-size: 0.94rem;">
                                 #{av.modeloAvion.nombre}
                             </strong>
                         </div>
                     </p:column>
 
-                    <p:column headerText="Matrícula" style="width: 20%; text-align: center;">
+                    <p:column headerText="Matrícula" style="width: 13%; text-align: center;">
                         <span class="avion-reg-badge">#{av.numeroDeRegistro}</span>
                     </p:column>
 
-                    <p:column headerText="Capacidad" sortBy="#{av.capacidadDePasajeros}" style="width: 18%; text-align: center;">
-                        <span style="color: #ffffff; font-weight: 600;">
+                    <p:column headerText="Cabinas / Clases" style="width: 28%;">
+                        <div class="flex flex-column">
+                            <span class="clase-count-pill #{vueloBean.getCantidadClasesAvion(av) == 3 ? 'three-classes' : ''}">
+                                #{vueloBean.getCantidadClasesAvion(av)} #{vueloBean.getCantidadClasesAvion(av) == 1 ? 'clase configurada' : 'clases configuradas'}
+                            </span>
+                            <div class="clase-chips-wrap">
+                                <ui:repeat value="#{vueloBean.getCapacidadesAvion(av)}" var="capAv">
+                                    <span class="clase-chip-mini">#{capAv.claseAsiento1.descripcion}: <strong>#{capAv.cantidad}</strong></span>
+                                </ui:repeat>
+                                <ui:fragment rendered="#{empty vueloBean.getCapacidadesAvion(av)}">
+                                    <span class="clase-chip-mini">Sin distribución registrada</span>
+                                </ui:fragment>
+                            </div>
+                        </div>
+                    </p:column>
+
+                    <p:column headerText="Capacidad" sortBy="#{av.capacidadDePasajeros}" style="width: 11%; text-align: center;">
+                        <span style="color: #e2e8f0; font-weight: 600; white-space: nowrap;">
                             <i class="pi pi-users mr-1" style="color: #94a3b8;"></i>#{av.capacidadDePasajeros} pax
                         </span>
                     </p:column>
 
-                    <p:column headerText="Estado" style="width: 15%; text-align: center;">
-                        <span class="badge-status-activo" style="padding: 3px 8px; font-size: 0.75rem;">
+                    <p:column headerText="Estado" style="width: 12%; text-align: center;">
+                        <span class="badge-status-activo" style="padding: 3px 8px; font-size: 0.75rem; white-space: nowrap;">
                             #{av.estadoDeMantenimiento != null ? av.estadoDeMantenimiento : 'OPERACIONAL'}
                         </span>
                     </p:column>
 
-                    <p:column headerText="Acción" style="width: 15%; text-align: center;">
+                    <p:column headerText="Acción" style="width: 12%; text-align: center;">
                         <p:commandButton value="Asignar"
                                          icon="pi pi-check"
                                          actionListener="#{vueloBean.seleccionarAvionDirecto(av)}"
                                          process="@this"
-                                         update=":formVuelo:panelAvionSeleccionado :formVuelo:avion :formVuelo:infoCapacidad :formVuelo:panelPaso2 :formVuelo:panelPaso3 :msgs"
+                                         update=":formVuelo:panelAvionSeleccionado :formVuelo:avion :formVuelo:stepBadge3 :formVuelo:panelPaso3 :msgs"
                                          oncomplete="PF('dlgSelectorAvion').hide();"
                                          styleClass="btn-primary-custom"
-                                         style="padding: 4px 10px !important; font-size: 0.85rem;" />
+                                         style="padding: 4px 10px !important; font-size: 0.82rem; white-space: nowrap;" />
                     </p:column>
 
                 </p:dataTable>
@@ -1068,6 +1417,98 @@
                 <div class="dialog-footer-fijo">
                     <p:commandButton value="Cerrar" icon="pi pi-times" type="button"
                                      onclick="PF('dlgSelectorAvion').hide();"
+                                     styleClass="btn-secondary-custom" />
+                </div>
+            </h:form>
+        </p:dialog>
+
+        <!-- DIÁLOGO CORPORATIVO SELECTOR DE COMANDANTE / PILOTO -->
+        <p:dialog widgetVar="dlgSelectorPiloto"
+                  header="Asignación de Comandante / Piloto"
+                  modal="true"
+                  width="980"
+                  responsive="true"
+                  fitViewport="true"
+                  showEffect="fade"
+                  hideEffect="fade"
+                  styleClass="custom-dialog">
+
+            <h:form id="formSelectorPiloto">
+                <div style="margin-bottom: 1rem;">
+                    <p style="color: #94a3b8; margin: 0 0 0.75rem 0; font-size: 0.9rem;">
+                        Seleccione un piloto comandante disponible para operar este vuelo. Filtre en tiempo real por nombre, RUT, trayectoria o especialización.
+                    </p>
+                    <ui:fragment rendered="#{not empty vueloBean.segmentos}">
+                        <div class="modal-availability-banner">
+                            <i class="pi pi-calendar-times"></i>
+                            <span>Disponibilidad filtrada automáticamente para el rango de la ruta: <strong>#{vueloBean.rangoHorarioRutaTexto}</strong></span>
+                        </div>
+                    </ui:fragment>
+                    <div class="flota-search-box">
+                        <i class="pi pi-search"></i>
+                        <p:inputText id="filtroPilotoInput"
+                                     value="#{vueloBean.textoBusquedaPiloto}"
+                                     placeholder="Buscar por nombre, RUT (ej: 12345678-9) o especialización..."
+                                     autocomplete="off"
+                                     onkeydown="if(event.keyCode==13){event.preventDefault();return false;}">
+                            <p:ajax event="keyup" delay="250" process="@this" update="tablaPilotosModal" listener="#{vueloBean.filtrarPilotosModal}" oncomplete="if(PF('wvTablaPilotosModal') &amp;&amp; PF('wvTablaPilotosModal').getPaginator()){PF('wvTablaPilotosModal').getPaginator().setPage(0);}" />
+                        </p:inputText>
+                    </div>
+                </div>
+
+                <p:dataTable id="tablaPilotosModal"
+                             widgetVar="wvTablaPilotosModal"
+                             value="#{vueloBean.pilotosFiltradosModal}"
+                             var="pl"
+                             paginator="true"
+                             rows="6"
+                             paginatorPosition="bottom"
+                             emptyMessage="No hay comandantes disponibles para el rango horario seleccionado o los criterios de búsqueda."
+                             styleClass="tabla-flota-skyway">
+
+                    <p:column headerText="Comandante" style="width: 33%;">
+                        <div class="flex flex-column" style="min-width: 0;">
+                            <strong style="color: var(--text-heading); font-size: 0.94rem;">
+                                #{pl.usuario.nombre} #{pl.usuario.apellido}
+                            </strong>
+                            <span title="#{pl.usuario.correoElectronico}" style="font-size: 0.76rem; color: #94a3b8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block;">
+                                #{pl.usuario.correoElectronico}
+                            </span>
+                        </div>
+                    </p:column>
+
+                    <p:column headerText="RUT" style="width: 16%; text-align: center;">
+                        <span class="avion-reg-badge">#{pl.rut}</span>
+                    </p:column>
+
+                    <p:column headerText="Experiencia" sortBy="#{pl.experienciaAnos}" style="width: 14%; text-align: center;">
+                        <span style="color: #e2e8f0; font-weight: 600; white-space: nowrap;">
+                            <i class="pi pi-briefcase mr-1" style="color: #8ab4a7;"></i>#{pl.experienciaAnos} años
+                        </span>
+                    </p:column>
+
+                    <p:column headerText="Especialización" style="width: 23%;">
+                        <span style="font-size: 0.82rem; color: #cbd5e1; display: block;">
+                            #{not empty pl.especializaciones ? pl.especializaciones : 'Operación Comercial Estándar'}
+                        </span>
+                    </p:column>
+
+                    <p:column headerText="Acción" style="width: 14%; text-align: center;">
+                        <p:commandButton value="Asignar"
+                                         icon="pi pi-check"
+                                         actionListener="#{vueloBean.seleccionarPilotoDirecto(pl)}"
+                                         process="@this"
+                                         update=":formVuelo:panelPilotoSeleccionado :formVuelo:piloto :formVuelo:stepBadge3 :formVuelo:panelPaso3 :msgs"
+                                         oncomplete="PF('dlgSelectorPiloto').hide();"
+                                         styleClass="btn-primary-custom"
+                                         style="padding: 4px 10px !important; font-size: 0.82rem; white-space: nowrap;" />
+                    </p:column>
+
+                </p:dataTable>
+
+                <div class="dialog-footer-fijo">
+                    <p:commandButton value="Cerrar" icon="pi pi-times" type="button"
+                                     onclick="PF('dlgSelectorPiloto').hide();"
                                      styleClass="btn-secondary-custom" />
                 </div>
             </h:form>
