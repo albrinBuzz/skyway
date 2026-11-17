@@ -242,6 +242,46 @@
     </script>
 
 
+        <style type="text/css">
+            .flight-lock-banner,
+            .flight-protect-banner {
+                display: flex;
+                align-items: flex-start;
+                gap: 0.75rem;
+                padding: 0.85rem 1.05rem;
+                border-radius: 10px;
+                margin-bottom: 1.25rem;
+                font-size: 0.86rem;
+                line-height: 1.45;
+            }
+            .flight-lock-banner {
+                background: rgba(153, 27, 27, 0.16);
+                border: 1px solid rgba(239, 68, 68, 0.35);
+                color: #fecaca;
+            }
+            .flight-lock-banner i {
+                color: #f87171;
+                font-size: 1.05rem;
+                margin-top: 2px;
+            }
+            .flight-protect-banner {
+                background: rgba(146, 64, 14, 0.16);
+                border: 1px solid rgba(217, 119, 6, 0.36);
+                color: #fde68a;
+            }
+            .flight-protect-banner i {
+                color: #fbbf24;
+                font-size: 1.05rem;
+                margin-top: 2px;
+            }
+            .flight-protect-banner.compact {
+                margin-top: 0.65rem;
+                margin-bottom: 0;
+                padding: 0.6rem 0.85rem;
+                font-size: 0.8rem;
+            }
+        </style>
+
         <p:growl id="msgs" showDetail="true" />
 
         <h:form id="formVuelo">
@@ -263,6 +303,27 @@
                     <p:button outcome="/admin/index.xhtml" value="Volver Al Panel" icon="pi pi-arrow-left" styleClass="btn-secondary-custom" />
                 </div>
 
+                <!-- BANNERS DE PROTECCIÓN OPERATIVA (FASE 0) -->
+                <ui:fragment rendered="#{vueloBean.edicionBloqueadaPorEstado}">
+                    <div class="flight-lock-banner">
+                        <i class="pi pi-lock"></i>
+                        <div>
+                            <strong style="display: block; margin-bottom: 2px;">Vuelo bloqueado en modo solo lectura (#{vueloBean.estadoActualDescripcion})</strong>
+                            <span>No se permiten modificaciones de ruta, tripulación, aeronave ni tarifas para vuelos cancelados, en curso o finalizados.</span>
+                        </div>
+                    </div>
+                </ui:fragment>
+
+                <ui:fragment rendered="#{not vueloBean.edicionBloqueadaPorEstado and vueloBean.vueloConReservasActivas}">
+                    <div class="flight-protect-banner">
+                        <i class="pi pi-shield"></i>
+                        <div>
+                            <strong style="display: block; margin-bottom: 2px;">Protección activa: #{vueloBean.asientosVendidosCount} asiento(s) vendido(s)</strong>
+                            <span>La ruta (origen/destino) y la aeronave asignada están bloqueadas para evitar descuadres de cabina. Puede reasignar comandante, ajustar tarifas o usar <strong>Reprogramar Horario</strong> (valida escalas, turnos, puertas y aeronave).</span>
+                        </div>
+                    </div>
+                </ui:fragment>
+
                 <!-- PASO 1: TRAYECTO ÚNICO (ORIGEN, DESTINO Y HORARIOS) -->
                 <div class="step-wrapper">
                     <div class="step-number">1</div>
@@ -280,6 +341,7 @@
                                                      icon="pi pi-plus"
                                                      process="@this"
                                                      rendered="#{empty vueloBean.segmentos}"
+                                                     disabled="#{vueloBean.rutaYAeronaveProtegidas}"
                                                      actionListener="#{vueloBean.openNewSegmento}"
                                                      oncomplete="PF('dlgNuevoSegmento').show(); setTimeout(function(){ window.initMapaSelectorDesdeDom('#{vueloBean.aeropuertosMapaJson}'); }, 300);"
                                                      styleClass="btn-secondary-custom"
@@ -288,6 +350,7 @@
                             </div>
 
                             <!-- MAPA GENERAL DE VISTA RÁPIDA DE RUTA -->
+                            <input type="hidden" id="hiddenSegmentosJson" value="#{vueloBean.segmentosJson}" />
                             <div id="mapaRutaGeneralContainer" style="width:100%; height:320px; border-radius:12px; border:1px solid #26354d; margin-bottom:1.5rem; display:none;"></div>
 
                             <!-- LISTA DE SEGMENTOS DE VUELO -->
@@ -302,8 +365,18 @@
                                         <!-- HEADER DE TRAMO CON BOTONES DISCRETOS -->
                                         <div class="segment-header-bar">
                                             <div class="flex gap-2">
+                                                <p:commandButton value="Reprogramar Horario"
+                                                                 icon="pi pi-clock"
+                                                                 rendered="#{vueloBean.puedeReprogramarHorario}"
+                                                                 actionListener="#{vueloBean.abrirReprogramacionHorario}"
+                                                                 process="@this"
+                                                                 update=":formReprogramarHorario"
+                                                                 oncomplete="PF('dlgReprogramarHorario').show();"
+                                                                 styleClass="btn-secondary-custom btn-sm" />
+
                                                 <p:commandButton value="Editar"
                                                                  icon="pi pi-pencil"
+                                                                 disabled="#{vueloBean.rutaYAeronaveProtegidas}"
                                                                  actionListener="#{vueloBean.prepararEdicion(seg)}"
                                                                  process="@this"
                                                                  update=":formSegmentoCrear:manage-segmento-content"
@@ -312,6 +385,7 @@
 
                                                 <p:commandButton value="Eliminar"
                                                                  icon="pi pi-trash"
+                                                                 disabled="#{vueloBean.rutaYAeronaveProtegidas}"
                                                                  actionListener="#{vueloBean.eliminarSegmento(seg)}"
                                                                  process="@this"
                                                                  update=":formVuelo:panelBtnDefinirRuta :formVuelo:listaSegmentosPanel :formVuelo:stepBadge2 :formVuelo:panelPaso2 :formVuelo:stepBadge3 :formVuelo:panelPaso3 :msgs"
@@ -436,7 +510,8 @@
 
                                         <div class="p-field p-col-12 p-md-6">
                                             <p:outputLabel for="aerolinea" value="Línea Aérea *" />
-                                            <p:selectOneMenu id="aerolinea" value="#{vueloBean.aerolineaId}" required="true" requiredMessage="Seleccione la Aerolínea">
+                                            <p:selectOneMenu id="aerolinea" value="#{vueloBean.aerolineaId}" required="true" requiredMessage="Seleccione la Aerolínea"
+                                                             disabled="#{vueloBean.edicionBloqueadaPorEstado}">
                                                 <f:selectItem itemLabel="Seleccione" itemValue="" />
                                                 <f:selectItems value="#{vueloBean.aerolineas}" var="a" itemLabel="#{a.nombre}" itemValue="#{a.idAerolinea}" />
                                                 <p:ajax update=":formVuelo:stepBadge3 :formVuelo:panelPaso3" />
@@ -469,6 +544,7 @@
                                                     <div class="avion-picker-action">
                                                         <p:commandButton value="Explorar Pilotos y Asignar"
                                                                          icon="pi pi-search"
+                                                                         disabled="#{vueloBean.edicionBloqueadaPorEstado}"
                                                                          actionListener="#{vueloBean.abrirSelectorPiloto}"
                                                                          process="@this"
                                                                          update=":formSelectorPiloto"
@@ -508,6 +584,7 @@
                                                     <div class="avion-card-actions">
                                                         <p:commandButton value="Cambiar Piloto"
                                                                          icon="pi pi-sync"
+                                                                         disabled="#{vueloBean.edicionBloqueadaPorEstado}"
                                                                          actionListener="#{vueloBean.abrirSelectorPiloto}"
                                                                          process="@this"
                                                                          update=":formSelectorPiloto"
@@ -515,6 +592,7 @@
                                                                          styleClass="btn-secondary-custom mr-2" />
                                                         <p:commandButton value="Quitar"
                                                                          icon="pi pi-times"
+                                                                         disabled="#{vueloBean.edicionBloqueadaPorEstado}"
                                                                          actionListener="#{vueloBean.desasignarPiloto}"
                                                                          process="@this"
                                                                          update=":formVuelo:panelPilotoSeleccionado :formVuelo:piloto :formVuelo:stepBadge3 :formVuelo:panelPaso3 :msgs"
@@ -549,6 +627,7 @@
                                                     <div class="avion-picker-action">
                                                         <p:commandButton value="Explorar Flota y Asignar"
                                                                          icon="pi pi-search"
+                                                                         disabled="#{vueloBean.rutaYAeronaveProtegidas}"
                                                                          actionListener="#{vueloBean.abrirSelectorAvion}"
                                                                          process="@this"
                                                                          update=":formSelectorAvion"
@@ -582,11 +661,18 @@
                                                                     <span>Conflicto de horario detectado para la ruta programada. Presione "Cambiar Aeronave" para elegir una unidad disponible.</span>
                                                                 </div>
                                                             </ui:fragment>
+                                                            <ui:fragment rendered="#{not vueloBean.edicionBloqueadaPorEstado and vueloBean.vueloConReservasActivas}">
+                                                                <div class="flight-protect-banner compact">
+                                                                    <i class="pi pi-shield"></i>
+                                                                    <span>Aeronave protegida: existen #{vueloBean.asientosVendidosCount} reserva(s) de asiento confirmada(s) sobre su matriz de cabina.</span>
+                                                                </div>
+                                                            </ui:fragment>
                                                         </div>
                                                     </div>
                                                     <div class="avion-card-actions">
                                                         <p:commandButton value="Cambiar Aeronave"
                                                                          icon="pi pi-sync"
+                                                                         disabled="#{vueloBean.rutaYAeronaveProtegidas}"
                                                                          actionListener="#{vueloBean.abrirSelectorAvion}"
                                                                          process="@this"
                                                                          update=":formSelectorAvion"
@@ -594,6 +680,7 @@
                                                                          styleClass="btn-secondary-custom mr-2" />
                                                         <p:commandButton value="Quitar"
                                                                          icon="pi pi-times"
+                                                                         disabled="#{vueloBean.rutaYAeronaveProtegidas}"
                                                                          actionListener="#{vueloBean.desasignarAvion}"
                                                                          process="@this"
                                                                          update=":formVuelo:panelAvionSeleccionado :formVuelo:avion :formVuelo:stepBadge3 :formVuelo:panelPaso3 :msgs"
@@ -634,6 +721,7 @@
                                                     </div>
                                                     <p:outputLabel value="Tarifa Base (CLP) *" />
                                                     <p:inputNumber value="#{cap.precio}" mode="currency" currencySymbol="$ " locale="es_CL" decimalPlaces="0" required="true" requiredMessage="Ingrese el precio para la clase #{cap.clase}"
+                                                                   readonly="#{vueloBean.edicionBloqueadaPorEstado}"
                                                                    inputStyle="width: 100%; background: #0f172a; border: 1px solid var(--border-color); color: var(--success-green); font-weight: bold; font-size: 1.1rem; text-align: right;">
                                                         <p:ajax event="blur" update=":formVuelo:panelConfirmarVuelo" />
                                                     </p:inputNumber>
@@ -644,6 +732,7 @@
                                         <div class="flex justify-content-end mt-3">
                                             <p:commandButton value="Guardar Tarifas"
                                                              icon="pi pi-check"
+                                                             disabled="#{vueloBean.edicionBloqueadaPorEstado}"
                                                              actionListener="#{vueloBean.guardarTarifasAsientos}"
                                                              process="infoCapacidad"
                                                              update=":msgs :formVuelo:panelConfirmarVuelo"
@@ -674,7 +763,7 @@
                                         <p:commandButton value="Confirmar y Guardar Vuelo Completo"
                                                          actionListener="#{vueloBean.confirmarYGuardarVueloCompleto}"
                                                          icon="pi pi-send"
-                                                         disabled="#{!vueloBean.paso3Completo}"
+                                                         disabled="#{!vueloBean.paso3Completo or vueloBean.edicionBloqueadaPorEstado}"
                                                          process="@form"
                                                          update=":formVuelo :msgs"
                                                          oncomplete="window.renderizarMapaRutaGeneral('#{vueloBean.segmentosJson}');"
@@ -1510,6 +1599,205 @@
                     <p:commandButton value="Cerrar" icon="pi pi-times" type="button"
                                      onclick="PF('dlgSelectorPiloto').hide();"
                                      styleClass="btn-secondary-custom" />
+                </div>
+            </h:form>
+        </p:dialog>
+
+        <!-- DIÁLOGO DE REPROGRAMACIÓN SEGURA DE HORARIOS Y FECHAS -->
+        <p:dialog widgetVar="dlgReprogramarHorario"
+                  header="Reprogramación Controlada de Horarios"
+                  modal="true"
+                  width="760"
+                  responsive="true"
+                  fitViewport="true"
+                  showEffect="fade"
+                  hideEffect="fade"
+                  styleClass="custom-dialog">
+
+            <h:form id="formReprogramarHorario" styleClass="ui-fluid">
+                <div class="dialog-scroll-body p-1">
+                    <ui:fragment rendered="#{not empty vueloBean.segmentos}">
+                        <div class="modal-availability-banner" style="margin-bottom: 1rem;">
+                            <i class="pi pi-shield"></i>
+                            <span>
+                                Trayecto fijo: <strong>#{vueloBean.segmentos[0].aeropuertoOrigen.codigoIata} → #{vueloBean.segmentos[0].aeropuertoDestino.codigoIata}</strong>
+                                (Vuelo <strong>#{not empty vueloBean.numeroVuelo ? vueloBean.numeroVuelo : '#'.concat(vueloBean.vuelo.idVuelo)}</strong>).
+                                El sistema validará aeronave, comandante, turnos de tripulación, puerta de embarque y escalas en todos los itinerarios conectados.
+                            </span>
+                        </div>
+                    </ui:fragment>
+
+                    <div class="p-formgrid p-grid">
+                        <div class="p-field p-col-12 p-md-6 mb-3">
+                            <p:outputLabel for="reprogFechaSalida" value="Nueva Fecha y Hora de Salida *" styleClass="ui-outputlabel" />
+                            <p:datePicker id="reprogFechaSalida"
+                                          value="#{vueloBean.reprogFechaSalida}"
+                                          showTime="true"
+                                          hourFormat="24"
+                                          pattern="dd/MM/yyyy HH:mm" />
+                        </div>
+
+                        <div class="p-field p-col-12 p-md-6 mb-3">
+                            <p:outputLabel for="reprogFechaLlegada" value="Nueva Fecha y Hora de Llegada *" styleClass="ui-outputlabel" />
+                            <p:datePicker id="reprogFechaLlegada"
+                                          value="#{vueloBean.reprogFechaLlegada}"
+                                          showTime="true"
+                                          hourFormat="24"
+                                          pattern="dd/MM/yyyy HH:mm" />
+                        </div>
+
+                        <div class="p-field p-col-12 p-md-8 mb-3">
+                            <p:outputLabel for="reprogPuerta" value="Puerta de Embarque (Origen)" styleClass="ui-outputlabel" />
+                            <p:selectOneMenu id="reprogPuerta" value="#{vueloBean.reprogPuertaId}">
+                                <f:selectItem itemLabel="Mantener puerta actual / Sin cambio" itemValue="" />
+                                <f:selectItems value="#{vueloBean.reprogPuertasDisponibles}" var="p"
+                                               itemLabel="GATE #{p.codigoPuerta} — Terminal #{p.terminal}" itemValue="#{p.idPuerta}" />
+                            </p:selectOneMenu>
+                        </div>
+
+                        <div class="p-field p-col-12 p-md-4 mb-3 flex align-items-end">
+                            <div class="flex align-items-center gap-2" style="padding-bottom: 0.5rem;">
+                                <p:selectBooleanCheckbox id="chkMarcarRetrasado" value="#{vueloBean.reprogMarcarRetrasado}" />
+                                <p:outputLabel for="chkMarcarRetrasado" value="Marcar vuelo como Retrasado" style="margin: 0; color: #cbd5e1; font-size: 0.85rem;" />
+                            </div>
+                        </div>
+
+                        <div class="p-field p-col-12 mb-3">
+                            <p:outputLabel for="reprogMotivo" value="Motivo Operacional (Auditoría) *" styleClass="ui-outputlabel" />
+                            <p:inputTextarea id="reprogMotivo"
+                                             value="#{vueloBean.reprogMotivo}"
+                                             rows="2"
+                                             autoResize="false"
+                                             placeholder="Ej: Ajuste operacional por congestión en pista / contingencia meteorológica..." />
+                        </div>
+                    </div>
+
+                    <h:panelGroup id="panelResultadoReprogramacion" layout="block">
+                        <ui:fragment rendered="#{vueloBean.resultadoReprogramacion != null}">
+                            <!-- APARTADO DE IMPACTO OPERACIONAL Y COMERCIAL -->
+                            <div style="background: #0b1324; border: 1px solid #26354d; border-radius: 8px; padding: 0.85rem 1rem; margin-bottom: 0.75rem;">
+                                <div style="font-size: 0.82rem; font-weight: 700; color: #9bb5d8; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.65rem;">
+                                    <i class="pi pi-sitemap mr-1"></i> Análisis de Impacto Operacional y Comercial
+                                </div>
+
+                                <div class="grid" style="margin-bottom: 0.55rem;">
+                                    <div class="col-6 md:col-3" style="padding: 0.25rem;">
+                                        <div style="background: #13223d; border: 1px solid #1e3a5f; border-radius: 6px; padding: 0.45rem 0.6rem; text-align: center;">
+                                            <div style="font-size: 0.7rem; color: #94a3b8;">Asientos / Reservas</div>
+                                            <div style="font-size: 0.95rem; font-weight: 700; color: #f8fafc;">
+                                                #{vueloBean.resultadoReprogramacion.asientosVendidos} / #{vueloBean.resultadoReprogramacion.reservasActivas}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 md:col-3" style="padding: 0.25rem;">
+                                        <div style="background: #13223d; border: 1px solid #1e3a5f; border-radius: 6px; padding: 0.45rem 0.6rem; text-align: center;">
+                                            <div style="font-size: 0.7rem; color: #94a3b8;">Check-ins Emitidos</div>
+                                            <div style="font-size: 0.95rem; font-weight: 700; color: #{vueloBean.resultadoReprogramacion.checkinsCompletados gt 0 ? '#fbbf24' : '#f8fafc'};">
+                                                #{vueloBean.resultadoReprogramacion.checkinsCompletados}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 md:col-3" style="padding: 0.25rem;">
+                                        <div style="background: #13223d; border: 1px solid #1e3a5f; border-radius: 6px; padding: 0.45rem 0.6rem; text-align: center;">
+                                            <div style="font-size: 0.7rem; color: #94a3b8;">Itinerarios Ligados</div>
+                                            <div style="font-size: 0.95rem; font-weight: 700; color: #60a5fa;">
+                                                #{vueloBean.resultadoReprogramacion.itinerariosEvaluados}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 md:col-3" style="padding: 0.25rem;">
+                                        <div style="background: #13223d; border: 1px solid #1e3a5f; border-radius: 6px; padding: 0.45rem 0.6rem; text-align: center;">
+                                            <div style="font-size: 0.7rem; color: #94a3b8;">Turnos Tripulación</div>
+                                            <div style="font-size: 0.95rem; font-weight: 700; color: #f8fafc;">
+                                                #{vueloBean.resultadoReprogramacion.turnosEvaluados}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <ui:fragment rendered="#{empty vueloBean.resultadoReprogramacion.itinerariosImpactados}">
+                                    <div style="font-size: 0.8rem; color: #94a3b8; font-style: italic; padding-top: 0.25rem;">
+                                        Este vuelo no está vinculado aún a ningún itinerario comercial publicado.
+                                    </div>
+                                </ui:fragment>
+
+                                <ui:fragment rendered="#{not empty vueloBean.resultadoReprogramacion.itinerariosImpactados}">
+                                    <div style="font-size: 0.76rem; font-weight: 600; color: #cbd5e1; margin: 0.45rem 0 0.35rem 0;">
+                                        Itinerarios relacionados y evaluación de escalas:
+                                    </div>
+                                    <div style="max-height: 170px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.45rem;">
+                                        <ui:repeat var="itImp" value="#{vueloBean.resultadoReprogramacion.itinerariosImpactados}">
+                                            <div style="background: #111c33; border: 1px solid #{itImp.estadoConexion eq 'ESCALA ROTA' ? 'rgba(239, 68, 68, 0.5)' : '#233554'}; border-radius: 6px; padding: 0.55rem 0.7rem;">
+                                                <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                                                    <span style="font-weight: 700; color: #e2e8f0; font-size: 0.82rem;">
+                                                        Itinerario ##{itImp.idItinerario} · #{itImp.rutaComercial}
+                                                        <span style="color: #94a3b8; font-weight: 400;">(#{itImp.numeroEscalas} escala(s) · #{itImp.reservasActivas} reserva(s))</span>
+                                                    </span>
+                                                    <span style="font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+                                                                 background: #{itImp.estadoConexion eq 'ESCALA ROTA' ? 'rgba(153, 27, 27, 0.38)' : (itImp.estadoConexion eq 'OK' ? 'rgba(20, 83, 45, 0.38)' : 'rgba(30, 58, 138, 0.38)')};
+                                                                 color: #{itImp.estadoConexion eq 'ESCALA ROTA' ? '#fca5a5' : (itImp.estadoConexion eq 'OK' ? '#86efac' : '#93c5fd')};">
+                                                        #{itImp.estadoConexion}
+                                                    </span>
+                                                </div>
+                                                <div style="font-size: 0.76rem; color: #cbd5e1; margin-top: 0.25rem;">
+                                                    <i class="pi pi-arrows-h mr-1" style="font-size: 0.7rem; color: #6488b8;"></i>
+                                                    #{itImp.secuenciaTramos}
+                                                </div>
+                                                <div style="font-size: 0.74rem; color: #{itImp.estadoConexion eq 'ESCALA ROTA' ? '#fca5a5' : '#94a3b8'}; margin-top: 0.15rem;">
+                                                    #{itImp.detalleConexion}
+                                                </div>
+                                            </div>
+                                        </ui:repeat>
+                                    </div>
+                                </ui:fragment>
+                            </div>
+
+                            <!-- RESULTADO DE VALIDACIÓN DE CONFLICTOS -->
+                            <div style="border-radius: 8px; padding: 0.85rem 1rem; margin-top: 0.25rem;
+                                        background: #{vueloBean.resultadoReprogramacion.valido ? 'rgba(20, 83, 45, 0.22)' : 'rgba(153, 27, 27, 0.22)'};
+                                        border: 1px solid #{vueloBean.resultadoReprogramacion.valido ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.45)'};">
+                                <div style="font-weight: 700; color: #{vueloBean.resultadoReprogramacion.valido ? '#86efac' : '#fca5a5'}; margin-bottom: 0.4rem;">
+                                    <i class="pi #{vueloBean.resultadoReprogramacion.valido ? 'pi-check-circle' : 'pi-times-circle'} mr-1"></i>
+                                    #{vueloBean.resultadoReprogramacion.resumenMensaje}
+                                </div>
+
+                                <ui:fragment rendered="#{not empty vueloBean.resultadoReprogramacion.errores}">
+                                    <ul style="margin: 0.35rem 0 0 1.2rem; padding: 0; color: #fecaca; font-size: 0.83rem; line-height: 1.5;">
+                                        <ui:repeat var="err" value="#{vueloBean.resultadoReprogramacion.errores}">
+                                            <li>#{err}</li>
+                                        </ui:repeat>
+                                    </ul>
+                                </ui:fragment>
+
+                                <ui:fragment rendered="#{not empty vueloBean.resultadoReprogramacion.advertencias}">
+                                    <ul style="margin: 0.45rem 0 0 1.2rem; padding: 0; color: #fde68a; font-size: 0.82rem; line-height: 1.5;">
+                                        <ui:repeat var="adv" value="#{vueloBean.resultadoReprogramacion.advertencias}">
+                                            <li>#{adv}</li>
+                                        </ui:repeat>
+                                    </ul>
+                                </ui:fragment>
+                            </div>
+                        </ui:fragment>
+                    </h:panelGroup>
+                </div>
+
+                <div class="dialog-footer-fijo">
+                    <p:commandButton value="Cancelar" icon="pi pi-times" type="button"
+                                     onclick="PF('dlgReprogramarHorario').hide();"
+                                     styleClass="ui-button-flat btn-secondary-custom" />
+                    <p:commandButton value="Verificar Impacto y Conflictos"
+                                     icon="pi pi-shield"
+                                     actionListener="#{vueloBean.simularReprogramacionHorario}"
+                                     process="@form"
+                                     update="panelResultadoReprogramacion :msgs"
+                                     styleClass="btn-secondary-custom" />
+                    <p:commandButton value="Confirmar Reprogramación"
+                                     icon="pi pi-check"
+                                     actionListener="#{vueloBean.confirmarReprogramacionHorario}"
+                                     process="@form"
+                                     update=":formVuelo :msgs panelResultadoReprogramacion"
+                                     oncomplete="if (args &amp;&amp; !args.validationFailed) { PF('dlgReprogramarHorario').hide(); var segEl = document.getElementById('hiddenSegmentosJson'); window.renderizarMapaRutaGeneral(segEl ? segEl.value : '[]'); }"
+                                     styleClass="btn-primary-custom" />
                 </div>
             </h:form>
         </p:dialog>

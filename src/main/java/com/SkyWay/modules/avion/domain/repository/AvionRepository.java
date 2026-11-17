@@ -48,8 +48,14 @@ public interface AvionRepository extends JpaRepository<Avion, Integer> {
             "WHERE (UPPER(a.estadoDeMantenimiento) <> 'EN MANTENIMIENTO' OR a.estadoDeMantenimiento IS NULL) " +
             "AND a.idAvion NOT IN (" +
             "   SELECT DISTINCT v.avion.idAvion FROM Vuelo v " +
+            "   LEFT JOIN v.estadoVuelo ev " +
             "   WHERE v.avion IS NOT NULL " +
             "   AND (:idVueloActual IS NULL OR v.idVuelo <> :idVueloActual) " +
+            "   AND (ev IS NULL OR (" +
+            "       UPPER(COALESCE(ev.descripcion, '')) NOT LIKE '%CANCEL%' " +
+            "       AND UPPER(COALESCE(ev.estado, '')) NOT LIKE '%CANCEL%' " +
+            "       AND UPPER(COALESCE(ev.estado, '')) <> 'INACTIVO'" +
+            "   )) " +
             "   AND v.fechaHoraSalida < :fechaLlegada " +
             "   AND v.fechaHoraLlegada > :fechaSalida" +
             ")")

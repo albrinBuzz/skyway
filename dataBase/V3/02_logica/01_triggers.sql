@@ -653,7 +653,7 @@ BEGIN
 
     titulo_notif := '✈️ Actualización de Vuelo: ' || COALESCE(v_numero_vuelo, '#' || v_id_vuelo);
 
-    -- 4. Iterar sobre todos los pasajeros confirmados con reserva activa
+    -- 4. Iterar sobre todos los pasajeros confirmados con reserva activa (titular y acompañantes)
     FOR rec_pasajero IN
         SELECT DISTINCT
             u.rut,
@@ -662,9 +662,13 @@ BEGIN
         FROM reserva_itinerario rsvi
                  JOIN itinerario_vuelo itv ON itv.id_itinerario = rsvi.id_itinerario
                  JOIN reserva rsv ON rsv.id_reserva = rsvi.id_reserva
-                 JOIN usuario u ON u.rut = rsv.rut_pasajero
+                 LEFT JOIN estado_reserva er ON er.id_estado_reserva = rsv.estado_reserva
+                 LEFT JOIN pasajero_reserva pr ON pr.id_reserva = rsv.id_reserva
+                 JOIN usuario u ON u.rut = rsv.rut_pasajero OR u.rut = pr.rut
         WHERE itv.id_vuelo = v_id_vuelo
           AND rsv.estado_reserva <> 3 -- Omitir reservas canceladas
+          AND UPPER(COALESCE(er.descripcion, '')) NOT LIKE '%CANCEL%'
+          AND UPPER(COALESCE(er.descripcion, '')) NOT LIKE '%ANUL%'
         LOOP
             -- Construcción HTML optimizada para la plantilla JavaMail
             mensaje_cuerpo := 'Estimado/a <strong>' || rec_pasajero.nombre || ' ' || rec_pasajero.apellido || '</strong>,<br/><br/>' ||

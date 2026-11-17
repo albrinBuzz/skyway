@@ -871,6 +871,7 @@ CREATE INDEX IF NOT EXISTS idx_wal_rut ON Wal_Transaccion_Pago(rut_titular);
 CREATE INDEX IF NOT EXISTS idx_wal_fecha ON Wal_Transaccion_Pago(fecha_captura DESC);
 CREATE INDEX IF NOT EXISTS idx_wal_payload ON Wal_Transaccion_Pago USING gin(payload_snapshot);
 
+
 DO $$
     DECLARE
         reg RECORD;
@@ -1526,7 +1527,7 @@ BEGIN
 
     titulo_notif := '✈️ Actualización de Vuelo: ' || COALESCE(v_numero_vuelo, '#' || v_id_vuelo);
 
-    -- 4. Iterar sobre todos los pasajeros confirmados con reserva activa
+    -- 4. Iterar sobre todos los pasajeros confirmados con reserva activa (titular y acompañantes)
     FOR rec_pasajero IN
         SELECT DISTINCT
             u.rut,
@@ -1535,9 +1536,13 @@ BEGIN
         FROM reserva_itinerario rsvi
                  JOIN itinerario_vuelo itv ON itv.id_itinerario = rsvi.id_itinerario
                  JOIN reserva rsv ON rsv.id_reserva = rsvi.id_reserva
-                 JOIN usuario u ON u.rut = rsv.rut_pasajero
+                 LEFT JOIN estado_reserva er ON er.id_estado_reserva = rsv.estado_reserva
+                 LEFT JOIN pasajero_reserva pr ON pr.id_reserva = rsv.id_reserva
+                 JOIN usuario u ON u.rut = rsv.rut_pasajero OR u.rut = pr.rut
         WHERE itv.id_vuelo = v_id_vuelo
           AND rsv.estado_reserva <> 3 -- Omitir reservas canceladas
+          AND UPPER(COALESCE(er.descripcion, '')) NOT LIKE '%CANCEL%'
+          AND UPPER(COALESCE(er.descripcion, '')) NOT LIKE '%ANUL%'
         LOOP
             -- Construcción HTML optimizada para la plantilla JavaMail
             mensaje_cuerpo := 'Estimado/a <strong>' || rec_pasajero.nombre || ' ' || rec_pasajero.apellido || '</strong>,<br/><br/>' ||
@@ -1705,7 +1710,6 @@ EXECUTE FUNCTION fn_validar_reserva_duplicada_itinerario();
 
 
 
-
 CREATE OR REPLACE FUNCTION fnBuscarVuelo(
     p_codigo_origen VARCHAR,
     p_codigo_destino VARCHAR,
@@ -1749,7 +1753,19 @@ BEGIN
         WHERE arp1.codigo_iata = p_codigo_origen
           AND arp2.codigo_iata = p_codigo_destino
           AND it.hora_salida >= p_fecha_inicio
-          AND it.hora_salida < p_fecha_inicio + INTERVAL '1 day';
+          AND it.hora_salida < p_fecha_inicio + INTERVAL '1 day'
+          AND NOT EXISTS (
+            SELECT 1
+            FROM itinerario_vuelo iv_chk
+                     JOIN vuelo v_chk ON v_chk.id_vuelo = iv_chk.id_vuelo
+                     JOIN estado_vuelo ev_chk ON ev_chk.id_estado_vuelo = v_chk.id_estado_vuelo
+            WHERE iv_chk.id_itinerario = it.id_itinerario
+              AND (
+                UPPER(COALESCE(ev_chk.descripcion, '')) LIKE '%CANCEL%'
+                    OR UPPER(COALESCE(ev_chk.estado, '')) LIKE '%CANCEL%'
+                    OR UPPER(COALESCE(ev_chk.estado, '')) = 'INACTIVO'
+                )
+        );
 END;
 $$ LANGUAGE plpgsql;
 
@@ -1767,8 +1783,10 @@ BEGIN
         SELECT
             v.*
         FROM vuelo v
+                 LEFT JOIN estado_vuelo ev
+                           ON ev.id_estado_vuelo = v.id_estado_vuelo
 
-                 -- Primer segmento (origen)
+            -- Primer segmento (origen)
                  LEFT JOIN segmento_vuelo sgmv1
                            ON sgmv1.id_vuelo = v.id_vuelo
                                AND sgmv1.orden_segmento = 1
@@ -1791,6 +1809,14 @@ BEGIN
 
         WHERE arp1.codigo_iata = p_codigo_origen
           AND arp2.codigo_iata = p_codigo_destino
+          AND (
+            ev.id_estado_vuelo IS NULL
+                OR (
+                UPPER(COALESCE(ev.descripcion, '')) NOT LIKE '%CANCEL%'
+                    AND UPPER(COALESCE(ev.estado, '')) NOT LIKE '%CANCEL%'
+                    AND UPPER(COALESCE(ev.estado, '')) <> 'INACTIVO'
+                )
+            )
           AND (
             p_fecha_inicio IS NULL
                 OR (
@@ -4429,7 +4455,6 @@ INSERT INTO Itinerario ( ORIGEN_AEROPUERTO, DESTINO_AEROPUERTO, DURACION_TOTAL, 
                                                                                                                 (8, 9, '03:00:00'::interval, 0,450000),       -- Itinerario 10: BOG -> MIA (directo)
 -- Itinerario 11: Vuelo directo SCL -> JFK
                                                                                                                 (1, 4, '09:35:00'::interval, 0, 690000),
-
 -- Itinerario 12: SCL -> BOG -> JFK
                                                                                                                 (1, 4, '13:00:00'::interval, 1, 460000);
 
@@ -4609,4 +4634,3 @@ FROM itinerario it
 WHERE it.hora_salida >= NOW()
   AND it.hora_salida < NOW() + INTERVAL '7 days'
 ORDER BY it.hora_salida ASC;
-

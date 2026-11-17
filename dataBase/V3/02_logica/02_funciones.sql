@@ -41,7 +41,19 @@ BEGIN
     WHERE arp1.codigo_iata = p_codigo_origen
       AND arp2.codigo_iata = p_codigo_destino
       AND it.hora_salida >= p_fecha_inicio
-      AND it.hora_salida < p_fecha_inicio + INTERVAL '1 day';
+      AND it.hora_salida < p_fecha_inicio + INTERVAL '1 day'
+      AND NOT EXISTS (
+          SELECT 1
+          FROM itinerario_vuelo iv_chk
+          JOIN vuelo v_chk ON v_chk.id_vuelo = iv_chk.id_vuelo
+          JOIN estado_vuelo ev_chk ON ev_chk.id_estado_vuelo = v_chk.id_estado_vuelo
+          WHERE iv_chk.id_itinerario = it.id_itinerario
+            AND (
+                UPPER(COALESCE(ev_chk.descripcion, '')) LIKE '%CANCEL%'
+                OR UPPER(COALESCE(ev_chk.estado, '')) LIKE '%CANCEL%'
+                OR UPPER(COALESCE(ev_chk.estado, '')) = 'INACTIVO'
+            )
+      );
 END;
 $$ LANGUAGE plpgsql;
 
@@ -59,6 +71,8 @@ BEGIN
     SELECT
         v.*
     FROM vuelo v
+    LEFT JOIN estado_vuelo ev
+        ON ev.id_estado_vuelo = v.id_estado_vuelo
 
     -- Primer segmento (origen)
     LEFT JOIN segmento_vuelo sgmv1
@@ -83,6 +97,14 @@ BEGIN
 
     WHERE arp1.codigo_iata = p_codigo_origen
       AND arp2.codigo_iata = p_codigo_destino
+      AND (
+            ev.id_estado_vuelo IS NULL
+            OR (
+                UPPER(COALESCE(ev.descripcion, '')) NOT LIKE '%CANCEL%'
+                AND UPPER(COALESCE(ev.estado, '')) NOT LIKE '%CANCEL%'
+                AND UPPER(COALESCE(ev.estado, '')) <> 'INACTIVO'
+            )
+      )
 	 AND (
             p_fecha_inicio IS NULL
             OR (

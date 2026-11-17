@@ -463,8 +463,8 @@
                           filterBy="#{vuelo.estadoVuelo.descripcion}"
                           filterMatchMode="contains"
                           style="text-align: center; width: 140px;">
-                    <span class="status-badge">
-                        <i class="pi pi-check-circle" style="font-size: 9px;"></i>
+                    <span class="status-badge" style="#{vueloBean.obtenerEstiloEstadoVueloListado(vuelo)}">
+                        <i class="pi #{vueloBean.isVueloEditableEnListado(vuelo) ? 'pi-check-circle' : 'pi-lock'}" style="font-size: 9px;"></i>
                         #{vuelo.estadoVuelo != null ? vuelo.estadoVuelo.descripcion : 'Programado'}
                     </span>
                 </p:column>
@@ -472,11 +472,11 @@
                 <!-- ACCIONES -->
                 <p:column headerText="Acciones" style="width: 110px; text-align: center">
                     <div class="flex gap-2 justify-content-center">
-                        <p:commandButton icon="pi pi-pencil"
+                        <p:commandButton icon="#{vueloBean.isVueloEditableEnListado(vuelo) ? 'pi pi-pencil' : 'pi pi-lock'}"
                                          action="#{vueloBean.editarVuelo(vuelo)}"
                                          styleClass="ui-button-outlined ui-button-secondary ui-button-sm"
                                          rendered="#{userBean.hasRole('ROLE_ADMIN') or userBean.hasRole('ROLE_DESPACHADOR')}"
-                                         title="Editar Vuelo" />
+                                         title="#{vueloBean.isVueloEditableEnListado(vuelo) ? 'Editar Vuelo' : 'Ver detalle (Vuelo bloqueado: solo lectura)'}" />
 
                         <p:commandButton value="Turnos"
                                          icon="pi pi-users"
