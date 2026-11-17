@@ -1,0 +1,200 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui">
+
+    <style type="text/css">
+        body .ui-dialog.cancel-vuelo-dialog {
+            background: #0d172a !important;
+            background-color: #0d172a !important;
+            border: 1px solid #2b3f5e !important;
+            border-radius: 12px !important;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.78) !important;
+            overflow: hidden !important;
+            max-width: 96vw !important;
+        }
+        body .ui-dialog.cancel-vuelo-dialog .ui-dialog-titlebar {
+            background: #13223d !important;
+            background-color: #13223d !important;
+            color: #f8fafc !important;
+            border: none !important;
+            border-bottom: 1px solid #1e3a5f !important;
+            padding: 1rem 1.25rem !important;
+        }
+        body .ui-dialog.cancel-vuelo-dialog .ui-dialog-title {
+            color: #f8fafc !important;
+            font-weight: 700 !important;
+            font-size: 1rem !important;
+        }
+        body .ui-dialog.cancel-vuelo-dialog .ui-dialog-titlebar-icon {
+            color: #94a3b8 !important;
+        }
+        body .ui-dialog.cancel-vuelo-dialog .ui-dialog-titlebar-icon:hover {
+            color: #f8fafc !important;
+            background: rgba(255, 255, 255, 0.08) !important;
+        }
+        body .ui-dialog.cancel-vuelo-dialog .ui-dialog-content {
+            background: #0d172a !important;
+            background-color: #0d172a !important;
+            color: #e2e8f0 !important;
+            padding: 1.15rem 1.25rem !important;
+        }
+        .cancel-kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.65rem;
+            margin-bottom: 0.9rem;
+        }
+        @media (max-width: 600px) {
+            .cancel-kpi-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .cancel-kpi-card {
+            background: #13223d;
+            border: 1px solid #243b61;
+            border-radius: 8px;
+            padding: 0.65rem 0.75rem;
+            text-align: center;
+        }
+        .cancel-btn-cerrar.ui-button {
+            background: #1e293b !important;
+            border: 1px solid #475569 !important;
+            color: #e2e8f0 !important;
+        }
+        .cancel-btn-cerrar.ui-button:hover {
+            background: #334155 !important;
+            color: #ffffff !important;
+        }
+    </style>
+
+    <p:dialog widgetVar="dlgCancelarVuelo"
+              header="Cancelación Operacional de Vuelo"
+              modal="true"
+              width="760"
+              responsive="true"
+              fitViewport="true"
+              showEffect="fade"
+              hideEffect="fade"
+              styleClass="custom-dialog cancel-vuelo-dialog">
+
+        <h:form id="formCancelarVuelo" styleClass="ui-fluid">
+            <h:panelGroup id="panelCancelarVueloContent" layout="block">
+                <ui:fragment rendered="#{vueloBean.resultadoCancelacion != null}">
+                    <div style="background: #2b0f18; border: 1px solid #991b1b; border-left: 5px solid #ef4444; border-radius: 8px; padding: 0.9rem 1rem; margin-bottom: 0.9rem; display: flex; gap: 0.8rem; align-items: flex-start;">
+                        <i class="pi pi-exclamation-triangle" style="color: #f87171; font-size: 1.3rem; margin-top: 2px;"></i>
+                        <div style="font-size: 0.85rem; color: #fee2e2; line-height: 1.48;">
+                            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.45rem; margin-bottom: 4px;">
+                                <span style="background: #991b1b; color: #ffffff; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.05em; padding: 2px 8px; border-radius: 999px; text-transform: uppercase;">
+                                    Operación Irreversible · Corte Atómico Total
+                                </span>
+                                <span style="font-size: 0.74rem; color: #fca5a5; font-weight: 600;">
+                                    Sin reacomodación automática
+                                </span>
+                            </div>
+                            <strong style="display: block; font-size: 0.94rem; color: #ffffff; margin-bottom: 4px;">
+                                Vuelo #{vueloBean.resultadoCancelacion.numeroVuelo} (#{vueloBean.resultadoCancelacion.ruta}) · Estado actual: #{vueloBean.resultadoCancelacion.estadoActual}
+                            </strong>
+                            <span>#{vueloBean.resultadoCancelacion.mensajeResumen}</span>
+                        </div>
+                    </div>
+
+                    <!-- KPIs DE IMPACTO EN 3 COLUMNAS -->
+                    <div class="cancel-kpi-grid">
+                        <div class="cancel-kpi-card">
+                            <div style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.03em;">Reservas Activas</div>
+                            <div style="font-size: 1.15rem; font-weight: 700; margin-top: 2px; color: #{vueloBean.resultadoCancelacion.reservasActivas gt 0 ? '#fca5a5' : '#f8fafc'};">
+                                #{vueloBean.resultadoCancelacion.reservasActivas}
+                            </div>
+                        </div>
+                        <div class="cancel-kpi-card">
+                            <div style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.03em;">Pasajeros a Notificar</div>
+                            <div style="font-size: 1.15rem; font-weight: 700; margin-top: 2px; color: #fbbf24;">
+                                #{vueloBean.resultadoCancelacion.pasajerosAfectados}
+                            </div>
+                        </div>
+                        <div class="cancel-kpi-card">
+                            <div style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.03em;">Asientos / Check-ins</div>
+                            <div style="font-size: 1.15rem; font-weight: 700; margin-top: 2px; color: #f8fafc;">
+                                #{vueloBean.resultadoCancelacion.asientosVendidos} / #{vueloBean.resultadoCancelacion.checkinsActivos}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ADVERTENCIAS ESPECÍFICAS -->
+                    <ui:fragment rendered="#{not empty vueloBean.resultadoCancelacion.advertencias}">
+                        <div style="background: #231b0e; border: 1px solid #78350f; border-left: 4px solid #f59e0b; border-radius: 8px; padding: 0.75rem 0.95rem; margin-bottom: 0.85rem;">
+                            <div style="font-size: 0.8rem; font-weight: 700; color: #fbbf24; margin-bottom: 0.3rem;">
+                                Consecuencias automáticas en cascada:
+                            </div>
+                            <ul style="margin: 0 0 0 1.15rem; padding: 0; font-size: 0.81rem; color: #fef3c7; line-height: 1.5;">
+                                <ui:repeat var="adv" value="#{vueloBean.resultadoCancelacion.advertencias}">
+                                    <li>#{adv}</li>
+                                </ui:repeat>
+                            </ul>
+                        </div>
+                    </ui:fragment>
+
+                    <!-- ITINERARIOS IMPACTADOS -->
+                    <ui:fragment rendered="#{not empty vueloBean.resultadoCancelacion.itinerariosImpactados}">
+                        <div style="background: #09101f; border: 1px solid #243b61; border-radius: 8px; padding: 0.75rem 0.95rem; margin-bottom: 0.9rem;">
+                            <div style="font-size: 0.8rem; font-weight: 700; color: #93c5fd; margin-bottom: 0.45rem;">
+                                <i class="pi pi-sitemap mr-1"></i> Itinerarios comerciales afectados (#{vueloBean.resultadoCancelacion.itinerariosImpactados.size()})
+                            </div>
+                            <div style="max-height: 145px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.45rem;">
+                                <ui:repeat var="itCanc" value="#{vueloBean.resultadoCancelacion.itinerariosImpactados}">
+                                    <div style="background: #111c33; border: 1px solid #263d63; border-radius: 6px; padding: 0.5rem 0.7rem; font-size: 0.8rem;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
+                                            <strong style="color: #f8fafc;">Itinerario ##{itCanc.idItinerario} · #{itCanc.rutaComercial} (#{itCanc.reservasActivas} reserva(s))</strong>
+                                            <span style="background: rgba(153, 27, 27, 0.55); border: 1px solid rgba(248, 113, 113, 0.4); color: #fecaca; padding: 2px 8px; border-radius: 999px; font-size: 0.7rem; font-weight: 700;">#{itCanc.estadoConexion}</span>
+                                        </div>
+                                        <div style="color: #cbd5e1; margin-top: 3px; font-size: 0.78rem; font-weight: 600;">#{itCanc.secuenciaTramos}</div>
+                                        <div style="color: #fca5a5; margin-top: 3px; font-size: 0.74rem;">#{itCanc.detalleConexion}</div>
+                                    </div>
+                                </ui:repeat>
+                            </div>
+                        </div>
+                    </ui:fragment>
+
+                    <!-- FORMULARIO DE CONFIRMACIÓN -->
+                    <ui:fragment rendered="#{vueloBean.resultadoCancelacion.permitido}">
+                        <div class="p-field mb-3">
+                            <p:outputLabel for="cancelMotivo" value="Motivo Operacional de Cancelación (Auditoría y Notificación) *"
+                                           style="display: block; color: #e2e8f0; font-weight: 600; font-size: 0.82rem; margin-bottom: 0.35rem;" />
+                            <p:inputTextarea id="cancelMotivo"
+                                             value="#{vueloBean.cancelMotivo}"
+                                             rows="2"
+                                             autoResize="false"
+                                             style="width: 100%; background: #0f172a; color: #f8fafc; border: 1px solid #334155;"
+                                             placeholder="Ej: Mantenimiento no programado de aeronave / condiciones climáticas adversas..." />
+                        </div>
+
+                        <div style="background: #2a1219; border: 1px solid #991b1b; border-radius: 6px; padding: 0.8rem 0.9rem; display: flex; align-items: flex-start; gap: 0.7rem;">
+                            <p:selectBooleanCheckbox id="chkConfirmCancelVuelo" value="#{vueloBean.cancelConfirmacionAceptada}" style="margin-top: 2px;" />
+                            <p:outputLabel for="chkConfirmCancelVuelo"
+                                           value="DECLARO QUE COMPRENDO LA GRAVEDAD DE ESTA ACCIÓN IRREVERSIBLE: este vuelo se cancelará definitivamente en cascada, destruyendo todas las reservas activas vinculadas (incluidos tramos de ida/vuelta o escalas), anulando pases de abordar, generando reembolsos automáticos, inhabilitando los itinerarios comerciales dependientes y notificando masivamente a los pasajeros."
+                                           style="margin: 0; color: #fee2e2; font-size: 0.8rem; line-height: 1.45; font-weight: 600; cursor: pointer;" />
+                        </div>
+                    </ui:fragment>
+                </ui:fragment>
+            </h:panelGroup>
+
+            <div class="dialog-footer-fijo" style="display: flex; justify-content: flex-end; gap: 0.65rem; padding-top: 0.9rem; border-top: 1px solid #1e3a5f; margin-top: 0.9rem;">
+                <p:commandButton value="Cerrar"
+                                 icon="pi pi-times"
+                                 type="button"
+                                 onclick="PF('dlgCancelarVuelo').hide();"
+                                 styleClass="cancel-btn-cerrar" />
+
+                <p:commandButton value="Ejecutar Cancelación Irreversible"
+                                 icon="pi pi-ban"
+                                 rendered="#{vueloBean.resultadoCancelacion != null and vueloBean.resultadoCancelacion.permitido}"
+                                 actionListener="#{vueloBean.confirmarCancelacionVueloOperacional}"
+                                 process="@form"
+                                 update="#{updateTargets} :formCancelarVuelo"
+                                 oncomplete="if (args &amp;&amp; !args.validationFailed) { PF('dlgCancelarVuelo').hide(); }"
+                                 styleClass="ui-button-danger" />
+            </div>
+        </h:form>
+    </p:dialog>
+</ui:composition>

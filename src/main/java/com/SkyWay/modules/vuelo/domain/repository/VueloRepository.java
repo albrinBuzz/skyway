@@ -77,8 +77,14 @@ public interface VueloRepository extends JpaRepository<Vuelo, Integer>{
 
 
 	@Query("SELECT COUNT(v) > 0 FROM Vuelo v " +
+			"LEFT JOIN v.estadoVuelo ev " +
 			"WHERE v.piloto.rut = :rutPiloto " +
 			"AND (:idVueloActual IS NULL OR v.idVuelo <> :idVueloActual) " +
+			"AND (ev IS NULL OR (" +
+			"    UPPER(COALESCE(ev.descripcion, '')) NOT LIKE '%CANCEL%' " +
+			"    AND UPPER(COALESCE(ev.estado, '')) NOT LIKE '%CANCEL%' " +
+			"    AND UPPER(COALESCE(ev.estado, '')) <> 'INACTIVO'" +
+			")) " +
 			"AND v.fechaHoraSalida < :fechaLlegada " +
 			"AND v.fechaHoraLlegada > :fechaSalida")
 	boolean existeConflictoPiloto(
@@ -88,10 +94,16 @@ public interface VueloRepository extends JpaRepository<Vuelo, Integer>{
 			@Param("idVueloActual") Integer idVueloActual
 	);
 
-	// Comprueba si la aeronave está asignada a otro vuelo que se solape en fechas
+	// Comprueba si la aeronave está asignada a otro vuelo activo que se solape en fechas
 	@Query("SELECT COUNT(v) > 0 FROM Vuelo v " +
+			"LEFT JOIN v.estadoVuelo ev " +
 			"WHERE v.avion.idAvion = :idAvion " +
 			"AND (:idVueloActual IS NULL OR v.idVuelo <> :idVueloActual) " +
+			"AND (ev IS NULL OR (" +
+			"    UPPER(COALESCE(ev.descripcion, '')) NOT LIKE '%CANCEL%' " +
+			"    AND UPPER(COALESCE(ev.estado, '')) NOT LIKE '%CANCEL%' " +
+			"    AND UPPER(COALESCE(ev.estado, '')) <> 'INACTIVO'" +
+			")) " +
 			"AND v.fechaHoraSalida < :fechaLlegada " +
 			"AND v.fechaHoraLlegada > :fechaSalida")
 	boolean existeConflictoAvion(

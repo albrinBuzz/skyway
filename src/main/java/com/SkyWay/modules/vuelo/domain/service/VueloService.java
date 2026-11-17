@@ -10,6 +10,8 @@ import com.SkyWay.dto.InfoVueloDTO;
 import com.SkyWay.modules.aeropuerto.presentation.dto.AeropuertoMapaDTO;
 import com.SkyWay.modules.piloto.domain.model.Piloto;
 import com.SkyWay.modules.vuelo.domain.model.Vuelo;
+import com.SkyWay.modules.vuelo.presentation.dto.ResultadoCancelacionVueloDTO;
+import com.SkyWay.modules.vuelo.presentation.dto.ResultadoReprogramacionDTO;
 import com.SkyWay.modules.vuelo.presentation.dto.VueloEstadoProjection;
 import com.SkyWay.modules.vuelo.presentation.dto.VueloMapaDTO;
 
@@ -52,6 +54,22 @@ public interface VueloService {
 	boolean existeConflictoPiloto(String rutPiloto, Timestamp salida, Timestamp llegada, Integer idVueloActual);
 
 	boolean existeConflictoAvion(Integer idAvion, Timestamp salida, Timestamp llegada, Integer idVueloActual);
+
+	boolean esVueloCancelado(Vuelo vuelo);
+
+	boolean esVueloInmutablePorEstado(Vuelo vuelo);
+
+	long contarAsientosVendidosVuelo(Integer idVuelo);
+
+	ResultadoReprogramacionDTO validarReprogramacionVuelo(Integer idVuelo, Timestamp nuevaSalida, Timestamp nuevaLlegada, Integer idPuertaSeleccionada);
+
+	ResultadoReprogramacionDTO reprogramarHorarioVuelo(Integer idVuelo, Timestamp nuevaSalida, Timestamp nuevaLlegada, Integer idPuertaSeleccionada, boolean marcarRetrasado, String motivo, String rutUsuarioAdmin);
+
+	boolean existeVueloCanceladoEnItinerario(Integer idItinerario);
+
+	ResultadoCancelacionVueloDTO simularCancelacionVuelo(Integer idVuelo);
+
+	ResultadoCancelacionVueloDTO cancelarVueloOperacional(Integer idVuelo, String motivo, String rutUsuarioAdmin);
 
 
 }

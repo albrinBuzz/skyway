@@ -10,9 +10,11 @@ import java.util.Optional;
 
 import com.SkyWay.modules.asiento.presentation.dto.InfoAsientoReservaDTO;
 import com.SkyWay.modules.pasajero.domain.model.Pasajero;
+import com.SkyWay.modules.reembolso.domain.service.ReembolsoService;
 import com.SkyWay.modules.reserva.domain.model.Reserva;
 import com.SkyWay.modules.reserva.domain.repository.ReservaRepository;
 import com.SkyWay.modules.reserva.domain.service.ReservaService;
+import com.SkyWay.modules.reserva.presentation.dto.ReembolsoPasajeroDTO;
 import com.SkyWay.modules.reserva.presentation.dto.TicketInfo;
 import com.SkyWay.util.Logger;
 import com.SkyWay.util.PnrGenerator;
@@ -36,6 +38,9 @@ public class ReservaServiceImpl implements ReservaService {
 
 	@Autowired
 	private ReservaRepository reservaRepository;
+
+	@Autowired
+	private ReembolsoService reembolsoService;
 	@PersistenceContext
 	private EntityManager entityManager;
 
@@ -361,6 +366,32 @@ public class ReservaServiceImpl implements ReservaService {
 			throw new IllegalArgumentException("El ID de reserva no puede ser nulo.");
 		}
 
+		// Validar que ni la reserva ni ninguno de sus vuelos asociados se encuentren cancelados
+		Number canceladosCount = (Number) em.createNativeQuery(
+				"SELECT (" +
+				"   CASE WHEN EXISTS (" +
+				"       SELECT 1 FROM reserva r " +
+				"       LEFT JOIN estado_reserva er ON er.id_estado_reserva = r.estado_reserva " +
+				"       WHERE r.id_reserva = :idRes " +
+				"       AND (r.estado_reserva = 3 OR UPPER(COALESCE(er.descripcion, '')) LIKE '%CANCEL%' OR UPPER(COALESCE(er.descripcion, '')) LIKE '%ANUL%')" +
+				"   ) THEN 1 ELSE 0 END" +
+				" + " +
+				"   CASE WHEN EXISTS (" +
+				"       SELECT 1 FROM itinerario_vuelo iv " +
+				"       JOIN vuelo v ON v.id_vuelo = iv.id_vuelo " +
+				"       LEFT JOIN estado_vuelo ev ON ev.id_estado_vuelo = v.id_estado_vuelo " +
+				"       WHERE (iv.id_itinerario = :idItin OR iv.id_itinerario IN (SELECT ri.id_itinerario FROM reserva_itinerario ri WHERE ri.id_reserva = :idRes)) " +
+				"       AND (UPPER(COALESCE(ev.descripcion, '')) LIKE '%CANCEL%' OR UPPER(COALESCE(ev.estado, '')) LIKE '%CANCEL%' OR UPPER(COALESCE(ev.estado, '')) = 'INACTIVO')" +
+				"   ) THEN 1 ELSE 0 END" +
+				")"
+		)
+				.setParameter("idRes", idReserva)
+				.setParameter("idItin", idItinerario != null ? idItinerario : -1)
+				.getSingleResult();
+		if (canceladosCount != null && canceladosCount.intValue() > 0) {
+			throw new IllegalStateException("No es posible completar el Check-In porque la reserva o uno de sus vuelos fue cancelado.");
+		}
+
 		try {
 			// 1. Verificar si ya existe Check-In COMPLETADO para mantener idempotencia
 			Number existingId = null;
@@ -637,5 +668,11 @@ public class ReservaServiceImpl implements ReservaService {
 		}
 
 		return Optional.empty();
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<ReembolsoPasajeroDTO> obtenerReembolsosPasajero(String rutPasajero) {
+		return reembolsoService.listarReembolsosPorPasajero(rutPasajero);
 	}
 }

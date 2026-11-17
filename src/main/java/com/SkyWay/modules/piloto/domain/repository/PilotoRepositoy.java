@@ -21,8 +21,14 @@ public interface PilotoRepositoy extends JpaRepository<Piloto, String>{
     @Query("SELECT p FROM Piloto p " +
             "WHERE p.rut NOT IN (" +
             "   SELECT DISTINCT v.piloto.rut FROM Vuelo v " +
+            "   LEFT JOIN v.estadoVuelo ev " +
             "   WHERE v.piloto IS NOT NULL " +
             "   AND (:idVueloActual IS NULL OR v.idVuelo <> :idVueloActual) " +
+            "   AND (ev IS NULL OR (" +
+            "       UPPER(COALESCE(ev.descripcion, '')) NOT LIKE '%CANCEL%' " +
+            "       AND UPPER(COALESCE(ev.estado, '')) NOT LIKE '%CANCEL%' " +
+            "       AND UPPER(COALESCE(ev.estado, '')) <> 'INACTIVO'" +
+            "   )) " +
             "   AND v.fechaHoraSalida < :fechaLlegada " +
             "   AND v.fechaHoraLlegada > :fechaSalida" +
             ")")

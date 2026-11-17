@@ -329,6 +329,20 @@
                             <p:commandButton value="Ver Tarjetas de Embarque" icon="pi pi-ticket" action="#{checkInView.siguientePaso}" update="@form :globalGrowl" styleClass="btn-skyway-primary" />
                         </h:panelGroup>
 
+                        <!-- BANNER DE BLOQUEO 0: VUELO O RESERVA CANCELADA -->
+                        <h:panelGroup rendered="#{checkInView.viajeCancelado}" layout="block"
+                                      styleClass="alert mb-4 d-flex align-items-center gap-3"
+                                      style="background: rgba(153, 27, 27, 0.25); border: 1px solid #ef4444; color: #fecaca; border-radius: 8px; padding: 16px;">
+                            <i class="pi pi-ban" style="font-size: 2rem; color: #f87171;"></i>
+                            <div>
+                                <strong class="d-block text-danger mb-1" style="font-size: 1.05rem;">Vuelo o Reserva Cancelada</strong>
+                                <span class="small text-white-50">
+                                    No es posible realizar el Check-In ni descargar tarjetas de embarque porque esta reserva o alguno de los vuelos asociados ha sido cancelado.
+                                    Revisa tu bandeja de notificaciones o correo electrónico para conocer el estado de tu reembolso.
+                                </span>
+                            </div>
+                        </h:panelGroup>
+
                         <!-- BANNER DE BLOQUEO 1: AÚN NO DISPONIBLE (Faltan más de 48 horas) -->
                         <h:panelGroup rendered="#{checkInView.estadoVentanaCheckIn == 'NO_DISPONIBLE_AUN' and not checkInView.checkInExitoso}" layout="block"
                                       styleClass="alert mb-4 d-flex align-items-center gap-3"

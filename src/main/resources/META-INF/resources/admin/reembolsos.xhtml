@@ -1,0 +1,468 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                template="/admin/template.xhtml">
+
+    <ui:define name="contenido-admin">
+        <style type="text/css">
+            .reem-ops-container {
+                max-width: 1400px;
+                margin: 0 auto;
+                padding: 1.5rem 1.25rem;
+                color: #e2e8f0;
+            }
+            .reem-header-bar {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 1rem;
+                padding-bottom: 1rem;
+                margin-bottom: 1.25rem;
+                border-bottom: 1px solid #1e293b;
+            }
+            .reem-kpi-grid {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 0.85rem;
+                margin-bottom: 1.25rem;
+            }
+            @media (max-width: 900px) {
+                .reem-kpi-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+            }
+            .reem-kpi-card {
+                background: #0f172a;
+                border: 1px solid #1e293b;
+                border-radius: 10px;
+                padding: 0.9rem 1rem;
+            }
+            .reem-table-card {
+                background: #0f172a;
+                border: 1px solid #1e293b;
+                border-radius: 12px;
+                padding: 1rem;
+            }
+            /* ESTILOS OSCUROS PARA DATATABLE Y FILTROS PRIMEFACES */
+            .reem-ops-table.ui-datatable,
+            .reem-ops-table.ui-datatable .ui-datatable-tablewrapper,
+            .reem-ops-table.ui-datatable table {
+                background: #0f172a !important;
+                border: none !important;
+            }
+            .reem-ops-table thead th {
+                background: #090e1a !important;
+                background-color: #090e1a !important;
+                color: #94a3b8 !important;
+                text-transform: uppercase !important;
+                font-size: 0.72rem !important;
+                font-weight: 700 !important;
+                letter-spacing: 0.04em !important;
+                padding: 12px 14px !important;
+                border: none !important;
+                border-bottom: 1px solid #1e293b !important;
+                vertical-align: middle !important;
+            }
+            .reem-ops-table tbody tr {
+                background: #0f172a !important;
+            }
+            .reem-ops-table tbody td {
+                background: #0f172a !important;
+                background-color: #0f172a !important;
+                color: #e2e8f0 !important;
+                padding: 12px 14px !important;
+                border: none !important;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+                font-size: 0.84rem !important;
+                vertical-align: middle !important;
+            }
+            .reem-ops-table tbody tr:hover td {
+                background: #17233a !important;
+                background-color: #17233a !important;
+            }
+            .reem-ops-table .ui-datatable-empty-message td {
+                background: #0f172a !important;
+                color: #94a3b8 !important;
+                text-align: center !important;
+                padding: 2rem !important;
+            }
+            .reem-ops-table .ui-paginator {
+                background: #090e1a !important;
+                background-color: #090e1a !important;
+                border: none !important;
+                border-top: 1px solid #1e293b !important;
+                padding: 8px 12px !important;
+            }
+            .reem-ops-table .ui-paginator .ui-paginator-page,
+            .reem-ops-table .ui-paginator .ui-paginator-first,
+            .reem-ops-table .ui-paginator .ui-paginator-prev,
+            .reem-ops-table .ui-paginator .ui-paginator-next,
+            .reem-ops-table .ui-paginator .ui-paginator-last {
+                background: #13223d !important;
+                color: #94a3b8 !important;
+                border: 1px solid #243b61 !important;
+                border-radius: 4px !important;
+                font-weight: 600 !important;
+                padding: 3px 8px !important;
+                font-size: 0.8rem !important;
+            }
+            .reem-ops-table .ui-paginator .ui-paginator-page.ui-state-active {
+                background: #1e3a8a !important;
+                color: #ffffff !important;
+                border-color: #3b82f6 !important;
+            }
+            .reem-select-dark.ui-selectonemenu {
+                background: #09101f !important;
+                border: 1px solid #334155 !important;
+                border-radius: 6px !important;
+            }
+            .reem-select-dark .ui-selectonemenu-label {
+                background: transparent !important;
+                color: #f8fafc !important;
+                font-size: 0.84rem !important;
+            }
+            .reem-select-dark .ui-selectonemenu-trigger {
+                background: #13223d !important;
+                border-left: 1px solid #334155 !important;
+                color: #94a3b8 !important;
+            }
+            .reem-btn-cerrar.ui-button {
+                background: #1e293b !important;
+                border: 1px solid #475569 !important;
+                color: #e2e8f0 !important;
+            }
+            .reem-btn-cerrar.ui-button:hover {
+                background: #334155 !important;
+                color: #ffffff !important;
+            }
+            .reem-btn-observar.ui-button {
+                background: rgba(153, 27, 27, 0.35) !important;
+                border: 1px solid #f87171 !important;
+                color: #fecaca !important;
+                font-weight: 600 !important;
+            }
+            .reem-btn-observar.ui-button:hover {
+                background: #b91c1c !important;
+                border-color: #ef4444 !important;
+                color: #ffffff !important;
+            }
+            body .ui-dialog.reem-admin-dialog {
+                background: #0d172a !important;
+                border: 1px solid #2b3f5e !important;
+                border-radius: 12px !important;
+            }
+            body .ui-dialog.reem-admin-dialog .ui-dialog-titlebar {
+                background: #13223d !important;
+                color: #f8fafc !important;
+                border-bottom: 1px solid #1e3a5f !important;
+            }
+            body .ui-dialog.reem-admin-dialog .ui-dialog-title {
+                color: #f8fafc !important;
+                font-weight: 700 !important;
+            }
+            body .ui-dialog.reem-admin-dialog .ui-dialog-content {
+                background: #0d172a !important;
+                color: #e2e8f0 !important;
+            }
+        </style>
+
+        <div class="reem-ops-container">
+            <h:form id="formReembolsosAdmin">
+                <p:growl id="msgs" showDetail="true" />
+
+                <!-- CABECERA DENTRO DEL FORM -->
+                <div class="reem-header-bar">
+                    <div>
+                        <h2 style="margin: 0; color: #f8fafc; font-weight: 700; font-size: 1.45rem;">
+                            <i class="pi pi-wallet mr-2" style="color: #60a5fa;"></i>Gestión de Reembolsos
+                        </h2>
+                        <span style="color: #94a3b8; font-size: 0.85rem;">
+                            Revisa las cuentas bancarias registradas por los pasajeros, valida sus datos y autoriza la devolución
+                        </span>
+                    </div>
+                    <p:commandButton value="Actualizar Bandeja"
+                                     icon="pi pi-refresh"
+                                     actionListener="#{gestionReembolsosBean.recargar}"
+                                     process="@this"
+                                     update=":formReembolsosAdmin"
+                                     styleClass="reem-btn-cerrar" />
+                </div>
+
+                <!-- KPIs -->
+                <div class="reem-kpi-grid">
+                    <div class="reem-kpi-card">
+                        <div style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase;">Falta Cuenta Bancaria</div>
+                        <div style="font-size: 1.4rem; font-weight: 700; color: #fbbf24;">#{gestionReembolsosBean.getCountPorEstado('SOLICITADO')}</div>
+                    </div>
+                    <div class="reem-kpi-card">
+                        <div style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase;">Por Confirmar Datos</div>
+                        <div style="font-size: 1.4rem; font-weight: 700; color: #38bdf8;">#{gestionReembolsosBean.getCountPorEstado('DATOS_BANCARIOS_ENVIADOS')}</div>
+                    </div>
+                    <div class="reem-kpi-card">
+                        <div style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase;">Confirmados (Listos a Pagar)</div>
+                        <div style="font-size: 1.4rem; font-weight: 700; color: #60a5fa;">#{gestionReembolsosBean.getCountPorEstado('DATOS_CONFIRMADOS')}</div>
+                        <div style="font-size: 0.76rem; color: #93c5fd;">
+                            $<h:outputText value="#{gestionReembolsosBean.getMontoTotalPorEstado('DATOS_CONFIRMADOS')}"><f:convertNumber pattern="#,##0" locale="es_CL" /></h:outputText>
+                        </div>
+                    </div>
+                    <div class="reem-kpi-card">
+                        <div style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase;">Reembolsados</div>
+                        <div style="font-size: 1.4rem; font-weight: 700; color: #34d399;">#{gestionReembolsosBean.getCountPorEstado('REEMBOLSADO')}</div>
+                        <div style="font-size: 0.76rem; color: #6ee7b7;">
+                            $<h:outputText value="#{gestionReembolsosBean.getMontoTotalPorEstado('REEMBOLSADO')}"><f:convertNumber pattern="#,##0" locale="es_CL" /></h:outputText>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FILTROS Y TABLA -->
+                <div class="reem-table-card">
+                    <div class="flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                        <div class="flex align-items-center gap-2 flex-wrap">
+                            <p:selectOneMenu value="#{gestionReembolsosBean.filtroEstado}" styleClass="reem-select-dark" style="min-width: 240px;">
+                                <f:selectItem itemLabel="Todos los estados" itemValue="TODOS" />
+                                <f:selectItem itemLabel="Solicitado (Falta Cuenta)" itemValue="SOLICITADO" />
+                                <f:selectItem itemLabel="Por Confirmar Datos" itemValue="DATOS_BANCARIOS_ENVIADOS" />
+                                <f:selectItem itemLabel="Confirmado (Listo a Pagar)" itemValue="DATOS_CONFIRMADOS" />
+                                <f:selectItem itemLabel="Reembolsado" itemValue="REEMBOLSADO" />
+                                <f:selectItem itemLabel="Observado / Rechazado" itemValue="RECHAZADO" />
+                                <p:ajax listener="#{gestionReembolsosBean.aplicarFiltros}" update="dtReembolsosAdmin" />
+                            </p:selectOneMenu>
+
+                            <p:inputText value="#{gestionReembolsosBean.textoBusqueda}"
+                                         placeholder="Buscar por PNR, RUT, pasajero, banco o comprobante..."
+                                         style="min-width: 340px; background: #09101f; color: #f8fafc; border: 1px solid #334155; height: 38px; padding: 0 12px; border-radius: 6px;">
+                                <p:ajax event="keyup" delay="250" listener="#{gestionReembolsosBean.aplicarFiltros}" update="dtReembolsosAdmin" />
+                            </p:inputText>
+                        </div>
+                    </div>
+
+                    <p:dataTable id="dtReembolsosAdmin"
+                                 value="#{gestionReembolsosBean.reembolsosFiltrados}"
+                                 var="rem"
+                                 styleClass="reem-ops-table"
+                                 paginator="true"
+                                 rows="10"
+                                 paginatorPosition="bottom"
+                                 emptyMessage="No hay registros de reembolso para los filtros aplicados.">
+
+                        <p:column headerText="ID / PNR" style="width: 120px;">
+                            <strong style="color: #93c5fd; display: block;">#REEM-#{rem.idReembolso}</strong>
+                            <span style="font-size: 0.78rem; color: #cbd5e1;">#{rem.codigoPnr}</span>
+                        </p:column>
+
+                        <p:column headerText="Pasajero Solicitante" style="width: 180px;">
+                            <strong style="color: #f8fafc; display: block;">#{rem.nombreSolicitante}</strong>
+                            <span style="font-size: 0.76rem; color: #94a3b8;">RUT: #{rem.rutSolicitante}</span>
+                        </p:column>
+
+                        <p:column headerText="Motivo / Origen">
+                            <span style="font-size: 0.8rem; color: #e2e8f0; display: block;">#{rem.motivo}</span>
+                            <span style="font-size: 0.74rem; color: #94a3b8;">#{rem.resumenVuelosAsientos}</span>
+                        </p:column>
+
+                        <p:column headerText="Cuenta Bancaria">
+                            <ui:fragment rendered="#{rem.idCuentaReembolso != null}">
+                                <strong style="color: #f8fafc; font-size: 0.82rem; display: block;">#{rem.banco} · #{rem.tipoCuenta}</strong>
+                                <span style="font-size: 0.76rem; color: #cbd5e1;">N° #{rem.numeroCuenta} · #{rem.titularNombre} (#{rem.titularRut})</span>
+                            </ui:fragment>
+                            <ui:fragment rendered="#{rem.idCuentaReembolso == null}">
+                                <span style="font-size: 0.78rem; color: #fbbf24; font-style: italic;">Pendiente de ingreso</span>
+                            </ui:fragment>
+                        </p:column>
+
+                        <p:column headerText="Monto" style="width: 125px; text-align: right;">
+                            <strong style="color: #34d399;">
+                                $<h:outputText value="#{rem.montoReembolso}"><f:convertNumber pattern="#,##0" locale="es_CL" /></h:outputText>
+                            </strong>
+                        </p:column>
+
+                        <p:column headerText="Estado" style="width: 185px; text-align: center;">
+                            <span style="font-size: 0.75rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; display: inline-block; #{gestionReembolsosBean.getEstiloBadge(rem.estadoReembolso)}">
+                                #{gestionReembolsosBean.getEtiquetaEstado(rem.estadoReembolso)}
+                            </span>
+                            <ui:fragment rendered="#{not empty rem.codigoOperacion}">
+                                <div style="font-size: 0.7rem; color: #6ee7b7; margin-top: 3px;">#{rem.codigoOperacion}</div>
+                            </ui:fragment>
+                        </p:column>
+
+                        <p:column headerText="Gestión" style="width: 155px; text-align: center;">
+                            <p:commandButton value="#{rem.estadoReembolso eq 'DATOS_BANCARIOS_ENVIADOS' ? 'Validar Datos' : (rem.estadoReembolso eq 'DATOS_CONFIRMADOS' ? 'Transferir' : 'Ver Detalle')}"
+                                             icon="#{rem.estadoReembolso eq 'DATOS_CONFIRMADOS' ? 'pi pi-send' : (rem.estadoReembolso eq 'DATOS_BANCARIOS_ENVIADOS' ? 'pi pi-check-square' : 'pi pi-eye')}"
+                                             actionListener="#{gestionReembolsosBean.abrirGestionReembolso(rem)}"
+                                             process="@this"
+                                             update=":formModalReembolsoAdmin:cntModalReembolsoAdmin :formModalReembolsoAdmin:pnlFooterModalReembolso"
+                                             oncomplete="PF('dlgGestionReembolsoAdmin').show();"
+                                             styleClass="ui-button-sm #{rem.estadoReembolso eq 'DATOS_CONFIRMADOS' ? 'ui-button-success' : (rem.estadoReembolso eq 'DATOS_BANCARIOS_ENVIADOS' ? 'ui-button-info' : 'reem-btn-cerrar')}" />
+                        </p:column>
+                    </p:dataTable>
+                </div>
+            </h:form>
+        </div>
+
+        <!-- MODAL DE VALIDACIÓN Y EJECUCIÓN DE REEMBOLSO -->
+        <p:dialog widgetVar="dlgGestionReembolsoAdmin"
+                  header="Detalle y Devolución de Reembolso"
+                  modal="true"
+                  width="700"
+                  responsive="true"
+                  fitViewport="true"
+                  styleClass="custom-dialog reem-admin-dialog">
+
+            <h:form id="formModalReembolsoAdmin" styleClass="ui-fluid">
+                <h:panelGroup id="cntModalReembolsoAdmin" layout="block">
+                    <ui:fragment rendered="#{gestionReembolsosBean.reembolsoActual != null}">
+                        <div style="background: #13223d; border: 1px solid #243b61; border-radius: 8px; padding: 0.85rem 1rem; margin-bottom: 0.85rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                            <div>
+                                <div style="font-size: 0.76rem; color: #94a3b8;">
+                                    Solicitud ##{gestionReembolsosBean.reembolsoActual.idReembolso} · Reserva #{gestionReembolsosBean.reembolsoActual.codigoPnr}
+                                </div>
+                                <strong style="color: #f8fafc; font-size: 0.96rem;">#{gestionReembolsosBean.reembolsoActual.nombreSolicitante} (#{gestionReembolsosBean.reembolsoActual.rutSolicitante})</strong>
+                                <div style="font-size: 0.78rem; color: #cbd5e1; margin-top: 2px;">#{gestionReembolsosBean.reembolsoActual.motivo}</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase;">Monto a devolver</div>
+                                <strong style="color: #34d399; font-size: 1.25rem;">
+                                    $<h:outputText value="#{gestionReembolsosBean.reembolsoActual.montoReembolso}"><f:convertNumber pattern="#,##0" locale="es_CL" /></h:outputText> CLP
+                                </strong>
+                            </div>
+                        </div>
+
+                        <!-- BARRA SIMPLE DE ETAPAS DEL REEMBOLSO -->
+                        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.45rem; margin-bottom: 0.85rem; font-size: 0.76rem;">
+                            <div style="background: #0f172a; border: 1px solid #{gestionReembolsosBean.reembolsoActual.idCuentaReembolso != null ? '#0ea5e9' : '#334155'}; border-radius: 6px; padding: 0.45rem 0.6rem; color: #{gestionReembolsosBean.reembolsoActual.idCuentaReembolso != null ? '#7dd3fc' : '#94a3b8'}; text-align: center; font-weight: 600;">
+                                1. Cuenta ingresada
+                            </div>
+                            <div style="background: #0f172a; border: 1px solid #{gestionReembolsosBean.reembolsoActual.estadoReembolso eq 'DATOS_CONFIRMADOS' or gestionReembolsosBean.reembolsoActual.estadoReembolso eq 'REEMBOLSADO' ? '#3b82f6' : (gestionReembolsosBean.reembolsoActual.estadoReembolso eq 'RECHAZADO' ? '#ef4444' : '#334155')}; border-radius: 6px; padding: 0.45rem 0.6rem; color: #{gestionReembolsosBean.reembolsoActual.estadoReembolso eq 'DATOS_CONFIRMADOS' or gestionReembolsosBean.reembolsoActual.estadoReembolso eq 'REEMBOLSADO' ? '#93c5fd' : (gestionReembolsosBean.reembolsoActual.estadoReembolso eq 'RECHAZADO' ? '#fca5a5' : '#94a3b8')}; text-align: center; font-weight: 600;">
+                                2. #{gestionReembolsosBean.reembolsoActual.estadoReembolso eq 'RECHAZADO' ? 'Requiere corrección' : 'Datos validados'}
+                            </div>
+                            <div style="background: #0f172a; border: 1px solid #{gestionReembolsosBean.reembolsoActual.estadoReembolso eq 'REEMBOLSADO' ? '#10b981' : '#334155'}; border-radius: 6px; padding: 0.45rem 0.6rem; color: #{gestionReembolsosBean.reembolsoActual.estadoReembolso eq 'REEMBOLSADO' ? '#6ee7b7' : '#94a3b8'}; text-align: center; font-weight: 600;">
+                                3. Dinero devuelto
+                            </div>
+                        </div>
+
+                        <div style="background: #09101f; border: 1px solid #1e293b; border-radius: 8px; padding: 0.85rem 1rem; margin-bottom: 0.9rem;">
+                            <div style="font-size: 0.78rem; font-weight: 700; color: #93c5fd; margin-bottom: 0.5rem;">
+                                Datos Bancarios Registrados por el Pasajero
+                            </div>
+                            <ui:fragment rendered="#{gestionReembolsosBean.reembolsoActual.idCuentaReembolso != null}">
+                                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.55rem; font-size: 0.83rem;">
+                                    <div><span style="color: #94a3b8;">Banco:</span> <strong style="color: #f8fafc;">#{gestionReembolsosBean.reembolsoActual.banco}</strong></div>
+                                    <div><span style="color: #94a3b8;">Tipo Cuenta:</span> <strong style="color: #f8fafc;">#{gestionReembolsosBean.reembolsoActual.tipoCuenta}</strong></div>
+                                    <div><span style="color: #94a3b8;">N° Cuenta:</span> <strong style="color: #f8fafc;">#{gestionReembolsosBean.reembolsoActual.numeroCuenta}</strong></div>
+                                    <div><span style="color: #94a3b8;">RUT Titular:</span> <strong style="color: #f8fafc;">#{gestionReembolsosBean.reembolsoActual.titularRut}</strong></div>
+                                    <div><span style="color: #94a3b8;">Titular:</span> <strong style="color: #f8fafc;">#{gestionReembolsosBean.reembolsoActual.titularNombre}</strong></div>
+                                    <div><span style="color: #94a3b8;">Correo aviso:</span> <strong style="color: #f8fafc;">#{gestionReembolsosBean.reembolsoActual.correoConfirmacion}</strong></div>
+                                </div>
+                            </ui:fragment>
+                            <ui:fragment rendered="#{gestionReembolsosBean.reembolsoActual.idCuentaReembolso == null}">
+                                <div style="color: #fbbf24; font-size: 0.83rem;">
+                                    El pasajero aún no ha ingresado una cuenta bancaria para este reembolso.
+                                </div>
+                            </ui:fragment>
+                        </div>
+
+                        <ui:fragment rendered="#{not empty gestionReembolsosBean.reembolsoActual.codigoOperacion}">
+                            <div style="background: rgba(16, 185, 129, 0.14); border: 1px solid #10b981; border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 0.9rem; font-size: 0.84rem; color: #6ee7b7;">
+                                <strong>Devolución realizada con éxito · Comprobante: #{gestionReembolsosBean.reembolsoActual.codigoOperacion}</strong><br/>
+                                <span>
+                                    Gestionado por: #{gestionReembolsosBean.reembolsoActual.rutAdminEjecuta} ·
+                                    <h:outputText value="#{gestionReembolsosBean.reembolsoActual.fechaEjecucion}">
+                                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm 'hrs'" timeZone="America/Santiago" />
+                                    </h:outputText>
+                                </span>
+                                <ui:fragment rendered="#{not empty gestionReembolsosBean.reembolsoActual.observacionAdmin}">
+                                    <div style="margin-top: 4px; font-size: 0.76rem; color: #a7f3d0;">
+                                        Nota: #{gestionReembolsosBean.reembolsoActual.observacionAdmin}
+                                    </div>
+                                </ui:fragment>
+                            </div>
+                        </ui:fragment>
+
+                        <ui:fragment rendered="#{gestionReembolsosBean.ultimaRespuestaBanco != null and not gestionReembolsosBean.ultimaRespuestaBanco.aprobado}">
+                            <div style="background: #27131a; border: 1px solid #991b1b; border-left: 4px solid #ef4444; border-radius: 8px; padding: 0.8rem 1rem; margin-bottom: 0.9rem; font-size: 0.83rem; color: #fee2e2;">
+                                <strong style="display: block; color: #fca5a5; margin-bottom: 3px;">
+                                    <i class="pi pi-times-circle mr-1"></i>No se pudo completar la transferencia
+                                </strong>
+                                <span>#{gestionReembolsosBean.ultimaRespuestaBanco.mensajeBanco}</span>
+                                <div style="font-size: 0.72rem; color: #94a3b8; margin-top: 5px;">
+                                    Ref. #{gestionReembolsosBean.ultimaRespuestaBanco.idempotencyKey} · Código #{gestionReembolsosBean.ultimaRespuestaBanco.codigoRespuestaBanco} · #{gestionReembolsosBean.ultimaRespuestaBanco.latenciaMs} ms
+                                </div>
+                            </div>
+                        </ui:fragment>
+
+                        <ui:fragment rendered="#{gestionReembolsosBean.ultimaRespuestaBanco == null and gestionReembolsosBean.reembolsoActual.estadoReembolso eq 'RECHAZADO' and not empty gestionReembolsosBean.reembolsoActual.observacionAdmin}">
+                            <div style="background: #27131a; border: 1px solid #991b1b; border-left: 4px solid #ef4444; border-radius: 8px; padding: 0.8rem 1rem; margin-bottom: 0.9rem; font-size: 0.83rem; color: #fee2e2;">
+                                <strong style="display: block; color: #fca5a5; margin-bottom: 3px;">
+                                    <i class="pi pi-exclamation-triangle mr-1"></i>Esperando corrección del pasajero
+                                </strong>
+                                <span>#{gestionReembolsosBean.reembolsoActual.observacionAdmin}</span>
+                            </div>
+                        </ui:fragment>
+
+                        <ui:fragment rendered="#{gestionReembolsosBean.reembolsoActual.estadoReembolso eq 'DATOS_CONFIRMADOS'}">
+                            <div class="p-field mb-3">
+                                <p:outputLabel for="selEscenarioTef" value="Resultado de la transferencia (Entorno de prueba)"
+                                               style="display: block; color: #93c5fd; font-size: 0.81rem; font-weight: 600; margin-bottom: 0.3rem;" />
+                                <p:selectOneMenu id="selEscenarioTef" value="#{gestionReembolsosBean.escenarioSandbox}" styleClass="reem-select-dark" style="width: 100%;">
+                                    <f:selectItem itemLabel="Transferencia exitosa — Acreditar devolución ahora" itemValue="APROBADO" />
+                                    <f:selectItem itemLabel="Simular rechazo del banco — Cuenta inválida, cerrada o RUT incorrecto" itemValue="RECHAZO_CUENTA" />
+                                    <f:selectItem itemLabel="Simular falla de conexión con el banco — Reintentar más tarde" itemValue="TIMEOUT_BANCO" />
+                                </p:selectOneMenu>
+                            </div>
+                        </ui:fragment>
+
+                        <ui:fragment rendered="#{gestionReembolsosBean.reembolsoActual.estadoReembolso eq 'DATOS_BANCARIOS_ENVIADOS' or gestionReembolsosBean.reembolsoActual.estadoReembolso eq 'DATOS_CONFIRMADOS'}">
+                            <div class="p-field mb-3">
+                                <p:outputLabel for="obsAdminRem" value="Nota o motivo (obligatorio solo si pides corrección al pasajero)"
+                                               style="display: block; color: #cbd5e1; font-size: 0.82rem; font-weight: 600; margin-bottom: 0.35rem;" />
+                                <p:inputTextarea id="obsAdminRem"
+                                                 value="#{gestionReembolsosBean.observacionModal}"
+                                                 rows="2"
+                                                 autoResize="false"
+                                                 style="width: 100%; background: #0f172a; color: #f8fafc; border: 1px solid #334155;"
+                                                 placeholder="Ej: El número de cuenta no coincide con el RUT del titular..." />
+                            </div>
+                        </ui:fragment>
+                    </ui:fragment>
+                </h:panelGroup>
+
+                <h:panelGroup id="pnlFooterModalReembolso" layout="block" style="display: flex; justify-content: flex-end; gap: 0.6rem; padding-top: 0.85rem; margin-top: 0.85rem; border-top: 1px solid #1e3a5f;">
+                    <p:commandButton value="Cerrar"
+                                     icon="pi pi-times"
+                                     type="button"
+                                     onclick="PF('dlgGestionReembolsoAdmin').hide();"
+                                     styleClass="reem-btn-cerrar" />
+
+                    <p:commandButton value="Solicitar Corrección"
+                                     icon="pi pi-exclamation-circle"
+                                     rendered="#{gestionReembolsosBean.reembolsoActual != null and (gestionReembolsosBean.reembolsoActual.estadoReembolso eq 'DATOS_BANCARIOS_ENVIADOS' or gestionReembolsosBean.reembolsoActual.estadoReembolso eq 'DATOS_CONFIRMADOS')}"
+                                     actionListener="#{gestionReembolsosBean.rechazarDatosBancarios}"
+                                     process="@form"
+                                     update=":formReembolsosAdmin :formModalReembolsoAdmin:cntModalReembolsoAdmin :formModalReembolsoAdmin:pnlFooterModalReembolso"
+                                     oncomplete="if (args &amp;&amp; !args.validationFailed) { PF('dlgGestionReembolsoAdmin').hide(); }"
+                                     styleClass="reem-btn-observar" />
+
+                    <p:commandButton value="Confirmar Datos Bancarios"
+                                     icon="pi pi-check"
+                                     rendered="#{gestionReembolsosBean.reembolsoActual != null and gestionReembolsosBean.reembolsoActual.estadoReembolso eq 'DATOS_BANCARIOS_ENVIADOS'}"
+                                     actionListener="#{gestionReembolsosBean.confirmarDatosBancarios}"
+                                     process="@form"
+                                     update=":formReembolsosAdmin :formModalReembolsoAdmin:cntModalReembolsoAdmin :formModalReembolsoAdmin:pnlFooterModalReembolso"
+                                     styleClass="ui-button-info" />
+
+                    <p:commandButton value="Enviar Devolución"
+                                     icon="pi pi-send"
+                                     rendered="#{gestionReembolsosBean.reembolsoActual != null and gestionReembolsosBean.reembolsoActual.estadoReembolso eq 'DATOS_CONFIRMADOS'}"
+                                     actionListener="#{gestionReembolsosBean.ejecutarReembolsoSimulado}"
+                                     process="@form"
+                                     update=":formReembolsosAdmin :formModalReembolsoAdmin:cntModalReembolsoAdmin :formModalReembolsoAdmin:pnlFooterModalReembolso"
+                                     oncomplete="if (args &amp;&amp; !args.validationFailed) { PF('dlgGestionReembolsoAdmin').hide(); }"
+                                     styleClass="ui-button-success" />
+                </h:panelGroup>
+            </h:form>
+        </p:dialog>
+    </ui:define>
+</ui:composition>

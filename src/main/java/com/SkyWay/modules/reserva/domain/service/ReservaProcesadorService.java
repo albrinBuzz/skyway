@@ -18,6 +18,7 @@ import com.SkyWay.modules.reservaitinerario.domain.model.ReservaItinerario;
 import com.SkyWay.modules.reservaitinerario.domain.service.ReservaItinerarioService;
 import com.SkyWay.modules.tarifaItinerario.domain.service.ItinerarioTarifaService;
 import com.SkyWay.modules.usuario.domain.model.Usuario;
+import com.SkyWay.modules.vuelo.domain.service.VueloService;
 import com.SkyWay.util.Logger;
 
 import jakarta.persistence.EntityManager;
@@ -47,6 +48,7 @@ public class ReservaProcesadorService {
     @Autowired private MetodoPagoService metodoPagoService;
     @Autowired private com.SkyWay.modules.usuario.domain.service.UsuarioService usuarioService;
     @Autowired private com.SkyWay.modules.usuario.domain.repository.UsuarioRepository usuarioRepository;
+    @Autowired private VueloService vueloService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -81,6 +83,9 @@ public class ReservaProcesadorService {
                 if (rutP == null || rutP.isBlank()) continue;
 
                 for (Integer idItin : dto.tarifasItinerarios().keySet()) {
+                    if (vueloService.existeVueloCanceladoEnItinerario(idItin)) {
+                        throw new IllegalStateException("Operación rechazada: el itinerario #" + idItin + " contiene un vuelo cancelado.");
+                    }
                     var pnrExistenteOpt = reservaService.buscarReservaActivaPorPasajeroEItinerario(rutP, idItin);
                     if (pnrExistenteOpt.isPresent()) {
                         String errorMsg = String.format("El pasajero con identificación '%s' ya cuenta con una reserva activa (PNR: %s) para el itinerario comercial #%d.",
@@ -88,6 +93,14 @@ public class ReservaProcesadorService {
                         Logger.logError("❌ [ANTI-CHURNING] " + errorMsg);
                         throw new IllegalStateException(errorMsg);
                     }
+                }
+            }
+        }
+        if (dto.asientosSeleccionados() != null && !dto.asientosSeleccionados().isEmpty()) {
+            for (Integer idVueloSel : dto.asientosSeleccionados().keySet()) {
+                var vueloOpt = vueloService.findById(idVueloSel);
+                if (vueloOpt.isPresent() && vueloService.esVueloCancelado(vueloOpt.get())) {
+                    throw new IllegalStateException("Operación rechazada: el vuelo #" + idVueloSel + " se encuentra cancelado.");
                 }
             }
         }

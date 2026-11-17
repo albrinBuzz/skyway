@@ -374,6 +374,29 @@ public class ReservaBean implements Serializable {
             }
         }
 
+        // 2.3 VERIFICACIÓN DE QUE NINGÚN VUELO DEL ITINERARIO HAYA SIDO CANCELADO
+        if (tarifasItinerarios != null) {
+            for (Integer idItin : tarifasItinerarios.keySet()) {
+                if (vueloService.existeVueloCanceladoEnItinerario(idItin)) {
+                    asientoCacheService.liberarTodosLosAsientosDeSesion(this.miSessionId);
+                    addMessage(FacesMessage.SEVERITY_ERROR, "Vuelo Cancelado",
+                            String.format("El itinerario #%d incluye un vuelo cancelado recientemente y no admite nuevas compras.", idItin));
+                    return;
+                }
+            }
+        }
+        if (asientosSeleccionados != null) {
+            for (Integer idVueloSel : asientosSeleccionados.keySet()) {
+                var vueloOpt = vueloService.findById(idVueloSel);
+                if (vueloOpt.isPresent() && vueloService.esVueloCancelado(vueloOpt.get())) {
+                    asientoCacheService.liberarTodosLosAsientosDeSesion(this.miSessionId);
+                    addMessage(FacesMessage.SEVERITY_ERROR, "Vuelo Cancelado",
+                            String.format("El vuelo #%d ha sido cancelado y ya no se encuentra disponible para reserva.", idVueloSel));
+                    return;
+                }
+            }
+        }
+
         // 3. VERIFICACIÓN DE DISPONIBILIDAD EN BD
         for (Map.Entry<Integer, List<InfoAsientoDTO>> entry : asientosSeleccionados.entrySet()) {
             Integer idVuelo = entry.getKey();

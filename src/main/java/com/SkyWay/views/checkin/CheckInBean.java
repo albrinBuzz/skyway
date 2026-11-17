@@ -20,6 +20,7 @@ import com.SkyWay.modules.checkin.util.ValidadorCheckIn;
 import com.SkyWay.modules.reserva.domain.service.ReservaService;
 import com.SkyWay.modules.reserva.presentation.dto.TicketInfo;
 import com.SkyWay.modules.reservaitinerario.domain.model.ReservaItinerario;
+import com.SkyWay.modules.vuelo.domain.service.VueloService;
 import com.SkyWay.util.Logger;
 
 import jakarta.annotation.PostConstruct;
@@ -58,6 +59,9 @@ public class CheckInBean implements Serializable {
     @Autowired private TarifaCaracteristicaValidator tarifaValidator;
     @Autowired private UpgradeTarifaService upgradeTarifaService;
     @Autowired private PagoFactoryService pagoFactoryService;
+    @Autowired private VueloService vueloService;
+
+    private boolean viajeCancelado = false;
 
     private List<OpcionUpgradeDTO> opcionesUpgradeCheckIn = new ArrayList<>();
     private OpcionUpgradeDTO opcionUpgradeCheckInSeleccionada;
@@ -193,6 +197,30 @@ public class CheckInBean implements Serializable {
                     }
                 }
 
+                // 0. Verificar si la reserva o alguno de sus vuelos fue cancelado
+                this.viajeCancelado = false;
+                Optional<Reserva> optReservaEstado = reservaService.findById(idReserva);
+                if (optReservaEstado.isPresent() && optReservaEstado.get().getEstadoReservaBean() != null) {
+                    String descRes = optReservaEstado.get().getEstadoReservaBean().getDescripcion();
+                    if (descRes != null && (descRes.toLowerCase().contains("cancel") || descRes.toLowerCase().contains("anul"))) {
+                        this.viajeCancelado = true;
+                    }
+                }
+                if (!this.viajeCancelado && vueloService.existeVueloCanceladoEnItinerario(idItinerario)) {
+                    this.viajeCancelado = true;
+                }
+                if (this.viajeCancelado) {
+                    this.estadoVentanaCheckIn = "CANCELADO";
+                    this.checkInExitoso = false;
+                    this.listaAsientos = new ArrayList<>();
+                    this.listaTicketsBoardingPass = new ArrayList<>();
+                    FacesContext.getCurrentInstance().addMessage(null,
+                            new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                                    "Vuelo o Reserva Cancelada",
+                                    "No es posible realizar el Check-In ni emitir pases de abordar porque este vuelo o su reserva fue cancelado."));
+                    return;
+                }
+
                 // 1. Evaluar ventana temporal contra la hora del vuelo
                 this.fechaSalidaVuelo = reservaService.obtenerFechaSalidaVuelo(idItinerario);
                 this.estadoVentanaCheckIn = ValidadorCheckIn.validarEstadoVentanaCheckIn(this.fechaSalidaVuelo);
@@ -268,7 +296,11 @@ public class CheckInBean implements Serializable {
     }
 
     public boolean isCheckInHabilitado() {
-        return "HABILITADO".equalsIgnoreCase(this.estadoVentanaCheckIn);
+        return !this.viajeCancelado && "HABILITADO".equalsIgnoreCase(this.estadoVentanaCheckIn);
+    }
+
+    public boolean isViajeCancelado() {
+        return this.viajeCancelado;
     }
 
     public void buscarReservaManual() {
@@ -371,6 +403,7 @@ public class CheckInBean implements Serializable {
         this.idItinerario = null;
         this.pasoActual = 0;
         this.checkInExitoso = false;
+        this.viajeCancelado = false;
         this.codigoReservaBuscado = null;
         this.apellidoORutBuscado = null;
         this.listaAsientos.clear();
@@ -480,7 +513,8 @@ public class CheckInBean implements Serializable {
     }
 
     public boolean isPermiteCambioAsiento() {
-        if (idReserva == null) return false;
+        if (idReserva == null || this.viajeCancelado) return false;
+        if (idItinerario != null && vueloService.existeVueloCanceladoEnItinerario(idItinerario)) return false;
         try {
             Optional<Reserva> optRes = reservaService.findById(idReserva);
             if (optRes.isEmpty()) return false;

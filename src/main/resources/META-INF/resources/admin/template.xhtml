@@ -389,6 +389,17 @@
                         </li>
                     </h:panelGroup>
 
+                    <!-- Finanzas & Reembolsos (Admin / Revenue / Agente Ejecutivo) -->
+                    <h:panelGroup rendered="#{userBean.hasRole('ROLE_ADMIN') or userBean.hasRole('ROLE_REVENUE_MANAGER') or userBean.hasRole('ROLE_AGENTE_AEROPUERTO')}">
+                        <li class="menu-category-title">Atención &amp; Reembolsos</li>
+                        <li class="menu-item #{view.viewId.contains('reembolsos') ? 'active' : ''}">
+                            <h:link outcome="/admin/reembolsos.xhtml" styleClass="menu-link" title="Gestión de Reembolsos">
+                                <i class="pi pi-wallet"></i>
+                                <label>Reembolsos</label>
+                            </h:link>
+                        </li>
+                    </h:panelGroup>
+
                     <!-- Gobierno y Sistema (Exclusivo Super Admin) -->
                     <h:panelGroup rendered="#{userBean.hasRole('ROLE_ADMIN')}">
                         <li class="menu-category-title">Gobierno &amp; Sistema</li>

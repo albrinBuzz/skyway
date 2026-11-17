@@ -20,4 +20,6 @@ public interface ReservaAsientoRepository extends JpaRepository<ReservaAsiento, 
 		   "LEFT JOIN FETCH ra.asiento a " +
 		   "WHERE ra.reserva.idReserva = :idReserva AND ra.vuelo.idVuelo = :idVuelo")
 	List<ReservaAsiento> findAsignacionesByReservaYVuelo(@Param("idReserva") Integer idReserva, @Param("idVuelo") Integer idVuelo);
+
+	long countByVuelo_IdVuelo(Integer idVuelo);
 }

@@ -230,6 +230,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- Trigger configurado para actuar antes de insertar o actualizar
+DROP TRIGGER IF EXISTS trg_set_orden_segmento_vuelo ON Segmento_Vuelo;
 CREATE TRIGGER trg_set_orden_segmento_vuelo
     BEFORE INSERT OR UPDATE ON Segmento_Vuelo
                          FOR EACH ROW
@@ -323,6 +324,7 @@ $$ LANGUAGE plpgsql;
 
 
 
+DROP TRIGGER IF EXISTS trg_set_fecha_itinerario ON Itinerario_Vuelo;
 CREATE TRIGGER trg_set_fecha_itinerario
     AFTER INSERT ON Itinerario_Vuelo
     FOR EACH ROW
@@ -490,6 +492,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Definición del Trigger incluyendo DELETE
+DROP TRIGGER IF EXISTS trg_set_fecha_vuelo ON Segmento_Vuelo;
 CREATE TRIGGER trg_set_fecha_vuelo
     AFTER INSERT OR UPDATE OR DELETE ON Segmento_Vuelo
     FOR EACH ROW
@@ -536,6 +539,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+DROP TRIGGER IF EXISTS trg_actualizar_fechas_turno ON Segmento_Vuelo;
 CREATE TRIGGER trg_actualizar_fechas_turno
     AFTER INSERT OR UPDATE ON Segmento_Vuelo
                         FOR EACH ROW
@@ -561,6 +565,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trg_proteger_log_auditoria ON Log_Auditoria;
 CREATE TRIGGER trg_proteger_log_auditoria
     BEFORE UPDATE OR DELETE ON Log_Auditoria
     FOR EACH ROW
@@ -576,8 +581,7 @@ EXECUTE FUNCTION fn_bloquear_modificacion_log();
 
 
 
-ALTER USER aerolinea_user SET search_path TO public, directus;
-SET search_path TO public, directus;
+SET search_path TO public;
 
 -- =============================================================================
 -- FUNCIÓN: GENERACIÓN DE NOTIFICACIONES PROFESIONALES DE CAMBIO DE ESTADO/HORARIO
@@ -601,6 +605,7 @@ DECLARE
     v_cambio_salida    BOOLEAN := FALSE;
     v_cambio_llegada   BOOLEAN := FALSE;
     v_cambio_estado    BOOLEAN := FALSE;
+    v_estado_flag      VARCHAR(100);
 
     mensaje_cuerpo     TEXT;
     titulo_notif       VARCHAR(150);
@@ -626,11 +631,13 @@ BEGIN
     SELECT
         v.numero_vuelo,
         ev.descripcion,
+        ev.estado,
         a_orig.codigo_iata,
         a_dest.codigo_iata
     INTO
         v_numero_vuelo,
         v_estado_nombre,
+        v_estado_flag,
         v_origen_iata,
         v_destino_iata
     FROM vuelo v
@@ -641,6 +648,16 @@ BEGIN
         AND s_dest.orden_segmento = (SELECT MAX(orden_segmento) FROM segmento_vuelo WHERE id_vuelo = v.id_vuelo)
              LEFT JOIN aeropuerto a_dest ON a_dest.id_aeropuerto = s_dest.id_aeropuerto_destino
     WHERE v.id_vuelo = v_id_vuelo;
+
+    -- Si la transición corresponde a cancelación operacional de vuelo,
+    -- fn_cancelar_vuelo_operacional emite la notificación específica con PNR y reembolso.
+    IF TG_TABLE_NAME = 'vuelo' AND v_cambio_estado AND (
+        UPPER(COALESCE(v_estado_nombre, '')) LIKE '%CANCEL%'
+        OR UPPER(COALESCE(v_estado_flag, '')) LIKE '%CANCEL%'
+        OR UPPER(COALESCE(v_estado_flag, '')) = 'INACTIVO'
+    ) THEN
+        RETURN NEW;
+    END IF;
 
     -- 3. Obtener Puerta de Embarque y Terminal asignada (si existe)
     SELECT pe.codigo_puerta, pe.terminal
@@ -653,7 +670,7 @@ BEGIN
 
     titulo_notif := '✈️ Actualización de Vuelo: ' || COALESCE(v_numero_vuelo, '#' || v_id_vuelo);
 
-    -- 4. Iterar sobre todos los pasajeros confirmados con reserva activa
+    -- 4. Iterar sobre todos los pasajeros confirmados con reserva activa (titular y acompañantes)
     FOR rec_pasajero IN
         SELECT DISTINCT
             u.rut,
@@ -662,9 +679,13 @@ BEGIN
         FROM reserva_itinerario rsvi
                  JOIN itinerario_vuelo itv ON itv.id_itinerario = rsvi.id_itinerario
                  JOIN reserva rsv ON rsv.id_reserva = rsvi.id_reserva
-                 JOIN usuario u ON u.rut = rsv.rut_pasajero
+                 LEFT JOIN estado_reserva er ON er.id_estado_reserva = rsv.estado_reserva
+                 LEFT JOIN pasajero_reserva pr ON pr.id_reserva = rsv.id_reserva
+                 JOIN usuario u ON u.rut = rsv.rut_pasajero OR u.rut = pr.rut
         WHERE itv.id_vuelo = v_id_vuelo
           AND rsv.estado_reserva <> 3 -- Omitir reservas canceladas
+          AND UPPER(COALESCE(er.descripcion, '')) NOT LIKE '%CANCEL%'
+          AND UPPER(COALESCE(er.descripcion, '')) NOT LIKE '%ANUL%'
         LOOP
             -- Construcción HTML optimizada para la plantilla JavaMail
             mensaje_cuerpo := 'Estimado/a <strong>' || rec_pasajero.nombre || ' ' || rec_pasajero.apellido || '</strong>,<br/><br/>' ||
@@ -828,6 +849,50 @@ CREATE TRIGGER trg_validar_reserva_duplicada_itinerario
     BEFORE INSERT ON reserva_itinerario
     FOR EACH ROW
 EXECUTE FUNCTION fn_validar_reserva_duplicada_itinerario();
+
+-- =============================================================================
+-- CREACIÓN AUTOMÁTICA DE SOLICITUD TRANSACCIONAL EN REEMBOLSO AL CANCELAR
+-- =============================================================================
+CREATE OR REPLACE FUNCTION fn_crear_reembolso_automatico()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_rut_titular VARCHAR(12);
+    v_monto DECIMAL(10, 2);
+BEGIN
+    SELECT r.rut_pasajero, COALESCE(NEW.monto_reembolso, r.total, 0)
+    INTO v_rut_titular, v_monto
+    FROM reserva r
+    WHERE r.id_reserva = NEW.id_reserva;
+
+    IF v_rut_titular IS NOT NULL THEN
+        INSERT INTO reembolso (
+            id_cancelacion, id_reserva, rut_solicitante, monto, estado, fecha_solicitud
+        )
+        VALUES (
+            NEW.id_cancelacion,
+            NEW.id_reserva,
+            v_rut_titular,
+            COALESCE(v_monto, 0),
+            CASE
+                WHEN UPPER(COALESCE(NEW.estado, '')) = 'REEMBOLSADO' THEN 'REEMBOLSADO'
+                ELSE 'SOLICITADO'
+            END,
+            COALESCE(NEW.fecha, NOW())
+        )
+        ON CONFLICT (id_cancelacion) DO NOTHING;
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_crear_reembolso_al_cancelar ON Cancelacion;
+CREATE TRIGGER trg_crear_reembolso_al_cancelar
+    AFTER INSERT ON Cancelacion
+    FOR EACH ROW
+    EXECUTE FUNCTION fn_crear_reembolso_automatico();
 
 
 

@@ -1,0 +1,157 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui">
+
+    <style type="text/css">
+        body .ui-dialog.dlg-cuenta-reembolso {
+            background: #0d172a !important;
+            border: 1px solid #2b3f5e !important;
+            border-radius: 12px !important;
+        }
+        body .ui-dialog.dlg-cuenta-reembolso .ui-dialog-titlebar {
+            background: #13223d !important;
+            color: #f8fafc !important;
+            border-bottom: 1px solid #1e3a5f !important;
+        }
+        body .ui-dialog.dlg-cuenta-reembolso .ui-dialog-title {
+            color: #f8fafc !important;
+            font-weight: 700 !important;
+        }
+        body .ui-dialog.dlg-cuenta-reembolso .ui-dialog-content {
+            background: #0d172a !important;
+            color: #e2e8f0 !important;
+        }
+    </style>
+
+    <h:form id="formCuentaReembolso">
+        <p:dialog id="dlgCuentaReembolso"
+                  widgetVar="dlgCuentaReembolso"
+                  header="Datos Bancarios para Reembolso"
+                  modal="true"
+                  responsive="true"
+                  resizable="false"
+                  width="640"
+                  styleClass="skyway-dialog skyway-corporate-dialog dlg-cuenta-reembolso">
+
+            <h:panelGroup id="cntCuentaReembolso" layout="block" style="padding: 0.25rem;">
+                <ui:fragment rendered="#{perfilPasajeroView.reembolsoSeleccionado != null}">
+                    <div style="background: #13223d; border: 1px solid #243b61; border-radius: 8px; padding: 0.75rem 0.95rem; margin-bottom: 0.9rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                        <div>
+                            <span style="font-size: 0.75rem; color: #94a3b8; display: block;">Solicitud de Reembolso ##{perfilPasajeroView.reembolsoSeleccionado.idReembolso} · PNR #{perfilPasajeroView.reembolsoSeleccionado.codigoPnr}</span>
+                            <strong style="color: #f8fafc; font-size: 0.9rem;">#{perfilPasajeroView.reembolsoSeleccionado.motivo}</strong>
+                        </div>
+                        <strong style="color: #34d399; font-size: 1.15rem;">
+                            $<h:outputText value="#{perfilPasajeroView.reembolsoSeleccionado.montoReembolso}"><f:convertNumber pattern="#,##0" locale="es_CL" /></h:outputText> CLP
+                        </strong>
+                    </div>
+
+                    <ui:fragment rendered="#{perfilPasajeroView.reembolsoSeleccionado.estadoReembolso eq 'RECHAZADO' and not empty perfilPasajeroView.reembolsoSeleccionado.observacionAdmin}">
+                        <div style="background: #27131a; border: 1px solid #7f1d1d; border-left: 4px solid #ef4444; border-radius: 6px; padding: 0.7rem 0.85rem; margin-bottom: 0.9rem; font-size: 0.82rem; color: #fecaca;">
+                            <strong style="display: block; color: #fca5a5;">Observación del Ejecutivo (corregir datos):</strong>
+                            #{perfilPasajeroView.reembolsoSeleccionado.observacionAdmin}
+                        </div>
+                    </ui:fragment>
+
+                    <ui:fragment rendered="#{not empty perfilPasajeroView.cuentasReembolsoGuardadas}">
+                        <div class="mb-3">
+                            <p:outputLabel for="selCuentaGuardada" value="Usar Cuenta Bancaria Guardada" style="display: block; color: #cbd5e1; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.3rem;" />
+                            <p:selectOneMenu id="selCuentaGuardada" value="#{perfilPasajeroView.idCuentaReembolsoSeleccionada}" style="width: 100%;">
+                                <f:selectItem itemLabel="— Ingresar nueva cuenta bancaria —" itemValue="0" />
+                                <f:selectItems value="#{perfilPasajeroView.cuentasReembolsoGuardadas}" var="cg"
+                                               itemLabel="#{cg.banco} · #{cg.tipoCuenta} N° #{cg.numeroCuenta} (#{cg.titularNombre})"
+                                               itemValue="#{cg.idCuentaReembolso}" />
+                                <p:ajax listener="#{perfilPasajeroView.alCambiarCuentaGuardada}" update="panelCamposNuevaCuenta" />
+                            </p:selectOneMenu>
+                        </div>
+                    </ui:fragment>
+
+                    <h:panelGroup id="panelCamposNuevaCuenta" layout="block">
+                        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem;">
+                            <div>
+                                <p:outputLabel for="inBancoRem" value="Banco *" style="display: block; color: #cbd5e1; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem;" />
+                                <p:selectOneMenu id="inBancoRem"
+                                                 value="#{perfilPasajeroView.cuentaBancariaForm.banco}"
+                                                 editable="true"
+                                                 disabled="#{perfilPasajeroView.idCuentaReembolsoSeleccionada gt 0}"
+                                                 style="width: 100%;">
+                                    <f:selectItem itemLabel="Seleccione o escriba banco" itemValue="" />
+                                    <f:selectItem itemLabel="Banco de Chile" itemValue="Banco de Chile" />
+                                    <f:selectItem itemLabel="BancoEstado" itemValue="BancoEstado" />
+                                    <f:selectItem itemLabel="Banco Santander" itemValue="Banco Santander" />
+                                    <f:selectItem itemLabel="BCI" itemValue="BCI" />
+                                    <f:selectItem itemLabel="Scotiabank" itemValue="Scotiabank" />
+                                    <f:selectItem itemLabel="Itaú" itemValue="Itaú" />
+                                    <f:selectItem itemLabel="Banco BICE" itemValue="Banco BICE" />
+                                </p:selectOneMenu>
+                            </div>
+
+                            <div>
+                                <p:outputLabel for="inTipoCuentaRem" value="Tipo de Cuenta *" style="display: block; color: #cbd5e1; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem;" />
+                                <p:selectOneMenu id="inTipoCuentaRem"
+                                                 value="#{perfilPasajeroView.cuentaBancariaForm.tipoCuenta}"
+                                                 disabled="#{perfilPasajeroView.idCuentaReembolsoSeleccionada gt 0}"
+                                                 style="width: 100%;">
+                                    <f:selectItem itemLabel="Cuenta Vista / RUT" itemValue="Cuenta Vista / RUT" />
+                                    <f:selectItem itemLabel="Cuenta Corriente" itemValue="Cuenta Corriente" />
+                                    <f:selectItem itemLabel="Cuenta de Ahorro" itemValue="Cuenta de Ahorro" />
+                                </p:selectOneMenu>
+                            </div>
+
+                            <div>
+                                <p:outputLabel for="inNumCuentaRem" value="Número de Cuenta *" style="display: block; color: #cbd5e1; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem;" />
+                                <p:inputText id="inNumCuentaRem"
+                                             value="#{perfilPasajeroView.cuentaBancariaForm.numeroCuenta}"
+                                             disabled="#{perfilPasajeroView.idCuentaReembolsoSeleccionada gt 0}"
+                                             placeholder="Ej: 00123456789"
+                                             style="width: 100%; background: #0f172a; color: #f8fafc; border: 1px solid #334155;" />
+                            </div>
+
+                            <div>
+                                <p:outputLabel for="inRutTitularRem" value="RUT Titular de Cuenta *" style="display: block; color: #cbd5e1; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem;" />
+                                <p:inputText id="inRutTitularRem"
+                                             value="#{perfilPasajeroView.cuentaBancariaForm.titularRut}"
+                                             disabled="#{perfilPasajeroView.idCuentaReembolsoSeleccionada gt 0}"
+                                             placeholder="Ej: 12345678-9"
+                                             style="width: 100%; background: #0f172a; color: #f8fafc; border: 1px solid #334155;" />
+                            </div>
+
+                            <div>
+                                <p:outputLabel for="inNombreTitularRem" value="Nombre Completo Titular *" style="display: block; color: #cbd5e1; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem;" />
+                                <p:inputText id="inNombreTitularRem"
+                                             value="#{perfilPasajeroView.cuentaBancariaForm.titularNombre}"
+                                             disabled="#{perfilPasajeroView.idCuentaReembolsoSeleccionada gt 0}"
+                                             style="width: 100%; background: #0f172a; color: #f8fafc; border: 1px solid #334155;" />
+                            </div>
+
+                            <div>
+                                <p:outputLabel for="inCorreoRem" value="Correo de Confirmación" style="display: block; color: #cbd5e1; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem;" />
+                                <p:inputText id="inCorreoRem"
+                                             value="#{perfilPasajeroView.cuentaBancariaForm.correoConfirmacion}"
+                                             disabled="#{perfilPasajeroView.idCuentaReembolsoSeleccionada gt 0}"
+                                             placeholder="correo@dominio.com"
+                                             style="width: 100%; background: #0f172a; color: #f8fafc; border: 1px solid #334155;" />
+                            </div>
+                        </div>
+                    </h:panelGroup>
+
+                    <div style="display: flex; justify-content: flex-end; gap: 0.6rem; padding-top: 0.9rem; margin-top: 1rem; border-top: 1px solid #1e3a5f;">
+                        <p:commandButton value="Cancelar"
+                                         icon="pi pi-times"
+                                         type="button"
+                                         onclick="PF('dlgCuentaReembolso').hide();"
+                                         styleClass="ui-button-flat ui-button-secondary" />
+                        <p:commandButton value="Enviar Datos Bancarios"
+                                         icon="pi pi-send"
+                                         actionListener="#{perfilPasajeroView.guardarDatosBancariosReembolso}"
+                                         process="@form"
+                                         update=":formVuelos:tabVuelos :globalGrowl :formCuentaReembolso:cntCuentaReembolso"
+                                         oncomplete="if (args &amp;&amp; !args.validationFailed) { PF('dlgCuentaReembolso').hide(); }"
+                                         styleClass="btn-skyway-primary" />
+                    </div>
+                </ui:fragment>
+            </h:panelGroup>
+        </p:dialog>
+    </h:form>
+</ui:composition>
