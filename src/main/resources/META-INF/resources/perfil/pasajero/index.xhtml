@@ -1458,8 +1458,8 @@
                                                 <div class="d-flex align-items-center gap-2">
                                                     <i class="pi pi-ban" style="font-size: 1.25rem; color: #EF4444;"></i>
                                                     <div>
-                                                        <strong class="d-block text-danger" style="font-size: 0.82rem;">Reserva Cancelada por Pasajero (PNR: #{perfilPasajeroView.getCodigoPnr(it.idReserva)})</strong>
-                                                        <span class="text-white-50" style="font-size: 0.76rem;">Esta reserva fue cancelada a solicitud del pasajero. La descarga del E-Ticket no se encuentra disponible.</span>
+                                                        <strong class="d-block text-danger" style="font-size: 0.82rem;">#{perfilPasajeroView.getTituloBannerCancelacion(it)}</strong>
+                                                        <span class="text-white-50" style="font-size: 0.76rem;">#{perfilPasajeroView.getDetalleBannerCancelacion(it)}</span>
                                                     </div>
                                                 </div>
                                                 <span class="badge bg-danger text-white py-1 px-2" style="font-size: 0.75rem;">
@@ -1664,8 +1664,8 @@
                                                 <div class="d-flex align-items-center gap-2">
                                                     <i class="pi pi-ban" style="font-size: 1.25rem; color: #EF4444;"></i>
                                                     <div>
-                                                        <strong class="d-block text-danger" style="font-size: 0.82rem;">Reserva Cancelada por Pasajero (PNR: #{perfilPasajeroView.getCodigoPnr(it.idReserva)})</strong>
-                                                        <span class="text-white-50" style="font-size: 0.76rem;">Esta reserva fue cancelada a solicitud del pasajero. La descarga del E-Ticket no se encuentra disponible.</span>
+                                                        <strong class="d-block text-danger" style="font-size: 0.82rem;">#{perfilPasajeroView.getTituloBannerCancelacion(it)}</strong>
+                                                        <span class="text-white-50" style="font-size: 0.76rem;">#{perfilPasajeroView.getDetalleBannerCancelacion(it)}</span>
                                                     </div>
                                                 </div>
                                                 <span class="badge bg-danger text-white py-1 px-2" style="font-size: 0.75rem;">
@@ -1861,8 +1861,8 @@
                                                 <div class="d-flex align-items-center gap-2">
                                                     <i class="pi pi-ban" style="font-size: 1.25rem; color: #EF4444;"></i>
                                                     <div>
-                                                        <strong class="d-block text-danger" style="font-size: 0.82rem;">Reserva Cancelada por Pasajero (PNR: #{perfilPasajeroView.getCodigoPnr(it.idReserva)})</strong>
-                                                        <span class="text-white-50" style="font-size: 0.76rem;">Esta reserva fue cancelada a solicitud del pasajero. La descarga del E-Ticket no se encuentra disponible.</span>
+                                                        <strong class="d-block text-danger" style="font-size: 0.82rem;">#{perfilPasajeroView.getTituloBannerCancelacion(it)}</strong>
+                                                        <span class="text-white-50" style="font-size: 0.76rem;">#{perfilPasajeroView.getDetalleBannerCancelacion(it)}</span>
                                                     </div>
                                                 </div>
                                                 <span class="badge bg-danger text-white py-1 px-2" style="font-size: 0.75rem;">
@@ -2027,6 +2027,140 @@
                                 </p:dataTable>
                             </p:tab>
 
+                            <p:tab title="Reembolsos (#{perfilPasajeroView.totalReembolsos})">
+                                <!-- RESUMEN DE REEMBOLSOS -->
+                                <div class="mb-4" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem;">
+                                    <div style="background: #0B132B; border: 1px solid #1E293B; border-radius: 10px; padding: 0.9rem 1rem;">
+                                        <span class="d-block text-white-50" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em;">Solicitudes Totales</span>
+                                        <strong class="text-white" style="font-size: 1.35rem;">#{perfilPasajeroView.totalReembolsos}</strong>
+                                    </div>
+                                    <div style="background: #0B132B; border: 1px solid #1E293B; border-radius: 10px; padding: 0.9rem 1rem;">
+                                        <span class="d-block text-white-50" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em;">Pendientes (#{perfilPasajeroView.totalReembolsosPendientes})</span>
+                                        <strong style="font-size: 1.25rem; color: #fbbf24;">
+                                            $<h:outputText value="#{perfilPasajeroView.montoTotalPendienteReembolso}"><f:convertNumber pattern="#,##0" locale="es_CL" /></h:outputText>
+                                        </strong>
+                                    </div>
+                                    <div style="background: #0B132B; border: 1px solid #1E293B; border-radius: 10px; padding: 0.9rem 1rem;">
+                                        <span class="d-block text-white-50" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em;">Procesados / Reembolsados (#{perfilPasajeroView.totalReembolsosCompletados})</span>
+                                        <strong style="font-size: 1.25rem; color: #34d399;">
+                                            $<h:outputText value="#{perfilPasajeroView.montoTotalAcreditadoReembolso}"><f:convertNumber pattern="#,##0" locale="es_CL" /></h:outputText>
+                                        </strong>
+                                    </div>
+                                </div>
+
+                                <h:panelGroup rendered="#{empty perfilPasajeroView.listaReembolsos}">
+                                    <div class="p-5 text-center rounded" style="background: #0B132B; border: 1px dashed #1E293B;">
+                                        <i class="pi pi-wallet text-secondary mb-3" style="font-size: 2.5rem; opacity: 0.6;"></i>
+                                        <h5 class="text-white font-weight-bold">No tienes solicitudes ni reembolsos registrados</h5>
+                                        <p class="text-white-50 small mb-0">Cuando se cancele un vuelo operacionalmente o anules una reserva, aquí podrás seguir el estado y monto de tu devolución.</p>
+                                    </div>
+                                </h:panelGroup>
+
+                                <ui:repeat value="#{perfilPasajeroView.listaReembolsos}" var="rem">
+                                    <div class="delta-trip-card" style="padding: 1.15rem 1.25rem;">
+                                        <div class="delta-trip-header" style="margin-bottom: 0.85rem;">
+                                            <div class="d-flex align-items-center flex-wrap gap-2">
+                                                <div class="delta-pnr-pill" onclick="copiarAlPortapapeles('#{rem.codigoPnr}', 'PNR Localizador');">
+                                                    <i class="pi pi-qrcode text-primary"></i>
+                                                    <strong>#{rem.codigoPnr}</strong>
+                                                    <i class="pi pi-copy text-white-50" style="font-size: 0.75rem;"></i>
+                                                </div>
+
+                                                <span style="background: #13223d; border: 1px solid #263d63; color: #93c5fd; font-size: 0.76rem; font-weight: 700; padding: 3px 9px; border-radius: 6px;">
+                                                    #REEM-#{rem.idReembolso}
+                                                </span>
+
+                                                <span style="font-size: 0.75rem; font-weight: 700; padding: 3px 9px; border-radius: 6px;
+                                                             background: #{rem.cancelacionAerolinea ? 'rgba(239, 68, 68, 0.16)' : 'rgba(100, 116, 139, 0.2)'};
+                                                             border: 1px solid #{rem.cancelacionAerolinea ? 'rgba(239, 68, 68, 0.4)' : 'rgba(148, 163, 184, 0.35)'};
+                                                             color: #{rem.cancelacionAerolinea ? '#fca5a5' : '#cbd5e1'};">
+                                                    #{rem.cancelacionAerolinea ? 'Cancelación Operacional de Vuelo' : 'Anulación de Reserva'}
+                                                </span>
+
+                                                <span style="font-size: 0.78rem; font-weight: 700; padding: 3px 10px; border-radius: 6px; #{perfilPasajeroView.getEstiloBadgeReembolso(rem)}">
+                                                    #{perfilPasajeroView.getEtiquetaEstadoReembolso(rem)}
+                                                </span>
+                                            </div>
+
+                                            <div class="d-flex align-items-center gap-3">
+                                                <ui:fragment rendered="#{perfilPasajeroView.isPuedeIngresarCuentaReembolso(rem)}">
+                                                    <p:commandButton value="#{rem.idCuentaReembolso != null ? 'Actualizar Cuenta Bancaria' : 'Ingresar Cuenta Bancaria'}"
+                                                                     icon="pi pi-credit-card"
+                                                                     styleClass="btn-skyway-primary btn-sm"
+                                                                     actionListener="#{perfilPasajeroView.abrirModalCuentaReembolso(rem)}"
+                                                                     process="@this"
+                                                                     update=":formCuentaReembolso:cntCuentaReembolso"
+                                                                     oncomplete="PF('dlgCuentaReembolso').show();" />
+                                                </ui:fragment>
+
+                                                <div class="text-end">
+                                                    <span class="d-block text-white-50" style="font-size: 0.72rem;">Monto a reembolsar</span>
+                                                    <strong style="font-size: 1.2rem; color: #34d399;">
+                                                        $<h:outputText value="#{rem.montoReembolso}"><f:convertNumber pattern="#,##0" locale="es_CL" /></h:outputText> CLP
+                                                    </strong>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; background: #09101f; border: 1px solid #1E293B; border-radius: 8px; padding: 0.75rem 0.9rem; margin-bottom: 0.75rem;">
+                                            <div>
+                                                <span class="d-block text-white-50" style="font-size: 0.72rem;">Fecha de Registro</span>
+                                                <strong class="text-white" style="font-size: 0.84rem;">
+                                                    <h:outputText value="#{rem.fechaCancelacion}">
+                                                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm 'hrs'" timeZone="America/Santiago" />
+                                                    </h:outputText>
+                                                </strong>
+                                            </div>
+                                            <div>
+                                                <span class="d-block text-white-50" style="font-size: 0.72rem;">Cuenta Bancaria Destino</span>
+                                                <strong class="text-white" style="font-size: 0.84rem;">
+                                                    #{rem.banco != null ? rem.banco.concat(' · ').concat(rem.tipoCuenta).concat(' ').concat(rem.numeroCuenta) : 'Pendiente de ingreso por pasajero'}
+                                                </strong>
+                                            </div>
+                                            <div>
+                                                <span class="d-block text-white-50" style="font-size: 0.72rem;">Comprobante Transferencia</span>
+                                                <strong style="font-size: 0.84rem; color: #{not empty rem.codigoOperacion ? '#34d399' : '#94a3b8'};">
+                                                    #{not empty rem.codigoOperacion ? rem.codigoOperacion : 'Aún no ejecutado'}
+                                                </strong>
+                                            </div>
+                                        </div>
+
+                                        <ui:fragment rendered="#{rem.estadoReembolso eq 'RECHAZADO' and not empty rem.observacionAdmin}">
+                                            <div style="background: rgba(153, 27, 27, 0.22); border: 1px solid rgba(239, 68, 68, 0.45); border-radius: 6px; padding: 0.55rem 0.75rem; margin-bottom: 0.65rem; font-size: 0.8rem; color: #fecaca;">
+                                                <strong>Observación del Ejecutivo:</strong> #{rem.observacionAdmin} — Presiona "Actualizar Cuenta Bancaria" para corregir.
+                                            </div>
+                                        </ui:fragment>
+
+                                        <div style="font-size: 0.82rem; color: #cbd5e1; margin-bottom: 0.45rem;">
+                                            <strong style="color: #93c5fd;">Motivo:</strong> #{rem.motivo}
+                                        </div>
+                                        <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.85rem;">
+                                            <strong style="color: #cbd5e1;">Vuelos / Asientos Respaldados:</strong> #{rem.resumenVuelosAsientos}
+                                        </div>
+
+                                        <!-- LÍNEA DE PROGRESO DEL REEMBOLSO (4 ETAPAS) -->
+                                        <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.5rem; padding-top: 0.65rem; border-top: 1px solid #1E293B; font-size: 0.75rem;">
+                                            <div style="display: flex; align-items: center; gap: 6px; color: #34d399; font-weight: 600;">
+                                                <i class="pi pi-check-circle"></i>
+                                                <span>1. Solicitud Creada</span>
+                                            </div>
+                                            <div style="display: flex; align-items: center; gap: 6px; color: #{perfilPasajeroView.getPasoProgresoReembolso(rem) ge 2 ? '#38bdf8' : '#94a3b8'}; font-weight: #{perfilPasajeroView.getPasoProgresoReembolso(rem) ge 2 ? '600' : '400'};">
+                                                <i class="pi #{perfilPasajeroView.getPasoProgresoReembolso(rem) ge 2 ? 'pi-check-circle' : 'pi-clock'}"></i>
+                                                <span>2. Cuenta Enviada</span>
+                                            </div>
+                                            <div style="display: flex; align-items: center; gap: 6px; color: #{perfilPasajeroView.getPasoProgresoReembolso(rem) ge 3 ? '#60a5fa' : '#64748b'}; font-weight: #{perfilPasajeroView.getPasoProgresoReembolso(rem) ge 3 ? '600' : '400'};">
+                                                <i class="pi #{perfilPasajeroView.getPasoProgresoReembolso(rem) ge 3 ? 'pi-check-circle' : 'pi-clock'}"></i>
+                                                <span>3. Datos Confirmados</span>
+                                            </div>
+                                            <div style="display: flex; align-items: center; gap: 6px; color: #{perfilPasajeroView.getPasoProgresoReembolso(rem) ge 4 ? '#34d399' : '#64748b'}; font-weight: #{perfilPasajeroView.getPasoProgresoReembolso(rem) ge 4 ? '700' : '400'};">
+                                                <i class="pi #{perfilPasajeroView.getPasoProgresoReembolso(rem) ge 4 ? 'pi-check-circle' : 'pi-circle-off'}"></i>
+                                                <span>4. Reembolsado</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </ui:repeat>
+                            </p:tab>
+
                         </p:tabView>
                     </h:form>
 
@@ -2042,6 +2176,7 @@
             <ui:include src="dialogs/dlgAsientos.xhtml" />
             <ui:include src="dialogs/sidebarParadas.xhtml" />
             <ui:include src="dialogs/dlgUpgradeTarifa.xhtml" />
+            <ui:include src="dialogs/dlgCuentaReembolso.xhtml" />
 
         </div>
     </ui:define>

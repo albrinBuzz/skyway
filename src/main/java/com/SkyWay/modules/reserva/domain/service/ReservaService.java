@@ -22,6 +22,7 @@ import com.SkyWay.modules.reserva.domain.model.Reserva;
 
 
 
+import com.SkyWay.modules.reserva.presentation.dto.ReembolsoPasajeroDTO;
 import com.SkyWay.modules.reserva.presentation.dto.TicketInfo;
 
 import org.springframework.data.domain.Page;
@@ -121,6 +122,8 @@ public interface ReservaService {
 	 */
 
 	Optional<String> buscarReservaActivaPorPasajeroEItinerario(String rut, Integer idItinerario);
+
+	List<ReembolsoPasajeroDTO> obtenerReembolsosPasajero(String rutPasajero);
 
 }
 

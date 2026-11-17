@@ -12,6 +12,7 @@ import com.SkyWay.modules.itinerario.presentation.dto.ItinerarioResumenDTO;
 import com.SkyWay.modules.reserva.domain.model.Reserva;
 import com.SkyWay.modules.reserva.domain.service.ETicketPdfGeneratorService;
 import com.SkyWay.modules.reserva.domain.service.ReservaService;
+import com.SkyWay.modules.reserva.presentation.dto.ReembolsoPasajeroDTO;
 import com.SkyWay.modules.reserva.presentation.dto.TicketInfo;
 import com.SkyWay.modules.reservaitinerario.domain.model.ReservaItinerario;
 import com.SkyWay.modules.reservaitinerario.domain.service.ReservaItinerarioService;
@@ -23,6 +24,9 @@ import com.SkyWay.config.pago.PasarelaPagoStrategy;
 import com.SkyWay.config.pago.SolicitudPagoDTO;
 import com.SkyWay.modules.tarifa.presentation.dto.SolicitudUpgradeDTO;
 import com.SkyWay.modules.pago.domain.model.Pago;
+import com.SkyWay.modules.reembolso.domain.model.CuentaReembolso;
+import com.SkyWay.modules.reembolso.domain.service.ReembolsoService;
+import com.SkyWay.modules.reembolso.presentation.dto.CuentaBancariaSolicitudDTO;
 import com.SkyWay.modules.itinerariovuelo.domain.model.ItinerarioVuelo;
 import com.SkyWay.modules.itinerario.presentation.dto.ItinerarioDetalleDTO;
 import jakarta.faces.context.ExternalContext;
@@ -90,6 +94,7 @@ public class PerfilBean implements Serializable {
 	@Autowired private PagoFactoryService pagoFactoryService;
 	@Autowired private PasajeroService pasajeroService;
 	@Autowired private AeropuertoService aeropuertoService;
+	@Autowired private ReembolsoService reembolsoService;
 
 	private List<OpcionUpgradeDTO> opcionesUpgrade = new ArrayList<>();
 	private OpcionUpgradeDTO opcionUpgradeSeleccionada;
@@ -98,6 +103,11 @@ public class PerfilBean implements Serializable {
 
 	private List<ItinerarioResumenDTO> listaItinerarios;
 	private List<ItinerarioResumenDTO> listaItinerariosFiltrados;
+	private List<ReembolsoPasajeroDTO> listaReembolsos = new ArrayList<>();
+	private List<CuentaReembolso> cuentasReembolsoGuardadas = new ArrayList<>();
+	private ReembolsoPasajeroDTO reembolsoSeleccionado;
+	private Integer idCuentaReembolsoSeleccionada = 0;
+	private CuentaBancariaSolicitudDTO cuentaBancariaForm = new CuentaBancariaSolicitudDTO();
 	private ItinerarioResumenDTO itinerarioSeleccionado;
 	private Itinerario itinerarioDetalle;
 	private Reserva reservaDetalle;
@@ -192,6 +202,7 @@ public class PerfilBean implements Serializable {
 				filtrarVuelosFuturos();
 				actualizarSchedule();
 				inicializarMetricasDelta();
+				cargarReembolsosPasajero();
 			}
 		}
 
@@ -418,6 +429,7 @@ public class PerfilBean implements Serializable {
 			listaItinerarios = itinerarioService.findResumenByRut(usuario.getRut(), 100, 0);
 			filtrarVuelosFuturos();
 			actualizarSchedule();
+			cargarReembolsosPasajero();
 
 		} catch (Exception e) {
 			Logger.logError("Error al cancelar la reserva: " + e.getMessage());
@@ -1647,7 +1659,9 @@ public class PerfilBean implements Serializable {
 	public String getEstadoVueloPorItinerario(ItinerarioResumenDTO it) {
 		if (it == null) return "A Tiempo";
 		if (isReservaCanceladaPorItinerario(it.getIdReserva())) {
-			return "Cancelada por Pasajero";
+			return isCancelacionOperativaReserva(it.getIdReserva(), it.getIdItinerario())
+					? "Cancelación Operativa de Vuelo"
+					: "Cancelada por Pasajero";
 		}
 		Date ahora = new Date();
 		if (it.getHoraLlegada() != null && ahora.after(it.getHoraLlegada())) {
@@ -1682,6 +1696,7 @@ public class PerfilBean implements Serializable {
 			case "Embarcando": return "bg-warning text-dark font-weight-bold";
 			case "Última Llamada": return "bg-danger text-white font-weight-bold";
 			case "En Vuelo": return "bg-info text-dark font-weight-bold";
+			case "Cancelación Operativa de Vuelo":
 			case "Cancelada por Pasajero":
 			case "Cancelada":
 			case "Cancelado": return "bg-danger text-white font-weight-bold";
@@ -1699,6 +1714,7 @@ public class PerfilBean implements Serializable {
 			case "Embarcando": return "pi-users";
 			case "Última Llamada": return "pi-exclamation-triangle";
 			case "En Vuelo": return "pi-send";
+			case "Cancelación Operativa de Vuelo":
 			case "Cancelada por Pasajero":
 			case "Cancelada":
 			case "Cancelado": return "pi-times-circle";
@@ -1706,6 +1722,42 @@ public class PerfilBean implements Serializable {
 			case "Finalizado": return "pi-check";
 			default: return "pi-circle-fill";
 		}
+	}
+
+	public boolean isCancelacionOperativaReserva(Integer idReserva, Integer idItinerario) {
+		if (idReserva != null && listaReembolsos != null) {
+			for (ReembolsoPasajeroDTO r : listaReembolsos) {
+				if (idReserva.equals(r.getIdReserva()) && r.isCancelacionAerolinea()) {
+					return true;
+				}
+			}
+		}
+		if (idItinerario != null && vueloService != null) {
+			return vueloService.existeVueloCanceladoEnItinerario(idItinerario);
+		}
+		return false;
+	}
+
+	public boolean isCancelacionOperativaSeleccionada() {
+		if (itinerarioSeleccionado == null) return false;
+		return isCancelacionOperativaReserva(itinerarioSeleccionado.getIdReserva(), itinerarioSeleccionado.getIdItinerario());
+	}
+
+	public String getTituloBannerCancelacion(ItinerarioResumenDTO it) {
+		if (it == null) return "";
+		String pnr = getCodigoPnr(it.getIdReserva());
+		if (isCancelacionOperativaReserva(it.getIdReserva(), it.getIdItinerario())) {
+			return "Vuelo Cancelado Operacionalmente (PNR: " + pnr + ")";
+		}
+		return "Reserva Cancelada por Pasajero (PNR: " + pnr + ")";
+	}
+
+	public String getDetalleBannerCancelacion(ItinerarioResumenDTO it) {
+		if (it == null) return "";
+		if (isCancelacionOperativaReserva(it.getIdReserva(), it.getIdItinerario())) {
+			return "La aerolínea canceló operacionalmente un vuelo de este itinerario. Puedes ingresar tu cuenta y seguir tu reembolso en la pestaña Reembolsos.";
+		}
+		return "Esta reserva fue cancelada a solicitud del pasajero. La descarga del E-Ticket no se encuentra disponible.";
 	}
 
 	public boolean tieneAvisoOperacional(ItinerarioResumenDTO it) {
@@ -1978,6 +2030,173 @@ public class PerfilBean implements Serializable {
 	public Pasajero getPasajeroLogueado() {
 		return pasajeroLogueado;
 	}
+
+	public void cargarReembolsosPasajero() {
+		if (usuario != null && usuario.getRut() != null && reembolsoService != null) {
+			this.listaReembolsos = reembolsoService.listarReembolsosPorPasajero(usuario.getRut());
+			this.cuentasReembolsoGuardadas = reembolsoService.listarCuentasPorPasajero(usuario.getRut());
+		} else {
+			this.listaReembolsos = new ArrayList<>();
+			this.cuentasReembolsoGuardadas = new ArrayList<>();
+		}
+	}
+
+	public void abrirModalCuentaReembolso(ReembolsoPasajeroDTO rem) {
+		this.reembolsoSeleccionado = rem;
+		this.idCuentaReembolsoSeleccionada = 0;
+		this.cuentaBancariaForm = new CuentaBancariaSolicitudDTO();
+		if (usuario != null && usuario.getRut() != null && reembolsoService != null) {
+			this.cuentasReembolsoGuardadas = reembolsoService.listarCuentasPorPasajero(usuario.getRut());
+		}
+		if (rem != null && rem.getIdCuentaReembolso() != null) {
+			this.cuentaBancariaForm.setBanco(rem.getBanco());
+			this.cuentaBancariaForm.setTipoCuenta(rem.getTipoCuenta());
+			this.cuentaBancariaForm.setNumeroCuenta(rem.getNumeroCuenta());
+			this.cuentaBancariaForm.setTitularNombre(rem.getTitularNombre());
+			this.cuentaBancariaForm.setTitularRut(rem.getTitularRut());
+			this.cuentaBancariaForm.setCorreoConfirmacion(rem.getCorreoConfirmacion());
+		} else if (usuario != null) {
+			this.cuentaBancariaForm.setTitularNombre(
+					((usuario.getNombre() != null ? usuario.getNombre() : "") + " " + (usuario.getApellido() != null ? usuario.getApellido() : "")).trim()
+			);
+			this.cuentaBancariaForm.setTitularRut(usuario.getRut());
+			this.cuentaBancariaForm.setCorreoConfirmacion(usuario.getCorreoElectronico());
+			this.cuentaBancariaForm.setTipoCuenta("Cuenta Vista / RUT");
+		}
+	}
+
+	public void alCambiarCuentaGuardada() {
+		if (this.idCuentaReembolsoSeleccionada != null && this.idCuentaReembolsoSeleccionada > 0 && this.cuentasReembolsoGuardadas != null) {
+			for (CuentaReembolso c : this.cuentasReembolsoGuardadas) {
+				if (this.idCuentaReembolsoSeleccionada.equals(c.getIdCuentaReembolso())) {
+					this.cuentaBancariaForm.setIdCuentaExistente(c.getIdCuentaReembolso());
+					this.cuentaBancariaForm.setBanco(c.getBanco());
+					this.cuentaBancariaForm.setTipoCuenta(c.getTipoCuenta());
+					this.cuentaBancariaForm.setNumeroCuenta(c.getNumeroCuenta());
+					this.cuentaBancariaForm.setTitularNombre(c.getTitularNombre());
+					this.cuentaBancariaForm.setTitularRut(c.getTitularRut());
+					this.cuentaBancariaForm.setCorreoConfirmacion(c.getCorreoConfirmacion());
+					return;
+				}
+			}
+		}
+		this.cuentaBancariaForm.setIdCuentaExistente(null);
+		this.cuentaBancariaForm.setBanco(null);
+		this.cuentaBancariaForm.setNumeroCuenta(null);
+	}
+
+	public void guardarDatosBancariosReembolso() {
+		if (this.reembolsoSeleccionado == null || this.reembolsoSeleccionado.getIdReembolso() == null || usuario == null) {
+			FacesContext.getCurrentInstance().addMessage(null,
+					new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "No se seleccionó un reembolso válido."));
+			FacesContext.getCurrentInstance().validationFailed();
+			return;
+		}
+		try {
+			if (this.idCuentaReembolsoSeleccionada != null && this.idCuentaReembolsoSeleccionada > 0) {
+				this.cuentaBancariaForm.setIdCuentaExistente(this.idCuentaReembolsoSeleccionada);
+			} else {
+				this.cuentaBancariaForm.setIdCuentaExistente(null);
+			}
+			reembolsoService.registrarDatosBancariosReembolso(
+					this.reembolsoSeleccionado.getIdReembolso(),
+					usuario.getRut(),
+					this.cuentaBancariaForm
+			);
+			cargarReembolsosPasajero();
+			FacesContext.getCurrentInstance().addMessage(null,
+					new FacesMessage(FacesMessage.SEVERITY_INFO, "Cuenta Bancaria Enviada",
+							"Los datos bancarios del reembolso #" + this.reembolsoSeleccionado.getIdReembolso()
+									+ " fueron enviados para verificación administrativa."));
+		} catch (Exception e) {
+			Logger.logError("Error guardando datos bancarios de reembolso: " + e.getMessage());
+			FacesContext.getCurrentInstance().addMessage(null,
+					new FacesMessage(FacesMessage.SEVERITY_ERROR, "Datos Inválidos", e.getMessage()));
+			FacesContext.getCurrentInstance().validationFailed();
+		}
+	}
+
+	public boolean isPuedeIngresarCuentaReembolso(ReembolsoPasajeroDTO rem) {
+		if (rem == null || rem.getEstadoReembolso() == null) return true;
+		String est = rem.getEstadoReembolso().trim().toUpperCase();
+		return "SOLICITADO".equals(est) || "RECHAZADO".equals(est) || "DATOS_BANCARIOS_ENVIADOS".equals(est);
+	}
+
+	public String getEtiquetaEstadoReembolso(ReembolsoPasajeroDTO rem) {
+		String est = (rem != null && rem.getEstadoReembolso() != null) ? rem.getEstadoReembolso().trim().toUpperCase() : "SOLICITADO";
+		return switch (est) {
+			case "DATOS_BANCARIOS_ENVIADOS" -> "En Validación (Cuenta Enviada)";
+			case "DATOS_CONFIRMADOS" -> "Confirmado (Listo para Transferir)";
+			case "REEMBOLSADO" -> "Reembolsado";
+			case "RECHAZADO" -> "Datos Observados / Corregir";
+			default -> "Solicitado (Falta Cuenta Bancaria)";
+		};
+	}
+
+	public List<ReembolsoPasajeroDTO> getListaReembolsos() {
+		return listaReembolsos;
+	}
+
+	public int getTotalReembolsos() {
+		return listaReembolsos != null ? listaReembolsos.size() : 0;
+	}
+
+	public long getTotalReembolsosPendientes() {
+		if (listaReembolsos == null) return 0L;
+		return listaReembolsos.stream()
+				.filter(r -> r.getEstadoReembolso() == null || !"REEMBOLSADO".equalsIgnoreCase(r.getEstadoReembolso()))
+				.count();
+	}
+
+	public long getTotalReembolsosCompletados() {
+		if (listaReembolsos == null) return 0L;
+		return listaReembolsos.stream()
+				.filter(r -> "REEMBOLSADO".equalsIgnoreCase(r.getEstadoReembolso()))
+				.count();
+	}
+
+	public BigDecimal getMontoTotalPendienteReembolso() {
+		if (listaReembolsos == null) return BigDecimal.ZERO;
+		return listaReembolsos.stream()
+				.filter(r -> r.getEstadoReembolso() == null || !"REEMBOLSADO".equalsIgnoreCase(r.getEstadoReembolso()))
+				.map(r -> r.getMontoReembolso() != null ? r.getMontoReembolso() : BigDecimal.ZERO)
+				.reduce(BigDecimal.ZERO, BigDecimal::add);
+	}
+
+	public BigDecimal getMontoTotalAcreditadoReembolso() {
+		if (listaReembolsos == null) return BigDecimal.ZERO;
+		return listaReembolsos.stream()
+				.filter(r -> "REEMBOLSADO".equalsIgnoreCase(r.getEstadoReembolso()))
+				.map(r -> r.getMontoReembolso() != null ? r.getMontoReembolso() : BigDecimal.ZERO)
+				.reduce(BigDecimal.ZERO, BigDecimal::add);
+	}
+
+	public String getEstiloBadgeReembolso(ReembolsoPasajeroDTO rem) {
+		String est = (rem != null && rem.getEstadoReembolso() != null) ? rem.getEstadoReembolso().trim().toUpperCase() : "SOLICITADO";
+		return switch (est) {
+			case "REEMBOLSADO" -> "background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7;";
+			case "DATOS_CONFIRMADOS" -> "background: rgba(59, 130, 246, 0.22); border: 1px solid #3b82f6; color: #93c5fd;";
+			case "DATOS_BANCARIOS_ENVIADOS" -> "background: rgba(14, 165, 233, 0.2); border: 1px solid #0ea5e9; color: #7dd3fc;";
+			case "RECHAZADO" -> "background: rgba(239, 68, 68, 0.22); border: 1px solid #ef4444; color: #fca5a5;";
+			default -> "background: rgba(245, 158, 11, 0.2); border: 1px solid #f59e0b; color: #fde68a;";
+		};
+	}
+
+	public int getPasoProgresoReembolso(ReembolsoPasajeroDTO rem) {
+		String est = (rem != null && rem.getEstadoReembolso() != null) ? rem.getEstadoReembolso().trim().toUpperCase() : "SOLICITADO";
+		return switch (est) {
+			case "REEMBOLSADO" -> 4;
+			case "DATOS_CONFIRMADOS" -> 3;
+			case "DATOS_BANCARIOS_ENVIADOS" -> 2;
+			default -> 1;
+		};
+	}
+
+	public List<CuentaReembolso> getCuentasReembolsoGuardadas() { return cuentasReembolsoGuardadas; }
+	public ReembolsoPasajeroDTO getReembolsoSeleccionado() { return reembolsoSeleccionado; }
+	public Integer getIdCuentaReembolsoSeleccionada() { return idCuentaReembolsoSeleccionada; }
+	public void setIdCuentaReembolsoSeleccionada(Integer idCuentaReembolsoSeleccionada) { this.idCuentaReembolsoSeleccionada = idCuentaReembolsoSeleccionada; }
+	public CuentaBancariaSolicitudDTO getCuentaBancariaForm() { return cuentaBancariaForm; }
 
 	public static class AcompananteDTO implements Serializable {
 		private static final long serialVersionUID = 1L;

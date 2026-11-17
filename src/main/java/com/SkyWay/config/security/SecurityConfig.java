@@ -99,6 +99,7 @@ public class SecurityConfig {
 	                	.requestMatchers("/perfil/**").authenticated()
 						// Acceso granular al Centro de Control de Operaciones (CCO) segun rol aeronautico
 						.requestMatchers("/admin/usuarios.xhtml", "/admin/metrics-ws.xhtml").hasAuthority("ROLE_ADMIN")
+						.requestMatchers("/admin/reembolsos.xhtml").hasAnyAuthority("ROLE_ADMIN", "ROLE_REVENUE_MANAGER", "ROLE_AGENTE_AEROPUERTO")
 						.requestMatchers("/admin/gestionarTarifas.xhtml", "/admin/itinerario/**", "/admin/gestionParametricas.xhtml").hasAnyAuthority("ROLE_ADMIN", "ROLE_REVENUE_MANAGER")
 						.requestMatchers("/admin/gestionFlota.xhtml").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANTENIMIENTO")
 						.requestMatchers("/admin/gestionAeropuertos.xhtml").hasAnyAuthority("ROLE_ADMIN", "ROLE_DESPACHADOR", "ROLE_MANTENIMIENTO", "ROLE_REVENUE_MANAGER")

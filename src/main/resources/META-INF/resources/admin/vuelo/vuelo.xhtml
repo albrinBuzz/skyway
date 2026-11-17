@@ -300,7 +300,17 @@
                             </div>
                         </ui:fragment>
                     </div>
-                    <p:button outcome="/admin/index.xhtml" value="Volver Al Panel" icon="pi pi-arrow-left" styleClass="btn-secondary-custom" />
+                    <div class="flex gap-2 align-items-center">
+                        <p:commandButton value="Cancelar Vuelo"
+                                         icon="pi pi-ban"
+                                         rendered="#{vueloBean.puedeCancelarVuelo}"
+                                         actionListener="#{vueloBean.abrirCancelacionVuelo}"
+                                         process="@this"
+                                         update=":formCancelarVuelo"
+                                         oncomplete="PF('dlgCancelarVuelo').show();"
+                                         styleClass="ui-button-danger ui-button-outlined" />
+                        <p:button outcome="/admin/index.xhtml" value="Volver Al Panel" icon="pi pi-arrow-left" styleClass="btn-secondary-custom" />
+                    </div>
                 </div>
 
                 <!-- BANNERS DE PROTECCIÓN OPERATIVA (FASE 0) -->
@@ -1801,6 +1811,10 @@
                 </div>
             </h:form>
         </p:dialog>
+
+        <ui:include src="/admin/vuelo/_dlgCancelarVuelo.xhtml">
+            <ui:param name="updateTargets" value=":formVuelo :msgs" />
+        </ui:include>
 
     </ui:define>
 </ui:composition>

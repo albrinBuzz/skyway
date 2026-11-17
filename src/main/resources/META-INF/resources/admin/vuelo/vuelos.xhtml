@@ -470,7 +470,7 @@
                 </p:column>
 
                 <!-- ACCIONES -->
-                <p:column headerText="Acciones" style="width: 110px; text-align: center">
+                <p:column headerText="Acciones" style="width: 160px; text-align: center">
                     <div class="flex gap-2 justify-content-center">
                         <p:commandButton icon="#{vueloBean.isVueloEditableEnListado(vuelo) ? 'pi pi-pencil' : 'pi pi-lock'}"
                                          action="#{vueloBean.editarVuelo(vuelo)}"
@@ -483,6 +483,15 @@
                                          action="#{vueloBean.verTurnos(vuelo)}"
                                          rendered="#{userBean.hasRole('ROLE_ADMIN') or userBean.hasRole('ROLE_DESPACHADOR')}"
                                          styleClass="btn-turns ui-button-sm" />
+
+                        <p:commandButton icon="pi pi-ban"
+                                         actionListener="#{vueloBean.abrirCancelacionVueloDesdeListado(vuelo)}"
+                                         process="@this"
+                                         update=":formCancelarVuelo"
+                                         oncomplete="PF('dlgCancelarVuelo').show();"
+                                         rendered="#{(userBean.hasRole('ROLE_ADMIN') or userBean.hasRole('ROLE_DESPACHADOR')) and vueloBean.isVueloEditableEnListado(vuelo)}"
+                                         styleClass="ui-button-outlined ui-button-danger ui-button-sm"
+                                         title="Cancelar Vuelo Operacionalmente" />
                     </div>
                 </p:column>
 
@@ -537,5 +546,9 @@
             </p:dataTable>
         </h:form>
     </div>
+
+    <ui:include src="/admin/vuelo/_dlgCancelarVuelo.xhtml">
+        <ui:param name="updateTargets" value=":vueloForm:dt-vuelos :vueloForm:msgs" />
+    </ui:include>
 
 </ui:composition>

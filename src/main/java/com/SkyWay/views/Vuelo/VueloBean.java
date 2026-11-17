@@ -31,6 +31,7 @@ import com.SkyWay.modules.turno.domain.service.TurnoService;
 import com.SkyWay.modules.usuario.domain.model.Usuario;
 import com.SkyWay.modules.vuelo.domain.model.Vuelo;
 import com.SkyWay.modules.vuelo.domain.service.VueloService;
+import com.SkyWay.modules.vuelo.presentation.dto.ResultadoCancelacionVueloDTO;
 import com.SkyWay.modules.vuelo.presentation.dto.ResultadoReprogramacionDTO;
 import com.SkyWay.util.Logger;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -150,6 +151,12 @@ public class VueloBean implements Serializable {
     private boolean reprogMarcarRetrasado = false;
     private String reprogMotivo;
     private ResultadoReprogramacionDTO resultadoReprogramacion;
+
+    // Estado de Cancelación Operacional en Cascada
+    private ResultadoCancelacionVueloDTO resultadoCancelacion;
+    private String cancelMotivo;
+    private boolean cancelConfirmacionAceptada = false;
+    private Integer idVueloCancelarObjetivo;
 
 
 
@@ -1612,4 +1619,85 @@ public class VueloBean implements Serializable {
     public String getReprogMotivo() { return reprogMotivo; }
     public void setReprogMotivo(String reprogMotivo) { this.reprogMotivo = reprogMotivo; }
     public ResultadoReprogramacionDTO getResultadoReprogramacion() { return resultadoReprogramacion; }
+
+    public boolean isPuedeCancelarVuelo() {
+        return !edicionBloqueadaPorEstado && obtenerIdVueloActual() != null;
+    }
+
+    public void abrirCancelacionVuelo() {
+        prepararDialogoCancelacion(obtenerIdVueloActual());
+    }
+
+    public void abrirCancelacionVueloDesdeListado(Vuelo vueloSeleccionado) {
+        prepararDialogoCancelacion(vueloSeleccionado != null ? vueloSeleccionado.getIdVuelo() : null);
+    }
+
+    private void prepararDialogoCancelacion(Integer idVueloObjetivo) {
+        this.cancelMotivo = "";
+        this.cancelConfirmacionAceptada = false;
+        this.idVueloCancelarObjetivo = idVueloObjetivo;
+        if (idVueloObjetivo == null) {
+            this.resultadoCancelacion = null;
+            addMessage(FacesMessage.SEVERITY_WARN, "Vuelo sin guardar", "Solo se pueden cancelar vuelos registrados en base de datos.");
+            return;
+        }
+        this.resultadoCancelacion = vueloService.simularCancelacionVuelo(idVueloObjetivo);
+    }
+
+    public void confirmarCancelacionVueloOperacional() {
+        if (this.idVueloCancelarObjetivo == null) {
+            addMessage(FacesMessage.SEVERITY_ERROR, "Vuelo inválido", "No se especificó el vuelo a cancelar.");
+            FacesContext.getCurrentInstance().validationFailed();
+            return;
+        }
+        if (this.cancelMotivo == null || this.cancelMotivo.trim().isEmpty()) {
+            addMessage(FacesMessage.SEVERITY_WARN, "Motivo requerido", "Debe indicar el motivo operacional de cancelación.");
+            FacesContext.getCurrentInstance().validationFailed();
+            return;
+        }
+        if (!this.cancelConfirmacionAceptada) {
+            addMessage(FacesMessage.SEVERITY_WARN, "Confirmación requerida",
+                    "Debe marcar la casilla de confirmación explícita para ejecutar la cancelación definitiva.");
+            FacesContext.getCurrentInstance().validationFailed();
+            return;
+        }
+
+        try {
+            String rutAdmin = obtenerRutUsuarioSesion();
+            this.resultadoCancelacion = vueloService.cancelarVueloOperacional(
+                    this.idVueloCancelarObjetivo,
+                    this.cancelMotivo,
+                    rutAdmin
+            );
+            if (!this.resultadoCancelacion.isEjecutado()) {
+                addMessage(FacesMessage.SEVERITY_ERROR, "Cancelación rechazada", this.resultadoCancelacion.getMensajeResumen());
+                FacesContext.getCurrentInstance().validationFailed();
+                return;
+            }
+
+            Integer idVueloActualVista = obtenerIdVueloActual();
+            if (idVueloActualVista != null && idVueloActualVista.equals(this.idVueloCancelarObjetivo)) {
+                this.vuelo = vueloService.findById(idVueloActualVista).orElse(this.vuelo);
+                this.segmentos = segmentoVueloService.findByIdVuelo(idVueloActualVista);
+                this.asignacionesPuertasTemp.clear();
+                sincronizarEstadoYProteccionVuelo();
+                actualizarDisponibilidadRecursos(false);
+            }
+            this.vuelos = vueloService.findAll();
+            this.vuelosFiltrados = null;
+
+            addMessage(FacesMessage.SEVERITY_INFO, "Vuelo Cancelado", this.resultadoCancelacion.getMensajeResumen());
+        } catch (Exception e) {
+            Logger.logError("Error en confirmarCancelacionVueloOperacional: " + e.getMessage());
+            addMessage(FacesMessage.SEVERITY_ERROR, "Error de Cancelación",
+                    "No se pudo completar la cancelación del vuelo: " + e.getMessage());
+            FacesContext.getCurrentInstance().validationFailed();
+        }
+    }
+
+    public ResultadoCancelacionVueloDTO getResultadoCancelacion() { return resultadoCancelacion; }
+    public String getCancelMotivo() { return cancelMotivo; }
+    public void setCancelMotivo(String cancelMotivo) { this.cancelMotivo = cancelMotivo; }
+    public boolean isCancelConfirmacionAceptada() { return cancelConfirmacionAceptada; }
+    public void setCancelConfirmacionAceptada(boolean cancelConfirmacionAceptada) { this.cancelConfirmacionAceptada = cancelConfirmacionAceptada; }
 }

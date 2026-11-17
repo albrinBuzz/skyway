@@ -115,16 +115,9 @@ BEGIN
 END;
 $$;
 
-SELECT * FROM FnbuscarVuelos('SCL', 'JFK', '2025-12-05');
-
-SELECT * FROM FnbuscarVuelos('SCL', 'JFK', NULL);
-
-
-select
-*
-from vuelo v
- join segmento_vuelo sg ON sg.id_vuelo = v.id_vuelo
-order by v.id_vuelo;
+-- Pruebas manuales comentadas para evitar salida en dump.sql:
+-- SELECT * FROM FnbuscarVuelos('SCL', 'JFK', '2025-12-05');
+-- SELECT * FROM FnbuscarVuelos('SCL', 'JFK', NULL);
 
 
 
@@ -281,9 +274,8 @@ ORDER BY a.fila ASC, a.letra ASC;
 END;
 $$ LANGUAGE plpgsql;
 
-SELECT * FROM fn_getAsientosAvion(25, 5);
-
-select * from reserva;
+-- Prueba manual comentada para evitar salida en dump.sql:
+-- SELECT * FROM fn_getAsientosAvion(25, 5);
 
 
 
@@ -514,3 +506,317 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
+-- =============================================================================
+-- FUNCIÓN 10: CANCELACIÓN OPERACIONAL DE VUELO EN CASCADA (IROPS)
+-- =============================================================================
+CREATE OR REPLACE FUNCTION fn_cancelar_vuelo_operacional(
+    p_id_vuelo INT,
+    p_rut_admin VARCHAR DEFAULT NULL,
+    p_motivo TEXT DEFAULT 'Cancelación operacional de vuelo'
+)
+RETURNS TABLE(
+    reservas_canceladas INT,
+    asientos_liberados INT,
+    checkins_anulados INT,
+    turnos_cancelados INT,
+    pasajeros_notificados INT
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_numero_vuelo VARCHAR(255);
+    v_estado_desc VARCHAR(100);
+    v_estado_flag VARCHAR(100);
+    v_id_estado_vuelo_cancelado INT;
+    v_id_estado_reserva_cancelada INT;
+    v_origen_iata VARCHAR(10);
+    v_destino_iata VARCHAR(10);
+    v_fecha_salida TIMESTAMP;
+    v_rut_auditoria VARCHAR(12);
+    v_motivo_limpio TEXT;
+
+    v_reservas_canceladas INT := 0;
+    v_asientos_liberados INT := 0;
+    v_checkins_anulados INT := 0;
+    v_turnos_cancelados INT := 0;
+    v_pasajeros_notificados INT := 0;
+    v_temp_count INT := 0;
+
+    r_res RECORD;
+    r_asiento RECORD;
+    r_pax RECORD;
+    v_id_cancelacion INT;
+    v_titulo_notif VARCHAR(100);
+    v_mensaje_notif TEXT;
+BEGIN
+    v_motivo_limpio := COALESCE(NULLIF(TRIM(p_motivo), ''), 'Cancelación operacional de vuelo');
+
+    -- 1. Bloquear el vuelo y validar que admita cancelación
+    SELECT
+        v.numero_vuelo,
+        v.fecha_hora_salida,
+        ev.descripcion,
+        ev.estado
+    INTO
+        v_numero_vuelo,
+        v_fecha_salida,
+        v_estado_desc,
+        v_estado_flag
+    FROM vuelo v
+    LEFT JOIN estado_vuelo ev ON ev.id_estado_vuelo = v.id_estado_vuelo
+    WHERE v.id_vuelo = p_id_vuelo
+    FOR UPDATE OF v;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'El vuelo ID % no existe.', p_id_vuelo;
+    END IF;
+
+    IF UPPER(COALESCE(v_estado_desc, '')) LIKE '%CANCEL%'
+       OR UPPER(COALESCE(v_estado_flag, '')) LIKE '%CANCEL%'
+       OR UPPER(COALESCE(v_estado_flag, '')) = 'INACTIVO' THEN
+        RAISE EXCEPTION 'El vuelo % ya se encuentra cancelado (%).', COALESCE(v_numero_vuelo, '#' || p_id_vuelo), COALESCE(v_estado_desc, v_estado_flag);
+    END IF;
+
+    IF UPPER(COALESCE(v_estado_desc, '')) LIKE '%EN VUELO%'
+       OR UPPER(COALESCE(v_estado_desc, '')) LIKE '%ATERRIZ%'
+       OR UPPER(COALESCE(v_estado_desc, '')) LIKE '%FINALIZ%'
+       OR UPPER(COALESCE(v_estado_flag, '')) = 'FINALIZADO' THEN
+        RAISE EXCEPTION 'No se puede cancelar el vuelo % porque ya se encuentra en estado "%".', COALESCE(v_numero_vuelo, '#' || p_id_vuelo), COALESCE(v_estado_desc, v_estado_flag);
+    END IF;
+
+    -- 2. Resolver ruta principal para las notificaciones
+    SELECT a_orig.codigo_iata, a_dest.codigo_iata
+    INTO v_origen_iata, v_destino_iata
+    FROM segmento_vuelo s_orig
+    LEFT JOIN aeropuerto a_orig ON a_orig.id_aeropuerto = s_orig.id_aeropuerto_origen
+    LEFT JOIN segmento_vuelo s_dest ON s_dest.id_vuelo = s_orig.id_vuelo
+        AND s_dest.orden_segmento = (SELECT MAX(orden_segmento) FROM segmento_vuelo WHERE id_vuelo = p_id_vuelo)
+    LEFT JOIN aeropuerto a_dest ON a_dest.id_aeropuerto = s_dest.id_aeropuerto_destino
+    WHERE s_orig.id_vuelo = p_id_vuelo
+    ORDER BY s_orig.orden_segmento ASC
+    LIMIT 1;
+
+    -- 3. Resolver estados destino (Vuelo Cancelado y Reserva Cancelada)
+    SELECT id_estado_vuelo
+    INTO v_id_estado_vuelo_cancelado
+    FROM estado_vuelo
+    WHERE UPPER(COALESCE(descripcion, '')) LIKE '%CANCEL%'
+       OR UPPER(COALESCE(estado, '')) LIKE '%CANCEL%'
+    ORDER BY CASE WHEN UPPER(descripcion) = 'VUELO CANCELADO' THEN 0 ELSE 1 END, id_estado_vuelo ASC
+    LIMIT 1;
+
+    IF v_id_estado_vuelo_cancelado IS NULL THEN
+        RAISE EXCEPTION 'No existe un registro en Estado_Vuelo para estado cancelado.';
+    END IF;
+
+    SELECT id_estado_reserva
+    INTO v_id_estado_reserva_cancelada
+    FROM estado_reserva
+    WHERE UPPER(COALESCE(descripcion, '')) LIKE '%CANCEL%'
+       OR UPPER(COALESCE(descripcion, '')) LIKE '%ANUL%'
+    ORDER BY id_estado_reserva ASC
+    LIMIT 1;
+
+    IF v_id_estado_reserva_cancelada IS NULL THEN
+        v_id_estado_reserva_cancelada := 3;
+    END IF;
+
+    -- 4. Cambiar estado del vuelo a Cancelado (disparador evita correo genérico)
+    UPDATE vuelo
+    SET id_estado_vuelo = v_id_estado_vuelo_cancelado
+    WHERE id_vuelo = p_id_vuelo;
+
+    -- 5. Cancelar en cascada todas las reservas activas vinculadas al vuelo (incluye escalas o RT de la misma reserva)
+    FOR r_res IN
+        SELECT r.id_reserva, r.codigo_reserva, r.total, r.rut_pasajero
+        FROM reserva r
+        LEFT JOIN estado_reserva er ON er.id_estado_reserva = r.estado_reserva
+        WHERE COALESCE(r.estado_reserva, 0) <> v_id_estado_reserva_cancelada
+          AND UPPER(COALESCE(er.descripcion, '')) NOT LIKE '%CANCEL%'
+          AND UPPER(COALESCE(er.descripcion, '')) NOT LIKE '%ANUL%'
+          AND (
+              EXISTS (SELECT 1 FROM reserva_asiento ra WHERE ra.id_reserva = r.id_reserva AND ra.id_vuelo = p_id_vuelo)
+              OR EXISTS (
+                  SELECT 1
+                  FROM reserva_itinerario ri
+                  JOIN itinerario_vuelo iv ON iv.id_itinerario = ri.id_itinerario
+                  WHERE ri.id_reserva = r.id_reserva
+                    AND iv.id_vuelo = p_id_vuelo
+              )
+          )
+        ORDER BY r.id_reserva ASC
+        FOR UPDATE OF r
+    LOOP
+        INSERT INTO cancelacion (id_reserva, fecha, motivo, estado, monto_reembolso)
+        VALUES (
+            r_res.id_reserva,
+            NOW(),
+            FORMAT('Cancelación operacional vuelo %s: %s', COALESCE(v_numero_vuelo, '#' || p_id_vuelo), v_motivo_limpio),
+            'Pendiente',
+            COALESCE(r_res.total, 0)
+        )
+        RETURNING id_cancelacion INTO v_id_cancelacion;
+
+        -- Respaldar todos los asientos ocupados por esa reserva (del vuelo cancelado y sus tramos vinculados)
+        FOR r_asiento IN
+            SELECT
+                ra.id_vuelo,
+                ra.id_asiento,
+                v2.numero_vuelo AS num_vuelo_asiento,
+                a.numero_asiento,
+                ca.descripcion AS clase_nombre,
+                ra.rut AS rut_ocupante
+            FROM reserva_asiento ra
+            JOIN vuelo v2 ON v2.id_vuelo = ra.id_vuelo
+            JOIN asiento a ON a.id_asiento = ra.id_asiento
+            JOIN clase_asiento ca ON ca.id_clase = a.id_clase
+            WHERE ra.id_reserva = r_res.id_reserva
+        LOOP
+            INSERT INTO cancelacion_asiento (
+                id_cancelacion, id_vuelo, id_asiento, numero_vuelo, numero_asiento, clase_asiento, rut_pasajero
+            )
+            VALUES (
+                v_id_cancelacion,
+                r_asiento.id_vuelo,
+                r_asiento.id_asiento,
+                LEFT(COALESCE(r_asiento.num_vuelo_asiento, ''), 50),
+                LEFT(COALESCE(r_asiento.numero_asiento, ''), 10),
+                LEFT(COALESCE(r_asiento.clase_nombre, ''), 50),
+                r_asiento.rut_ocupante
+            );
+            v_asientos_liberados := v_asientos_liberados + 1;
+        END LOOP;
+
+        DELETE FROM reserva_asiento
+        WHERE id_reserva = r_res.id_reserva;
+
+        UPDATE reserva
+        SET estado_reserva = v_id_estado_reserva_cancelada
+        WHERE id_reserva = r_res.id_reserva;
+
+        UPDATE checkin
+        SET estado = 'ANULADO'
+        WHERE id_reserva = r_res.id_reserva
+          AND COALESCE(estado, '') <> 'ANULADO';
+        GET DIAGNOSTICS v_temp_count = ROW_COUNT;
+        v_checkins_anulados := v_checkins_anulados + v_temp_count;
+
+        v_reservas_canceladas := v_reservas_canceladas + 1;
+
+        v_titulo_notif := LEFT('Vuelo Cancelado: ' || COALESCE(v_numero_vuelo, '#' || p_id_vuelo) || ' (PNR ' || COALESCE(r_res.codigo_reserva, '#' || r_res.id_reserva) || ')', 100);
+
+        FOR r_pax IN
+            SELECT DISTINCT u.rut, u.nombre, u.apellido
+            FROM usuario u
+            WHERE u.rut = r_res.rut_pasajero
+               OR u.rut IN (
+                   SELECT pr.rut
+                   FROM pasajero_reserva pr
+                   WHERE pr.id_reserva = r_res.id_reserva
+               )
+        LOOP
+            v_mensaje_notif :=
+                'Estimado/a <strong>' || COALESCE(r_pax.nombre, '') || ' ' || COALESCE(r_pax.apellido, '') || '</strong>,<br/><br/>' ||
+                'Lamentamos informarle que el vuelo <strong>' || COALESCE(v_numero_vuelo, '#' || p_id_vuelo) || '</strong> (' ||
+                COALESCE(v_origen_iata, 'ORIGEN') || ' &#10140; ' || COALESCE(v_destino_iata, 'DESTINO') || ')' ||
+                COALESCE(' programado para el <strong>' || TO_CHAR(v_fecha_salida, 'DD/MM/YYYY HH24:MI hs') || '</strong>', '') ||
+                ' ha sido <strong>CANCELADO</strong>.<br/><br/>' ||
+                '<strong>Detalle de su reserva afectada:</strong>' ||
+                '<ul style="margin-top:8px; padding-left:20px; color:#cbd5e1; line-height:1.6;">' ||
+                '<li>Código de reserva (PNR): <strong>' || COALESCE(r_res.codigo_reserva, '#' || r_res.id_reserva) || '</strong></li>' ||
+                '<li>Motivo informado: ' || v_motivo_limpio || '</li>' ||
+                '<li>Solicitud de reembolso registrada (#<strong>' || v_id_cancelacion || '</strong>) por monto total <strong>$' || COALESCE(r_res.total, 0) || '</strong> (Estado: Pendiente).</li>' ||
+                '</ul>' ||
+                'Cualquier tarjeta de embarque emitida previamente ha quedado anulada.';
+
+            INSERT INTO notificacion (
+                rut_destinatario, titulo, mensaje, fecha, leido, enviada, canal
+            )
+            VALUES (
+                r_pax.rut,
+                v_titulo_notif,
+                v_mensaje_notif,
+                NOW(),
+                FALSE,
+                FALSE,
+                'Email'
+            );
+
+            v_pasajeros_notificados := v_pasajeros_notificados + 1;
+        END LOOP;
+    END LOOP;
+
+    -- 6. Liberar puertas asignadas a los segmentos del vuelo cancelado
+    DELETE FROM asignacion_puerta
+    WHERE id_segmento IN (
+        SELECT id_segmento FROM segmento_vuelo WHERE id_vuelo = p_id_vuelo
+    );
+
+    -- 7. Cancelar asignaciones activas de tripulación de los turnos del vuelo
+    UPDATE turno_tripulacion tt
+    SET estado = 'CANCELADO',
+        fecha_respuesta = NOW(),
+        motivo_rechazo = LEFT('Cancelación de vuelo ' || COALESCE(v_numero_vuelo, '#' || p_id_vuelo) || ': ' || v_motivo_limpio, 255)
+    FROM turno t
+    WHERE tt.id_turno = t.id_turno
+      AND t.id_vuelo = p_id_vuelo
+      AND UPPER(COALESCE(tt.estado, 'PENDIENTE')) <> 'CANCELADO';
+    GET DIAGNOSTICS v_turnos_cancelados = ROW_COUNT;
+
+    -- 8. Registrar en Log_Auditoria validando rut existente para evitar fallo de FK
+    v_rut_auditoria := NULL;
+    IF p_rut_admin IS NOT NULL AND TRIM(p_rut_admin) <> '' THEN
+        SELECT rut INTO v_rut_auditoria FROM usuario WHERE rut = TRIM(p_rut_admin) LIMIT 1;
+    END IF;
+
+    INSERT INTO log_auditoria (
+        fecha_hora,
+        rut_usuario,
+        accion,
+        nivel,
+        tabla_afectada,
+        id_registro_afectado,
+        datos_anteriores,
+        datos_nuevos,
+        detalle
+    )
+    VALUES (
+        NOW(),
+        v_rut_auditoria,
+        'CANCELACION_OPERACIONAL_VUELO',
+        'WARN'::tipo_nivel_log,
+        'vuelo',
+        p_id_vuelo,
+        jsonb_build_object(
+            'numero_vuelo', v_numero_vuelo,
+            'estado_anterior', v_estado_desc
+        ),
+        jsonb_build_object(
+            'estado_nuevo', 'Vuelo Cancelado',
+            'reservas_canceladas', v_reservas_canceladas,
+            'asientos_liberados', v_asientos_liberados,
+            'checkins_anulados', v_checkins_anulados,
+            'turnos_cancelados', v_turnos_cancelados,
+            'pasajeros_notificados', v_pasajeros_notificados
+        ),
+        FORMAT(
+            'CANCELACION VUELO %s | MOTIVO: %s | RESERVAS: %s | ASIENTOS_LIBERADOS: %s | CHECKINS_ANULADOS: %s | TURNOS_CANCELADOS: %s | PASAJEROS_NOTIFICADOS: %s',
+            COALESCE(v_numero_vuelo, '#' || p_id_vuelo),
+            v_motivo_limpio,
+            v_reservas_canceladas,
+            v_asientos_liberados,
+            v_checkins_anulados,
+            v_turnos_cancelados,
+            v_pasajeros_notificados
+        )
+    );
+
+    RETURN QUERY SELECT
+        v_reservas_canceladas,
+        v_asientos_liberados,
+        v_checkins_anulados,
+        v_turnos_cancelados,
+        v_pasajeros_notificados;
+END;
+$$;

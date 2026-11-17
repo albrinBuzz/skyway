@@ -376,6 +376,25 @@ public class AsientoCacheService {
     }
 
     /**
+     * Purga completamente la caché en memoria para un vuelo dado (ej. tras cancelación operacional).
+     */
+    public void limpiarCacheVuelo(Integer idVuelo) {
+        if (idVuelo == null) return;
+        Map<Integer, InfoAsientoDTO> removidos = mapaVuelos.remove(idVuelo);
+        if (removidos != null) {
+            for (Map.Entry<Integer, InfoAsientoDTO> entry : removidos.entrySet()) {
+                tiempoSeleccionMap.remove(entry.getKey());
+                if ("SELECCIONADO".equalsIgnoreCase(entry.getValue().getEstado())) {
+                    EventoAsientoPush evento = new EventoAsientoPush(entry.getKey(), idVuelo, "libre", null);
+                    messagingTemplate.convertAndSend("/topic/vuelo/" + idVuelo, evento);
+                }
+            }
+            Logger.logInfo(String.format("🧹 [Cache-Vuelo] Caché de %d asiento(s) limpiada para el Vuelo #%d.",
+                    removidos.size(), idVuelo));
+        }
+    }
+
+    /**
      * Retorna el tiempo restante del temporizador del usuario filtrado SOLO para el vuelo especificado.
      * Esto evita que reservas/selecciones previas de otros vuelos afecten el TTL actual.
      */

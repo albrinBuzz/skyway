@@ -27,6 +27,7 @@ import com.SkyWay.modules.piloto.domain.model.Piloto;
 import com.SkyWay.modules.puertaembarque.domain.model.PuertaEmbarque;
 import com.SkyWay.modules.puertaembarque.domain.repository.PuertaEmbarqueRepository;
 import com.SkyWay.modules.reservaasiento.domain.repository.ReservaAsientoRepository;
+import com.SkyWay.modules.reservaasiento.domain.service.AsientoCacheService;
 import com.SkyWay.modules.segmentovuelo.domain.model.SegmentoVuelo;
 import com.SkyWay.modules.segmentovuelo.domain.repository.SegmentoVueloRepository;
 import com.SkyWay.modules.segmentovuelo.presentation.dto.SegmentoMapaProjection;
@@ -38,6 +39,7 @@ import com.SkyWay.modules.vuelo.domain.model.Vuelo;
 import com.SkyWay.modules.vuelo.domain.repository.VueloRepository;
 import com.SkyWay.modules.vuelo.domain.service.VueloService;
 import com.SkyWay.modules.vuelo.presentation.dto.ItinerarioImpactoDTO;
+import com.SkyWay.modules.vuelo.presentation.dto.ResultadoCancelacionVueloDTO;
 import com.SkyWay.modules.vuelo.presentation.dto.ResultadoReprogramacionDTO;
 import com.SkyWay.modules.vuelo.presentation.dto.VueloEstadoProjection;
 import com.SkyWay.modules.vuelo.presentation.dto.VueloMapaDTO;
@@ -85,6 +87,8 @@ public class VueloServiceImpl implements VueloService {
 	private ItinerarioVueloRepository itinerarioVueloRepository;
 	@Autowired
 	private EstadoVueloRepository estadoVueloRepository;
+	@Autowired
+	private AsientoCacheService asientoCacheService;
 
 	private static final long MIN_ESCALA_MINUTOS = 45L;
 	private static final long VENTANA_PUERTA_MINUTOS = 60L;
@@ -961,6 +965,272 @@ public class VueloServiceImpl implements VueloService {
 			LOGGER.warn("No se pudo registrar log_auditoria para reprogramación del vuelo {}: {}",
 					vuelo.getIdVuelo(), ex.getMessage());
 		}
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public boolean existeVueloCanceladoEnItinerario(Integer idItinerario) {
+		if (idItinerario == null || idItinerario <= 0) {
+			return false;
+		}
+		List<ItinerarioVuelo> tramos = itinerarioVueloRepository.findByItinerarioIdItinerarioOrderByOrdenAsc(idItinerario);
+		if (tramos == null || tramos.isEmpty()) {
+			return false;
+		}
+		for (ItinerarioVuelo iv : tramos) {
+			if (iv.getVuelo() != null && esVueloCancelado(iv.getVuelo())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public ResultadoCancelacionVueloDTO simularCancelacionVuelo(Integer idVuelo) {
+		ResultadoCancelacionVueloDTO dto = new ResultadoCancelacionVueloDTO();
+		dto.setIdVuelo(idVuelo);
+		if (idVuelo == null || idVuelo <= 0) {
+			dto.setPermitido(false);
+			dto.setMensajeResumen("El vuelo aún no se encuentra registrado en base de datos.");
+			return dto;
+		}
+
+		Vuelo vuelo = vueloRepository.findById(idVuelo).orElse(null);
+		if (vuelo == null) {
+			dto.setPermitido(false);
+			dto.setMensajeResumen("No se encontró el vuelo #" + idVuelo + ".");
+			return dto;
+		}
+
+		dto.setNumeroVuelo(vuelo.getNumeroVuelo() != null ? vuelo.getNumeroVuelo() : "#" + idVuelo);
+		String estadoDesc = vuelo.getEstadoVuelo() != null ? vuelo.getEstadoVuelo().getDescripcion() : "Programado";
+		dto.setEstadoActual(estadoDesc);
+
+		List<SegmentoVuelo> segs = segmentoVueloRepository.buscarPorVuelo(idVuelo);
+		if (segs != null && !segs.isEmpty()) {
+			SegmentoVuelo primero = segs.get(0);
+			SegmentoVuelo ultimo = segs.get(segs.size() - 1);
+			String orig = primero.getAeropuertoOrigen() != null ? primero.getAeropuertoOrigen().getCodigoIata() : "?";
+			String dest = ultimo.getAeropuertoDestino() != null ? ultimo.getAeropuertoDestino().getCodigoIata() : "?";
+			dto.setRuta(orig + " → " + dest);
+		} else {
+			dto.setRuta("Sin ruta");
+		}
+
+		boolean inmutable = esVueloInmutablePorEstado(vuelo);
+		dto.setPermitido(!inmutable);
+
+		long reservasActivas = contarReservasActivasPorVuelo(idVuelo);
+		long asientosVendidos = contarAsientosVendidosVuelo(idVuelo);
+		long checkinsCompletados = contarCheckinsCompletadosPorVuelo(idVuelo);
+		long pasajerosAfectados = contarPasajerosAfectadosPorVuelo(idVuelo);
+		long reservasMultiTramo = contarReservasMultiTramoOIdaVueltaPorVuelo(idVuelo);
+		long turnosActivos = contarTurnosActivosPorVuelo(idVuelo);
+
+		dto.setReservasActivas(reservasActivas);
+		dto.setAsientosVendidos(asientosVendidos);
+		dto.setCheckinsActivos(checkinsCompletados);
+		dto.setPasajerosAfectados(pasajerosAfectados);
+		dto.setReservasMultiTramo(reservasMultiTramo);
+		dto.setTurnosActivos(turnosActivos);
+
+		List<ItinerarioImpactoDTO> itinerariosImpactados = construirImpactoItinerariosParaCancelacion(idVuelo);
+		dto.setItinerariosImpactados(itinerariosImpactados);
+
+		if (inmutable) {
+			dto.getAdvertencias().add("El vuelo está en estado '" + estadoDesc + "' y no puede volver a cancelarse.");
+			dto.setMensajeResumen("Cancelación no disponible en el estado actual (" + estadoDesc + ").");
+			return dto;
+		}
+
+		if (reservasActivas > 0) {
+			dto.getAdvertencias().add(String.format(
+					"ANULACIÓN MASIVA E IRREVERSIBLE: Se cancelarán definitivamente %d reserva(s) activa(s) (%d pasajero(s)), se respaldarán/liberarán %d asiento(s) y se emitirán %d solicitud(es) automática(s) de reembolso total.",
+					reservasActivas, pasajerosAfectados, asientosVendidos, reservasActivas
+			));
+		}
+		if (reservasMultiTramo > 0) {
+			dto.getAdvertencias().add(String.format(
+					"DESTRUCCIÓN DE RESERVAS CONECTADAS (MULTI-TRAMO / IDA Y VUELTA): %d reserva(s) incluyen escalas o vuelo de regreso. Bajo el modelo atómico actual se anulará TODO el viaje del pasajero (incluidos tramos sanos), sin reacomodación parcial.",
+					reservasMultiTramo
+			));
+		}
+		if (checkinsCompletados > 0) {
+			dto.getAdvertencias().add(String.format(
+					"INVALIDACIÓN DE EMBARQUE EN CURSO: Se anularán de inmediato %d Check-in(s) / Boarding Pass ya emitidos para pasajeros que podrían encontrarse rumbo al aeropuerto.",
+					checkinsCompletados
+			));
+		}
+		if (!itinerariosImpactados.isEmpty()) {
+			dto.getAdvertencias().add(String.format(
+					"BLOQUEO DE RED COMERCIAL: %d itinerario(s) comercial(es) quedarán rotos e inhabilitados para búsqueda, venta web/móvil y check-in, dejando desconectados sus vuelos hermanos.",
+					itinerariosImpactados.size()
+			));
+		}
+		if (turnosActivos > 0) {
+			dto.getAdvertencias().add(String.format(
+					"DESMOVILIZACIÓN OPERACIONAL: Se cancelarán %d asignación(es) de tripulación en Turno_Tripulacion, se liberará aeronave/piloto y se retirará la puerta de embarque.",
+					turnosActivos
+			));
+		}
+
+		if (reservasActivas > 0) {
+			dto.setMensajeResumen(String.format(
+					"ACCIÓN CRÍTICA IRREVERSIBLE: Cancelará %d reserva(s) completa(s) (incluidas escalas e ida/vuelta), anulará %d pase(s) de abordar, inhabilitará %d itinerario(s), generará reembolsos automáticos y notificará de inmediato a %d pasajero(s).",
+					reservasActivas, checkinsCompletados, itinerariosImpactados.size(), pasajerosAfectados
+			));
+		} else if (!itinerariosImpactados.isEmpty()) {
+			dto.setMensajeResumen(String.format(
+					"IMPACTO EN RED COMERCIAL (SIN RESERVAS ACTIVAS): Aunque no hay pasajeros comprados en este vuelo, cancelarlo romperá e inhabilitará %d itinerario(s) comercial(es) conectado(s) y sus vuelos combinados, además de liberar aeronave, piloto, puerta y turnos.",
+					itinerariosImpactados.size()
+			));
+		} else {
+			dto.setMensajeResumen("Sin reservas activas ni itinerarios conectados: la cancelación es irreversible y liberará aeronave, piloto, puerta y turnos asociados.");
+		}
+		return dto;
+	}
+
+	@Override
+	@Transactional
+	public ResultadoCancelacionVueloDTO cancelarVueloOperacional(Integer idVuelo, String motivo, String rutUsuarioAdmin) {
+		ResultadoCancelacionVueloDTO res = simularCancelacionVuelo(idVuelo);
+		if (!res.isPermitido()) {
+			res.setEjecutado(false);
+			return res;
+		}
+		if (motivo == null || motivo.isBlank()) {
+			res.setPermitido(false);
+			res.setEjecutado(false);
+			res.setMensajeResumen("Debe indicar un motivo operacional obligatorio para cancelar el vuelo.");
+			return res;
+		}
+
+		Object[] row = (Object[]) em.createNativeQuery(
+				"SELECT reservas_canceladas, asientos_liberados, checkins_anulados, turnos_cancelados, pasajeros_notificados " +
+				"FROM fn_cancelar_vuelo_operacional(:idVuelo, CAST(:rutAdmin AS VARCHAR), CAST(:motivo AS TEXT))"
+		)
+				.setParameter("idVuelo", idVuelo)
+				.setParameter("rutAdmin", (rutUsuarioAdmin != null && !rutUsuarioAdmin.isBlank()) ? rutUsuarioAdmin.trim() : null)
+				.setParameter("motivo", motivo.trim())
+				.getSingleResult();
+
+		asientoCacheService.limpiarCacheVuelo(idVuelo);
+
+		int rCanc = row != null && row[0] != null ? ((Number) row[0]).intValue() : 0;
+		int aLib = row != null && row[1] != null ? ((Number) row[1]).intValue() : 0;
+		int chkAnul = row != null && row[2] != null ? ((Number) row[2]).intValue() : 0;
+		int tCanc = row != null && row[3] != null ? ((Number) row[3]).intValue() : 0;
+		int pNotif = row != null && row[4] != null ? ((Number) row[4]).intValue() : 0;
+
+		res.setReservasCanceladas(rCanc);
+		res.setAsientosLiberados(aLib);
+		res.setCheckinsAnulados(chkAnul);
+		res.setTurnosCancelados(tCanc);
+		res.setPasajerosNotificados(pNotif);
+		res.setEstadoActual("Vuelo Cancelado");
+		res.setEjecutado(true);
+		res.setMensajeResumen(String.format(
+				"Vuelo %s cancelado. Reservas canceladas: %d | Asientos respaldados y liberados: %d | Check-ins anulados: %d | Turnos cancelados: %d | Notificaciones enviadas: %d.",
+				res.getNumeroVuelo(), rCanc, aLib, chkAnul, tCanc, pNotif
+		));
+		return res;
+	}
+
+	private List<ItinerarioImpactoDTO> construirImpactoItinerariosParaCancelacion(Integer idVuelo) {
+		List<Integer> ids = itinerarioVueloRepository.findIdsItinerariosPorVuelo(idVuelo);
+		if (ids == null || ids.isEmpty()) {
+			return new ArrayList<>();
+		}
+		List<ItinerarioImpactoDTO> lista = new ArrayList<>();
+		for (Integer idItin : ids) {
+			List<ItinerarioVuelo> tramos = itinerarioVueloRepository.findByItinerarioIdItinerarioOrderByOrdenAsc(idItin);
+			if (tramos == null || tramos.isEmpty()) {
+				continue;
+			}
+			Itinerario itin = tramos.get(0).getItinerario();
+			ItinerarioImpactoDTO dto = new ItinerarioImpactoDTO();
+			dto.setIdItinerario(idItin);
+			String orig = (itin != null && itin.getAeropuertoOrigen() != null) ? itin.getAeropuertoOrigen().getCodigoIata() : "?";
+			String dest = (itin != null && itin.getAeropuertoDestino() != null) ? itin.getAeropuertoDestino().getCodigoIata() : "?";
+			dto.setRutaComercial(orig + " → " + dest);
+			dto.setNumeroEscalas(Math.max(0, tramos.size() - 1));
+			dto.setReservasActivas(contarReservasActivasPorItinerario(idItin));
+			dto.setEstadoConexion("INHABILITADO");
+
+			StringBuilder sec = new StringBuilder();
+			for (int i = 0; i < tramos.size(); i++) {
+				Vuelo vt = tramos.get(i).getVuelo();
+				if (i > 0) sec.append(" ➔ ");
+				if (vt != null) {
+					String cod = vt.getNumeroVuelo() != null ? vt.getNumeroVuelo() : "#" + vt.getIdVuelo();
+					sec.append(idVuelo.equals(vt.getIdVuelo()) ? "[" + cod + " CANCELAR]" : cod);
+				}
+			}
+			dto.setSecuenciaTramos(sec.toString());
+			dto.setDetalleConexion(tramos.size() > 1
+					? String.format("Itinerario con %d tramos combinados: al cancelar este vuelo toda la cadena comercial quedará rota e inhabilitada para venta, búsqueda y check-in.", tramos.size())
+					: "Itinerario directo: quedará inhabilitado inmediatamente para búsqueda, venta y check-in.");
+			lista.add(dto);
+		}
+		return lista;
+	}
+
+	private long contarPasajerosAfectadosPorVuelo(Integer idVuelo) {
+		Object res = em.createNativeQuery(
+				"SELECT COUNT(DISTINCT rut_pax) FROM (" +
+				"   SELECT r.rut_pasajero AS rut_pax " +
+				"   FROM reserva r " +
+				"   LEFT JOIN estado_reserva er ON er.id_estado_reserva = r.estado_reserva " +
+				"   WHERE UPPER(COALESCE(er.descripcion, '')) NOT LIKE '%CANCEL%' " +
+				"   AND UPPER(COALESCE(er.descripcion, '')) NOT LIKE '%ANUL%' " +
+				"   AND (r.id_reserva IN (SELECT ra.id_reserva FROM reserva_asiento ra WHERE ra.id_vuelo = :idVuelo) " +
+				"        OR r.id_reserva IN (SELECT ri.id_reserva FROM reserva_itinerario ri JOIN itinerario_vuelo iv ON iv.id_itinerario = ri.id_itinerario WHERE iv.id_vuelo = :idVuelo)) " +
+				"   UNION " +
+				"   SELECT pr.rut AS rut_pax " +
+				"   FROM pasajero_reserva pr " +
+				"   JOIN reserva r ON r.id_reserva = pr.id_reserva " +
+				"   LEFT JOIN estado_reserva er ON er.id_estado_reserva = r.estado_reserva " +
+				"   WHERE UPPER(COALESCE(er.descripcion, '')) NOT LIKE '%CANCEL%' " +
+				"   AND UPPER(COALESCE(er.descripcion, '')) NOT LIKE '%ANUL%' " +
+				"   AND (r.id_reserva IN (SELECT ra.id_reserva FROM reserva_asiento ra WHERE ra.id_vuelo = :idVuelo) " +
+				"        OR r.id_reserva IN (SELECT ri.id_reserva FROM reserva_itinerario ri JOIN itinerario_vuelo iv ON iv.id_itinerario = ri.id_itinerario WHERE iv.id_vuelo = :idVuelo))" +
+				") sub WHERE rut_pax IS NOT NULL"
+		).setParameter("idVuelo", idVuelo).getSingleResult();
+		return res != null ? ((Number) res).longValue() : 0L;
+	}
+
+	private long contarReservasMultiTramoOIdaVueltaPorVuelo(Integer idVuelo) {
+		Object res = em.createNativeQuery(
+				"SELECT COUNT(DISTINCT r.id_reserva) " +
+				"FROM reserva r " +
+				"LEFT JOIN estado_reserva er ON er.id_estado_reserva = r.estado_reserva " +
+				"WHERE UPPER(COALESCE(er.descripcion, '')) NOT LIKE '%CANCEL%' " +
+				"AND UPPER(COALESCE(er.descripcion, '')) NOT LIKE '%ANUL%' " +
+				"AND (r.id_reserva IN (SELECT ra.id_reserva FROM reserva_asiento ra WHERE ra.id_vuelo = :idVuelo) " +
+				"     OR r.id_reserva IN (SELECT ri.id_reserva FROM reserva_itinerario ri JOIN itinerario_vuelo iv ON iv.id_itinerario = ri.id_itinerario WHERE iv.id_vuelo = :idVuelo)) " +
+				"AND (" +
+				"   (SELECT COUNT(*) FROM reserva_itinerario ri2 WHERE ri2.id_reserva = r.id_reserva) > 1 " +
+				"   OR EXISTS (" +
+				"       SELECT 1 FROM reserva_itinerario ri3 " +
+				"       JOIN itinerario_vuelo iv3 ON iv3.id_itinerario = ri3.id_itinerario " +
+				"       WHERE ri3.id_reserva = r.id_reserva " +
+				"       GROUP BY ri3.id_itinerario HAVING COUNT(iv3.id_vuelo) > 1" +
+				"   )" +
+				")"
+		).setParameter("idVuelo", idVuelo).getSingleResult();
+		return res != null ? ((Number) res).longValue() : 0L;
+	}
+
+	private long contarTurnosActivosPorVuelo(Integer idVuelo) {
+		Object res = em.createNativeQuery(
+				"SELECT COUNT(*) " +
+				"FROM turno_tripulacion tt " +
+				"JOIN turno t ON t.id_turno = tt.id_turno " +
+				"WHERE t.id_vuelo = :idVuelo " +
+				"AND UPPER(COALESCE(tt.estado, 'PENDIENTE')) <> 'CANCELADO'"
+		).setParameter("idVuelo", idVuelo).getSingleResult();
+		return res != null ? ((Number) res).longValue() : 0L;
 	}
 
 
