@@ -46,6 +46,10 @@ import jakarta.inject.Named;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.servlet.http.HttpSession;
+import org.primefaces.model.FilterMeta;
+import org.primefaces.model.LazyDataModel;
+import org.primefaces.model.SortMeta;
+import org.primefaces.model.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -154,6 +158,7 @@ public class VueloBean implements Serializable {
 
     // Estado de Cancelación Operacional en Cascada
     private ResultadoCancelacionVueloDTO resultadoCancelacion;
+    private LazyDataModel<Vuelo> vuelosLazy;
     private String cancelMotivo;
     private boolean cancelConfirmacionAceptada = false;
     private Integer idVueloCancelarObjetivo;
@@ -209,7 +214,7 @@ public class VueloBean implements Serializable {
         } else {
             vuelo = new Vuelo();
             segmentos = new ArrayList<>();
-            vuelos = vueloService.findAll();
+            inicializarVuelosLazy();
             if (aerolineas != null && !aerolineas.isEmpty()) {
                 Aerolinea aerolineaPorDefecto = aerolineas.stream()
                         .filter(a -> a.getNombre() != null && a.getNombre().toLowerCase().contains("skyway"))
@@ -1317,6 +1322,60 @@ public class VueloBean implements Serializable {
         return vuelos;
     }
 
+    public LazyDataModel<Vuelo> getVuelosLazy() {
+        if (this.vuelosLazy == null) {
+            inicializarVuelosLazy();
+        }
+        return this.vuelosLazy;
+    }
+
+    private void inicializarVuelosLazy() {
+        this.vuelosLazy = new LazyDataModel<>() {
+            private static final long serialVersionUID = 1L;
+            private List<Vuelo> paginaActual = new ArrayList<>();
+
+            @Override
+            public String getRowKey(Vuelo v) {
+                return v != null && v.getIdVuelo() != null ? String.valueOf(v.getIdVuelo()) : null;
+            }
+
+            @Override
+            public Vuelo getRowData(String rowKey) {
+                if (rowKey == null || paginaActual == null) return null;
+                return paginaActual.stream()
+                        .filter(v -> String.valueOf(v.getIdVuelo()).equals(rowKey))
+                        .findFirst()
+                        .orElse(null);
+            }
+
+            @Override
+            public int count(Map<String, FilterMeta> filterBy) {
+                String global = extraerFiltroGlobal(filterBy);
+                return (int) vueloService.contarVuelosPaginados(global);
+            }
+
+            @Override
+            public List<Vuelo> load(int first, int pageSize, Map<String, SortMeta> sortBy, Map<String, FilterMeta> filterBy) {
+                String global = extraerFiltroGlobal(filterBy);
+                String sortField = null;
+                boolean asc = false;
+                if (sortBy != null && !sortBy.isEmpty()) {
+                    SortMeta meta = sortBy.values().iterator().next();
+                    sortField = meta.getField();
+                    asc = meta.getOrder() == SortOrder.ASCENDING;
+                }
+                this.paginaActual = vueloService.buscarVuelosPaginados(first, pageSize, global, sortField, asc);
+                return this.paginaActual;
+            }
+
+            private String extraerFiltroGlobal(Map<String, FilterMeta> filterBy) {
+                if (filterBy == null) return null;
+                FilterMeta gf = filterBy.get("globalFilter");
+                return gf != null && gf.getFilterValue() != null ? gf.getFilterValue().toString() : null;
+            }
+        };
+    }
+
     public List<Vuelo> getVuelosFiltrados() {
         return vuelosFiltrados;
     }
@@ -1683,7 +1742,6 @@ public class VueloBean implements Serializable {
                 sincronizarEstadoYProteccionVuelo();
                 actualizarDisponibilidadRecursos(false);
             }
-            this.vuelos = vueloService.findAll();
             this.vuelosFiltrados = null;
 
             addMessage(FacesMessage.SEVERITY_INFO, "Vuelo Cancelado", this.resultadoCancelacion.getMensajeResumen());

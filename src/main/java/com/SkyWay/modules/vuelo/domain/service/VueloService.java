@@ -71,5 +71,10 @@ public interface VueloService {
 
 	ResultadoCancelacionVueloDTO cancelarVueloOperacional(Integer idVuelo, String motivo, String rutUsuarioAdmin);
 
+	List<Vuelo> buscarVuelosPaginados(int first, int pageSize, String filtroGlobal, String sortField, boolean asc);
+
+	long contarVuelosPaginados(String filtroGlobal);
+
+	Optional<Integer> obtenerPrimerIdVueloDisponible();
 
 }

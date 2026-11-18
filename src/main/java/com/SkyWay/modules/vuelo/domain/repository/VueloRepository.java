@@ -29,7 +29,7 @@ public interface VueloRepository extends JpaRepository<Vuelo, Integer>{
 
 
 	@Query(value = """
-        SELECT DISTINCT
+        SELECT
             v.id_vuelo AS idVuelo,
             v.numero_vuelo AS numeroVuelo,
             c_orig.nombre AS origenCiudad,
@@ -68,6 +68,7 @@ public interface VueloRepository extends JpaRepository<Vuelo, Integer>{
                              OR LOWER(a_orig.codigo_iata) LIKE LOWER(CONCAT('%', :ruta, '%'))
                              OR LOWER(a_dest.codigo_iata) LIKE LOWER(CONCAT('%', :ruta, '%')))
         ORDER BY v.fecha_hora_salida ASC
+        LIMIT 100
         """, nativeQuery = true)
 	List<VueloEstadoProjection> buscarEstadoVuelosVivo(
 			@Param("numeroVuelo") String numeroVuelo,

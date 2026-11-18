@@ -4,6 +4,67 @@ ALTER USER aerolinea_user SET search_path TO public, directus;
 SET search_path TO public, directus;
 
 
+BEGIN;
+SET LOCAL lock_timeout = '10s';
+
+TRUNCATE TABLE
+    Checkin_Pasajero,
+    Checkin,
+    Equipaje,
+    Reembolso,
+    Cuenta_Reembolso,
+    Cancelacion_Asiento,
+    Cancelacion,
+    Wal_Transaccion_Pago,
+    Log_Auditoria,
+    Notificacion,
+    Pago,
+    Reserva_Asiento,
+    pasajero_reserva,
+    Reserva_Itinerario,
+    Reserva,
+    Turno_Tripulacion,
+    Turno,
+    Itinerario_Tarifa,
+    Itinerario_Vuelo,
+    Itinerario,
+    Asignacion_Puerta,
+    Segmento_Vuelo,
+    Precio_Asiento,
+    Vuelo,
+    Asiento,
+    Configuracion_Cabina,
+    Capacidad_Clase,
+    Avion,
+    Modelo_Avion,
+    Fabricante,
+    Puerta_Embarque,
+    Aeropuerto,
+    Ciudad,
+    Pais,
+    Continente,
+    Aerolinea,
+    Tarifa_Caracteristica,
+    Caracteristica_Tarifa,
+    Tarifa,
+    Clase_asiento,
+    Estado_Vuelo,
+    Estado_reserva,
+    Metodo_Pago,
+    Tipo_Equipaje,
+    Tipo_Turno,
+    Personal_Administrativo,
+    Tripulacion,
+    Piloto,
+    Pasajero,
+    RolUsuario,
+    Usuario,
+    Roles
+    RESTART IDENTITY CASCADE;
+
+COMMIT;
+
+
 -- Eliminar Secuencias con CASCADE
 DROP SEQUENCE IF EXISTS rol_seq CASCADE;
 DROP SEQUENCE IF EXISTS usuario_seq CASCADE;
@@ -910,5 +971,36 @@ CREATE INDEX IF NOT EXISTS idx_wal_estado ON Wal_Transaccion_Pago(estado);
 CREATE INDEX IF NOT EXISTS idx_wal_rut ON Wal_Transaccion_Pago(rut_titular);
 CREATE INDEX IF NOT EXISTS idx_wal_fecha ON Wal_Transaccion_Pago(fecha_captura DESC);
 CREATE INDEX IF NOT EXISTS idx_wal_payload ON Wal_Transaccion_Pago USING gin(payload_snapshot);
+
+-- =============================================================================
+-- ÍNDICES DE ALTO RENDIMIENTO PARA OPERACIONES A GRAN ESCALA (MILLONES DE FILAS)
+-- =============================================================================
+CREATE INDEX IF NOT EXISTS idx_vuelo_salida ON Vuelo(Fecha_Hora_Salida, ID_ESTADO_VUELO);
+CREATE INDEX IF NOT EXISTS idx_vuelo_estado_salida ON Vuelo(ID_ESTADO_VUELO, Fecha_Hora_Salida);
+CREATE INDEX IF NOT EXISTS idx_vuelo_numero ON Vuelo(Numero_Vuelo);
+CREATE INDEX IF NOT EXISTS idx_vuelo_avion_fechas ON Vuelo(ID_AVION, Fecha_Hora_Salida, Fecha_Hora_Llegada);
+CREATE INDEX IF NOT EXISTS idx_vuelo_piloto_fechas ON Vuelo(RUT_PILOTO, Fecha_Hora_Salida, Fecha_Hora_Llegada);
+
+CREATE INDEX IF NOT EXISTS idx_segvuelo_vuelo_orden ON Segmento_Vuelo(ID_VUELO, Orden_Segmento);
+CREATE INDEX IF NOT EXISTS idx_segvuelo_origen_hora ON Segmento_Vuelo(ID_AEROPUERTO_ORIGEN, Hora_Salida);
+CREATE INDEX IF NOT EXISTS idx_segvuelo_destino_hora ON Segmento_Vuelo(ID_AEROPUERTO_DESTINO, Hora_Llegada);
+
+CREATE INDEX IF NOT EXISTS idx_itinerario_ruta_salida ON Itinerario(ORIGEN_AEROPUERTO, DESTINO_AEROPUERTO, HORA_SALIDA);
+CREATE INDEX IF NOT EXISTS idx_itinerario_salida ON Itinerario(HORA_SALIDA);
+CREATE INDEX IF NOT EXISTS idx_itin_vuelo_vuelo ON Itinerario_Vuelo(ID_VUELO, ID_ITINERARIO);
+CREATE INDEX IF NOT EXISTS idx_itin_tarifa_itin ON Itinerario_Tarifa(ID_ITINERARIO);
+
+CREATE INDEX IF NOT EXISTS idx_reserva_estado ON Reserva(Estado_reserva, Fecha_Reserva DESC);
+CREATE INDEX IF NOT EXISTS idx_reserva_rut ON Reserva(RUT_Pasajero);
+CREATE INDEX IF NOT EXISTS idx_reserva_itin_itin ON Reserva_Itinerario(ID_ITINERARIO, ID_RESERVA);
+CREATE INDEX IF NOT EXISTS idx_reserva_itin_res ON Reserva_Itinerario(ID_RESERVA);
+CREATE INDEX IF NOT EXISTS idx_reserva_asiento_vuelo ON Reserva_Asiento(ID_VUELO, ID_RESERVA);
+CREATE INDEX IF NOT EXISTS idx_reserva_asiento_res ON Reserva_Asiento(ID_RESERVA);
+CREATE INDEX IF NOT EXISTS idx_precio_asiento_vuelo ON Precio_Asiento(ID_VUELO, ID_CLASE);
+CREATE INDEX IF NOT EXISTS idx_turno_vuelo ON Turno(ID_VUELO);
+CREATE INDEX IF NOT EXISTS idx_turno_trip_turno ON Turno_Tripulacion(ID_TURNO);
+CREATE INDEX IF NOT EXISTS idx_asig_puerta_seg ON Asignacion_Puerta(ID_SEGMENTO);
+CREATE INDEX IF NOT EXISTS idx_asig_puerta_puerta ON Asignacion_Puerta(ID_PUERTA);
+CREATE INDEX IF NOT EXISTS idx_checkin_reserva ON Checkin(ID_RESERVA);
 
 

@@ -12,12 +12,16 @@ import jakarta.faces.context.FacesContext;
 //import org.omnifaces.cdi.ViewScoped;
 
 import jakarta.faces.view.ViewScoped;
+import org.primefaces.model.FilterMeta;
+import org.primefaces.model.LazyDataModel;
+import org.primefaces.model.SortMeta;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Component("gestionUsuariosAdminBean")
@@ -29,7 +33,7 @@ public class GestionUsuariosAdminBean implements Serializable {
     @Autowired
     private GestionUsuariosAdminService adminService;
 
-    private List<Usuario> listaUsuarios;
+    private LazyDataModel<Usuario> usuariosLazy;
     private List<Role> listaRolesGlobales;
 
     private Usuario usuarioSeleccionado;
@@ -50,12 +54,51 @@ public class GestionUsuariosAdminBean implements Serializable {
 
     @PostConstruct
     public void init() {
-        cargarUsuarios();
+        inicializarUsuariosLazy();
         cargarRoles();
     }
 
     public void cargarUsuarios() {
-        this.listaUsuarios = adminService.listarTodosConRoles();
+        // LazyDataModel consulta directamente por página desde BD; no mantener listas completas en RAM.
+        inicializarUsuariosLazy();
+    }
+
+    private void inicializarUsuariosLazy() {
+        this.usuariosLazy = new LazyDataModel<>() {
+            private static final long serialVersionUID = 1L;
+            private List<Usuario> paginaActual = new ArrayList<>();
+
+            @Override
+            public String getRowKey(Usuario usr) {
+                return usr != null ? usr.getRut() : null;
+            }
+
+            @Override
+            public Usuario getRowData(String rowKey) {
+                if (rowKey == null || paginaActual == null) return null;
+                return paginaActual.stream()
+                        .filter(u -> rowKey.equals(u.getRut()))
+                        .findFirst()
+                        .orElse(null);
+            }
+
+            @Override
+            public int count(Map<String, FilterMeta> filterBy) {
+                return (int) adminService.contarUsuariosPaginados(extraerFiltroGlobal(filterBy));
+            }
+
+            @Override
+            public List<Usuario> load(int first, int pageSize, Map<String, SortMeta> sortBy, Map<String, FilterMeta> filterBy) {
+                this.paginaActual = adminService.buscarUsuariosPaginados(first, pageSize, extraerFiltroGlobal(filterBy));
+                return this.paginaActual;
+            }
+
+            private String extraerFiltroGlobal(Map<String, FilterMeta> filterBy) {
+                if (filterBy == null) return null;
+                FilterMeta gf = filterBy.get("globalFilter");
+                return gf != null && gf.getFilterValue() != null ? gf.getFilterValue().toString() : null;
+            }
+        };
     }
 
     public void cargarRoles() {
@@ -154,7 +197,12 @@ public class GestionUsuariosAdminBean implements Serializable {
     }
 
     // Getters y Setters
-    public List<Usuario> getListaUsuarios() { return listaUsuarios; }
+    public LazyDataModel<Usuario> getUsuariosLazy() {
+        if (usuariosLazy == null) {
+            inicializarUsuariosLazy();
+        }
+        return usuariosLazy;
+    }
     public List<Role> getListaRolesGlobales() { return listaRolesGlobales; }
     public Usuario getUsuarioSeleccionado() { return usuarioSeleccionado; }
     public void setUsuarioSeleccionado(Usuario usuarioSeleccionado) { this.usuarioSeleccionado = usuarioSeleccionado; }
