@@ -2420,5 +2420,25 @@ INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Bool) VAL
 INSERT INTO Tarifa_Caracteristica (ID_TARIFA, ID_CARACTERISTICA, Valor_Int) VALUES
     (3, 2, 24);
 
--- Insertar vuelos
-TRUNCATE TABLE Asignacion_Puerta, Segmento_Vuelo, Precio_Asiento, Vuelo CASCADE;
+-- Limpieza segura de vuelos (solo si las tablas existen y sin bloqueo indefinido)
+DO $$
+DECLARE
+    v_tablas TEXT;
+BEGIN
+    SET LOCAL lock_timeout = '10s';
+
+    SELECT string_agg(format('%I.%I', schemaname, tablename), ', ' ORDER BY tablename)
+    INTO v_tablas
+    FROM pg_tables
+    WHERE schemaname = ANY (current_schemas(false))
+      AND lower(tablename) = ANY (ARRAY[
+          'asignacion_puerta', 'precio_asiento', 'segmento_vuelo', 'vuelo'
+      ]);
+
+    IF v_tablas IS NOT NULL THEN
+        EXECUTE 'TRUNCATE TABLE ' || v_tablas || ' RESTART IDENTITY CASCADE';
+    END IF;
+EXCEPTION
+    WHEN lock_not_available OR deadlock_detected THEN
+        RAISE NOTICE 'TRUNCATE de vuelos omitido (%).', SQLERRM;
+END $$;
