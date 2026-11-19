@@ -169,6 +169,8 @@ DROP TABLE IF EXISTS Cancelacion_Asiento CASCADE;
 DROP TABLE IF EXISTS Wal_Transaccion_Pago CASCADE;
 DROP TABLE IF EXISTS Reembolso CASCADE;
 DROP TABLE IF EXISTS Cuenta_Reembolso CASCADE;
+DROP TABLE IF EXISTS Token_Recuperacion CASCADE;
+DROP SEQUENCE IF EXISTS token_recuperacion_seq CASCADE;
 
 
 -- SECUENCIAS INICIALES
@@ -232,6 +234,7 @@ CREATE SEQUENCE IF NOT EXISTS log_auditoria_seq START WITH 1;
 CREATE SEQUENCE IF NOT EXISTS cancelacion_asiento_seq START WITH 1;
 CREATE SEQUENCE IF NOT EXISTS cuenta_reembolso_seq START WITH 1;
 CREATE SEQUENCE IF NOT EXISTS reembolso_seq START WITH 1;
+CREATE SEQUENCE IF NOT EXISTS token_recuperacion_seq START WITH 1 INCREMENT BY 1;
 
 DROP TABLE IF EXISTS Checkin_Pasajero CASCADE;
 DROP TABLE IF EXISTS Checkin CASCADE;
@@ -852,6 +855,21 @@ CREATE TABLE  Wal_Transaccion_Pago (
 
 
 
+CREATE TABLE IF NOT EXISTS Token_Recuperacion (
+                                                  id_token BIGINT PRIMARY KEY DEFAULT nextval('token_recuperacion_seq'),
+                                                  rut_usuario VARCHAR(12) NOT NULL REFERENCES Usuario(RUT) ON DELETE CASCADE,
+                                                  correo_electronico VARCHAR(100) NOT NULL,
+                                                  token_hash VARCHAR(64) NOT NULL UNIQUE,
+                                                  fecha_creacion TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+                                                  fecha_expiracion TIMESTAMP WITH TIME ZONE NOT NULL,
+                                                  usado BOOLEAN NOT NULL DEFAULT FALSE,
+                                                  revocado BOOLEAN NOT NULL DEFAULT FALSE,
+                                                  fecha_uso TIMESTAMP WITH TIME ZONE,
+                                                  ip_solicitud VARCHAR(45),
+                                                  ip_uso VARCHAR(45)
+);
+
+
 -- 3. Índices Estratégicos para Consultas Rápidas y Paneles de Control (Dashboards)
 CREATE INDEX idx_log_auditoria_fecha ON Log_Auditoria(fecha_hora DESC);
 CREATE INDEX idx_log_auditoria_rut ON Log_Auditoria(rut_usuario);
@@ -1002,5 +1020,11 @@ CREATE INDEX IF NOT EXISTS idx_turno_trip_turno ON Turno_Tripulacion(ID_TURNO);
 CREATE INDEX IF NOT EXISTS idx_asig_puerta_seg ON Asignacion_Puerta(ID_SEGMENTO);
 CREATE INDEX IF NOT EXISTS idx_asig_puerta_puerta ON Asignacion_Puerta(ID_PUERTA);
 CREATE INDEX IF NOT EXISTS idx_checkin_reserva ON Checkin(ID_RESERVA);
+
+
+
+CREATE INDEX IF NOT EXISTS idx_token_rec_hash ON Token_Recuperacion(token_hash);
+CREATE INDEX IF NOT EXISTS idx_token_rec_usuario_estado ON Token_Recuperacion(rut_usuario, usado, revocado, fecha_creacion DESC);
+
 
 
