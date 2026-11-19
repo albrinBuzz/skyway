@@ -1,0 +1,98 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets">
+
+    <div class="row g-2 g-md-3">
+        <!-- RESUMEN HTTP & JSF -->
+        <div class="col-12 col-lg-5">
+            <div class="card-custom h-100">
+                <h6 class="mb-3 text-success fw-bold">Tráfico HTTP Web &amp; Framework JSF 4</h6>
+                <div class="detail-item"><span>Requests HTTP (Total / Activas):</span><strong id="httpTotalsVal" class="text-info">0 / 0</strong></div>
+                <div class="detail-item"><span>Velocidad (RPS / RPM):</span><strong id="httpRateVal" class="text-success">0 req/s · 0 req/m</strong></div>
+                <div class="detail-item"><span>Latencia HTTP (Últ / Media / Pico):</span><strong id="httpLatencyVal" class="text-light">0 / 0 / 0 ms</strong></div>
+                <div class="detail-item"><span>Códigos (2xx / 3xx / 4xx / 5xx):</span><strong id="httpCodesVal" class="text-light">0 / 0 / 0 / 0</strong></div>
+                <div class="detail-item"><span>Tasa de Error (4xx+5xx):</span><strong id="httpErrorRateVal" class="text-warning">0%</strong></div>
+                <div class="detail-item"><span>Última Petición HTTP:</span><strong id="httpLastUriVal" class="text-info">-</strong></div>
+
+                <div class="mt-3 pt-2" style="border-top: 1px solid #19253a;">
+                    <div class="kpi-title mb-2">Red HTTP, Proxies &amp; Clientes</div>
+                    <div class="detail-item"><span>Última IP Cliente / IPs Únicas:</span><strong id="httpClientIpVal" class="text-info">-</strong></div>
+                    <div class="detail-item"><span>Cadena Proxy (X-Forwarded-For):</span><strong id="httpXffVal" class="text-secondary">-</strong></div>
+                    <div class="detail-item"><span>Host / Protocolo:</span><strong id="httpHostProtoVal" class="text-light">-</strong></div>
+                    <div class="detail-item"><span>Dispositivos (PC / Móvil / Bot):</span><strong id="httpDevicesVal" class="text-light">0 / 0 / 0</strong></div>
+                    <div class="detail-item"><span>Volumen Payload Entrante:</span><strong id="httpReqKbVal" class="text-light">0 KB</strong></div>
+                </div>
+
+                <div class="mt-3 pt-2" style="border-top: 1px solid #19253a;">
+                    <div class="kpi-title mb-2">Ciclo de Vida JSF 4 / Facelets</div>
+                    <div class="detail-item"><span>Última Vista / Componentes UI:</span><strong id="jsfViewVal" class="text-light">-</strong></div>
+                    <div class="detail-item"><span>Render JSF (Últ / Media / Pico):</span><strong id="jsfRenderVal" class="text-light">0 / 0 / 0 ms</strong></div>
+                    <div class="detail-item"><span>Peticiones JSF / Postbacks AJAX:</span><strong id="jsfTotalReqVal" class="text-light">0 / 0</strong></div>
+                    <div class="detail-item"><span>Sesiones HTTP (Activas / Históricas):</span><strong id="sessionsDetailVal" class="text-light">0 / 0</strong></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TOP ENDPOINTS & ERRORES RECIENTES -->
+        <div class="col-12 col-lg-7">
+            <div class="card-custom mb-3">
+                <h6 class="mb-2 text-info fw-bold">Top Endpoints Más Activos</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-dark mb-0 align-middle" style="font-size: 0.79rem;">
+                        <thead>
+                            <tr class="text-secondary">
+                                <th>Endpoint</th>
+                                <th class="text-end">Hits</th>
+                                <th class="text-end">Media</th>
+                                <th class="text-end">Pico</th>
+                                <th class="text-end">Err</th>
+                            </tr>
+                        </thead>
+                        <tbody id="httpTopEndpointsBody">
+                            <tr><td colspan="5" class="text-secondary">Sin tráfico registrado aún</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card-custom mb-3">
+                <h6 class="mb-2 text-warning fw-bold">Top IPs Clientes Activas (Proxy / Real IP)</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-dark mb-0 align-middle" style="font-size: 0.78rem;">
+                        <thead>
+                            <tr class="text-secondary">
+                                <th>IP Cliente</th>
+                                <th>Dispositivo</th>
+                                <th class="text-end">Peticiones</th>
+                                <th>Última Ruta</th>
+                            </tr>
+                        </thead>
+                        <tbody id="httpTopIpsBody">
+                            <tr><td colspan="4" class="text-secondary">Sin IPs registradas aún</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card-custom">
+                <h6 class="mb-2 text-danger fw-bold">Últimos Errores HTTP (4xx / 5xx)</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-dark mb-0 align-middle" style="font-size: 0.78rem;">
+                        <thead>
+                            <tr class="text-secondary">
+                                <th>Hora</th>
+                                <th>IP</th>
+                                <th>Status</th>
+                                <th>Ruta</th>
+                                <th class="text-end">Latencia</th>
+                            </tr>
+                        </thead>
+                        <tbody id="httpRecentErrorsBody">
+                            <tr><td colspan="5" class="text-success">Sin errores HTTP recientes</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</ui:composition>

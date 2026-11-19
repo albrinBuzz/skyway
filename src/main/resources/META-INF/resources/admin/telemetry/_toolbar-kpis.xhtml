@@ -1,0 +1,124 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets">
+
+    <!-- BARRA DE CONTROL EN TIEMPO DE EJECUCIÓN -->
+    <div class="tel-toolbar mb-3">
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3">
+            <div>
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                    <h4 class="mb-0 fw-bold text-light">SkyWay Telemetría Full-Stack &amp; Operacional</h4>
+                    <span id="telemetryModeBadge" class="badge bg-secondary">Cargando estado...</span>
+                    <span id="wsStatus" class="badge bg-warning text-dark">Conectando WS...</span>
+                </div>
+                <small class="text-secondary">
+                    Perfil: <strong id="profileHeaderVal" class="text-info">-</strong>
+                    · Env <code>SKYWAY_TELEMETRIA_ACTIVA</code>: <strong id="envFlagVal" class="text-light">false</strong>
+                    · Viewers WS: <strong id="viewersVal" class="text-info">0</strong>
+                    · Auto-pausa F1: <strong id="autoPauseVal" class="text-warning">Inactiva</strong>
+                    · Ticks: <strong id="ticksVal" class="text-light">0</strong>
+                    · Muestra: <strong id="lastUpdateVal" class="text-light">-</strong>
+                </small>
+            </div>
+
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <button type="button" id="btnToggleTelemetry" class="tel-btn-primary">
+                    Activar Telemetría en Vivo
+                </button>
+
+                <select id="selIntervalo" class="tel-select" title="Frecuencia de muestreo (F1 recomendado 5s+)">
+                    <option value="2">Cada 2s (Rápido)</option>
+                    <option value="5" selected="selected">Cada 5s (Recomendado F1)</option>
+                    <option value="10">Cada 10s (Ahorro CPU)</option>
+                    <option value="15">Cada 15s (Mínimo Consumo)</option>
+                </select>
+
+                <button type="button" id="btnSnapshotNow" class="tel-btn-secondary">
+                    <i class="pi pi-refresh"/> Snapshot Ahora
+                </button>
+
+                <button type="button" id="btnTriggerGc" class="tel-btn-secondary">
+                    <i class="pi pi-bolt"/> Solicitar GC
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ALERTAS DE SALUD EN VIVO -->
+    <div id="alertsContainer" class="mb-3"></div>
+
+    <!-- 8 KPI CARDS PRINCIPALES -->
+    <div class="row g-2 g-md-3 mb-3">
+        <div class="col-6 col-md-4 col-xl-3">
+            <div class="card-custom h-100">
+                <div class="kpi-title">RAM Proceso JVM</div>
+                <div id="ramText" class="text-value text-info mt-1">0 MB</div>
+                <small id="ramSubtext" class="text-secondary">Heap: 0%</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-3">
+            <div class="card-custom h-100">
+                <div class="kpi-title">CPU App / Sistema</div>
+                <div id="cpuText" class="text-value text-success mt-1">0.0%</div>
+                <small id="cpuSubtext" class="text-secondary">Sistema: 0.0%</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-3">
+            <div class="card-custom h-100">
+                <div class="kpi-title">SQL Ping &amp; Tamaño BD</div>
+                <div id="dbText" class="text-value text-warning mt-1">0 ms</div>
+                <small id="hikariText" class="text-secondary">Hikari: 0 / 0 · 0 MB</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-3">
+            <div class="card-custom h-100">
+                <div class="kpi-title">Cache Hit PostgreSQL</div>
+                <div id="pgCacheHitKpi" class="text-value text-info mt-1">0%</div>
+                <small id="pgBackendsKpi" class="text-secondary">Backends: 0 / 0</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-3">
+            <div class="card-custom h-100">
+                <div class="kpi-title">Tráfico HTTP (RPS / RPM)</div>
+                <div id="httpRpmKpi" class="text-value text-light mt-1">0 req/m</div>
+                <small id="httpSubKpi" class="text-secondary">Activas: 0 · Err: 0%</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-3">
+            <div class="card-custom h-100">
+                <div class="kpi-title">Sesiones &amp; Hilos JVM</div>
+                <div id="sessionsText" class="text-value text-primary mt-1">0</div>
+                <small id="sessionsSubtext" class="text-secondary">Hilos: 0 · Deadlocks: 0</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-3">
+            <div class="card-custom h-100">
+                <div class="kpi-title">Vuelos 24h / En Aire</div>
+                <div id="opsFlightsKpi" class="text-value text-info mt-1">0</div>
+                <small id="opsFlightsSubKpi" class="text-secondary">En vuelo ahora: 0</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-3">
+            <div class="card-custom h-100">
+                <div class="kpi-title">Reservas Hoy / Ingresos</div>
+                <div id="opsBookingsKpi" class="text-value text-success mt-1">0</div>
+                <small id="opsRevenueSubKpi" class="text-secondary">Hoy: $0 · Check-ins: 0</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- BARRA PRESIÓN MEMORIA -->
+    <div class="row g-2 g-md-3 mb-3">
+        <div class="col-12">
+            <div class="card-custom">
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-2 gap-1">
+                    <span class="fw-bold text-info" style="font-size: 0.86rem;">Presión de Memoria JVM vs Cuota Referencial 1024 MB (Heap + Metaspace + CodeCache + Direct Buffers)</span>
+                    <strong id="f1RamVal" class="text-light" style="font-size: 0.86rem;">0 MB / 1024 MB (0%)</strong>
+                </div>
+                <div class="progress-custom">
+                    <div id="f1RamBar" class="progress-bar bg-info" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</ui:composition>

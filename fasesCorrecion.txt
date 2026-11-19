@@ -1,0 +1,25 @@
+Fase 0 — Guardrails inmediatos y máquina de estados (Prioridad máxima)
+Matriz de transiciones permitidas en Estado_Vuelo: Bloquear en backend (VueloBean / VueloService) cualquier edición de aeronave, ruta, tarifas o piloto cuando el vuelo esté En vuelo, Aterrizado o Cancelado.
+Excluir vuelos cancelados del motor de disponibilidad: Actualizar findAvionesDisponiblesEnRango, findPilotosDisponiblesEnRango, existeConflictoAvion, existeConflictoPiloto, fnBuscarVuelo y FnbuscarVuelos para ignorar vuelos con estado de cancelación.
+Fase 1 — Cambio seguro de piloto (Comandante)
+Regla de turnaround y continuidad de aeropuerto: Exigir un margen mínimo Configurable (ej. 90–120 min) antes y después de cada vuelo en las consultas de disponibilidad del piloto y validar coincidencia de aeropuerto si el intervalo es corto.
+Auditoría y notificación operativa: Registrar en Log_Auditoria el cambio (rut_anterior -> rut_nuevo, motivo, usuario despachador) y emitir notificación directa en Notificacion al comandante desasignado y al nuevo asignado.
+Fase 2 — Reasignación atómica de aeronave (Tail Swap)
+Pre-chequeo de compatibilidad antes de permitir el cambio en UI: Al editar un vuelo existente, consultar cantidad de asientos vendidos por clase (Reserva_Asiento + Asiento).
+Caso 1 (0 reservas y 0 bloqueos activos): Permitir cambio libre y reemplazar Precio_Asiento limpiando las clases obsoletas.
+Caso 2 (Aeronave nueva con capacidad ≥ vendida en cada clase): Ejecutar un procedimiento almacenado sp_reasignar_avion_vuelo(p_id_vuelo, p_id_avion_nuevo) con bloqueo FOR UPDATE sobre el vuelo y Reserva_Asiento que:
+Limpie holds en AsientoCacheService para ese vuelo,
+Remapee cada Reserva_Asiento por código equivalente (numero_asiento + id_clase, o primer asiento libre equivalente en la misma clase),
+Invalide/regenere códigos de pase si cambió el número de asiento y notifique por correo al pasajero el nuevo asiento asignado.
+Caso 3 (Capacidad insuficiente o clase eliminada): Bloquear el cambio directo en VueloBean para evitar pérdida de asientos vendidos; exigir primero reacomodación de pasajeros afectados o cancelación controlada.
+Fase 3 — Cancelación transaccional de vuelo en cascada
+Flujo dedicado "Cancelar Vuelo" (modal con motivo obligatorio y previsualización de impacto): Mostrar antes de confirmar cuántos itinerarios, reservas activas, pasajeros y check-ins serán afectados.
+Procedimiento almacenado atómico sp_cancelar_vuelo_operacional(p_id_vuelo, p_motivo, p_usuario):
+Adquirir FOR UPDATE sobre Vuelo, sus Itinerario_Vuelo y Reserva_Asiento.
+Cambiar Vuelo.id_estado_vuelo a Cancelado (disparando notificaciones a pasajeros).
+Desactivar o marcar como no comercializables los Itinerario asociados.
+Anular Checkin activos (Estado = 'ANULADO') vinculados a reservas de ese vuelo y limpiar retenciones en AsientoCacheService.
+Marcar las Reserva afectadas para reembolso automático o reacomodación prioritaria, respaldando en Cancelacion / Cancelacion_Asiento y dejando trazabilidad inmutable en Log_Auditoria.
+Liberar Turno y disponibilidad de aeronave/piloto.
+Fase 4 — Prevención por mantenimiento e incidentes de flota
+Cuando en gestión de flota un Avion pase a EN MANTENIMIENTO, disparar una verificación automática de vuelos futuros (fecha_hora_salida > NOW()) asignados a esa matrícula y generar una alerta inmediata al despachador para ejecutar la Fase 2 (Tail Swap) o Fase 3 (Cancelación) antes del cierre operativo.

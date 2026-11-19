@@ -1,0 +1,135 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets">
+
+    <div class="row g-2 g-md-3">
+        <!-- INFRAESTRUCTURA HOST, AZURE & RED -->
+        <div class="col-12 col-md-6 col-xl-4">
+            <div class="card-custom h-100">
+                <h6 class="mb-3 text-info fw-bold">Infraestructura Cloud, Host &amp; Buffers</h6>
+                <div class="detail-item"><span>Entorno / Región:</span><strong id="azureRegionVal" class="text-info">-</strong></div>
+                <div class="detail-item"><span>App Service / SKU:</span><strong id="azureSkuVal" class="text-light">-</strong></div>
+                <div class="detail-item"><span>Hostname Público / Instancia:</span><strong id="azureInstanceVal" class="text-secondary">-</strong></div>
+                <div class="detail-item"><span>Host Local / IP Interna:</span><strong id="hostNetVal" class="text-light">-</strong></div>
+                <div class="detail-item"><span>PID Proceso JVM:</span><strong id="pidVal" class="text-info">-</strong></div>
+                <div class="detail-item"><span>Sistema Operativo:</span><strong id="osVal" class="text-light">-</strong></div>
+                <div class="detail-item"><span>vCPU / Load Average:</span><strong id="coresVal" class="text-light">0 vCPU</strong></div>
+                <div class="detail-item"><span>RAM Física (Usada / Libre / Total):</span><strong id="physicalRamVal" class="text-light">0 MB</strong></div>
+                <div class="detail-item"><span>Memoria Swap (Usada / Total):</span><strong id="swapVal" class="text-light">0 MB / 0 MB</strong></div>
+                <div class="detail-item"><span>Almacenamiento Disco Raíz:</span><strong id="diskVal" class="text-light">0 GB / 0 GB</strong></div>
+                <div class="detail-item"><span>NIO Direct / Mapped Buffers:</span><strong id="buffersVal" class="text-info">0 MB / 0 MB</strong></div>
+                <div class="detail-item"><span>Clases JVM (Cargadas / Descarg.):</span><strong id="classesVal" class="text-light">0 / 0</strong></div>
+            </div>
+        </div>
+
+        <!-- POOLS DE MEMORIA JVM & GC -->
+        <div class="col-12 col-md-6 col-xl-4">
+            <div class="card-custom h-100">
+                <h6 class="mb-3 text-primary fw-bold">Pools de Memoria JVM &amp; Garbage Collector</h6>
+                <div class="detail-item"><span>Heap (Usado / Committed / Max):</span><strong id="heapSummaryVal" class="text-info">0 / 0 / 0 MB</strong></div>
+                <div class="detail-item"><span>GC Totales (Eventos / Tiempo):</span><strong id="gcTotalsVal" class="text-warning">0 / 0 ms</strong></div>
+                <div class="mt-2 pt-2" style="border-top: 1px solid #19253a;">
+                    <div class="kpi-title mb-2">Uso por Memory Pool</div>
+                    <div id="memoryPoolsContainer"></div>
+                </div>
+                <div class="mt-2 pt-2" style="border-top: 1px solid #19253a;">
+                    <div class="kpi-title mb-1">Colectores GC Activos</div>
+                    <div id="gcCollectorsContainer"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- HILOS, TOMCAT JMX, RUNTIME & BROKER STOMP -->
+        <div class="col-12 col-xl-4">
+            <div class="card-custom h-100">
+                <h6 class="mb-3 text-light fw-bold">Hilos, Tomcat JMX &amp; Broker STOMP</h6>
+                <div class="detail-item"><span>Hilos Activos / Pico:</span><strong id="threadsVal" class="text-light">0 / 0</strong></div>
+                <div class="detail-item"><span>Hilos Daemon / Total Iniciados:</span><strong id="daemonThreadsVal" class="text-light">0 / 0</strong></div>
+                <div class="detail-item"><span>Runnable / Waiting / Timed / Blocked:</span><strong id="threadStatesSummaryVal" class="text-info">0 / 0 / 0 / 0</strong></div>
+                <div class="detail-item"><span>Deadlocks Detectados:</span><strong id="deadlocksVal" class="text-success">0</strong></div>
+                <div class="detail-item"><span>Tomcat Hilos (Ocup / Act / Max):</span><strong id="tomcatThreadsVal" class="text-info">-</strong></div>
+                <div class="detail-item"><span>Tomcat I/O (Recibidos / Enviados):</span><strong id="tomcatBytesVal" class="text-light">-</strong></div>
+                <div class="detail-item"><span>Tomcat Req / Errores Conector:</span><strong id="tomcatReqErrVal" class="text-light">-</strong></div>
+                <div class="detail-item"><span>Zona Horaria / Charset:</span><strong id="runtimeTzVal" class="text-light">-</strong></div>
+                <div class="detail-item"><span>Spring Boot / Java Runtime:</span><strong id="versionsVal" class="text-light">-</strong></div>
+                <div class="detail-item"><span>Beans Spring / Uptime:</span><strong id="springUptimeVal" class="text-success">-</strong></div>
+                <div class="mt-2 pt-2" style="border-top: 1px solid #19253a;">
+                    <div class="kpi-title mb-1">WebSocket / STOMP Broker</div>
+                    <div class="detail-item"><span>Sesiones WS:</span><strong id="wsSessionStatsVal" class="text-info">-</strong></div>
+                    <div class="detail-item"><span>Tráfico STOMP:</span><strong id="wsStompStatsVal" class="text-light">-</strong></div>
+                </div>
+                <div class="mt-2 pt-2" style="border-top: 1px solid #19253a;">
+                    <div class="kpi-title mb-1">JVM Arguments</div>
+                    <div id="jvmFlagsVal" class="small text-secondary text-break" style="max-height: 60px; overflow-y: auto;">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- INTERFACES DE RED Y VOLÚMENES DE DISCO -->
+        <div class="col-12 col-lg-7">
+            <div class="card-custom h-100">
+                <h6 class="mb-2 text-info fw-bold">Interfaces de Red Activas (IPv4 / IPv6 / CIDR / MAC / MTU)</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-dark mb-0 align-middle" style="font-size: 0.78rem;">
+                        <thead>
+                            <tr class="text-secondary">
+                                <th>Interfaz</th>
+                                <th>IPv4 / CIDR</th>
+                                <th>IPv6</th>
+                                <th>MAC</th>
+                                <th class="text-end">MTU</th>
+                            </tr>
+                        </thead>
+                        <tbody id="networkInterfacesBody">
+                            <tr><td colspan="5" class="text-secondary">Cargando interfaces...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-5">
+            <div class="card-custom h-100">
+                <h6 class="mb-2 text-success fw-bold">Volúmenes de Disco Montados</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-dark mb-0 align-middle" style="font-size: 0.78rem;">
+                        <thead>
+                            <tr class="text-secondary">
+                                <th>Unidad / Ruta</th>
+                                <th class="text-end">Usado</th>
+                                <th class="text-end">Libre</th>
+                                <th class="text-end">Total (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="diskVolumesBody">
+                            <tr><td colspan="4" class="text-secondary">Cargando discos...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TOP HILOS CONSUMIDORES DE CPU -->
+        <div class="col-12">
+            <div class="card-custom">
+                <h6 class="mb-2 text-info fw-bold">Top Hilos JVM por Tiempo de CPU Acumulado</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-dark mb-0 align-middle" style="font-size: 0.79rem;">
+                        <thead>
+                            <tr class="text-secondary">
+                                <th>ID</th>
+                                <th>Nombre del Hilo</th>
+                                <th>Estado</th>
+                                <th>Tipo</th>
+                                <th class="text-end">CPU Acumulado (ms)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topThreadsBody">
+                            <tr><td colspan="5" class="text-secondary">Esperando muestreo...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</ui:composition>
