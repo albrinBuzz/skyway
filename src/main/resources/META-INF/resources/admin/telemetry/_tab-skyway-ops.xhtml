@@ -1,0 +1,73 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets">
+
+    <div class="row g-2 g-md-3">
+        <!-- MÉTRICAS OPERACIONALES SKYWAY -->
+        <div class="col-12 col-lg-5">
+            <div class="card-custom h-100">
+                <h6 class="mb-3 text-info fw-bold">Operación Aeronáutica, Finanzas &amp; Seguridad</h6>
+                <div class="detail-item"><span>Vuelos (Próx. 24h / En Aire Ahora):</span><strong id="opsVuelosSummaryVal" class="text-info">0 / 0</strong></div>
+                <div class="detail-item"><span>Itinerarios 24h (Total / Directos):</span><strong id="opsItinerariosVal" class="text-light">0 / 0</strong></div>
+                <div class="detail-item"><span>Aeropuertos / Aviones Activos:</span><strong id="opsInfraRedVal" class="text-light">0 / 0</strong></div>
+                <div class="detail-item"><span>Reservas (Hoy / Últimas 24h):</span><strong id="opsReservasVal" class="text-info">0 / 0</strong></div>
+                <div class="detail-item"><span>Ingresos Pagados (Hoy / 24h):</span><strong id="opsIngresosVal" class="text-success">$0 / $0</strong></div>
+                <div class="detail-item"><span>Reembolsos Pendientes (Cant / Monto):</span><strong id="opsReembolsosVal" class="text-warning">0 / $0</strong></div>
+                <div class="detail-item"><span>Check-Ins Hoy (Por Canal):</span><strong id="opsCheckinsHoyVal" class="text-light">0</strong></div>
+                <div class="detail-item"><span>Equipajes Registrados Hoy (Piezas / Kg):</span><strong id="opsEquipajeHoyVal" class="text-light">0 / 0 kg</strong></div>
+                <div class="detail-item"><span>Usuarios Nuevos Hoy / Tokens Rec. Activos:</span><strong id="opsSecurityVal" class="text-info">0 / 0</strong></div>
+                <div class="detail-item"><span>Notificaciones (Hoy / Pendientes):</span><strong id="opsNotifVal" class="text-warning">0 / 0</strong></div>
+                <div class="detail-item"><span>Caché Cabinas (Vuelos / Asientos WS):</span><strong id="opsCacheSeatsVal" class="text-info">0 / 0</strong></div>
+                <div class="detail-item"><span>Eventos Auditoría (24h):</span><strong id="opsAudit24hVal" class="text-light">0</strong></div>
+                <div class="mt-2 pt-2" style="border-top: 1px solid #19253a;">
+                    <div class="kpi-title mb-1">Ingresos Últimas 24h por Pasarela</div>
+                    <div id="opsPaymentsMethodContainer" class="small text-secondary">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRÓXIMOS VUELOS Y AUDITORÍA EN VIVO -->
+        <div class="col-12 col-lg-7">
+            <div class="card-custom mb-3">
+                <h6 class="mb-2 text-info fw-bold">Próximas Salidas Programadas (Ventana 24h)</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-dark mb-0 align-middle" style="font-size: 0.78rem;">
+                        <thead>
+                            <tr class="text-secondary">
+                                <th>Vuelo</th>
+                                <th>Ruta</th>
+                                <th>Salida</th>
+                                <th>Aeronave</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="opsUpcomingFlightsBody">
+                            <tr><td colspan="5" class="text-secondary">Sin vuelos en ventana de 24h</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card-custom">
+                <h6 class="mb-2 text-warning fw-bold">Últimos Eventos de Auditoría en Vivo (Log_Auditoria)</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-dark mb-0 align-middle" style="font-size: 0.78rem;">
+                        <thead>
+                            <tr class="text-secondary">
+                                <th>Fecha</th>
+                                <th>Nivel</th>
+                                <th>Acción</th>
+                                <th>Tabla</th>
+                                <th>Usuario</th>
+                                <th>IP</th>
+                            </tr>
+                        </thead>
+                        <tbody id="auditEventsBody">
+                            <tr><td colspan="6" class="text-secondary">Esperando eventos...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</ui:composition>

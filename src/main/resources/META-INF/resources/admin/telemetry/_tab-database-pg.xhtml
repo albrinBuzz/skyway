@@ -1,0 +1,76 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets">
+
+    <div class="row g-2 g-md-3">
+        <!-- POSTGRESQL & HIKARICP -->
+        <div class="col-12 col-lg-5">
+            <div class="card-custom h-100">
+                <h6 class="mb-3 text-warning fw-bold">PostgreSQL, PostGIS &amp; HikariCP</h6>
+                <div class="detail-item"><span>Estado / Pool:</span><strong id="hikariPoolNameVal" class="text-light">-</strong></div>
+                <div class="detail-item"><span>Endpoint JDBC (Host:Puerto):</span><strong id="pgEndpointHostVal" class="text-info">-</strong></div>
+                <div class="detail-item"><span>IP / Puerto Servidor PG:</span><strong id="pgServerAddrVal" class="text-light">-</strong></div>
+                <div class="detail-item"><span>Motor / Versión:</span><strong id="dbProductVal" class="text-light">-</strong></div>
+                <div class="detail-item"><span>PostGIS / Catálogo:</span><strong id="dbCatalogVal" class="text-info">-</strong></div>
+                <div class="detail-item"><span>Inicio PostgreSQL / Encoding:</span><strong id="pgStartEncVal" class="text-light">-</strong></div>
+                <div class="detail-item"><span>Shared Buffers / Work Mem:</span><strong id="pgMemParamsVal" class="text-light">-</strong></div>
+                <div class="detail-item"><span>Driver JDBC:</span><strong id="dbDriverVal" class="text-light">-</strong></div>
+                <div class="detail-item"><span>Tamaño Base de Datos:</span><strong id="pgSizeVal" class="text-info">0 MB</strong></div>
+                <div class="detail-item"><span>Cache Hit Ratio / Index Scan %:</span><strong id="pgCacheHitVal" class="text-success">0% / 0%</strong></div>
+                <div class="detail-item"><span>Backends PostgreSQL:</span><strong id="pgBackendsVal" class="text-light">0 / 0</strong></div>
+                <div class="detail-item"><span>Locks (Concedidos / En Espera):</span><strong id="pgLocksVal" class="text-light">0 / 0</strong></div>
+                <div class="detail-item"><span>Archivos Temp (Spill / MB):</span><strong id="pgTempFilesVal" class="text-warning">0 / 0 MB</strong></div>
+                <div class="detail-item"><span>Dead Tuples Totales:</span><strong id="pgDeadTuplesVal" class="text-light">0</strong></div>
+                <div class="detail-item"><span>Transacciones (Commit / Rollback / Deadlocks):</span><strong id="pgTxVal" class="text-light">0 / 0 / 0</strong></div>
+                <div class="detail-item"><span>Tuplas I/O (Ret / Fetch / Ins / Upd / Del):</span><strong id="pgTuplesIoVal" class="text-secondary">0</strong></div>
+                <div class="detail-item"><span>Hikari (Act / Idle / Max / Espera):</span><strong id="hikariDetailVal" class="text-light">0 / 0 / 0 / 0</strong></div>
+                <div class="detail-item"><span>Adquisición Socket (Actual / Pico):</span><strong id="dbAcquireVal" class="text-info">0 ms / 0 ms</strong></div>
+                <div class="detail-item"><span>Pings SQL (Media / Total / Fallos):</span><strong id="totalQueriesVal" class="text-light">0 ms / 0 / 0</strong></div>
+            </div>
+        </div>
+
+        <!-- TOP TABLAS & SESIONES ACTIVAS -->
+        <div class="col-12 col-lg-7">
+            <div class="card-custom mb-3">
+                <h6 class="mb-2 text-info fw-bold">Top Tablas por Tamaño, Tuplas Muertas y Uso de Índices (pg_stat_user_tables)</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-dark mb-0 align-middle" style="font-size: 0.79rem;">
+                        <thead>
+                            <tr class="text-secondary">
+                                <th>Tabla</th>
+                                <th class="text-end">Filas Est.</th>
+                                <th class="text-end">Dead Tup</th>
+                                <th class="text-end">Idx / Seq Scan</th>
+                                <th class="text-end">Tamaño (MB)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pgTopTablesBody">
+                            <tr><td colspan="5" class="text-secondary">Esperando datos...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card-custom">
+                <h6 class="mb-2 text-warning fw-bold">Sesiones &amp; Consultas Activas en PostgreSQL (pg_stat_activity)</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-dark mb-0 align-middle" style="font-size: 0.78rem;">
+                        <thead>
+                            <tr class="text-secondary">
+                                <th>PID</th>
+                                <th>IP Cliente / App</th>
+                                <th>Estado</th>
+                                <th>Wait</th>
+                                <th class="text-end">Duración</th>
+                                <th>Consulta</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pgSessionsBody">
+                            <tr><td colspan="6" class="text-secondary">Esperando datos...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</ui:composition>

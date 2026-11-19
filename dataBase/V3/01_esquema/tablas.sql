@@ -1026,5 +1026,12 @@ CREATE INDEX IF NOT EXISTS idx_checkin_reserva ON Checkin(ID_RESERVA);
 CREATE INDEX IF NOT EXISTS idx_token_rec_hash ON Token_Recuperacion(token_hash);
 CREATE INDEX IF NOT EXISTS idx_token_rec_usuario_estado ON Token_Recuperacion(rut_usuario, usado, revocado, fecha_creacion DESC);
 
+-- Índices de rango temporal para telemetría y reportería rápida en PostgreSQL Free Tier
+CREATE INDEX IF NOT EXISTS idx_reserva_fecha ON Reserva(Fecha_Reserva DESC);
+CREATE INDEX IF NOT EXISTS idx_pago_fecha ON Pago(Fecha DESC);
+CREATE INDEX IF NOT EXISTS idx_checkin_fecha_hora ON Checkin(Fecha_Hora DESC);
+CREATE INDEX IF NOT EXISTS idx_notificacion_fecha_env ON Notificacion(Fecha DESC, enviada);
+
+
 
 

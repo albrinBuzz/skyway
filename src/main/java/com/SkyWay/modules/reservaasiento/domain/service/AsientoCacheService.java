@@ -424,4 +424,12 @@ public class AsientoCacheService {
         return tieneAsientos ? Math.max(0, menorTiempoRestante) : -1;
     }
 
+    public int getCantidadVuelosEnCache() {
+        return mapaVuelos.size();
+    }
+
+    public int getCantidadAsientosRetenidos() {
+        return tiempoSeleccionMap.size();
+    }
+
 }
