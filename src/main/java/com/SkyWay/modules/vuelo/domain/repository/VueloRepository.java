@@ -113,5 +113,86 @@ public interface VueloRepository extends JpaRepository<Vuelo, Integer>{
 			@Param("fechaLlegada") Timestamp fechaLlegada,
 			@Param("idVueloActual") Integer idVueloActual
 	);
-	
+
+	@Query(value = """
+		WITH vuelos_top AS (
+			SELECT
+				v.id_vuelo,
+				v.numero_vuelo,
+				v.fecha_hora_salida,
+				v.fecha_hora_llegada,
+				v.id_avion,
+				COALESCE(ev.descripcion, 'Programado') AS estado
+			FROM vuelo v
+			LEFT JOIN estado_vuelo ev ON ev.id_estado_vuelo = v.id_estado_vuelo
+			WHERE (ev.id_estado_vuelo IS NULL OR UPPER(COALESCE(ev.descripcion, '')) NOT LIKE '%CANCEL%')
+			  AND v.fecha_hora_salida >= NOW()
+			ORDER BY v.fecha_hora_salida ASC
+			LIMIT :limite
+		)
+		SELECT
+			vt.numero_vuelo,
+			ao.codigo_iata AS orig_iata,
+			co.nombre AS orig_ciudad,
+			ad.codigo_iata AS dest_iata,
+			cd.nombre AS dest_ciudad,
+			vt.fecha_hora_salida,
+			vt.fecha_hora_llegada,
+			COALESCE(m.nombre, 'Aeronave asignada') AS modelo,
+			vt.estado
+		FROM vuelos_top vt
+		LEFT JOIN avion av ON av.id_avion = vt.id_avion
+		LEFT JOIN modelo_avion m ON m.id_modelo = av.id_modelo
+		JOIN segmento_vuelo s1 ON s1.id_vuelo = vt.id_vuelo
+			 AND s1.orden_segmento = (SELECT MIN(sx.orden_segmento) FROM segmento_vuelo sx WHERE sx.id_vuelo = vt.id_vuelo)
+		JOIN aeropuerto ao ON ao.id_aeropuerto = s1.id_aeropuerto_origen
+		JOIN ciudad co ON co.id_ciudad = ao.id_ciudad
+		JOIN segmento_vuelo s2 ON s2.id_vuelo = vt.id_vuelo
+			 AND s2.orden_segmento = (SELECT MAX(sy.orden_segmento) FROM segmento_vuelo sy WHERE sy.id_vuelo = vt.id_vuelo)
+		JOIN aeropuerto ad ON ad.id_aeropuerto = s2.id_aeropuerto_destino
+		JOIN ciudad cd ON cd.id_ciudad = ad.id_ciudad
+		ORDER BY vt.fecha_hora_salida ASC
+		""", nativeQuery = true)
+	List<Object[]> findProximosVuelosVigentesPortal(@Param("limite") int limite);
+
+	@Query(value = """
+		WITH vuelos_top AS (
+			SELECT
+				v.id_vuelo,
+				v.numero_vuelo,
+				v.fecha_hora_salida,
+				v.fecha_hora_llegada,
+				v.id_avion,
+				COALESCE(ev.descripcion, 'Programado') AS estado
+			FROM vuelo v
+			LEFT JOIN estado_vuelo ev ON ev.id_estado_vuelo = v.id_estado_vuelo
+			WHERE (ev.id_estado_vuelo IS NULL OR UPPER(COALESCE(ev.descripcion, '')) NOT LIKE '%CANCEL%')
+			ORDER BY v.fecha_hora_salida DESC
+			LIMIT :limite
+		)
+		SELECT
+			vt.numero_vuelo,
+			ao.codigo_iata AS orig_iata,
+			co.nombre AS orig_ciudad,
+			ad.codigo_iata AS dest_iata,
+			cd.nombre AS dest_ciudad,
+			vt.fecha_hora_salida,
+			vt.fecha_hora_llegada,
+			COALESCE(m.nombre, 'Aeronave asignada') AS modelo,
+			vt.estado
+		FROM vuelos_top vt
+		LEFT JOIN avion av ON av.id_avion = vt.id_avion
+		LEFT JOIN modelo_avion m ON m.id_modelo = av.id_modelo
+		JOIN segmento_vuelo s1 ON s1.id_vuelo = vt.id_vuelo
+			 AND s1.orden_segmento = (SELECT MIN(sx.orden_segmento) FROM segmento_vuelo sx WHERE sx.id_vuelo = vt.id_vuelo)
+		JOIN aeropuerto ao ON ao.id_aeropuerto = s1.id_aeropuerto_origen
+		JOIN ciudad co ON co.id_ciudad = ao.id_ciudad
+		JOIN segmento_vuelo s2 ON s2.id_vuelo = vt.id_vuelo
+			 AND s2.orden_segmento = (SELECT MAX(sy.orden_segmento) FROM segmento_vuelo sy WHERE sy.id_vuelo = vt.id_vuelo)
+		JOIN aeropuerto ad ON ad.id_aeropuerto = s2.id_aeropuerto_destino
+		JOIN ciudad cd ON cd.id_ciudad = ad.id_ciudad
+		ORDER BY vt.fecha_hora_salida DESC
+		""", nativeQuery = true)
+	List<Object[]> findUltimosVuelosPortal(@Param("limite") int limite);
+
 }

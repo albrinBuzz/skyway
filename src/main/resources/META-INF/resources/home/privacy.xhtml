@@ -5,23 +5,77 @@
                 template="/template/main.xhtml">
 
     <ui:define name="head">
-        <title>Política de Privacidad | SkyWay Airlines</title>
+        <title>Política de Privacidad | #{homePortalBean.nombreAerolinea} Airlines</title>
+        <style type="text/css">
+            .corp-page { background: #0b1220; min-height: 75vh; }
+            .corp-hero { background: linear-gradient(180deg, #101c34 0%, #0b1220 100%); border-bottom: 1px solid #1e3150; }
+            .corp-card { background: #101b33; border: 1px solid #1e3150; border-radius: 12px; padding: 2rem; }
+            .corp-subcard { background: #0d1629; border: 1px solid #1e293b; border-radius: 8px; padding: 1rem 1.15rem; margin-bottom: 1rem; }
+            .corp-badge { display: inline-block; background: #162442; border: 1px solid #28426e; color: #bfdbfe; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 4px 10px; border-radius: 6px; }
+        </style>
     </ui:define>
 
     <ui:define name="contenido">
-        <div class="container py-5">
-            <div class="p-5 rounded-3 skyway-card border border-secondary">
-                <h1 class="text-white fw-bold mb-4">Políticas de Privacidad</h1>
-                <p class="text-white-50">En SkyWay nos tomamos muy en serio la protección de tus datos personales. Esta política detalla la información que recopilamos y cómo la utilizamos.</p>
+        <div class="corp-page pb-5">
+            <div class="corp-hero py-5 mb-4">
+                <div class="container">
+                    <span class="corp-badge mb-2">Protección de Datos del Pasajero</span>
+                    <h1 class="text-white fw-bold mb-2" style="font-size: 2rem;">Política de Privacidad</h1>
+                    <p class="m-0" style="color: #94a3b8; max-width: 780px; line-height: 1.65;">
+                        Esta política explica qué información personal recopilamos cuando cotizas, compras o gestionas un vuelo con #{homePortalBean.nombreAerolinea}, con qué finalidad la utilizamos y cómo protegemos tus datos.
+                    </p>
+                </div>
+            </div>
 
-                <h4 class="text-white fw-bold mt-4 mb-2">1. Recopilación de Datos</h4>
-                <p class="text-white-50">Recopilamos tu RUT, nombre, correo electrónico y detalles de viaje para procesar tus reservas y emitir tus pasabordos digitales.</p>
+            <div class="container">
+                <div class="corp-card mx-auto" style="max-width: 920px;">
+                    <div class="corp-subcard">
+                        <h5 class="text-white fw-bold mb-2">1. Alcance y Responsabilidad</h5>
+                        <p class="m-0" style="color: #94a3b8; font-size: 0.9rem; line-height: 1.65;">
+                            #{homePortalBean.nombreAerolinea} Airlines trata los datos personales de sus pasajeros y usuarios registrados con estricto apego a las finalidades propias del transporte aéreo de pasajeros, la emisión de boletos, el control de embarque y el cumplimiento de exigencias aeronáuticas y migratorias vigentes.
+                        </p>
+                    </div>
 
-                <h4 class="text-white fw-bold mt-4 mb-2">2. Uso de la Información</h4>
-                <p class="text-white-50">Tus datos personales no son compartidos con terceros, excepto para pasarelas de pago homologadas (WebPay / PayPal) y requisitos de aeronáutica civil.</p>
+                    <div class="corp-subcard">
+                        <h5 class="text-white fw-bold mb-2">2. Datos Personales Recopilados</h5>
+                        <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.65;" class="mb-2">
+                            Para emitir una reserva válida, efectuar el Check-In y acreditar la identidad en aeropuerto, solicitamos:
+                        </p>
+                        <ul class="m-0 ps-3" style="color: #cbd5e1; font-size: 0.88rem; line-height: 1.65;">
+                            <li>Datos de identificación: nombre completo, apellido, RUT o cédula de identidad, tipo y número de documento o pasaporte, fecha de nacimiento y nacionalidad.</li>
+                            <li>Datos de contacto: correo electrónico y número telefónico para envío de confirmaciones y avisos del vuelo.</li>
+                            <li>Datos de viaje: itinerario seleccionado, tarifa adquirida, número de asiento y equipaje adicional contratado.</li>
+                        </ul>
+                    </div>
 
-                <h4 class="text-white fw-bold mt-4 mb-2">3. Seguridad</h4>
-                <p class="text-white-50">Mantenemos cifrado SSL/TLS de extremo a extremo en todas las transacciones dentro de la plataforma web.</p>
+                    <div class="corp-subcard">
+                        <h5 class="text-white fw-bold mb-2">3. Información de Acompañantes</h5>
+                        <p class="m-0" style="color: #94a3b8; font-size: 0.9rem; line-height: 1.65;">
+                            Cuando una reserva incluye más de un pasajero, el titular declara contar con la autorización de cada acompañante para registrar sus datos de identificación y viaje con el único fin de asignar asientos, gestionar el Check-In y emitir sus tarjetas de embarque individuales.
+                        </p>
+                    </div>
+
+                    <div class="corp-subcard">
+                        <h5 class="text-white fw-bold mb-2">4. Procesamiento de Pagos y Datos de Reembolso</h5>
+                        <p class="m-0" style="color: #94a3b8; font-size: 0.9rem; line-height: 1.65;">
+                            Los pagos realizados en línea mediante WebPay o PayPal son autorizados directamente por cada proveedor financiero externo; #{homePortalBean.nombreAerolinea} no almacena códigos de seguridad ni numeración completa de tarjetas bancarias. En caso de corresponder un reembolso por cancelación operacional de un vuelo de la aerolínea, los datos de cuenta bancaria ingresados por el titular se utilizan exclusivamente para efectuar y acreditar la transferencia.
+                        </p>
+                    </div>
+
+                    <div class="corp-subcard">
+                        <h5 class="text-white fw-bold mb-2">5. Comunicaciones Operacionales del Vuelo</h5>
+                        <p class="m-0" style="color: #94a3b8; font-size: 0.9rem; line-height: 1.65;">
+                            El correo electrónico del pasajero se emplea para remitir el comprobante de compra (PNR y E-Ticket PDF), recordatorios de apertura de Check-In, avisos ante cambios de puerta de embarque, reprogramaciones de horario, cancelaciones operacionales o confirmaciones de reembolso.
+                        </p>
+                    </div>
+
+                    <div class="corp-subcard mb-0">
+                        <h5 class="text-white fw-bold mb-2">6. Resguardo y Derechos del Pasajero</h5>
+                        <p class="m-0" style="color: #94a3b8; font-size: 0.9rem; line-height: 1.65;">
+                            #{homePortalBean.nombreAerolinea} aplica controles de acceso por cuenta y protección cifrada de credenciales para resguardar el historial de reservas. El titular puede revisar sus viajes activos e históricos y actualizar su correo electrónico o contraseña directamente desde su Perfil web o aplicación móvil.
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
     </ui:define>

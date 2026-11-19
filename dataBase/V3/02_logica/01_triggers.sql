@@ -860,7 +860,15 @@ AS $$
 DECLARE
     v_rut_titular VARCHAR(12);
     v_monto DECIMAL(10, 2);
+    v_motivo TEXT;
 BEGIN
+    v_motivo := LOWER(COALESCE(NEW.motivo, ''));
+    -- El reembolso aplica únicamente ante cancelación operacional de vuelo por parte de la aerolínea
+    IF (v_motivo NOT LIKE '%cancelación operacional%' AND v_motivo NOT LIKE '%cancelacion operacional%')
+       OR COALESCE(NEW.monto_reembolso, 0) <= 0 THEN
+        RETURN NEW;
+    END IF;
+
     SELECT r.rut_pasajero, COALESCE(NEW.monto_reembolso, r.total, 0)
     INTO v_rut_titular, v_monto
     FROM reserva r

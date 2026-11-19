@@ -1,5 +1,6 @@
 package com.SkyWay.modules.avion.application.serviceImpl;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,7 @@ import com.SkyWay.modules.avion.domain.exception.AvionValidationException;
 import com.SkyWay.modules.avion.domain.model.Avion;
 import com.SkyWay.modules.avion.domain.repository.AvionRepository;
 import com.SkyWay.modules.avion.domain.service.AvionService;
+import com.SkyWay.modules.avion.presentation.dto.FlotaResumenDTO;
 import com.SkyWay.modules.capacidadclase.domain.model.CapacidadClase;
 import com.SkyWay.modules.capacidadclase.domain.repository.CapacidadClaseRepository;
 import com.SkyWay.modules.claseasiento.domain.model.ClaseAsiento;
@@ -150,5 +152,29 @@ public class AvionServiceImpl implements AvionService {
 		});
 
 		return guardado;
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public long contarAvionesActivos() {
+		return avionRepository.countByActivoTrue();
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<FlotaResumenDTO> obtenerResumenFlotaPortal() {
+		List<Object[]> rows = avionRepository.findResumenFlotaAgrupado();
+		List<FlotaResumenDTO> lista = new ArrayList<>(rows.size());
+		for (Object[] r : rows) {
+			lista.add(new FlotaResumenDTO(
+					r[0] != null ? r[0].toString() : "",
+					r[1] != null ? r[1].toString() : "",
+					r[2] != null ? ((Number) r[2]).longValue() : 0L,
+					r[3] != null ? ((Number) r[3]).intValue() : 0,
+					r[4] != null ? ((Number) r[4]).intValue() : 0,
+					r[5] != null ? ((Number) r[5]).intValue() : 0
+			));
+		}
+		return lista;
 	}
 }

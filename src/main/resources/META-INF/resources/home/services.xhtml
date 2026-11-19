@@ -5,58 +5,87 @@
                 template="/template/main.xhtml">
 
     <ui:define name="head">
-        <title>Servicios | SkyWay Airlines</title>
+        <title>Servicios | #{homePortalBean.nombreAerolinea} Airlines</title>
+        <style type="text/css">
+            .corp-page { background: #0b1220; min-height: 75vh; }
+            .corp-hero { background: linear-gradient(180deg, #101c34 0%, #0b1220 100%); border-bottom: 1px solid #1e3150; }
+            .corp-card { background: #101b33; border: 1px solid #1e3150; border-radius: 12px; padding: 1.4rem; }
+            .corp-badge { display: inline-block; background: #162442; border: 1px solid #28426e; color: #bfdbfe; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 4px 10px; border-radius: 6px; }
+        </style>
     </ui:define>
 
     <ui:define name="contenido">
-        <div class="container py-5">
-            <div class="text-center mb-5">
-                <span class="badge bg-primary px-3 py-2 text-uppercase mb-2">Experiencia de Viaje</span>
-                <h1 class="display-5 fw-bold text-white">Nuestros Servicios</h1>
-                <p class="lead text-white-50">Diseñados para brindarte comodidad en cada etapa de tu vuelo.</p>
+        <div class="corp-page pb-5">
+            <div class="corp-hero py-5 mb-4">
+                <div class="container">
+                    <span class="corp-badge mb-2">Experiencia del Pasajero</span>
+                    <h1 class="text-white fw-bold mb-2" style="font-size: 2rem;">Servicios Disponibles</h1>
+                    <p class="m-0" style="color: #94a3b8; max-width: 760px; line-height: 1.65;">
+                        Funcionalidades operativas reales disponibles durante la reserva, preparación del viaje y día de vuelo.
+                    </p>
+                </div>
             </div>
 
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="p-4 rounded-3 skyway-card h-100 border border-secondary">
-                        <i class="fas fa-couch text-primary mb-3" style="font-size: 2.5rem;"></i>
-                        <h4 class="text-white fw-bold mb-2">Selección de Asientos</h4>
-                        <p class="text-white-50">Elige la ubicación de tu preferencia: Premium con espacio extra, pasillo o ventana en tiempo real.</p>
+            <div class="container">
+                <div class="row g-3">
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="corp-card h-100">
+                            <i class="pi pi-th-large fs-3 mb-3 d-block" style="color: #93c5fd;"></i>
+                            <h5 class="text-white fw-bold mb-2">Selección de Asientos en Vivo</h5>
+                            <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.55;" class="m-0">
+                                Visualiza la distribución real de cabina por clase y retén tus asientos hasta por 10 minutos mientras completas la compra.
+                            </p>
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="p-4 rounded-3 skyway-card h-100 border border-secondary">
-                        <i class="fas fa-suitcase-rolling text-primary mb-3" style="font-size: 2.5rem;"></i>
-                        <h4 class="text-white fw-bold mb-2">Gestión de Equipaje</h4>
-                        <p class="text-white-50">Añade maletas adicionales en bodega o equipaje especial de deporte de forma anticipada con tarifas preferenciales.</p>
+
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="corp-card h-100">
+                            <i class="pi pi-briefcase fs-3 mb-3 d-block" style="color: #93c5fd;"></i>
+                            <h5 class="text-white fw-bold mb-2">Gestión de Equipaje</h5>
+                            <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.55;" class="m-0">
+                                Añade por pasajero hasta 1 pieza en cabina y 3 maletas facturadas en bodega (15 kg / 23 kg) según los tipos configurados en sistema.
+                            </p>
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="p-4 rounded-3 skyway-card h-100 border border-secondary">
-                        <i class="fas fa-utensils text-primary mb-3" style="font-size: 2.5rem;"></i>
-                        <h4 class="text-white fw-bold mb-2">Servicio a Bordo</h4>
-                        <p class="text-white-50">Menús gourmet diseñados por chefs reconocidos, opciones vegetarianas/veganas y bebidas de cortesía.</p>
+
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="corp-card h-100">
+                            <i class="pi pi-ticket fs-3 mb-3 d-block" style="color: #93c5fd;"></i>
+                            <h5 class="text-white fw-bold mb-2">Tarifas por Categoría</h5>
+                            <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.55;" class="m-0">
+                                Elige entre las tarifas vigentes (<ui:repeat value="#{homePortalBean.tarifas}" var="t" varStatus="st">#{t.nombre}#{not st.last ? ', ' : ''}</ui:repeat>) con reglas claras de cambios de asiento antes del vuelo.
+                            </p>
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="p-4 rounded-3 skyway-card h-100 border border-secondary">
-                        <i class="fas fa-wifi text-primary mb-3" style="font-size: 2.5rem;"></i>
-                        <h4 class="text-white fw-bold mb-2">Wi-Fi y Entretenimiento</h4>
-                        <p class="text-white-50">Conexión satelital a bordo y catálogo completo de películas, series y música de alta definición.</p>
+
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="corp-card h-100">
+                            <i class="pi pi-check-square fs-3 mb-3 d-block" style="color: #93c5fd;"></i>
+                            <h5 class="text-white fw-bold mb-2">Check-In Web y Pase Digital</h5>
+                            <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.55;" class="m-0">
+                                Realiza el Check-In online entre 48 horas y 60 minutos antes de la salida del vuelo y obtén tu tarjeta de embarque individual.
+                            </p>
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="p-4 rounded-3 skyway-card h-100 border border-secondary">
-                        <i class="fas fa-concierge-bell text-primary mb-3" style="font-size: 2.5rem;"></i>
-                        <h4 class="text-white fw-bold mb-2">Salones VIP</h4>
-                        <p class="text-white-50">Acceso a zonas exclusivas de descanso con buffet libre, duchas y salas de reuniones en aeropuertos clave.</p>
+
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="corp-card h-100">
+                            <i class="pi pi-clock fs-3 mb-3 d-block" style="color: #93c5fd;"></i>
+                            <h5 class="text-white fw-bold mb-2">Estado de Vuelo y Puertas</h5>
+                            <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.55;" class="m-0">
+                                Consulta horarios actualizados, puerta asignada y avisos por correo ante reprogramaciones operacionales.
+                            </p>
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="p-4 rounded-3 skyway-card h-100 border border-secondary">
-                        <i class="fas fa-user-shield text-primary mb-3" style="font-size: 2.5rem;"></i>
-                        <h4 class="text-white fw-bold mb-2">Asistencia Especial</h4>
-                        <p class="text-white-50">Acompañamiento a menores no acompañados, movilidad reducida y transporte pet-friendly.</p>
+
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="corp-card h-100">
+                            <i class="pi pi-file-pdf fs-3 mb-3 d-block" style="color: #93c5fd;"></i>
+                            <h5 class="text-white fw-bold mb-2">E-Ticket PDF y Portal de Pasajero</h5>
+                            <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.55;" class="m-0">
+                                Descarga tu comprobante E-Ticket con código PNR, administra acompañantes y sigue reembolsos por cancelación operacional de vuelo.
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -1,81 +1,100 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui:composition lang="es"
+                xmlns:f="jakarta.faces.core"
                 xmlns:h="jakarta.faces.html"
-                xmlns:p="http://primefaces.org/ui"
                 xmlns:ui="http://java.sun.com/jsf/facelets"
                 template="/template/main.xhtml">
 
     <ui:define name="head">
-        <title>Quiénes Somos | SkyWay Airlines</title>
+        <title>Quiénes Somos | #{homePortalBean.nombreAerolinea} Airlines</title>
         <style type="text/css">
-            .about-hero {
-                background: linear-gradient(135deg, #101b33 0%, #1e293b 100%);
-                border: 1px solid #1e3a5c;
-                border-radius: 16px;
-            }
-            .stat-box {
-                background: #0f172a;
-                border: 1px solid #1e3a5c;
-                border-radius: 12px;
-                padding: 24px;
-                text-align: center;
-            }
+            .corp-page { background: #0b1220; min-height: 75vh; }
+            .corp-hero { background: linear-gradient(180deg, #101c34 0%, #0b1220 100%); border-bottom: 1px solid #1e3150; }
+            .corp-card { background: #101b33; border: 1px solid #1e3150; border-radius: 12px; padding: 1.5rem; }
+            .corp-subcard { background: #0d1629; border: 1px solid #1e293b; border-radius: 10px; padding: 1.15rem; }
+            .corp-badge { display: inline-block; background: #162442; border: 1px solid #28426e; color: #bfdbfe; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 4px 10px; border-radius: 6px; }
         </style>
     </ui:define>
 
     <ui:define name="contenido">
-        <div class="container py-5">
-            <div class="about-hero p-5 text-center text-white mb-5 shadow-lg">
-                <span class="badge bg-primary px-3 py-2 text-uppercase mb-3">Conectando Cielos</span>
-                <h1 class="display-4 fw-bold mb-3">Quiénes Somos</h1>
-                <p class="lead text-white-50 mx-auto" style="max-width: 800px;">
-                    En SkyWay impulsamos la aviación comercial con innovación tecnológica, seguridad rigurosa y un compromiso inquebrantable con el confort y puntualidad de nuestros pasajeros.
-                </p>
-            </div>
-
-            <div class="row g-4 mb-5">
-                <div class="col-md-3">
-                    <div class="stat-box">
-                        <h2 class="display-5 fw-bold text-primary mb-1">15+</h2>
-                        <p class="text-white-50 m-0">Años de Experiencia</p>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="stat-box">
-                        <h2 class="display-5 fw-bold text-primary mb-1">45+</h2>
-                        <p class="text-white-50 m-0">Destinos Globales</p>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="stat-box">
-                        <h2 class="display-5 fw-bold text-primary mb-1">98.4%</h2>
-                        <p class="text-white-50 m-0">Puntualidad Operativa</p>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="stat-box">
-                        <h2 class="display-5 fw-bold text-primary mb-1">2.5M</h2>
-                        <p class="text-white-50 m-0">Pasajeros Anuales</p>
-                    </div>
+        <div class="corp-page pb-5">
+            <div class="corp-hero py-5 mb-4">
+                <div class="container">
+                    <span class="corp-badge mb-2">Operación Aérea · #{homePortalBean.codigoAerolinea}</span>
+                    <h1 class="text-white fw-bold mb-2" style="font-size: 2rem;">Quiénes Somos</h1>
+                    <p class="m-0" style="color: #94a3b8; max-width: 780px; line-height: 1.65;">
+                        #{homePortalBean.nombreAerolinea} conecta destinos nacionales e internacionales integrando planificación de vuelos, venta digital de pasajes y autogestión de viaje en un solo lugar.
+                    </p>
                 </div>
             </div>
 
-            <div class="row align-items-center g-5">
-                <div class="col-lg-6">
-                    <h3 class="text-white fw-bold mb-3"><i class="fas fa-bullseye text-primary me-2"></i>Nuestra Misión</h3>
-                    <p class="text-white-50 fs-5 mb-4">
-                        Proporcionar una experiencia de transporte aéreo eficiente, accesible y segura, conectando comunidades mediante tecnología de vanguardia y un servicio de excelencia.
-                    </p>
-                    <h3 class="text-white fw-bold mb-3"><i class="fas fa-eye text-primary me-2"></i>Nuestra Visión</h3>
-                    <p class="text-white-50 fs-5">
-                        Ser reconocidos como la aerolínea líder en innovación digital y sostenibilidad operativa en Latinoamérica para el año 2030.
-                    </p>
+            <div class="container">
+                <!-- CIFRAS REALES EN VIVO DESDE BD -->
+                <div class="row g-3 mb-4">
+                    <div class="col-6 col-md-3">
+                        <div class="corp-card h-100 text-center">
+                            <div class="fw-bold text-white" style="font-size: 1.75rem;">#{homePortalBean.totalAeropuertos}</div>
+                            <div style="color: #94a3b8; font-size: 0.82rem;">Aeropuertos activos</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="corp-card h-100 text-center">
+                            <div class="fw-bold text-white" style="font-size: 1.75rem;">#{homePortalBean.totalPaises}</div>
+                            <div style="color: #94a3b8; font-size: 0.82rem;">Países conectados</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="corp-card h-100 text-center">
+                            <div class="fw-bold text-white" style="font-size: 1.75rem;">#{homePortalBean.totalAviones}</div>
+                            <div style="color: #94a3b8; font-size: 0.82rem;">Aeronaves operativas</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="corp-card h-100 text-center">
+                            <div class="fw-bold text-white" style="font-size: 1.75rem;">
+                                <h:outputText value="#{homePortalBean.totalItinerarios}">
+                                    <f:convertNumber pattern="#,##0" locale="es_CL"/>
+                                </h:outputText>
+                            </div>
+                            <div style="color: #94a3b8; font-size: 0.82rem;">Itinerarios registrados</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-lg-6 text-center">
-                    <div class="p-4 rounded-3 skyway-card border border-secondary">
-                        <i class="fas fa-plane-departure text-primary mb-3" style="font-size: 5rem;"></i>
-                        <h4 class="text-white fw-bold">Flota Moderna</h4>
-                        <p class="text-white-50">Contamos con aeronaves equipadas con tecnología de reducción de emisiones y máxima comodidad a bordo.</p>
+
+                <div class="row g-4">
+                    <div class="col-12 col-lg-6">
+                        <div class="corp-card h-100">
+                            <h4 class="text-white fw-bold mb-3"><i class="pi pi-compass me-2" style="color: #93c5fd;"></i>Propósito Operacional</h4>
+                            <p style="color: #cbd5e1; line-height: 1.65; font-size: 0.92rem;">
+                                Conectamos terminales aéreas nacionales e internacionales mediante itinerarios directos y con escala calculados sobre disponibilidad real de vuelos, flota y tripulación.
+                            </p>
+                            <div class="corp-subcard mt-3">
+                                <div class="fw-bold text-white mb-1" style="font-size: 0.88rem;">Transparencia Tarifaria</div>
+                                <p class="m-0" style="color: #94a3b8; font-size: 0.84rem;">
+                                    Cada tarifa comercial muestra de forma explícita sus condiciones de cambio de asiento, equipaje y cancelación antes de confirmar el pago.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-6">
+                        <div class="corp-card h-100">
+                            <h4 class="text-white fw-bold mb-3"><i class="pi pi-server me-2" style="color: #93c5fd;"></i>Experiencia de Servicio</h4>
+                            <div class="d-flex flex-column gap-2">
+                                <div class="corp-subcard">
+                                    <div class="fw-bold text-white" style="font-size: 0.88rem;">Reserva Web Directa</div>
+                                    <span style="color: #94a3b8; font-size: 0.82rem;">Búsqueda por ciudad o código IATA, mapa interactivo de asientos en cabina, pago en línea y Check-In web.</span>
+                                </div>
+                                <div class="corp-subcard">
+                                    <div class="fw-bold text-white" style="font-size: 0.88rem;">Control Operacional Aéreo</div>
+                                    <span style="color: #94a3b8; font-size: 0.82rem;">Coordinación de flota, aeropuertos, rutas con escala, puertas de embarque y horarios actualizados.</span>
+                                </div>
+                                <div class="corp-subcard">
+                                    <div class="fw-bold text-white" style="font-size: 0.88rem;">Aplicación Móvil del Viajero</div>
+                                    <span style="color: #94a3b8; font-size: 0.82rem;">Acceso a reservas compartidas, tarjetas de embarque con código QR, avisos de vuelo y cambio de asiento.</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

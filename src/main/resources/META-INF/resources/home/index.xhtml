@@ -3,55 +3,130 @@
                 xmlns:f="jakarta.faces.core"
                 xmlns:h="jakarta.faces.html"
                 xmlns:p="http://primefaces.org/ui"
-                xmlns:fs="http://xmlns.jcp.org/jsf/core"
                 xmlns:ui="http://java.sun.com/jsf/facelets"
                 template="/template/main.xhtml">
 
     <ui:define name="head">
-        <title>SkyWay Airlines | Sistema de Reserva de Vuelos</title>
+        <title>#{homePortalBean.nombreAerolinea} Airlines | Reserva de Vuelos</title>
 
-        <!-- Leaflet JS y CSS -->
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-                integrity="sha512‑gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
-                crossorigin="">
-        </script>
-
+        <!-- Leaflet CSS y JS -->
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
         <style type="text/css">
             /* ==========================================================================
-               CAPA GLOBAL Y CONTENEDORES
+               PALETA CORPORATIVA SOBRIA SKYWAY
                ========================================================================== */
+            .home-shell {
+                background: #0b1220;
+            }
+
+            .hero-band {
+                background: linear-gradient(180deg, #101c34 0%, #0b1220 100%);
+                border-bottom: 1px solid #1e3150;
+            }
+
             .skyway-card {
                 background: #101b33 !important;
-                border: 1px solid #1e3a5c !important;
+                border: 1px solid #1e3150 !important;
                 border-radius: 12px !important;
             }
 
+            .skyway-subcard {
+                background: #0d1629 !important;
+                border: 1px solid #1e293b !important;
+                border-radius: 10px !important;
+            }
+
             .skyway-title {
-                color: #4aa3ff !important;
+                color: #f1f5f9 !important;
                 font-weight: 700 !important;
             }
 
+            .skyway-kicker {
+                color: #93c5fd !important;
+                font-size: 0.78rem !important;
+                font-weight: 700 !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.06em !important;
+            }
+
             .skyway-label {
-                color: #94a3b8 !important;
-                font-weight: 500 !important;
+                color: #cbd5e1 !important;
+                font-weight: 600 !important;
                 margin-bottom: 6px !important;
-                font-size: 0.9rem !important;
+                font-size: 0.84rem !important;
+            }
+
+            .badge-airline {
+                display: inline-block;
+                background: #162442 !important;
+                border: 1px solid #28426e !important;
+                color: #bfdbfe !important;
+                font-size: 0.72rem !important;
+                font-weight: 700 !important;
+                letter-spacing: 0.04em !important;
+                text-transform: uppercase !important;
+                padding: 4px 10px !important;
+                border-radius: 6px !important;
+            }
+
+            .badge-slate {
+                display: inline-block;
+                background: #17233b !important;
+                border: 1px solid #2b3f5e !important;
+                color: #cbd5e1 !important;
+                font-size: 0.72rem !important;
+                font-weight: 600 !important;
+                padding: 3px 9px !important;
+                border-radius: 6px !important;
+            }
+
+            /* KPI Strip Superior */
+            .kpi-airline-grid {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 0.75rem;
+            }
+            @media (max-width: 768px) {
+                .kpi-airline-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+            }
+            .kpi-airline-box {
+                background: #0d1629;
+                border: 1px solid #1e3150;
+                border-radius: 10px;
+                padding: 0.85rem 1rem;
+            }
+            .kpi-airline-val {
+                color: #f8fafc;
+                font-size: 1.35rem;
+                font-weight: 800;
+                line-height: 1.15;
+            }
+            .kpi-airline-lbl {
+                color: #94a3b8;
+                font-size: 0.76rem;
+                margin-top: 2px;
             }
 
             /* Tabs Superiores */
-            .skyway-tabs.nav-tabs { border-bottom: 1px solid #1e3a5c !important; }
+            .skyway-tabs.nav-tabs {
+                border-bottom: 1px solid #1e3150 !important;
+            }
             .skyway-tabs .nav-link {
                 background: #0a1224 !important;
                 color: #94a3b8 !important;
-                border: 1px solid #1e3a5c !important;
+                border: 1px solid #1e3150 !important;
                 border-bottom: none !important;
-                font-size: 0.9rem !important;
+                font-size: 0.88rem !important;
+                font-weight: 600 !important;
                 padding: 10px 16px !important;
             }
             .skyway-tabs .nav-link.active {
-                background: #101b33 !important;
-                color: #ffffff !important;
+                background: #13223d !important;
+                color: #f8fafc !important;
                 border-bottom: 2px solid #3b82f6 !important;
             }
 
@@ -64,9 +139,9 @@
             .skyway-custom-input.ui-datepicker {
                 display: flex !important;
                 width: 100% !important;
-                min-height: 46px !important;
-                background: #11263f !important;
-                border: 1px solid #1e3a5c !important;
+                min-height: 44px !important;
+                background: #0d1629 !important;
+                border: 1px solid #243b61 !important;
                 border-radius: 6px !important;
                 box-sizing: border-box !important;
                 position: relative !important;
@@ -74,9 +149,9 @@
 
             .skyway-custom-input .ui-selectonemenu-label {
                 background: transparent !important;
-                color: #e6eef7 !important;
-                padding: 10px 12px !important;
-                font-size: 0.9rem !important;
+                color: #f1f5f9 !important;
+                padding: 10px 40px 10px 12px !important;
+                font-size: 0.88rem !important;
                 white-space: nowrap !important;
                 overflow: hidden !important;
                 text-overflow: ellipsis !important;
@@ -84,12 +159,12 @@
 
             .skyway-custom-input .ui-inputfield,
             .skyway-custom-input input {
-                background: #11263f !important;
-                color: #e6eef7 !important;
+                background: #0d1629 !important;
+                color: #f1f5f9 !important;
                 border: none !important;
                 height: 100% !important;
                 padding: 10px 12px !important;
-                font-size: 0.9rem !important;
+                font-size: 0.88rem !important;
                 width: 100% !important;
                 box-sizing: border-box !important;
                 border-radius: 6px !important;
@@ -103,9 +178,9 @@
             .skyway-custom-input .ui-autocomplete-dropdown,
             .skyway-custom-input .ui-datepicker-trigger.ui-button,
             .skyway-custom-input .ui-selectonemenu-trigger {
-                background: #1e3a5c !important;
+                background: #162642 !important;
                 border: none !important;
-                color: #4aa3ff !important;
+                color: #93c5fd !important;
                 width: 40px !important;
                 min-width: 40px !important;
                 height: 100% !important;
@@ -115,17 +190,100 @@
                 border-radius: 0 5px 5px 0 !important;
             }
 
-            /* ==========================================================================
-               🛠 FIX CRÍTICO MÓVIL: CORRECCIÓN DE DESPLEGABLES Y CALENDARIO
-               ========================================================================== */
+            .btn-airline-primary {
+                background: #1d4ed8 !important;
+                border: 1px solid #2563eb !important;
+                color: #ffffff !important;
+                font-weight: 700 !important;
+                padding: 0.65rem 1.75rem !important;
+                border-radius: 8px !important;
+                transition: background 0.2s ease !important;
+            }
+            .btn-airline-primary:hover {
+                background: #1e40af !important;
+                color: #ffffff !important;
+            }
 
-            /* 1. Limitar alto y ancho del panel desplegable de aeropuertos */
+            .btn-airline-outline {
+                background: #0d1629 !important;
+                border: 1px solid #28426e !important;
+                color: #cbd5e1 !important;
+                font-weight: 600 !important;
+                font-size: 0.84rem !important;
+                padding: 0.45rem 0.9rem !important;
+                border-radius: 7px !important;
+                text-decoration: none !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                gap: 0.4rem !important;
+                transition: all 0.2s ease !important;
+            }
+            .btn-airline-outline:hover {
+                border-color: #3b82f6 !important;
+                background: #162442 !important;
+                color: #ffffff !important;
+            }
+
+            /* Tarjetas de Rutas / Blog / Flota */
+            .route-card {
+                transition: border-color 0.2s ease, transform 0.15s ease;
+            }
+            .route-card:hover {
+                border-color: #3b82f6 !important;
+                transform: translateY(-2px);
+            }
+            .iata-pill {
+                font-family: monospace;
+                font-weight: 800;
+                font-size: 1.05rem;
+                color: #f8fafc;
+            }
+            .blog-thumb {
+                width: 100%;
+                height: 140px;
+                object-fit: cover;
+                border-radius: 8px;
+                border: 1px solid #1e293b;
+                margin-bottom: 0.85rem;
+            }
+            #leafletMap {
+                position: relative;
+                z-index: 1;
+            }
+            #leafletMap .leaflet-pane,
+            #leafletMap .leaflet-top,
+            #leafletMap .leaflet-bottom {
+                z-index: 2 !important;
+            }
+            #leafletMap .leaflet-tile-pane {
+                filter: brightness(0.86) contrast(1.06) saturate(0.82);
+            }
+            .pay-logo-box {
+                background: #f8fafc;
+                border-radius: 8px;
+                padding: 6px 12px;
+                height: 40px;
+                min-width: 112px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 8px;
+            }
+            .pay-logo {
+                max-height: 26px;
+                width: auto;
+                max-width: 96px;
+                object-fit: contain;
+            }
+
+            /* Desplegables y Calendario */
             .ui-autocomplete-panel,
             .ui-selectonemenu-panel {
                 background: #0f172a !important;
-                border: 1px solid #3b82f6 !important;
+                border: 1px solid #28426e !important;
                 box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8) !important;
-                max-height: 240px !important; /* Evita que ocupe toda la pantalla */
+                max-height: 240px !important;
                 overflow-y: auto !important;
                 max-width: 90vw !important;
                 border-radius: 8px !important;
@@ -138,20 +296,19 @@
                 padding: 10px 12px !important;
                 font-size: 0.85rem !important;
                 border-bottom: 1px solid #1e293b !important;
-                white-space: normal !important; /* Permite salto de línea si el nombre es muy largo */
+                white-space: normal !important;
             }
 
             .ui-autocomplete-items .ui-autocomplete-item.ui-state-highlight,
             .ui-autocomplete-items .ui-autocomplete-item:hover,
             .ui-selectonemenu-items .ui-selectonemenu-item:hover {
-                background: #2563eb !important;
+                background: #1d4ed8 !important;
                 color: #ffffff !important;
             }
 
-            /* 2. Centrar y arreglar el tamaño del DatePicker / Calendario */
             .ui-datepicker {
                 background: #0d172a !important;
-                border: 1px solid #3b82f6 !important;
+                border: 1px solid #28426e !important;
                 border-radius: 12px !important;
                 padding: 12px 8px !important;
                 box-shadow: 0 15px 35px rgba(0, 0, 0, 0.85) !important;
@@ -159,11 +316,11 @@
                 max-width: 330px !important;
                 box-sizing: border-box !important;
                 z-index: 9999 !important;
-                overflow: hidden !important; /* Evita que el círculo o contenido sobresalga */
+                overflow: hidden !important;
             }
 
             .ui-datepicker .ui-datepicker-header {
-                background: #1e293b !important;
+                background: #162442 !important;
                 border: none !important;
                 border-radius: 8px !important;
                 color: #f8fafc !important;
@@ -180,18 +337,18 @@
             .ui-datepicker .ui-datepicker-prev,
             .ui-datepicker .ui-datepicker-next {
                 top: 8px !important;
-                color: #60a5fa !important;
+                color: #93c5fd !important;
             }
 
             .ui-datepicker table {
                 width: 100% !important;
                 margin: 0 !important;
                 border-collapse: collapse !important;
-                table-layout: fixed !important; /* Fuerza a que las 7 columnas tengan exactamente el mismo ancho */
+                table-layout: fixed !important;
             }
 
             .ui-datepicker th {
-                color: #60a5fa !important;
+                color: #93c5fd !important;
                 font-size: 0.78rem !important;
                 font-weight: 600 !important;
                 padding: 4px 0 !important;
@@ -218,15 +375,13 @@
                 box-sizing: border-box !important;
             }
 
-            /* Día Seleccionado dentro del círculo */
             .ui-datepicker td.ui-datepicker-current-day a,
             .ui-datepicker td a.ui-state-active,
             .ui-datepicker td a.ui-state-highlight {
-                background: #2563eb !important;
+                background: #1d4ed8 !important;
                 color: #ffffff !important;
                 font-weight: 700 !important;
                 border: none !important;
-                box-shadow: 0 0 8px rgba(37, 99, 235, 0.6) !important;
             }
 
             .ui-datepicker td a:hover {
@@ -234,384 +389,628 @@
             }
 
             @media (max-width: 768px) {
-                .container.py-4 {
-                    padding-top: 1rem !important;
-                    padding-bottom: 1rem !important;
-                }
                 .skyway-card {
                     padding: 1rem !important;
                 }
-                .skyway-title {
-                    font-size: 1.3rem !important;
-                }
-
-                /* Centrar el calendario flotante en teléfonos */
                 .ui-datepicker {
                     left: 50% !important;
-                    transform: translateX(-50%) !important; /* Centra el panel horizontalmente respecto a la pantalla */
+                    transform: translateX(-50%) !important;
                 }
             }
         </style>
     </ui:define>
 
     <ui:define name="contenido">
+        <div class="home-shell pb-5">
 
-        <!-- ========================================================= -->
-        <!-- ✈️ SECCIÓN 1: BÚSQUEDA DE VUELOS (RESPONSIVA)              -->
-        <!-- ========================================================= -->
-        <div class="container py-4">
-            <div class="card skyway-card shadow-lg p-3 p-md-4 rounded-3">
-
-                <h2 class="text-center mb-3 skyway-title">
-                    <i class="pi pi-send me-2"></i>Buscar Vuelos
-                </h2>
-
-                <ul class="nav nav-tabs skyway-tabs nav-fill" id="searchTabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <a class="nav-link active" id="one-way-tab" data-bs-toggle="tab" href="#one-way" role="tab" aria-controls="one-way" aria-selected="true">
-                            <i class="pi pi-arrow-right me-1"></i> Solo Ida
-                        </a>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <a class="nav-link" id="round-trip-tab" data-bs-toggle="tab" href="#round-trip" role="tab" aria-controls="round-trip" aria-selected="false">
-                            <i class="pi pi-sync me-1"></i> Ida y Vuelta
-                        </a>
-                    </li>
-                </ul>
-
-                <div class="tab-content mt-3" id="searchTabsContent">
-
-                    <!-- ================= TAB 1: SOLO IDA ================= -->
-                    <div class="tab-pane fade show active" id="one-way" role="tabpanel" aria-labelledby="one-way-tab">
-                        <h:form id="formOneWay">
-
-                            <div class="row g-3">
-                                <div class="col-12 col-md-6 d-flex flex-column">
-                                    <h:outputLabel for="aeropuertoSalida" styleClass="skyway-label" value="Aeropuerto de salida" />
-                                    <p:autoComplete id="aeropuertoSalida"
-                                                    value="#{itinerarioBusquedaBean.codigoIataOrigen}"
-                                                    completeMethod="#{itinerarioBusquedaBean.buscarAeropuertos}"
-                                                    var="a"
-                                                    itemLabel="#{itinerarioBusquedaBean.getItemLabel(a)}"
-                                                    itemValue="#{a.codigoIata}"
-                                                    dropdown="true"
-                                                    forceSelection="true"
-                                                    placeholder="Origen o código IATA..."
-                                                    styleClass="skyway-custom-input"
-                                                    required="true"
-                                                    requiredMessage="Debe seleccionar un aeropuerto de salida" />
-                                </div>
-
-                                <div class="col-12 col-md-6 d-flex flex-column">
-                                    <h:outputLabel for="aeropuertoLlegada" styleClass="skyway-label" value="Aeropuerto de llegada" />
-                                    <p:autoComplete id="aeropuertoLlegada"
-                                                    value="#{itinerarioBusquedaBean.codigoIataDestino}"
-                                                    completeMethod="#{itinerarioBusquedaBean.buscarAeropuertos}"
-                                                    var="a"
-                                                    itemLabel="#{itinerarioBusquedaBean.getItemLabel(a)}"
-                                                    itemValue="#{a.codigoIata}"
-                                                    dropdown="true"
-                                                    forceSelection="true"
-                                                    placeholder="Destino o código IATA..."
-                                                    styleClass="skyway-custom-input"
-                                                    required="true"
-                                                    requiredMessage="Debe seleccionar un aeropuerto de llegada" />
-                                </div>
-
-                                <div class="col-12 col-md-6 d-flex flex-column">
-                                    <h:outputLabel for="fechaSalida" styleClass="skyway-label" value="Fecha de salida" />
-                                    <!-- Propiedad touchUI="true" agregada para selección nativa en móviles -->
-                                    <p:datePicker id="fechaSalida"
-                                                  value="#{itinerarioBusquedaBean.fechaIda}"
-                                                  mindate="#{java.time.LocalDate.now()}"
-                                                  pattern="dd/MM/yyyy"
-                                                  showIcon="true"
-                                                  styleClass="skyway-custom-input"
-                                                  placeholder="Seleccione fecha..."
-                                                  required="true"
-                                                  requiredMessage="Debe seleccionar la fecha de salida"/>
-                                </div>
-
-                                <div class="col-12 col-md-6 d-flex flex-column">
-                                    <h:outputLabel for="adultos" styleClass="skyway-label" value="Pasajeros" />
-                                    <p:selectOneMenu id="adultos"
-                                                     value="#{itinerarioBusquedaBean.adultos}"
-                                                     required="true"
-                                                     requiredMessage="Debe seleccionar al menos un adulto"
-                                                     styleClass="skyway-custom-input w-100">
-                                        <f:selectItem itemLabel="1 Pasajero" itemValue="1" />
-                                        <f:selectItem itemLabel="2 Pasajeros" itemValue="2" />
-                                        <f:selectItem itemLabel="3 Pasajeros" itemValue="3" />
-                                        <f:selectItem itemLabel="4 Pasajeros" itemValue="4" />
-                                        <f:selectItem itemLabel="5 Pasajeros" itemValue="5" />
-                                    </p:selectOneMenu>
-                                    <h:message for="adultos" styleClass="text-danger mt-1 d-block small" />
-                                </div>
-                            </div>
-
-                            <div class="text-center mt-4">
-                                <p:commandButton value="Buscar Vuelos"
-                                                 icon="pi pi-search"
-                                                 styleClass="skyway-btn"
-                                                 ajax="false"
-                                                 action="#{itinerarioBusquedaBean.buscarVuelosSoloIda}" />
-                            </div>
-                        </h:form>
-                    </div>
-
-                    <!-- ================= TAB 2: IDA Y VUELTA ================= -->
-                    <div class="tab-pane fade" id="round-trip" role="tabpanel" aria-labelledby="round-trip-tab">
-                        <h:form id="formRoundTrip">
-
-                            <div class="row g-3">
-                                <div class="col-12 col-md-6 d-flex flex-column">
-                                    <h:outputLabel for="origenRT" styleClass="skyway-label" value="Aeropuerto de salida" />
-                                    <p:autoComplete id="origenRT"
-                                                    value="#{itinerarioBusquedaBean.codigoIataOrigen}"
-                                                    completeMethod="#{itinerarioBusquedaBean.buscarAeropuertos}"
-                                                    var="a"
-                                                    itemLabel="#{itinerarioBusquedaBean.getItemLabel(a)}"
-                                                    itemValue="#{a.codigoIata}"
-                                                    dropdown="true"
-                                                    forceSelection="true"
-                                                    placeholder="Origen o código IATA..."
-                                                    styleClass="skyway-custom-input"
-                                                    required="true"
-                                                    requiredMessage="Debe seleccionar un aeropuerto de salida" />
-                                </div>
-
-                                <div class="col-12 col-md-6 d-flex flex-column">
-                                    <h:outputLabel for="destinoRT" styleClass="skyway-label" value="Aeropuerto de llegada" />
-                                    <p:autoComplete id="destinoRT"
-                                                    value="#{itinerarioBusquedaBean.codigoIataDestino}"
-                                                    completeMethod="#{itinerarioBusquedaBean.buscarAeropuertos}"
-                                                    var="a"
-                                                    itemLabel="#{itinerarioBusquedaBean.getItemLabel(a)}"
-                                                    itemValue="#{a.codigoIata}"
-                                                    dropdown="true"
-                                                    forceSelection="true"
-                                                    placeholder="Destino o código IATA..."
-                                                    styleClass="skyway-custom-input"
-                                                    required="true"
-                                                    requiredMessage="Debe seleccionar un aeropuerto de llegada" />
-                                </div>
-
-                                <div class="col-12 col-md-4 d-flex flex-column">
-                                    <h:outputLabel for="fechaIdaRT" styleClass="skyway-label" value="Fecha de salida" />
-                                    <p:datePicker id="fechaIdaRT"
-                                                  value="#{itinerarioBusquedaBean.fechaIda}"
-                                                  mindate="#{java.time.LocalDate.now()}"
-                                                  pattern="dd/MM/yyyy"
-                                                  touchUI="true"
-                                                  showIcon="true"
-                                                  styleClass="skyway-custom-input"
-                                                  placeholder="Fecha salida..."
-                                                  required="true"
-                                                  requiredMessage="Debe seleccionar la fecha de salida" />
-                                </div>
-
-                                <div class="col-12 col-md-4 d-flex flex-column">
-                                    <h:outputLabel for="fechaRetornoRT" styleClass="skyway-label" value="Fecha de regreso" />
-                                    <p:datePicker id="fechaRetornoRT"
-                                                  value="#{itinerarioBusquedaBean.fechaRetorno}"
-                                                  mindate="#{itinerarioBusquedaBean.fechaIda != null ? itinerarioBusquedaBean.fechaIda : java.time.LocalDate.now()}"
-                                                  pattern="dd/MM/yyyy"
-                                                  touchUI="true"
-                                                  showIcon="true"
-                                                  styleClass="skyway-custom-input"
-                                                  placeholder="Fecha regreso..."
-                                                  required="true"
-                                                  requiredMessage="Debe seleccionar la fecha de regreso" />
-                                </div>
-
-                                <div class="col-12 col-md-4 d-flex flex-column">
-                                    <h:outputLabel for="adultosRT" styleClass="skyway-label" value="Pasajeros" />
-                                    <p:selectOneMenu id="adultosRT"
-                                                     value="#{itinerarioBusquedaBean.adultos}"
-                                                     required="true"
-                                                     requiredMessage="Debe seleccionar al menos un adulto"
-                                                     styleClass="skyway-custom-input w-100">
-                                        <f:selectItem itemLabel="1 Pasajero" itemValue="1" />
-                                        <f:selectItem itemLabel="2 Pasajeros" itemValue="2" />
-                                        <f:selectItem itemLabel="3 Pasajeros" itemValue="3" />
-                                        <f:selectItem itemLabel="4 Pasajeros" itemValue="4" />
-                                        <f:selectItem itemLabel="5 Pasajeros" itemValue="5" />
-                                    </p:selectOneMenu>
-                                    <h:message for="adultosRT" styleClass="text-danger mt-1 d-block small" />
-                                </div>
-                            </div>
-
-                            <div class="text-center mt-4">
-                                <p:commandButton value="Buscar Vuelos"
-                                                 icon="pi pi-search"
-                                                 styleClass="skyway-btn"
-                                                 ajax="false"
-                                                 action="#{itinerarioBusquedaBean.buscarVuelosIdaYVuelta}" />
-                            </div>
-                        </h:form>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-
-        <!-- ========================================================= -->
-        <!-- 🌟 SECCIÓN 2: POR QUÉ VOLAR EN SKYWAY                     -->
-        <!-- ========================================================= -->
-        <div class="container my-5">
-            <div class="text-center mb-4">
-                <span class="badge bg-primary px-3 py-2 text-uppercase mb-2">Plataforma Digital</span>
-                <h2 class="display-6 fw-bold text-white">¿Por qué reservar en SkyWay?</h2>
-                <p class="lead" style="color:#94a3b8; font-size:1rem;">Proceso de reserva web rápido, claro y seguro.</p>
-            </div>
-
-            <div class="row g-3">
-                <div class="col-12 col-md-4">
-                    <div class="p-3 rounded-3 skyway-card h-100">
-                        <div class="mb-2 d-inline-block p-2 rounded-circle" style="background: rgba(59, 130, 246, 0.1);">
-                            <i class="pi pi-shield text-primary fs-3"></i>
-                        </div>
-                        <h5 class="text-white fw-bold mb-2">Compra Segura</h5>
-                        <p style="color:#94a3b8; font-size:0.88rem;">Validación de datos en tiempo real y flujo de compra protegido.</p>
-                    </div>
-                </div>
-
-                <div class="col-12 col-md-4">
-                    <div class="p-3 rounded-3 skyway-card h-100">
-                        <div class="mb-2 d-inline-block p-2 rounded-circle" style="background: rgba(59, 130, 246, 0.1);">
-                            <i class="pi pi-percentage text-primary fs-3"></i>
-                        </div>
-                        <h5 class="text-white fw-bold mb-2">Tarifas Transparentes</h5>
-                        <p style="color:#94a3b8; font-size:0.88rem;">Desglose claro en pesos chilenos sin cargos ocultos.</p>
-                    </div>
-                </div>
-
-                <div class="col-12 col-md-4">
-                    <div class="p-3 rounded-3 skyway-card h-100">
-                        <div class="mb-2 d-inline-block p-2 rounded-circle" style="background: rgba(59, 130, 246, 0.1);">
-                            <i class="pi pi-desktop text-primary fs-3"></i>
-                        </div>
-                        <h5 class="text-white fw-bold mb-2">Gestión 100% Web</h5>
-                        <p style="color:#94a3b8; font-size:0.88rem;">Acceso y selección directa por código IATA.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ========================================================= -->
-        <!-- 📖 SECCIÓN 3: BLOG INTERACTIVO                           -->
-        <!-- ========================================================= -->
-        <div class="container my-5">
-            <div class="mb-3">
-                <span class="text-primary fw-bold">Guías y Recomendaciones</span>
-                <h3 class="text-white fw-bold m-0 fs-3">Blog de Viajes</h3>
-            </div>
-
-            <div class="row g-3">
-                <div class="col-12 col-md-4">
-                    <div class="p-3 rounded-3 skyway-card h-100 d-flex flex-column justify-content-between">
+            <!-- ========================================================= -->
+            <!-- ✈️ SECCIÓN 1: CABECERA CORPORATIVA + BUSCADOR DE VUELOS    -->
+            <!-- ========================================================= -->
+            <div class="hero-band py-4">
+                <div class="container">
+                    <div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4">
                         <div>
-                            <span class="badge bg-primary mb-2">Consejos</span>
-                            <h5 class="text-white fw-bold mb-2">Planifica tu itinerario de vuelo</h5>
-                            <p style="color:#94a3b8; font-size:0.88rem;">
-                                Recomendaciones para antelación en reservas y horarios.
+                            <span class="badge-airline mb-2">Operación Aérea · #{homePortalBean.nombreAerolinea} (#{homePortalBean.codigoAerolinea})</span>
+                            <h1 class="text-white fw-bold m-0" style="font-size: 1.95rem; letter-spacing: -0.02em;">
+                                Planifica y Reserva tu Próximo Vuelo
+                            </h1>
+                            <p class="m-0 mt-1" style="color: #94a3b8; font-size: 0.94rem;">
+                                Consulta disponibilidad en tiempo real, tarifas por categoría y asignación directa de asientos.
                             </p>
                         </div>
-                        <button type="button" class="btn btn-sm btn-outline-primary w-100 mt-2"
-                                onclick="abrirBlogModal('Planifica tu itinerario', 'Consejos', '5 min', '#{resource['assets/icons/premium_photo-1661954654458-c673671d4a08.jpeg']}', 'Te recomendamos buscar con tiempo de anticipación para mejores precios.')">
-                            Leer Artículo
-                        </button>
-                    </div>
-                </div>
-
-                <div class="col-12 col-md-4">
-                    <div class="p-3 rounded-3 skyway-card h-100 d-flex flex-column justify-content-between">
-                        <div>
-                            <span class="badge bg-success mb-2">Destinos</span>
-                            <h5 class="text-white fw-bold mb-2">Atractivos de Sudamérica</h5>
-                            <p style="color:#94a3b8; font-size:0.88rem;">
-                                Un vistazo a las mejores ciudades culturales y paisajes.
-                            </p>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <h:outputLink value="/home/checkin.xhtml" styleClass="btn-airline-outline">
+                                <i class="pi pi-check-square"></i> Check-In Online
+                            </h:outputLink>
+                            <h:outputLink value="/home/estado-vuelo.xhtml" styleClass="btn-airline-outline">
+                                <i class="pi pi-clock"></i> Estado de Vuelo
+                            </h:outputLink>
                         </div>
-                        <button type="button" class="btn btn-sm btn-outline-primary w-100 mt-2"
-                                onclick="abrirBlogModal('Atractivos de Sudamérica', 'Destinos', '4 min', '#{resource['assets/icons/rio-de-janeiro-1963744_640.jpg']}', 'Sudamérica ofrece una diversidad geográfica increíble.')">
-                            Leer Artículo
-                        </button>
                     </div>
-                </div>
 
-                <div class="col-12 col-md-4">
-                    <div class="p-3 rounded-3 skyway-card h-100 d-flex flex-column justify-content-between">
-                        <div>
-                            <span class="badge bg-warning text-dark mb-2">Guías</span>
-                            <h5 class="text-white fw-bold mb-2">Preparativos para tu viaje</h5>
-                            <p style="color:#94a3b8; font-size:0.88rem;">
-                                Lista de verificación de documentos y equipaje permitido.
-                            </p>
+                    <!-- BUSCADOR PRINCIPAL -->
+                    <div class="card skyway-card shadow-lg p-3 p-md-4 mb-4">
+                        <ul class="nav nav-tabs skyway-tabs nav-fill" id="searchTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link active" id="one-way-tab" data-bs-toggle="tab" href="#one-way" role="tab" aria-controls="one-way" aria-selected="true">
+                                    <i class="pi pi-arrow-right me-1"></i> Solo Ida
+                                </a>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link" id="round-trip-tab" data-bs-toggle="tab" href="#round-trip" role="tab" aria-controls="round-trip" aria-selected="false">
+                                    <i class="pi pi-sync me-1"></i> Ida y Vuelta
+                                </a>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content mt-3" id="searchTabsContent">
+
+                            <!-- TAB 1: SOLO IDA -->
+                            <div class="tab-pane fade show active" id="one-way" role="tabpanel" aria-labelledby="one-way-tab">
+                                <h:form id="formOneWay">
+                                    <div class="row g-3">
+                                        <div class="col-12 col-md-6 d-flex flex-column">
+                                            <h:outputLabel for="aeropuertoSalida" styleClass="skyway-label" value="Aeropuerto de salida" />
+                                            <p:autoComplete id="aeropuertoSalida"
+                                                            value="#{itinerarioBusquedaBean.codigoIataOrigen}"
+                                                            completeMethod="#{itinerarioBusquedaBean.buscarAeropuertos}"
+                                                            var="a"
+                                                            itemLabel="#{itinerarioBusquedaBean.getItemLabel(a)}"
+                                                            itemValue="#{a.codigoIata}"
+                                                            dropdown="true"
+                                                            forceSelection="true"
+                                                            placeholder="Ciudad, aeropuerto o código IATA..."
+                                                            styleClass="skyway-custom-input"
+                                                            required="true"
+                                                            requiredMessage="Debe seleccionar un aeropuerto de salida" />
+                                        </div>
+
+                                        <div class="col-12 col-md-6 d-flex flex-column">
+                                            <h:outputLabel for="aeropuertoLlegada" styleClass="skyway-label" value="Aeropuerto de llegada" />
+                                            <p:autoComplete id="aeropuertoLlegada"
+                                                            value="#{itinerarioBusquedaBean.codigoIataDestino}"
+                                                            completeMethod="#{itinerarioBusquedaBean.buscarAeropuertos}"
+                                                            var="a"
+                                                            itemLabel="#{itinerarioBusquedaBean.getItemLabel(a)}"
+                                                            itemValue="#{a.codigoIata}"
+                                                            dropdown="true"
+                                                            forceSelection="true"
+                                                            placeholder="Ciudad, aeropuerto o código IATA..."
+                                                            styleClass="skyway-custom-input"
+                                                            required="true"
+                                                            requiredMessage="Debe seleccionar un aeropuerto de llegada" />
+                                        </div>
+
+                                        <div class="col-12 col-md-6 d-flex flex-column">
+                                            <h:outputLabel for="fechaSalida" styleClass="skyway-label" value="Fecha de salida" />
+                                            <p:datePicker id="fechaSalida"
+                                                          value="#{itinerarioBusquedaBean.fechaIda}"
+                                                          mindate="#{java.time.LocalDate.now()}"
+                                                          pattern="dd/MM/yyyy"
+                                                          showIcon="true"
+                                                          styleClass="skyway-custom-input"
+                                                          placeholder="Seleccione fecha..."
+                                                          required="true"
+                                                          requiredMessage="Debe seleccionar la fecha de salida"/>
+                                        </div>
+
+                                        <div class="col-12 col-md-6 d-flex flex-column">
+                                            <h:outputLabel for="adultos" styleClass="skyway-label" value="Pasajeros" />
+                                            <p:selectOneMenu id="adultos"
+                                                             value="#{itinerarioBusquedaBean.adultos}"
+                                                             required="true"
+                                                             requiredMessage="Debe seleccionar al menos un adulto"
+                                                             styleClass="skyway-custom-input w-100">
+                                                <f:selectItem itemLabel="1 Pasajero" itemValue="1" />
+                                                <f:selectItem itemLabel="2 Pasajeros" itemValue="2" />
+                                                <f:selectItem itemLabel="3 Pasajeros" itemValue="3" />
+                                                <f:selectItem itemLabel="4 Pasajeros" itemValue="4" />
+                                                <f:selectItem itemLabel="5 Pasajeros" itemValue="5" />
+                                            </p:selectOneMenu>
+                                            <h:message for="adultos" styleClass="text-danger mt-1 d-block small" />
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex justify-content-end mt-4">
+                                        <p:commandButton value="Buscar Vuelos"
+                                                         icon="pi pi-search"
+                                                         styleClass="btn-airline-primary"
+                                                         ajax="false"
+                                                         action="#{itinerarioBusquedaBean.buscarVuelosSoloIda}" />
+                                    </div>
+                                </h:form>
+                            </div>
+
+                            <!-- TAB 2: IDA Y VUELTA -->
+                            <div class="tab-pane fade" id="round-trip" role="tabpanel" aria-labelledby="round-trip-tab">
+                                <h:form id="formRoundTrip">
+                                    <div class="row g-3">
+                                        <div class="col-12 col-md-6 d-flex flex-column">
+                                            <h:outputLabel for="origenRT" styleClass="skyway-label" value="Aeropuerto de salida" />
+                                            <p:autoComplete id="origenRT"
+                                                            value="#{itinerarioBusquedaBean.codigoIataOrigen}"
+                                                            completeMethod="#{itinerarioBusquedaBean.buscarAeropuertos}"
+                                                            var="a"
+                                                            itemLabel="#{itinerarioBusquedaBean.getItemLabel(a)}"
+                                                            itemValue="#{a.codigoIata}"
+                                                            dropdown="true"
+                                                            forceSelection="true"
+                                                            placeholder="Ciudad, aeropuerto o código IATA..."
+                                                            styleClass="skyway-custom-input"
+                                                            required="true"
+                                                            requiredMessage="Debe seleccionar un aeropuerto de salida" />
+                                        </div>
+
+                                        <div class="col-12 col-md-6 d-flex flex-column">
+                                            <h:outputLabel for="destinoRT" styleClass="skyway-label" value="Aeropuerto de llegada" />
+                                            <p:autoComplete id="destinoRT"
+                                                            value="#{itinerarioBusquedaBean.codigoIataDestino}"
+                                                            completeMethod="#{itinerarioBusquedaBean.buscarAeropuertos}"
+                                                            var="a"
+                                                            itemLabel="#{itinerarioBusquedaBean.getItemLabel(a)}"
+                                                            itemValue="#{a.codigoIata}"
+                                                            dropdown="true"
+                                                            forceSelection="true"
+                                                            placeholder="Ciudad, aeropuerto o código IATA..."
+                                                            styleClass="skyway-custom-input"
+                                                            required="true"
+                                                            requiredMessage="Debe seleccionar un aeropuerto de llegada" />
+                                        </div>
+
+                                        <div class="col-12 col-md-4 d-flex flex-column">
+                                            <h:outputLabel for="fechaIdaRT" styleClass="skyway-label" value="Fecha de salida" />
+                                            <p:datePicker id="fechaIdaRT"
+                                                          value="#{itinerarioBusquedaBean.fechaIda}"
+                                                          mindate="#{java.time.LocalDate.now()}"
+                                                          pattern="dd/MM/yyyy"
+                                                          showIcon="true"
+                                                          styleClass="skyway-custom-input"
+                                                          placeholder="Fecha salida..."
+                                                          required="true"
+                                                          requiredMessage="Debe seleccionar la fecha de salida" />
+                                        </div>
+
+                                        <div class="col-12 col-md-4 d-flex flex-column">
+                                            <h:outputLabel for="fechaRetornoRT" styleClass="skyway-label" value="Fecha de regreso" />
+                                            <p:datePicker id="fechaRetornoRT"
+                                                          value="#{itinerarioBusquedaBean.fechaRetorno}"
+                                                          mindate="#{itinerarioBusquedaBean.fechaIda != null ? itinerarioBusquedaBean.fechaIda : java.time.LocalDate.now()}"
+                                                          pattern="dd/MM/yyyy"
+                                                          showIcon="true"
+                                                          styleClass="skyway-custom-input"
+                                                          placeholder="Fecha regreso..."
+                                                          required="true"
+                                                          requiredMessage="Debe seleccionar la fecha de regreso" />
+                                        </div>
+
+                                        <div class="col-12 col-md-4 d-flex flex-column">
+                                            <h:outputLabel for="adultosRT" styleClass="skyway-label" value="Pasajeros" />
+                                            <p:selectOneMenu id="adultosRT"
+                                                             value="#{itinerarioBusquedaBean.adultos}"
+                                                             required="true"
+                                                             requiredMessage="Debe seleccionar al menos un adulto"
+                                                             styleClass="skyway-custom-input w-100">
+                                                <f:selectItem itemLabel="1 Pasajero" itemValue="1" />
+                                                <f:selectItem itemLabel="2 Pasajeros" itemValue="2" />
+                                                <f:selectItem itemLabel="3 Pasajeros" itemValue="3" />
+                                                <f:selectItem itemLabel="4 Pasajeros" itemValue="4" />
+                                                <f:selectItem itemLabel="5 Pasajeros" itemValue="5" />
+                                            </p:selectOneMenu>
+                                            <h:message for="adultosRT" styleClass="text-danger mt-1 d-block small" />
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex justify-content-end mt-4">
+                                        <p:commandButton value="Buscar Vuelos"
+                                                         icon="pi pi-search"
+                                                         styleClass="btn-airline-primary"
+                                                         ajax="false"
+                                                         action="#{itinerarioBusquedaBean.buscarVuelosIdaYVuelta}" />
+                                    </div>
+                                </h:form>
+                            </div>
+
                         </div>
-                        <button type="button" class="btn btn-sm btn-outline-primary w-100 mt-2"
-                                onclick="abrirBlogModal('Preparativos para tu viaje', 'Guías', '6 min', '#{resource['assets/icons/pexels-abhishek-verma-209130-670261.jpg']}', 'Verifica que tus documentos estén vigentes antes de viajar.')">
-                            Leer Artículo
-                        </button>
+                    </div>
+
+                    <!-- INDICADORES REALES DESDE BASE DE DATOS -->
+                    <div class="kpi-airline-grid">
+                        <div class="kpi-airline-box">
+                            <div class="kpi-airline-val">#{homePortalBean.totalAeropuertos}</div>
+                            <div class="kpi-airline-lbl">Aeropuertos activos en red</div>
+                        </div>
+                        <div class="kpi-airline-box">
+                            <div class="kpi-airline-val">#{homePortalBean.totalPaises}</div>
+                            <div class="kpi-airline-lbl">Países conectados</div>
+                        </div>
+                        <div class="kpi-airline-box">
+                            <div class="kpi-airline-val">#{homePortalBean.totalAviones}</div>
+                            <div class="kpi-airline-lbl">Aeronaves operativas en flota</div>
+                        </div>
+                        <div class="kpi-airline-box">
+                            <div class="kpi-airline-val">
+                                <h:outputText value="#{homePortalBean.totalItinerarios}">
+                                    <f:convertNumber pattern="#,##0" locale="es_CL"/>
+                                </h:outputText>
+                            </div>
+                            <div class="kpi-airline-lbl">#{homePortalBean.itinerariosHistoricos ? 'Itinerarios disponibles' : 'Itinerarios programados'}</div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- ========================================================= -->
-        <!-- 🗺️ MAPA INTERACTIVO Y PAGO                                 -->
-        <!-- ========================================================= -->
-        <div class="container my-5">
-            <div class="row g-4">
-                <div class="col-12 col-lg-7">
-                    <h4 class="text-white fw-bold mb-3"><i class="pi pi-globe me-2 text-primary"></i>Red de Rutas</h4>
-                    <div id="leafletMap" style="height: 280px; border:1px solid #1e3a5c; border-radius:12px;"></div>
+            <!-- ========================================================= -->
+            <!-- 🛫 SECCIÓN 2: RUTAS DISPONIBLES EN RED                    -->
+            <!-- ========================================================= -->
+            <h:panelGroup rendered="#{not empty homePortalBean.rutasDestacadas}" layout="block" styleClass="container my-5">
+                <div class="d-flex justify-content-between align-items-end flex-wrap gap-2 mb-3">
+                    <div>
+                        <span class="skyway-kicker">Rutas Disponibles</span>
+                        <h2 class="text-white fw-bold m-0 fs-3">Destinos y Tarifas Disponibles</h2>
+                    </div>
+                    <h:outputLink value="/home/blog.xhtml?articulo=red-rutas" styleClass="btn-airline-outline">
+                        Ver directorio de aeropuertos <i class="pi pi-arrow-right"></i>
+                    </h:outputLink>
                 </div>
-                <div class="col-12 col-lg-5">
-                    <div class="p-3 rounded-3 skyway-card">
-                        <h4 class="text-white fw-bold mb-3"><i class="pi pi-credit-card me-2 text-primary"></i>Métodos de Pago</h4>
-                        <div class="row g-2 text-center">
-                            <div class="col-6">
-                                <div class="p-2 border border-secondary rounded text-white">
-                                    <i class="pi pi-credit-card text-primary d-block fs-5"></i>
-                                    <small>Tarjetas Crédito/Débito</small>
+
+                <div class="row g-3">
+                    <ui:repeat value="#{homePortalBean.rutasDestacadas}" var="ruta">
+                        <div class="col-12 col-md-6 col-lg-4">
+                            <div class="p-3 skyway-card route-card h-100 d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="badge-slate">
+                                            #{ruta.escalasMinimas == 0 ? 'Vuelo Directo' : 'Desde '.concat(ruta.escalasMinimas.toString()).concat(' escala(s)')}
+                                        </span>
+                                        <span style="color: #94a3b8; font-size: 0.76rem;">#{ruta.cantidadOpciones} #{ruta.cantidadOpciones eq 1 ? 'vuelo' : 'vuelos'} · #{ruta.fechaLabel}</span>
+                                    </div>
+
+                                    <div class="d-flex align-items-center gap-2 my-2">
+                                        <div>
+                                            <span class="iata-pill d-block">#{ruta.origenIata}</span>
+                                            <span style="color: #94a3b8; font-size: 0.78rem;">#{ruta.origenCiudad}</span>
+                                        </div>
+                                        <i class="pi pi-arrow-right mx-2" style="color: #93c5fd;"></i>
+                                        <div>
+                                            <span class="iata-pill d-block">#{ruta.destinoIata}</span>
+                                            <span style="color: #94a3b8; font-size: 0.78rem;">#{ruta.destinoCiudad} (#{ruta.destinoPais})</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="pt-3 mt-3 border-top d-flex justify-content-between align-items-center" style="border-color: #1e3150 !important;">
+                                    <div>
+                                        <span class="d-block" style="color: #94a3b8; font-size: 0.72rem;">Desde (ref. #{ruta.fechaLabel})</span>
+                                        <strong class="text-white" style="font-size: 1.05rem;">
+                                            $<h:outputText value="#{ruta.precioMinimo}"><f:convertNumber pattern="#,##0" locale="es_CL"/></h:outputText> CLP
+                                        </strong>
+                                    </div>
+                                    <a href="#{request.contextPath}/home/vuelos.xhtml?salida=#{ruta.origenIata}&amp;llegada=#{ruta.destinoIata}&amp;fechaIda=#{ruta.fechaUrl}&amp;adultos=1&amp;trip=OW"
+                                       class="btn-airline-outline">
+                                        Ver vuelos <i class="pi pi-chevron-right"></i>
+                                    </a>
                                 </div>
                             </div>
-                            <div class="col-6">
-                                <div class="p-2 border border-secondary rounded text-white">
-                                    <i class="pi pi-shield text-primary d-block fs-5"></i>
-                                    <small>Pasarela Web</small>
+                        </div>
+                    </ui:repeat>
+                </div>
+            </h:panelGroup>
+
+            <!-- ========================================================= -->
+            <!-- 🗺️ SECCIÓN 3: RED DE RUTAS EN VIVO + PRÓXIMOS VUELOS       -->
+            <!-- ========================================================= -->
+            <div class="container my-5">
+                <div class="row g-4">
+                    <div class="col-12 col-lg-7">
+                        <div class="p-3 skyway-card h-100">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                                <div>
+                                    <span class="skyway-kicker">Cobertura Regional e Internacional</span>
+                                    <h4 class="text-white fw-bold m-0"><i class="pi pi-globe me-2" style="color: #93c5fd;"></i>Red de Aeropuertos</h4>
                                 </div>
+                                <span class="badge-slate">#{homePortalBean.totalAeropuertos} terminales</span>
+                            </div>
+                            <div id="homeMapaDataHolder"
+                                 data-aeropuertos="#{homePortalBean.aeropuertosMapaJson}"
+                                 style="display:none;"></div>
+                            <div id="leafletMap" style="height: 320px; border: 1px solid #1e3150; border-radius: 10px; background: #090f1d;"></div>
+                            <div class="mt-2 d-flex justify-content-between align-items-center flex-wrap gap-2" style="font-size: 0.76rem; color: #94a3b8;">
+                                <span><i class="pi pi-info-circle me-1" style="color: #93c5fd;"></i>Pasa el cursor sobre cualquier terminal para consultar su código IATA y ciudad.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-5">
+                        <div class="p-3 skyway-card h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <span class="skyway-kicker">Salidas Programadas</span>
+                                        <h4 class="text-white fw-bold m-0"><i class="pi pi-clock me-2" style="color: #93c5fd;"></i>Próximos Vuelos</h4>
+                                    </div>
+                                    <h:outputLink value="/home/estado-vuelo.xhtml" styleClass="btn-airline-outline">
+                                        Monitor <i class="pi pi-external-link"></i>
+                                    </h:outputLink>
+                                </div>
+
+                                <h:panelGroup rendered="#{empty homePortalBean.proximosVuelos}" layout="block" styleClass="p-3 skyway-subcard text-center">
+                                    <span style="color: #94a3b8; font-size: 0.85rem;">No hay vuelos operables registrados en este momento.</span>
+                                </h:panelGroup>
+
+                                <div class="d-flex flex-column gap-2">
+                                    <ui:repeat value="#{homePortalBean.proximosVuelos}" var="vp">
+                                        <div class="p-2 skyway-subcard d-flex justify-content-between align-items-center gap-2">
+                                            <div>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <strong style="color: #93c5fd; font-size: 0.84rem; font-family: monospace;">#{vp.numeroVuelo}</strong>
+                                                    <span class="text-white fw-bold" style="font-size: 0.84rem;">#{vp.origIata} → #{vp.destIata}</span>
+                                                </div>
+                                                <div style="color: #94a3b8; font-size: 0.74rem;">
+                                                    #{vp.salidaTxt} · #{vp.modelo}
+                                                </div>
+                                            </div>
+                                            <span class="badge-slate" style="white-space: nowrap;">#{vp.estado}</span>
+                                        </div>
+                                    </ui:repeat>
+                                </div>
+                            </div>
+
+                            <div class="mt-3 pt-2 border-top" style="border-color: #1e3150 !important; font-size: 0.78rem; color: #94a3b8;">
+                                Check-In web habilitado desde <strong>48 horas</strong> hasta <strong>60 minutos</strong> antes de la salida.
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- ========================================================= -->
-        <!-- 💬 MODAL INTERACTIVO PARA BLOG                             -->
-        <!-- ========================================================= -->
-        <div class="modal fade" id="blogArticleModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content" style="background:#101b33; border:1px solid #1e3a5c; color:#e6eef7;">
-                    <div class="modal-header border-bottom border-secondary">
-                        <div>
-                            <span class="badge bg-primary" id="modalBlogCategoria">Categoría</span>
-                            <h5 class="modal-title fw-bold text-white mt-1" id="modalBlogTitulo">Título</h5>
+            <!-- ========================================================= -->
+            <!-- 🎫 SECCIÓN 4: TARIFAS Y EQUIPAJE DESDE BASE DE DATOS       -->
+            <!-- ========================================================= -->
+            <h:panelGroup rendered="#{not empty homePortalBean.tarifas}" layout="block" styleClass="container my-5">
+                <div class="d-flex justify-content-between align-items-end flex-wrap gap-2 mb-3">
+                    <div>
+                        <span class="skyway-kicker">Opciones de Viaje</span>
+                        <h3 class="text-white fw-bold m-0 fs-3">Tarifas Disponibles y Beneficios</h3>
+                    </div>
+                    <h:outputLink value="/home/blog.xhtml?articulo=tarifas-equipaje" styleClass="btn-airline-outline">
+                        Detalles de equipaje y cambios <i class="pi pi-arrow-right"></i>
+                    </h:outputLink>
+                </div>
+
+                <div class="row g-3">
+                    <ui:repeat value="#{homePortalBean.tarifas}" var="tarifa">
+                        <div class="col-12 col-md-4">
+                            <div class="p-3 skyway-card h-100">
+                                <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom" style="border-color: #1e3150 !important;">
+                                    <h5 class="text-white fw-bold m-0">#{tarifa.nombre}</h5>
+                                    <span class="badge-airline">Tarifa</span>
+                                </div>
+                                <ui:repeat value="#{tarifa.tarifaCaracteristicas}" var="tc">
+                                    <div class="d-flex justify-content-between align-items-center py-1" style="font-size: 0.84rem; border-bottom: 1px solid rgba(255,255,255,0.04);">
+                                        <span style="color: #94a3b8;">#{tc.caracteristica.nombre}</span>
+                                        <h:panelGroup rendered="#{tc.caracteristica.tipoDato eq 'boolean'}">
+                                            <span style="font-weight: 700; color: #{tc.valorBool ? '#93c5fd' : '#64748b'};">
+                                                #{tc.valorBool ? 'Incluido' : 'No incluido'}
+                                            </span>
+                                        </h:panelGroup>
+                                        <h:panelGroup rendered="#{tc.caracteristica.tipoDato ne 'boolean'}">
+                                            <span class="fw-bold text-white">#{tc.valor} #{tc.valorInt gt 0 ? tc.valorInt : ''}</span>
+                                        </h:panelGroup>
+                                    </div>
+                                </ui:repeat>
+                            </div>
                         </div>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </ui:repeat>
+                </div>
+
+                <h:panelGroup rendered="#{not empty homePortalBean.tiposEquipaje}" layout="block" styleClass="p-3 skyway-subcard mt-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div style="font-size: 0.84rem; color: #cbd5e1;">
+                        <strong class="text-white"><i class="pi pi-briefcase me-1" style="color: #93c5fd;"></i>Equipaje soportado en reserva:</strong>
+                        hasta 1 pieza de cabina y 3 maletas de bodega por pasajero.
                     </div>
-                    <div class="modal-body">
-                        <img id="modalBlogImagen" src="" class="img-fluid rounded-3 mb-3 w-100" style="max-height: 200px; object-fit: cover;" alt="Blog" />
-                        <p id="modalBlogTexto" style="color:#94a3b8; line-height: 1.5; font-size:0.95rem;"></p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <ui:repeat value="#{homePortalBean.tiposEquipaje}" var="equipaje">
+                            <span class="badge-slate">#{equipaje.nombre}</span>
+                        </ui:repeat>
                     </div>
-                    <div class="modal-footer border-top border-secondary">
-                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </h:panelGroup>
+            </h:panelGroup>
+
+            <!-- ========================================================= -->
+            <!-- 🛩️ SECCIÓN 5: FLOTA EN OPERACIÓN Y MEDIOS DE PAGO          -->
+            <!-- ========================================================= -->
+            <div class="container my-5">
+                <div class="row g-4">
+                    <div class="col-12 col-lg-7">
+                        <div class="p-3 skyway-card h-100">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                                <div>
+                                    <span class="skyway-kicker">Aeronaves Registradas</span>
+                                    <h4 class="text-white fw-bold m-0"><i class="pi pi-send me-2" style="color: #93c5fd;"></i>Flota en Operación</h4>
+                                </div>
+                                <h:outputLink value="/home/blog.xhtml?articulo=flota-cabinas" styleClass="btn-airline-outline">
+                                    Ver ficha de flota
+                                </h:outputLink>
+                            </div>
+
+                            <div class="row g-2">
+                                <ui:repeat value="#{homePortalBean.flotaResumen}" var="fl">
+                                    <div class="col-12 col-sm-6">
+                                        <div class="p-2 skyway-subcard h-100">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <strong class="text-white" style="font-size: 0.88rem;">#{fl.nombreMostrar}</strong>
+                                                <span class="badge-airline">#{fl.unidades} un.</span>
+                                            </div>
+                                            <div style="color: #94a3b8; font-size: 0.78rem; margin-top: 4px;">
+                                                Capacidad: <strong style="color: #cbd5e1;">#{fl.capMin eq fl.capMax ? fl.capMax : fl.capMin.toString().concat('–').concat(fl.capMax.toString())} asientos</strong>
+                                                <h:panelGroup rendered="#{fl.ultimoAnio gt 0}">
+                                                    · Año ref. #{fl.ultimoAnio}
+                                                </h:panelGroup>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </ui:repeat>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-5">
+                        <div class="p-3 skyway-card h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <span class="skyway-kicker">Pago en Línea Seguro</span>
+                                <h4 class="text-white fw-bold mb-3"><i class="pi pi-credit-card me-2" style="color: #93c5fd;"></i>Métodos de Pago</h4>
+                                <div class="row g-2 text-center">
+                                    <ui:repeat value="#{homePortalBean.metodosPago}" var="mp">
+                                        <div class="col-6">
+                                            <div class="p-3 skyway-subcard h-100 d-flex flex-column align-items-center justify-content-center">
+                                                <h:panelGroup rendered="#{not empty homePortalBean.getLogoMetodoPago(mp)}">
+                                                    <div class="pay-logo-box">
+                                                        <img src="#{resource[homePortalBean.getLogoMetodoPago(mp)]}" alt="#{mp.descripcion}" class="pay-logo" />
+                                                    </div>
+                                                </h:panelGroup>
+                                                <h:panelGroup rendered="#{empty homePortalBean.getLogoMetodoPago(mp)}">
+                                                    <div class="pay-logo-box" style="background: #162442; border: 1px solid #28426e;">
+                                                        <i class="pi pi-credit-card fs-5" style="color: #93c5fd;"></i>
+                                                    </div>
+                                                </h:panelGroup>
+                                                <small class="text-white fw-semibold">#{mp.descripcion}</small>
+                                            </div>
+                                        </div>
+                                    </ui:repeat>
+                                </div>
+                            </div>
+                            <p class="m-0 mt-3" style="color: #94a3b8; font-size: 0.8rem;">
+                                Confirmación inmediata y envío de tu E-Ticket en formato PDF tras completar el pago.
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
+
+            <!-- ========================================================= -->
+            <!-- 📖 SECCIÓN 6: BLOG Y GUÍAS DEL PASAJERO (VISTA REAL)       -->
+            <!-- ========================================================= -->
+            <div class="container my-5">
+                <div class="d-flex justify-content-between align-items-end flex-wrap gap-2 mb-3">
+                    <div>
+                        <span class="skyway-kicker">Guías Oficiales SkyWay</span>
+                        <h3 class="text-white fw-bold m-0 fs-3">Blog y Recomendaciones de Viaje</h3>
+                    </div>
+                    <h:outputLink value="/home/blog.xhtml" styleClass="btn-airline-outline">
+                        Ir al Blog Completo <i class="pi pi-arrow-right"></i>
+                    </h:outputLink>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="p-3 skyway-card h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <img src="#{resource['assets/icons/rio-de-janeiro-1963744_640.jpg']}" class="blog-thumb" alt="Red de Destinos"/>
+                                <span class="badge-airline mb-2">Destinos</span>
+                                <h5 class="text-white fw-bold mb-2">Red de Destinos y Aeropuertos</h5>
+                                <p style="color: #94a3b8; font-size: 0.84rem;">
+                                    Explora los #{homePortalBean.totalAeropuertos} aeropuertos en #{homePortalBean.totalPaises} países y sus tarifas base activas.
+                                </p>
+                            </div>
+                            <h:outputLink value="/home/blog.xhtml?articulo=red-rutas" styleClass="btn-airline-outline w-100 mt-2">
+                                Leer Artículo <i class="pi pi-arrow-right"></i>
+                            </h:outputLink>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="p-3 skyway-card h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <img src="#{resource['assets/icons/pexels-abhishek-verma-209130-670261.jpg']}" class="blog-thumb" alt="Tarifas y Equipaje"/>
+                                <span class="badge-airline mb-2">Tarifas</span>
+                                <h5 class="text-white fw-bold mb-2">Tarifas y Reglas de Equipaje</h5>
+                                <p style="color: #94a3b8; font-size: 0.84rem;">
+                                    Compara beneficios incluidos por categoría tarifaria y piezas permitidas en cabina y bodega.
+                                </p>
+                            </div>
+                            <h:outputLink value="/home/blog.xhtml?articulo=tarifas-equipaje" styleClass="btn-airline-outline w-100 mt-2">
+                                Leer Artículo <i class="pi pi-arrow-right"></i>
+                            </h:outputLink>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="p-3 skyway-card h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <img src="#{resource['assets/icons/premium_photo-1661954654458-c673671d4a08.jpeg']}" class="blog-thumb" alt="Flota Operativa"/>
+                                <span class="badge-airline mb-2">Flota</span>
+                                <h5 class="text-white fw-bold mb-2">Nuestra Flota Operativa</h5>
+                                <p style="color: #94a3b8; font-size: 0.84rem;">
+                                    Conoce los modelos y capacidades de las #{homePortalBean.totalAviones} aeronaves registradas en servicio.
+                                </p>
+                            </div>
+                            <h:outputLink value="/home/blog.xhtml?articulo=flota-cabinas" styleClass="btn-airline-outline w-100 mt-2">
+                                Leer Artículo <i class="pi pi-arrow-right"></i>
+                            </h:outputLink>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="p-3 skyway-card h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <img src="#{resource['assets/icons/pexels-apasaric-2506923.jpg']}" class="blog-thumb" alt="Check-In y Embarque"/>
+                                <span class="badge-airline mb-2">Guías</span>
+                                <h5 class="text-white fw-bold mb-2">Check-In y Embarque</h5>
+                                <p style="color: #94a3b8; font-size: 0.84rem;">
+                                    Horarios de apertura del Check-In online (48h–60 min), E-Ticket PDF, puertas y autogestión.
+                                </p>
+                            </div>
+                            <h:outputLink value="/home/blog.xhtml?articulo=checkin-embarque" styleClass="btn-airline-outline w-100 mt-2">
+                                Leer Artículo <i class="pi pi-arrow-right"></i>
+                            </h:outputLink>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
+
+        <script type="text/javascript">
+            //<![CDATA[
+            document.addEventListener('DOMContentLoaded', function () {
+                var mapEl = document.getElementById('leafletMap');
+                if (!mapEl || typeof L === 'undefined') return;
+
+                var map = L.map('leafletMap', { zoomControl: true, attributionControl: false }).setView([-18, -62], 3);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 12
+                }).addTo(map);
+
+                var holder = document.getElementById('homeMapaDataHolder');
+                var aeropuertos = [];
+                try {
+                    aeropuertos = JSON.parse((holder && holder.getAttribute('data-aeropuertos')) || '[]');
+                } catch (e) { aeropuertos = []; }
+
+                var bounds = [];
+
+                aeropuertos.forEach(function (a) {
+                    if (a.lat == null || a.lng == null) return;
+                    bounds.push([a.lat, a.lng]);
+                    var marker = L.circleMarker([a.lat, a.lng], {
+                        radius: 5,
+                        fillColor: '#60a5fa',
+                        color: '#0f172a',
+                        weight: 1.5,
+                        opacity: 1,
+                        fillOpacity: 0.92
+                    }).addTo(map);
+                    marker.bindTooltip('<strong>' + a.codigoIata + '</strong> · ' + a.nombreAeropuerto + ' (' + a.ciudad + ')', { direction: 'top' });
+                });
+
+                if (bounds.length > 0) {
+                    map.fitBounds(bounds, { padding: [24, 24], maxZoom: 5 });
+                }
+
+                setTimeout(function () { map.invalidateSize(); }, 250);
+            });
+            //]]>
+        </script>
 
     </ui:define>
 </ui:composition>

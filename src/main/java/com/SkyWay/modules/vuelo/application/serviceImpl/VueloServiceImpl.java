@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -43,6 +44,7 @@ import com.SkyWay.modules.vuelo.presentation.dto.ResultadoCancelacionVueloDTO;
 import com.SkyWay.modules.vuelo.presentation.dto.ResultadoReprogramacionDTO;
 import com.SkyWay.modules.vuelo.presentation.dto.VueloEstadoProjection;
 import com.SkyWay.modules.vuelo.presentation.dto.VueloMapaDTO;
+import com.SkyWay.modules.vuelo.presentation.dto.VueloProgramadoPortalDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.PersistenceContext;
 import org.slf4j.Logger;
@@ -1372,5 +1374,38 @@ public class VueloServiceImpl implements VueloService {
 		return "v.idVuelo";
 	}
 
+	@Override
+	@Transactional(readOnly = true)
+	public List<VueloProgramadoPortalDTO> obtenerProximosVuelosPortal(int limite) {
+		int lim = Math.max(1, limite);
+		List<Object[]> rows = vueloRepository.findProximosVuelosVigentesPortal(lim);
+		if (rows == null || rows.isEmpty()) {
+			rows = vueloRepository.findUltimosVuelosPortal(lim);
+		}
+		List<VueloProgramadoPortalDTO> lista = new ArrayList<>();
+		if (rows == null) {
+			return lista;
+		}
+		ZoneId zona = ZoneId.of("America/Santiago");
+		DateTimeFormatter fmtHora = DateTimeFormatter.ofPattern("dd/MM/yyyy · HH:mm");
+		for (Object[] r : rows) {
+			Timestamp tsSal = r[5] instanceof Timestamp ? (Timestamp) r[5] : null;
+			Timestamp tsLlg = r[6] instanceof Timestamp ? (Timestamp) r[6] : null;
+			String salidaTxt = tsSal != null ? tsSal.toInstant().atZone(zona).format(fmtHora) : "-";
+			String llegadaTxt = tsLlg != null ? tsLlg.toInstant().atZone(zona).format(fmtHora) : "-";
+			lista.add(new VueloProgramadoPortalDTO(
+					r[0] != null ? r[0].toString() : "",
+					r[1] != null ? r[1].toString() : "",
+					r[2] != null ? r[2].toString() : "",
+					r[3] != null ? r[3].toString() : "",
+					r[4] != null ? r[4].toString() : "",
+					salidaTxt,
+					llegadaTxt,
+					r[7] != null ? r[7].toString() : "",
+					r[8] != null ? r[8].toString() : ""
+			));
+		}
+		return lista;
+	}
 
 }

@@ -1757,7 +1757,7 @@ public class PerfilBean implements Serializable {
 		if (isCancelacionOperativaReserva(it.getIdReserva(), it.getIdItinerario())) {
 			return "La aerolínea canceló operacionalmente un vuelo de este itinerario. Puedes ingresar tu cuenta y seguir tu reembolso en la pestaña Reembolsos.";
 		}
-		return "Esta reserva fue cancelada a solicitud del pasajero. La descarga del E-Ticket no se encuentra disponible.";
+		return "Esta reserva fue cancelada a solicitud del pasajero (sin derecho a reembolso, ya que aplica únicamente por cancelación de vuelo de la aerolínea). La descarga del E-Ticket no se encuentra disponible.";
 	}
 
 	public boolean tieneAvisoOperacional(ItinerarioResumenDTO it) {

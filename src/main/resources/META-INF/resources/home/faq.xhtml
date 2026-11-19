@@ -5,54 +5,111 @@
                 template="/template/main.xhtml">
 
     <ui:define name="head">
-        <title>Preguntas Frecuentes | SkyWay Airlines</title>
+        <title>Preguntas Frecuentes | #{homePortalBean.nombreAerolinea} Airlines</title>
+        <style type="text/css">
+            .corp-page { background: #0b1220; min-height: 75vh; }
+            .corp-hero { background: linear-gradient(180deg, #101c34 0%, #0b1220 100%); border-bottom: 1px solid #1e3150; }
+            .corp-badge { display: inline-block; background: #162442; border: 1px solid #28426e; color: #bfdbfe; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 4px 10px; border-radius: 6px; }
+            .faq-item { background: #101b33 !important; border: 1px solid #1e3150 !important; border-radius: 10px !important; overflow: hidden; margin-bottom: 0.85rem; }
+            .faq-btn { background: #101b33 !important; color: #f1f5f9 !important; font-weight: 600 !important; box-shadow: none !important; }
+            .faq-btn::after { filter: invert(1); }
+            .faq-body { background: #0d1629 !important; color: #cbd5e1 !important; border-top: 1px solid #1e3150; font-size: 0.9rem; line-height: 1.6; }
+        </style>
     </ui:define>
 
     <ui:define name="contenido">
-        <div class="container py-5">
-            <div class="text-center mb-5">
-                <h1 class="display-5 fw-bold text-white">Centro de Ayuda y FAQ</h1>
-                <p class="lead text-white-50">Encuentra respuestas rápidas a las inquietudes más comunes.</p>
+        <div class="corp-page pb-5">
+            <div class="corp-hero py-5 mb-4">
+                <div class="container">
+                    <span class="corp-badge mb-2">Centro de Ayuda</span>
+                    <h1 class="text-white fw-bold mb-2" style="font-size: 2rem;">Preguntas Frecuentes</h1>
+                    <p class="m-0" style="color: #94a3b8; max-width: 740px;">
+                        Respuestas basadas en las reglas vigentes de reserva, equipaje, Check-In y cancelaciones de #{homePortalBean.nombreAerolinea}.
+                    </p>
+                </div>
             </div>
 
-            <div class="accordion mx-auto" id="faqPageAccordion" style="max-width: 900px;">
-                <div class="accordion-item mb-3" style="background:#101b33; border:1px solid #1e3a5c; border-radius:8px; overflow:hidden;">
-                    <h2 class="accordion-header" id="heading1">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#col1" style="background:#101b33; color:#e2e8f0; font-weight:600;">
-                            ¿Con cuánta anticipación debo hacer Check-In?
-                        </button>
-                    </h2>
-                    <div id="col1" class="accordion-collapse collapse" data-bs-parent="#faqPageAccordion">
-                        <div class="accordion-body" style="color:#94a3b8; background:#0a1224;">
-                            El Check-In web se habilita 48 horas antes de la salida programada del vuelo y se cierra 1 hora antes para vuelos nacionales y 2 horas para vuelos internacionales.
-                        </div>
-                    </div>
-                </div>
+            <div class="container">
+                <div class="accordion mx-auto" id="faqPageAccordion" style="max-width: 900px;">
 
-                <div class="accordion-item mb-3" style="background:#101b33; border:1px solid #1e3a5c; border-radius:8px; overflow:hidden;">
-                    <h2 class="accordion-header" id="heading2">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#col2" style="background:#101b33; color:#e2e8f0; font-weight:600;">
-                            ¿Puedo cancelar o cambiar la fecha de mi reserva?
-                        </button>
-                    </h2>
-                    <div id="col2" class="accordion-collapse collapse" data-bs-parent="#faqPageAccordion">
-                        <div class="accordion-body" style="color:#94a3b8; background:#0a1224;">
-                            Sí, ingresando a "Mis Reservas" desde tu Perfil de Pasajero. Las condiciones de cancelación o cambio dependen del tipo de tarifa adquirida.
+                    <div class="accordion-item faq-item">
+                        <h2 class="accordion-header" id="heading1">
+                            <button class="accordion-button faq-btn" type="button" data-bs-toggle="collapse" data-bs-target="#col1" aria-expanded="true">
+                                ¿Con cuánta anticipación puedo hacer el Check-In online?
+                            </button>
+                        </h2>
+                        <div id="col1" class="accordion-collapse collapse show" data-bs-parent="#faqPageAccordion">
+                            <div class="accordion-body faq-body">
+                                El Check-In web se habilita <strong>48 horas</strong> antes de la salida programada del vuelo y se cierra <strong>60 minutos</strong> antes del despegue. Puedes realizarlo desde la sección Check-In o desde la aplicación móvil (solo el titular de la reserva).
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="accordion-item mb-3" style="background:#101b33; border:1px solid #1e3a5c; border-radius:8px; overflow:hidden;">
-                    <h2 class="accordion-header" id="heading3">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#col3" style="background:#101b33; color:#e2e8f0; font-weight:600;">
-                            ¿Qué dimensiones y peso están permitidos en mano?
-                        </button>
-                    </h2>
-                    <div id="col3" class="accordion-collapse collapse" data-bs-parent="#faqPageAccordion">
-                        <div class="accordion-body" style="color:#94a3b8; background:#0a1224;">
-                            Cada pasajero puede llevar una pieza de equipaje de mano de hasta 10 kg con dimensiones máximas de 55 x 35 x 25 cm, más un objeto personal bajo el asiento.
+                    <div class="accordion-item faq-item">
+                        <h2 class="accordion-header" id="heading2">
+                            <button class="accordion-button collapsed faq-btn" type="button" data-bs-toggle="collapse" data-bs-target="#col2">
+                                ¿Cuándo aplica el reembolso de una reserva?
+                            </button>
+                        </h2>
+                        <div id="col2" class="accordion-collapse collapse" data-bs-parent="#faqPageAccordion">
+                            <div class="accordion-body faq-body">
+                                El reembolso aplica <strong>únicamente cuando un vuelo es cancelado operacionalmente por parte de la aerolínea</strong>. En ese caso, se genera automáticamente la solicitud en tu perfil (pestaña <em>Reembolsos</em>) para que ingreses tu cuenta bancaria y recibas la devolución. Las anulaciones voluntarias realizadas por el pasajero u otras gestiones no contemplan reembolso.
+                            </div>
                         </div>
                     </div>
+
+                    <div class="accordion-item faq-item">
+                        <h2 class="accordion-header" id="heading3">
+                            <button class="accordion-button collapsed faq-btn" type="button" data-bs-toggle="collapse" data-bs-target="#col3">
+                                ¿Cuánto equipaje puedo asociar durante la reserva?
+                            </button>
+                        </h2>
+                        <div id="col3" class="accordion-collapse collapse" data-bs-parent="#faqPageAccordion">
+                            <div class="accordion-body faq-body">
+                                Por cada pasajero se permite agregar un máximo de <strong>1 pieza de equipaje de cabina</strong> y hasta <strong>3 maletas de bodega</strong> (15 kg o 23 kg) según la tarifa y disponibilidad del vuelo.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item faq-item">
+                        <h2 class="accordion-header" id="heading4">
+                            <button class="accordion-button collapsed faq-btn" type="button" data-bs-toggle="collapse" data-bs-target="#col4">
+                                ¿Cuánto tiempo se mantienen reservados mis asientos mientras pago?
+                            </button>
+                        </h2>
+                        <div id="col4" class="accordion-collapse collapse" data-bs-parent="#faqPageAccordion">
+                            <div class="accordion-body faq-body">
+                                Al seleccionar tus asientos en el mapa interactivo de cabina, quedan retenidos temporalmente por <strong>10 minutos</strong> para completar el flujo de equipaje, datos de pasajeros y confirmación en la pasarela de pago.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item faq-item">
+                        <h2 class="accordion-header" id="heading5">
+                            <button class="accordion-button collapsed faq-btn" type="button" data-bs-toggle="collapse" data-bs-target="#col5">
+                                ¿Puedo cambiar mi asiento después de comprar?
+                            </button>
+                        </h2>
+                        <div id="col5" class="accordion-collapse collapse" data-bs-parent="#faqPageAccordion">
+                            <div class="accordion-body faq-body">
+                                Sí, siempre que la tarifa adquirida incluya cambios de asiento, se respeten las horas mínimas previas al vuelo configuradas para esa tarifa y no hayas realizado aún el Check-In.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item faq-item">
+                        <h2 class="accordion-header" id="heading6">
+                            <button class="accordion-button collapsed faq-btn" type="button" data-bs-toggle="collapse" data-bs-target="#col6">
+                                ¿Qué métodos de pago están disponibles?
+                            </button>
+                        </h2>
+                        <div id="col6" class="accordion-collapse collapse" data-bs-parent="#faqPageAccordion">
+                            <div class="accordion-body faq-body">
+                                Puedes pagar en línea mediante <strong>WebPay</strong> o <strong>PayPal</strong>. Una vez confirmado el pago, recibirás tu código de reserva (PNR) y E-Ticket en formato PDF.
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>

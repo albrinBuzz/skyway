@@ -1141,4 +1141,50 @@ public class ItinerarioServiceImpl implements ItinerarioService {
         return h + "h " + m + "m";
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public long obtenerTotalItinerariosEstimado() {
+        Long est = itinerarioRepository.obtenerEstimacionReltuples();
+        if (est != null && est > 0L) {
+            return est;
+        }
+        return itinerarioRepository.count();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public RutasPortalResumenDTO obtenerRutasDestacadasPortal(int limite) {
+        int lim = Math.max(1, limite);
+        List<Object[]> rows = itinerarioRepository.findRutasDestacadasVigentesPortal(lim);
+        boolean historicas = false;
+        if (rows == null || rows.isEmpty()) {
+            historicas = true;
+            rows = itinerarioRepository.findRutasDestacadasRecientesPortal(lim);
+        }
+
+        List<RutaDestacadaDTO> lista = new ArrayList<>();
+        if (rows != null) {
+            for (Object[] r : rows) {
+                String fechaUrl = r[11] != null ? r[11].toString() : LocalDate.now().plusDays(1).toString();
+                String fechaLabel = r[12] != null ? r[12].toString() : "";
+                lista.add(new RutaDestacadaDTO(
+                        r[0] != null ? r[0].toString() : "",
+                        r[1] != null ? r[1].toString() : "",
+                        r[2] != null ? r[2].toString() : "",
+                        r[3] != null ? r[3].toString() : "",
+                        r[4] != null ? r[4].toString() : "",
+                        r[5] != null ? r[5].toString() : "",
+                        r[6] != null ? r[6].toString() : "",
+                        r[7] != null ? r[7].toString() : "",
+                        r[8] != null ? ((Number) r[8]).intValue() : 0,
+                        r[9] != null ? ((Number) r[9]).intValue() : 0,
+                        r[10] != null ? ((Number) r[10]).longValue() : 0L,
+                        fechaUrl,
+                        fechaLabel
+                ));
+            }
+        }
+        return new RutasPortalResumenDTO(lista, historicas);
+    }
+
 }

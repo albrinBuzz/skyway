@@ -88,4 +88,8 @@ public interface ItinerarioService {
     List<CombinacionRutaSugeridaDTO> sugerirCombinacionesRuta(String origenIata, String destinoIata, String criterioOrden);
 
     List<CombinacionRutaSugeridaDTO> sugerirCombinacionesRuta(String origenIata, String destinoIata, String criterioOrden, int maxHorasEspera);
+
+    long obtenerTotalItinerariosEstimado();
+
+    RutasPortalResumenDTO obtenerRutasDestacadasPortal(int limite);
 }
