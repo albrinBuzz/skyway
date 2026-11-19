@@ -12,6 +12,8 @@ import com.SkyWay.modules.tripulacion.domain.model.Tripulacion;
 import com.SkyWay.modules.tripulacion.domain.repository.TripulacionRepository;
 import com.SkyWay.modules.usuario.domain.model.Usuario;
 import com.SkyWay.modules.usuario.domain.repository.UsuarioRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,11 +22,17 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
 public class GestionUsuariosAdminService {
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Autowired
     private UsuarioRepository usuarioRepository;
@@ -46,6 +54,86 @@ public class GestionUsuariosAdminService {
     @Transactional(readOnly = true)
     public List<Usuario> listarTodosConRoles() {
         return usuarioRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public long contarUsuariosPaginados(String filtroGlobal) {
+        String term = normalizarFiltro(filtroGlobal);
+        if (term == null) {
+            try {
+                Object estObj = entityManager.createNativeQuery(
+                        "SELECT reltuples::BIGINT FROM pg_class WHERE relname = 'usuario' LIMIT 1"
+                ).getSingleResult();
+                long est = estObj != null ? ((Number) estObj).longValue() : -1L;
+                if (est > 10_000L) {
+                    return est;
+                }
+            } catch (Exception ignored) {
+            }
+            Long exact = entityManager.createQuery("SELECT COUNT(u.rut) FROM Usuario u", Long.class).getSingleResult();
+            return exact != null ? exact : 0L;
+        }
+        Long count = entityManager.createQuery(
+                        "SELECT COUNT(u.rut) FROM Usuario u WHERE " + construirWhereBusquedaUsuario(), Long.class)
+                .setParameter("term", "%" + term + "%")
+                .getSingleResult();
+        return count != null ? count : 0L;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Usuario> buscarUsuariosPaginados(int first, int pageSize, String filtroGlobal) {
+        String term = normalizarFiltro(filtroGlobal);
+        StringBuilder jpqlRuts = new StringBuilder("SELECT u.rut FROM Usuario u");
+        if (term != null) {
+            jpqlRuts.append(" WHERE ").append(construirWhereBusquedaUsuario());
+        }
+        jpqlRuts.append(" ORDER BY u.fechaRegistro DESC NULLS LAST, u.rut ASC");
+
+        var qRuts = entityManager.createQuery(jpqlRuts.toString(), String.class);
+        if (term != null) {
+            qRuts.setParameter("term", "%" + term + "%");
+        }
+        qRuts.setFirstResult(Math.max(0, first));
+        qRuts.setMaxResults(Math.max(1, pageSize));
+        List<String> ruts = qRuts.getResultList();
+        if (ruts == null || ruts.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<Usuario> cargados = entityManager.createQuery(
+                        "SELECT DISTINCT u FROM Usuario u LEFT JOIN FETCH u.roles WHERE u.rut IN :ruts",
+                        Usuario.class)
+                .setParameter("ruts", ruts)
+                .getResultList();
+
+        Map<String, Usuario> porRut = new LinkedHashMap<>();
+        for (Usuario u : cargados) {
+            porRut.put(u.getRut(), u);
+        }
+        List<Usuario> ordenados = new ArrayList<>(ruts.size());
+        for (String rut : ruts) {
+            Usuario u = porRut.get(rut);
+            if (u != null) {
+                ordenados.add(u);
+            }
+        }
+        return ordenados;
+    }
+
+    private String normalizarFiltro(String filtro) {
+        if (filtro == null) return null;
+        String clean = filtro.trim().toLowerCase(Locale.ROOT);
+        return clean.isEmpty() ? null : clean;
+    }
+
+    private String construirWhereBusquedaUsuario() {
+        return "(" +
+                "LOWER(COALESCE(u.rut, '')) LIKE :term " +
+                "OR LOWER(COALESCE(u.nombre, '')) LIKE :term " +
+                "OR LOWER(COALESCE(u.apellido, '')) LIKE :term " +
+                "OR LOWER(COALESCE(u.correoElectronico, '')) LIKE :term " +
+                "OR LOWER(COALESCE(u.documentoIdentidad, '')) LIKE :term" +
+                ")";
     }
 
     @Transactional(readOnly = true)

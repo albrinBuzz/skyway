@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -43,6 +44,7 @@ import com.SkyWay.modules.vuelo.presentation.dto.ResultadoCancelacionVueloDTO;
 import com.SkyWay.modules.vuelo.presentation.dto.ResultadoReprogramacionDTO;
 import com.SkyWay.modules.vuelo.presentation.dto.VueloEstadoProjection;
 import com.SkyWay.modules.vuelo.presentation.dto.VueloMapaDTO;
+import com.SkyWay.modules.vuelo.presentation.dto.VueloProgramadoPortalDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.PersistenceContext;
 import org.slf4j.Logger;
@@ -1233,5 +1235,177 @@ public class VueloServiceImpl implements VueloService {
 		return res != null ? ((Number) res).longValue() : 0L;
 	}
 
+	@Override
+	@Transactional(readOnly = true)
+	public Optional<Integer> obtenerPrimerIdVueloDisponible() {
+		List<Integer> ids = em.createQuery("SELECT v.idVuelo FROM Vuelo v ORDER BY v.idVuelo ASC", Integer.class)
+				.setMaxResults(1)
+				.getResultList();
+		return ids.isEmpty() ? Optional.empty() : Optional.of(ids.get(0));
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public long contarVuelosPaginados(String filtroGlobal) {
+		String term = normalizarTerminoBusqueda(filtroGlobal);
+		if (term == null) {
+			// En tablas millonarias, usar estimación de catálogo O(1) cuando supera 10.000 filas
+			try {
+				Object estObj = em.createNativeQuery(
+						"SELECT reltuples::BIGINT FROM pg_class WHERE relname = 'vuelo' LIMIT 1"
+				).getSingleResult();
+				long est = estObj != null ? ((Number) estObj).longValue() : -1L;
+				if (est > 10_000L) {
+					return est;
+				}
+			} catch (Exception ignored) {
+			}
+			Long exact = em.createQuery("SELECT COUNT(v.idVuelo) FROM Vuelo v", Long.class).getSingleResult();
+			return exact != null ? exact : 0L;
+		}
+		String jpql = "SELECT COUNT(DISTINCT v.idVuelo) FROM Vuelo v " +
+				"LEFT JOIN v.estadoVuelo ev " +
+				"LEFT JOIN v.avion av " +
+				"LEFT JOIN av.modeloAvion ma " +
+				"LEFT JOIN v.piloto pil " +
+				"LEFT JOIN pil.usuario pu " +
+				"WHERE 1=1 " + construirWhereBusquedaVuelo();
+		Long count = em.createQuery(jpql, Long.class)
+				.setParameter("term", "%" + term + "%")
+				.getSingleResult();
+		return count != null ? count : 0L;
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<Vuelo> buscarVuelosPaginados(int first, int pageSize, String filtroGlobal, String sortField, boolean asc) {
+		String term = normalizarTerminoBusqueda(filtroGlobal);
+		String orderCol = resolverColumnaOrdenVuelo(sortField);
+		String orderDir = asc ? "ASC" : "DESC";
+
+		StringBuilder jpqlIds;
+		if (term == null && !"ev.descripcion".equals(orderCol)) {
+			// Sin filtro: evitar 5 LEFT JOINs innecesarios sobre millones de filas
+			jpqlIds = new StringBuilder("SELECT v.idVuelo FROM Vuelo v");
+		} else {
+			jpqlIds = new StringBuilder(
+					"SELECT v.idVuelo FROM Vuelo v " +
+					"LEFT JOIN v.estadoVuelo ev " +
+					"LEFT JOIN v.avion av " +
+					"LEFT JOIN av.modeloAvion ma " +
+					"LEFT JOIN v.piloto pil " +
+					"LEFT JOIN pil.usuario pu " +
+					"WHERE 1=1 "
+			);
+			if (term != null) {
+				jpqlIds.append(construirWhereBusquedaVuelo());
+			}
+		}
+		jpqlIds.append(" ORDER BY ").append(orderCol).append(" ").append(orderDir).append(", v.idVuelo DESC");
+
+		jakarta.persistence.TypedQuery<Integer> qIds = em.createQuery(jpqlIds.toString(), Integer.class);
+		if (term != null) {
+			qIds.setParameter("term", "%" + term + "%");
+		}
+		qIds.setFirstResult(Math.max(0, first));
+		qIds.setMaxResults(Math.max(1, pageSize));
+		List<Integer> ids = qIds.getResultList();
+		if (ids == null || ids.isEmpty()) {
+			return new ArrayList<>();
+		}
+
+		List<Vuelo> vuelos = em.createQuery(
+				"SELECT DISTINCT v FROM Vuelo v " +
+				"LEFT JOIN FETCH v.estadoVuelo " +
+				"LEFT JOIN FETCH v.avion av " +
+				"LEFT JOIN FETCH av.modeloAvion " +
+				"LEFT JOIN FETCH v.piloto pil " +
+				"LEFT JOIN FETCH pil.usuario " +
+				"LEFT JOIN FETCH v.segmentoVuelos sv " +
+				"LEFT JOIN FETCH sv.aeropuertoOrigen " +
+				"LEFT JOIN FETCH sv.aeropuertoDestino " +
+				"WHERE v.idVuelo IN :ids",
+				Vuelo.class
+		).setParameter("ids", ids).getResultList();
+
+		Map<Integer, Vuelo> porId = new LinkedHashMap<>();
+		for (Vuelo v : vuelos) {
+			porId.put(v.getIdVuelo(), v);
+		}
+		List<Vuelo> ordenados = new ArrayList<>(ids.size());
+		for (Integer id : ids) {
+			Vuelo v = porId.get(id);
+			if (v != null) {
+				ordenados.add(v);
+			}
+		}
+		return ordenados;
+	}
+
+	private String normalizarTerminoBusqueda(String filtro) {
+		if (filtro == null) return null;
+		String t = filtro.trim().toLowerCase();
+		return t.isEmpty() ? null : t;
+	}
+
+	private String construirWhereBusquedaVuelo() {
+		return " AND (" +
+				"LOWER(COALESCE(v.numeroVuelo, '')) LIKE :term " +
+				"OR CAST(v.idVuelo AS string) LIKE :term " +
+				"OR LOWER(COALESCE(ma.nombre, '')) LIKE :term " +
+				"OR LOWER(COALESCE(pu.nombre, '')) LIKE :term " +
+				"OR LOWER(COALESCE(pu.apellido, '')) LIKE :term " +
+				"OR LOWER(COALESCE(ev.descripcion, '')) LIKE :term " +
+				"OR EXISTS (SELECT 1 FROM SegmentoVuelo sv " +
+				"           LEFT JOIN sv.aeropuertoOrigen ao " +
+				"           LEFT JOIN sv.aeropuertoDestino ad " +
+				"           WHERE sv.vuelo = v AND (" +
+				"               LOWER(COALESCE(ao.codigoIata, '')) LIKE :term " +
+				"               OR LOWER(COALESCE(ad.codigoIata, '')) LIKE :term" +
+				"           ))" +
+				")";
+	}
+
+	private String resolverColumnaOrdenVuelo(String sortField) {
+		if ("numeroVuelo".equals(sortField)) return "v.numeroVuelo";
+		if ("fechaHoraSalida".equals(sortField)) return "v.fechaHoraSalida";
+		if ("fechaHoraLlegada".equals(sortField)) return "v.fechaHoraLlegada";
+		if ("estadoVuelo.descripcion".equals(sortField)) return "ev.descripcion";
+		return "v.idVuelo";
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<VueloProgramadoPortalDTO> obtenerProximosVuelosPortal(int limite) {
+		int lim = Math.max(1, limite);
+		List<Object[]> rows = vueloRepository.findProximosVuelosVigentesPortal(lim);
+		if (rows == null || rows.isEmpty()) {
+			rows = vueloRepository.findUltimosVuelosPortal(lim);
+		}
+		List<VueloProgramadoPortalDTO> lista = new ArrayList<>();
+		if (rows == null) {
+			return lista;
+		}
+		ZoneId zona = ZoneId.of("America/Santiago");
+		DateTimeFormatter fmtHora = DateTimeFormatter.ofPattern("dd/MM/yyyy · HH:mm");
+		for (Object[] r : rows) {
+			Timestamp tsSal = r[5] instanceof Timestamp ? (Timestamp) r[5] : null;
+			Timestamp tsLlg = r[6] instanceof Timestamp ? (Timestamp) r[6] : null;
+			String salidaTxt = tsSal != null ? tsSal.toInstant().atZone(zona).format(fmtHora) : "-";
+			String llegadaTxt = tsLlg != null ? tsLlg.toInstant().atZone(zona).format(fmtHora) : "-";
+			lista.add(new VueloProgramadoPortalDTO(
+					r[0] != null ? r[0].toString() : "",
+					r[1] != null ? r[1].toString() : "",
+					r[2] != null ? r[2].toString() : "",
+					r[3] != null ? r[3].toString() : "",
+					r[4] != null ? r[4].toString() : "",
+					salidaTxt,
+					llegadaTxt,
+					r[7] != null ? r[7].toString() : "",
+					r[8] != null ? r[8].toString() : ""
+			));
+		}
+		return lista;
+	}
 
 }

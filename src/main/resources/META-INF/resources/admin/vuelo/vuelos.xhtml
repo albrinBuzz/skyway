@@ -338,8 +338,9 @@
             <p:growl id="msgs" showDetail="true"/>
 
             <p:dataTable id="dt-vuelos"
-                         value="#{vueloBean.vuelos}"
+                         value="#{vueloBean.vuelosLazy}"
                          var="vuelo"
+                         lazy="true"
                          widgetVar="wvVuelos"
                          responsiveLayout="scroll"
                          styleClass="skyway-ops-table"
@@ -347,7 +348,6 @@
                          rows="10"
                          paginatorPosition="bottom"
                          rowKey="#{vuelo.idVuelo}"
-                         filteredValue="#{vueloBean.vuelosFiltrados}"
                          globalFilterOnly="true"
                          emptyMessage="No se encontraron registros de vuelos que coincidan con la búsqueda.">
 

@@ -312,8 +312,11 @@
 
             <h:form id="formTabla">
                 <p:dataTable id="dt-usuarios"
-                             value="#{gestionUsuariosAdminBean.listaUsuarios}"
+                             value="#{gestionUsuariosAdminBean.usuariosLazy}"
                              var="usr"
+                             lazy="true"
+                             widgetVar="wvUsuarios"
+                             globalFilterOnly="true"
                              rowKey="#{usr.rut}"
                              styleClass="skyway-ops-table"
                              paginator="true"
@@ -322,6 +325,15 @@
                              paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}"
                              currentPageReportTemplate="Mostrando {startRecord}-{endRecord} de {totalRecords} usuarios"
                              emptyMessage="No hay usuarios registrados en el sistema.">
+
+                    <f:facet name="header">
+                        <div class="flex justify-content-end align-items-center gap-2">
+                            <p:inputText id="globalFilter"
+                                         onkeyup="PF('wvUsuarios').filter()"
+                                         placeholder="Buscar por RUT, nombre, correo o documento..."
+                                         style="width: 300px;" />
+                        </div>
+                    </f:facet>
 
                     <!-- Listener explícito para redibujar la tabla al cambiar de página -->
                     <p:ajax event="page" process="@this" update=":formTabla:dt-usuarios" />

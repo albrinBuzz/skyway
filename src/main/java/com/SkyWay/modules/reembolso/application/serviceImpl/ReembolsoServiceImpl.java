@@ -79,6 +79,7 @@ public class ReembolsoServiceImpl implements ReembolsoService {
 
         Reembolso reembolso = reembolsoRepository.findById(idReembolso)
                 .orElseThrow(() -> new IllegalArgumentException("Reembolso #" + idReembolso + " no encontrado."));
+        validarElegibilidadCancelacionAerolinea(reembolso.getIdCancelacion());
 
         if (!usuarioPerteneceAReserva(rutPasajero.trim(), reembolso.getIdReserva())) {
             throw new SecurityException("No tiene autorización para registrar datos bancarios en este reembolso.");
@@ -136,6 +137,7 @@ public class ReembolsoServiceImpl implements ReembolsoService {
     public void confirmarDatosBancariosAdmin(Integer idReembolso, String rutAdmin, String observacion) {
         Reembolso reembolso = reembolsoRepository.findById(idReembolso)
                 .orElseThrow(() -> new IllegalArgumentException("Reembolso #" + idReembolso + " no encontrado."));
+        validarElegibilidadCancelacionAerolinea(reembolso.getIdCancelacion());
 
         if (!"DATOS_BANCARIOS_ENVIADOS".equalsIgnoreCase(reembolso.getEstado())) {
             throw new IllegalStateException("Solo se pueden confirmar datos bancarios cuando el reembolso está en estado DATOS_BANCARIOS_ENVIADOS.");
@@ -183,6 +185,7 @@ public class ReembolsoServiceImpl implements ReembolsoService {
         }
         Reembolso reembolso = reembolsoRepository.findById(idReembolso)
                 .orElseThrow(() -> new IllegalArgumentException("Reembolso #" + idReembolso + " no encontrado."));
+        validarElegibilidadCancelacionAerolinea(reembolso.getIdCancelacion());
 
         String est = reembolso.getEstado() != null ? reembolso.getEstado().toUpperCase() : "";
         if (!"DATOS_BANCARIOS_ENVIADOS".equals(est) && !"DATOS_CONFIRMADOS".equals(est)) {
@@ -219,6 +222,7 @@ public class ReembolsoServiceImpl implements ReembolsoService {
     public PayoutResponseDTO ejecutarReembolsoSimuladoAdmin(Integer idReembolso, String rutAdmin, String observacion, String escenarioSandbox) {
         Reembolso reembolso = reembolsoRepository.findById(idReembolso)
                 .orElseThrow(() -> new IllegalArgumentException("Reembolso #" + idReembolso + " no encontrado."));
+        validarElegibilidadCancelacionAerolinea(reembolso.getIdCancelacion());
 
         if (!"DATOS_CONFIRMADOS".equalsIgnoreCase(reembolso.getEstado())) {
             throw new IllegalStateException("Solo se puede ejecutar el reembolso cuando los datos bancarios estén en estado DATOS_CONFIRMADOS.");
@@ -335,12 +339,14 @@ public class ReembolsoServiceImpl implements ReembolsoService {
     private List<ReembolsoPasajeroDTO> consultarReembolsos(String rutFiltro, boolean esAdmin) {
         List<ReembolsoPasajeroDTO> lista = new ArrayList<>();
         try {
-            String whereClause = esAdmin
+            String whereClause = (esAdmin
                     ? "WHERE 1=1 "
                     : "WHERE (UPPER(COALESCE(r.rut_pasajero, '')) = :rut "
                     + "   OR UPPER(COALESCE(rem.rut_solicitante, '')) = :rut "
                     + "   OR EXISTS (SELECT 1 FROM pasajero_reserva pr WHERE pr.id_reserva = r.id_reserva AND UPPER(pr.rut) = :rut) "
-                    + "   OR EXISTS (SELECT 1 FROM cancelacion_asiento ca2 WHERE ca2.id_cancelacion = c.id_cancelacion AND UPPER(ca2.rut_pasajero) = :rut)) ";
+                    + "   OR EXISTS (SELECT 1 FROM cancelacion_asiento ca2 WHERE ca2.id_cancelacion = c.id_cancelacion AND UPPER(ca2.rut_pasajero) = :rut)) ")
+                    + "AND (LOWER(COALESCE(c.motivo, '')) LIKE '%cancelación operacional%' "
+                    + "     OR LOWER(COALESCE(c.motivo, '')) LIKE '%cancelacion operacional%') ";
 
             String sql = "SELECT DISTINCT " +
                     "   rem.id_reembolso, " +
@@ -431,6 +437,19 @@ public class ReembolsoServiceImpl implements ReembolsoService {
             Logger.logError("Error consultando reembolsos transaccionales: " + e.getMessage());
         }
         return lista;
+    }
+
+    private void validarElegibilidadCancelacionAerolinea(Integer idCancelacion) {
+        if (idCancelacion == null) {
+            throw new IllegalStateException("El reembolso aplica únicamente ante cancelación operacional de vuelo por parte de la aerolínea.");
+        }
+        List<?> res = em.createNativeQuery(
+                "SELECT motivo FROM cancelacion WHERE id_cancelacion = :idCanc LIMIT 1"
+        ).setParameter("idCanc", idCancelacion).getResultList();
+        String motivo = res.isEmpty() || res.get(0) == null ? "" : res.get(0).toString().toLowerCase();
+        if (!motivo.contains("cancelación operacional") && !motivo.contains("cancelacion operacional")) {
+            throw new IllegalStateException("Solo se consideran reembolsos cuando un vuelo es cancelado operacionalmente por parte de la aerolínea.");
+        }
     }
 
     private boolean usuarioPerteneceAReserva(String rut, Integer idReserva) {

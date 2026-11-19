@@ -1,6 +1,7 @@
 package com.SkyWay.modules.avion.domain.service;
 
 import com.SkyWay.modules.avion.domain.model.Avion;
+import com.SkyWay.modules.avion.presentation.dto.FlotaResumenDTO;
 
 import java.util.List;
 import java.util.Map;
@@ -18,4 +19,7 @@ public interface AvionService {
 
 	// Método para guardar avión y sincronizar CapacidadClase (que activa el Trigger de Asientos)
 	public Avion saveConCapacidades(Avion avion, Map<Integer, Integer> capacidadesPorClase);
+
+	long contarAvionesActivos();
+	List<FlotaResumenDTO> obtenerResumenFlotaPortal();
 }

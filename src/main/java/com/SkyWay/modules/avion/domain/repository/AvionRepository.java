@@ -64,4 +64,24 @@ public interface AvionRepository extends JpaRepository<Avion, Integer> {
             @Param("fechaLlegada") Timestamp fechaLlegada,
             @Param("idVueloActual") Integer idVueloActual
     );
+
+    long countByActivoTrue();
+
+    @Query(value = """
+        SELECT
+            f.nombre AS fabricante,
+            m.nombre AS modelo,
+            COUNT(*) AS unidades,
+            COALESCE(MIN(a.capacidad_de_pasajeros), 0) AS cap_min,
+            COALESCE(MAX(a.capacidad_de_pasajeros), 0) AS cap_max,
+            COALESCE(MAX(a.ano_de_fabricacion), 0) AS ultimo_anio
+        FROM avion a
+        JOIN modelo_avion m ON m.id_modelo = a.id_modelo
+        JOIN fabricante f ON f.id_fabricante = m.id_fabricante
+        WHERE a.activo = true AND m.activo = true
+        GROUP BY f.nombre, m.nombre
+        ORDER BY unidades DESC, f.nombre ASC, m.nombre ASC
+        LIMIT 8
+        """, nativeQuery = true)
+    List<Object[]> findResumenFlotaAgrupado();
 }

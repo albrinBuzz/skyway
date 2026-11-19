@@ -14,6 +14,7 @@ import com.SkyWay.modules.vuelo.presentation.dto.ResultadoCancelacionVueloDTO;
 import com.SkyWay.modules.vuelo.presentation.dto.ResultadoReprogramacionDTO;
 import com.SkyWay.modules.vuelo.presentation.dto.VueloEstadoProjection;
 import com.SkyWay.modules.vuelo.presentation.dto.VueloMapaDTO;
+import com.SkyWay.modules.vuelo.presentation.dto.VueloProgramadoPortalDTO;
 
 
 public interface VueloService {
@@ -71,5 +72,12 @@ public interface VueloService {
 
 	ResultadoCancelacionVueloDTO cancelarVueloOperacional(Integer idVuelo, String motivo, String rutUsuarioAdmin);
 
+	List<Vuelo> buscarVuelosPaginados(int first, int pageSize, String filtroGlobal, String sortField, boolean asc);
+
+	long contarVuelosPaginados(String filtroGlobal);
+
+	Optional<Integer> obtenerPrimerIdVueloDisponible();
+
+	List<VueloProgramadoPortalDTO> obtenerProximosVuelosPortal(int limite);
 
 }

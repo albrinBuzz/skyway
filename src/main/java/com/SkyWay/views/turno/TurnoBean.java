@@ -92,9 +92,9 @@ public class TurnoBean implements Serializable {
             this.tiposTurnoDisponibles = tipoTurnoService.findAll();
 
             if (this.vueloId == null || this.vueloId.trim().isEmpty()) {
-                List<Vuelo> vuelos = vueloService.findAll();
-                if (vuelos != null && !vuelos.isEmpty()) {
-                    this.vueloId = String.valueOf(vuelos.get(0).getIdVuelo());
+                Optional<Integer> primerId = vueloService.obtenerPrimerIdVueloDisponible();
+                if (primerId.isPresent()) {
+                    this.vueloId = String.valueOf(primerId.get());
                     Logger.logInfo("[TurnoBean] vueloId no provisto. Seleccionado primer vuelo ID: " + this.vueloId);
                 }
             }

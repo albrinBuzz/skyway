@@ -5,23 +5,79 @@
                 template="/template/main.xhtml">
 
     <ui:define name="head">
-        <title>Términos y Condiciones | SkyWay Airlines</title>
+        <title>Términos y Condiciones | #{homePortalBean.nombreAerolinea} Airlines</title>
+        <style type="text/css">
+            .corp-page { background: #0b1220; min-height: 75vh; }
+            .corp-hero { background: linear-gradient(180deg, #101c34 0%, #0b1220 100%); border-bottom: 1px solid #1e3150; }
+            .corp-card { background: #101b33; border: 1px solid #1e3150; border-radius: 12px; padding: 2rem; }
+            .corp-subcard { background: #0d1629; border: 1px solid #1e293b; border-radius: 8px; padding: 1rem 1.15rem; margin-bottom: 1rem; }
+            .corp-badge { display: inline-block; background: #162442; border: 1px solid #28426e; color: #bfdbfe; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 4px 10px; border-radius: 6px; }
+        </style>
     </ui:define>
 
     <ui:define name="contenido">
-        <div class="container py-5">
-            <div class="p-5 rounded-3 skyway-card border border-secondary">
-                <h1 class="text-white fw-bold mb-4">Términos y Condiciones del Servicio</h1>
-                <p class="text-white-50">Al utilizar la plataforma SkyWay para realizar reservas de vuelos, aceptas los siguientes términos de servicio:</p>
+        <div class="corp-page pb-5">
+            <div class="corp-hero py-5 mb-4">
+                <div class="container">
+                    <span class="corp-badge mb-2">Contrato de Transporte y Uso Digital</span>
+                    <h1 class="text-white fw-bold mb-2" style="font-size: 2rem;">Términos y Condiciones Generales</h1>
+                    <p class="m-0" style="color: #94a3b8; max-width: 780px; line-height: 1.65;">
+                        Condiciones aplicables a la cotización, compra de pasajes, selección de asientos, equipaje, Check-In y cancelaciones en #{homePortalBean.nombreAerolinea} Airlines.
+                    </p>
+                </div>
+            </div>
 
-                <h4 class="text-white fw-bold mt-4 mb-2">1. Validez de las Reservas</h4>
-                <p class="text-white-50">Una reserva queda formalmente confirmada una vez emitido el código PNR y validado el pago en la pasarela correspondiente.</p>
+            <div class="container">
+                <div class="corp-card mx-auto" style="max-width: 920px;">
+                    <div class="corp-subcard">
+                        <h5 class="text-white fw-bold mb-2">1. Reserva, Pago y Emisión del E-Ticket</h5>
+                        <p class="m-0" style="color: #94a3b8; font-size: 0.9rem; line-height: 1.65;">
+                            Toda compra realizada en el sitio web de #{homePortalBean.nombreAerolinea} queda sujeta a disponibilidad de cupos al momento de confirmar el pago mediante WebPay o PayPal. Una vez acreditado el pago, el sistema emite el código localizador único (PNR) y el comprobante electrónico E-Ticket en formato PDF, momento desde el cual el contrato de transporte se entiende perfeccionado.
+                        </p>
+                    </div>
 
-                <h4 class="text-white fw-bold mt-4 mb-2">2. Retención Temporal de Asientos</h4>
-                <p class="text-white-50">Los asientos seleccionados en línea se mantienen bloqueados temporalmente por un lapso de 10 minutos para concretar la transacción.</p>
+                    <div class="corp-subcard">
+                        <h5 class="text-white fw-bold mb-2">2. Retención Temporal de Asientos Durante la Compra</h5>
+                        <p class="m-0" style="color: #94a3b8; font-size: 0.9rem; line-height: 1.65;">
+                            Durante el proceso de compra, los asientos seleccionados en el mapa de cabina permanecen retenidos temporalmente por un máximo de <strong>10 minutos</strong> para que el pasajero complete la selección de equipaje, ingreso de datos y pago. Transcurrido dicho plazo sin confirmación de pago, los asientos se liberan automáticamente para otros viajeros.
+                        </p>
+                    </div>
 
-                <h4 class="text-white fw-bold mt-4 mb-2">3. Documentación</h4>
-                <p class="text-white-50">Es responsabilidad exclusiva del pasajero portar la cédula de identidad o pasaporte vigente requerido según el destino nacional o internacional.</p>
+                    <div class="corp-subcard">
+                        <h5 class="text-white fw-bold mb-2">3. Tarifas y Cambios de Asiento</h5>
+                        <p class="m-0" style="color: #94a3b8; font-size: 0.9rem; line-height: 1.65;">
+                            Las condiciones de flexibilidad, inclusión de cambio de asiento y horas mínimas de anticipación permitidas se rigen estrictamente por la categoría tarifaria elegida al comprar. No se permiten cambios de asiento una vez efectuado el Check-In del pasajero.
+                        </p>
+                    </div>
+
+                    <div class="corp-subcard">
+                        <h5 class="text-white fw-bold mb-2">4. Equipaje de Cabina y Bodega</h5>
+                        <p class="m-0" style="color: #94a3b8; font-size: 0.9rem; line-height: 1.65;">
+                            Durante la reserva, cada pasajero puede asociar hasta <strong>1 pieza de equipaje de cabina</strong> y un máximo de <strong>3 maletas facturadas en bodega</strong> (en formatos de 15 kg o 23 kg) según los servicios habilitados y las tarifas correspondientes. El pasajero es responsable de cumplir con los pesos máximos declarados al presentarse en aeropuerto.
+                        </p>
+                    </div>
+
+                    <div class="corp-subcard">
+                        <h5 class="text-white fw-bold mb-2">5. Check-In Online y Presentación al Embarque</h5>
+                        <p class="m-0" style="color: #94a3b8; font-size: 0.9rem; line-height: 1.65;">
+                            El Check-In online se habilita <strong>48 horas</strong> antes de la salida programada del vuelo y cierra <strong>60 minutos</strong> antes del despegue. En reservas con múltiples viajeros, solo el titular de la reserva está facultado para ejecutar el Check-In y gestionar los boletos del grupo. Es responsabilidad del pasajero verificar su puerta de embarque en el monitor de Estado de Vuelo y presentarse con la antelación suficiente para controles de seguridad y documentación.
+                        </p>
+                    </div>
+
+                    <div class="corp-subcard">
+                        <h5 class="text-white fw-bold mb-2">6. Cancelaciones y Política Exclusiva de Reembolsos</h5>
+                        <p class="m-0" style="color: #94a3b8; font-size: 0.9rem; line-height: 1.65;">
+                            El reembolso monetario aplica <strong>únicamente cuando un vuelo es cancelado operacionalmente por parte de #{homePortalBean.nombreAerolinea}</strong>. En dicha situación, las reservas afectadas reciben la solicitud automática de reembolso en el perfil del titular para ingresar los datos bancarios y recibir la devolución total correspondiente. La anulación voluntaria de una reserva por iniciativa del pasajero u otras modificaciones no contemplan reembolso.
+                        </p>
+                    </div>
+
+                    <div class="corp-subcard mb-0">
+                        <h5 class="text-white fw-bold mb-2">7. Documentación Obligatoria de Viaje</h5>
+                        <p class="m-0" style="color: #94a3b8; font-size: 0.9rem; line-height: 1.65;">
+                            Todo pasajero debe portar cédula de identidad o pasaporte vigente, además de cualquier visa o permiso sanitario requerido por las autoridades del país de origen, escala o destino. #{homePortalBean.nombreAerolinea} podrá denegar el embarque si la documentación no coincide con la reserva o se encuentra vencida.
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
     </ui:define>

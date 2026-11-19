@@ -341,14 +341,14 @@ IF v_estado_actual IS NULL THEN
         RAISE EXCEPTION 'La reserva N° % ya fue cancelada previamente.', p_id_reserva;
 END IF;
 
-    -- 3. Registrar la Cancelación en la tabla Dominio (MOTIVO LIMPIO)
+    -- 3. Registrar la Cancelación en la tabla Dominio (Anulación voluntaria del pasajero: sin reembolso)
 INSERT INTO cancelacion (id_reserva, fecha, motivo, estado, monto_reembolso)
 VALUES (
            p_id_reserva,
            NOW(),
            p_motivo,
-           'Pendiente',
-           v_total_reserva
+           'Sin Reembolso',
+           0
        )
     RETURNING id_cancelacion INTO v_id_cancelacion;
 

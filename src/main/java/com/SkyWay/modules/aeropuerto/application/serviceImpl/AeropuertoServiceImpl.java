@@ -5,6 +5,7 @@ import com.SkyWay.modules.aeropuerto.domain.repository.AeropuertoRepository;
 import com.SkyWay.modules.aeropuerto.domain.service.AeropuertoService;
 import com.SkyWay.modules.aeropuerto.presentation.dto.AeropuertoMapaDTO;
 import com.SkyWay.modules.aeropuerto.presentation.dto.AeropuertoMapaProjection;
+import com.SkyWay.modules.aeropuerto.presentation.dto.PaisDestinosDTO;
 import com.SkyWay.util.Logger;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
@@ -16,6 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -184,5 +187,37 @@ public class AeropuertoServiceImpl implements AeropuertoService {
         } catch (Exception ex) {
             Logger.logError("Advertencia: No se pudo verificar la geocodificación externa: " + ex.getMessage());
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long contarAeropuertosActivos() {
+        return aeropuertoRepository.countByActivoTrue();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long contarPaisesActivos() {
+        return aeropuertoRepository.contarPaisesActivos();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PaisDestinosDTO> obtenerDestinosAgrupadosPorPais() {
+        List<Object[]> rows = aeropuertoRepository.findDirectorioAeropuertosPorPais();
+        Map<String, List<PaisDestinosDTO.AeropuertoItemDTO>> agrupado = new LinkedHashMap<>();
+        for (Object[] r : rows) {
+            String pais = r[0] != null ? r[0].toString() : "";
+            String ciudad = r[1] != null ? r[1].toString() : "";
+            String iata = r[2] != null ? r[2].toString() : "";
+            String nombre = r[3] != null ? r[3].toString() : "";
+            agrupado.computeIfAbsent(pais, k -> new ArrayList<>())
+                    .add(new PaisDestinosDTO.AeropuertoItemDTO(iata, nombre, ciudad));
+        }
+        List<PaisDestinosDTO> resultado = new ArrayList<>(agrupado.size());
+        for (Map.Entry<String, List<PaisDestinosDTO.AeropuertoItemDTO>> e : agrupado.entrySet()) {
+            resultado.add(new PaisDestinosDTO(e.getKey(), e.getValue()));
+        }
+        return resultado;
     }
 }

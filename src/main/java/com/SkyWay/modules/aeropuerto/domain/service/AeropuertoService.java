@@ -3,6 +3,7 @@ package com.SkyWay.modules.aeropuerto.domain.service;
 import com.SkyWay.modules.aeropuerto.domain.model.Aeropuerto;
 import com.SkyWay.modules.aeropuerto.presentation.dto.AeropuertoMapaDTO;
 import com.SkyWay.modules.aeropuerto.presentation.dto.AeropuertoMapaProjection;
+import com.SkyWay.modules.aeropuerto.presentation.dto.PaisDestinosDTO;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,4 +23,8 @@ public interface AeropuertoService {
     // Métodos CRUD personalizados
     void registrarAeropuerto(String nombre, String codigoIata, Integer idCiudad, Double latitud, Double longitud) throws Exception;
     void actualizarAeropuerto(Integer id, String nombre, String codigoIata, Integer idCiudad, Double latitud, Double longitud) throws Exception;
+
+    long contarAeropuertosActivos();
+    long contarPaisesActivos();
+    List<PaisDestinosDTO> obtenerDestinosAgrupadosPorPais();
 }

@@ -27,20 +27,35 @@
                 document.getElementById('btnModoOrigenRuta').classList.toggle('activo', modo === 'ORIGEN');
                 document.getElementById('btnModoDestinoRuta').classList.toggle('activo', modo === 'DESTINO');
                 var t = document.getElementById('ayudaModoRutaTexto');
-                t.textContent = modo === 'ORIGEN' ? 'Origen' : 'Destino';
-                t.style.color = modo === 'ORIGEN' ? '#38bdf8' : '#10b981';
+                if (t) {
+                    t.textContent = modo === 'ORIGEN' ? 'Origen' : 'Destino';
+                    t.style.color = modo === 'ORIGEN' ? '#93c5fd' : '#6ee7b7';
+                }
+            }
+
+            function sincronizarMapaDesdeSelectores(iataOrigen, iataDestino) {
+                if (!mapaRutaMaestra) return;
+                if (markerOrigenRuta) { mapaRutaMaestra.removeLayer(markerOrigenRuta); markerOrigenRuta = null; }
+                if (markerDestinoRuta) { mapaRutaMaestra.removeLayer(markerDestinoRuta); markerDestinoRuta = null; }
+                if (lineaRutaMaestra) { mapaRutaMaestra.removeLayer(lineaRutaMaestra); lineaRutaMaestra = null; }
+                if (iataOrigen) { pintarMarcadorRuta(iataOrigen, 'ORIGEN'); }
+                if (iataDestino) { pintarMarcadorRuta(iataDestino, 'DESTINO'); }
             }
 
             function initMapaRutaMaestra(aeropuertosJson) {
-                var container = L.DomUtil.get('mapaRutaMaestra');
-                if (container !== null) {
-                    container._leaflet_id = null;
+                if (aeropuertosJson) {
+                    window._skywayAeropuertosCache = aeropuertosJson;
+                } else {
+                    aeropuertosJson = window._skywayAeropuertosCache;
                 }
+                var container = L.DomUtil.get('mapaRutaMaestra');
+                if (!container || !aeropuertosJson) return;
 
                 if (mapaRutaMaestra) {
-                    mapaRutaMaestra.remove();
+                    try { mapaRutaMaestra.remove(); } catch (e) {}
                     mapaRutaMaestra = null;
                 }
+                container._leaflet_id = null;
                 markerOrigenRuta = null; markerDestinoRuta = null; lineaRutaMaestra = null;
 
                 var aeropuertos = typeof aeropuertosJson === 'string' ? JSON.parse(aeropuertosJson) : aeropuertosJson;
@@ -87,8 +102,8 @@
                 var icono = L.divIcon({
                     className: 'marker-seleccionado',
                     html: tipo === 'ORIGEN'
-                        ? '<i class="pi pi-circle-fill" style="color:#38bdf8; font-size:1.4rem; filter: drop-shadow(0 0 4px #38bdf8);"></i>'
-                        : '<i class="pi pi-flag-fill" style="color:#10b981; font-size:1.4rem; filter: drop-shadow(0 0 4px #10b981);"></i>'
+                        ? '<i class="pi pi-circle-fill" style="color:#3b82f6; font-size:1.3rem;"></i>'
+                        : '<i class="pi pi-flag-fill" style="color:#059669; font-size:1.3rem;"></i>'
                 });
 
                 if (tipo === 'ORIGEN') {
@@ -112,7 +127,7 @@
                 if (markerOrigenRuta && markerDestinoRuta) {
 
                     var latlngs = [markerOrigenRuta.getLatLng(), markerDestinoRuta.getLatLng()];
-                    lineaRutaMaestra = L.polyline(latlngs, { color: '#38bdf8', weight: 3, dashArray: '6,8', opacity: 0.85 })
+                    lineaRutaMaestra = L.polyline(latlngs, { color: '#60a5fa', weight: 3, dashArray: '6,8', opacity: 0.85 })
                         .addTo(mapaRutaMaestra);
                     mapaRutaMaestra.fitBounds(L.latLngBounds(latlngs), { padding: [40, 40] });
                 } else if (markerOrigenRuta) {
@@ -128,127 +143,131 @@
                 cambiarModoRuta('ORIGEN');
             }
 
-            // Inicializa el mapa de ruta maestra en cuanto el DOM esté listo (esta sección no vive en un diálogo)
+            // Inicializa ambos mapas al cargar la vista (incluyendo restauración por F5)
             document.addEventListener('DOMContentLoaded', function () {
-
-
-                // 1. Carga Mapa Ruta Maestra
                 initMapaRutaMaestra('#{itinerarioBean.aeropuertosMapaJson}');
-
-                // 2. Carga Mapa Itinerario Armado (con la propiedad del Bean)
-                var jsonInicial = '#{itinerarioBean.itinerarioArmadoMapaJson}';
-
-
-                if (jsonInicial && jsonInicial !== '[]' && jsonInicial !== '') {
-                    renderItinerarioArmado(jsonInicial);
-                }
+                sincronizarTodosLosMapas();
             });
 
             // ---------- MAPA 2: VUELOS FÍSICOS Y ESCALAS (Paso 3) ----------
 
             // ---------- MAPA 2: ITINERARIO ARMADO EN VIVO (Paso 3, columna derecha) ----------
             var mapaItinerarioArmado = null;
-            var capasItinerarioArmado = [];
+            var grupoCapasItinerario = null;
 
-            function initMapaItinerarioArmado() {
+            function asegurarMapaItinerarioArmado() {
                 var container = L.DomUtil.get('mapaItinerarioArmado');
-                if (container !== null) {
-                    // Si el contenedor fue reemplazado por AJAX, limpiamos el puntero interno de Leaflet
-                    container._leaflet_id = null;
-                }
+                if (!container) return false;
 
-                if (mapaItinerarioArmado) {
-
-                    mapaItinerarioArmado.remove();
+                if (mapaItinerarioArmado && mapaItinerarioArmado.getContainer() !== container) {
+                    try { mapaItinerarioArmado.remove(); } catch (e) {}
                     mapaItinerarioArmado = null;
+                    grupoCapasItinerario = null;
                 }
 
-                mapaItinerarioArmado = L.map('mapaItinerarioArmado', { zoomControl: true, attributionControl: false })
-                    .setView([-20, -60], 3);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 12 }).addTo(mapaItinerarioArmado);
+                if (!mapaItinerarioArmado) {
+                    mapaItinerarioArmado = L.map('mapaItinerarioArmado', { zoomControl: true, attributionControl: false })
+                        .setView([-23, -62], 3);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 12 }).addTo(mapaItinerarioArmado);
+                    grupoCapasItinerario = L.featureGroup().addTo(mapaItinerarioArmado);
+                } else if (!grupoCapasItinerario) {
+                    grupoCapasItinerario = L.featureGroup().addTo(mapaItinerarioArmado);
+                }
+                return true;
             }
 
-            // Se llama automáticamente desde el servidor (PrimeFaces.current().executeScript)
-            // cada vez que se vincula o se quita un tramo.
+            function sincronizarMapaItinerarioDesdeDom() {
+                var el = document.getElementById('mapaItinerarioDataHolder');
+                if (el) {
+                    renderItinerarioArmado(el.getAttribute('data-json') || '[]');
+                }
+            }
+
+            function sincronizarTodosLosMapas(origenFallback, destinoFallback) {
+                var holder = document.getElementById('rutaMaestraDataHolder');
+                var origen = holder ? (holder.getAttribute('data-origen') || '') : (origenFallback || '');
+                var destino = holder ? (holder.getAttribute('data-destino') || '') : (destinoFallback || '');
+                var cRuta = L.DomUtil.get('mapaRutaMaestra');
+                if (cRuta && (!mapaRutaMaestra || mapaRutaMaestra.getContainer() !== cRuta)) {
+                    initMapaRutaMaestra(window._skywayAeropuertosCache);
+                }
+                if (mapaRutaMaestra) {
+                    mapaRutaMaestra.invalidateSize(true);
+                    sincronizarMapaDesdeSelectores(origen, destino);
+                }
+                sincronizarMapaItinerarioDesdeDom();
+            }
 
             function renderItinerarioArmado(vuelosJson) {
+                if (!asegurarMapaItinerarioArmado()) return;
+                grupoCapasItinerario.clearLayers();
 
-                initMapaItinerarioArmado();
-
-
-                capasItinerarioArmado.forEach(function (capa) { mapaItinerarioArmado.removeLayer(capa); });
-                capasItinerarioArmado = [];
-
-                var vuelos = typeof vuelosJson === 'string' ? JSON.parse(vuelosJson) : vuelosJson;
+                var vuelos = [];
+                try {
+                    vuelos = typeof vuelosJson === 'string' ? JSON.parse(vuelosJson || '[]') : (vuelosJson || []);
+                    if (typeof vuelos === 'string') {
+                        vuelos = JSON.parse(vuelos);
+                    }
+                } catch (e) {
+                    vuelos = [];
+                }
 
                 if (!vuelos || vuelos.length === 0) {
-                    console.warn('[ItinerarioArmado] ⚠️ No hay vuelos vinculados para reconstruir la ruta.');
-                    console.groupEnd();
+                    setTimeout(function () {
+                        if (mapaItinerarioArmado) {
+                            mapaItinerarioArmado.invalidateSize(true);
+                            mapaItinerarioArmado.setView([-23, -62], 3);
+                        }
+                    }, 120);
                     return;
                 }
 
                 var todosLosPuntos = [];
-                var numeroGlobal = 1;
 
                 vuelos.forEach(function (vuelo, idxVuelo) {
+                    if (!vuelo.puntos || vuelo.puntos.length === 0) return;
                     var latlngs = vuelo.puntos.map(function (p) { return [p.lat, p.lng]; });
                     todosLosPuntos = todosLosPuntos.concat(latlngs);
 
-
-                    // Línea sólida azul para cada tramo de vuelo ya vinculado
-                    var linea = L.polyline(latlngs, { color: '#38bdf8', weight: 4, opacity: 0.9 }).addTo(mapaItinerarioArmado);
-                    linea.bindTooltip('Vuelo ' + vuelo.numeroVuelo, { sticky: true });
-                    capasItinerarioArmado.push(linea);
+                    var linea = L.polyline(latlngs, { color: '#3b82f6', weight: 3.5, opacity: 0.92 })
+                        .bindTooltip('Vuelo ' + vuelo.numeroVuelo, { sticky: true });
+                    grupoCapasItinerario.addLayer(linea);
 
                     vuelo.puntos.forEach(function (p, idxPunto) {
-                        var color = '#f59e0b'; // escala por defecto
-                        var html = '<div class="marker-num-badge">' + numeroGlobal + '</div>';
-                        var tipoPuntoDesc = 'Conexión/Escala (# ' + numeroGlobal + ')';
+                        var esOrigenAbs = (idxVuelo === 0 && idxPunto === 0);
+                        var esDestinoAbs = (idxVuelo === vuelos.length - 1 && idxPunto === vuelo.puntos.length - 1);
+                        var colorRelleno = esOrigenAbs ? '#2563eb' : (esDestinoAbs ? '#93c5fd' : '#d97706');
+                        var radio = (esOrigenAbs || esDestinoAbs) ? 7 : 5;
 
-                        if (idxVuelo === 0 && idxPunto === 0) {
-                            color = '#38bdf8'; // origen absoluto
-                            html = '<i class="pi pi-circle-fill" style="color:#38bdf8; font-size:1rem; filter: drop-shadow(0 0 4px #38bdf8);"></i>';
-                            tipoPuntoDesc = '📍 Origen Absoluto del Itinerario';
-                        } else if (idxVuelo === vuelos.length - 1 && idxPunto === vuelo.puntos.length - 1) {
-                            color = '#10b981'; // destino absoluto
-                            html = '<i class="pi pi-flag-fill" style="color:#10b981; font-size:1rem; filter: drop-shadow(0 0 4px #10b981);"></i>';
-                            tipoPuntoDesc = '🏁 Destino Absoluto del Itinerario';
-                        } else if (p.tipo !== 'ESCALA') {
-                            // origen/destino intermedio entre tramos consecutivos: se omite duplicado visual,
-                            // se muestra como punto de conexión numerado
-                            html = '<div class="marker-num-badge">' + numeroGlobal + '</div>';
-                        }
-
-
-                        var icono = L.divIcon({ className: 'marker-itinerario-armado', html: html, iconSize: [22, 22] });
-                        var marker = L.marker([p.lat, p.lng], { icon: icono })
-                            .addTo(mapaItinerarioArmado)
-                            .bindTooltip(p.iata + ' — ' + p.nombre);
-                        capasItinerarioArmado.push(marker);
-
-                        numeroGlobal++;
+                        var marker = L.circleMarker([p.lat, p.lng], {
+                            radius: radio,
+                            color: '#f8fafc',
+                            weight: 2,
+                            fillColor: colorRelleno,
+                            fillOpacity: 1
+                        }).bindTooltip(p.iata + ' — ' + p.nombre, { direction: 'top' });
+                        grupoCapasItinerario.addLayer(marker);
                     });
 
-                    // Conector punteado entre el fin de este vuelo y el inicio del siguiente (si no coinciden exactamente)
                     if (idxVuelo < vuelos.length - 1) {
                         var finActual = latlngs[latlngs.length - 1];
                         var inicioSiguiente = vuelos[idxVuelo + 1].puntos[0];
-
-
-                        var conector = L.polyline([finActual, [inicioSiguiente.lat, inicioSiguiente.lng]], {
-                            color: '#64748b', weight: 2, dashArray: '4,6', opacity: 0.6
-                        }).addTo(mapaItinerarioArmado);
-                        capasItinerarioArmado.push(conector);
+                        if (finActual && inicioSiguiente && (finActual[0] !== inicioSiguiente.lat || finActual[1] !== inicioSiguiente.lng)) {
+                            var conector = L.polyline([finActual, [inicioSiguiente.lat, inicioSiguiente.lng]], {
+                                color: '#94a3b8', weight: 2, dashArray: '4,6', opacity: 0.75
+                            });
+                            grupoCapasItinerario.addLayer(conector);
+                        }
                     }
                 });
 
-                if (todosLosPuntos.length > 0) {
-
-                    mapaItinerarioArmado.fitBounds(L.latLngBounds(todosLosPuntos), { padding: [30, 30] });
-                }
-
-                console.info('[ItinerarioArmado] ✅ Renderizado completado con éxito.');
-                console.groupEnd();
+                setTimeout(function () {
+                    if (!mapaItinerarioArmado) return;
+                    mapaItinerarioArmado.invalidateSize(true);
+                    if (todosLosPuntos.length > 0) {
+                        mapaItinerarioArmado.fitBounds(L.latLngBounds(todosLosPuntos), { padding: [36, 36], maxZoom: 6 });
+                    }
+                }, 140);
             }
 
 
@@ -278,13 +297,13 @@
                     var latlngs = vuelo.puntos.map(function (p) { return [p.lat, p.lng]; });
 
                     // Trazar línea de trayectoria
-                    var linea = L.polyline(latlngs, { color: '#38bdf8', weight: 4, opacity: 0.9 }).addTo(mapaVistaPrevia);
+                    var linea = L.polyline(latlngs, { color: '#3b82f6', weight: 3.5, opacity: 0.9 }).addTo(mapaVistaPrevia);
 
                     // Trazar marcadores de origen, escalas y destino
                     vuelo.puntos.forEach(function (p, idx) {
-                        var iconHtml = '<i class="pi pi-circle-fill" style="color:#f59e0b; font-size:1rem;"></i>';
-                        if (idx === 0) iconHtml = '<i class="pi pi-circle-fill" style="color:#38bdf8; font-size:1.1rem;"></i>';
-                        else if (idx === vuelo.puntos.length - 1) iconHtml = '<i class="pi pi-flag-fill" style="color:#10b981; font-size:1.1rem;"></i>';
+                        var iconHtml = '<i class="pi pi-circle-fill" style="color:#d97706; font-size:0.95rem;"></i>';
+                        if (idx === 0) iconHtml = '<i class="pi pi-circle-fill" style="color:#3b82f6; font-size:1.05rem;"></i>';
+                        else if (idx === vuelo.puntos.length - 1) iconHtml = '<i class="pi pi-flag-fill" style="color:#059669; font-size:1.05rem;"></i>';
 
                         var icono = L.divIcon({ className: 'marker-preview', html: iconHtml, iconSize: [20, 20] });
                         L.marker([p.lat, p.lng], { icon: icono })
@@ -304,23 +323,23 @@
         </script>
 
         <style type="text/css">
-            /* --- CONFIGURACIÓN VISUAL CORPORATIVA (FLUIDA) --- */
+            /* --- CONFIGURACIÓN VISUAL CORPORATIVA SOBRIA --- */
             :root {
-                --bg-dark: #0f172a;
-                --bg-panel: #1e293b;
-                --border-color: rgba(255, 255, 255, 0.08);
-                --sky-blue: #3b82f6;
-                --sky-blue-hover: #2563eb;
+                --bg-dark: #0b1120;
+                --bg-panel: #111827;
+                --border-color: #1e293b;
+                --sky-blue: #2563eb;
+                --sky-blue-hover: #1d4ed8;
                 --text-primary: #f8fafc;
                 --text-secondary: #94a3b8;
-                --status-green: #10b981;
-                --status-amber: #f59e0b;
+                --status-green: #059669;
+                --status-amber: #d97706;
                 --bg-input: #090e1a;
             }
 
             body, .ui-widget-content {
-                background-color: #080e1a !important;
-                background-image: radial-gradient(circle at top right, #0f172a, #080e1a);
+                background-color: #0b1120 !important;
+                background-image: none !important;
                 color: var(--text-primary) !important;
                 margin: 0; padding: 0;
                 font-family: 'Inter', sans-serif;
@@ -345,7 +364,7 @@
                 top: 2rem;
                 bottom: 2rem;
                 width: 2px;
-                background: linear-gradient(to bottom, var(--sky-blue), var(--border-color) 70%, rgba(51,65,85,0.1));
+                background: #1e293b;
                 z-index: 1;
             }
 
@@ -353,7 +372,7 @@
                 position: relative;
                 margin-bottom: 3.5rem;
                 z-index: 2;
-                transition: all 0.3s ease;
+                transition: all 0.2s ease;
             }
 
             .step-indicator {
@@ -363,70 +382,69 @@
                 width: 42px;
                 height: 42px;
                 border-radius: 50%;
-                background: #0b1329;
-                border: 2px solid var(--border-color);
+                background: #0f172a;
+                border: 2px solid #334155;
                 color: var(--text-secondary);
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-weight: 800;
-                font-size: 1.1rem;
-                box-shadow: 0 0 0 6px #080e1a;
-                transition: all 0.3s ease;
+                font-weight: 700;
+                font-size: 1rem;
+                box-shadow: 0 0 0 6px #0b1120;
+                transition: all 0.2s ease;
             }
 
             .step-indicator.completed {
-                background: var(--status-green) !important;
-                border-color: var(--status-green) !important;
-                color: #fff !important;
-                box-shadow: 0 0 15px rgba(16, 185, 129, 0.4), 0 0 0 6px #080e1a;
+                background: #065f46 !important;
+                border-color: #059669 !important;
+                color: #ecfdf5 !important;
+                box-shadow: 0 0 0 6px #0b1120;
             }
 
             .step-indicator.active {
-                border-color: var(--sky-blue);
-                color: #fff;
-                background: var(--sky-blue);
-                box-shadow: 0 0 15px rgba(59, 130, 246, 0.6), 0 0 0 6px #080e1a;
+                border-color: #3b82f6;
+                color: #ffffff;
+                background: #1e40af;
+                box-shadow: 0 0 0 6px #0b1120;
             }
 
             .step-disabled {
-                opacity: 0.25;
+                opacity: 0.35;
                 pointer-events: none;
-                filter: grayscale(60%);
             }
 
-            /* PANELES CON EFECTO DE CRISTAL */
+            /* PANELES CORPORATIVOS */
             .glass-panel {
-                background: rgba(30, 41, 59, 0.4) !important;
-                backdrop-filter: blur(12px);
-                border: 1px solid var(--border-color) !important;
-                border-radius: 14px !important;
+                background: #0f172a !important;
+                backdrop-filter: none;
+                border: 1px solid #1e293b !important;
+                border-radius: 10px !important;
                 overflow: hidden;
             }
 
             .panel-header-custom {
-                padding: 1.25rem 1.5rem;
-                background: rgba(15, 23, 42, 0.7);
-                border-bottom: 1px solid var(--border-color);
+                padding: 1rem 1.4rem;
+                background: #090e1a;
+                border-bottom: 1px solid #1e293b;
                 display: flex; align-items: center; justify-content: space-between;
             }
 
             .section-title {
-                font-size: 0.9rem; font-weight: 800; text-transform: uppercase;
-                letter-spacing: 0.06em; color: var(--text-primary); margin: 0;
+                font-size: 0.88rem; font-weight: 700; text-transform: uppercase;
+                letter-spacing: 0.05em; color: var(--text-primary); margin: 0;
                 display: flex; align-items: center; gap: 10px;
             }
 
             .step-tag {
-                font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
-                letter-spacing: 0.05em; color: var(--sky-blue);
-                background: rgba(59, 130, 246, 0.1); padding: 4px 10px; border-radius: 20px;
-                border: 1px solid rgba(59, 130, 246, 0.2);
+                font-size: 0.72rem; font-weight: 600; text-transform: uppercase;
+                letter-spacing: 0.04em; color: #93c5fd;
+                background: rgba(30, 58, 138, 0.35); padding: 4px 10px; border-radius: 6px;
+                border: 1px solid #1e3a8a;
             }
             .step-tag.completed-tag {
-                color: var(--status-green);
-                background: rgba(16, 185, 129, 0.1);
-                border-color: rgba(16, 185, 129, 0.2);
+                color: #6ee7b7;
+                background: rgba(6, 95, 70, 0.35);
+                border-color: #047857;
             }
 
             /* --- CONTROL TOTAL DE INPUTS Y SELECT MENUS (PRIMEFACES OVERRIDES) --- */
@@ -457,9 +475,13 @@
             }
             .ui-selectonemenu .ui-selectonemenu-label {
                 color: var(--text-primary) !important;
-                font-size: 0.9rem !important;
-                padding: 12px !important;
+                font-size: 0.875rem !important;
+                padding: 10px 42px 10px 12px !important;
+                line-height: 1.35 !important;
                 text-align: left;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
             }
             .ui-selectonemenu .ui-selectonemenu-trigger {
                 background: transparent !important;
@@ -1393,20 +1415,30 @@
                 overflow: hidden;
             }
 
+            .skyway-custom-table .ui-datatable-tablewrapper {
+                overflow-x: auto !important;
+            }
+
+            .skyway-custom-table table {
+                table-layout: auto !important;
+                width: 100% !important;
+            }
+
             .skyway-custom-table thead th {
                 background: #090e1a !important;
                 color: #94a3b8 !important;
-                font-size: 0.7rem !important;
+                font-size: 0.68rem !important;
                 font-weight: 800 !important;
-                letter-spacing: 0.05em !important;
-                padding: 12px !important;
+                letter-spacing: 0.04em !important;
+                padding: 10px 8px !important;
                 border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+                white-space: nowrap;
             }
 
             .skyway-custom-table tbody td {
                 background: rgba(30, 41, 59, 0.25) !important;
                 border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
-                padding: 10px 12px !important;
+                padding: 9px 8px !important;
             }
 
             .skyway-custom-table tbody tr:hover td {
@@ -1469,11 +1501,55 @@
                 border: 1px solid rgba(245, 158, 11, 0.3);
             }
 
+            .flight-schedule-box {
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+            }
+
             .schedule-row {
                 display: flex;
                 align-items: center;
                 gap: 6px;
-                font-size: 0.75rem;
+                font-size: 0.76rem;
+                white-space: nowrap;
+            }
+
+            .schedule-tag {
+                width: 34px;
+                font-size: 0.62rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.03em;
+                padding: 2px 4px;
+                border-radius: 4px;
+                text-align: center;
+                flex-shrink: 0;
+            }
+
+            .schedule-tag.dep {
+                background: rgba(30, 58, 138, 0.35);
+                color: #93c5fd;
+                border: 1px solid #243b61;
+            }
+
+            .schedule-tag.arr {
+                background: rgba(51, 65, 85, 0.45);
+                color: #cbd5e1;
+                border: 1px solid #334155;
+            }
+
+            .schedule-hour {
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 0.88rem;
+                font-weight: 800;
+                color: #f8fafc;
+            }
+
+            .schedule-date {
+                font-size: 0.76rem;
+                font-weight: 500;
+                color: #cbd5e1;
             }
 
             .schedule-label {
@@ -1488,7 +1564,7 @@
             }
 
             .schedule-time.alt {
-                color: #34d399;
+                color: #cbd5e1;
             }
 
             .pilot-name {
@@ -1856,32 +1932,317 @@
             }
 
             .transfer-badge {
-                background: rgba(245, 158, 11, 0.12);
-                border: 1px solid rgba(245, 158, 11, 0.3);
-                color: #fbbf24;
-                font-size: 0.7rem;
-                font-weight: 800;
-                padding: 6px 14px;
-                border-radius: 20px;
-                letter-spacing: 0.03em;
+                background: rgba(180, 83, 9, 0.16);
+                border: 1px solid rgba(217, 119, 6, 0.4);
+                color: #fcd34d;
+                font-size: 0.72rem;
+                font-weight: 700;
+                padding: 5px 12px;
+                border-radius: 6px;
+                letter-spacing: 0.02em;
                 display: inline-flex;
                 align-items: center;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+                gap: 6px;
+            }
+            .transfer-badge.alerta-corta {
+                background: rgba(153, 27, 27, 0.28);
+                border-color: rgba(248, 113, 113, 0.45);
+                color: #fecaca;
+            }
+            .transfer-badge.alerta-larga {
+                background: rgba(180, 83, 9, 0.26);
+                border-color: rgba(251, 191, 36, 0.45);
+                color: #fde68a;
+            }
+
+            /* === ESTÉTICA CORPORATIVA SOBRIA (SIN CYAN NI DEGRADADOS FLÚOR) === */
+            .tarifa-featured .tarifa-card-modern {
+                border: 1px solid #334155 !important;
+                background: #111c33 !important;
+                box-shadow: none !important;
+            }
+            .featured-badge {
+                background: #1e40af !important;
+                color: #f8fafc !important;
+                box-shadow: none !important;
+            }
+            .btn-skyway-primary,
+            .btn-action-bind {
+                background: #1e40af !important;
+                background-image: none !important;
+                border: 1px solid #2563eb !important;
+                color: #ffffff !important;
+                box-shadow: none !important;
+                border-radius: 8px !important;
+            }
+            .btn-skyway-primary:hover,
+            .btn-action-bind:hover {
+                background: #1d4ed8 !important;
+                transform: none !important;
+                box-shadow: none !important;
+            }
+            .btn-skyway-confirm {
+                background: #065f46 !important;
+                background-image: none !important;
+                border: 1px solid #047857 !important;
+                color: #ffffff !important;
+                box-shadow: none !important;
+                border-radius: 8px !important;
+            }
+            .btn-skyway-confirm:hover {
+                background: #047857 !important;
+            }
+            .flight-details-card {
+                border-color: #334155 !important;
+            }
+            .modo-btn.modo-origen.activo .modo-numero {
+                background: #1e40af !important;
+                color: #ffffff !important;
+            }
+            .modo-btn.modo-destino.activo .modo-numero {
+                background: #065f46 !important;
+                color: #ffffff !important;
+            }
+            .badge-tramo-num {
+                background: #1e3a8a !important;
+                color: #f8fafc !important;
+            }
+            .iata-tag,
+            .route-badge-iata,
+            .flight-number,
+            .iata-mini,
+            .iata-code,
+            .flight-title-code,
+            .resumen-numero,
+            .tarifa-title,
+            .paso-badge {
+                color: #93c5fd !important;
+            }
+            .paso-badge {
+                background: #1e3a8a !important;
+                color: #f8fafc !important;
+            }
+            .paso-badge-verde {
+                background: #065f46 !important;
+                color: #ecfdf5 !important;
+            }
+            .tag-destino,
+            .badge-destino {
+                color: #6ee7b7 !important;
+            }
+            .flight-line {
+                background: #334155 !important;
+            }
+            .flight-plane-icon {
+                color: #94a3b8 !important;
+            }
+            .timeline-card {
+                background: #0f172a !important;
+                border: 1px solid #1e293b !important;
+                box-shadow: none !important;
+            }
+            .timeline-card::before {
+                background: #1e40af !important;
+            }
+            .compat-hint-ok {
+                display: block;
+                margin-top: 4px;
+                font-size: 0.68rem;
+                color: #93c5fd;
+                font-weight: 600;
+            }
+            .compat-badge-blocked {
+                display: inline-block;
+                background: rgba(51, 65, 85, 0.45);
+                border: 1px solid #475569;
+                color: #94a3b8;
+                font-size: 0.69rem;
+                font-weight: 600;
+                padding: 4px 8px;
+                border-radius: 6px;
+                line-height: 1.25;
+            }
+            .btn-sugerir-tramo {
+                background: #13223d !important;
+                border: 1px solid #2b4570 !important;
+                color: #cbd5e1 !important;
+                font-weight: 600 !important;
+            }
+            .btn-sugerir-tramo:hover {
+                background: #1e3a5f !important;
+                color: #ffffff !important;
+            }
+
+            /* === LAYOUTS EXPLÍCITOS Y LIMPIEZA FINAL DE VERDES/CYAN === */
+            .paso1-ruta-grid {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+                gap: 0.85rem;
+                align-items: end;
+            }
+            @media (max-width: 768px) {
+                .paso1-ruta-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+            .paso3-split-grid {
+                display: grid;
+                grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+                align-items: start;
+            }
+            .paso3-col-izq {
+                padding: 1.25rem;
+                border-right: 1px solid #1e293b;
+                min-width: 0;
+            }
+            .paso3-col-der {
+                padding: 1.25rem;
+                background: rgba(9, 14, 26, 0.55);
+                min-width: 0;
+            }
+            @media (max-width: 1120px) {
+                .paso3-split-grid {
+                    grid-template-columns: 1fr;
+                }
+                .paso3-col-izq {
+                    border-right: none;
+                    border-bottom: 1px solid #1e293b;
+                }
+            }
+            .paso3-filtros-grid {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 0.75rem;
+                align-items: end;
+            }
+            @media (max-width: 820px) {
+                .paso3-filtros-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+            .paso3-filtros-grid .ui-inputgroup {
+                display: flex !important;
+                width: 100% !important;
+            }
+            .paso3-filtros-grid .ui-selectonemenu {
+                flex: 1 1 auto !important;
+                width: 100% !important;
+                min-width: 0 !important;
+            }
+            .datepicker-skyway.p-datepicker,
+            .datepicker-skyway.ui-calendar {
+                display: flex !important;
+                align-items: stretch !important;
+                width: 100% !important;
+            }
+            .datepicker-skyway input {
+                flex: 1 1 auto !important;
+                width: auto !important;
+                min-width: 0 !important;
+                border-radius: 8px 0 0 8px !important;
+            }
+            .datepicker-skyway .ui-datepicker-trigger {
+                flex-shrink: 0 !important;
+                border-radius: 0 8px 8px 0 !important;
+                background: #13223d !important;
+                border: 1px solid #334155 !important;
+                color: #cbd5e1 !important;
+            }
+
+            /* Paleta sobria unificada para tabla, estados y botones */
+            .badge-directo,
+            .badge-escala,
+            .badge-status-linked,
+            .badge-status-ok,
+            .system-badge.badge-green {
+                background: rgba(30, 58, 138, 0.28) !important;
+                border: 1px solid #334155 !important;
+                color: #cbd5e1 !important;
+            }
+            .status-msg-found {
+                color: #cbd5e1 !important;
+            }
+            .status-msg-found i {
+                color: #93c5fd !important;
+            }
+            .schedule-time,
+            .schedule-time.alt,
+            .text-emerald-400,
+            .metric-val,
+            .iata-bold,
+            .segment-num,
+            .step-tag.completed-tag,
+            .tag-destino,
+            .badge-destino {
+                color: #e2e8f0 !important;
+            }
+            .schedule-icon,
+            .target-route-icon {
+                color: #93c5fd !important;
+            }
+            .resumen-validacion.valido {
+                background: rgba(30, 58, 138, 0.22) !important;
+                border-color: #2563eb !important;
+                color: #dbeafe !important;
+            }
+            .btn-skyway-confirm {
+                background: #1e40af !important;
+                background-image: none !important;
+                border: 1px solid #2563eb !important;
+                color: #ffffff !important;
+                box-shadow: none !important;
+                display: block !important;
+                width: 100% !important;
+            }
+            .btn-skyway-confirm:hover {
+                background: #1d4ed8 !important;
+            }
+            .step-indicator.completed {
+                background: #1e3a8a !important;
+                border-color: #3b82f6 !important;
+                color: #ffffff !important;
+            }
+            .paso-badge-verde {
+                background: #1e3a8a !important;
+                color: #f8fafc !important;
             }
         </style>
 
         <div class="main-content">
-            <header class="flex justify-content-between align-items-center mb-5">
+            <header class="flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
                 <div>
-                    <h1 class="m-0" style="font-weight: 900; font-size: 1.8rem; letter-spacing: -0.02em;">
-                        Planificación Logística de <span style="color: var(--sky-blue);">Itinerarios</span>
+                    <h1 class="m-0" style="font-weight: 800; font-size: 1.55rem; letter-spacing: -0.02em; color: #f8fafc;">
+                        Crear o Editar <span style="color: #93c5fd;">Itinerario</span>
                     </h1>
-                    <p class="m-0 text-xs mt-1" style="color: var(--text-secondary);">Diseño integral de ofertas de vuelo: Orígenes, destinos comerciales, asignación de tarifas y asignación secuencial de tramos operativos.</p>
+                    <p class="m-0 text-xs mt-1" style="color: var(--text-secondary);">Selecciona la ruta, define los precios por tarifa y elige los vuelos que cubrirán el viaje. Tu avance se conserva automáticamente si recargas la página.</p>
                 </div>
-                <p:tag severity="info" value="ÁREA DE OPERACIONES" icon="pi pi-briefcase" style="padding: 6px 12px; font-weight: bold; font-size: 0.75rem;"/>
+                <div class="flex align-items-center gap-2 flex-wrap">
+                    <h:form id="formAccionesCabecera" style="margin:0;">
+                        <p:commandButton value="Limpiar Todo y Nuevo"
+                                         icon="pi pi-eraser"
+                                         title="Descarta el progreso actual y comienza un itinerario en blanco"
+                                         action="#{itinerarioBean.iniciarNuevaRutaDesdeCero}"
+                                         process="@this"
+                                         update=":msgs :formCrearItinerario :stepTarifas :panelStepLogistica"
+                                         oncomplete="setTimeout(function(){ sincronizarTodosLosMapas(); }, 180);"
+                                         styleClass="btn-sugerir-tramo text-xs" />
+                    </h:form>
+                    <span style="background: #13223d; border: 1px solid #243b61; color: #93c5fd; padding: 7px 12px; border-radius: 6px; font-weight: 700; font-size: 0.74rem; letter-spacing: 0.04em;">
+                        <i class="pi pi-briefcase mr-1"></i> ÁREA DE OPERACIONES
+                    </span>
+                </div>
             </header>
 
             <p:growl id="msgs" showDetail="true" />
+
+            <h:panelGroup rendered="#{itinerarioBean.tramosBloqueadosPorReservas}" layout="block"
+                          style="background: #2b1a12; border: 1px solid #9a3412; border-left: 4px solid #f59e0b; border-radius: 8px; padding: 0.85rem 1rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem;">
+                <i class="pi pi-lock" style="color: #fbbf24; font-size: 1.2rem;"></i>
+                <div style="font-size: 0.83rem; color: #fef3c7; line-height: 1.45;">
+                    <strong style="display: block; color: #ffffff;">Edición Estructural Bloqueada (#{itinerarioBean.reservasTotalesEdicion} reserva(s) vinculada(s))</strong>
+                    <span>Por integridad comercial no se puede alterar el origen, destino ni los tramos de vuelo de este itinerario. Solo puedes actualizar los montos de sus tarifas vigentes.</span>
+                </div>
+            </h:panelGroup>
 
             <div class="flow-container">
 
@@ -1896,11 +2257,11 @@
                         <p:panel styleClass="glass-panel shadow-4">
                             <div class="panel-header-custom">
                                 <h3 class="section-title">
-                                    <i class="pi pi-map" style="color: var(--sky-blue);"></i>
-                                    Definición de la Ruta Comercial Maestra
+                                    <i class="pi pi-map" style="color: #93c5fd;"></i>
+                                    1. Ruta Principal (Origen y Destino)
                                 </h3>
                                 <span class="step-tag #{itinerarioBean.itinerario.aeropuertoOrigen ne null ? 'completed-tag' : ''}">
-                                    #{itinerarioBean.itinerario.aeropuertoOrigen ne null ? 'Ruta Fijada con Éxito' : 'Paso 1: Destinos y Precio Base'}
+                                    #{itinerarioBean.itinerario.aeropuertoOrigen ne null ? 'Ruta Definida' : 'Paso 1: Origen y Destino'}
                                 </span>
                             </div>
 
@@ -1911,6 +2272,7 @@
 
                             <div class="p-4">
                                 <p:outputPanel id="panelEstadoRuta" layout="block" class="mb-3">
+                                    <span id="rutaMaestraDataHolder" data-origen="#{itinerarioBean.aeropuertoOrigen}" data-destino="#{itinerarioBean.aeropuertoDestino}" style="display:none;"></span>
 
                                     <!-- Selector de Modo con botones bien proporcionados -->
                                     <div class="modo-selector-container">
@@ -1928,6 +2290,52 @@
                                         </button>
                                     </div>
 
+                                    <!-- SELECTORES DIRECTOS IATA + BOTONES MAPA -->
+                                    <div class="paso1-ruta-grid mb-3">
+                                        <div>
+                                            <label class="filter-field-label">Aeropuerto de Origen</label>
+                                            <p:selectOneMenu value="#{itinerarioBean.aeropuertoOrigen}"
+                                                             filter="true"
+                                                             filterMatchMode="contains"
+                                                             disabled="#{itinerarioBean.tramosBloqueadosPorReservas}"
+                                                             styleClass="select-skyway w-full">
+                                                <f:selectItem itemLabel="Seleccionar origen..." itemValue="#{null}" />
+                                                <f:selectItems value="#{itinerarioBean.aeropuertos}" var="a"
+                                                               itemValue="#{a.codigoIata}"
+                                                               itemLabel="#{a.codigoIata} — #{a.nombreAeropuerto}" />
+                                                <p:ajax listener="#{itinerarioBean.guardarBorradorSesion}"
+                                                        update="formCrearItinerario:panelEstadoRuta"
+                                                        oncomplete="sincronizarTodosLosMapas();" />
+                                            </p:selectOneMenu>
+                                        </div>
+                                        <div>
+                                            <p:commandButton value="Invertir"
+                                                             icon="pi pi-arrows-h"
+                                                             actionListener="#{itinerarioBean.invertirRutaMaestra}"
+                                                             disabled="#{itinerarioBean.tramosBloqueadosPorReservas}"
+                                                             process="@this"
+                                                             update="formCrearItinerario:panelEstadoRuta"
+                                                             oncomplete="sincronizarTodosLosMapas();"
+                                                             styleClass="btn-sugerir-tramo" />
+                                        </div>
+                                        <div>
+                                            <label class="filter-field-label">Aeropuerto de Destino</label>
+                                            <p:selectOneMenu value="#{itinerarioBean.aeropuertoDestino}"
+                                                             filter="true"
+                                                             filterMatchMode="contains"
+                                                             disabled="#{itinerarioBean.tramosBloqueadosPorReservas}"
+                                                             styleClass="select-skyway w-full">
+                                                <f:selectItem itemLabel="Seleccionar destino..." itemValue="#{null}" />
+                                                <f:selectItems value="#{itinerarioBean.aeropuertos}" var="a"
+                                                               itemValue="#{a.codigoIata}"
+                                                               itemLabel="#{a.codigoIata} — #{a.nombreAeropuerto}" />
+                                                <p:ajax listener="#{itinerarioBean.guardarBorradorSesion}"
+                                                        update="formCrearItinerario:panelEstadoRuta"
+                                                        oncomplete="sincronizarTodosLosMapas();" />
+                                            </p:selectOneMenu>
+                                        </div>
+                                    </div>
+
                                     <!-- Grilla corregida para tarjetas de origen y destino -->
                                     <div class="ruta-display-grid">
 
@@ -1942,7 +2350,7 @@
                                                         <span class="airport-name">#{itinerarioBean.aeropuertosMap[itinerarioBean.aeropuertoOrigen].nombreAeropuerto}</span>
                                                     </h:panelGroup>
                                                     <h:panelGroup rendered="#{empty itinerarioBean.aeropuertoOrigen}">
-                                                        <span class="vacio">Sin seleccionar — haz clic en el mapa</span>
+                                                        <span class="vacio">Selecciona en la lista o haz clic en el mapa</span>
                                                     </h:panelGroup>
                                                 </div>
                                             </div>
@@ -1959,7 +2367,7 @@
                                                         <span class="airport-name">#{itinerarioBean.aeropuertosMap[itinerarioBean.aeropuertoDestino].nombreAeropuerto}</span>
                                                     </h:panelGroup>
                                                     <h:panelGroup rendered="#{empty itinerarioBean.aeropuertoDestino}">
-                                                        <span class="vacio">Sin seleccionar — haz clic en el mapa</span>
+                                                        <span class="vacio">Selecciona en la lista o haz clic en el mapa</span>
                                                     </h:panelGroup>
                                                 </div>
                                             </div>
@@ -1969,25 +2377,28 @@
 
                                     <small class="ayuda-mapa mt-2 block">
                                         <i class="pi pi-info-circle mr-1"></i>
-                                        Haz clic sobre un aeropuerto del mapa interactivo para asignarlo como
-                                        <b id="ayudaModoRutaTexto" style="color:#38bdf8;">Origen</b>.
+                                        Puedes usar los selectores superiores o hacer clic en el mapa para fijar
+                                        <b id="ayudaModoRutaTexto" style="color:#93c5fd;">Origen</b>.
                                     </small>
                                 </p:outputPanel>
 
                                 <!-- MAPA DE RUTA -->
-                                <div id="mapaRutaMaestra" style="width:100%; height:380px; border-radius:12px; border:1px solid rgba(255,255,255,0.08);"></div>
+                                <div id="mapaRutaMaestra" style="width:100%; height:340px; border-radius:10px; border:1px solid #1e293b;"></div>
 
                                 <div class="mt-4 pt-3 border-top-1 border-white-alpha-10 flex flex-column md:flex-row align-items-center justify-content-between gap-3">
-                                    <div style="max-width: 320px; width: 100%;">
-                                        <p:outputLabel for="price" value="Precio de Salida Base Referencial (CLP)" styleClass="text-xs font-bold uppercase text-slate-400 mb-1 block" />
-                                        <p:inputNumber id="price" value="#{itinerarioBean.itinerario.precioBase}" symbol="$ " locale="es_CL" decimalPlaces="0" required="true"/>
+                                    <div style="max-width: 340px; width: 100%;">
+                                        <p:outputLabel for="price" value="Precio Base Referencial (CLP)" styleClass="text-xs font-bold uppercase text-slate-400 mb-1 block" />
+                                        <p:inputNumber id="price" value="#{itinerarioBean.itinerario.precioBase}" symbol="$ " locale="es_CL" decimalPlaces="0" required="false" placeholder="Ej: 45000">
+                                            <p:ajax event="change" process="@this" listener="#{itinerarioBean.guardarBorradorSesion}" />
+                                        </p:inputNumber>
                                     </div>
 
-                                    <p:commandButton value="Fijar Destinos de la Ruta"
+                                    <p:commandButton value="Fijar Ruta y Buscar Vuelos"
                                                      action="#{itinerarioBean.saveItinerario}"
                                                      icon="pi pi-lock"
-                                                     update="msgs @form stepTarifas panelStepLogistica"
-                                                     oncomplete="setTimeout(function(){ initMapaRutaMaestra('#{itinerarioBean.aeropuertosMapaJson}'); if('#{itinerarioBean.aeropuertoOrigen}'){ pintarMarcadorRuta('#{itinerarioBean.aeropuertoOrigen}', 'ORIGEN'); } if('#{itinerarioBean.aeropuertoDestino}'){ pintarMarcadorRuta('#{itinerarioBean.aeropuertoDestino}', 'DESTINO'); } }, 300);"
+                                                     disabled="#{itinerarioBean.tramosBloqueadosPorReservas}"
+                                                     update=":msgs @form :stepTarifas :panelStepLogistica"
+                                                     oncomplete="setTimeout(function(){ sincronizarTodosLosMapas(); }, 180);"
                                                      styleClass="btn-skyway-primary" />
                                 </div>
                             </div>
@@ -2006,11 +2417,11 @@
                     <p:panel styleClass="glass-panel shadow-4">
                         <div class="panel-header-custom">
                             <h3 class="section-title">
-                                <i class="pi pi-ticket" style="color: var(--sky-blue);"></i>
-                                Configuración Comercial de Precios por Tipo de Tarifa
+                                <i class="pi pi-ticket" style="color: #93c5fd;"></i>
+                                2. Precios por Tipo de Tarifa
                             </h3>
                             <span class="step-tag #{itinerarioBean.precioTarifas.size() eq itinerarioBean.tarifas.size() ? 'completed-tag' : ''}">
-                                #{itinerarioBean.precioTarifas.size() eq itinerarioBean.tarifas.size() ? 'Tarifas Consolidadas' : 'Paso 2: Políticas de Equipaje y Beneficios'}
+                                #{itinerarioBean.precioTarifas.size() eq itinerarioBean.tarifas.size() ? 'Precios Confirmados' : 'Paso 2: Tarifas'}
                             </span>
                         </div>
 
@@ -2077,7 +2488,9 @@
                                                                        locale="es_CL"
                                                                        decimalPlaces="0"
                                                                        typeValue="BigDecimal"
-                                                                       styleClass="input-monto-skyway" />
+                                                                       styleClass="input-monto-skyway">
+                                                            <p:ajax event="change" process="@this" listener="#{itinerarioBean.guardarBorradorSesion}" />
+                                                        </p:inputNumber>
                                                     </div>
                                                 </div>
                                             </f:facet>
@@ -2096,7 +2509,7 @@
                                 <p:commandButton value="Confirmar Precios y Tarifas"
                                                  action="#{itinerarioBean.guardarTodasLasTarifas}"
                                                  icon="pi pi-save"
-                                                 update="stepTarifas :panelStepLogistica :msgs"
+                                                 update=":stepTarifas :msgs"
                                                  styleClass="btn-skyway-primary" />
                             </div>
                         </h:form>
@@ -2105,16 +2518,19 @@
 
 
                 <h:panelGroup id="panelStepLogistica" layout="block" styleClass="step-block #{itinerarioBean.itinerario.aeropuertoOrigen eq null ? 'step-disabled' : ''}">
-                    <div class="step-indicator">3</div>
+                    <div class="step-indicator #{itinerarioBean.resumenSecuencia eq 'OK' ? 'completed' : (itinerarioBean.itinerario.aeropuertoOrigen ne null ? 'active' : '')}">
+                        <h:panelGroup rendered="#{itinerarioBean.resumenSecuencia ne 'OK'}">3</h:panelGroup>
+                        <h:panelGroup rendered="#{itinerarioBean.resumenSecuencia eq 'OK'}"><i class="pi pi-check"></i></h:panelGroup>
+                    </div>
                     <div class="glass-panel shadow-4">
 
                         <!-- ENCABEZADO PASO 3 -->
                         <div class="panel-header-custom">
                             <h3 class="section-title">
                                 <i class="pi pi-sitemap text-blue-400"></i>
-                                Consolidación Logística de Conexiones y Escalas
+                                3. Selección de Vuelos y Escalas
                             </h3>
-                            <span class="step-tag tag-amber">Paso 3: Plan de Vuelo Físico</span>
+                            <span class="step-tag">Paso 3: Asignar Vuelos</span>
                         </div>
 
                         <!-- RESUMEN DE RUTA ENLAZADA -->
@@ -2123,38 +2539,140 @@
                                 <i class="pi pi-flag-fill"></i>
                             </div>
                             <div class="target-route-text">
-                                <span class="target-route-label">Objetivo de Servicio Comercial Seleccionado</span>
+                                <span class="target-route-label">Ruta a cubrir</span>
                                 <div class="target-route-path">
-                                    Establecer tramos desde
+                                    Vuelos desde
                                     <span class="route-badge-iata">#{itinerarioBean.itinerario.aeropuertoOrigen.codigoIata}</span>
-                                    hacia
+                                    hasta
                                     <span class="route-badge-iata badge-destino">#{itinerarioBean.itinerario.aeropuertoDestino.codigoIata}</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="p-grid m-0">
+                        <!-- PANEL DE OPCIONES DE RUTA SUGERIDAS -->
+                        <h:form id="formPermutacionesSugeridas">
+                            <div style="margin: 0 1.25rem 0.75rem 1.25rem; background: #090e1a; border: 1px solid #1e293b; border-radius: 10px; padding: 1rem 1.15rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem; margin-bottom: 0.9rem; padding-bottom: 0.85rem; border-bottom: 1px solid #1e293b;">
+                                    <div style="flex: 1 1 280px;">
+                                        <div class="flex align-items-center gap-2">
+                                            <i class="pi pi-compass" style="color: #93c5fd;"></i>
+                                            <strong style="color: #f8fafc; font-size: 0.88rem; letter-spacing: 0.02em;">
+                                                OPCIONES DE RUTA DISPONIBLES (#{itinerarioBean.combinacionesSugeridas.size()})
+                                            </strong>
+                                        </div>
+                                        <span style="color: #94a3b8; font-size: 0.76rem; display: block; margin-top: 2px;">
+                                            Rutas directas o con escalas listas para usar. Prioriza vuelos con asientos disponibles para aprovechar mejor cada avión.
+                                        </span>
+                                    </div>
+                                    <div style="display: flex; align-items: flex-end; gap: 0.75rem; flex-wrap: wrap;">
+                                        <div style="min-width: 225px;">
+                                            <label class="filter-field-label">Espera máx. en escalas</label>
+                                            <p:selectOneMenu value="#{itinerarioBean.maxHorasEspera}" styleClass="select-skyway w-full">
+                                                <f:selectItem itemLabel="Hasta 4 horas" itemValue="4" />
+                                                <f:selectItem itemLabel="Hasta 6 horas" itemValue="6" />
+                                                <f:selectItem itemLabel="Hasta 8 horas" itemValue="8" />
+                                                <f:selectItem itemLabel="Hasta 10 hrs (Recomendado)" itemValue="10" />
+                                                <f:selectItem itemLabel="Hasta 12 horas" itemValue="12" />
+                                                <p:ajax listener="#{itinerarioBean.cargarCombinacionesSugeridas}"
+                                                        update="panelListaPermutaciones :formBuscarVuelo:tablaVuelos :formVuelosAsignados:panelTimeline"
+                                                        oncomplete="sincronizarMapaItinerarioDesdeDom();" />
+                                            </p:selectOneMenu>
+                                        </div>
+                                        <div style="min-width: 240px;">
+                                            <label class="filter-field-label">Ordenar opciones por</label>
+                                            <p:selectOneMenu value="#{itinerarioBean.criterioOrdenSugerencias}" styleClass="select-skyway w-full">
+                                                <f:selectItem itemLabel="Más asientos disponibles" itemValue="OPORTUNIDAD" />
+                                                <f:selectItem itemLabel="Menor tiempo de viaje" itemValue="DURACION" />
+                                                <f:selectItem itemLabel="Menos escalas" itemValue="ESCALAS" />
+                                                <p:ajax listener="#{itinerarioBean.cargarCombinacionesSugeridas}" update="panelListaPermutaciones" />
+                                            </p:selectOneMenu>
+                                        </div>
+                                        <div>
+                                            <p:commandButton icon="pi pi-refresh"
+                                                             value="Actualizar"
+                                                             title="Actualizar opciones"
+                                                             actionListener="#{itinerarioBean.cargarCombinacionesSugeridas}"
+                                                             process="@this"
+                                                             update="panelListaPermutaciones"
+                                                             styleClass="btn-sugerir-tramo"
+                                                             style="height: 41px;" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <p:outputPanel id="panelListaPermutaciones" layout="block">
+                                    <h:panelGroup rendered="#{empty itinerarioBean.combinacionesSugeridas}" layout="block"
+                                                  style="background: #0f172a; border: 1px dashed #334155; border-radius: 8px; padding: 0.85rem; text-align: center; color: #94a3b8; font-size: 0.8rem;">
+                                        No hay combinaciones automáticas disponibles entre #{itinerarioBean.aeropuertoOrigen} y #{itinerarioBean.aeropuertoDestino}. Puedes buscar y elegir vuelos manualmente abajo.
+                                    </h:panelGroup>
+
+                                    <h:panelGroup rendered="#{not empty itinerarioBean.combinacionesSugeridas}" layout="block"
+                                                  style="max-height: 265px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.55rem; padding-right: 4px;">
+                                        <ui:repeat value="#{itinerarioBean.combinacionesSugeridas}" var="comb">
+                                            <div style="background: #0f172a; border: 1px solid #1e293b; border-radius: 8px; padding: 0.7rem 0.9rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+                                                <div style="flex: 1 1 340px;">
+                                                    <div class="flex align-items-center flex-wrap gap-2 mb-1">
+                                                        <span style="background: #{comb.numeroEscalas eq 0 ? '#1e3a8a' : '#334155'}; color: #f8fafc; font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 4px;">
+                                                            #{comb.numeroEscalas eq 0 ? 'DIRECTO' : comb.numeroEscalas += ' ESCALA(S)'}
+                                                        </span>
+                                                        <strong style="color: #93c5fd; font-size: 0.86rem;">#{comb.secuenciaCodigos}</strong>
+                                                        <span style="font-size: 0.71rem; font-weight: 600; padding: 2px 8px; border-radius: 4px; #{comb.nivelEstrategia eq 'OPORTUNIDAD' ? 'background: rgba(30, 64, 175, 0.3); border: 1px solid #3b82f6; color: #bfdbfe;' : (comb.nivelEstrategia eq 'CRITICA' ? 'background: rgba(153, 27, 27, 0.35); border: 1px solid #f87171; color: #fecaca;' : 'background: rgba(51, 65, 85, 0.45); border: 1px solid #475569; color: #cbd5e1;')}">
+                                                            #{comb.etiquetaEstrategia}
+                                                        </span>
+                                                    </div>
+                                                    <div style="color: #cbd5e1; font-size: 0.78rem;">#{comb.rutaEscalas}</div>
+                                                    <div style="color: #94a3b8; font-size: 0.73rem; margin-top: 2px;">
+                                                        Salida #{comb.horarioSalidaTexto} · Llegada #{comb.horarioLlegadaTexto} · Tiempo total: <strong style="color: #e2e8f0;">#{comb.duracionTotalTexto}</strong>
+                                                    </div>
+                                                </div>
+
+                                                <div style="display: flex; align-items: center; gap: 1rem;">
+                                                    <div style="text-align: right; min-width: 145px;">
+                                                        <div style="font-size: 0.81rem; font-weight: 700; color: #{comb.ocupacionMaximaPct ge 85 ? '#fca5a5' : '#cbd5e1'};">
+                                                            #{comb.ocupacionPromedioPct}% ocupado
+                                                        </div>
+                                                        <div style="font-size: 0.72rem; color: #94a3b8;">
+                                                            #{comb.asientosLibresMinimos} asientos libres
+                                                        </div>
+                                                    </div>
+                                                    <p:commandButton value="Elegir Ruta"
+                                                                     icon="pi pi-check"
+                                                                     action="#{itinerarioBean.aplicarCombinacionSugerida(comb)}"
+                                                                     disabled="#{itinerarioBean.tramosBloqueadosPorReservas}"
+                                                                     process="@this"
+                                                                     update=":formVuelosAsignados:panelTimeline :formBuscarVuelo :msgs"
+                                                                     oncomplete="sincronizarMapaItinerarioDesdeDom();"
+                                                                     styleClass="btn-action-bind" />
+                                                </div>
+                                            </div>
+                                        </ui:repeat>
+                                    </h:panelGroup>
+                                </p:outputPanel>
+                            </div>
+                        </h:form>
+
+                        <div class="paso3-split-grid">
                             <!-- SECCIÓN IZQUIERDA: BÚSQUEDA Y LISTA DE VUELOS -->
-                            <div class="p-col-12 p-lg-7 p-4 border-right-1 border-white-alpha-10">
+                            <div class="paso3-col-izq">
                                 <h:form id="formBuscarVuelo">
 
-                                    <div class="flex align-items-center justify-content-between mb-3">
+                                    <div class="flex align-items-center justify-content-between mb-2">
                                         <div class="flex align-items-center gap-2">
                                             <span class="paso-badge">A</span>
-                                            <h4 class="m-0 text-white font-semibold text-sm tracking-wide">CENTRAL DE BÚSQUEDA Y OPERACIONES DE VUELO</h4>
+                                            <h4 class="m-0 text-white font-semibold text-sm tracking-wide">BÚSQUEDA MANUAL POR TRAMO</h4>
                                         </div>
-                                        <span class="system-badge"><i class="pi pi-search text-xs"></i> BÚSQUEDA OPERATIVA</span>
+                                        <span class="system-badge"><i class="pi pi-search text-xs"></i> CATÁLOGO</span>
                                     </div>
 
-                                    <p class="text-xs text-slate-400 mb-3 ml-4">
-                                        Filtre por origen, destino o fecha programada para consultar la disponibilidad de salidas y vincularlas al itinerario.
+                                    <p class="text-xs text-slate-400 mb-3">
+                                        Si prefieres armar el viaje paso a paso, filtra vuelos por aeropuerto o fecha y agrégalos en orden.
                                     </p>
 
                                     <!-- PANEL DE FILTROS BÚSQUEDA -->
                                     <div class="search-filter-card mb-4">
-                                        <div class="grid p-fluid">
-                                            <div class="col-12 md:col-4">
-                                                <label class="filter-field-label">Origen Comercial</label>
+                                        <div class="paso3-filtros-grid">
+                                            <div>
+                                                <label class="filter-field-label">Origen</label>
                                                 <div class="ui-inputgroup">
                                                     <span class="ui-inputgroup-addon addon-sky"><i class="pi pi-upload"></i></span>
                                                     <p:selectOneMenu value="#{itinerarioBean.aeropuertoOrigenBusqueda}" filter="true" filterMatchMode="contains" styleClass="select-skyway">
@@ -2164,8 +2682,8 @@
                                                 </div>
                                             </div>
 
-                                            <div class="col-12 md:col-4">
-                                                <label class="filter-field-label">Destino Comercial</label>
+                                            <div>
+                                                <label class="filter-field-label">Destino</label>
                                                 <div class="ui-inputgroup">
                                                     <span class="ui-inputgroup-addon addon-sky"><i class="pi pi-download"></i></span>
                                                     <p:selectOneMenu value="#{itinerarioBean.aeropuertoDestinoBusqueda}" filter="true" filterMatchMode="contains" styleClass="select-skyway">
@@ -2175,36 +2693,53 @@
                                                 </div>
                                             </div>
 
-                                            <div class="col-12 md:col-4">
-                                                <label class="filter-field-label">Fecha Programada</label>
-                                                <p:datePicker value="#{itinerarioBean.fechaBusqueda}" placeholder="Seleccionar fecha" pattern="dd/MM/yyyy" showIcon="true" styleClass="datepicker-skyway"/>
+                                            <div>
+                                                <label class="filter-field-label">Fecha de Salida</label>
+                                                <p:datePicker value="#{itinerarioBean.fechaBusqueda}" placeholder="Cualquier fecha" pattern="dd/MM/yyyy" showIcon="true" styleClass="datepicker-skyway"/>
                                             </div>
                                         </div>
 
-                                        <div class="flex justify-content-between align-items-center mt-3 pt-3 border-top-1 border-white-alpha-10">
-                                            <p:commandButton value="Restablecer Filtros" action="#{itinerarioBean.limpiarFiltros}"
-                                                             update="tablaVuelos" process="@this"
-                                                             styleClass="ui-button-flat btn-link-reset text-xs" icon="pi pi-refresh" />
-                                            <p:commandButton value="Buscar Operaciones" action="#{itinerarioBean.buscarVuelos}" icon="pi pi-search"
+                                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.9rem; padding-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.08);">
+                                            <div class="flex align-items-center flex-wrap gap-2">
+                                                <p:commandButton value="Restablecer" action="#{itinerarioBean.limpiarFiltros}"
+                                                                 update="formBuscarVuelo" process="@this"
+                                                                 styleClass="ui-button-flat btn-link-reset text-xs" icon="pi pi-refresh" />
+                                                <p:commandButton value="Siguiente tramo (#{itinerarioBean.siguienteOrigenEsperado != null ? itinerarioBean.siguienteOrigenEsperado : '-'})"
+                                                                 action="#{itinerarioBean.sugerirSiguienteTramo}"
+                                                                 icon="pi pi-compass"
+                                                                 process="@this"
+                                                                 update="formBuscarVuelo :msgs"
+                                                                 rendered="#{not empty itinerarioBean.siguienteOrigenEsperado and not itinerarioBean.tramosBloqueadosPorReservas}"
+                                                                 styleClass="btn-sugerir-tramo text-xs"
+                                                                 style="white-space: nowrap;" />
+                                            </div>
+                                            <p:commandButton value="Buscar Vuelos" action="#{itinerarioBean.buscarVuelos}" icon="pi pi-search"
                                                              update="tablaVuelos resultadoBusquedaInfo :msgs"
-                                                             styleClass="btn-skyway-primary" />
+                                                             styleClass="btn-skyway-primary"
+                                                             style="white-space: nowrap;" />
                                         </div>
                                     </div>
 
                                     <!-- ESTADO BÚSQUEDA -->
                                     <p:outputPanel id="resultadoBusquedaInfo" layout="block" styleClass="mb-3">
-                                        <h:panelGroup rendered="#{not empty itinerarioBean.vuelos}" styleClass="status-msg-found">
+                                        <h:panelGroup rendered="#{itinerarioBean.totalVuelosDisponibles gt 0}" styleClass="status-msg-found">
                                             <i class="pi pi-check-circle mr-1"></i>
-                                            <span><strong class="text-white">#{itinerarioBean.vuelos.size()}</strong> vuelo(s) disponible(s) para vincular.</span>
+                                            <span><strong class="text-white">#{itinerarioBean.totalVuelosDisponibles}</strong> vuelo(s) disponible(s) para vincular (paginado de a 5).</span>
                                         </h:panelGroup>
-                                        <h:panelGroup rendered="#{empty itinerarioBean.vuelos}" styleClass="status-msg-empty">
+                                        <h:panelGroup rendered="#{itinerarioBean.totalVuelosDisponibles eq 0}" styleClass="status-msg-empty">
                                             <i class="pi pi-exclamation-circle mr-1"></i>
                                             <span>No se encontraron vuelos programados para los criterios ingresados.</span>
+                                            <p:commandButton value="Ver todas las fechas"
+                                                             action="#{itinerarioBean.verTodasFechasSiguienteTramo}"
+                                                             rendered="#{itinerarioBean.fechaBusqueda ne null}"
+                                                             process="@this"
+                                                             update="formBuscarVuelo :msgs"
+                                                             styleClass="btn-sugerir-tramo ml-2 text-xs" />
                                         </h:panelGroup>
                                     </p:outputPanel>
 
-                                    <!-- TABLA MEJORADA DE VUELOS -->
-                                    <p:dataTable id="tablaVuelos" value="#{itinerarioBean.vuelos}" var="vuelo" rowKey="#{vuelo.idVuelo}"
+                                    <!-- TABLA MEJORADA DE VUELOS (PAGINADA EN BD) -->
+                                    <p:dataTable id="tablaVuelos" widgetVar="wvTablaVuelosPaso3" value="#{itinerarioBean.vuelosDisponiblesLazy}" var="vuelo" lazy="true" rowKey="#{vuelo.idVuelo}"
                                                  rows="5" paginator="true" paginatorPosition="bottom" size="small"
                                                  paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}"
                                                  emptyMessage="No hay registros disponibles." styleClass="skyway-custom-table">
@@ -2242,37 +2777,44 @@
                                         </p:column>
 
                                         <!-- HORARIOS SALIDA Y LLEGADA -->
-                                        <p:column headerText="HORARIOS (SALIDA / LLEGADA)">
+                                        <p:column headerText="HORARIOS">
                                             <div class="flight-schedule-box">
-                                                <div class="schedule-row departure">
-                                                    <i class="pi pi-clock schedule-icon text-blue-400"></i>
-                                                    <span class="schedule-label">Salida:</span>
-                                                    <span class="schedule-time">
-                                        <h:outputText value="#{vuelo.fechaHoraSalida}">
-                                            <f:convertDateTime pattern="dd/MM HH:mm"/>
-                                        </h:outputText>
-                                    </span>
+                                                <div class="schedule-row">
+                                                    <span class="schedule-tag dep" title="Salida">SAL</span>
+                                                    <span class="schedule-hour">
+                                                        <h:outputText value="#{vuelo.fechaHoraSalida}">
+                                                            <f:convertDateTime pattern="HH:mm" timeZone="America/Santiago"/>
+                                                        </h:outputText>
+                                                    </span>
+                                                    <span class="schedule-date">
+                                                        <h:outputText value="#{vuelo.fechaHoraSalida}">
+                                                            <f:convertDateTime pattern="dd/MM/yyyy" timeZone="America/Santiago"/>
+                                                        </h:outputText>
+                                                    </span>
                                                 </div>
-                                                <div class="schedule-row arrival">
-                                                    <i class="pi pi-flag schedule-icon text-emerald-400"></i>
-                                                    <span class="schedule-label">Llegada:</span>
-                                                    <span class="schedule-time alt">
-                                        <h:outputText value="#{vuelo.fechaHoraLlegada}">
-                                            <f:convertDateTime pattern="dd/MM HH:mm"/>
-                                        </h:outputText>
-                                    </span>
+                                                <div class="schedule-row">
+                                                    <span class="schedule-tag arr" title="Llegada">LLG</span>
+                                                    <span class="schedule-hour">
+                                                        <h:outputText value="#{vuelo.fechaHoraLlegada}">
+                                                            <f:convertDateTime pattern="HH:mm" timeZone="America/Santiago"/>
+                                                        </h:outputText>
+                                                    </span>
+                                                    <span class="schedule-date">
+                                                        <h:outputText value="#{vuelo.fechaHoraLlegada}">
+                                                            <f:convertDateTime pattern="dd/MM/yyyy" timeZone="America/Santiago"/>
+                                                        </h:outputText>
+                                                    </span>
                                                 </div>
                                             </div>
                                         </p:column>
 
-                                        <!-- PILOTO Y LICENCIA -->
-                                        <p:column headerText="COMANDANTE">
+                                        <!-- PILOTO Y OCUPACIÓN -->
+                                        <p:column headerText="OCUPACIÓN / DISPONIBILIDAD">
                                             <div class="pilot-info-box">
-                                <span class="pilot-name">
-                                    <i class="pi pi-user text-xs mr-1 text-slate-400"></i>
-                                    #{vuelo.piloto != null ? vuelo.piloto.usuario.apellido : 'Sin Asignar'}
-                                </span>
-                                                <span class="pilot-license">Lic: #{vuelo.piloto != null ? vuelo.piloto.licencia : 'N/A'}</span>
+                                                <span class="pilot-name" style="color: #{itinerarioBean.getOcupacionPctVuelo(vuelo) lt 45 ? '#93c5fd' : (itinerarioBean.getOcupacionPctVuelo(vuelo) ge 85 ? '#fca5a5' : '#e2e8f0')};">
+                                                    #{itinerarioBean.getAsientosVendidosVuelo(vuelo)} / #{itinerarioBean.getCapacidadVuelo(vuelo)} (#{itinerarioBean.getOcupacionPctVuelo(vuelo)}%)
+                                                </span>
+                                                <span class="pilot-license">#{itinerarioBean.getAsientosLibresVuelo(vuelo)} libres · #{vuelo.piloto != null ? vuelo.piloto.usuario.apellido : 'Sin piloto'}</span>
                                             </div>
                                         </p:column>
 
@@ -2285,17 +2827,25 @@
                                                              styleClass="btn-icon-sky" />
                                         </p:column>
 
-                                        <!-- ACCIÓN VINCULAR -->
-                                        <p:column style="width:7.5rem; text-align:center">
+                                        <!-- ACCIÓN VINCULAR / COMPATIBILIDAD -->
+                                        <p:column headerText="CONEXIÓN" style="width:9.8rem; text-align:center">
                                             <h:panelGroup rendered="#{itinerarioBean.estaVinculado(vuelo)}">
-                                <span class="badge-status-linked">
-                                    <i class="pi pi-check-circle"></i> Vinculado
-                                </span>
+                                                <span class="badge-status-linked">
+                                                    <i class="pi pi-check-circle"></i> Vinculado
+                                                </span>
                                             </h:panelGroup>
-                                            <p:commandButton value="Vincular" icon="pi pi-plus" action="#{itinerarioBean.agregarVuelo(vuelo)}"
-                                                             rendered="#{not itinerarioBean.estaVinculado(vuelo)}"
-                                                             update="formVuelosAsignados:panelTimeline tablaVuelos :msgs"
-                                                             styleClass="btn-action-bind" />
+                                            <h:panelGroup rendered="#{not itinerarioBean.estaVinculado(vuelo) and not itinerarioBean.tramosBloqueadosPorReservas and itinerarioBean.isVueloCompatibleParaVincular(vuelo)}">
+                                                <p:commandButton value="Vincular" icon="pi pi-plus" action="#{itinerarioBean.agregarVuelo(vuelo)}"
+                                                                 update=":formVuelosAsignados:panelTimeline :formBuscarVuelo :msgs"
+                                                                 oncomplete="sincronizarMapaItinerarioDesdeDom();"
+                                                                 styleClass="btn-action-bind" />
+                                                <span class="compat-hint-ok">#{itinerarioBean.getTextoConexionSugerida(vuelo)}</span>
+                                            </h:panelGroup>
+                                            <h:panelGroup rendered="#{not itinerarioBean.estaVinculado(vuelo) and (itinerarioBean.tramosBloqueadosPorReservas or not itinerarioBean.isVueloCompatibleParaVincular(vuelo))}">
+                                                <span class="compat-badge-blocked">
+                                                    #{itinerarioBean.tramosBloqueadosPorReservas ? 'Ruta bloqueada' : itinerarioBean.getMotivoIncompatibilidad(vuelo)}
+                                                </span>
+                                            </h:panelGroup>
                                         </p:column>
 
                                         <!-- EXPANSIÓN DE FILA CON FICHA TÉCNICA ESTRUCTURADA -->
@@ -2371,53 +2921,58 @@
                                 </h:form>
                             </div>
 
-                            <!-- SECCIÓN DERECHA: PREVISUALIZACIÓN EN VIVO (ITINERARIO ARMADO) -->
-                            <div class="p-col-12 p-lg-5 p-4" style="background: rgba(15, 23, 42, 0.25);">
+                            <!-- SECCIÓN DERECHA: RESUMEN DEL ITINERARIO Y MAPA -->
+                            <div class="paso3-col-der">
 
                                 <h:form id="formVuelosAsignados">
                                     <!-- ENCABEZADO Y PREVISUALIZACIÓN -->
                                     <div class="flex align-items-center justify-content-between mb-2">
                                         <div class="flex align-items-center gap-2">
                                             <span class="paso-badge paso-badge-verde">B</span>
-                                            <h4 class="m-0 text-white font-semibold text-sm tracking-wide">ITINERARIO COMERCIAL ARMADO</h4>
+                                            <h4 class="m-0 text-white font-semibold text-sm tracking-wide">RESUMEN DEL ITINERARIO</h4>
                                         </div>
-                                        <span class="system-badge badge-green"><i class="pi pi-eye text-xs mr-1"></i> PREVISUALIZACIÓN</span>
+                                        <span class="system-badge"><i class="pi pi-map mr-1"></i> RUTA EN VIVO</span>
                                     </div>
 
-                                    <p class="text-xs text-slate-400 mb-3 ml-4">
-                                        Secuencia de tramos y conexiones que conforman la propuesta final de vuelo.
+                                    <p class="text-xs text-slate-400 mb-3">
+                                        Orden de vuelos y escalas seleccionados para este itinerario.
                                     </p>
 
                                     <!-- MAPA EN VIVO -->
-                                    <div id="mapaItinerarioArmado" style="width:100%; height:250px; border-radius:12px; border:1px solid rgba(255,255,255,0.08); margin-bottom: 12px;"></div>
+                                    <div id="mapaItinerarioArmado" style="width:100%; height:260px; border-radius:10px; border:1px solid #1e293b; margin-bottom: 10px;"></div>
 
                                     <div class="mapa-leyenda mb-4">
-                                        <span class="leyenda-item"><span class="leyenda-dot" style="background:#38bdf8;"></span> Origen Inicial</span>
-                                        <span class="leyenda-item"><i class="pi pi-map-marker text-amber-400 text-xs"></i> Conexión / Escala</span>
-                                        <span class="leyenda-item"><span class="leyenda-dot" style="background:#10b981;"></span> Destino Final</span>
+                                        <span class="leyenda-item"><span class="leyenda-dot" style="background:#2563eb;"></span> Origen</span>
+                                        <span class="leyenda-item"><span class="leyenda-dot" style="background:#d97706;"></span> Escala</span>
+                                        <span class="leyenda-item"><span class="leyenda-dot" style="background:#93c5fd;"></span> Destino Final</span>
                                     </div>
 
                                     <h:panelGroup id="panelTimeline">
+                                        <span id="mapaItinerarioDataHolder" data-json="#{itinerarioBean.itinerarioArmadoMapaJson}" style="display:none;"></span>
 
-                                        <!-- RESUMEN DE VALIDACIÓN COMERCIAL -->
+                                        <!-- RESUMEN DE VALIDACIÓN -->
                                         <h:panelGroup rendered="#{not empty itinerarioBean.itinerariosAsignados}" layout="block" styleClass="resumen-secuencia mb-4">
                                             <div class="resumen-item">
                                                 <span class="resumen-numero">#{itinerarioBean.itinerariosAsignados.size()}</span>
-                                                <span class="resumen-label">Tramo(s)</span>
+                                                <span class="resumen-label">Vuelo(s)</span>
                                             </div>
                                             <div class="resumen-item">
                                                 <span class="resumen-numero">#{itinerarioBean.numeroEscalasCalculado}</span>
-                                                <span class="resumen-label">Conexión(es)</span>
+                                                <span class="resumen-label">Escala(s)</span>
+                                            </div>
+                                            <div class="resumen-item">
+                                                <span class="resumen-numero" style="font-size: 0.95rem;">#{itinerarioBean.duracionTotalArmada}</span>
+                                                <span class="resumen-label">Duración</span>
                                             </div>
                                             <div class="resumen-validacion #{itinerarioBean.resumenSecuencia eq 'OK' ? 'valido' : 'invalido'}">
                                                 <i class="pi #{itinerarioBean.resumenSecuencia eq 'OK' ? 'pi-check-circle' : 'pi-exclamation-triangle'}" style="font-size: 1.1rem;"></i>
                                                 <div class="flex flex-column">
                     <span class="font-bold">
-                        <h:outputText value="Coherencia Comercial Garantizada" rendered="#{itinerarioBean.resumenSecuencia eq 'OK'}"/>
-                        <h:outputText value="Incoherencia en Secuencia" rendered="#{itinerarioBean.resumenSecuencia ne 'OK'}"/>
+                        <h:outputText value="Ruta completa lista para publicar" rendered="#{itinerarioBean.resumenSecuencia eq 'OK'}"/>
+                        <h:outputText value="Falta completar ruta" rendered="#{itinerarioBean.resumenSecuencia ne 'OK'}"/>
                     </span>
                                                     <span style="font-size: 0.72rem; opacity: 0.85;">
-                        <h:outputText value="Conecta correctamente #{itinerarioBean.aeropuertoOrigen} con #{itinerarioBean.aeropuertoDestino}" rendered="#{itinerarioBean.resumenSecuencia eq 'OK'}"/>
+                        <h:outputText value="Conecta #{itinerarioBean.aeropuertoOrigen} con #{itinerarioBean.aeropuertoDestino}" rendered="#{itinerarioBean.resumenSecuencia eq 'OK'}"/>
                         <h:outputText value="#{itinerarioBean.resumenSecuencia}" rendered="#{itinerarioBean.resumenSecuencia ne 'OK'}"/>
                     </span>
                                                 </div>
@@ -2449,9 +3004,11 @@
                                 #{iv.vuelo.avion != null ? iv.vuelo.avion.modeloAvion.nombre : 'Sin Avión'}
                             </span>
                                                             <p:commandButton icon="pi pi-trash" actionListener="#{itinerarioBean.removerVuelo(iv)}"
-                                                                             update=":formVuelosAsignados:panelTimeline :formBuscarVuelo:tablaVuelos :msgs"
+                                                                             rendered="#{not itinerarioBean.tramosBloqueadosPorReservas}"
+                                                                             update=":formVuelosAsignados:panelTimeline :formBuscarVuelo :msgs"
+                                                                             oncomplete="sincronizarMapaItinerarioDesdeDom();"
                                                                              styleClass="btn-icon-danger"
-                                                                             title="Desvincular este tramo" />
+                                                                             title="Quitar este vuelo" />
                                                         </div>
                                                     </div>
 
@@ -2461,11 +3018,16 @@
                                                         <div class="airport-block">
                                                             <span class="iata-code">#{iv.vuelo.segmentoVuelos[0].aeropuertoOrigen.codigoIata}</span>
                                                             <span class="sub-label">Salida Programada</span>
-                                                            <span class="time-stamp">
-                                <h:outputText value="#{iv.vuelo.fechaHoraSalida}">
-                                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/Santiago"/>
-                                </h:outputText>
-                            </span>
+                                                            <span class="schedule-hour" style="font-size: 0.92rem; margin-top: 2px; display: block;">
+                                                                <h:outputText value="#{iv.vuelo.fechaHoraSalida}">
+                                                                    <f:convertDateTime pattern="HH:mm" timeZone="America/Santiago"/>
+                                                                </h:outputText>
+                                                            </span>
+                                                            <span class="schedule-date" style="font-size: 0.72rem; white-space: nowrap;">
+                                                                <h:outputText value="#{iv.vuelo.fechaHoraSalida}">
+                                                                    <f:convertDateTime pattern="dd/MM/yyyy" timeZone="America/Santiago"/>
+                                                                </h:outputText>
+                                                            </span>
                                                         </div>
 
                                                         <!-- LINEA Y CONECTOR DE VUELO -->
@@ -2482,13 +3044,18 @@
 
                                                         <!-- BLOQUE DESTINO -->
                                                         <div class="airport-block text-right">
-                                                            <span class="iata-code text-emerald-400">#{iv.vuelo.segmentoVuelos[iv.vuelo.segmentoVuelos.size() - 1].aeropuertoDestino.codigoIata}</span>
+                                                            <span class="iata-code" style="color: #93c5fd;">#{iv.vuelo.segmentoVuelos[iv.vuelo.segmentoVuelos.size() - 1].aeropuertoDestino.codigoIata}</span>
                                                             <span class="sub-label">Arribo Estimado</span>
-                                                            <span class="time-stamp text-emerald-400">
-                                <h:outputText value="#{iv.vuelo.fechaHoraLlegada}">
-                                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/Santiago"/>
-                                </h:outputText>
-                            </span>
+                                                            <span class="schedule-hour" style="font-size: 0.92rem; margin-top: 2px; display: block;">
+                                                                <h:outputText value="#{iv.vuelo.fechaHoraLlegada}">
+                                                                    <f:convertDateTime pattern="HH:mm" timeZone="America/Santiago"/>
+                                                                </h:outputText>
+                                                            </span>
+                                                            <span class="schedule-date" style="font-size: 0.72rem; white-space: nowrap;">
+                                                                <h:outputText value="#{iv.vuelo.fechaHoraLlegada}">
+                                                                    <f:convertDateTime pattern="dd/MM/yyyy" timeZone="America/Santiago"/>
+                                                                </h:outputText>
+                                                            </span>
                                                         </div>
                                                     </div>
 
@@ -2506,25 +3073,73 @@
 
                                                 <!-- CONECTOR ENTRE TRAMOS SI HAY MÁS DE UNO -->
                                                 <h:panelGroup rendered="#{not status.last}" layout="block" styleClass="transfer-connector-box">
-                                                    <div class="transfer-badge">
-                                                        <i class="pi pi-sync mr-1"></i>
-                                                        <span>CONEXIÓN INTERMEDIA EN <strong>#{iv.vuelo.segmentoVuelos[iv.vuelo.segmentoVuelos.size() - 1].aeropuertoDestino.codigoIata}</strong></span>
-                                                        <i class="pi pi-arrow-down ml-2"></i>
+                                                    <div class="transfer-badge #{itinerarioBean.getNivelAlertaEspera(status.index) eq 'corta' ? 'alerta-corta' : (itinerarioBean.getNivelAlertaEspera(status.index) eq 'larga' ? 'alerta-larga' : '')}">
+                                                        <i class="pi pi-clock"></i>
+                                                        <span>
+                                                            ESPERA EN <strong>#{iv.vuelo.segmentoVuelos[iv.vuelo.segmentoVuelos.size() - 1].aeropuertoDestino.codigoIata}</strong>:
+                                                            <strong>#{itinerarioBean.getTiempoEsperaEntreTramos(status.index)}</strong>
+                                                            #{itinerarioBean.getNivelAlertaEspera(status.index) eq 'corta' ? '(Escala ajustada)' : (itinerarioBean.getNivelAlertaEspera(status.index) eq 'larga' ? '(Espera prolongada)' : '')}
+                                                        </span>
+                                                        <i class="pi pi-arrow-down ml-1"></i>
                                                     </div>
                                                 </h:panelGroup>
 
                                             </ui:repeat>
                                         </div>
 
+                                        <!-- PANEL DE CONTINUIDAD POST-PUBLICACIÓN (NO BORRA DATOS BRUSCAMENTE) -->
+                                        <h:panelGroup rendered="#{itinerarioBean.ultimoItinerarioPublicado ne null}" layout="block"
+                                                      style="margin-top: 1rem; background: #0f172a; border: 1px solid #2563eb; border-left: 4px solid #3b82f6; border-radius: 8px; padding: 0.95rem 1rem;">
+                                            <div style="display: flex; align-items: flex-start; gap: 0.65rem; margin-bottom: 0.75rem;">
+                                                <i class="pi pi-check-circle" style="color: #93c5fd; font-size: 1.2rem; margin-top: 2px;"></i>
+                                                <div>
+                                                    <strong style="display: block; color: #f8fafc; font-size: 0.9rem;">
+                                                        Itinerario SKW-ITI-#{itinerarioBean.ultimoItinerarioPublicado.idItinerario} guardado correctamente
+                                                    </strong>
+                                                    <span style="color: #cbd5e1; font-size: 0.77rem;">
+                                                        Conservamos la ruta #{itinerarioBean.aeropuertoOrigen} → #{itinerarioBean.aeropuertoDestino}, tarifas y vuelos visibles para que decidas cómo continuar:
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                                                <p:commandButton value="Crear otro en #{itinerarioBean.aeropuertoOrigen} → #{itinerarioBean.aeropuertoDestino}"
+                                                                 icon="pi pi-copy"
+                                                                 action="#{itinerarioBean.crearOtroMismaRuta}"
+                                                                 process="@this"
+                                                                 update=":msgs :formCrearItinerario :stepTarifas :panelStepLogistica"
+                                                                 oncomplete="setTimeout(function(){ sincronizarTodosLosMapas(); }, 180);"
+                                                                 styleClass="btn-skyway-primary text-xs" />
+                                                <p:commandButton value="Seguir editando este"
+                                                                 icon="pi pi-pencil"
+                                                                 action="#{itinerarioBean.continuarEditandoPublicado}"
+                                                                 process="@this"
+                                                                 update=":msgs :formVuelosAsignados:panelTimeline"
+                                                                 oncomplete="sincronizarMapaItinerarioDesdeDom();"
+                                                                 styleClass="btn-sugerir-tramo text-xs" />
+                                                <p:commandButton value="Nueva ruta desde cero"
+                                                                 icon="pi pi-refresh"
+                                                                 action="#{itinerarioBean.iniciarNuevaRutaDesdeCero}"
+                                                                 process="@this"
+                                                                 update=":msgs :formCrearItinerario :stepTarifas :panelStepLogistica"
+                                                                 oncomplete="setTimeout(function(){ sincronizarTodosLosMapas(); }, 180);"
+                                                                 styleClass="btn-sugerir-tramo text-xs" />
+                                                <p:button value="Ver listado"
+                                                          icon="pi pi-list"
+                                                          outcome="itinerarios.xhtml"
+                                                          styleClass="btn-sugerir-tramo text-xs" />
+                                            </div>
+                                        </h:panelGroup>
+
                                         <!-- BOTÓN CONFIRMAR -->
-                                        <div class="mt-4 pt-3 border-top-1 border-white-alpha-10">
-                                            <p:commandButton value="Publicar y Confirmar Propuesta de Itinerario"
+                                        <h:panelGroup rendered="#{itinerarioBean.ultimoItinerarioPublicado eq null}" layout="block" class="mt-4 pt-3 border-top-1 border-white-alpha-10">
+                                            <p:commandButton value="#{itinerarioBean.esModificacion ? 'Guardar Cambios del Itinerario' : 'Guardar y Publicar Itinerario'}"
                                                              action="#{itinerarioBean.guardarItinerario}"
                                                              icon="pi pi-check-circle"
                                                              styleClass="w-full btn-skyway-confirm p-3 text-sm font-bold"
                                                              disabled="#{empty itinerarioBean.itinerariosAsignados}"
-                                                             update=":msgs @form" />
-                                        </div>
+                                                             update=":msgs :formCrearItinerario :stepTarifas :panelStepLogistica"
+                                                             oncomplete="setTimeout(function(){ sincronizarTodosLosMapas(); }, 180);" />
+                                        </h:panelGroup>
                                     </h:panelGroup>
                                 </h:form>
 

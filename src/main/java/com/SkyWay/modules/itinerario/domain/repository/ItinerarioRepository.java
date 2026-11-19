@@ -108,4 +108,132 @@ public interface ItinerarioRepository extends JpaRepository<Itinerario, Integer>
             @Param("offset") int offset
     );
 
+    @Query(value = "SELECT GREATEST(0, COALESCE(reltuples::bigint, 0)) FROM pg_class WHERE relname = 'itinerario'", nativeQuery = true)
+    Long obtenerEstimacionReltuples();
+
+    @Query(value = """
+        WITH muestra AS (
+            SELECT i.origen_aeropuerto, i.destino_aeropuerto, i.precio_base, i.numero_escalas, i.hora_salida
+            FROM itinerario i
+            WHERE i.hora_salida >= NOW()
+              AND NOT EXISTS (
+                  SELECT 1
+                  FROM itinerario_vuelo iv_chk
+                  JOIN vuelo v_chk ON v_chk.id_vuelo = iv_chk.id_vuelo
+                  JOIN estado_vuelo ev_chk ON ev_chk.id_estado_vuelo = v_chk.id_estado_vuelo
+                  WHERE iv_chk.id_itinerario = i.id_itinerario
+                    AND (
+                        UPPER(COALESCE(ev_chk.descripcion, '')) LIKE '%CANCEL%'
+                        OR UPPER(COALESCE(ev_chk.estado, '')) LIKE '%CANCEL%'
+                        OR UPPER(COALESCE(ev_chk.estado, '')) = 'INACTIVO'
+                    )
+              )
+            ORDER BY i.hora_salida ASC
+            LIMIT 1200
+        ),
+        agrupado_dia AS (
+            SELECT
+                ao.codigo_iata AS orig_iata,
+                ao.nombre_aeropuerto AS orig_nombre,
+                co.nombre AS orig_ciudad,
+                po.nombre AS orig_pais,
+                ad.codigo_iata AS dest_iata,
+                ad.nombre_aeropuerto AS dest_nombre,
+                cd.nombre AS dest_ciudad,
+                pd.nombre AS dest_pais,
+                MIN(m.precio_base) AS precio_min,
+                MIN(m.numero_escalas) AS escalas_min,
+                COUNT(*) AS opciones,
+                DATE(m.hora_salida) AS fecha_dia,
+                ROW_NUMBER() OVER (
+                    PARTITION BY ao.codigo_iata, ad.codigo_iata
+                    ORDER BY COUNT(*) DESC, MIN(m.precio_base) ASC, DATE(m.hora_salida) ASC
+                ) AS rn
+            FROM muestra m
+            JOIN aeropuerto ao ON ao.id_aeropuerto = m.origen_aeropuerto
+            JOIN ciudad co ON co.id_ciudad = ao.id_ciudad
+            JOIN pais po ON po.id_pais = co.id_pais
+            JOIN aeropuerto ad ON ad.id_aeropuerto = m.destino_aeropuerto
+            JOIN ciudad cd ON cd.id_ciudad = ad.id_ciudad
+            JOIN pais pd ON pd.id_pais = cd.id_pais
+            WHERE ao.activo = true AND ad.activo = true
+            GROUP BY ao.codigo_iata, ao.nombre_aeropuerto, co.nombre, po.nombre,
+                     ad.codigo_iata, ad.nombre_aeropuerto, cd.nombre, pd.nombre,
+                     DATE(m.hora_salida)
+        )
+        SELECT
+            orig_iata, orig_nombre, orig_ciudad, orig_pais,
+            dest_iata, dest_nombre, dest_ciudad, dest_pais,
+            precio_min, escalas_min, opciones,
+            TO_CHAR(fecha_dia, 'YYYY-MM-DD') AS fecha_url,
+            TO_CHAR(fecha_dia, 'DD/MM/YYYY') AS fecha_label
+        FROM agrupado_dia
+        WHERE rn = 1
+        ORDER BY opciones DESC, precio_min ASC, fecha_dia ASC
+        LIMIT :limite
+        """, nativeQuery = true)
+    List<Object[]> findRutasDestacadasVigentesPortal(@Param("limite") int limite);
+
+    @Query(value = """
+        WITH muestra AS (
+            SELECT i.origen_aeropuerto, i.destino_aeropuerto, i.precio_base, i.numero_escalas, i.hora_salida
+            FROM itinerario i
+            WHERE NOT EXISTS (
+                  SELECT 1
+                  FROM itinerario_vuelo iv_chk
+                  JOIN vuelo v_chk ON v_chk.id_vuelo = iv_chk.id_vuelo
+                  JOIN estado_vuelo ev_chk ON ev_chk.id_estado_vuelo = v_chk.id_estado_vuelo
+                  WHERE iv_chk.id_itinerario = i.id_itinerario
+                    AND (
+                        UPPER(COALESCE(ev_chk.descripcion, '')) LIKE '%CANCEL%'
+                        OR UPPER(COALESCE(ev_chk.estado, '')) LIKE '%CANCEL%'
+                        OR UPPER(COALESCE(ev_chk.estado, '')) = 'INACTIVO'
+                    )
+              )
+            ORDER BY i.hora_salida DESC
+            LIMIT 1200
+        ),
+        agrupado_dia AS (
+            SELECT
+                ao.codigo_iata AS orig_iata,
+                ao.nombre_aeropuerto AS orig_nombre,
+                co.nombre AS orig_ciudad,
+                po.nombre AS orig_pais,
+                ad.codigo_iata AS dest_iata,
+                ad.nombre_aeropuerto AS dest_nombre,
+                cd.nombre AS dest_ciudad,
+                pd.nombre AS dest_pais,
+                MIN(m.precio_base) AS precio_min,
+                MIN(m.numero_escalas) AS escalas_min,
+                COUNT(*) AS opciones,
+                DATE(m.hora_salida) AS fecha_dia,
+                ROW_NUMBER() OVER (
+                    PARTITION BY ao.codigo_iata, ad.codigo_iata
+                    ORDER BY COUNT(*) DESC, MIN(m.precio_base) ASC, DATE(m.hora_salida) DESC
+                ) AS rn
+            FROM muestra m
+            JOIN aeropuerto ao ON ao.id_aeropuerto = m.origen_aeropuerto
+            JOIN ciudad co ON co.id_ciudad = ao.id_ciudad
+            JOIN pais po ON po.id_pais = co.id_pais
+            JOIN aeropuerto ad ON ad.id_aeropuerto = m.destino_aeropuerto
+            JOIN ciudad cd ON cd.id_ciudad = ad.id_ciudad
+            JOIN pais pd ON pd.id_pais = cd.id_pais
+            WHERE ao.activo = true AND ad.activo = true
+            GROUP BY ao.codigo_iata, ao.nombre_aeropuerto, co.nombre, po.nombre,
+                     ad.codigo_iata, ad.nombre_aeropuerto, cd.nombre, pd.nombre,
+                     DATE(m.hora_salida)
+        )
+        SELECT
+            orig_iata, orig_nombre, orig_ciudad, orig_pais,
+            dest_iata, dest_nombre, dest_ciudad, dest_pais,
+            precio_min, escalas_min, opciones,
+            TO_CHAR(fecha_dia, 'YYYY-MM-DD') AS fecha_url,
+            TO_CHAR(fecha_dia, 'DD/MM/YYYY') AS fecha_label
+        FROM agrupado_dia
+        WHERE rn = 1
+        ORDER BY opciones DESC, precio_min ASC, fecha_dia DESC
+        LIMIT :limite
+        """, nativeQuery = true)
+    List<Object[]> findRutasDestacadasRecientesPortal(@Param("limite") int limite);
+
 }

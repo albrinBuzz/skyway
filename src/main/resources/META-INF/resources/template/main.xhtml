@@ -673,7 +673,7 @@
                                     <div class="form-group-fancy mb-3">
                                         <div class="d-flex justify-content-between align-items-center mb-1">
                                             <label class="form-label-fancy mb-0">Contraseña</label>
-                                            <a href="#" class="forget-link-fancy">¿Olvidaste tu clave?</a>
+                                            <h:outputLink value="#{request.contextPath}/home/recuperar-clave.xhtml" styleClass="forget-link-fancy">¿Olvidaste tu clave?</h:outputLink>
                                         </div>
                                         <div class="input-wrapper-fancy">
                                             <i class="fas fa-lock input-icon-fancy"></i>
@@ -805,100 +805,107 @@
 <ui:insert name="contenido"></ui:insert>
 
 <!-- Footer Start -->
-<div class="container-fluid bg-dark py-5 footer">
-    <div class="container py-5">
-        <div class="row g-5">
+<div class="container-fluid py-5 footer" style="background: #080e1c; border-top: 1px solid #1e3150;">
+    <div class="container py-2">
+        <div class="row g-4">
 
-            <!-- Contacto -->
-            <div class="col-md-6 col-lg-3">
-                <h4 class="mb-4 text-white">Contáctanos</h4>
-                <p class="text-white mb-1">
-                    <i class="fas fa-map-marker-alt me-2"></i>
-                    Av. Libertador Bernardo O’Higgins 1234, Santiago, Chile
+            <!-- Identidad y operación -->
+            <div class="col-md-6 col-lg-4">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <h:graphicImage value="#{resource['assets/icons/Logotipo_SkyWay.png']}"
+                                    style="height: 32px; width: auto; mix-blend-mode: screen; filter: brightness(1.6);"
+                                    alt="SkyWay Airlines" />
+                    <span class="text-white fw-bold" style="letter-spacing: 0.04em;">SKYWAY AIRLINES</span>
+                </div>
+                <p style="color: #94a3b8; font-size: 0.86rem; line-height: 1.6;" class="mb-3">
+                    Reserva vuelos, selecciona tu asiento en cabina, realiza Check-In en línea y revisa el estado actualizado de cada salida.
                 </p>
-                <p class="text-white mb-1">
-                    <i class="fas fa-envelope me-2"></i>
-                    contacto@skyWay.cl
-                </p>
-                <p class="text-white mb-1">
-                    <i class="fas fa-phone-alt me-2"></i>
-                    +56 2 1234 5678 — Línea nacional
-                </p>
-                <p class="text-white mb-0">
-                    <small>Horario: Lunes a Domingo, 08:00‑20:00 (CLT)</small>
-                </p>
+                <div class="d-flex flex-wrap gap-2">
+                    <h:outputLink value="/home/index.xhtml" styleClass="btn btn-sm text-light" style="background: #101b33; border: 1px solid #1e3150;">
+                        Buscar Vuelos
+                    </h:outputLink>
+                    <h:outputLink value="/home/estado-vuelo.xhtml" styleClass="btn btn-sm text-light" style="background: #101b33; border: 1px solid #1e3150;">
+                        Estado de Vuelo
+                    </h:outputLink>
+                    <h:outputLink value="/home/checkin.xhtml" styleClass="btn btn-sm text-light" style="background: #101b33; border: 1px solid #1e3150;">
+                        Check-In
+                    </h:outputLink>
+                </div>
             </div>
 
             <!-- Sobre la aerolínea -->
-            <div class="col-md-6 col-lg-3">
-                <h4 class="mb-4 text-white">Sobre Nosotros</h4>
-                <ul class="list-unstyled">
+            <div class="col-md-6 col-lg-2">
+                <h5 class="mb-3 text-white fw-bold" style="font-size: 0.95rem;">Aerolínea</h5>
+                <ul class="list-unstyled d-flex flex-column gap-2 m-0" style="font-size: 0.86rem;">
                     <li>
-                        <h:outputLink value="/home/about.xhtml" styleClass="text-white text-decoration-none">
-                            <i class="fas fa-angle-right me-2"></i>Quiénes somos
+                        <h:outputLink value="/home/about.xhtml" styleClass="text-decoration-none" style="color: #cbd5e1;">
+                            <i class="fas fa-angle-right me-2" style="color: #60a5fa;"></i>Quiénes somos
                         </h:outputLink>
                     </li>
                     <li>
-                        <h:outputLink value="/home/history.xhtml" styleClass="text-white text-decoration-none">
-                            <i class="fas fa-angle-right me-2"></i>Nuestra historia
+                        <h:outputLink value="/home/history.xhtml" styleClass="text-decoration-none" style="color: #cbd5e1;">
+                            <i class="fas fa-angle-right me-2" style="color: #60a5fa;"></i>Experiencia de viaje
                         </h:outputLink>
                     </li>
                     <li>
-                        <h:outputLink value="/home/services.xhtml" styleClass="text-white text-decoration-none">
-                            <i class="fas fa-angle-right me-2"></i>Servicios
+                        <h:outputLink value="/home/services.xhtml" styleClass="text-decoration-none" style="color: #cbd5e1;">
+                            <i class="fas fa-angle-right me-2" style="color: #60a5fa;"></i>Servicios
                         </h:outputLink>
                     </li>
                     <li>
-                        <h:outputLink value="/blog/index.xhtml" styleClass="text-white text-decoration-none">
-                            <i class="fas fa-angle-right me-2"></i>Blog
-                        </h:outputLink>
-                    </li>
-                </ul>
-            </div>
-
-            <!-- Atención al cliente -->
-            <div class="col-md-6 col-lg-3">
-                <h4 class="mb-4 text-white">Atención al Cliente</h4>
-                <ul class="list-unstyled">
-                    <li>
-                        <h:outputLink value="/home/contact.xhtml" styleClass="text-white text-decoration-none">
-                            <i class="fas fa-angle-right me-2"></i>Contacto
-                        </h:outputLink>
-                    </li>
-                    <li>
-                        <h:outputLink value="/home/faq.xhtml" styleClass="text-white text-decoration-none">
-                            <i class="fas fa-angle-right me-2"></i>Preguntas frecuentes
-                        </h:outputLink>
-                    </li>
-                    <li>
-                        <h:outputLink value="/home/privacy.xhtml" styleClass="text-white text-decoration-none">
-                            <i class="fas fa-angle-right me-2"></i>Políticas de Privacidad
-                        </h:outputLink>
-                    </li>
-                    <li>
-                        <h:outputLink value="/home/terms.xhtml" styleClass="text-white text-decoration-none">
-                            <i class="fas fa-angle-right me-2"></i>Términos y Condiciones
+                        <h:outputLink value="/home/blog.xhtml" styleClass="text-decoration-none" style="color: #cbd5e1;">
+                            <i class="fas fa-angle-right me-2" style="color: #60a5fa;"></i>Blog y guías
                         </h:outputLink>
                     </li>
                 </ul>
             </div>
 
-            <!-- Redes sociales + Métodos de pago -->
+            <!-- Información al pasajero -->
             <div class="col-md-6 col-lg-3">
-                <h4 class="text-white mb-4">Síguenos</h4>
-                <div class="mb-4">
-                    <a href="https://facebook.com" target="_blank" class="text-white me-3"><i class="fab fa-facebook-f fa-2x"></i></a>
-                    <a href="https://instagram.com" target="_blank" class="text-white me-3"><i class="fab fa-instagram fa-2x"></i></a>
-                    <a href="https://twitter.com" target="_blank" class="text-white me-3"><i class="fab fa-twitter fa-2x"></i></a>
+                <h5 class="mb-3 text-white fw-bold" style="font-size: 0.95rem;">Información al Pasajero</h5>
+                <ul class="list-unstyled d-flex flex-column gap-2 m-0" style="font-size: 0.86rem;">
+                    <li>
+                        <h:outputLink value="/home/faq.xhtml" styleClass="text-decoration-none" style="color: #cbd5e1;">
+                            <i class="fas fa-angle-right me-2" style="color: #60a5fa;"></i>Preguntas frecuentes
+                        </h:outputLink>
+                    </li>
+                    <li>
+                        <h:outputLink value="/home/privacy.xhtml" styleClass="text-decoration-none" style="color: #cbd5e1;">
+                            <i class="fas fa-angle-right me-2" style="color: #60a5fa;"></i>Políticas de privacidad
+                        </h:outputLink>
+                    </li>
+                    <li>
+                        <h:outputLink value="/home/terms.xhtml" styleClass="text-decoration-none" style="color: #cbd5e1;">
+                            <i class="fas fa-angle-right me-2" style="color: #60a5fa;"></i>Términos y condiciones
+                        </h:outputLink>
+                    </li>
+                    <li>
+                        <h:outputLink value="/perfil/pasajero/index.xhtml" styleClass="text-decoration-none" style="color: #cbd5e1;">
+                            <i class="fas fa-angle-right me-2" style="color: #60a5fa;"></i>Portal del pasajero
+                        </h:outputLink>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Medios de pago y respaldo -->
+            <div class="col-md-6 col-lg-3">
+                <h5 class="mb-3 text-white fw-bold" style="font-size: 0.95rem;">Medios de Pago</h5>
+                <p style="color: #94a3b8; font-size: 0.82rem;" class="mb-2">
+                    Compra segura en línea con emisión inmediata de tu E-Ticket PDF:
+                </p>
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded"
+                         style="background: #f8fafc; height: 34px; padding: 4px 10px;" title="WebPay">
+                        <h:graphicImage value="#{resource['assets/icons/logo_webpay.png']}"
+                                        style="max-height: 22px; width: auto; object-fit: contain;" alt="WebPay" />
+                    </div>
+                    <div class="d-inline-flex align-items-center justify-content-center rounded"
+                         style="background: #f8fafc; height: 34px; padding: 4px 10px;" title="PayPal">
+                        <h:graphicImage value="#{resource['assets/icons/logo_paypal.png']}"
+                                        style="max-height: 22px; width: auto; object-fit: contain;" alt="PayPal" />
+                    </div>
                 </div>
-                <h4 class="text-white mb-4">Formas de Pago</h4>
-                <div class="d-flex flex-wrap">
-                    <a href="#" class="text-white me-3 mb-2"><i class="fab fa-cc-visa fa-2x"></i></a>
-                    <a href="#" class="text-white me-3 mb-2"><i class="fab fa-cc-mastercard fa-2x"></i></a>
-                    <a href="#" class="text-white me-3 mb-2"><i class="fab fa-cc-amex fa-2x"></i></a>
-                    <a href="#" class="text-white me-3 mb-2"><i class="fas fa-money-bill-wave fa-2x"></i></a>
-                    <a href="#" class="text-white me-3 mb-2"><i class="fas fa-credit-card fa-2x"></i></a>
-                </div>
+                <small style="color: #64748b; display: block;">Check-In web abierto desde 48 h hasta 60 min antes de la salida.</small>
             </div>
 
         </div>
@@ -907,14 +914,14 @@
 <!-- Footer End -->
 
 <!-- Copyright -->
-<div class="container-fluid bg-dark text-body py-4">
+<div class="container-fluid text-body py-3" style="background: #060a15; border-top: 1px solid #16233b;">
     <div class="container">
         <div class="row align-items-center">
-            <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
-                <small class="text-white">2026 SkyWay Todos los derechos reservados.</small>
+            <div class="col-md-6 text-center text-md-start mb-2 mb-md-0">
+                <small style="color: #94a3b8;">© 2026 SkyWay Airlines · Todos los derechos reservados.</small>
             </div>
             <div class="col-md-6 text-center text-md-end">
-                <small class="text-white">Desarrollado por <a href="https://www.tuwebdiseño.com" class="text-decoration-none text-white">Tu Web Diseño</a></small>
+                <small style="color: #64748b;">Sistema de Reservas y Gestión Aeronáutica</small>
             </div>
         </div>
     </div>

@@ -1,0 +1,616 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition lang="es"
+                xmlns:f="jakarta.faces.core"
+                xmlns:h="jakarta.faces.html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                template="/template/main.xhtml">
+
+    <ui:define name="head">
+        <title>SkyWay Airlines | Recuperar Contraseña</title>
+        <style type="text/css">
+            .recovery-shell {
+                min-height: calc(100vh - 220px);
+                background: #0b1220;
+                padding: 48px 16px 64px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .recovery-card {
+                width: 100%;
+                max-width: 520px;
+                background: #101b33;
+                border: 1px solid #1e3150;
+                border-radius: 16px;
+                padding: 32px;
+                box-shadow: 0 24px 48px rgba(3, 7, 18, 0.45);
+            }
+
+            .recovery-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 0.72rem;
+                font-weight: 700;
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                color: #cbd5e1;
+                background: #0b1324;
+                border: 1px solid #1e3150;
+                border-radius: 999px;
+                padding: 5px 12px;
+                margin-bottom: 14px;
+            }
+
+            .recovery-title {
+                margin: 0 0 8px;
+                font-size: 1.55rem;
+                font-weight: 700;
+                color: #f8fafc;
+            }
+
+            .recovery-subtitle {
+                margin: 0 0 22px;
+                font-size: 0.92rem;
+                line-height: 1.55;
+                color: #94a3b8;
+            }
+
+            .recovery-steps {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+                margin-bottom: 24px;
+            }
+
+            .recovery-step {
+                background: #0b1324;
+                border: 1px solid #1e3150;
+                border-radius: 8px;
+                padding: 8px 10px;
+                font-size: 0.76rem;
+                font-weight: 600;
+                color: #64748b;
+                text-align: center;
+            }
+
+            .recovery-step.active {
+                border-color: #2563eb;
+                background: #132240;
+                color: #e2e8f0;
+            }
+
+            .recovery-step.done {
+                border-color: #166534;
+                background: rgba(22, 101, 52, 0.2);
+                color: #86efac;
+            }
+
+            .recovery-field {
+                margin-bottom: 16px;
+            }
+
+            .recovery-label {
+                display: block;
+                font-size: 0.84rem;
+                font-weight: 600;
+                color: #cbd5e1;
+                margin-bottom: 6px;
+            }
+
+            .recovery-field .recovery-input.ui-inputfield,
+            .recovery-field .ui-password input,
+            .recovery-field input.recovery-password {
+                width: 100% !important;
+                background: #0b1324 !important;
+                border: 1px solid #243b61 !important;
+                border-radius: 8px !important;
+                color: #f8fafc !important;
+                padding: 11px 14px !important;
+                font-size: 0.94rem !important;
+                box-sizing: border-box !important;
+            }
+
+            .recovery-field .ui-password input {
+                padding-right: 40px !important;
+            }
+
+            .recovery-field .recovery-input.ui-inputfield:focus,
+            .recovery-field .ui-password input:focus {
+                border-color: #3b82f6 !important;
+                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.16) !important;
+                outline: none !important;
+            }
+
+            .recovery-field .ui-password {
+                width: 100% !important;
+                display: block !important;
+                position: relative !important;
+            }
+
+            .recovery-field .ui-password .ui-password-toggle {
+                right: 12px !important;
+                color: #94a3b8 !important;
+            }
+
+            .recovery-token-input.ui-inputfield {
+                font-family: monospace;
+                font-size: 0.88rem !important;
+            }
+
+            .pwd-feedback-box {
+                margin-top: 10px;
+                background: #0b1324;
+                border: 1px solid #1e3150;
+                border-radius: 10px;
+                padding: 12px 14px;
+            }
+
+            .pwd-strength-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                font-size: 0.78rem;
+                color: #94a3b8;
+                margin-bottom: 8px;
+            }
+
+            .pwd-strength-label {
+                font-weight: 700;
+                color: #94a3b8;
+            }
+
+            .pwd-strength-bars {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 6px;
+                margin-bottom: 10px;
+            }
+
+            .pwd-bar {
+                height: 5px;
+                border-radius: 999px;
+                background: #1e293b;
+                transition: background-color 0.2s ease;
+            }
+
+            .pwd-checklist {
+                list-style: none;
+                margin: 0;
+                padding: 0;
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 6px 10px;
+            }
+
+            .pwd-check-item {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 0.76rem;
+                color: #64748b;
+                transition: color 0.2s ease;
+            }
+
+            .pwd-check-item.ok {
+                color: #86efac;
+            }
+
+            .pwd-match-indicator {
+                margin-top: 7px;
+                font-size: 0.79rem;
+                display: none;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .pwd-match-indicator.match {
+                display: flex;
+                color: #86efac;
+            }
+
+            .pwd-match-indicator.mismatch {
+                display: flex;
+                color: #fca5a5;
+            }
+
+            @media (max-width: 480px) {
+                .pwd-checklist {
+                    grid-template-columns: 1fr;
+                }
+            }
+
+            .recovery-btn-primary.ui-button {
+                width: 100%;
+                background: #1d4ed8 !important;
+                border: 1px solid #2563eb !important;
+                border-radius: 8px !important;
+                color: #ffffff !important;
+                font-weight: 700 !important;
+                padding: 11px 18px !important;
+                margin-top: 6px;
+            }
+
+            .recovery-btn-primary.ui-button:hover {
+                background: #1e40af !important;
+            }
+
+            .recovery-btn-secondary.ui-button {
+                background: transparent !important;
+                border: 1px solid #29436e !important;
+                border-radius: 8px !important;
+                color: #cbd5e1 !important;
+                font-weight: 600 !important;
+                padding: 9px 14px !important;
+            }
+
+            .recovery-btn-secondary.ui-button:hover {
+                border-color: #60a5fa !important;
+                color: #93c5fd !important;
+            }
+
+            .recovery-actions-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 10px;
+                flex-wrap: wrap;
+                margin-top: 16px;
+            }
+
+            .recovery-hint {
+                font-size: 0.8rem;
+                color: #94a3b8;
+                margin-top: 6px;
+                line-height: 1.45;
+            }
+
+            .recovery-verified-pill {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                background: rgba(22, 101, 52, 0.18);
+                border: 1px solid rgba(34, 197, 94, 0.35);
+                color: #bbf7d0;
+                border-radius: 8px;
+                padding: 10px 12px;
+                font-size: 0.84rem;
+                margin-bottom: 16px;
+            }
+
+            .recovery-success-box {
+                background: rgba(22, 101, 52, 0.18);
+                border: 1px solid rgba(34, 197, 94, 0.35);
+                border-radius: 12px;
+                padding: 20px;
+                text-align: center;
+                margin-bottom: 18px;
+            }
+
+            .recovery-success-box i {
+                font-size: 2rem;
+                color: #4ade80;
+                margin-bottom: 8px;
+                display: block;
+            }
+
+            .recovery-footer-link {
+                margin-top: 22px;
+                padding-top: 16px;
+                border-top: 1px solid #1e3150;
+                text-align: center;
+                font-size: 0.86rem;
+                color: #94a3b8;
+            }
+
+            .recovery-footer-link a {
+                color: #93c5fd;
+                text-decoration: none;
+                font-weight: 600;
+            }
+
+            .recovery-footer-link a:hover {
+                text-decoration: underline;
+            }
+        </style>
+    </ui:define>
+
+    <ui:define name="contenido">
+        <div class="recovery-shell">
+            <div class="recovery-card">
+                <div class="recovery-badge">
+                    <i class="pi pi-shield"/>
+                    <span>Seguridad de Cuenta</span>
+                </div>
+
+                <h1 class="recovery-title">Recuperar contraseña</h1>
+                <p class="recovery-subtitle">
+                    Restablece el acceso a tu cuenta SkyWay mediante un enlace seguro enviado a tu correo electrónico registrado.
+                </p>
+
+                <h:form id="frmRecuperar">
+                    <h:panelGroup id="pnlRecuperacion" layout="block">
+                        <div class="recovery-steps">
+                            <div class="recovery-step #{recuperacionContrasenaBean.pasoSolicitar ? 'active' : 'done'}">
+                                1. Correo
+                            </div>
+                            <div class="recovery-step #{recuperacionContrasenaBean.pasoVerificar ? 'active' : (recuperacionContrasenaBean.pasoCompletado ? 'done' : '')}">
+                                2. Token y clave
+                            </div>
+                            <div class="recovery-step #{recuperacionContrasenaBean.pasoCompletado ? 'active done' : ''}">
+                                3. Confirmación
+                            </div>
+                        </div>
+
+                        <p:messages id="msgRecuperar"
+                                    showDetail="true"
+                                    closable="true"
+                                    rendered="#{!recuperacionContrasenaBean.pasoCompletado}"
+                                    styleClass="mb-3"/>
+
+                        <!-- PASO 1: SOLICITUD DE TOKEN -->
+                        <h:panelGroup rendered="#{recuperacionContrasenaBean.pasoSolicitar}" layout="block">
+                            <div class="recovery-field">
+                                <label for="txtCorreo" class="recovery-label">Correo electrónico</label>
+                                <p:inputText id="txtCorreo"
+                                             value="#{recuperacionContrasenaBean.correo}"
+                                             placeholder="nombre@correo.com"
+                                             maxlength="100"
+                                             styleClass="recovery-input"
+                                             autocomplete="email"/>
+                                <div class="recovery-hint">
+                                    Te enviaremos un enlace de un solo uso y su token de seguridad válido por 15 minutos.
+                                </div>
+                            </div>
+
+                            <p:commandButton value="Enviar enlace de recuperación"
+                                             icon="pi pi-envelope"
+                                             action="#{recuperacionContrasenaBean.solicitarCodigo}"
+                                             update="pnlRecuperacion"
+                                             process="@form"
+                                             styleClass="recovery-btn-primary"/>
+                        </h:panelGroup>
+
+                        <!-- PASO 2: VALIDACIÓN DE TOKEN Y NUEVA CONTRASEÑA -->
+                        <h:panelGroup rendered="#{recuperacionContrasenaBean.pasoVerificar}" layout="block">
+                            <!-- SUBPASO 2A: ESPERANDO / VALIDANDO TOKEN -->
+                            <h:panelGroup rendered="#{!recuperacionContrasenaBean.tokenPrevalidado}" layout="block">
+                                <div class="recovery-field">
+                                    <label for="txtToken" class="recovery-label">Token de seguridad (enviado a tu correo)</label>
+                                    <p:inputText id="txtToken"
+                                                 value="#{recuperacionContrasenaBean.token}"
+                                                 placeholder="Pega aquí el token enviado a tu correo"
+                                                 maxlength="128"
+                                                 styleClass="recovery-input recovery-token-input"
+                                                 autocomplete="off"/>
+                                    <div class="recovery-hint">
+                                        Haz clic en el enlace del correo recibido o pega el token aquí y valídalo para habilitar el cambio de contraseña.
+                                    </div>
+                                </div>
+
+                                <p:commandButton value="Validar token"
+                                                 icon="pi pi-key"
+                                                 action="#{recuperacionContrasenaBean.validarTokenIngresado}"
+                                                 update="pnlRecuperacion"
+                                                 process="@this,txtToken"
+                                                 styleClass="recovery-btn-primary"/>
+                            </h:panelGroup>
+
+                            <!-- SUBPASO 2B: SOLO CUANDO EL TOKEN YA FUE CARGADO Y VALIDADO -->
+                            <h:panelGroup rendered="#{recuperacionContrasenaBean.tokenPrevalidado}" layout="block">
+                                <div class="recovery-verified-pill">
+                                    <i class="pi pi-lock"/>
+                                    <span>Token verificado. Define ahora tu nueva contraseña.</span>
+                                </div>
+
+                                <div class="recovery-field">
+                                    <label for="pwdNueva" class="recovery-label">Nueva contraseña</label>
+                                    <p:password id="pwdNueva"
+                                                value="#{recuperacionContrasenaBean.nuevaContrasena}"
+                                                toggleMask="true"
+                                                redisplay="false"
+                                                feedback="false"
+                                                maxlength="72"
+                                                placeholder="Mínimo 8 caracteres, letras y números"
+                                                styleClass="recovery-password"/>
+
+                                    <div id="pwdFeedbackBox" class="pwd-feedback-box">
+                                        <div class="pwd-strength-header">
+                                            <span>Seguridad de la contraseña</span>
+                                            <span id="pwdStrengthLabel" class="pwd-strength-label">Sin ingresar</span>
+                                        </div>
+                                        <div class="pwd-strength-bars">
+                                            <div class="pwd-bar" data-bar="1"></div>
+                                            <div class="pwd-bar" data-bar="2"></div>
+                                            <div class="pwd-bar" data-bar="3"></div>
+                                            <div class="pwd-bar" data-bar="4"></div>
+                                        </div>
+                                        <ul class="pwd-checklist">
+                                            <li id="chkLen" class="pwd-check-item">
+                                                <i class="pi pi-circle"></i>
+                                                <span>Mínimo 8 caracteres</span>
+                                            </li>
+                                            <li id="chkNum" class="pwd-check-item">
+                                                <i class="pi pi-circle"></i>
+                                                <span>Al menos un número</span>
+                                            </li>
+                                            <li id="chkCase" class="pwd-check-item">
+                                                <i class="pi pi-circle"></i>
+                                                <span>Mayúscula y minúscula</span>
+                                            </li>
+                                            <li id="chkSpecial" class="pwd-check-item">
+                                                <i class="pi pi-circle"></i>
+                                                <span>Símbolo especial</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class="recovery-field">
+                                    <label for="pwdConfirmar" class="recovery-label">Confirmar nueva contraseña</label>
+                                    <p:password id="pwdConfirmar"
+                                                value="#{recuperacionContrasenaBean.confirmarContrasena}"
+                                                toggleMask="true"
+                                                redisplay="false"
+                                                feedback="false"
+                                                maxlength="72"
+                                                placeholder="Repite tu nueva contraseña"
+                                                styleClass="recovery-password"/>
+                                    <div id="pwdMatchIndicator" class="pwd-match-indicator">
+                                        <i id="pwdMatchIcon" class="pi pi-info-circle"></i>
+                                        <span id="pwdMatchText"></span>
+                                    </div>
+                                </div>
+
+                                <p:commandButton value="Restablecer contraseña"
+                                                 icon="pi pi-check-circle"
+                                                 action="#{recuperacionContrasenaBean.restablecerContrasena}"
+                                                 update="pnlRecuperacion"
+                                                 process="@form"
+                                                 styleClass="recovery-btn-primary"/>
+                            </h:panelGroup>
+
+                            <div class="recovery-actions-row">
+                                <p:commandButton value="Solicitar otro correo"
+                                                 icon="pi pi-arrow-left"
+                                                 action="#{recuperacionContrasenaBean.volverASolicitar}"
+                                                 update="pnlRecuperacion"
+                                                 process="@this"
+                                                 styleClass="recovery-btn-secondary"/>
+
+                                <p:commandButton value="Reenviar enlace"
+                                                 icon="pi pi-refresh"
+                                                 action="#{recuperacionContrasenaBean.reenviarCodigo}"
+                                                 update="pnlRecuperacion"
+                                                 process="@this"
+                                                 rendered="#{!recuperacionContrasenaBean.tokenPrevalidado}"
+                                                 styleClass="recovery-btn-secondary"/>
+                            </div>
+                        </h:panelGroup>
+
+                        <!-- PASO 3: CONFIRMACIÓN FINAL -->
+                        <h:panelGroup rendered="#{recuperacionContrasenaBean.pasoCompletado}" layout="block">
+                            <div class="recovery-success-box">
+                                <i class="pi pi-check-circle"/>
+                                <h3 class="text-white mb-2" style="font-size: 1.15rem;">Contraseña actualizada</h3>
+                                <p class="mb-0" style="color: #bbf7d0; font-size: 0.9rem;">
+                                    Tu nueva contraseña ya está activa. Puedes ingresar al portal con tus credenciales actualizadas.
+                                </p>
+                            </div>
+
+                            <h:outputLink value="#{request.contextPath}/home/login.xhtml"
+                                          styleClass="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only recovery-btn-primary text-center d-block"
+                                          style="text-decoration: none;">
+                                <span class="ui-button-text">Ir a iniciar sesión</span>
+                            </h:outputLink>
+                        </h:panelGroup>
+                    </h:panelGroup>
+                </h:form>
+
+                <div class="recovery-footer-link">
+                    ¿Recordaste tu contraseña?
+                    <h:outputLink value="#{request.contextPath}/home/login.xhtml">Volver al inicio de sesión</h:outputLink>
+                </div>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            (function () {
+                function resolverInput(idBase) {
+                    return document.querySelector("#frmRecuperar input[id$='" + idBase + "_input']")
+                        || document.querySelector("#frmRecuperar input[id$='" + idBase + "']");
+                }
+
+                function actualizarCheck(id, ok) {
+                    var el = document.getElementById(id);
+                    if (!el) return;
+                    el.classList.toggle("ok", ok);
+                    var icon = el.querySelector("i");
+                    if (icon) {
+                        icon.className = ok ? "pi pi-check-circle" : "pi pi-circle";
+                    }
+                }
+
+                function evaluarFeedbackClave() {
+                    var inputNueva = resolverInput("pwdNueva");
+                    var inputConfirmar = resolverInput("pwdConfirmar");
+                    if (!inputNueva) return;
+
+                    var val = inputNueva.value || "";
+                    var tieneLen = val.length >= 8;
+                    var tieneNum = /\d/.test(val);
+                    var tieneMayusMinus = /[a-z]/.test(val) &amp;&amp; /[A-Z]/.test(val);
+                    var tieneLetra = /[A-Za-z]/.test(val);
+                    var tieneEspecial = /[^A-Za-z0-9]/.test(val);
+
+                    actualizarCheck("chkLen", tieneLen);
+                    actualizarCheck("chkNum", tieneNum);
+                    actualizarCheck("chkCase", tieneMayusMinus);
+                    actualizarCheck("chkSpecial", tieneEspecial);
+
+                    var nivel = 0;
+                    if (val.length > 0) {
+                        if (tieneLen &amp;&amp; tieneLetra &amp;&amp; tieneNum) {
+                            nivel = 2;
+                            if (tieneMayusMinus) nivel++;
+                            if (tieneEspecial &amp;&amp; val.length >= 10) nivel++;
+                        } else {
+                            nivel = 1;
+                        }
+                    }
+
+                    var niveles = [
+                        { texto: "Sin ingresar", color: "#94a3b8" },
+                        { texto: "Débil", color: "#ef4444" },
+                        { texto: "Aceptable", color: "#f59e0b" },
+                        { texto: "Fuerte", color: "#3b82f6" },
+                        { texto: "Muy fuerte", color: "#22c55e" }
+                    ];
+                    var estado = niveles[nivel];
+
+                    var labelEl = document.getElementById("pwdStrengthLabel");
+                    if (labelEl) {
+                        labelEl.textContent = estado.texto;
+                        labelEl.style.color = estado.color;
+                    }
+
+                    var bars = document.querySelectorAll("#pwdFeedbackBox .pwd-bar");
+                    bars.forEach(function (bar, idx) {
+                        bar.style.backgroundColor = (idx &lt; nivel) ? estado.color : "#1e293b";
+                    });
+
+                    var matchEl = document.getElementById("pwdMatchIndicator");
+                    var matchIcon = document.getElementById("pwdMatchIcon");
+                    var matchText = document.getElementById("pwdMatchText");
+                    if (matchEl &amp;&amp; matchIcon &amp;&amp; matchText &amp;&amp; inputConfirmar) {
+                        var conf = inputConfirmar.value || "";
+                        matchEl.classList.remove("match", "mismatch");
+                        if (conf.length === 0) {
+                            matchText.textContent = "";
+                        } else if (val === conf) {
+                            matchEl.classList.add("match");
+                            matchIcon.className = "pi pi-check-circle";
+                            matchText.textContent = "Las contraseñas coinciden";
+                        } else {
+                            matchEl.classList.add("mismatch");
+                            matchIcon.className = "pi pi-times-circle";
+                            matchText.textContent = "Las contraseñas no coinciden";
+                        }
+                    }
+                }
+
+                document.addEventListener("input", function (ev) {
+                    if (!ev.target || !ev.target.id) return;
+                    if (ev.target.id.indexOf("pwdNueva") !== -1 || ev.target.id.indexOf("pwdConfirmar") !== -1) {
+                        evaluarFeedbackClave();
+                    }
+                });
+
+                document.addEventListener("DOMContentLoaded", evaluarFeedbackClave);
+            })();
+        </script>
+    </ui:define>
+
+</ui:composition>

@@ -6,262 +6,1004 @@
                 xmlns:ui="http://java.sun.com/jsf/facelets"
                 template="/template/main.xhtml">
 
-    <ui:define name="contenido">
-
-        <!-- ESTILOS BASADOS STRICTAMENTE EN LA PALETA CORPORATIVA SKYWAY -->
+    <ui:define name="head">
+        <title>SkyWay Airlines | Mi Perfil</title>
         <style type="text/css">
-            :root {
-                --deep-space: #080e1a;
-                --midnight-blue: #0b1426;
-                --slate-glass: #1e293b;
-                --border-ui: #334155;
-                --cyber-cyan: #00d1ff;
-                --aviation-blue: #4c7cf3;
-                --glow-white: #f8fafc;
-                --text-dim: #94a3b8;
+            .perfil-shell {
+                background: #0b1220;
+                min-height: calc(100vh - 220px);
+                padding: 36px 16px 64px;
             }
 
-            .profile-wrapper {
-                max-width: 1000px;
+            .perfil-container {
+                max-width: 980px;
                 margin: 0 auto;
-                padding: 20px 10px;
             }
 
-            .profile-card {
-                background-color: var(--midnight-blue);
-                border: 1px solid var(--border-ui);
-                border-radius: 12px;
+            .perfil-card {
+                background: #101b33;
+                border: 1px solid #1e3150;
+                border-radius: 16px;
                 overflow: hidden;
+                box-shadow: 0 20px 44px rgba(3, 7, 18, 0.4);
             }
 
-            .profile-header {
-                background-color: rgba(30, 41, 59, 0.4);
-                border-bottom: 1px solid var(--border-ui);
-                padding: 24px;
+            .perfil-header {
+                background: #0d1629;
+                border-bottom: 1px solid #1e3150;
+                padding: 26px 28px;
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
                 flex-wrap: wrap;
-                gap: 16px;
+                gap: 18px;
             }
 
-            .avatar-badge {
-                width: 64px;
-                height: 64px;
+            .perfil-identity {
+                display: flex;
+                align-items: center;
+                gap: 18px;
+            }
+
+            .perfil-avatar {
+                width: 68px;
+                height: 68px;
                 border-radius: 50%;
-                background-color: var(--slate-glass);
-                border: 2px solid var(--aviation-blue);
-                color: var(--cyber-cyan);
-                font-size: 24px;
+                background: #132240;
+                border: 2px solid #2563eb;
+                color: #93c5fd;
+                font-size: 1.45rem;
                 font-weight: 700;
                 display: flex;
                 align-items: center;
                 justify-content: center;
+                flex-shrink: 0;
             }
 
-            .profile-title {
+            .perfil-name {
                 margin: 0;
-                color: var(--glow-white);
-                font-size: 22px;
+                color: #f8fafc;
+                font-size: 1.4rem;
+                font-weight: 700;
+            }
+
+            .perfil-meta {
+                display: flex;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 10px;
+                margin-top: 6px;
+                font-size: 0.84rem;
+                color: #94a3b8;
+            }
+
+            .perfil-rut-chip {
+                background: #0b1220;
+                border: 1px solid #1e3150;
+                border-radius: 6px;
+                padding: 2px 9px;
+                color: #93c5fd;
                 font-weight: 600;
             }
 
-            .profile-subtitle {
-                color: var(--cyber-cyan);
-                font-size: 13px;
-                font-weight: 500;
-                margin-top: 4px;
-                display: block;
+            .perfil-header-actions {
+                display: flex;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 10px;
             }
 
-            /* ESTRUCTURA EN CUADRÍCULA (GRID LAYOUT) */
-            .info-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-                gap: 16px;
-                padding: 24px;
+            .perfil-role-pill {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                background: rgba(29, 78, 216, 0.16);
+                border: 1px solid #2563eb;
+                color: #e2e8f0;
+                padding: 5px 12px;
+                border-radius: 999px;
+                font-size: 0.78rem;
+                font-weight: 600;
             }
 
-            .info-box {
-                background-color: var(--deep-space);
-                border: 1px solid var(--slate-glass);
+            .perfil-quick-link {
+                display: inline-flex;
+                align-items: center;
+                gap: 7px;
+                background: #101b33;
+                border: 1px solid #29436e;
+                color: #cbd5e1 !important;
                 border-radius: 8px;
-                padding: 14px 18px;
+                padding: 7px 14px;
+                font-size: 0.82rem;
+                font-weight: 600;
+                text-decoration: none !important;
+                transition: border-color 0.2s ease, color 0.2s ease;
             }
 
-            .info-box.full-width {
+            .perfil-quick-link:hover {
+                border-color: #60a5fa;
+                color: #93c5fd !important;
+            }
+
+            .perfil-tabs {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                padding: 14px 28px;
+                background: #0d1629;
+                border-bottom: 1px solid #1e3150;
+            }
+
+            .perfil-tab-btn.ui-button {
+                background: transparent !important;
+                border: 1px solid #1e3150 !important;
+                border-radius: 8px !important;
+                color: #94a3b8 !important;
+                font-weight: 600 !important;
+                font-size: 0.85rem !important;
+                padding: 8px 14px !important;
+            }
+
+            .perfil-tab-btn.ui-button:hover {
+                border-color: #3b82f6 !important;
+                color: #e2e8f0 !important;
+            }
+
+            .perfil-tab-btn.active.ui-button {
+                background: #1d4ed8 !important;
+                border-color: #2563eb !important;
+                color: #ffffff !important;
+            }
+
+            .perfil-body {
+                padding: 26px 28px;
+            }
+
+            .perfil-info-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+                gap: 16px;
+            }
+
+            .perfil-info-box {
+                background: #0b1220;
+                border: 1px solid #1e3150;
+                border-radius: 10px;
+                padding: 15px 18px;
+            }
+
+            .perfil-info-box.full-width {
                 grid-column: 1 / -1;
             }
 
-            .info-label {
-                font-size: 11px;
+            .perfil-info-label {
+                font-size: 0.72rem;
                 text-transform: uppercase;
-                letter-spacing: 0.8px;
-                color: var(--text-dim);
-                font-weight: 600;
-                margin-bottom: 6px;
+                letter-spacing: 0.08em;
+                color: #94a3b8;
+                font-weight: 700;
+                margin-bottom: 7px;
                 display: flex;
                 align-items: center;
                 gap: 8px;
             }
 
-            .info-label i {
-                color: var(--aviation-blue);
-                font-size: 13px;
+            .perfil-info-label i {
+                color: #60a5fa;
+                font-size: 0.85rem;
             }
 
-            .info-value {
-                font-size: 14px;
-                color: var(--glow-white);
-                font-weight: 500;
-            }
-
-            .role-pill {
-                display: inline-block;
-                background-color: rgba(76, 124, 243, 0.15);
-                border: 1px solid var(--aviation-blue);
-                color: var(--glow-white);
-                padding: 4px 12px;
-                border-radius: 20px;
-                font-size: 12px;
+            .perfil-info-value {
+                font-size: 0.95rem;
+                color: #f8fafc;
                 font-weight: 600;
+                word-break: break-word;
             }
 
-            .profile-footer {
-                padding: 16px 24px;
-                border-top: 1px solid var(--border-ui);
-                background-color: rgba(8, 14, 26, 0.5);
+            .perfil-section-title {
+                margin: 0 0 6px;
+                font-size: 1.15rem;
+                font-weight: 700;
+                color: #f8fafc;
+            }
+
+            .perfil-section-sub {
+                margin: 0 0 22px;
+                font-size: 0.88rem;
+                color: #94a3b8;
+            }
+
+            .perfil-form-grid {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 18px;
+            }
+
+            .perfil-field {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .perfil-field.full-width {
+                grid-column: 1 / -1;
+            }
+
+            .perfil-label {
+                font-size: 0.83rem;
+                font-weight: 600;
+                color: #cbd5e1;
+                margin-bottom: 6px;
+            }
+
+            .perfil-field .ui-inputfield,
+            .perfil-field .ui-password input,
+            .perfil-field .p-datepicker input {
+                width: 100% !important;
+                background: #0b1220 !important;
+                border: 1px solid #243b61 !important;
+                border-radius: 8px !important;
+                color: #f8fafc !important;
+                padding: 11px 14px !important;
+                font-size: 0.92rem !important;
+                box-sizing: border-box !important;
+            }
+
+            .perfil-field .ui-password input {
+                padding-right: 40px !important;
+            }
+
+            .perfil-field .ui-inputfield:focus,
+            .perfil-field .ui-password input:focus,
+            .perfil-field .p-datepicker input:focus {
+                border-color: #3b82f6 !important;
+                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.16) !important;
+                outline: none !important;
+            }
+
+            .perfil-field .ui-password,
+            .perfil-field .p-datepicker {
+                width: 100% !important;
+                display: block !important;
+                position: relative !important;
+            }
+
+            .perfil-field .ui-password .ui-password-toggle {
+                right: 12px !important;
+                color: #94a3b8 !important;
+            }
+
+            .perfil-readonly-box {
+                background: #080f1d;
+                border: 1px dashed #1e3150;
+                border-radius: 8px;
+                padding: 11px 14px;
+                color: #94a3b8;
+                font-size: 0.92rem;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+            }
+
+            .perfil-readonly-note {
+                margin-top: 6px;
+                font-size: 0.78rem;
+                color: #64748b;
+            }
+
+            .perfil-footer-actions {
+                padding: 18px 28px;
+                border-top: 1px solid #1e3150;
+                background: #0d1629;
                 display: flex;
                 justify-content: flex-end;
+                align-items: center;
+                flex-wrap: wrap;
                 gap: 12px;
             }
 
-            /* Sobrescribir botones PrimeFaces con paleta limpia */
-            .btn-skyway-primary {
-                background-color: var(--aviation-blue) !important;
-                border-color: var(--aviation-blue) !important;
+            .perfil-form-actions {
+                margin-top: 24px;
+                padding-top: 18px;
+                border-top: 1px solid #1e3150;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            .btn-perfil-primary.ui-button {
+                background: #1d4ed8 !important;
+                border: 1px solid #2563eb !important;
+                border-radius: 8px !important;
                 color: #ffffff !important;
+                font-weight: 700 !important;
+                padding: 10px 18px !important;
+            }
+
+            .btn-perfil-primary.ui-button:hover {
+                background: #1e40af !important;
+            }
+
+            .btn-perfil-secondary.ui-button {
+                background: transparent !important;
+                border: 1px solid #29436e !important;
+                border-radius: 8px !important;
+                color: #cbd5e1 !important;
+                font-weight: 600 !important;
+                padding: 10px 16px !important;
+            }
+
+            .btn-perfil-secondary.ui-button:hover {
+                border-color: #60a5fa !important;
+                color: #93c5fd !important;
+            }
+
+            .pwd-feedback-box {
+                margin-top: 10px;
+                background: #0b1220;
+                border: 1px solid #1e3150;
+                border-radius: 10px;
+                padding: 12px 14px;
+            }
+
+            .pwd-strength-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                font-size: 0.78rem;
+                color: #94a3b8;
+                margin-bottom: 8px;
+            }
+
+            .pwd-strength-label {
+                font-weight: 700;
+                color: #94a3b8;
+            }
+
+            .pwd-strength-bars {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 6px;
+                margin-bottom: 10px;
+            }
+
+            .pwd-bar {
+                height: 5px;
+                border-radius: 999px;
+                background: #1e293b;
+                transition: background-color 0.2s ease;
+            }
+
+            .pwd-checklist {
+                list-style: none;
+                margin: 0;
+                padding: 0;
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 6px 10px;
+            }
+
+            .pwd-check-item {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 0.76rem;
+                color: #64748b;
+            }
+
+            .pwd-check-item.ok {
+                color: #86efac;
+            }
+
+            .pwd-match-indicator {
+                margin-top: 7px;
+                font-size: 0.79rem;
+                display: none;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .pwd-match-indicator.match {
+                display: flex;
+                color: #86efac;
+            }
+
+            .pwd-match-indicator.mismatch {
+                display: flex;
+                color: #fca5a5;
+            }
+
+            .perfil-recovery-link {
+                font-size: 0.83rem;
+                color: #93c5fd;
+                text-decoration: none;
+                font-weight: 600;
+            }
+
+            .perfil-recovery-link:hover {
+                text-decoration: underline;
+            }
+
+            body .perfil-datepicker-panel,
+            body .perfil-datepicker-panel.p-datepicker,
+            body .perfil-datepicker-panel.ui-datepicker {
+                width: 312px !important;
+                max-width: 92vw !important;
+                background: #0d172a !important;
+                border: 1px solid #28426e !important;
+                border-radius: 12px !important;
+                padding: 12px !important;
+                color: #f8fafc !important;
+                box-shadow: 0 20px 44px rgba(0, 0, 0, 0.75) !important;
+                z-index: 9999 !important;
+            }
+
+            body .perfil-datepicker-panel .p-datepicker-header,
+            body .perfil-datepicker-panel .ui-datepicker-header {
+                background: #162442 !important;
+                border: 1px solid #1e3150 !important;
+                border-radius: 8px !important;
+                color: #f8fafc !important;
+                padding: 8px 10px !important;
+                margin-bottom: 10px !important;
+            }
+
+            body .perfil-datepicker-panel .p-datepicker-title {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                gap: 6px !important;
+            }
+
+            body .perfil-datepicker-panel .p-datepicker-header select,
+            body .perfil-datepicker-panel .p-datepicker-header input,
+            body .perfil-datepicker-panel .p-datepicker-month,
+            body .perfil-datepicker-panel .p-datepicker-year {
+                background: #0b1220 !important;
+                border: 1px solid #243b61 !important;
+                border-radius: 6px !important;
+                color: #f8fafc !important;
+                padding: 4px 8px !important;
+                font-size: 0.85rem !important;
                 font-weight: 600 !important;
             }
 
-            .btn-skyway-primary:hover {
-                background-color: #3b68d6 !important;
+            body .perfil-datepicker-panel .p-datepicker-prev,
+            body .perfil-datepicker-panel .p-datepicker-next {
+                color: #93c5fd !important;
+                border-radius: 50% !important;
             }
 
-            .btn-skyway-secondary {
-                background-color: transparent !important;
-                border: 1px solid var(--border-ui) !important;
-                color: var(--text-dim) !important;
+            body .perfil-datepicker-panel .p-datepicker-prev:hover,
+            body .perfil-datepicker-panel .p-datepicker-next:hover {
+                background: #1e3150 !important;
+                color: #ffffff !important;
             }
 
-            .btn-skyway-secondary:hover {
-                border-color: var(--aviation-blue) !important;
-                color: var(--glow-white) !important;
+            body .perfil-datepicker-panel .p-datepicker-calendar {
+                width: 100% !important;
+                margin: 0 !important;
+            }
+
+            body .perfil-datepicker-panel .p-datepicker-calendar th,
+            body .perfil-datepicker-panel .p-datepicker-calendar th span {
+                color: #93c5fd !important;
+                font-size: 0.76rem !important;
+                font-weight: 700 !important;
+                padding: 5px 0 !important;
+                text-align: center !important;
+            }
+
+            body .perfil-datepicker-panel .p-datepicker-calendar td {
+                padding: 2px !important;
+                text-align: center !important;
+            }
+
+            body .perfil-datepicker-panel .p-datepicker-calendar td > span,
+            body .perfil-datepicker-panel .p-datepicker-calendar td > a {
+                width: 32px !important;
+                height: 32px !important;
+                margin: 0 auto !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                border-radius: 50% !important;
+                color: #e2e8f0 !important;
+                font-size: 0.84rem !important;
+                transition: background-color 0.15s ease;
+            }
+
+            body .perfil-datepicker-panel .p-datepicker-calendar td > span:not(.p-disabled):hover,
+            body .perfil-datepicker-panel .p-datepicker-calendar td > a:hover {
+                background: #1e3150 !important;
+                color: #ffffff !important;
+            }
+
+            body .perfil-datepicker-panel .p-datepicker-calendar td > span.p-highlight,
+            body .perfil-datepicker-panel .p-datepicker-calendar td > a.ui-state-active {
+                background: #1d4ed8 !important;
+                color: #ffffff !important;
+                font-weight: 700 !important;
+            }
+
+            body .perfil-datepicker-panel .p-datepicker-calendar td > span.p-disabled {
+                color: #475569 !important;
+                opacity: 0.5 !important;
+            }
+
+            @media (max-width: 680px) {
+                .perfil-form-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .pwd-checklist {
+                    grid-template-columns: 1fr;
+                }
+
+                .perfil-header,
+                .perfil-tabs,
+                .perfil-body,
+                .perfil-footer-actions {
+                    padding-left: 18px;
+                    padding-right: 18px;
+                }
             }
         </style>
+    </ui:define>
 
-        <div class="profile-wrapper">
-            <h:form id="formPerfil">
-                <p:growl id="messages" showDetail="true" />
+    <ui:define name="contenido">
+        <div class="perfil-shell">
+            <div class="perfil-container">
+                <h:form id="formPerfil">
+                    <p:growl id="growlPerfil" showDetail="true" life="4500"/>
 
-                <!-- TARJETA PRINCIPAL CORPORATIVA -->
-                <div class="profile-card">
-
-                    <!-- CABECERA -->
-                    <div class="profile-header">
-                        <div style="display: flex; align-items: center; gap: 16px;">
-                            <div class="avatar-badge">
-                                <h:outputText value="#{userBean.usuario.nombre.substring(0,1)}#{userBean.usuario.apellido.substring(0,1)}"
-                                              rendered="#{not empty userBean.usuario.nombre and not empty userBean.usuario.apellido}" />
-                                <h:outputText value="U" rendered="#{empty userBean.usuario.nombre}" />
+                    <h:panelGroup id="pnlPerfil" layout="block">
+                        <!-- SIN SESIÓN ACTIVA -->
+                        <h:panelGroup rendered="#{!miPerfilBean.autenticado}" layout="block" styleClass="perfil-card">
+                            <div class="perfil-body text-center">
+                                <h2 class="perfil-section-title">Inicia sesión para gestionar tu perfil</h2>
+                                <p class="perfil-section-sub">
+                                    Tu sesión expiró o aún no has ingresado al portal de SkyWay Airlines.
+                                </p>
+                                <h:outputLink value="#{request.contextPath}/home/login.xhtml"
+                                              styleClass="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only btn-perfil-primary"
+                                              style="text-decoration: none;">
+                                    <span class="ui-button-text">Ir a iniciar sesión</span>
+                                </h:outputLink>
                             </div>
-                            <div>
-                                <h2 class="profile-title">
-                                    #{userBean.usuario.nombre} #{userBean.usuario.apellido}
-                                </h2>
-                                <span class="profile-subtitle">
-                                    RUT: #{userBean.usuario.rut}
-                                </span>
+                        </h:panelGroup>
+
+                        <!-- PERFIL AUTENTICADO -->
+                        <h:panelGroup rendered="#{miPerfilBean.autenticado}" layout="block" styleClass="perfil-card">
+                            <!-- CABECERA -->
+                            <div class="perfil-header">
+                                <div class="perfil-identity">
+                                    <div class="perfil-avatar">#{miPerfilBean.iniciales}</div>
+                                    <div>
+                                        <h1 class="perfil-name">#{miPerfilBean.nombreCompleto}</h1>
+                                        <div class="perfil-meta">
+                                            <span class="perfil-rut-chip">RUT: #{miPerfilBean.usuarioActual.rut}</span>
+                                            <span>#{miPerfilBean.usuarioActual.correoElectronico}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="perfil-header-actions">
+                                    <ui:repeat value="#{miPerfilBean.usuarioActual.roles}" var="role">
+                                        <span class="perfil-role-pill">
+                                            <i class="pi pi-shield"/>
+                                            <span>#{role.nombre}</span>
+                                        </span>
+                                    </ui:repeat>
+
+                                    <h:outputLink value="#{request.contextPath}/perfil/pasajero/index.xhtml"
+                                                  rendered="#{miPerfilBean.isTieneRol('Pasajero')}"
+                                                  styleClass="perfil-quick-link">
+                                        <i class="pi pi-ticket"/>
+                                        <span>Mis Viajes</span>
+                                    </h:outputLink>
+
+                                    <h:outputLink value="#{request.contextPath}/admin/index.xhtml"
+                                                  rendered="#{miPerfilBean.isTieneRol('Admin')}"
+                                                  styleClass="perfil-quick-link">
+                                        <i class="pi pi-sliders-h"/>
+                                        <span>Panel Admin</span>
+                                    </h:outputLink>
+                                </div>
                             </div>
-                        </div>
 
-                        <!-- ROLES -->
-                        <div>
-                            <ui:repeat value="#{userBean.usuario.roles}" var="role">
-                                <span class="role-pill">#{role.nombre}</span>
-                            </ui:repeat>
-                        </div>
-                    </div>
+                            <!-- PESTAÑAS DE NAVEGACIÓN -->
+                            <div class="perfil-tabs">
+                                <p:commandButton value="Resumen de Cuenta"
+                                                 icon="pi pi-user"
+                                                 action="#{miPerfilBean.abrirResumen}"
+                                                 update="pnlPerfil"
+                                                 process="@this"
+                                                 styleClass="perfil-tab-btn #{miPerfilBean.vistaResumen ? 'active' : ''}"/>
 
-                    <!-- CAMPOS ORGANIZADOS EN CUADRÍCULA MULTICOLUMNA -->
-                    <div class="info-grid">
+                                <p:commandButton value="Actualizar Perfil"
+                                                 icon="pi pi-user-edit"
+                                                 action="#{miPerfilBean.abrirEditar}"
+                                                 update="pnlPerfil"
+                                                 process="@this"
+                                                 styleClass="perfil-tab-btn #{miPerfilBean.vistaEditar ? 'active' : ''}"/>
 
-                        <div class="info-box">
-                            <span class="info-label">
-                                <i class="pi pi-id-card"></i> Documento de Identidad
-                            </span>
-                            <div class="info-value">#{userBean.usuario.documentoIdentidad}</div>
-                        </div>
-
-                        <div class="info-box">
-                            <span class="info-label">
-                                <i class="pi pi-envelope"></i> Correo Electrónico
-                            </span>
-                            <div class="info-value">#{userBean.usuario.correoElectronico}</div>
-                        </div>
-
-                        <div class="info-box">
-                            <span class="info-label">
-                                <i class="pi pi-phone"></i> Teléfono de Contacto
-                            </span>
-                            <div class="info-value">#{userBean.usuario.telefono}</div>
-                        </div>
-
-                        <div class="info-box">
-                            <span class="info-label">
-                                <i class="pi pi-calendar"></i> Fecha de Nacimiento
-                            </span>
-                            <div class="info-value">
-                                <h:outputText value="#{userBean.usuario.fechaNacimiento}">
-                                    <f:convertDateTime pattern="dd/MM/yyyy" />
-                                </h:outputText>
+                                <p:commandButton value="Seguridad y Contraseña"
+                                                 icon="pi pi-lock"
+                                                 action="#{miPerfilBean.abrirSeguridad}"
+                                                 update="pnlPerfil"
+                                                 process="@this"
+                                                 styleClass="perfil-tab-btn #{miPerfilBean.vistaSeguridad ? 'active' : ''}"/>
                             </div>
-                        </div>
 
-                        <div class="info-box full-width">
-                            <span class="info-label">
-                                <i class="pi pi-clock"></i> Fecha de Registro en Plataforma
-                            </span>
-                            <div class="info-value">
-                                <h:outputText value="#{userBean.usuario.fechaRegistro}">
-                                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
-                                </h:outputText>
+                            <!-- CUERPO -->
+                            <div class="perfil-body">
+                                <p:messages id="msgPerfil" showDetail="true" closable="true" styleClass="mb-3"/>
+
+                                <!-- VISTA 1: RESUMEN -->
+                                <h:panelGroup rendered="#{miPerfilBean.vistaResumen}" layout="block">
+                                    <div class="perfil-info-grid">
+                                        <div class="perfil-info-box">
+                                            <span class="perfil-info-label">
+                                                <i class="pi pi-id-card"/> Documento de Identidad
+                                            </span>
+                                            <div class="perfil-info-value">#{miPerfilBean.usuarioActual.documentoIdentidad}</div>
+                                        </div>
+
+                                        <div class="perfil-info-box">
+                                            <span class="perfil-info-label">
+                                                <i class="pi pi-envelope"/> Correo Electrónico
+                                            </span>
+                                            <div class="perfil-info-value">#{miPerfilBean.usuarioActual.correoElectronico}</div>
+                                        </div>
+
+                                        <div class="perfil-info-box">
+                                            <span class="perfil-info-label">
+                                                <i class="pi pi-phone"/> Teléfono de Contacto
+                                            </span>
+                                            <div class="perfil-info-value">#{miPerfilBean.usuarioActual.telefono}</div>
+                                        </div>
+
+                                        <div class="perfil-info-box">
+                                            <span class="perfil-info-label">
+                                                <i class="pi pi-calendar"/> Fecha de Nacimiento
+                                            </span>
+                                            <div class="perfil-info-value">
+                                                <h:outputText value="#{miPerfilBean.usuarioActual.fechaNacimiento}">
+                                                    <f:convertDateTime pattern="dd/MM/yyyy"/>
+                                                </h:outputText>
+                                            </div>
+                                        </div>
+
+                                        <div class="perfil-info-box full-width">
+                                            <span class="perfil-info-label">
+                                                <i class="pi pi-clock"/> Fecha de Registro en Plataforma
+                                            </span>
+                                            <div class="perfil-info-value">
+                                                <h:outputText value="#{miPerfilBean.usuarioActual.fechaRegistro}">
+                                                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss"/>
+                                                </h:outputText>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </h:panelGroup>
+
+                                <!-- VISTA 2: ACTUALIZAR PERFIL -->
+                                <h:panelGroup rendered="#{miPerfilBean.vistaEditar}" layout="block">
+                                    <h2 class="perfil-section-title">Actualizar datos personales</h2>
+                                    <p class="perfil-section-sub">
+                                        Mantén tu información de contacto al día para recibir notificaciones de vuelo, check-in y comprobantes.
+                                    </p>
+
+                                    <div class="perfil-form-grid">
+                                        <div class="perfil-field">
+                                            <label class="perfil-label">RUT (identificador de cuenta)</label>
+                                            <div class="perfil-readonly-box">
+                                                <span>#{miPerfilBean.usuarioActual.rut}</span>
+                                                <i class="pi pi-lock"/>
+                                            </div>
+                                        </div>
+
+                                        <div class="perfil-field">
+                                            <label class="perfil-label">Documento de Identidad</label>
+                                            <div class="perfil-readonly-box">
+                                                <span>#{miPerfilBean.usuarioActual.documentoIdentidad}</span>
+                                                <i class="pi pi-lock"/>
+                                            </div>
+                                        </div>
+
+                                        <div class="perfil-field">
+                                            <label for="txtNombreEdit" class="perfil-label">Nombre</label>
+                                            <p:inputText id="txtNombreEdit"
+                                                         value="#{miPerfilBean.nombreEdit}"
+                                                         maxlength="120"
+                                                         placeholder="Tu nombre"/>
+                                        </div>
+
+                                        <div class="perfil-field">
+                                            <label for="txtApellidoEdit" class="perfil-label">Apellido</label>
+                                            <p:inputText id="txtApellidoEdit"
+                                                         value="#{miPerfilBean.apellidoEdit}"
+                                                         maxlength="120"
+                                                         placeholder="Tu apellido"/>
+                                        </div>
+
+                                        <div class="perfil-field">
+                                            <label for="txtCorreoEdit" class="perfil-label">Correo Electrónico</label>
+                                            <p:inputText id="txtCorreoEdit"
+                                                         value="#{miPerfilBean.correoEdit}"
+                                                         maxlength="100"
+                                                         placeholder="nombre@correo.com"/>
+                                        </div>
+
+                                        <div class="perfil-field">
+                                            <label for="txtTelefonoEdit" class="perfil-label">Teléfono de Contacto</label>
+                                            <p:inputText id="txtTelefonoEdit"
+                                                         value="#{miPerfilBean.telefonoEdit}"
+                                                         maxlength="20"
+                                                         placeholder="+56 9 1234 5678"/>
+                                        </div>
+
+                                        <div class="perfil-field">
+                                            <label for="dpFechaNacEdit" class="perfil-label">Fecha de Nacimiento</label>
+                                            <p:datePicker id="dpFechaNacEdit"
+                                                          value="#{miPerfilBean.fechaNacimientoEdit}"
+                                                          pattern="dd/MM/yyyy"
+                                                          mask="true"
+                                                          monthNavigator="true"
+                                                          yearNavigator="true"
+                                                          yearRange="1920:2026"
+                                                          appendTo="@(body)"
+                                                          panelStyleClass="perfil-datepicker-panel"
+                                                          maxdate="#{miPerfilBean.fechaMaximaNacimiento}">
+                                                <f:convertDateTime pattern="dd/MM/yyyy"/>
+                                            </p:datePicker>
+                                        </div>
+                                    </div>
+
+                                    <div class="perfil-readonly-note">
+                                        Por seguridad y validación aeroportuaria, el RUT y documento de identidad no son editables desde el portal.
+                                    </div>
+
+                                    <div class="perfil-form-actions">
+                                        <p:commandButton value="Cancelar"
+                                                         icon="pi pi-times"
+                                                         action="#{miPerfilBean.abrirResumen}"
+                                                         update="pnlPerfil"
+                                                         process="@this"
+                                                         styleClass="btn-perfil-secondary"/>
+
+                                        <p:commandButton value="Guardar cambios"
+                                                         icon="pi pi-check"
+                                                         action="#{miPerfilBean.guardarPerfil}"
+                                                         update="pnlPerfil growlPerfil"
+                                                         process="@form"
+                                                         styleClass="btn-perfil-primary"/>
+                                    </div>
+                                </h:panelGroup>
+
+                                <!-- VISTA 3: CAMBIAR CONTRASEÑA -->
+                                <h:panelGroup rendered="#{miPerfilBean.vistaSeguridad}" layout="block">
+                                    <h2 class="perfil-section-title">Cambiar contraseña</h2>
+                                    <p class="perfil-section-sub">
+                                        Verifica tu contraseña actual y define una nueva clave segura para proteger tu cuenta.
+                                    </p>
+
+                                    <div class="perfil-form-grid">
+                                        <div class="perfil-field full-width">
+                                            <label for="pwdActualPerfil" class="perfil-label">Contraseña actual</label>
+                                            <p:password id="pwdActualPerfil"
+                                                        value="#{miPerfilBean.contrasenaActual}"
+                                                        toggleMask="true"
+                                                        redisplay="false"
+                                                        feedback="false"
+                                                        maxlength="72"
+                                                        placeholder="Ingresa tu contraseña actual"/>
+                                        </div>
+
+                                        <div class="perfil-field">
+                                            <label for="pwdNuevaPerfil" class="perfil-label">Nueva contraseña</label>
+                                            <p:password id="pwdNuevaPerfil"
+                                                        value="#{miPerfilBean.nuevaContrasena}"
+                                                        toggleMask="true"
+                                                        redisplay="false"
+                                                        feedback="false"
+                                                        maxlength="72"
+                                                        placeholder="Mínimo 8 caracteres, letras y números"/>
+
+                                            <div id="pwdPerfilFeedbackBox" class="pwd-feedback-box">
+                                                <div class="pwd-strength-header">
+                                                    <span>Seguridad de la contraseña</span>
+                                                    <span id="pwdPerfilStrengthLabel" class="pwd-strength-label">Sin ingresar</span>
+                                                </div>
+                                                <div class="pwd-strength-bars">
+                                                    <div class="pwd-bar"></div>
+                                                    <div class="pwd-bar"></div>
+                                                    <div class="pwd-bar"></div>
+                                                    <div class="pwd-bar"></div>
+                                                </div>
+                                                <ul class="pwd-checklist">
+                                                    <li id="chkPerfilLen" class="pwd-check-item">
+                                                        <i class="pi pi-circle"/>
+                                                        <span>Mínimo 8 caracteres</span>
+                                                    </li>
+                                                    <li id="chkPerfilNum" class="pwd-check-item">
+                                                        <i class="pi pi-circle"/>
+                                                        <span>Al menos un número</span>
+                                                    </li>
+                                                    <li id="chkPerfilCase" class="pwd-check-item">
+                                                        <i class="pi pi-circle"/>
+                                                        <span>Mayúscula y minúscula</span>
+                                                    </li>
+                                                    <li id="chkPerfilSpecial" class="pwd-check-item">
+                                                        <i class="pi pi-circle"/>
+                                                        <span>Símbolo especial</span>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+
+                                        <div class="perfil-field">
+                                            <label for="pwdConfirmarPerfil" class="perfil-label">Confirmar nueva contraseña</label>
+                                            <p:password id="pwdConfirmarPerfil"
+                                                        value="#{miPerfilBean.confirmarContrasena}"
+                                                        toggleMask="true"
+                                                        redisplay="false"
+                                                        feedback="false"
+                                                        maxlength="72"
+                                                        placeholder="Repite la nueva contraseña"/>
+                                            <div id="pwdPerfilMatchIndicator" class="pwd-match-indicator">
+                                                <i id="pwdPerfilMatchIcon" class="pi pi-info-circle"/>
+                                                <span id="pwdPerfilMatchText"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="perfil-form-actions">
+                                        <h:outputLink value="#{request.contextPath}/home/recuperar-clave.xhtml"
+                                                      styleClass="perfil-recovery-link">
+                                            ¿Olvidaste tu contraseña actual? Recupérala aquí
+                                        </h:outputLink>
+
+                                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                            <p:commandButton value="Cancelar"
+                                                             icon="pi pi-times"
+                                                             action="#{miPerfilBean.abrirResumen}"
+                                                             update="pnlPerfil"
+                                                             process="@this"
+                                                             styleClass="btn-perfil-secondary"/>
+
+                                            <p:commandButton value="Actualizar contraseña"
+                                                             icon="pi pi-check-circle"
+                                                             action="#{miPerfilBean.guardarContrasena}"
+                                                             update="pnlPerfil growlPerfil"
+                                                             process="@form"
+                                                             styleClass="btn-perfil-primary"/>
+                                        </div>
+                                    </div>
+                                </h:panelGroup>
                             </div>
-                        </div>
 
-                    </div>
+                            <!-- PIE ACCIONES RÁPIDAS SOLO EN VISTA RESUMEN -->
+                            <h:panelGroup rendered="#{miPerfilBean.vistaResumen}" layout="block" styleClass="perfil-footer-actions">
+                                <p:commandButton value="Actualizar Perfil"
+                                                 icon="pi pi-user-edit"
+                                                 styleClass="btn-perfil-secondary"
+                                                 action="#{miPerfilBean.abrirEditar}"
+                                                 update="pnlPerfil"
+                                                 process="@this"/>
 
-                    <!-- FOOTER CON ACCIONES SOBRIAS -->
-                    <div class="profile-footer">
-                        <p:commandButton value="Actualizar Perfil"
-                                         icon="pi pi-user-edit"
-                                         styleClass="btn-skyway-secondary"
-                                         action="#{userBean.actualizarUsuario}"
-                                         process="@this"
-                                         update="formPerfil" />
-
-                        <p:commandButton value="Cambiar Contraseña"
-                                         icon="pi pi-lock"
-                                         styleClass="btn-skyway-primary"
-                                         action="#{userBean.cambiarContrasena}"
-                                         process="@this"
-                                         update="formPerfil" />
-                    </div>
-
-                </div>
-            </h:form>
+                                <p:commandButton value="Cambiar Contraseña"
+                                                 icon="pi pi-lock"
+                                                 styleClass="btn-perfil-primary"
+                                                 action="#{miPerfilBean.abrirSeguridad}"
+                                                 update="pnlPerfil"
+                                                 process="@this"/>
+                            </h:panelGroup>
+                        </h:panelGroup>
+                    </h:panelGroup>
+                </h:form>
+            </div>
         </div>
 
+        <script type="text/javascript">
+            (function () {
+                function resolverInput(idBase) {
+                    return document.querySelector("#formPerfil input[id$='" + idBase + "_input']")
+                        || document.querySelector("#formPerfil input[id$='" + idBase + "']");
+                }
+
+                function actualizarCheck(id, ok) {
+                    var el = document.getElementById(id);
+                    if (!el) return;
+                    el.classList.toggle("ok", ok);
+                    var icon = el.querySelector("i");
+                    if (icon) {
+                        icon.className = ok ? "pi pi-check-circle" : "pi pi-circle";
+                    }
+                }
+
+                function evaluarFeedbackPerfil() {
+                    var inputNueva = resolverInput("pwdNuevaPerfil");
+                    var inputConfirmar = resolverInput("pwdConfirmarPerfil");
+                    if (!inputNueva) return;
+
+                    var val = inputNueva.value || "";
+                    var tieneLen = val.length >= 8;
+                    var tieneNum = /\d/.test(val);
+                    var tieneMayusMinus = /[a-z]/.test(val) &amp;&amp; /[A-Z]/.test(val);
+                    var tieneLetra = /[A-Za-z]/.test(val);
+                    var tieneEspecial = /[^A-Za-z0-9]/.test(val);
+
+                    actualizarCheck("chkPerfilLen", tieneLen);
+                    actualizarCheck("chkPerfilNum", tieneNum);
+                    actualizarCheck("chkPerfilCase", tieneMayusMinus);
+                    actualizarCheck("chkPerfilSpecial", tieneEspecial);
+
+                    var nivel = 0;
+                    if (val.length > 0) {
+                        if (tieneLen &amp;&amp; tieneLetra &amp;&amp; tieneNum) {
+                            nivel = 2;
+                            if (tieneMayusMinus) nivel++;
+                            if (tieneEspecial &amp;&amp; val.length >= 10) nivel++;
+                        } else {
+                            nivel = 1;
+                        }
+                    }
+
+                    var niveles = [
+                        { texto: "Sin ingresar", color: "#94a3b8" },
+                        { texto: "Débil", color: "#ef4444" },
+                        { texto: "Aceptable", color: "#f59e0b" },
+                        { texto: "Fuerte", color: "#3b82f6" },
+                        { texto: "Muy fuerte", color: "#22c55e" }
+                    ];
+                    var estado = niveles[nivel];
+
+                    var labelEl = document.getElementById("pwdPerfilStrengthLabel");
+                    if (labelEl) {
+                        labelEl.textContent = estado.texto;
+                        labelEl.style.color = estado.color;
+                    }
+
+                    var bars = document.querySelectorAll("#pwdPerfilFeedbackBox .pwd-bar");
+                    bars.forEach(function (bar, idx) {
+                        bar.style.backgroundColor = (idx &lt; nivel) ? estado.color : "#1e293b";
+                    });
+
+                    var matchEl = document.getElementById("pwdPerfilMatchIndicator");
+                    var matchIcon = document.getElementById("pwdPerfilMatchIcon");
+                    var matchText = document.getElementById("pwdPerfilMatchText");
+                    if (matchEl &amp;&amp; matchIcon &amp;&amp; matchText &amp;&amp; inputConfirmar) {
+                        var conf = inputConfirmar.value || "";
+                        matchEl.classList.remove("match", "mismatch");
+                        if (conf.length === 0) {
+                            matchText.textContent = "";
+                        } else if (val === conf) {
+                            matchEl.classList.add("match");
+                            matchIcon.className = "pi pi-check-circle";
+                            matchText.textContent = "Las contraseñas coinciden";
+                        } else {
+                            matchEl.classList.add("mismatch");
+                            matchIcon.className = "pi pi-times-circle";
+                            matchText.textContent = "Las contraseñas no coinciden";
+                        }
+                    }
+                }
+
+                document.addEventListener("input", function (ev) {
+                    if (!ev.target || !ev.target.id) return;
+                    if (ev.target.id.indexOf("pwdNuevaPerfil") !== -1 || ev.target.id.indexOf("pwdConfirmarPerfil") !== -1) {
+                        evaluarFeedbackPerfil();
+                    }
+                });
+
+                document.addEventListener("DOMContentLoaded", evaluarFeedbackPerfil);
+            })();
+        </script>
     </ui:define>
 
 </ui:composition>

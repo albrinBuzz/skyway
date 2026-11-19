@@ -4,6 +4,67 @@ ALTER USER aerolinea_user SET search_path TO public, directus;
 SET search_path TO public, directus;
 
 
+BEGIN;
+SET LOCAL lock_timeout = '10s';
+
+TRUNCATE TABLE
+    Checkin_Pasajero,
+    Checkin,
+    Equipaje,
+    Reembolso,
+    Cuenta_Reembolso,
+    Cancelacion_Asiento,
+    Cancelacion,
+    Wal_Transaccion_Pago,
+    Log_Auditoria,
+    Notificacion,
+    Pago,
+    Reserva_Asiento,
+    pasajero_reserva,
+    Reserva_Itinerario,
+    Reserva,
+    Turno_Tripulacion,
+    Turno,
+    Itinerario_Tarifa,
+    Itinerario_Vuelo,
+    Itinerario,
+    Asignacion_Puerta,
+    Segmento_Vuelo,
+    Precio_Asiento,
+    Vuelo,
+    Asiento,
+    Configuracion_Cabina,
+    Capacidad_Clase,
+    Avion,
+    Modelo_Avion,
+    Fabricante,
+    Puerta_Embarque,
+    Aeropuerto,
+    Ciudad,
+    Pais,
+    Continente,
+    Aerolinea,
+    Tarifa_Caracteristica,
+    Caracteristica_Tarifa,
+    Tarifa,
+    Clase_asiento,
+    Estado_Vuelo,
+    Estado_reserva,
+    Metodo_Pago,
+    Tipo_Equipaje,
+    Tipo_Turno,
+    Personal_Administrativo,
+    Tripulacion,
+    Piloto,
+    Pasajero,
+    RolUsuario,
+    Usuario,
+    Roles
+    RESTART IDENTITY CASCADE;
+
+COMMIT;
+
+
 -- Eliminar Secuencias con CASCADE
 DROP SEQUENCE IF EXISTS rol_seq CASCADE;
 DROP SEQUENCE IF EXISTS usuario_seq CASCADE;
@@ -108,6 +169,8 @@ DROP TABLE IF EXISTS Cancelacion_Asiento CASCADE;
 DROP TABLE IF EXISTS Wal_Transaccion_Pago CASCADE;
 DROP TABLE IF EXISTS Reembolso CASCADE;
 DROP TABLE IF EXISTS Cuenta_Reembolso CASCADE;
+DROP TABLE IF EXISTS Token_Recuperacion CASCADE;
+DROP SEQUENCE IF EXISTS token_recuperacion_seq CASCADE;
 
 
 -- SECUENCIAS INICIALES
@@ -171,6 +234,7 @@ CREATE SEQUENCE IF NOT EXISTS log_auditoria_seq START WITH 1;
 CREATE SEQUENCE IF NOT EXISTS cancelacion_asiento_seq START WITH 1;
 CREATE SEQUENCE IF NOT EXISTS cuenta_reembolso_seq START WITH 1;
 CREATE SEQUENCE IF NOT EXISTS reembolso_seq START WITH 1;
+CREATE SEQUENCE IF NOT EXISTS token_recuperacion_seq START WITH 1 INCREMENT BY 1;
 
 DROP TABLE IF EXISTS Checkin_Pasajero CASCADE;
 DROP TABLE IF EXISTS Checkin CASCADE;
@@ -791,6 +855,21 @@ CREATE TABLE  Wal_Transaccion_Pago (
 
 
 
+CREATE TABLE IF NOT EXISTS Token_Recuperacion (
+                                                  id_token BIGINT PRIMARY KEY DEFAULT nextval('token_recuperacion_seq'),
+                                                  rut_usuario VARCHAR(12) NOT NULL REFERENCES Usuario(RUT) ON DELETE CASCADE,
+                                                  correo_electronico VARCHAR(100) NOT NULL,
+                                                  token_hash VARCHAR(64) NOT NULL UNIQUE,
+                                                  fecha_creacion TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+                                                  fecha_expiracion TIMESTAMP WITH TIME ZONE NOT NULL,
+                                                  usado BOOLEAN NOT NULL DEFAULT FALSE,
+                                                  revocado BOOLEAN NOT NULL DEFAULT FALSE,
+                                                  fecha_uso TIMESTAMP WITH TIME ZONE,
+                                                  ip_solicitud VARCHAR(45),
+                                                  ip_uso VARCHAR(45)
+);
+
+
 -- 3. Índices Estratégicos para Consultas Rápidas y Paneles de Control (Dashboards)
 CREATE INDEX idx_log_auditoria_fecha ON Log_Auditoria(fecha_hora DESC);
 CREATE INDEX idx_log_auditoria_rut ON Log_Auditoria(rut_usuario);
@@ -911,7 +990,41 @@ CREATE INDEX IF NOT EXISTS idx_wal_rut ON Wal_Transaccion_Pago(rut_titular);
 CREATE INDEX IF NOT EXISTS idx_wal_fecha ON Wal_Transaccion_Pago(fecha_captura DESC);
 CREATE INDEX IF NOT EXISTS idx_wal_payload ON Wal_Transaccion_Pago USING gin(payload_snapshot);
 
+-- =============================================================================
+-- ÍNDICES DE ALTO RENDIMIENTO PARA OPERACIONES A GRAN ESCALA (MILLONES DE FILAS)
+-- =============================================================================
+CREATE INDEX IF NOT EXISTS idx_vuelo_salida ON Vuelo(Fecha_Hora_Salida, ID_ESTADO_VUELO);
+CREATE INDEX IF NOT EXISTS idx_vuelo_estado_salida ON Vuelo(ID_ESTADO_VUELO, Fecha_Hora_Salida);
+CREATE INDEX IF NOT EXISTS idx_vuelo_numero ON Vuelo(Numero_Vuelo);
+CREATE INDEX IF NOT EXISTS idx_vuelo_avion_fechas ON Vuelo(ID_AVION, Fecha_Hora_Salida, Fecha_Hora_Llegada);
+CREATE INDEX IF NOT EXISTS idx_vuelo_piloto_fechas ON Vuelo(RUT_PILOTO, Fecha_Hora_Salida, Fecha_Hora_Llegada);
 
+CREATE INDEX IF NOT EXISTS idx_segvuelo_vuelo_orden ON Segmento_Vuelo(ID_VUELO, Orden_Segmento);
+CREATE INDEX IF NOT EXISTS idx_segvuelo_origen_hora ON Segmento_Vuelo(ID_AEROPUERTO_ORIGEN, Hora_Salida);
+CREATE INDEX IF NOT EXISTS idx_segvuelo_destino_hora ON Segmento_Vuelo(ID_AEROPUERTO_DESTINO, Hora_Llegada);
+
+CREATE INDEX IF NOT EXISTS idx_itinerario_ruta_salida ON Itinerario(ORIGEN_AEROPUERTO, DESTINO_AEROPUERTO, HORA_SALIDA);
+CREATE INDEX IF NOT EXISTS idx_itinerario_salida ON Itinerario(HORA_SALIDA);
+CREATE INDEX IF NOT EXISTS idx_itin_vuelo_vuelo ON Itinerario_Vuelo(ID_VUELO, ID_ITINERARIO);
+CREATE INDEX IF NOT EXISTS idx_itin_tarifa_itin ON Itinerario_Tarifa(ID_ITINERARIO);
+
+CREATE INDEX IF NOT EXISTS idx_reserva_estado ON Reserva(Estado_reserva, Fecha_Reserva DESC);
+CREATE INDEX IF NOT EXISTS idx_reserva_rut ON Reserva(RUT_Pasajero);
+CREATE INDEX IF NOT EXISTS idx_reserva_itin_itin ON Reserva_Itinerario(ID_ITINERARIO, ID_RESERVA);
+CREATE INDEX IF NOT EXISTS idx_reserva_itin_res ON Reserva_Itinerario(ID_RESERVA);
+CREATE INDEX IF NOT EXISTS idx_reserva_asiento_vuelo ON Reserva_Asiento(ID_VUELO, ID_RESERVA);
+CREATE INDEX IF NOT EXISTS idx_reserva_asiento_res ON Reserva_Asiento(ID_RESERVA);
+CREATE INDEX IF NOT EXISTS idx_precio_asiento_vuelo ON Precio_Asiento(ID_VUELO, ID_CLASE);
+CREATE INDEX IF NOT EXISTS idx_turno_vuelo ON Turno(ID_VUELO);
+CREATE INDEX IF NOT EXISTS idx_turno_trip_turno ON Turno_Tripulacion(ID_TURNO);
+CREATE INDEX IF NOT EXISTS idx_asig_puerta_seg ON Asignacion_Puerta(ID_SEGMENTO);
+CREATE INDEX IF NOT EXISTS idx_asig_puerta_puerta ON Asignacion_Puerta(ID_PUERTA);
+CREATE INDEX IF NOT EXISTS idx_checkin_reserva ON Checkin(ID_RESERVA);
+
+
+
+CREATE INDEX IF NOT EXISTS idx_token_rec_hash ON Token_Recuperacion(token_hash);
+CREATE INDEX IF NOT EXISTS idx_token_rec_usuario_estado ON Token_Recuperacion(rut_usuario, usado, revocado, fecha_creacion DESC);
 DO $$
     DECLARE
         reg RECORD;
@@ -1774,7 +1887,15 @@ AS $$
 DECLARE
     v_rut_titular VARCHAR(12);
     v_monto DECIMAL(10, 2);
+    v_motivo TEXT;
 BEGIN
+    v_motivo := LOWER(COALESCE(NEW.motivo, ''));
+    -- El reembolso aplica únicamente ante cancelación operacional de vuelo por parte de la aerolínea
+    IF (v_motivo NOT LIKE '%cancelación operacional%' AND v_motivo NOT LIKE '%cancelacion operacional%')
+        OR COALESCE(NEW.monto_reembolso, 0) <= 0 THEN
+        RETURN NEW;
+    END IF;
+
     SELECT r.rut_pasajero, COALESCE(NEW.monto_reembolso, r.total, 0)
     INTO v_rut_titular, v_monto
     FROM reserva r
@@ -1807,8 +1928,6 @@ CREATE TRIGGER trg_crear_reembolso_al_cancelar
     AFTER INSERT ON Cancelacion
     FOR EACH ROW
 EXECUTE FUNCTION fn_crear_reembolso_automatico();
-
-
 
 
 CREATE OR REPLACE FUNCTION fnBuscarVuelo(
@@ -2976,14 +3095,14 @@ BEGIN
         RAISE EXCEPTION 'La reserva N° % ya fue cancelada previamente.', p_id_reserva;
     END IF;
 
-    -- 3. Registrar la Cancelación en la tabla Dominio (MOTIVO LIMPIO)
+    -- 3. Registrar la Cancelación en la tabla Dominio (Anulación voluntaria del pasajero: sin reembolso)
     INSERT INTO cancelacion (id_reserva, fecha, motivo, estado, monto_reembolso)
     VALUES (
                p_id_reserva,
                NOW(),
                p_motivo,
-               'Pendiente',
-               v_total_reserva
+               'Sin Reembolso',
+               0
            )
     RETURNING id_cancelacion INTO v_id_cancelacion;
 
@@ -3169,6 +3288,8 @@ BEGIN
     VALUES (v_rut, 'REACTIVACION_REGISTRO', 'INFO', p_tabla, p_id, FORMAT('Registro ID %s en tabla %s reactivado exitosamente.', p_id, p_tabla));
 END;
 $$;
+
+
 -- =========================================================================
 -- 1. MAESTRO DE CONTINENTES
 -- =========================================================================

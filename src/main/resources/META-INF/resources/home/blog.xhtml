@@ -1,0 +1,431 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition lang="es"
+                xmlns:f="jakarta.faces.core"
+                xmlns:h="jakarta.faces.html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                template="/template/main.xhtml">
+
+    <ui:define name="head">
+        <title>Blog y Guías del Viajero | #{homePortalBean.nombreAerolinea}</title>
+        <style type="text/css">
+            .blog-shell {
+                background: #0b1220;
+                min-height: 80vh;
+            }
+            .blog-hero {
+                background: linear-gradient(180deg, #101c34 0%, #0b1220 100%);
+                border-bottom: 1px solid #1e3150;
+            }
+            .blog-pill-nav {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.65rem;
+            }
+            .blog-nav-link {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.6rem 1rem;
+                border-radius: 8px;
+                border: 1px solid #1e3150;
+                background: #101b33;
+                color: #cbd5e1;
+                text-decoration: none;
+                font-size: 0.86rem;
+                font-weight: 600;
+                transition: all 0.2s ease;
+            }
+            .blog-nav-link:hover {
+                border-color: #3b82f6;
+                color: #f8fafc;
+            }
+            .blog-nav-link.active {
+                background: #1d4ed8;
+                border-color: #2563eb;
+                color: #ffffff;
+            }
+            .blog-card {
+                background: #101b33;
+                border: 1px solid #1e3150;
+                border-radius: 12px;
+                padding: 1.5rem;
+            }
+            .blog-subcard {
+                background: #0d1629;
+                border: 1px solid #1e293b;
+                border-radius: 10px;
+                padding: 1rem;
+            }
+            .blog-badge {
+                display: inline-block;
+                background: #162442;
+                border: 1px solid #28426e;
+                color: #bfdbfe;
+                font-size: 0.72rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                padding: 4px 10px;
+                border-radius: 6px;
+            }
+            .blog-cover {
+                width: 100%;
+                height: 240px;
+                object-fit: cover;
+                border-radius: 10px;
+                border: 1px solid #1e3150;
+            }
+            .blog-table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 0.86rem;
+            }
+            .blog-table th {
+                background: #09101f;
+                color: #94a3b8;
+                font-size: 0.72rem;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                padding: 0.7rem 0.85rem;
+                border-bottom: 1px solid #1e3150;
+                text-align: left;
+            }
+            .blog-table td {
+                padding: 0.72rem 0.85rem;
+                border-bottom: 1px solid #17233b;
+                color: #e2e8f0;
+                vertical-align: middle;
+            }
+            .blog-table tr:hover td {
+                background: rgba(30, 58, 138, 0.14);
+            }
+            .iata-chip {
+                display: inline-block;
+                background: #162442;
+                border: 1px solid #28426e;
+                color: #93c5fd;
+                font-family: monospace;
+                font-weight: 700;
+                font-size: 0.78rem;
+                padding: 2px 7px;
+                border-radius: 5px;
+            }
+        </style>
+    </ui:define>
+
+    <ui:define name="contenido">
+        <div class="blog-shell pb-5">
+
+            <!-- CABECERA -->
+            <div class="blog-hero py-4 mb-4">
+                <div class="container">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+                        <div>
+                            <span class="blog-badge mb-2">Centro Informativo · #{homePortalBean.nombreAerolinea}</span>
+                            <h1 class="text-white fw-bold m-0" style="font-size: 1.85rem;">Guías de Viaje e Información Operativa</h1>
+                            <p class="m-0 mt-1" style="color: #94a3b8; font-size: 0.92rem;">
+                                Artículos de referencia respaldados directamente con la red de aeropuertos, flota, tarifas y reglas vigentes del sistema.
+                            </p>
+                        </div>
+                        <h:outputLink value="/home/index.xhtml" styleClass="blog-nav-link">
+                            <i class="pi pi-arrow-left"></i> Volver al Inicio
+                        </h:outputLink>
+                    </div>
+
+                    <!-- SELECTOR DE ARTÍCULOS -->
+                    <div class="blog-pill-nav">
+                        <h:outputLink value="/home/blog.xhtml?articulo=red-rutas"
+                                      styleClass="blog-nav-link #{homePortalBean.articuloActivo eq 'red-rutas' ? 'active' : ''}">
+                            <i class="pi pi-globe"></i> Red de Destinos y Rutas
+                        </h:outputLink>
+                        <h:outputLink value="/home/blog.xhtml?articulo=tarifas-equipaje"
+                                      styleClass="blog-nav-link #{homePortalBean.articuloActivo eq 'tarifas-equipaje' ? 'active' : ''}">
+                            <i class="pi pi-ticket"></i> Tarifas y Equipaje
+                        </h:outputLink>
+                        <h:outputLink value="/home/blog.xhtml?articulo=flota-cabinas"
+                                      styleClass="blog-nav-link #{homePortalBean.articuloActivo eq 'flota-cabinas' ? 'active' : ''}">
+                            <i class="pi pi-send"></i> Flota Operativa
+                        </h:outputLink>
+                        <h:outputLink value="/home/blog.xhtml?articulo=checkin-embarque"
+                                      styleClass="blog-nav-link #{homePortalBean.articuloActivo eq 'checkin-embarque' ? 'active' : ''}">
+                            <i class="pi pi-check-square"></i> Check-In y Embarque
+                        </h:outputLink>
+                    </div>
+                </div>
+            </div>
+
+            <div class="container">
+                <div class="row g-4">
+
+                    <!-- COLUMNA PRINCIPAL DEL ARTÍCULO -->
+                    <div class="col-12 col-lg-8">
+
+                        <!-- ARTÍCULO 1: RED DE DESTINOS -->
+                        <h:panelGroup rendered="#{homePortalBean.articuloActivo eq 'red-rutas'}" layout="block" styleClass="blog-card">
+                            <img src="#{resource['assets/icons/rio-de-janeiro-1963744_640.jpg']}" class="blog-cover mb-4" alt="Red de destinos SkyWay"/>
+                            <span class="blog-badge mb-2">Conectividad</span>
+                            <h2 class="text-white fw-bold mb-2">Red de Destinos y Aeropuertos Operativos</h2>
+                            <p style="color: #cbd5e1; line-height: 1.65;">
+                                #{homePortalBean.nombreAerolinea} conecta actualmente <strong>#{homePortalBean.totalAeropuertos}</strong> aeropuertos activos
+                                distribuidos en <strong>#{homePortalBean.totalPaises}</strong> países, con
+                                <strong>#{homePortalBean.totalItinerarios}</strong> itinerario(s) #{homePortalBean.itinerariosHistoricos ? 'disponibles para consulta' : 'programados'}.
+                            </p>
+
+                            <h5 class="text-white fw-bold mt-4 mb-3">Rutas Principales Registradas</h5>
+                            <div class="table-responsive mb-4">
+                                <table class="blog-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Origen</th>
+                                            <th>Destino</th>
+                                            <th>Modalidad</th>
+                                            <th>Tarifa Base</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <ui:repeat value="#{homePortalBean.rutasDestacadas}" var="ruta">
+                                            <tr>
+                                                <td>
+                                                    <span class="iata-chip">#{ruta.origenIata}</span>
+                                                    <span class="ms-2">#{ruta.origenCiudad}</span>
+                                                </td>
+                                                <td>
+                                                    <span class="iata-chip">#{ruta.destinoIata}</span>
+                                                    <span class="ms-2">#{ruta.destinoCiudad}</span>
+                                                </td>
+                                                <td>#{ruta.escalasMinimas == 0 ? 'Directo' : ruta.escalasMinimas.toString().concat(' escala(s)')}</td>
+                                                <td class="fw-bold text-white">
+                                                    $<h:outputText value="#{ruta.precioMinimo}"><f:convertNumber pattern="#,##0" locale="es_CL"/></h:outputText> CLP
+                                                </td>
+                                                <td class="text-end">
+                                                    <a href="#{request.contextPath}/home/vuelos.xhtml?salida=#{ruta.origenIata}&amp;llegada=#{ruta.destinoIata}&amp;fechaIda=#{ruta.fechaUrl}&amp;adultos=1&amp;trip=OW"
+                                                       class="btn btn-sm btn-primary" style="background:#1d4ed8; border-color:#2563eb;">
+                                                        Ver vuelos
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </ui:repeat>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <h5 class="text-white fw-bold mt-4 mb-3">Directorio de Aeropuertos Activos por País</h5>
+                            <div class="row g-3">
+                                <ui:repeat value="#{homePortalBean.destinosPorPais}" var="grupo">
+                                    <div class="col-12 col-md-6">
+                                        <div class="blog-subcard h-100">
+                                            <div class="fw-bold text-white mb-2" style="font-size: 0.92rem;">
+                                                <i class="pi pi-map-marker me-1" style="color: #93c5fd;"></i>#{grupo.pais}
+                                            </div>
+                                            <ul class="list-unstyled m-0" style="font-size: 0.82rem; color: #cbd5e1;">
+                                                <ui:repeat value="#{grupo.aeropuertos}" var="ap">
+                                                    <li class="mb-1">
+                                                        <span class="iata-chip me-1">#{ap.codigoIata}</span>
+                                                        #{ap.ciudad} — <span style="color: #94a3b8;">#{ap.nombreAeropuerto}</span>
+                                                    </li>
+                                                </ui:repeat>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </ui:repeat>
+                            </div>
+                        </h:panelGroup>
+
+                        <!-- ARTÍCULO 2: TARIFAS Y EQUIPAJE -->
+                        <h:panelGroup rendered="#{homePortalBean.articuloActivo eq 'tarifas-equipaje'}" layout="block" styleClass="blog-card">
+                            <img src="#{resource['assets/icons/pexels-abhishek-verma-209130-670261.jpg']}" class="blog-cover mb-4" alt="Tarifas y equipaje SkyWay"/>
+                            <span class="blog-badge mb-2">Tarifas y Equipaje</span>
+                            <h2 class="text-white fw-bold mb-2">Condiciones Comerciales de Tarifas y Equipaje</h2>
+                            <p style="color: #cbd5e1; line-height: 1.65;">
+                                Cada itinerario de #{homePortalBean.nombreAerolinea} ofrece categorías tarifarias con distintos niveles de flexibilidad para selección de asiento y cambios previos al vuelo.
+                            </p>
+
+                            <div class="row g-3 mt-2 mb-4">
+                                <ui:repeat value="#{homePortalBean.tarifas}" var="tarifa">
+                                    <div class="col-12 col-md-4">
+                                        <div class="blog-subcard h-100">
+                                            <h5 class="text-white fw-bold mb-3" style="border-bottom: 1px solid #1e3150; padding-bottom: 0.5rem;">
+                                                #{tarifa.nombre}
+                                            </h5>
+                                            <ui:repeat value="#{tarifa.tarifaCaracteristicas}" var="tc">
+                                                <div class="d-flex justify-content-between align-items-start gap-2 mb-2" style="font-size: 0.8rem;">
+                                                    <span style="color: #94a3b8;">#{tc.caracteristica.nombre}</span>
+                                                    <h:panelGroup rendered="#{tc.caracteristica.tipoDato eq 'boolean'}">
+                                                        <span style="font-weight: 700; color: #{tc.valorBool ? '#93c5fd' : '#64748b'};">
+                                                            #{tc.valorBool ? 'Incluido' : 'No incluido'}
+                                                        </span>
+                                                    </h:panelGroup>
+                                                    <h:panelGroup rendered="#{tc.caracteristica.tipoDato ne 'boolean'}">
+                                                        <span class="fw-bold text-white">
+                                                            #{tc.valor} #{tc.valorInt gt 0 ? tc.valorInt : ''}
+                                                        </span>
+                                                    </h:panelGroup>
+                                                </div>
+                                            </ui:repeat>
+                                        </div>
+                                    </div>
+                                </ui:repeat>
+                            </div>
+
+                            <h5 class="text-white fw-bold mb-3">Equipaje Disponible en Reserva</h5>
+                            <div class="blog-subcard">
+                                <p class="mb-2" style="color: #cbd5e1; font-size: 0.88rem;">
+                                    Durante el flujo de compra puedes asociar por cada pasajero hasta <strong>1 pieza en cabina</strong> y un máximo de <strong>3 maletas facturadas en bodega</strong> (15 kg y/o 23 kg) según las opciones disponibles para tu viaje:
+                                </p>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <ui:repeat value="#{homePortalBean.tiposEquipaje}" var="equipaje">
+                                        <span class="blog-badge">#{equipaje.nombre}</span>
+                                    </ui:repeat>
+                                </div>
+                            </div>
+                        </h:panelGroup>
+
+                        <!-- ARTÍCULO 3: FLOTA OPERATIVA -->
+                        <h:panelGroup rendered="#{homePortalBean.articuloActivo eq 'flota-cabinas'}" layout="block" styleClass="blog-card">
+                            <img src="#{resource['assets/icons/premium_photo-1661954654458-c673671d4a08.jpeg']}" class="blog-cover mb-4" alt="Flota operativa SkyWay"/>
+                            <span class="blog-badge mb-2">Flota y Cabinas</span>
+                            <h2 class="text-white fw-bold mb-2">Flota Operativa Registrada</h2>
+                            <p style="color: #cbd5e1; line-height: 1.65;">
+                                La operación comercial se respalda con <strong>#{homePortalBean.totalAviones}</strong> aeronave(s) activa(s) en registro, organizadas por fabricante, modelo y configuración de asientos por clase.
+                            </p>
+
+                            <div class="table-responsive mt-3">
+                                <table class="blog-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Fabricante</th>
+                                            <th>Modelo</th>
+                                            <th>Aeronaves Activas</th>
+                                            <th>Capacidad Pasajeros</th>
+                                            <th>Año más Reciente</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <ui:repeat value="#{homePortalBean.flotaResumen}" var="flota">
+                                            <tr>
+                                                <td>#{flota.fabricante}</td>
+                                                <td class="fw-bold text-white">#{flota.modelo}</td>
+                                                <td>#{flota.unidades}</td>
+                                                <td>
+                                                    <h:outputText value="#{flota.capMin eq flota.capMax ? flota.capMax.toString().concat(' asientos') : flota.capMin.toString().concat(' – ').concat(flota.capMax.toString()).concat(' asientos')}"/>
+                                                </td>
+                                                <td>#{flota.ultimoAnio gt 0 ? flota.ultimoAnio : '-'}</td>
+                                            </tr>
+                                        </ui:repeat>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </h:panelGroup>
+
+                        <!-- ARTÍCULO 4: CHECK-IN Y EMBARQUE -->
+                        <h:panelGroup rendered="#{homePortalBean.articuloActivo eq 'checkin-embarque'}" layout="block" styleClass="blog-card">
+                            <img src="#{resource['assets/icons/pexels-apasaric-2506923.jpg']}" class="blog-cover mb-4" alt="Check-in y embarque"/>
+                            <span class="blog-badge mb-2">Operación al Pasajero</span>
+                            <h2 class="text-white fw-bold mb-2">Preparativos, Check-In Online y Embarque</h2>
+                            <p style="color: #cbd5e1; line-height: 1.65;">
+                                Guía práctica con las recomendaciones y servicios vigentes de #{homePortalBean.nombreAerolinea} desde tu compra hasta el abordaje.
+                            </p>
+
+                            <div class="row g-3 mt-2">
+                                <div class="col-12 col-md-6">
+                                    <div class="blog-subcard h-100">
+                                        <h6 class="text-white fw-bold"><i class="pi pi-clock me-2" style="color: #93c5fd;"></i>Ventana de Check-In Web</h6>
+                                        <p class="m-0" style="color: #94a3b8; font-size: 0.84rem; line-height: 1.55;">
+                                            El Check-In online se habilita <strong>48 horas</strong> antes de la salida programada del vuelo y permanece disponible hasta <strong>60 minutos</strong> antes del despegue.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <div class="blog-subcard h-100">
+                                        <h6 class="text-white fw-bold"><i class="pi pi-qrcode me-2" style="color: #93c5fd;"></i>E-Ticket y Tarjeta de Embarque</h6>
+                                        <p class="m-0" style="color: #94a3b8; font-size: 0.84rem; line-height: 1.55;">
+                                            Tras confirmar tu reserva obtienes tu código PNR y comprobante PDF; al completar el Check-In puedes generar el pase de abordar individual por pasajero.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <div class="blog-subcard h-100">
+                                        <h6 class="text-white fw-bold"><i class="pi pi-compass me-2" style="color: #93c5fd;"></i>Monitoreo de Puertas y Estado</h6>
+                                        <p class="m-0" style="color: #94a3b8; font-size: 0.84rem; line-height: 1.55;">
+                                            Consulta el estado operativo en vivo y puerta asignada desde la sección Estado de Vuelo antes de trasladarte a la terminal.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <div class="blog-subcard h-100">
+                                        <h6 class="text-white fw-bold"><i class="pi pi-user-edit me-2" style="color: #93c5fd;"></i>Autogestión y Reembolsos</h6>
+                                        <p class="m-0" style="color: #94a3b8; font-size: 0.84rem; line-height: 1.55;">
+                                            Desde tu perfil de pasajero puedes gestionar cambios de asiento permitidos por tu tarifa. El reembolso aplica exclusivamente cuando un vuelo es cancelado por parte de la aerolínea; otras gestiones o cancelaciones voluntarias no contemplan devolución.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </h:panelGroup>
+
+                    </div>
+
+                    <!-- BARRA LATERAL CON DATOS REALES Y ACCESOS DIRECTOS -->
+                    <div class="col-12 col-lg-4">
+                        <div class="blog-card mb-4">
+                            <h5 class="text-white fw-bold mb-3"><i class="pi pi-database me-2" style="color: #93c5fd;"></i>Cifras en Vivo de la Red</h5>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <div class="blog-subcard">
+                                        <div class="fw-bold text-white fs-5">#{homePortalBean.totalAeropuertos}</div>
+                                        <div style="color: #94a3b8; font-size: 0.76rem;">Aeropuertos activos</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="blog-subcard">
+                                        <div class="fw-bold text-white fs-5">#{homePortalBean.totalPaises}</div>
+                                        <div style="color: #94a3b8; font-size: 0.76rem;">Países conectados</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="blog-subcard">
+                                        <div class="fw-bold text-white fs-5">#{homePortalBean.totalAviones}</div>
+                                        <div style="color: #94a3b8; font-size: 0.76rem;">Aeronaves activas</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="blog-subcard">
+                                        <div class="fw-bold text-white fs-5">
+                                            <h:outputText value="#{homePortalBean.totalItinerarios}"><f:convertNumber pattern="#,##0" locale="es_CL"/></h:outputText>
+                                        </div>
+                                        <div style="color: #94a3b8; font-size: 0.76rem;">Itinerarios en red</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="blog-card">
+                            <h5 class="text-white fw-bold mb-3"><i class="pi pi-bolt me-2" style="color: #93c5fd;"></i>Accesos Directos</h5>
+                            <div class="d-grid gap-2">
+                                <h:outputLink value="/home/index.xhtml" styleClass="blog-nav-link justify-content-between">
+                                    <span><i class="pi pi-search me-2"></i>Buscar y Reservar Vuelos</span>
+                                    <i class="pi pi-chevron-right"></i>
+                                </h:outputLink>
+                                <h:outputLink value="/home/checkin.xhtml" styleClass="blog-nav-link justify-content-between">
+                                    <span><i class="pi pi-check-square me-2"></i>Realizar Check-In Online</span>
+                                    <i class="pi pi-chevron-right"></i>
+                                </h:outputLink>
+                                <h:outputLink value="/home/estado-vuelo.xhtml" styleClass="blog-nav-link justify-content-between">
+                                    <span><i class="pi pi-clock me-2"></i>Consultar Estado de Vuelo</span>
+                                    <i class="pi pi-chevron-right"></i>
+                                </h:outputLink>
+                                <h:outputLink value="/home/faq.xhtml" styleClass="blog-nav-link justify-content-between">
+                                    <span><i class="pi pi-question-circle me-2"></i>Preguntas Frecuentes</span>
+                                    <i class="pi pi-chevron-right"></i>
+                                </h:outputLink>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </ui:define>
+</ui:composition>

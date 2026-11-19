@@ -235,6 +235,7 @@
             .delta-kpi-col {
                 border-right: none !important;
                 padding-right: 0 !important;
+                min-width: 0 !important;
             }
 
             @media (min-width: 992px) {
@@ -289,19 +290,114 @@
                 letter-spacing: 0.5px !important;
             }
 
+            .delta-companions-list {
+                display: grid !important;
+                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
+                gap: 8px !important;
+                max-height: 112px !important;
+                overflow-y: auto !important;
+                padding-right: 4px !important;
+                margin-top: 6px !important;
+                scrollbar-width: thin;
+                scrollbar-color: #334155 #070E1E;
+            }
+
+            .delta-companions-list::-webkit-scrollbar {
+                width: 6px;
+            }
+            .delta-companions-list::-webkit-scrollbar-track {
+                background: #070E1E;
+                border-radius: 4px;
+            }
+            .delta-companions-list::-webkit-scrollbar-thumb {
+                background: #334155;
+                border-radius: 4px;
+            }
+
             .delta-companion-chip {
                 background: #0D172A !important;
                 border: 1px solid #1E293B !important;
                 border-radius: 6px !important;
-                padding: 6px 10px !important;
-                display: inline-flex !important;
+                padding: 6px 9px !important;
+                display: flex !important;
                 align-items: center !important;
                 gap: 8px !important;
+                width: 100% !important;
+                min-width: 0 !important;
+                overflow: hidden !important;
                 transition: border-color 0.2s ease !important;
             }
 
             .delta-companion-chip:hover {
                 border-color: #38BDF8 !important;
+            }
+
+            .delta-companion-info {
+                flex: 1 1 auto !important;
+                min-width: 0 !important;
+            }
+
+            .delta-companion-name {
+                display: block;
+                color: #F8FAFC;
+                font-size: 0.8rem;
+                font-weight: 700;
+                line-height: 1.25;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .delta-companion-meta {
+                display: block;
+                color: #94A3B8;
+                font-size: 0.7rem;
+                font-family: 'JetBrains Mono', monospace;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .btn-ver-acompanantes {
+                background: rgba(56, 189, 248, 0.12) !important;
+                border: 1px solid rgba(56, 189, 248, 0.35) !important;
+                color: #93c5fd !important;
+                border-radius: 4px !important;
+                font-size: 0.7rem !important;
+                font-weight: 700 !important;
+                padding: 2px 8px !important;
+                cursor: pointer;
+                transition: background 0.15s ease;
+            }
+
+            .btn-ver-acompanantes:hover {
+                background: rgba(56, 189, 248, 0.22) !important;
+                color: #ffffff !important;
+            }
+
+            body .ui-dialog.dlg-todos-acompanantes {
+                background: #0d172a !important;
+                border: 1px solid #2b3f5e !important;
+                border-radius: 12px !important;
+                box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75) !important;
+            }
+            body .ui-dialog.dlg-todos-acompanantes .ui-dialog-titlebar {
+                background: #13223d !important;
+                color: #f8fafc !important;
+                border-bottom: 1px solid #1e3a5f !important;
+                padding: 0.9rem 1.2rem !important;
+            }
+            body .ui-dialog.dlg-todos-acompanantes .ui-dialog-title {
+                color: #f8fafc !important;
+                font-weight: 700 !important;
+            }
+            body .ui-dialog.dlg-todos-acompanantes .ui-dialog-titlebar-close {
+                color: #94a3b8 !important;
+            }
+            body .ui-dialog.dlg-todos-acompanantes .ui-dialog-content {
+                background: #0d172a !important;
+                color: #e2e8f0 !important;
+                padding: 1rem 1.2rem !important;
             }
 
             /* Layout de Itinerarios Full-Width */
@@ -1164,23 +1260,28 @@
                         <span class="delta-kpi-sub">Documento Oficial Registrado</span>
                     </div>
 
-                    <!-- KPI 3: Acompañantes en Reserva (Detallado estilo Travel Companions de Delta) -->
+                    <!-- KPI 3: Acompañantes en Reserva (Compacto con scroll y acceso al directorio completo) -->
                     <div class="delta-kpi-col delta-kpi-companions">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
+                        <div class="d-flex justify-content-between align-items-center mb-1 gap-2 flex-wrap">
                             <div class="delta-kpi-title mb-0">Acompañantes en Reserva</div>
-                            <span class="badge bg-secondary" style="font-size: 0.72rem;">#{perfilPasajeroView.acompanantesHabituales.size()} #{perfilPasajeroView.acompanantesHabituales.size() == 1 ? 'Viajero' : 'Viajeros'}</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-secondary" style="font-size: 0.72rem;">#{perfilPasajeroView.acompanantesHabituales.size()} #{perfilPasajeroView.acompanantesHabituales.size() == 1 ? 'Viajero' : 'Viajeros'}</span>
+                                <h:panelGroup rendered="#{perfilPasajeroView.acompanantesHabituales.size() gt 4}">
+                                    <button type="button" class="btn-ver-acompanantes" onclick="PF('dlgTodosAcompanantes').show();">
+                                        <i class="pi pi-users me-1"></i>Ver todos
+                                    </button>
+                                </h:panelGroup>
+                            </div>
                         </div>
                         <h:panelGroup rendered="#{not empty perfilPasajeroView.acompanantesHabituales}">
-                            <div class="delta-companions-list d-flex gap-2 flex-wrap mt-1">
+                            <div class="delta-companions-list">
                                 <ui:repeat value="#{perfilPasajeroView.acompanantesHabituales}" var="acomp">
-                                    <div class="delta-companion-chip">
+                                    <div class="delta-companion-chip"
+                                         title="#{acomp.nombreCompleto} · RUT: #{acomp.rut}#{not empty acomp.correo ? ' · '.concat(acomp.correo) : ''}">
                                         <span class="delta-avatar-badge">#{acomp.iniciales}</span>
                                         <div class="delta-companion-info">
-                                            <strong class="text-white d-block" style="font-size: 0.82rem; line-height: 1.2;">#{acomp.nombreCompleto}</strong>
-                                            <span class="text-white-50 small font-monospace" style="font-size: 0.72rem;">RUT: #{acomp.rut}</span>
-                                            <h:panelGroup rendered="#{not empty acomp.correo}">
-                                                <span class="text-white-50 small d-none d-xl-inline" style="font-size: 0.70rem;"> • #{acomp.correo}</span>
-                                            </h:panelGroup>
+                                            <span class="delta-companion-name">#{acomp.nombreCompleto}</span>
+                                            <span class="delta-companion-meta">RUT: #{acomp.rut}#{not empty acomp.correo ? ' • '.concat(acomp.correo) : ''}</span>
                                         </div>
                                     </div>
                                 </ui:repeat>
@@ -2051,8 +2152,8 @@
                                 <h:panelGroup rendered="#{empty perfilPasajeroView.listaReembolsos}">
                                     <div class="p-5 text-center rounded" style="background: #0B132B; border: 1px dashed #1E293B;">
                                         <i class="pi pi-wallet text-secondary mb-3" style="font-size: 2.5rem; opacity: 0.6;"></i>
-                                        <h5 class="text-white font-weight-bold">No tienes solicitudes ni reembolsos registrados</h5>
-                                        <p class="text-white-50 small mb-0">Cuando se cancele un vuelo operacionalmente o anules una reserva, aquí podrás seguir el estado y monto de tu devolución.</p>
+                                        <h5 class="text-white font-weight-bold">No tienes reembolsos registrados</h5>
+                                        <p class="text-white-50 small mb-0">El reembolso aplica únicamente cuando un vuelo es cancelado operacionalmente por parte de la aerolínea. Las cancelaciones voluntarias u otras gestiones no contemplan devolución.</p>
                                     </div>
                                 </h:panelGroup>
 
@@ -2177,6 +2278,57 @@
             <ui:include src="dialogs/sidebarParadas.xhtml" />
             <ui:include src="dialogs/dlgUpgradeTarifa.xhtml" />
             <ui:include src="dialogs/dlgCuentaReembolso.xhtml" />
+
+            <!-- MODAL DIRECTORIO COMPLETO DE ACOMPAÑANTES -->
+            <p:dialog header="Acompañantes en Reserva (#{perfilPasajeroView.acompanantesHabituales.size()})"
+                      widgetVar="dlgTodosAcompanantes"
+                      modal="true"
+                      responsive="true"
+                      resizable="false"
+                      width="780"
+                      onShow="resetModalAcompanantes();"
+                      styleClass="skyway-dialog dlg-todos-acompanantes">
+                <div style="margin-bottom: 0.9rem;">
+                    <input type="text"
+                           id="filtroAcompanantesModal"
+                           placeholder="Buscar por nombre, RUT o correo..."
+                           oninput="filtrarAcompanantesModal(this.value)"
+                           style="width: 100%; padding: 0.6rem 0.9rem; background: #070E1E; border: 1px solid #334155; border-radius: 8px; color: #f8fafc; font-size: 0.85rem; outline: none;" />
+                </div>
+                <div id="gridAcompanantesModal"
+                     style="display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); align-content: start; gap: 0.65rem; max-height: 410px; overflow-y: auto; padding: 2px 6px 4px 2px;">
+                    <ui:repeat value="#{perfilPasajeroView.acompanantesHabituales}" var="acompDlg">
+                        <div class="delta-companion-chip item-acomp-modal"
+                             title="#{acompDlg.nombreCompleto} · RUT: #{acompDlg.rut}#{not empty acompDlg.correo ? ' · '.concat(acompDlg.correo) : ''}"
+                             data-search="#{acompDlg.nombreCompleto} #{acompDlg.rut} #{acompDlg.correo}">
+                            <span class="delta-avatar-badge">#{acompDlg.iniciales}</span>
+                            <div class="delta-companion-info">
+                                <span class="delta-companion-name">#{acompDlg.nombreCompleto}</span>
+                                <span class="delta-companion-meta">RUT: #{acompDlg.rut}#{not empty acompDlg.correo ? ' • '.concat(acompDlg.correo) : ''}</span>
+                            </div>
+                        </div>
+                    </ui:repeat>
+                </div>
+                <script type="text/javascript">
+                    //<![CDATA[
+                    function resetModalAcompanantes() {
+                        var input = document.getElementById('filtroAcompanantesModal');
+                        if (input) input.value = '';
+                        filtrarAcompanantesModal('');
+                        var grid = document.getElementById('gridAcompanantesModal');
+                        if (grid) grid.scrollTop = 0;
+                    }
+                    function filtrarAcompanantesModal(query) {
+                        var term = (query || '').toLowerCase().trim();
+                        var items = document.querySelectorAll('#gridAcompanantesModal .item-acomp-modal');
+                        items.forEach(function (el) {
+                            var txt = (el.getAttribute('data-search') || '').toLowerCase();
+                            el.style.display = (!term || txt.indexOf(term) !== -1) ? 'flex' : 'none';
+                        });
+                    }
+                    //]]>
+                </script>
+            </p:dialog>
 
         </div>
     </ui:define>

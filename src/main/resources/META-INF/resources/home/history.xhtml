@@ -5,55 +5,74 @@
                 template="/template/main.xhtml">
 
     <ui:define name="head">
-        <title>Nuestra Historia | SkyWay Airlines</title>
+        <title>Experiencia de Viaje | #{homePortalBean.nombreAerolinea} Airlines</title>
         <style type="text/css">
+            .corp-page { background: #0b1220; min-height: 75vh; }
+            .corp-hero { background: linear-gradient(180deg, #101c34 0%, #0b1220 100%); border-bottom: 1px solid #1e3150; }
+            .corp-card { background: #101b33; border: 1px solid #1e3150; border-radius: 12px; padding: 1.75rem; }
+            .corp-badge { display: inline-block; background: #162442; border: 1px solid #28426e; color: #bfdbfe; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 4px 10px; border-radius: 6px; }
             .timeline-item {
                 position: relative;
-                padding-left: 40px;
-                border-left: 2px solid #1e3a5c;
-                margin-bottom: 30px;
+                padding-left: 32px;
+                border-left: 2px solid #1e3150;
+                margin-bottom: 24px;
             }
             .timeline-item::before {
                 content: '';
                 position: absolute;
-                left: -9px;
-                top: 0;
-                width: 16px;
-                height: 16px;
+                left: -7px;
+                top: 4px;
+                width: 12px;
+                height: 12px;
                 border-radius: 50%;
                 background: #3b82f6;
+                border: 2px solid #0b1220;
             }
         </style>
     </ui:define>
 
     <ui:define name="contenido">
-        <div class="container py-5">
-            <div class="text-center mb-5">
-                <span class="badge bg-primary px-3 py-2 text-uppercase mb-2">Trayectoria</span>
-                <h1 class="display-5 fw-bold text-white">Nuestra Historia</h1>
-                <p class="lead text-white-50">El camino que hemos recorrido para transformar la aviación moderna.</p>
+        <div class="corp-page pb-5">
+            <div class="corp-hero py-5 mb-4">
+                <div class="container">
+                    <span class="corp-badge mb-2">Compromiso y Servicio</span>
+                    <h1 class="text-white fw-bold mb-2" style="font-size: 2rem;">Experiencia de Viaje SkyWay</h1>
+                    <p class="m-0" style="color: #94a3b8; max-width: 780px; line-height: 1.65;">
+                        Cómo acompañamos cada etapa de tu vuelo, desde la elección del itinerario hasta la llegada a destino.
+                    </p>
+                </div>
             </div>
 
-            <div class="mx-auto" style="max-width: 800px;">
-                <div class="timeline-item">
-                    <span class="badge bg-primary mb-2">2010</span>
-                    <h4 class="text-white fw-bold">Fundación de SkyWay</h4>
-                    <p class="text-white-50">Iniciamos operaciones con 3 rutas regionales interconectando las principales ciudades comerciales del país.</p>
-                </div>
-                <div class="timeline-item">
-                    <span class="badge bg-primary mb-2">2015</span>
-                    <h4 class="text-white fw-bold">Expansión Internacional</h4>
-                    <p class="text-white-50">Inauguramos rutas hacia destinos clave en Sudamérica e integramos nuestras primeras aeronaves de fuselaje ancho.</p>
-                </div>
-                <div class="timeline-item">
-                    <span class="badge bg-primary mb-2">2020</span>
-                    <h4 class="text-white fw-bold">Transformación Digital</h4>
-                    <p class="text-white-50">Lanzamos nuestra plataforma unificada de reservas con asignación de asientos en tiempo real y soporte WebPay/PayPal.</p>
-                </div>
-                <div class="timeline-item">
-                    <span class="badge bg-primary mb-2">2025</span>
-                    <h4 class="text-white fw-bold">Flota Ecológica y Futuro</h4>
-                    <p class="text-white-50">Renovamos el 100% de nuestra flota con motores turbofan sostenibles y sistema de auto Check-In sin contacto.</p>
+            <div class="container">
+                <div class="corp-card mx-auto" style="max-width: 860px;">
+                    <div class="timeline-item">
+                        <span class="corp-badge mb-2">1. Red y Cobertura</span>
+                        <h5 class="text-white fw-bold">Conectividad en #{homePortalBean.totalPaises} Países</h5>
+                        <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6;" class="m-0">
+                            Operamos entre #{homePortalBean.totalAeropuertos} aeropuertos activos con #{homePortalBean.totalAviones} aeronaves en servicio, conectando vuelos directos y con escala pensados para optimizar horarios y disponibilidad.
+                        </p>
+                    </div>
+                    <div class="timeline-item">
+                        <span class="corp-badge mb-2">2. Planificación y Compra Transparente</span>
+                        <h5 class="text-white fw-bold">Elección de Tarifa, Asiento y Equipaje</h5>
+                        <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6;" class="m-0">
+                            Selecciona la categoría tarifaria que mejor se adapte a tu viaje, escoge tu ubicación en el mapa de cabina con reserva temporal de 10 minutos, añade equipaje de cabina o bodega y paga en línea con WebPay o PayPal.
+                        </p>
+                    </div>
+                    <div class="timeline-item">
+                        <span class="corp-badge mb-2">3. Día del Vuelo</span>
+                        <h5 class="text-white fw-bold">Check-In Anticipado y Seguimiento en Vivo</h5>
+                        <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6;" class="m-0">
+                            Completa tu Check-In online entre 48 horas y 60 minutos antes de la salida, descarga tu E-Ticket PDF o tarjeta de embarque digital y mantente informado ante cualquier ajuste de horario o puerta asignada.
+                        </p>
+                    </div>
+                    <div class="timeline-item mb-0">
+                        <span class="corp-badge mb-2">4. Respaldo al Pasajero</span>
+                        <h5 class="text-white fw-bold">Autogestión de Viajes y Devoluciones por Cancelación de Vuelo</h5>
+                        <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6;" class="m-0">
+                            Desde tu perfil web o aplicación móvil puedes revisar tus próximos vuelos, cambiar asientos permitidos por tu tarifa y gestionar tu reembolso si un vuelo llegara a ser cancelado por la aerolínea.
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>

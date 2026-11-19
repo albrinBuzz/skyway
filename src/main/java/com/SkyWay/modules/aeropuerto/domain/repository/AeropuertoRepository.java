@@ -108,4 +108,25 @@ public interface AeropuertoRepository extends JpaRepository<Aeropuerto, Integer>
         WHERE c.id_ciudad = :idCiudad
         """, nativeQuery = true)
     String obtenerNombreCiudadPorId(@Param("idCiudad") Integer idCiudad);
+
+    long countByActivoTrue();
+
+    @Query(value = """
+        SELECT COUNT(DISTINCT p.id_pais)
+        FROM aeropuerto a
+        JOIN ciudad c ON c.id_ciudad = a.id_ciudad
+        JOIN pais p ON p.id_pais = c.id_pais
+        WHERE a.activo = true AND c.activo = true AND p.activo = true
+        """, nativeQuery = true)
+    long contarPaisesActivos();
+
+    @Query(value = """
+        SELECT p.nombre AS pais, c.nombre AS ciudad, a.codigo_iata, a.nombre_aeropuerto
+        FROM aeropuerto a
+        JOIN ciudad c ON c.id_ciudad = a.id_ciudad
+        JOIN pais p ON p.id_pais = c.id_pais
+        WHERE a.activo = true AND c.activo = true AND p.activo = true
+        ORDER BY p.nombre ASC, c.nombre ASC, a.codigo_iata ASC
+        """, nativeQuery = true)
+    List<Object[]> findDirectorioAeropuertosPorPais();
 }

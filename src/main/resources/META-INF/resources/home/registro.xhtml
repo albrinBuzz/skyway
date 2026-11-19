@@ -8,57 +8,80 @@
                 template="/template/main.xhtml">
 
     <ui:define name="head">
-        <title>SkyWay | Registro de Usuario</title>
+        <title>SkyWay Airlines | Crear Cuenta de Pasajero</title>
         <style type="text/css">
-            /* ==========================================================================
-               🎨 ESTILOS DARK THEME CORPORATIVO SKYWAY - REGISTRO PREMIUM
-               ========================================================================== */
-            :root {
-                --sky-bg-dark: #090E1A;
-                --sky-card-bg: #0F172A;
-                --sky-input-bg: #1E293B;
-                --sky-border: rgba(255, 255, 255, 0.12);
-                --sky-blue: #38BDF8;
-                --navy-brand: #2563EB;
-                --navy-hover: #1D4ED8;
-                --text-heading: #F8FAFC;
-                --text-muted: #94A3B8;
+            .registro-shell {
+                background: #0b1220;
+                min-height: calc(100vh - 220px);
+                padding: 28px 14px 56px;
             }
 
             .register-container {
-                max-width: 880px;
-                margin: 30px auto;
-                background: var(--sky-card-bg) !important;
-                border: 1px solid var(--sky-border) !important;
-                border-radius: 16px !important;
-                padding: 32px !important;
-                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5) !important;
-                box-sizing: border-box !important;
+                max-width: 780px;
+                margin: 0 auto;
+                background: #101b33;
+                border: 1px solid #1e3150;
+                border-radius: 16px;
+                padding: 28px;
+                box-shadow: 0 20px 44px rgba(3, 7, 18, 0.45);
+                box-sizing: border-box;
+            }
+
+            .register-header {
+                border-bottom: 1px solid #1e3150;
+                padding-bottom: 18px;
+                margin-bottom: 20px;
+            }
+
+            .register-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 7px;
+                font-size: 0.72rem;
+                font-weight: 700;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: #93c5fd;
+                background: #0b1324;
+                border: 1px solid #1e3150;
+                border-radius: 999px;
+                padding: 5px 12px;
+                margin-bottom: 10px;
             }
 
             .register-title {
-                color: var(--text-heading) !important;
-                font-size: 1.4rem !important;
-                font-weight: 800 !important;
-                margin-bottom: 20px !important;
-                border-bottom: 1px solid var(--sky-border) !important;
-                padding-bottom: 12px !important;
+                color: #f8fafc;
+                font-size: 1.5rem;
+                font-weight: 700;
+                margin: 0 0 6px;
                 display: flex;
                 align-items: center;
                 gap: 10px;
             }
 
+            .register-title i {
+                color: #60a5fa;
+            }
+
+            .register-subtitle {
+                margin: 0;
+                font-size: 0.9rem;
+                color: #94a3b8;
+                line-height: 1.5;
+            }
+
             .section-header {
-                color: var(--sky-blue) !important;
-                font-size: 0.78rem !important;
-                font-weight: 800 !important;
-                text-transform: uppercase !important;
-                letter-spacing: 0.05em !important;
-                margin-top: 20px !important;
-                margin-bottom: 12px !important;
+                color: #93c5fd;
+                font-size: 0.76rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                margin: 24px 0 14px;
+                padding-bottom: 7px;
+                border-bottom: 1px solid #1e3150;
                 display: flex;
                 align-items: center;
-                gap: 6px;
+                gap: 8px;
             }
 
             .skyway-field-group {
@@ -66,353 +89,556 @@
             }
 
             .skyway-label {
-                display: block !important;
-                color: var(--text-muted) !important;
-                font-size: 0.78rem !important;
-                font-weight: 700 !important;
-                text-transform: uppercase !important;
-                letter-spacing: 0.03em !important;
+                display: flex !important;
+                align-items: center;
+                justify-content: space-between;
+                gap: 6px;
+                color: #cbd5e1 !important;
+                font-size: 0.82rem !important;
+                font-weight: 600 !important;
                 margin-bottom: 6px !important;
             }
 
-            /* Normalización general de inputs */
-            .register-container .ui-inputfield,
-            .register-container .ui-selectonemenu {
-                background: var(--sky-input-bg) !important;
-                border: 1px solid var(--sky-border) !important;
-                color: var(--text-heading) !important;
-                border-radius: 8px !important;
-                padding: 10px 12px !important;
+            .skyway-req-pill {
+                font-size: 0.7rem;
+                font-weight: 700;
+                color: #fcd34d;
+                background: rgba(245, 158, 11, 0.12);
+                border: 1px solid rgba(245, 158, 11, 0.35);
+                border-radius: 999px;
+                padding: 2px 8px;
+            }
+
+            .register-container input.ui-inputfield,
+            .register-container .ui-password input,
+            .register-container .ui-selectonemenu,
+            .register-container .skyway-date-select {
                 width: 100% !important;
-                font-size: 0.88rem !important;
+                min-height: 46px !important;
+                background: #0b1220 !important;
+                border: 1px solid #243b61 !important;
+                color: #f8fafc !important;
+                border-radius: 8px !important;
+                padding: 10px 14px !important;
+                font-size: 0.94rem !important;
                 box-sizing: border-box !important;
+            }
+
+            .register-container .ui-password {
+                width: 100% !important;
+                display: block !important;
+                position: relative !important;
+            }
+
+            .register-container .ui-password input {
+                padding-right: 42px !important;
+            }
+
+            .register-container .ui-password .ui-password-toggle {
+                right: 12px !important;
+                color: #94a3b8 !important;
+            }
+
+            .register-container .ui-selectonemenu {
+                display: flex !important;
+                align-items: center !important;
+                padding: 0 36px 0 14px !important;
             }
 
             .register-container .ui-selectonemenu .ui-selectonemenu-label {
-                color: var(--text-heading) !important;
-                padding: 0 !important;
-                line-height: 22px !important;
-            }
-
-            .register-container .ui-inputfield:focus,
-            .register-container .ui-selectonemenu:focus-within {
-                border-color: var(--sky-blue) !important;
-                box-shadow: 0 0 10px rgba(56, 189, 248, 0.25) !important;
-            }
-
-            /* Botón Principal */
-            .btn-skyway-register.ui-button {
-                background: linear-gradient(135deg, #2563EB, #0284C7) !important;
+                background: transparent !important;
                 border: none !important;
-                color: #FFFFFF !important;
-                font-weight: 800 !important;
-                padding: 14px !important;
+                box-shadow: none !important;
+                color: #f8fafc !important;
+                padding: 10px 0 !important;
+                line-height: 24px !important;
+                font-size: 0.94rem !important;
+                width: 100% !important;
+            }
+
+            .register-container .ui-selectonemenu .ui-selectonemenu-trigger {
+                background: transparent !important;
+                border: none !important;
+                color: #93c5fd !important;
+            }
+
+            .register-container input.ui-inputfield:focus,
+            .register-container .ui-password input:focus,
+            .register-container .ui-selectonemenu:focus-within,
+            .register-container .skyway-date-select:focus {
+                border-color: #3b82f6 !important;
+                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.16) !important;
+                outline: none !important;
+            }
+
+            /* Selectores nativos Día / Mes / Año optimizados para móvil y cambio rápido de década */
+            .skyway-birth-grid {
+                display: grid;
+                grid-template-columns: 0.9fr 1.45fr 1.15fr;
+                gap: 8px;
+            }
+
+            .register-container .skyway-date-select {
+                padding: 10px 10px !important;
+                cursor: pointer;
+                color-scheme: dark;
+            }
+
+            .age-highlight-box {
+                margin-top: 8px;
+                background: #0b1324;
+                border: 1px solid #1e3150;
+                border-radius: 8px;
+                padding: 8px 11px;
+                font-size: 0.79rem;
+                color: #94a3b8;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                line-height: 1.4;
+            }
+
+            .age-highlight-box.ok {
+                background: rgba(22, 101, 52, 0.18);
+                border-color: rgba(34, 197, 94, 0.35);
+                color: #bbf7d0;
+            }
+
+            .age-highlight-box.invalid {
+                background: rgba(153, 27, 27, 0.2);
+                border-color: rgba(248, 113, 113, 0.4);
+                color: #fecaca;
+            }
+
+            .field-helper-text {
+                margin-top: 5px;
+                font-size: 0.78rem;
+                color: #94a3b8;
+                line-height: 1.4;
+            }
+
+            /* Botón Principal SÓLIDO sin degradado */
+            .btn-skyway-register.ui-button {
+                width: 100%;
+                min-height: 48px;
+                background: #1d4ed8 !important;
+                border: 1px solid #2563eb !important;
+                color: #ffffff !important;
+                font-weight: 700 !important;
+                padding: 12px 18px !important;
                 font-size: 0.98rem !important;
                 border-radius: 10px !important;
-                box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35) !important;
-                transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+                box-shadow: none !important;
             }
 
             .btn-skyway-register.ui-button:hover {
-                background: linear-gradient(135deg, #1D4ED8, #0369A1) !important;
-                transform: translateY(-1px);
+                background: #1e40af !important;
             }
 
-            /* ==========================================================================
-               🛠️ FIX DEFINITIVO: POPUP CALENDARIO SIN SELECTS QUE SE CIERREN
-               ========================================================================== */
-            body .ui-datepicker {
-                background-color: #0F172A !important;
-                border: 1px solid #38BDF8 !important;
-                border-radius: 16px !important;
-                color: #F8FAFC !important;
-                padding: 14px !important;
-                box-shadow: 0 20px 45px rgba(0, 0, 0, 0.9) !important;
-                max-width: 340px !important;
-                width: 92vw !important;
-                box-sizing: border-box !important;
+            /* Feedback de contraseña */
+            .pwd-feedback-box {
+                margin-top: 10px;
+                background: #0b1220;
+                border: 1px solid #1e3150;
+                border-radius: 10px;
+                padding: 12px 14px;
+            }
+
+            .pwd-strength-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                font-size: 0.78rem;
+                color: #94a3b8;
+                margin-bottom: 8px;
+            }
+
+            .pwd-strength-label {
+                font-weight: 700;
+                color: #94a3b8;
+            }
+
+            .pwd-strength-bars {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 6px;
+                margin-bottom: 10px;
+            }
+
+            .pwd-bar {
+                height: 5px;
+                border-radius: 999px;
+                background: #1e293b;
+                transition: background-color 0.2s ease;
+            }
+
+            .pwd-checklist {
+                list-style: none;
+                margin: 0;
+                padding: 0;
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 6px 10px;
+            }
+
+            .pwd-check-item {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 0.76rem;
+                color: #64748b;
+            }
+
+            .pwd-check-item.ok {
+                color: #86efac;
+            }
+
+            .pwd-match-indicator {
+                margin-top: 8px;
+                font-size: 0.8rem;
+                display: none;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .pwd-match-indicator.match {
+                display: flex;
+                color: #86efac;
+            }
+
+            .pwd-match-indicator.mismatch {
+                display: flex;
+                color: #fca5a5;
+            }
+
+            .register-footer-link {
+                margin-top: 22px;
+                padding-top: 16px;
+                border-top: 1px solid #1e3150;
+                text-align: center;
+                font-size: 0.88rem;
+                color: #94a3b8;
+            }
+
+            .register-footer-link a {
+                color: #93c5fd;
+                font-weight: 600;
+                text-decoration: none;
+            }
+
+            .register-footer-link a:hover {
+                text-decoration: underline;
+            }
+
+            /* Popup calendario en modo oscuro */
+            body .registro-datepicker-panel,
+            body .registro-datepicker-panel.p-datepicker,
+            body .registro-datepicker-panel.ui-datepicker {
+                width: 318px !important;
+                max-width: 92vw !important;
+                background: #0d172a !important;
+                border: 1px solid #28426e !important;
+                border-radius: 12px !important;
+                padding: 12px !important;
+                color: #f8fafc !important;
+                box-shadow: 0 20px 44px rgba(0, 0, 0, 0.8) !important;
                 z-index: 99999 !important;
             }
 
-            body .ui-datepicker .ui-datepicker-header {
-                background-color: #090E1A !important;
-                border: 1px solid rgba(255, 255, 255, 0.1) !important;
-                padding: 8px 12px !important;
-                border-radius: 10px !important;
-                display: flex !important;
-                align-items: center !important;
-                justify-content: space-between !important;
+            body .registro-datepicker-panel .p-datepicker-header {
+                background: #162442 !important;
+                border: 1px solid #1e3150 !important;
+                border-radius: 8px !important;
+                color: #f8fafc !important;
+                padding: 8px 10px !important;
                 margin-bottom: 10px !important;
             }
 
-            /* Estilo del Título Táctil para cambiar de Año/Mes */
-            body .ui-datepicker .ui-datepicker-title {
-                color: #38BDF8 !important;
-                font-weight: 800 !important;
-                font-size: 0.95rem !important;
-                cursor: pointer !important;
-                padding: 4px 8px !important;
-                border-radius: 6px !important;
-                transition: background 0.2s !important;
-            }
-
-            body .ui-datepicker .ui-datepicker-title:hover {
-                background: rgba(56, 189, 248, 0.15) !important;
-            }
-
-            /* Botones de Navegación de Mes/Año (Flechas) */
-            body .ui-datepicker .ui-datepicker-prev,
-            body .ui-datepicker .ui-datepicker-next {
-                color: #38BDF8 !important;
-                cursor: pointer !important;
-            }
-
-            /* Vista de Malla de Días, Meses y Años */
-            body .ui-datepicker table {
-                width: 100% !important;
-                margin: 8px 0 0 0 !important;
-                border-collapse: collapse !important;
-                table-layout: fixed !important;
-            }
-
-            body .ui-datepicker table th {
-                color: #38BDF8 !important;
-                font-weight: 800 !important;
-                font-size: 0.8rem !important;
-                padding: 6px 0 !important;
-                text-align: center !important;
-            }
-
-            body .ui-datepicker table td {
-                padding: 3px !important;
-                text-align: center !important;
-            }
-
-            body .ui-datepicker table td a,
-            body .ui-datepicker table td span {
-                color: #CBD5E1 !important;
-                border-radius: 50% !important;
-                text-align: center !important;
+            body .registro-datepicker-panel .p-datepicker-title {
                 display: flex !important;
                 align-items: center !important;
                 justify-content: center !important;
-                width: 32px !important;
-                height: 32px !important;
-                margin: 0 auto !important;
+                gap: 6px !important;
+            }
+
+            body .registro-datepicker-panel .p-datepicker-header select,
+            body .registro-datepicker-panel .p-datepicker-header input {
+                background: #0b1220 !important;
+                border: 1px solid #243b61 !important;
+                border-radius: 6px !important;
+                color: #f8fafc !important;
+                padding: 4px 8px !important;
                 font-size: 0.85rem !important;
-                text-decoration: none !important;
+                font-weight: 600 !important;
             }
 
-            body .ui-datepicker table td a:hover {
-                background-color: #2563EB !important;
-                color: #FFFFFF !important;
+            body .registro-datepicker-panel .p-datepicker-prev,
+            body .registro-datepicker-panel .p-datepicker-next {
+                color: #93c5fd !important;
+                border-radius: 50% !important;
             }
 
-            body .ui-datepicker table td a.ui-state-active,
-            body .ui-datepicker table td a.ui-state-highlight {
-                background-color: #38BDF8 !important;
-                color: #0F172A !important;
-                font-weight: 800 !important;
-                box-shadow: 0 0 10px rgba(56, 189, 248, 0.5) !important;
+            body .registro-datepicker-panel .p-datepicker-prev:hover,
+            body .registro-datepicker-panel .p-datepicker-next:hover {
+                background: #1e3150 !important;
+                color: #ffffff !important;
             }
 
-            /* Vista de Selección de Meses y Décadas/Años */
-            body .ui-datepicker .ui-monthpicker .ui-monthpicker-month,
-            body .ui-datepicker .ui-yearpicker .ui-yearpicker-year {
-                color: #CBD5E1 !important;
-                padding: 10px !important;
-                border-radius: 8px !important;
+            body .registro-datepicker-panel .p-datepicker-calendar {
+                width: 100% !important;
+                margin: 0 !important;
+            }
+
+            body .registro-datepicker-panel .p-datepicker-calendar th,
+            body .registro-datepicker-panel .p-datepicker-calendar th span {
+                color: #93c5fd !important;
+                font-size: 0.76rem !important;
                 font-weight: 700 !important;
+                padding: 5px 0 !important;
+                text-align: center !important;
             }
 
-            body .ui-datepicker .ui-monthpicker .ui-monthpicker-month:hover,
-            body .ui-datepicker .ui-yearpicker .ui-yearpicker-year:hover {
-                background-color: #2563EB !important;
-                color: #FFFFFF !important;
+            body .registro-datepicker-panel .p-datepicker-calendar td {
+                padding: 2px !important;
+                text-align: center !important;
             }
 
-            /* Botones Inferiores (Hoy / Limpiar) */
-            body .ui-datepicker .ui-datepicker-buttonpane {
-                background: transparent !important;
-                border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
-                margin-top: 12px !important;
-                padding-top: 10px !important;
+            body .registro-datepicker-panel .p-datepicker-calendar td > span,
+            body .registro-datepicker-panel .p-datepicker-calendar td > a {
+                width: 34px !important;
+                height: 34px !important;
+                margin: 0 auto !important;
                 display: flex !important;
-                justify-content: space-between !important;
+                align-items: center !important;
+                justify-content: center !important;
+                border-radius: 50% !important;
+                color: #e2e8f0 !important;
+                font-size: 0.85rem !important;
             }
 
-            body .ui-datepicker .ui-datepicker-buttonpane button {
-                background: #1E293B !important;
-                color: #38BDF8 !important;
-                border: 1px solid rgba(56, 189, 248, 0.3) !important;
-                border-radius: 8px !important;
+            body .registro-datepicker-panel .p-datepicker-calendar td > span:not(.p-disabled):hover,
+            body .registro-datepicker-panel .p-datepicker-calendar td > a:hover {
+                background: #1e3150 !important;
+                color: #ffffff !important;
+            }
+
+            body .registro-datepicker-panel .p-datepicker-calendar td > span.p-highlight,
+            body .registro-datepicker-panel .p-datepicker-calendar td > a.ui-state-active {
+                background: #1d4ed8 !important;
+                color: #ffffff !important;
                 font-weight: 700 !important;
-                padding: 8px 16px !important;
-                font-size: 0.82rem !important;
             }
 
-            /* POPUP DE SELECTONEMENU Y NACIONALIDADES */
+            body .registro-datepicker-panel .p-datepicker-calendar td > span.p-disabled {
+                color: #475569 !important;
+                opacity: 0.5 !important;
+            }
+
+            /* Popup SelectOneMenu en modo oscuro */
             body .ui-selectonemenu-panel {
-                background-color: #0F172A !important;
-                border: 1px solid rgba(255, 255, 255, 0.15) !important;
+                background: #0d172a !important;
+                border: 1px solid #28426e !important;
                 border-radius: 8px !important;
-                max-width: 90vw !important;
-                box-shadow: 0 10px 25px rgba(0,0,0,0.8) !important;
+                max-width: 92vw !important;
+                box-shadow: 0 12px 28px rgba(0, 0, 0, 0.8) !important;
                 z-index: 99999 !important;
             }
 
             body .ui-selectonemenu-panel .ui-selectonemenu-items .ui-selectonemenu-item {
-                color: #CBD5E1 !important;
-                padding: 8px 12px !important;
-                font-size: 0.85rem !important;
+                color: #e2e8f0 !important;
+                padding: 10px 14px !important;
+                font-size: 0.9rem !important;
                 white-space: normal !important;
             }
 
             body .ui-selectonemenu-panel .ui-selectonemenu-items .ui-selectonemenu-item:hover,
             body .ui-selectonemenu-panel .ui-selectonemenu-items .ui-selectonemenu-item.ui-state-highlight {
-                background-color: #2563EB !important;
-                color: #FFFFFF !important;
+                background: #1d4ed8 !important;
+                color: #ffffff !important;
             }
 
             @media (max-width: 768px) {
+                .registro-shell {
+                    padding: 16px 10px 44px;
+                }
+
                 .register-container {
-                    padding: 18px 16px !important;
-                    margin: 15px auto !important;
-                    border-radius: 12px !important;
+                    padding: 20px 16px;
+                    border-radius: 14px;
                 }
 
                 .register-title {
-                    font-size: 1.2rem !important;
+                    font-size: 1.28rem;
                 }
 
-                /* Centrado del Calendario en dispositivos móviles */
-                body .ui-datepicker {
-                    left: 50% !important;
-                    transform: translateX(-50%) !important;
+                /* Evita auto-zoom en iOS/Android al enfocar campos */
+                .register-container .ui-inputfield,
+                .register-container .ui-password input,
+                .register-container .ui-selectonemenu .ui-selectonemenu-label {
+                    font-size: 16px !important;
+                }
+
+                .pwd-checklist {
+                    grid-template-columns: 1fr;
                 }
             }
         </style>
     </ui:define>
 
     <ui:define name="contenido">
-        <p:growl id="growl" showDetail="true" keepAlive="true" life="5000" />
+        <p:growl id="growl" showDetail="true" keepAlive="true" life="5000"/>
 
-        <div class="container px-2 px-md-3">
+        <div class="registro-shell">
             <div class="register-container">
-                <div class="register-title">
-                    <i class="pi pi-user-plus text-blue-400"></i>
-                    Crear Cuenta de Pasajero
+                <div class="register-header">
+                    <div class="register-badge">
+                        <i class="pi pi-user-plus"/>
+                        <span>Registro de Pasajero</span>
+                    </div>
+                    <h1 class="register-title">
+                        <i class="pi pi-user-plus"/>
+                        <span>Crear Cuenta de Pasajero</span>
+                    </h1>
+                    <p class="register-subtitle">
+                        Crea tu cuenta en pocos pasos para gestionar reservas, check-in digital y pases de abordar online.
+                    </p>
                 </div>
 
                 <h:form id="registroForm">
-
-                    <!-- SECCIÓN 1: DATOS PERSONALES -->
+                    <!-- SECCIÓN 1: IDENTIDAD Y CONTACTO -->
                     <div class="section-header">
-                        <i class="pi pi-id-card"></i> Información Personal y Acceso
+                        <i class="pi pi-id-card"/>
+                        <span>Información Personal y Contacto</span>
                     </div>
 
-                    <div class="row g-2 g-md-3">
-                        <!-- RUT -->
+                    <div class="row g-3">
                         <div class="col-12 col-md-6 skyway-field-group">
-                            <p:outputLabel for="rutUsuario" value="RUT / Identificador de Cuenta" styleClass="skyway-label"/>
-                            <p:inputText id="rutUsuario" value="#{usuarioBean.usuario.rut}" required="true"
-                                         requiredMessage="El RUT es obligatorio"
-                                         placeholder="Ej: 12345678-9"/>
+                            <label for="nombre" class="skyway-label">Nombre *</label>
+                            <p:inputText id="nombre"
+                                         value="#{usuarioBean.usuario.nombre}"
+                                         placeholder="Ej: Jose"
+                                         autocomplete="given-name"/>
                         </div>
 
-                        <!-- Nombre -->
                         <div class="col-12 col-md-6 skyway-field-group">
-                            <p:outputLabel for="nombre" value="Nombre" styleClass="skyway-label"/>
-                            <p:inputText id="nombre" value="#{usuarioBean.usuario.nombre}" required="true"
-                                         requiredMessage="El nombre es obligatorio"
-                                         placeholder="Ej: Cristóbal"/>
+                            <label for="apellido" class="skyway-label">Apellido *</label>
+                            <p:inputText id="apellido"
+                                         value="#{usuarioBean.usuario.apellido}"
+                                         placeholder="Ej: Román"
+                                         autocomplete="family-name"/>
                         </div>
 
-                        <!-- Apellido -->
                         <div class="col-12 col-md-6 skyway-field-group">
-                            <p:outputLabel for="apellido" value="Apellido" styleClass="skyway-label"/>
-                            <p:inputText id="apellido" value="#{usuarioBean.usuario.apellido}" required="true"
-                                         requiredMessage="El apellido es obligatorio"
-                                         placeholder="Ej: Román"/>
+                            <label for="rutUsuario" class="skyway-label">RUT / Identificador de Cuenta *</label>
+                            <p:inputText id="rutUsuario"
+                                         value="#{usuarioBean.usuario.rut}"
+                                         placeholder="Ej: 1111111-1"
+                                         maxlength="12"/>
                         </div>
 
-                        <!-- Fecha Nacimiento (Navegación Táctil Nativa PrimeFaces por Clic en Título) -->
                         <div class="col-12 col-md-6 skyway-field-group">
-                            <p:outputLabel for="fechaNacimiento" value="Fecha de Nacimiento" styleClass="skyway-label"/>
-                            <p:datePicker id="fechaNacimiento"
-                                          value="#{usuarioBean.usuario.fechaNacimiento}"
-                                          pattern="dd/MM/yyyy"
-                                          mask="true"
-                                          maxdate="#{usuarioBean.fechaMaxMayorEdad}"
-                                          mindate="01/01/1925"
-                                          showIcon="true"
-                                          showButtonBar="true"
-                                          monthNavigator="true"
-                                          yearNavigator="true"
-                                          yearRange="c-100:c-18"
-                                          touchUI="true"
-                                          appendTo="@(body)"
-                                          readonlyInput="false"
-                                          styleClass="skyway-custom-input"
-                                          placeholder="DD/MM/AAAA (Ej: 15/05/1978)"
-                                          required="true"
-                                          requiredMessage="La fecha de nacimiento es obligatoria"
-                                          converterMessage="La fecha ingresada no existe o tiene un formato incorrecto (DD/MM/AAAA)">
-                                <f:convertDateTime pattern="dd/MM/yyyy" />
-                            </p:datePicker>
-                            <p:message for="fechaNacimiento" styleClass="text-danger small mt-1" />
+                            <label for="diaNacimiento" class="skyway-label">
+                                <span>Fecha de Nacimiento *</span>
+                                <span class="skyway-req-pill">+18 años obligatorio</span>
+                            </label>
+                            <div class="skyway-birth-grid">
+                                <h:selectOneMenu id="diaNacimiento"
+                                                 value="#{usuarioBean.diaNacimiento}"
+                                                 styleClass="skyway-date-select">
+                                    <f:selectItem itemLabel="Día" itemValue="#{null}"/>
+                                    <f:selectItems value="#{usuarioBean.diasNacimiento}" var="d" itemLabel="#{d}" itemValue="#{d}"/>
+                                </h:selectOneMenu>
+
+                                <h:selectOneMenu id="mesNacimiento"
+                                                 value="#{usuarioBean.mesNacimiento}"
+                                                 styleClass="skyway-date-select">
+                                    <f:selectItem itemLabel="Mes" itemValue="#{null}"/>
+                                    <f:selectItem itemLabel="Enero" itemValue="1"/>
+                                    <f:selectItem itemLabel="Febrero" itemValue="2"/>
+                                    <f:selectItem itemLabel="Marzo" itemValue="3"/>
+                                    <f:selectItem itemLabel="Abril" itemValue="4"/>
+                                    <f:selectItem itemLabel="Mayo" itemValue="5"/>
+                                    <f:selectItem itemLabel="Junio" itemValue="6"/>
+                                    <f:selectItem itemLabel="Julio" itemValue="7"/>
+                                    <f:selectItem itemLabel="Agosto" itemValue="8"/>
+                                    <f:selectItem itemLabel="Septiembre" itemValue="9"/>
+                                    <f:selectItem itemLabel="Octubre" itemValue="10"/>
+                                    <f:selectItem itemLabel="Noviembre" itemValue="11"/>
+                                    <f:selectItem itemLabel="Diciembre" itemValue="12"/>
+                                </h:selectOneMenu>
+
+                                <h:selectOneMenu id="anioNacimiento"
+                                                 value="#{usuarioBean.anioNacimiento}"
+                                                 styleClass="skyway-date-select">
+                                    <f:selectItem itemLabel="Año" itemValue="#{null}"/>
+                                    <f:selectItems value="#{usuarioBean.aniosNacimiento}" var="a" itemLabel="#{a}" itemValue="#{a}"/>
+                                </h:selectOneMenu>
+                            </div>
+                            <div id="ageStatusBox" class="age-highlight-box">
+                                <i id="ageStatusIcon" class="pi pi-calendar"/>
+                                <span id="ageStatusText">
+                                    Solo mayores de edad: selecciona día, mes y año (hasta #{usuarioBean.fechaLimiteTexto}).
+                                </span>
+                            </div>
                         </div>
 
-                        <!-- Correo Electrónico -->
                         <div class="col-12 col-md-6 skyway-field-group">
-                            <p:outputLabel for="correoElectronico" value="Correo Electrónico" styleClass="skyway-label"/>
-                            <p:inputText id="correoElectronico" value="#{usuarioBean.usuario.correoElectronico}" required="true"
-                                         requiredMessage="El correo electrónico es obligatorio"
-                                         placeholder="ejemplo@correo.cl"/>
+                            <label for="correoElectronico" class="skyway-label">Correo Electrónico *</label>
+                            <p:inputText id="correoElectronico"
+                                         type="email"
+                                         value="#{usuarioBean.usuario.correoElectronico}"
+                                         placeholder="nombre@correo.cl"
+                                         autocomplete="email"
+                                         inputmode="email"/>
                         </div>
 
-                        <!-- Teléfono Móvil (Chile) -->
                         <div class="col-12 col-md-6 skyway-field-group">
-                            <p:outputLabel for="telefono" value="Teléfono Móvil (Chile)" styleClass="skyway-label"/>
-                            <p:inputMask id="telefono" mask="+56 9 9999 9999" value="#{usuarioBean.usuario.telefono}"
-                                         required="true" requiredMessage="El teléfono es obligatorio"
-                                         placeholder="+56 9 1234 5678"/>
+                            <label for="telefono" class="skyway-label">Teléfono Móvil *</label>
+                            <p:inputText id="telefono"
+                                         type="tel"
+                                         value="#{usuarioBean.usuario.telefono}"
+                                         placeholder="+56 9 1111 1111"
+                                         maxlength="20"
+                                         autocomplete="tel"
+                                         inputmode="tel"/>
                         </div>
                     </div>
 
-                    <!-- SECCIÓN 2: DOCUMENTACIÓN Y NACIONALIDAD -->
+                    <!-- SECCIÓN 2: DOCUMENTO DE VIAJE -->
                     <div class="section-header">
-                        <i class="pi pi-globe"></i> Documento de Viaje y Nacionalidad
+                        <i class="pi pi-globe"/>
+                        <span>Documento de Viaje y Nacionalidad</span>
                     </div>
 
-                    <div class="row g-2 g-md-3">
-                        <!-- Tipo de Documento -->
+                    <div class="row g-3">
                         <div class="col-12 col-md-4 skyway-field-group">
-                            <p:outputLabel for="tipoDocumento" value="Tipo Documento" styleClass="skyway-label"/>
-                            <p:selectOneMenu id="tipoDocumento" value="#{usuarioBean.tipoDocumento}" required="true"
+                            <label for="tipoDocumento" class="skyway-label">Tipo de Documento *</label>
+                            <p:selectOneMenu id="tipoDocumento"
+                                             value="#{usuarioBean.tipoDocumento}"
+                                             required="true"
                                              requiredMessage="Seleccione el tipo de documento">
-                                <f:selectItem itemLabel="Seleccione..." itemValue=""/>
                                 <f:selectItem itemLabel="Cédula de Identidad" itemValue="CEDULA"/>
                                 <f:selectItem itemLabel="Pasaporte" itemValue="PASAPORTE"/>
                                 <f:selectItem itemLabel="DNI Extranjero" itemValue="DNI"/>
                             </p:selectOneMenu>
                         </div>
 
-                        <!-- Número de Documento / Pasaporte -->
                         <div class="col-12 col-md-4 skyway-field-group">
-                            <p:outputLabel for="documentoIdentidad" value="Número de Documento" styleClass="skyway-label"/>
-                            <p:inputText id="documentoIdentidad" value="#{usuarioBean.usuario.documentoIdentidad}" required="true"
-                                         requiredMessage="El número de documento es obligatorio"
-                                         placeholder="Ej: 12345678-9 o A1234567"/>
+                            <label for="documentoIdentidad" class="skyway-label">Número de Documento *</label>
+                            <p:inputText id="documentoIdentidad"
+                                         value="#{usuarioBean.usuario.documentoIdentidad}"
+                                         placeholder="Ej: 111111111 o P123456"
+                                         maxlength="20"/>
                         </div>
 
-                        <!-- Nacionalidad -->
                         <div class="col-12 col-md-4 skyway-field-group">
-                            <p:outputLabel for="nacionalidad" value="Nacionalidad" styleClass="skyway-label"/>
-                            <p:selectOneMenu id="nacionalidad" value="#{usuarioBean.nacionalidad}" required="true"
-                                             filter="true" filterMatchMode="contains"
+                            <label for="nacionalidad" class="skyway-label">Nacionalidad *</label>
+                            <p:selectOneMenu id="nacionalidad"
+                                             value="#{usuarioBean.nacionalidad}"
+                                             required="true"
+                                             filter="true"
+                                             filterMatchMode="contains"
                                              requiredMessage="Seleccione una nacionalidad">
-                                <f:selectItem itemLabel="Seleccione..." itemValue=""/>
                                 <f:selectItem itemLabel="Chilena" itemValue="Chilena"/>
                                 <f:selectItem itemLabel="Argentina" itemValue="Argentina"/>
                                 <f:selectItem itemLabel="Peruana" itemValue="Peruana"/>
@@ -432,34 +658,315 @@
 
                     <!-- SECCIÓN 3: SEGURIDAD -->
                     <div class="section-header">
-                        <i class="pi pi-lock"></i> Seguridad y Acceso
+                        <i class="pi pi-lock"/>
+                        <span>Seguridad y Contraseña</span>
                     </div>
 
-                    <div class="row g-2 g-md-3">
+                    <div class="row g-3">
                         <div class="col-12 col-md-6 skyway-field-group">
-                            <p:outputLabel for="contrasena" value="Contraseña" styleClass="skyway-label"/>
-                            <p:password id="contrasena" value="#{usuarioBean.usuario.contrasena}" required="true"
-                                        toggleMask="true" requiredMessage="La contraseña es obligatoria"
-                                        placeholder="••••••••"/>
+                            <label for="contrasena" class="skyway-label">Contraseña *</label>
+                            <p:password id="contrasena"
+                                        value="#{usuarioBean.usuario.contrasena}"
+                                        toggleMask="true"
+                                        feedback="false"
+                                        maxlength="72"
+                                        placeholder="Mínimo 8 caracteres, letras y números"/>
+
+                            <div id="pwdRegFeedbackBox" class="pwd-feedback-box">
+                                <div class="pwd-strength-header">
+                                    <span>Seguridad de la contraseña</span>
+                                    <span id="pwdRegStrengthLabel" class="pwd-strength-label">Sin ingresar</span>
+                                </div>
+                                <div class="pwd-strength-bars">
+                                    <div class="pwd-bar"></div>
+                                    <div class="pwd-bar"></div>
+                                    <div class="pwd-bar"></div>
+                                    <div class="pwd-bar"></div>
+                                </div>
+                                <ul class="pwd-checklist">
+                                    <li id="chkRegLen" class="pwd-check-item">
+                                        <i class="pi pi-circle"/>
+                                        <span>Mínimo 8 caracteres</span>
+                                    </li>
+                                    <li id="chkRegNum" class="pwd-check-item">
+                                        <i class="pi pi-circle"/>
+                                        <span>Al menos un número</span>
+                                    </li>
+                                    <li id="chkRegCase" class="pwd-check-item">
+                                        <i class="pi pi-circle"/>
+                                        <span>Mayúscula y minúscula</span>
+                                    </li>
+                                    <li id="chkRegSpecial" class="pwd-check-item">
+                                        <i class="pi pi-circle"/>
+                                        <span>Símbolo especial</span>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
 
                         <div class="col-12 col-md-6 skyway-field-group">
-                            <p:outputLabel for="confirmarContrasena" value="Confirmar Contraseña" styleClass="skyway-label"/>
-                            <p:password id="confirmarContrasena" value="#{usuarioBean.confirmarContrasena}" required="true"
-                                        toggleMask="true" requiredMessage="Confirma tu contraseña"
-                                        placeholder="••••••••"/>
+                            <label for="confirmarContrasena" class="skyway-label">Confirmar Contraseña *</label>
+                            <p:password id="confirmarContrasena"
+                                        value="#{usuarioBean.confirmarContrasena}"
+                                        toggleMask="true"
+                                        feedback="false"
+                                        maxlength="72"
+                                        placeholder="Repite tu contraseña"/>
+                            <div id="pwdRegMatchIndicator" class="pwd-match-indicator">
+                                <i id="pwdRegMatchIcon" class="pi pi-info-circle"/>
+                                <span id="pwdRegMatchText"></span>
+                            </div>
                         </div>
                     </div>
 
                     <!-- BOTÓN PRINCIPAL -->
-                    <div class="mt-4 pt-2">
-                        <p:commandButton value="Crear Cuenta de Pasajero" action="#{usuarioBean.registrar}"
+                    <div class="mt-4 pt-1">
+                        <p:commandButton value="Crear Cuenta de Pasajero"
+                                         action="#{usuarioBean.registrar}"
                                          icon="pi pi-check-circle"
-                                         styleClass="btn-skyway-register w-100" update=":growl @form"/>
+                                         styleClass="btn-skyway-register"
+                                         update=":growl"/>
                     </div>
 
+                    <div class="register-footer-link">
+                        ¿Ya tienes una cuenta registrada?
+                        <h:outputLink value="#{request.contextPath}/home/login.xhtml">Inicia sesión aquí</h:outputLink>
+                    </div>
                 </h:form>
             </div>
         </div>
+
+        <script type="text/javascript">
+            (function () {
+                var FECHA_LIMITE_TEXTO = "#{usuarioBean.fechaLimiteTexto}";
+
+                function resolverInput(idBase) {
+                    return document.querySelector("#registroForm input[id$='" + idBase + "_input']")
+                        || document.querySelector("#registroForm input[id$='" + idBase + "']");
+                }
+
+                function actualizarCheck(id, ok) {
+                    var el = document.getElementById(id);
+                    if (!el) return;
+                    el.classList.toggle("ok", ok);
+                    var icon = el.querySelector("i");
+                    if (icon) {
+                        icon.className = ok ? "pi pi-check-circle" : "pi pi-circle";
+                    }
+                }
+
+                function evaluarFeedbackRegistro() {
+                    var inputNueva = resolverInput("contrasena");
+                    var inputConfirmar = resolverInput("confirmarContrasena");
+                    if (!inputNueva) return;
+
+                    var val = inputNueva.value || "";
+                    var tieneLen = val.length >= 8;
+                    var tieneNum = /\d/.test(val);
+                    var tieneMayusMinus = /[a-z]/.test(val) &amp;&amp; /[A-Z]/.test(val);
+                    var tieneLetra = /[A-Za-z]/.test(val);
+                    var tieneEspecial = /[^A-Za-z0-9]/.test(val);
+
+                    actualizarCheck("chkRegLen", tieneLen);
+                    actualizarCheck("chkRegNum", tieneNum);
+                    actualizarCheck("chkRegCase", tieneMayusMinus);
+                    actualizarCheck("chkRegSpecial", tieneEspecial);
+
+                    var nivel = 0;
+                    if (val.length > 0) {
+                        if (tieneLen &amp;&amp; tieneLetra &amp;&amp; tieneNum) {
+                            nivel = 2;
+                            if (tieneMayusMinus) nivel++;
+                            if (tieneEspecial &amp;&amp; val.length >= 10) nivel++;
+                        } else {
+                            nivel = 1;
+                        }
+                    }
+
+                    var niveles = [
+                        { texto: "Sin ingresar", color: "#94a3b8" },
+                        { texto: "Débil", color: "#ef4444" },
+                        { texto: "Aceptable", color: "#f59e0b" },
+                        { texto: "Fuerte", color: "#3b82f6" },
+                        { texto: "Muy fuerte", color: "#22c55e" }
+                    ];
+                    var estado = niveles[nivel];
+
+                    var labelEl = document.getElementById("pwdRegStrengthLabel");
+                    if (labelEl) {
+                        labelEl.textContent = estado.texto;
+                        labelEl.style.color = estado.color;
+                    }
+
+                    var bars = document.querySelectorAll("#pwdRegFeedbackBox .pwd-bar");
+                    bars.forEach(function (bar, idx) {
+                        bar.style.backgroundColor = (idx &lt; nivel) ? estado.color : "#1e293b";
+                    });
+
+                    var matchEl = document.getElementById("pwdRegMatchIndicator");
+                    var matchIcon = document.getElementById("pwdRegMatchIcon");
+                    var matchText = document.getElementById("pwdRegMatchText");
+                    if (matchEl &amp;&amp; matchIcon &amp;&amp; matchText &amp;&amp; inputConfirmar) {
+                        var conf = inputConfirmar.value || "";
+                        matchEl.classList.remove("match", "mismatch");
+                        if (conf.length === 0) {
+                            matchText.textContent = "";
+                        } else if (val === conf) {
+                            matchEl.classList.add("match");
+                            matchIcon.className = "pi pi-check-circle";
+                            matchText.textContent = "Las contraseñas coinciden";
+                        } else {
+                            matchEl.classList.add("mismatch");
+                            matchIcon.className = "pi pi-times-circle";
+                            matchText.textContent = "Las contraseñas no coinciden";
+                        }
+                    }
+                }
+
+                function evaluarMayoriaEdad() {
+                    var selDia = document.querySelector("#registroForm select[id$='diaNacimiento']");
+                    var selMes = document.querySelector("#registroForm select[id$='mesNacimiento']");
+                    var selAnio = document.querySelector("#registroForm select[id$='anioNacimiento']");
+                    var box = document.getElementById("ageStatusBox");
+                    var icon = document.getElementById("ageStatusIcon");
+                    var text = document.getElementById("ageStatusText");
+                    if (!selDia || !selMes || !selAnio || !box || !icon || !text) return;
+
+                    box.classList.remove("ok", "invalid");
+
+                    var diaVal = selDia.value;
+                    var mesVal = selMes.value;
+                    var anioVal = selAnio.value;
+                    if (!diaVal || !mesVal || !anioVal) {
+                        icon.className = "pi pi-calendar";
+                        text.textContent = "Solo mayores de edad: selecciona día, mes y año (hasta " + FECHA_LIMITE_TEXTO + ").";
+                        return;
+                    }
+
+                    var dia = parseInt(diaVal, 10);
+                    var mes = parseInt(mesVal, 10) - 1;
+                    var anio = parseInt(anioVal, 10);
+                    var fechaNac = new Date(anio, mes, dia);
+
+                    if (fechaNac.getFullYear() !== anio || fechaNac.getMonth() !== mes || fechaNac.getDate() !== dia || anio &lt; 1925) {
+                        box.classList.add("invalid");
+                        icon.className = "pi pi-times-circle";
+                        text.textContent = "La combinación de día y mes no existe en el calendario.";
+                        return;
+                    }
+
+                    var hoy = new Date();
+                    var edad = hoy.getFullYear() - anio;
+                    var m = hoy.getMonth() - mes;
+                    if (m &lt; 0 || (m === 0 &amp;&amp; hoy.getDate() &lt; dia)) {
+                        edad--;
+                    }
+
+                    if (edad >= 18) {
+                        box.classList.add("ok");
+                        icon.className = "pi pi-check-circle";
+                        text.textContent = "Mayor de edad verificada (" + edad + " años).";
+                    } else {
+                        box.classList.add("invalid");
+                        icon.className = "pi pi-exclamation-triangle";
+                        text.textContent = "Debes tener al menos 18 años para registrarte (edad actual: " + Math.max(0, edad) + " años).";
+                    }
+                }
+
+                function calcularDvRut(cuerpo) {
+                    var suma = 0;
+                    var mult = 2;
+                    for (var i = cuerpo.length - 1; i >= 0; i--) {
+                        suma += parseInt(cuerpo.charAt(i), 10) * mult;
+                        mult = mult === 7 ? 2 : mult + 1;
+                    }
+                    var resto = 11 - (suma % 11);
+                    if (resto === 11) return "0";
+                    if (resto === 10) return "K";
+                    return String(resto);
+                }
+
+                function formatearRut(input, completarSiSoloCuerpo) {
+                    if (!input) return;
+                    var raw = (input.value || "").toUpperCase().replace(/[^0-9K-]/g, "");
+                    if (!raw) {
+                        input.value = "";
+                        return;
+                    }
+
+                    var sinGuion = raw.replace(/-/g, "");
+                    var tieneGuionExplicito = raw.indexOf("-") !== -1;
+
+                    if (tieneGuionExplicito) {
+                        var partes = raw.split("-");
+                        var cuerpo = (partes[0] || "").replace(/[^0-9]/g, "").slice(0, 8);
+                        var dvRaw = (partes.slice(1).join("") || "").replace(/[^0-9K]/g, "").slice(0, 1);
+                        if (!cuerpo) {
+                            input.value = "";
+                            return;
+                        }
+                        if (dvRaw) {
+                            input.value = cuerpo + "-" + dvRaw;
+                        } else if (completarSiSoloCuerpo &amp;&amp; cuerpo.length >= 7) {
+                            input.value = cuerpo + "-" + calcularDvRut(cuerpo);
+                        } else {
+                            input.value = cuerpo + "-";
+                        }
+                        return;
+                    }
+
+                    if (sinGuion.length >= 9) {
+                        var cuerpo9 = sinGuion.slice(0, 8).replace(/[^0-9]/g, "");
+                        var dv9 = sinGuion.slice(8, 9).replace(/[^0-9K]/g, "");
+                        input.value = cuerpo9 ? (dv9 ? cuerpo9 + "-" + dv9 : cuerpo9) : "";
+                        return;
+                    }
+
+                    var ultimo = sinGuion.charAt(sinGuion.length - 1);
+                    if (ultimo === "K" &amp;&amp; sinGuion.length >= 2) {
+                        var cuerpoK = sinGuion.slice(0, sinGuion.length - 1).replace(/[^0-9]/g, "").slice(0, 8);
+                        input.value = cuerpoK ? cuerpoK + "-K" : "";
+                        return;
+                    }
+
+                    var soloNumeros = sinGuion.replace(/[^0-9]/g, "").slice(0, 8);
+                    if (completarSiSoloCuerpo &amp;&amp; soloNumeros.length >= 7) {
+                        input.value = soloNumeros + "-" + calcularDvRut(soloNumeros);
+                    } else {
+                        input.value = soloNumeros;
+                    }
+                }
+
+                document.addEventListener("input", function (ev) {
+                    if (!ev.target || !ev.target.id) return;
+                    if (ev.target.id.indexOf("rutUsuario") !== -1) {
+                        formatearRut(ev.target, false);
+                    }
+                    if (ev.target.id.indexOf("contrasena") !== -1 || ev.target.id.indexOf("confirmarContrasena") !== -1) {
+                        evaluarFeedbackRegistro();
+                    }
+                });
+
+                document.addEventListener("blur", function (ev) {
+                    if (ev.target &amp;&amp; ev.target.id &amp;&amp; ev.target.id.indexOf("rutUsuario") !== -1) {
+                        formatearRut(ev.target, true);
+                    }
+                }, true);
+
+                document.addEventListener("change", function (ev) {
+                    if (!ev.target || !ev.target.id) return;
+                    if (ev.target.id.indexOf("diaNacimiento") !== -1
+                        || ev.target.id.indexOf("mesNacimiento") !== -1
+                        || ev.target.id.indexOf("anioNacimiento") !== -1) {
+                        evaluarMayoriaEdad();
+                    }
+                });
+
+                document.addEventListener("DOMContentLoaded", function () {
+                    evaluarFeedbackRegistro();
+                    evaluarMayoriaEdad();
+                });
+            })();
+        </script>
     </ui:define>
 </ui:composition>
