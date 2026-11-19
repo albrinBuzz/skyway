@@ -4,65 +4,39 @@ ALTER USER aerolinea_user SET search_path TO public, directus;
 SET search_path TO public, directus;
 
 
-BEGIN;
-SET LOCAL lock_timeout = '10s';
+-- Limpieza segura previa: solo trunca tablas SkyWay existentes en orden determinista y sin abortar si alguna no existe o hay bloqueo
+DO $$
+DECLARE
+    v_tablas TEXT;
+BEGIN
+    SET LOCAL lock_timeout = '10s';
 
-TRUNCATE TABLE
-    Checkin_Pasajero,
-    Checkin,
-    Equipaje,
-    Reembolso,
-    Cuenta_Reembolso,
-    Cancelacion_Asiento,
-    Cancelacion,
-    Wal_Transaccion_Pago,
-    Log_Auditoria,
-    Notificacion,
-    Pago,
-    Reserva_Asiento,
-    pasajero_reserva,
-    Reserva_Itinerario,
-    Reserva,
-    Turno_Tripulacion,
-    Turno,
-    Itinerario_Tarifa,
-    Itinerario_Vuelo,
-    Itinerario,
-    Asignacion_Puerta,
-    Segmento_Vuelo,
-    Precio_Asiento,
-    Vuelo,
-    Asiento,
-    Configuracion_Cabina,
-    Capacidad_Clase,
-    Avion,
-    Modelo_Avion,
-    Fabricante,
-    Puerta_Embarque,
-    Aeropuerto,
-    Ciudad,
-    Pais,
-    Continente,
-    Aerolinea,
-    Tarifa_Caracteristica,
-    Caracteristica_Tarifa,
-    Tarifa,
-    Clase_asiento,
-    Estado_Vuelo,
-    Estado_reserva,
-    Metodo_Pago,
-    Tipo_Equipaje,
-    Tipo_Turno,
-    Personal_Administrativo,
-    Tripulacion,
-    Piloto,
-    Pasajero,
-    RolUsuario,
-    Usuario,
-    Roles
-    RESTART IDENTITY CASCADE;
+    SELECT string_agg(format('%I.%I', schemaname, tablename), ', ' ORDER BY tablename)
+    INTO v_tablas
+    FROM pg_tables
+    WHERE schemaname = ANY (current_schemas(false))
+      AND lower(tablename) = ANY (ARRAY[
+          'aerolinea', 'aeropuerto', 'asiento', 'asignacion_puerta', 'avion',
+          'cancelacion', 'cancelacion_asiento', 'capacidad_clase', 'caracteristica_tarifa',
+          'checkin', 'checkin_pasajero', 'ciudad', 'clase_asiento', 'configuracion_cabina',
+          'continente', 'cuenta_reembolso', 'equipaje', 'estado_reserva', 'estado_vuelo',
+          'fabricante', 'itinerario', 'itinerario_tarifa', 'itinerario_vuelo',
+          'log_auditoria', 'metodo_pago', 'modelo_avion', 'notificacion', 'pago',
+          'pais', 'pasajero', 'pasajero_reserva', 'personal_administrativo', 'piloto',
+          'precio_asiento', 'puerta_embarque', 'reembolso', 'reserva', 'reserva_asiento',
+          'reserva_itinerario', 'roles', 'rolusuario', 'segmento_vuelo', 'tarifa',
+          'tarifa_caracteristica', 'tipo_equipaje', 'tipo_turno', 'token_recuperacion',
+          'tripulacion', 'turno', 'turno_tripulacion', 'usuario', 'vuelo',
+          'wal_transaccion_pago'
+      ]);
 
-COMMIT;
+    IF v_tablas IS NOT NULL THEN
+        EXECUTE 'TRUNCATE TABLE ' || v_tablas || ' RESTART IDENTITY CASCADE';
+    END IF;
+EXCEPTION
+    WHEN lock_not_available OR deadlock_detected THEN
+        RAISE NOTICE 'TRUNCATE previo omitido (%): se continuará con DROP/CREATE.', SQLERRM;
+END $$;
 
 
 -- Eliminar Secuencias con CASCADE
