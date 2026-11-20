@@ -7,31 +7,36 @@
                 template="/template/main.xhtml">
 
     <ui:define name="head">
-        <title>Perfil del Piloto - SkyWay</title>
+        <title>Centro de Mando del Piloto - SkyWay</title>
         <style type="text/css">
             :root {
                 --deep-space: #080e1a;
                 --midnight-blue: #0b1426;
                 --slate-glass: #1e293b;
                 --border-ui: #334155;
-
                 --aviation-blue: #4c7cf3;
+                --aviation-cyan: #38bdf8;
                 --glow-white: #f8fafc;
                 --text-dim: #94a3b8;
-
-                --status-ontime-bg: rgba(16, 185, 129, 0.1);
-                --status-ontime-border: #10b981;
-                --status-ontime-text: #34d399;
+                --ok-green: #10b981;
+                --warn-amber: #f59e0b;
+                --danger-red: #ef4444;
             }
 
             .pilot-wrapper {
-                max-width: 1100px;
+                max-width: 1180px;
                 margin: 0 auto;
-                padding: 24px 12px;
+                padding: 24px 14px 42px 14px;
             }
 
+            /* ENCABEZADO */
             .page-header {
-                margin-bottom: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 14px;
+                margin-bottom: 22px;
                 border-bottom: 1px solid var(--slate-glass);
                 padding-bottom: 16px;
             }
@@ -39,7 +44,7 @@
             .page-title {
                 color: var(--glow-white);
                 font-size: 22px;
-                font-weight: 600;
+                font-weight: 700;
                 margin: 0 0 4px 0;
             }
 
@@ -49,85 +54,385 @@
                 margin: 0;
             }
 
+            .header-actions {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+
+            /* CARDS Y TITULOS */
             .skyway-card {
                 background-color: var(--midnight-blue);
                 border: 1px solid var(--slate-glass);
-                border-radius: 8px;
+                border-radius: 10px;
                 padding: 20px;
-                margin-bottom: 24px;
+                margin-bottom: 22px;
+            }
+
+            .card-header-bar {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 12px;
+                margin-bottom: 16px;
             }
 
             .card-header-title {
                 color: var(--glow-white);
                 font-size: 15px;
-                font-weight: 600;
-                margin: 0 0 16px 0;
+                font-weight: 700;
+                margin: 0;
                 display: flex;
                 align-items: center;
-                gap: 10px;
+                gap: 9px;
             }
 
             .card-header-title i {
-                color: var(--text-dim);
+                color: var(--aviation-blue);
             }
 
-            /* 1. REJILLA DE KPIs */
+            /* KPIs OPERATIVOS */
             .kpi-grid {
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
                 gap: 14px;
-                margin-bottom: 24px;
+                margin-bottom: 22px;
             }
 
             .kpi-card {
                 background-color: var(--midnight-blue);
                 border: 1px solid var(--slate-glass);
-                border-radius: 8px;
+                border-radius: 10px;
                 padding: 16px;
                 display: flex;
-                align-items: center;
+                align-items: flex-start;
                 gap: 14px;
             }
 
             .kpi-icon {
-                width: 42px;
-                height: 42px;
-                border-radius: 6px;
+                width: 44px;
+                height: 44px;
+                flex-shrink: 0;
+                border-radius: 8px;
                 background-color: var(--deep-space);
                 border: 1px solid var(--border-ui);
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                color: var(--text-dim);
+                color: var(--aviation-cyan);
                 font-size: 18px;
             }
 
             .kpi-label {
                 font-size: 11px;
                 text-transform: uppercase;
-                letter-spacing: 0.5px;
+                letter-spacing: 0.6px;
                 color: var(--text-dim);
-                font-weight: 600;
+                font-weight: 700;
                 display: block;
-                margin-bottom: 2px;
+                margin-bottom: 3px;
             }
 
             .kpi-value {
-                font-size: 18px;
-                font-weight: 700;
+                font-size: 20px;
+                font-weight: 800;
                 color: var(--glow-white);
+                line-height: 1.2;
             }
 
-            .kpi-unit {
+            .kpi-sub {
                 font-size: 12px;
-                font-weight: 400;
+                color: var(--text-dim);
+                margin-top: 4px;
+            }
+
+            /* HERO PRÓXIMA OPERACIÓN */
+            .hero-briefing {
+                background: linear-gradient(135deg, #0b1426 0%, #0f1c36 100%);
+                border: 1px solid #2a3f6b;
+                border-radius: 10px;
+                padding: 20px;
+                margin-bottom: 22px;
+            }
+
+            .hero-route-grid {
+                display: grid;
+                grid-template-columns: 1fr auto 1fr;
+                gap: 16px;
+                align-items: center;
+                background-color: var(--deep-space);
+                border: 1px solid var(--slate-glass);
+                border-radius: 8px;
+                padding: 16px 18px;
+                margin-bottom: 14px;
+            }
+
+            .airport-code {
+                font-size: 26px;
+                font-weight: 800;
+                color: var(--glow-white);
+                letter-spacing: 1px;
+                line-height: 1.1;
+            }
+
+            .airport-meta {
+                font-size: 12px;
+                color: var(--text-dim);
+                margin-top: 3px;
+            }
+
+            .route-track {
+                text-align: center;
+                min-width: 170px;
+                padding: 0 10px;
+            }
+
+            .route-line {
+                height: 2px;
+                background: linear-gradient(90deg, var(--aviation-blue), var(--aviation-cyan));
+                margin: 6px 0;
+                position: relative;
+            }
+
+            .hero-metrics-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                gap: 12px;
+            }
+
+            .mini-box {
+                background-color: var(--deep-space);
+                border: 1px solid var(--slate-glass);
+                border-radius: 8px;
+                padding: 12px 14px;
+            }
+
+            .mini-label {
+                font-size: 11px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: var(--text-dim);
+                font-weight: 700;
+                margin-bottom: 5px;
+                display: block;
+            }
+
+            .mini-val {
+                font-size: 14px;
+                color: var(--glow-white);
+                font-weight: 600;
+            }
+
+            .progress-track {
+                width: 100%;
+                height: 6px;
+                background-color: #162238;
+                border-radius: 99px;
+                overflow: hidden;
+                margin-top: 7px;
+            }
+
+            .progress-fill-blue {
+                height: 100%;
+                background: linear-gradient(90deg, #4c7cf3, #38bdf8);
+            }
+
+            .progress-fill-green {
+                height: 100%;
+                background: linear-gradient(90deg, #10b981, #34d399);
+            }
+
+            .progress-fill-amber {
+                height: 100%;
+                background: linear-gradient(90deg, #f59e0b, #fbbf24);
+            }
+
+            /* BADGES SEMÁNTICOS */
+            .badge-piloto {
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                padding: 4px 10px;
+                border-radius: 5px;
+                font-size: 11px;
+                font-weight: 700;
+                letter-spacing: 0.3px;
+                white-space: nowrap;
+            }
+
+            .badge-info {
+                background-color: rgba(76, 124, 243, 0.14);
+                border: 1px solid #4c7cf3;
+                color: #dbeafe;
+            }
+
+            .badge-success {
+                background-color: rgba(16, 185, 129, 0.15);
+                border: 1px solid #10b981;
+                color: #6ee7b7;
+            }
+
+            .badge-warning {
+                background-color: rgba(245, 158, 11, 0.15);
+                border: 1px solid #f59e0b;
+                color: #fde68a;
+            }
+
+            .badge-danger {
+                background-color: rgba(239, 68, 68, 0.16);
+                border: 1px solid #ef4444;
+                color: #fca5a5;
+            }
+
+            .badge-secondary {
+                background-color: rgba(148, 163, 184, 0.12);
+                border: 1px solid #475569;
+                color: #cbd5e1;
+            }
+
+            /* TABS WORKSPACE Y FILTROS */
+            .workspace-tabs {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                margin-bottom: 18px;
+            }
+
+            .tab-pill-btn {
+                background-color: var(--midnight-blue) !important;
+                border: 1px solid var(--slate-glass) !important;
+                color: var(--text-dim) !important;
+                font-size: 13px !important;
+                font-weight: 600 !important;
+                border-radius: 7px !important;
+                padding: 8px 14px !important;
+            }
+
+            .tab-pill-btn.active-tab,
+            .tab-pill-btn:hover {
+                background-color: var(--aviation-blue) !important;
+                border-color: var(--aviation-blue) !important;
+                color: #ffffff !important;
+            }
+
+            .filter-bar {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 12px;
+                margin-bottom: 16px;
+            }
+
+            .scope-pills {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+
+            .scope-btn {
+                background-color: var(--deep-space) !important;
+                border: 1px solid var(--border-ui) !important;
+                color: var(--text-dim) !important;
+                font-size: 12px !important;
+                border-radius: 6px !important;
+            }
+
+            .scope-btn.active-scope {
+                background-color: rgba(76, 124, 243, 0.22) !important;
+                border-color: var(--aviation-blue) !important;
+                color: #ffffff !important;
+                font-weight: 700 !important;
+            }
+
+            .search-input-dark {
+                background-color: var(--deep-space) !important;
+                border: 1px solid var(--border-ui) !important;
+                color: var(--glow-white) !important;
+                border-radius: 6px !important;
+                padding: 7px 12px !important;
+                min-width: 260px;
+                font-size: 13px !important;
+            }
+
+            /* TARJETAS DE VUELO */
+            .flight-item-card {
+                background-color: var(--deep-space);
+                border: 1px solid var(--slate-glass);
+                border-radius: 8px;
+                padding: 16px 18px;
+                margin-bottom: 10px;
+                transition: border-color 0.2s ease;
+            }
+
+            .flight-item-card:hover {
+                border-color: var(--aviation-blue);
+            }
+
+            .flight-card-top {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 12px;
+                margin-bottom: 10px;
+            }
+
+            .flight-code {
+                font-size: 16px;
+                font-weight: 800;
+                color: var(--glow-white);
+                letter-spacing: 0.4px;
+            }
+
+            .flight-meta-strip {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+                gap: 10px;
+                padding-top: 10px;
+                border-top: 1px solid #162238;
+                font-size: 12px;
                 color: var(--text-dim);
             }
 
-            /* 2. ESTRUCTURA DATOS PERSONALES */
+            .meta-strong {
+                color: var(--glow-white);
+                font-weight: 600;
+                display: block;
+                margin-top: 2px;
+            }
+
+            /* BOTONES */
+            .btn-sky-outline {
+                background-color: transparent !important;
+                border: 1px solid var(--border-ui) !important;
+                color: var(--glow-white) !important;
+                font-size: 12px !important;
+                font-weight: 600 !important;
+                border-radius: 6px !important;
+            }
+
+            .btn-sky-outline:hover {
+                background-color: var(--aviation-blue) !important;
+                border-color: var(--aviation-blue) !important;
+                color: #ffffff !important;
+            }
+
+            .btn-sky-primary {
+                background-color: var(--aviation-blue) !important;
+                border: 1px solid var(--aviation-blue) !important;
+                color: #ffffff !important;
+                font-size: 12px !important;
+                font-weight: 700 !important;
+                border-radius: 6px !important;
+            }
+
+            /* TABLAS Y DATOS */
             .pilot-info-grid {
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
                 gap: 12px;
             }
 
@@ -143,16 +448,11 @@
                 text-transform: uppercase;
                 letter-spacing: 0.5px;
                 color: var(--text-dim);
-                font-weight: 600;
+                font-weight: 700;
                 margin-bottom: 4px;
                 display: flex;
                 align-items: center;
                 gap: 8px;
-            }
-
-            .info-label i {
-                color: var(--text-dim);
-                font-size: 12px;
             }
 
             .info-value {
@@ -161,332 +461,1412 @@
                 font-weight: 500;
             }
 
-            /* 3. TARJETAS HORIZONTALES DE VUELO */
-            .flight-item-card {
-                background-color: var(--deep-space);
-                border: 1px solid var(--slate-glass);
-                border-radius: 6px;
-                padding: 16px 20px;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                flex-wrap: wrap;
-                gap: 16px;
-                margin-bottom: 8px;
-                transition: border-color 0.2s ease;
-            }
-
-            .flight-item-card:hover {
-                border-color: var(--border-ui);
-            }
-
-            .flight-route-box {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-            }
-
-            .flight-code {
-                font-size: 16px;
-                font-weight: 700;
-                color: var(--glow-white);
-                letter-spacing: 0.5px;
-            }
-
-            .flight-date-box {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                color: var(--text-dim);
-                font-size: 13px;
-            }
-
-            .badge-status {
-                display: inline-block;
-                background-color: rgba(76, 124, 243, 0.12) !important;
-                border: 1px solid var(--aviation-blue) !important;
+            .skyway-table,
+            .skyway-table .ui-widget-content,
+            .skyway-table .ui-datatable-tablewrapper {
+                background: var(--midnight-blue) !important;
+                background-color: var(--midnight-blue) !important;
+                border: 1px solid var(--slate-glass) !important;
+                border-radius: 8px !important;
                 color: var(--glow-white) !important;
-                padding: 4px 12px !important;
-                border-radius: 4px !important;
-                font-size: 12px !important;
-                font-weight: 500 !important;
             }
 
-            .btn-flight-details {
-                background-color: transparent !important;
-                border: 1px solid var(--border-ui) !important;
-                color: var(--glow-white) !important;
-                font-size: 12px !important;
-                font-weight: 500 !important;
-                border-radius: 4px !important;
+            .skyway-table table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+                background-color: var(--midnight-blue) !important;
             }
 
-            .btn-flight-details:hover {
-                background-color: var(--aviation-blue) !important;
-                border-color: var(--aviation-blue) !important;
-                color: #ffffff !important;
-            }
-
-            /* 4. OVERRIDES PRIMEFACES PAGINADOR */
-            .skyway-dataview .ui-dataview-content {
-                background: transparent !important;
-                border: none !important;
-            }
-
-            .skyway-dataview .ui-paginator {
+            .skyway-table thead th,
+            .skyway-table .ui-datatable-thead > tr > th,
+            .skyway-table .ui-state-default {
+                background: var(--deep-space) !important;
                 background-color: var(--deep-space) !important;
+                background-image: none !important;
+                border: none !important;
+                border-bottom: 1px solid var(--border-ui) !important;
+                color: var(--text-dim) !important;
+                font-size: 11px !important;
+                font-weight: 700 !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.6px !important;
+                padding: 11px 12px !important;
+                box-shadow: none !important;
+            }
+
+            .skyway-table tbody tr,
+            .skyway-table .ui-datatable-data > tr,
+            .skyway-table .ui-datatable-odd,
+            .skyway-table .ui-datatable-even,
+            .skyway-table .ui-datatable-empty-message {
+                background: var(--midnight-blue) !important;
+                background-color: var(--midnight-blue) !important;
+                background-image: none !important;
+                border: none !important;
+                color: var(--glow-white) !important;
+            }
+
+            .skyway-table .ui-datatable-data > tr:nth-child(even) {
+                background-color: #0d182d !important;
+            }
+
+            .skyway-table tbody tr:hover,
+            .skyway-table .ui-datatable-data > tr:hover {
+                background-color: #13223d !important;
+            }
+
+            .skyway-table tbody td,
+            .skyway-table .ui-datatable-data > tr > td {
+                background: transparent !important;
+                background-color: transparent !important;
+                border: none !important;
+                border-bottom: 1px solid var(--slate-glass) !important;
+                color: var(--glow-white) !important;
+                font-size: 12.5px !important;
+                padding: 11px 12px !important;
+            }
+
+            .skyway-table .ui-datatable-empty-message > td {
+                color: var(--text-dim) !important;
+                text-align: center !important;
+                padding: 16px !important;
+            }
+
+            .skyway-table .ui-paginator,
+            .skyway-dataview .ui-paginator {
+                background: var(--deep-space) !important;
+                background-color: var(--deep-space) !important;
+                background-image: none !important;
                 border: 1px solid var(--slate-glass) !important;
                 border-radius: 6px !important;
-                margin-top: 16px !important;
+                margin-top: 12px !important;
                 padding: 6px !important;
+                color: var(--text-dim) !important;
             }
 
+            .skyway-table .ui-paginator .ui-paginator-page,
+            .skyway-table .ui-paginator .ui-paginator-first,
+            .skyway-table .ui-paginator .ui-paginator-prev,
+            .skyway-table .ui-paginator .ui-paginator-next,
+            .skyway-table .ui-paginator .ui-paginator-last,
             .skyway-dataview .ui-paginator .ui-paginator-page,
             .skyway-dataview .ui-paginator .ui-paginator-first,
             .skyway-dataview .ui-paginator .ui-paginator-prev,
             .skyway-dataview .ui-paginator .ui-paginator-next,
             .skyway-dataview .ui-paginator .ui-paginator-last {
+                background: var(--midnight-blue) !important;
                 background-color: var(--midnight-blue) !important;
                 color: var(--text-dim) !important;
                 border: 1px solid var(--border-ui) !important;
                 border-radius: 4px !important;
             }
 
+            .skyway-table .ui-paginator .ui-paginator-page.ui-state-active,
             .skyway-dataview .ui-paginator .ui-paginator-page.ui-state-active {
+                background: var(--aviation-blue) !important;
                 background-color: var(--aviation-blue) !important;
                 color: #ffffff !important;
                 border-color: var(--aviation-blue) !important;
             }
 
+            /* NOTIFICACIONES */
+            .notif-item {
+                background-color: var(--deep-space);
+                border: 1px solid var(--slate-glass);
+                border-radius: 8px;
+                padding: 14px 16px;
+                margin-bottom: 10px;
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                gap: 14px;
+                flex-wrap: wrap;
+            }
+
+            .notif-item.unread {
+                border-left: 3px solid var(--aviation-blue);
+                background-color: #0d1930;
+            }
+
+            /* DATAVIEW PRIMEFACES DARK OVERRIDES */
+            .skyway-dataview .ui-dataview-header {
+                display: none !important;
+            }
+
+            .skyway-dataview .ui-widget-content,
+            .skyway-dataview .ui-dataview-content,
+            .skyway-dataview .ui-dataview-list-container {
+                background: transparent !important;
+                background-color: transparent !important;
+                border: none !important;
+                padding: 0 !important;
+                color: var(--glow-white) !important;
+            }
+
+            .skyway-dataview .ui-dataview-empty-message {
+                background-color: var(--deep-space) !important;
+                border: 1px solid var(--slate-glass) !important;
+                border-radius: 8px !important;
+                color: var(--text-dim) !important;
+                padding: 18px !important;
+                text-align: center !important;
+                font-size: 13px !important;
+            }
+
+            .search-input-dark::placeholder {
+                color: var(--text-dim) !important;
+                opacity: 0.85 !important;
+            }
+
             /* MODAL */
+            .skyway-dialog.ui-dialog {
+                background-color: var(--midnight-blue) !important;
+                border: 1px solid var(--border-ui) !important;
+                box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75) !important;
+            }
+
             .skyway-dialog .ui-dialog-content,
             .skyway-dialog .ui-dialog-titlebar,
             .skyway-dialog .ui-dialog-footer {
+                background: var(--midnight-blue) !important;
                 background-color: var(--midnight-blue) !important;
                 border-color: var(--slate-glass) !important;
                 color: var(--glow-white) !important;
+            }
+
+            .skyway-dialog .ui-dialog-titlebar {
+                border-bottom: 1px solid var(--slate-glass) !important;
+            }
+
+            .skyway-dialog .ui-dialog-titlebar-close {
+                color: var(--text-dim) !important;
             }
 
             .skyway-dialog .ui-dialog-footer {
                 border-top: 1px solid var(--border-ui) !important;
                 padding: 12px 16px !important;
             }
+
+            @media (max-width: 720px) {
+                .hero-route-grid {
+                    grid-template-columns: 1fr;
+                    text-align: center;
+                }
+            }
+
+            /* AGENDA SEMANAL INMEDIATA (7 DÍAS) */
+            .week-strip-grid {
+                display: grid;
+                grid-template-columns: repeat(7, minmax(0, 1fr));
+                gap: 8px;
+                margin-bottom: 16px;
+            }
+
+            @media (max-width: 980px) {
+                .week-strip-grid {
+                    grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+                }
+            }
+
+            .week-day-card {
+                display: block;
+                text-decoration: none !important;
+                background-color: var(--deep-space);
+                border: 1px solid var(--slate-glass);
+                border-radius: 8px;
+                padding: 10px 10px;
+                min-height: 92px;
+                transition: border-color 0.2s ease, background-color 0.2s ease;
+            }
+
+            .week-day-card:hover {
+                border-color: var(--aviation-blue);
+                background-color: #0e1a30;
+            }
+
+            .week-day-card.has-flights {
+                border-color: #2c4a87;
+                background-color: #0d182e;
+            }
+
+            .week-day-card.is-today {
+                border-top: 3px solid var(--aviation-cyan);
+            }
+
+            .week-day-card.is-selected {
+                border-color: var(--aviation-cyan);
+                box-shadow: 0 0 0 1px var(--aviation-cyan);
+                background-color: #132342;
+            }
+
+            .week-day-head {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 6px;
+                padding-bottom: 5px;
+                border-bottom: 1px solid #162238;
+            }
+
+            .week-day-name {
+                font-size: 10.5px;
+                font-weight: 800;
+                letter-spacing: 0.4px;
+                color: var(--text-dim);
+            }
+
+            .week-day-date {
+                font-size: 12px;
+                font-weight: 800;
+                color: var(--glow-white);
+            }
+
+            .week-slot-pill {
+                background-color: rgba(76, 124, 243, 0.14);
+                border: 1px solid rgba(76, 124, 243, 0.45);
+                border-radius: 5px;
+                padding: 4px 6px;
+                margin-top: 4px;
+                font-size: 11px;
+                color: var(--glow-white);
+                line-height: 1.25;
+            }
+
+            .week-slot-time {
+                color: var(--aviation-cyan);
+                font-weight: 800;
+                display: block;
+            }
+
+            .date-input-dark {
+                background-color: var(--deep-space) !important;
+                border: 1px solid var(--border-ui) !important;
+                color: var(--glow-white) !important;
+                border-radius: 6px !important;
+                padding: 6px 10px !important;
+                font-size: 12px !important;
+                color-scheme: dark;
+            }
+
+            /* CALENDARIO DETALLADO (PRIMEFACES SCHEDULE / FULLCALENDAR) */
+            .skyway-schedule .fc {
+                color: var(--glow-white) !important;
+                font-size: 12.5px !important;
+            }
+
+            .skyway-schedule .fc-toolbar-title {
+                font-size: 1.25rem !important;
+                font-weight: 800 !important;
+                color: var(--aviation-cyan) !important;
+                text-transform: capitalize;
+            }
+
+            .skyway-schedule .fc-button {
+                background: var(--deep-space) !important;
+                background-color: var(--deep-space) !important;
+                border: 1px solid var(--border-ui) !important;
+                color: #cbd5e1 !important;
+                font-size: 12px !important;
+                font-weight: 600 !important;
+                padding: 5px 11px !important;
+                box-shadow: none !important;
+                text-transform: capitalize;
+            }
+
+            .skyway-schedule .fc-button:hover {
+                background: #13223d !important;
+                border-color: var(--aviation-blue) !important;
+                color: #ffffff !important;
+            }
+
+            .skyway-schedule .fc-button-active {
+                background: var(--aviation-blue) !important;
+                border-color: var(--aviation-blue) !important;
+                color: #ffffff !important;
+            }
+
+            .skyway-schedule .fc-theme-standard .fc-scrollgrid,
+            .skyway-schedule .fc-theme-standard td,
+            .skyway-schedule .fc-theme-standard th {
+                border-color: var(--slate-glass) !important;
+            }
+
+            .skyway-schedule .fc-col-header-cell {
+                background: var(--deep-space) !important;
+                padding: 8px 0 !important;
+            }
+
+            .skyway-schedule .fc-col-header-cell-cushion,
+            .skyway-schedule .fc-daygrid-day-number,
+            .skyway-schedule .fc-timegrid-slot-label-cushion,
+            .skyway-schedule .fc-timegrid-axis-cushion {
+                color: #cbd5e1 !important;
+                text-decoration: none !important;
+                font-weight: 600 !important;
+            }
+
+            .skyway-schedule .fc-daygrid-day,
+            .skyway-schedule .fc-timegrid-slot,
+            .skyway-schedule .fc-timegrid-col,
+            .skyway-schedule .fc-timegrid-axis {
+                background-color: var(--deep-space) !important;
+            }
+
+            .skyway-schedule .fc-daygrid-day:hover {
+                background-color: #0e1a30 !important;
+            }
+
+            .skyway-schedule .fc-day-today {
+                background-color: rgba(56, 189, 248, 0.08) !important;
+            }
+
+            .skyway-schedule .fc-daygrid-event {
+                border-radius: 5px !important;
+                padding: 2px 5px !important;
+                font-size: 11px !important;
+                font-weight: 600 !important;
+                cursor: pointer !important;
+            }
+
+            .skyway-schedule .fc-popover {
+                background-color: var(--midnight-blue) !important;
+                border: 1px solid var(--border-ui) !important;
+            }
+
+            .skyway-schedule .fc-popover-header {
+                background-color: var(--deep-space) !important;
+                color: var(--glow-white) !important;
+            }
+
+            .schedule-legend {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 16px;
+                align-items: center;
+                padding-top: 14px;
+                margin-top: 14px;
+                border-top: 1px solid var(--slate-glass);
+                font-size: 12px;
+                color: var(--text-dim);
+            }
+
+            .legend-item {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .legend-dot {
+                width: 11px;
+                height: 11px;
+                border-radius: 3px;
+                display: inline-block;
+            }
         </style>
     </ui:define>
 
     <ui:define name="contenido">
+        <p:growl id="growlPiloto" showDetail="true" life="3500" />
 
         <div class="pilot-wrapper">
 
-            <!-- ENCABEZADO -->
-            <header class="page-header">
-                <h2 class="page-title">Perfil del Piloto</h2>
-                <p class="page-subtitle">Panel operativo de tripulación de mando y asignación de itinerarios.</p>
-            </header>
-
-            <!-- SECCIÓN 1: KPIs OPERATIVOS DE ALTO NIVEL -->
-            <div class="kpi-grid">
-
-                <div class="kpi-card">
-                    <div class="kpi-icon">
-                        <i class="pi pi-clock"></i>
-                    </div>
-                    <div>
-                        <span class="kpi-label">Horas Voladas</span>
-                        <div class="kpi-value">
-                            #{perfilPilotoBean.totalHorasVuelo} <span class="kpi-unit">hrs</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="kpi-card">
-                    <div class="kpi-icon">
-                        <i class="pi pi-send"></i>
-                    </div>
-                    <div>
-                        <span class="kpi-label">Vuelos Asignados</span>
-                        <div class="kpi-value">
-                            #{perfilPilotoBean.totalVuelosCompletados} <span class="kpi-unit">servicios</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="kpi-card">
-                    <div class="kpi-icon">
-                        <i class="pi pi-compass"></i>
-                    </div>
-                    <div>
-                        <span class="kpi-label">Flota Habilitada</span>
-                        <div class="kpi-value" style="font-size: 15px;">
-                            #{perfilPilotoBean.modeloAvionPrincipal}
-                        </div>
-                    </div>
-                </div>
-
-                <div class="kpi-card">
-                    <div class="kpi-icon">
-                        <i class="pi pi-briefcase"></i>
-                    </div>
-                    <div>
-                        <span class="kpi-label">Experiencia Mando</span>
-                        <div class="kpi-value">
-                            #{perfilPilotoBean.piloto.experienciaAnos} <span class="kpi-unit">años</span>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- SECCIÓN 2: EXPEDIENTE Y DATOS DEL COMANDANTE -->
-            <div class="skyway-card">
+            <!-- AVISO SI NO EXISTE REGISTRO DE PILOTO -->
+            <h:panelGroup rendered="#{empty perfilPilotoBean.piloto}" layout="block" styleClass="skyway-card">
                 <div class="card-header-title">
-                    <i class="pi pi-id-card"></i> Expediente del Comandante
+                    <i class="pi pi-exclamation-triangle" style="color: var(--warn-amber);"></i>
+                    Sin expediente activo de piloto
                 </div>
+                <p style="color: var(--text-dim); font-size: 13px; margin-bottom: 14px;">
+                    La cuenta actual no registra información operacional en la tabla <strong>Piloto</strong> de la base de datos.
+                </p>
+                <a href="#{request.contextPath}/perfil/index.xhtml" class="btn btn-sm btn-primary">
+                    Ir a Mi Perfil de Usuario
+                </a>
+            </h:panelGroup>
 
-                <div class="pilot-info-grid">
-                    <div class="info-box">
-                        <span class="info-label"><i class="pi pi-user"></i> Nombre Completo</span>
-                        <div class="info-value">#{perfilPilotoBean.piloto.usuario.nombre} #{perfilPilotoBean.piloto.usuario.apellido}</div>
+            <!-- PANEL OPERACIONAL COMPLETO DEL PILOTO -->
+            <h:form id="formPanelPiloto" rendered="#{not empty perfilPilotoBean.piloto}">
+
+                <!-- ENCABEZADO -->
+                <header class="page-header">
+                    <div>
+                        <h2 class="page-title">Centro de Mando del Piloto</h2>
+                        <p class="page-subtitle">
+                            Comandante <strong>#{perfilPilotoBean.usuario.nombre} #{perfilPilotoBean.usuario.apellido}</strong>
+                            · Licencia <strong style="color: var(--aviation-cyan);">#{perfilPilotoBean.piloto.licencia}</strong>
+                            · #{perfilPilotoBean.piloto.experienciaAnos} años de servicio
+                        </p>
                     </div>
-
-                    <div class="info-box">
-                        <span class="info-label"><i class="pi pi-shield"></i> RUT / Identificación</span>
-                        <div class="info-value">#{perfilPilotoBean.piloto.rut}</div>
+                    <div class="header-actions">
+                        <p:commandButton value="Alertas (#{perfilPilotoBean.notificacionesNoLeidas})"
+                                         icon="pi pi-bell"
+                                         action="#{perfilPilotoBean.cambiarTab('ALERTAS')}"
+                                         update="formPanelPiloto"
+                                         styleClass="#{perfilPilotoBean.notificacionesNoLeidas gt 0 ? 'badge-piloto badge-warning' : 'btn-sky-outline'} ui-button-sm" />
+                        <p:commandButton value="Actualizar Datos"
+                                         icon="pi pi-refresh"
+                                         action="#{perfilPilotoBean.recargarPanel}"
+                                         update="formPanelPiloto :growlPiloto"
+                                         styleClass="btn-sky-outline ui-button-sm" />
+                        <a href="#{request.contextPath}/perfil/index.xhtml"
+                           class="btn btn-sm btn-outline-light"
+                           style="font-size: 12px; border-color: var(--border-ui);">
+                            <i class="pi pi-user-edit"></i> Editar Perfil / Clave
+                        </a>
                     </div>
+                </header>
 
-                    <div class="info-box">
-                        <span class="info-label"><i class="pi pi-verified"></i> N° Licencia Aeronáutica</span>
-                        <div class="info-value" style="color: var(--aviation-blue); font-weight: 700;">
-                            #{perfilPilotoBean.piloto.licencia}
+                <!-- ALERTA DE FATIGA / SOBRE-ESFUERZO (TIEMPO ENTRE VUELOS) -->
+                <h:panelGroup rendered="#{perfilPilotoBean.resumenFatiga ne null and perfilPilotoBean.resumenFatiga.alertasCriticas gt 0}"
+                              layout="block"
+                              style="background-color: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.45); border-radius: 10px; padding: 14px 18px; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <i class="pi pi-exclamation-triangle" style="color: #fca5a5; font-size: 20px;"></i>
+                        <div>
+                            <strong style="color: #fca5a5; font-size: 14px;">
+                                Alerta de Fatiga Operacional: #{perfilPilotoBean.resumenFatiga.tituloEstado}
+                            </strong>
+                            <div style="color: var(--glow-white); font-size: 12.5px; margin-top: 2px;">
+                                #{perfilPilotoBean.resumenFatiga.detalleTexto}
+                            </div>
+                        </div>
+                    </div>
+                    <span class="badge-piloto badge-danger">#{perfilPilotoBean.resumenFatiga.alertasCriticas} alerta(s) crítica(s)</span>
+                </h:panelGroup>
+
+                <!-- SECCIÓN 1: KPIs REALES CALCULADOS DESDE BD -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-icon"><i class="pi pi-clock"></i></div>
+                        <div>
+                            <span class="kpi-label">Horas de Vuelo</span>
+                            <div class="kpi-value">#{perfilPilotoBean.horasSemanaTexto}</div>
+                            <div class="kpi-sub">
+                                Esta semana · Aterrizadas: #{perfilPilotoBean.kpis.horasCompletadasTexto} · Próx.: #{perfilPilotoBean.kpis.horasProgramadasTexto}
+                            </div>
                         </div>
                     </div>
 
-                    <div class="info-box">
-                        <span class="info-label"><i class="pi pi-chart-line"></i> Experiencia de Mando</span>
-                        <div class="info-value">#{perfilPilotoBean.piloto.experienciaAnos} Años de Servicio</div>
-                    </div>
-
-                    <div class="info-box">
-                        <span class="info-label"><i class="pi pi-envelope"></i> Correo Electrónico</span>
-                        <div class="info-value">#{perfilPilotoBean.piloto.usuario.correoElectronico}</div>
-                    </div>
-
-                    <div class="info-box">
-                        <span class="info-label"><i class="pi pi-phone"></i> Teléfono de Contacto</span>
-                        <div class="info-value">#{perfilPilotoBean.piloto.usuario.telefono}</div>
-                    </div>
-
-                    <div class="info-box" style="grid-column: 1 / -1;">
-                        <span class="info-label"><i class="pi pi-briefcase"></i> Especializaciones y Certificaciones de Aeronave</span>
-                        <div class="info-value" style="color: var(--text-dim); font-size: 13px; line-height: 1.4;">
-                            #{perfilPilotoBean.piloto.especializaciones}
+                    <div class="kpi-card">
+                        <div class="kpi-icon"><i class="pi pi-send"></i></div>
+                        <div>
+                            <span class="kpi-label">Vuelos Esta Semana</span>
+                            <div class="kpi-value">#{perfilPilotoBean.vuelosSemanaCount} vuelo(s)</div>
+                            <div class="kpi-sub">
+                                Hoy: #{perfilPilotoBean.vuelosHoyCount} · Próximos totales: #{perfilPilotoBean.kpis.vuelosProximos} · Historial: #{perfilPilotoBean.kpis.vuelosCompletados}
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- SECCIÓN 3: PRÓXIMOS VUELOS ASIGNADOS -->
-            <div class="skyway-card">
-                <div class="card-header-title">
-                    <i class="pi pi-send"></i> Mis Próximos Vuelos Asignados
+                    <div class="kpi-card">
+                        <div class="kpi-icon"><i class="pi pi-users"></i></div>
+                        <div>
+                            <span class="kpi-label">Ocupación &amp; Check-in Real</span>
+                            <div class="kpi-value">#{perfilPilotoBean.kpis.factorOcupacionRealPct}%</div>
+                            <div class="kpi-sub">
+                                #{perfilPilotoBean.kpis.totalPasajerosReservados} / #{perfilPilotoBean.kpis.totalCapacidadOfertada} pax · Check-in #{perfilPilotoBean.kpis.porcentajeCheckinReal}%
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-icon"><i class="pi pi-compass"></i></div>
+                        <div>
+                            <span class="kpi-label">Flota &amp; Red Operada</span>
+                            <div class="kpi-value" style="font-size: 16px;">#{perfilPilotoBean.kpis.modeloAvionPrincipal}</div>
+                            <div class="kpi-sub">
+                                #{perfilPilotoBean.kpis.aeronavesDistintas} aeronaves · #{perfilPilotoBean.kpis.aeropuertosVisitados} aeropuertos
+                                <h:panelGroup rendered="#{perfilPilotoBean.kpis.alertasMantenimiento gt 0}">
+                                    · <span style="color: var(--warn-amber); font-weight: 700;">#{perfilPilotoBean.kpis.alertasMantenimiento} aviso(s) mant.</span>
+                                </h:panelGroup>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h:panelGroup rendered="#{perfilPilotoBean.resumenFatiga ne null}" layout="block" styleClass="kpi-card">
+                        <div class="kpi-icon">
+                            <i class="pi pi-shield" style="color: #{perfilPilotoBean.resumenFatiga.severidad eq 'danger' ? '#fca5a5' : (perfilPilotoBean.resumenFatiga.severidad eq 'warning' ? 'var(--warn-amber)' : 'var(--ok-green)')};"></i>
+                        </div>
+                        <div>
+                            <span class="kpi-label">Descanso &amp; Control de Fatiga</span>
+                            <div class="kpi-value" style="font-size: 15px; color: #{perfilPilotoBean.resumenFatiga.severidad eq 'danger' ? '#fca5a5' : (perfilPilotoBean.resumenFatiga.severidad eq 'warning' ? 'var(--warn-amber)' : 'var(--ok-green)')};">
+                                #{perfilPilotoBean.resumenFatiga.tituloEstado}
+                            </div>
+                            <div class="kpi-sub">
+                                Mín. libre entre vuelos: <strong>#{perfilPilotoBean.resumenFatiga.descansoMinimoTexto}</strong> · Carga máx.: #{perfilPilotoBean.resumenFatiga.maxRotacionTexto}
+                                <h:panelGroup rendered="#{perfilPilotoBean.resumenFatiga.enlacesMenores8h gt 0}">
+                                    · #{perfilPilotoBean.resumenFatiga.enlacesMenores8h} enlace(s) sin 8h desc.
+                                </h:panelGroup>
+                            </div>
+                        </div>
+                    </h:panelGroup>
                 </div>
 
-                <h:form id="formVuelos">
-                    <p:dataView value="#{perfilPilotoBean.vuelos}"
-                                var="vuelo"
+                <!-- SECCIÓN 2: AGENDA DE LA SEMANA COMPLETA (LUNES A DOMINGO) -->
+                <div class="skyway-card">
+                    <div class="card-header-bar">
+                        <div class="card-header-title">
+                            <i class="pi pi-calendar"></i>
+                            Agenda de la Semana Completa (Lun — Dom)
+                            <span class="badge-piloto badge-secondary">#{perfilPilotoBean.rangoSemanaTexto}</span>
+                            <span class="badge-piloto #{perfilPilotoBean.vuelosHoyCount gt 0 ? 'badge-success' : 'badge-secondary'}">
+                                Hoy: #{perfilPilotoBean.vuelosHoyCount}
+                            </span>
+                            <span class="badge-piloto badge-info">
+                                Semana: #{perfilPilotoBean.vuelosSemanaCount} vuelo(s) · #{perfilPilotoBean.horasSemanaTexto}
+                            </span>
+                        </div>
+                        <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                            <p:commandButton value="« Sem. Anterior"
+                                             action="#{perfilPilotoBean.semanaAnterior}"
+                                             update="formPanelPiloto"
+                                             styleClass="btn-sky-outline ui-button-sm" />
+                            <p:commandButton value="Esta Semana"
+                                             action="#{perfilPilotoBean.semanaActual}"
+                                             update="formPanelPiloto"
+                                             styleClass="#{perfilPilotoBean.semanaOffset eq 0 ? 'btn-sky-primary' : 'btn-sky-outline'} ui-button-sm" />
+                            <p:commandButton value="Sem. Siguiente »"
+                                             action="#{perfilPilotoBean.semanaSiguiente}"
+                                             update="formPanelPiloto"
+                                             styleClass="btn-sky-outline ui-button-sm" />
+                        </div>
+                    </div>
+
+                    <!-- TIRA DE 7 DÍAS -->
+                    <div class="week-strip-grid">
+                        <ui:repeat value="#{perfilPilotoBean.diasAgenda7Dias}" var="dia">
+                            <p:commandLink action="#{perfilPilotoBean.seleccionarDiaAgenda(dia.isoDate)}"
+                                           update="formPanelPiloto"
+                                           styleClass="week-day-card #{dia.cantidadVuelos gt 0 ? 'has-flights' : ''} #{dia.esHoy ? 'is-today' : ''} #{perfilPilotoBean.fechaDiaFiltro eq dia.isoDate ? 'is-selected' : ''}">
+                                <div class="week-day-head">
+                                    <span class="week-day-name">#{dia.diaCorto}</span>
+                                    <span class="week-day-date">#{dia.fechaCorta}</span>
+                                </div>
+
+                                <h:panelGroup rendered="#{dia.cantidadVuelos eq 0}" layout="block"
+                                              style="font-size: 11px; color: #64748b; padding-top: 8px;">
+                                    Sin vuelos
+                                </h:panelGroup>
+
+                                <ui:repeat value="#{dia.vuelos}" var="vd">
+                                    <div class="week-slot-pill">
+                                        <span class="week-slot-time">
+                                            <h:outputText value="#{vd.fechaHoraSalida}">
+                                                <f:convertDateTime pattern="hh:mm a" timeZone="America/Santiago" locale="en_US"/>
+                                            </h:outputText>
+                                            –
+                                            <h:outputText value="#{vd.fechaHoraLlegada}">
+                                                <f:convertDateTime pattern="hh:mm a" timeZone="America/Santiago" locale="en_US"/>
+                                            </h:outputText>
+                                        </span>
+                                        <span>#{vd.origenIata} ➔ #{vd.destinoIata}</span>
+                                    </div>
+                                </ui:repeat>
+                            </p:commandLink>
+                        </ui:repeat>
+                    </div>
+
+                    <!-- TABLA CRONOLÓGICA DIRECTA DE FECHAS Y HORAS DE LA SEMANA -->
+                    <p:dataTable value="#{perfilPilotoBean.vuelosEstaSemana}"
+                                 var="vs"
+                                 emptyMessage="No tienes vuelos activos asignados en la semana #{perfilPilotoBean.rangoSemanaTexto}."
+                                 styleClass="skyway-table">
+                        <p:column headerText="Fecha">
+                            <strong>
+                                <h:outputText value="#{vs.fechaHoraSalida}">
+                                    <f:convertDateTime pattern="EEE dd/MM/yyyy" timeZone="America/Santiago" locale="es_CL"/>
+                                </h:outputText>
+                            </strong>
+                        </p:column>
+                        <p:column headerText="Salida → Llegada">
+                            <strong style="color: var(--aviation-cyan);">
+                                <h:outputText value="#{vs.fechaHoraSalida}">
+                                    <f:convertDateTime pattern="hh:mm a" timeZone="America/Santiago" locale="en_US"/>
+                                </h:outputText>
+                                →
+                                <h:outputText value="#{vs.fechaHoraLlegada}">
+                                    <f:convertDateTime pattern="hh:mm a" timeZone="America/Santiago" locale="en_US"/>
+                                </h:outputText>
+                            </strong>
+                            <div style="font-size: 11px; color: var(--text-dim);">#{vs.duracionTexto}</div>
+                        </p:column>
+                        <p:column headerText="Vuelo">
+                            <strong>#{vs.numeroVuelo}</strong>
+                            <div style="font-size: 11px; color: var(--text-dim);">#{vs.ventanaOperativa}</div>
+                        </p:column>
+                        <p:column headerText="Ruta">
+                            <strong>#{vs.origenIata} ➔ #{vs.destinoIata}</strong>
+                            <div style="font-size: 11px; color: var(--text-dim);">#{vs.origenCiudad} → #{vs.destinoCiudad}</div>
+                        </p:column>
+                        <p:column headerText="Puerta / Aeronave">
+                            <div>#{vs.puertaTerminalTexto}</div>
+                            <div style="font-size: 11px; color: var(--text-dim);">#{vs.avionMatricula} · #{vs.modeloCompleto}</div>
+                        </p:column>
+                        <p:column headerText="Descanso / Jornada">
+                            <h:panelGroup rendered="#{vs.intervaloPrevio ne null}">
+                                <span class="badge-piloto badge-#{vs.intervaloPrevio.severidad}"
+                                      title="#{vs.intervaloPrevio.explicacionCorta}">#{vs.intervaloPrevio.etiqueta}</span>
+                                <div style="font-size: 11.5px; color: var(--glow-white); margin-top: 4px; font-weight: 600;">
+                                    #{vs.intervaloPrevio.tiempoDesdeAnteriorTexto}
+                                    <h:panelGroup rendered="#{not empty vs.intervaloPrevio.codigoPrevio}">
+                                        <span style="color: var(--text-dim); font-weight: 400;"> libre tras #{vs.intervaloPrevio.codigoPrevio}</span>
+                                    </h:panelGroup>
+                                </div>
+                                <div style="font-size: 11px; margin-top: 2px; color: #{vs.intervaloPrevio.severidad eq 'danger' or vs.intervaloPrevio.sobreEsfuerzo ? '#fca5a5' : (vs.intervaloPrevio.severidad eq 'warning' ? '#fde68a' : (vs.intervaloPrevio.severidad eq 'success' ? '#6ee7b7' : 'var(--text-dim)'))};">
+                                    #{vs.intervaloPrevio.explicacionCorta}
+                                </div>
+                                <div style="font-size: 10.5px; color: #{vs.intervaloPrevio.sobreEsfuerzo ? '#fca5a5' : 'var(--text-dim)'}; margin-top: 1px;">
+                                    Acum. sin 8h: #{vs.intervaloPrevio.trabajoAcumuladoTexto} · Jornada: #{vs.intervaloPrevio.amplitudJornadaTexto} / 12h
+                                </div>
+                            </h:panelGroup>
+                        </p:column>
+                        <p:column headerText="Estado">
+                            <span class="badge-piloto badge-#{vs.estadoSeveridad}">#{vs.estadoDescripcion}</span>
+                        </p:column>
+                        <p:column headerText="Acción" style="width: 115px; text-align: right;">
+                            <p:commandButton value="Briefing"
+                                             icon="pi pi-search"
+                                             action="#{perfilPilotoBean.abrirBriefing(vs)}"
+                                             update=":dlgBriefingVuelo :growlPiloto"
+                                             oncomplete="PF('briefingDialog').show();"
+                                             styleClass="btn-sky-outline ui-button-sm" />
+                        </p:column>
+                    </p:dataTable>
+                </div>
+
+                <!-- SECCIÓN 3: CALENDARIO OPERACIONAL DETALLADO (MES / SEMANA HORARIA / DÍA) -->
+                <div class="skyway-card">
+                    <div class="card-header-bar">
+                        <div class="card-header-title">
+                            <i class="pi pi-calendar-plus"></i>
+                            Calendario Operacional Detallado
+                        </div>
+                        <span style="font-size: 12px; color: var(--text-dim);">
+                            Haz clic en cualquier vuelo del calendario para abrir su Briefing Completo
+                        </span>
+                    </div>
+
+                    <p:schedule id="schedulePiloto"
+                                value="#{perfilPilotoBean.scheduleModel}"
+                                widgetVar="pilotoSchedule"
+                                timeZone="America/Santiago"
+                                clientTimeZone="local"
+                                locale="es"
+                                view="dayGridMonth"
+                                initialDate="#{perfilPilotoBean.fechaInicialSchedule}"
+                                height="auto"
+                                leftHeaderTemplate="prev,next today"
+                                centerHeaderTemplate="title"
+                                rightHeaderTemplate="dayGridMonth,timeGridWeek,timeGridDay"
+                                styleClass="skyway-schedule"
+                                tooltip="true"
+                                showWeekNumbers="false">
+                        <p:ajax event="eventSelect"
+                                listener="#{perfilPilotoBean.onScheduleEventSelect}"
+                                update=":dlgBriefingVuelo :growlPiloto"
+                                oncomplete="PF('briefingDialog').show();" />
+                    </p:schedule>
+
+                    <div class="schedule-legend">
+                        <span class="legend-item"><span class="legend-dot" style="background:#2563eb;"></span> Programado</span>
+                        <span class="legend-item"><span class="legend-dot" style="background:#059669;"></span> En vuelo</span>
+                        <span class="legend-item"><span class="legend-dot" style="background:#d97706;"></span> Retrasado / Demorado</span>
+                        <span class="legend-item"><span class="legend-dot" style="background:#1e293b; border:1px solid #475569;"></span> Finalizado</span>
+                        <span class="legend-item"><span class="legend-dot" style="background:#475569;"></span> Cancelado</span>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN 4: PRÓXIMA OPERACIÓN / DISPATCH BRIEFING -->
+                <h:panelGroup rendered="#{not empty perfilPilotoBean.proximoVuelo}" layout="block" styleClass="hero-briefing">
+                    <div class="card-header-bar">
+                        <div class="card-header-title">
+                            <i class="pi pi-compass"></i>
+                            Próxima Operación / Dispatch Briefing — #{perfilPilotoBean.proximoVuelo.numeroVuelo}
+                            <span class="badge-piloto badge-#{perfilPilotoBean.proximoVuelo.estadoSeveridad}">
+                                #{perfilPilotoBean.proximoVuelo.estadoDescripcion}
+                            </span>
+                            <span class="badge-piloto badge-info">
+                                #{perfilPilotoBean.proximoVuelo.ventanaOperativa}
+                            </span>
+                        </div>
+                        <p:commandButton value="Abrir Briefing Completo"
+                                         icon="pi pi-file-o"
+                                         action="#{perfilPilotoBean.abrirBriefing(perfilPilotoBean.proximoVuelo)}"
+                                         update=":dlgBriefingVuelo :growlPiloto"
+                                         oncomplete="PF('briefingDialog').show();"
+                                         styleClass="btn-sky-primary ui-button-sm" />
+                    </div>
+
+                    <div class="hero-route-grid">
+                        <div>
+                            <div class="airport-code">#{perfilPilotoBean.proximoVuelo.origenIata}</div>
+                            <div class="airport-meta">
+                                #{perfilPilotoBean.proximoVuelo.origenCiudad}#{not empty perfilPilotoBean.proximoVuelo.origenPais ? ', '.concat(perfilPilotoBean.proximoVuelo.origenPais) : ''}
+                                · #{perfilPilotoBean.proximoVuelo.origenAeropuerto}
+                            </div>
+                            <div style="margin-top: 6px; font-size: 13px; color: var(--glow-white); font-weight: 700;">
+                                <h:outputText value="#{perfilPilotoBean.proximoVuelo.fechaHoraSalida}">
+                                    <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago" locale="en_US"/>
+                                </h:outputText>
+                                <span style="color: var(--aviation-cyan); margin-left: 8px; font-size: 12px;">
+                                    #{perfilPilotoBean.proximoVuelo.puertaTerminalTexto}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="route-track">
+                            <div style="font-size: 12px; color: var(--glow-white); font-weight: 700;">
+                                #{perfilPilotoBean.proximoVuelo.duracionTexto}
+                            </div>
+                            <div class="route-line"></div>
+                            <div style="font-size: 11px; color: var(--text-dim);">
+                                #{perfilPilotoBean.proximoVuelo.distanciaTotalKm} km ·
+                                #{perfilPilotoBean.proximoVuelo.escalas eq 0 ? 'Directo' : perfilPilotoBean.proximoVuelo.escalas} #{perfilPilotoBean.proximoVuelo.escalas gt 0 ? 'escala(s)' : ''}
+                            </div>
+                        </div>
+
+                        <div style="text-align: right;">
+                            <div class="airport-code">#{perfilPilotoBean.proximoVuelo.destinoIata}</div>
+                            <div class="airport-meta">
+                                #{perfilPilotoBean.proximoVuelo.destinoCiudad}#{not empty perfilPilotoBean.proximoVuelo.destinoPais ? ', '.concat(perfilPilotoBean.proximoVuelo.destinoPais) : ''}
+                                · #{perfilPilotoBean.proximoVuelo.destinoAeropuerto}
+                            </div>
+                            <div style="margin-top: 6px; font-size: 13px; color: var(--glow-white); font-weight: 700;">
+                                <h:outputText value="#{perfilPilotoBean.proximoVuelo.fechaHoraLlegada}">
+                                    <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago" locale="en_US"/>
+                                </h:outputText>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="hero-metrics-grid">
+                        <div class="mini-box">
+                            <span class="mini-label">Aeronave Asignada</span>
+                            <div class="mini-val">
+                                #{perfilPilotoBean.proximoVuelo.avionMatricula} · #{perfilPilotoBean.proximoVuelo.modeloCompleto}
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-dim); margin-top: 4px;">
+                                Mant.: <strong style="color: #{perfilPilotoBean.proximoVuelo.alertaMantenimiento ? 'var(--warn-amber)' : 'var(--ok-green)'};">
+                                    #{perfilPilotoBean.proximoVuelo.avionEstadoMantenimiento}
+                                </strong>
+                                <h:panelGroup rendered="#{not empty perfilPilotoBean.proximoVuelo.avionFechaProximoMant}">
+                                    · Próx:
+                                    <h:outputText value="#{perfilPilotoBean.proximoVuelo.avionFechaProximoMant}">
+                                        <f:convertDateTime pattern="dd/MM/yyyy" timeZone="America/Santiago"/>
+                                    </h:outputText>
+                                </h:panelGroup>
+                            </div>
+                        </div>
+
+                        <div class="mini-box">
+                            <span class="mini-label">Cabina &amp; Embarque Real</span>
+                            <div class="mini-val">
+                                #{perfilPilotoBean.proximoVuelo.pasajerosReservados} / #{perfilPilotoBean.proximoVuelo.avionCapacidadPax} pax (#{perfilPilotoBean.proximoVuelo.ocupacionPct}%)
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-dim); margin-top: 3px;">
+                                Check-in completado: <strong style="color: var(--glow-white);">#{perfilPilotoBean.proximoVuelo.pasajerosCheckin} (#{perfilPilotoBean.proximoVuelo.checkinPct}%)</strong>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-fill-green" style="width: #{perfilPilotoBean.proximoVuelo.checkinPct > 100 ? 100 : perfilPilotoBean.proximoVuelo.checkinPct}%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="mini-box">
+                            <span class="mini-label">Equipaje Reservas Pax (W&amp;B Ref.)</span>
+                            <div class="mini-val">
+                                #{perfilPilotoBean.proximoVuelo.piezasEquipaje} piezas · #{perfilPilotoBean.proximoVuelo.pesoEquipajeKg} kg
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-dim); margin-top: 3px;">
+                                Capacidad carga avión: #{perfilPilotoBean.proximoVuelo.avionCapacidadCargaKg} kg (#{perfilPilotoBean.proximoVuelo.cargaEquipajePct}%)
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-fill-blue" style="width: #{perfilPilotoBean.proximoVuelo.cargaEquipajePct > 100 ? 100 : perfilPilotoBean.proximoVuelo.cargaEquipajePct}%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="mini-box">
+                            <span class="mini-label">Tripulación Asignada (Turnos)</span>
+                            <div class="mini-val">
+                                #{perfilPilotoBean.proximoVuelo.tripulacionConfirmada} / #{perfilPilotoBean.proximoVuelo.tripulacionTotal} confirmados
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-dim); margin-top: 4px;">
+                                Pendientes: #{perfilPilotoBean.proximoVuelo.tripulacionPendiente}
+                                <h:panelGroup rendered="#{perfilPilotoBean.proximoVuelo.tripulacionRechazada gt 0}">
+                                    · <span style="color: var(--danger-red); font-weight: 700;">#{perfilPilotoBean.proximoVuelo.tripulacionRechazada} rechazado(s)</span>
+                                </h:panelGroup>
+                            </div>
+                        </div>
+                    </div>
+                </h:panelGroup>
+
+                <!-- BARRA DE PESTAÑAS DEL PANEL -->
+                <div class="workspace-tabs">
+                    <p:commandButton value="Vuelos Asignados (#{perfilPilotoBean.kpis.totalVuelos})"
+                                     icon="pi pi-send"
+                                     action="#{perfilPilotoBean.cambiarTab('VUELOS')}"
+                                     update="formPanelPiloto"
+                                     styleClass="tab-pill-btn #{perfilPilotoBean.tabActiva eq 'VUELOS' ? 'active-tab' : ''}" />
+                    <p:commandButton value="Flota Operada (#{perfilPilotoBean.flotaAsignada.size()})"
+                                     icon="pi pi-compass"
+                                     action="#{perfilPilotoBean.cambiarTab('FLOTA')}"
+                                     update="formPanelPiloto"
+                                     styleClass="tab-pill-btn #{perfilPilotoBean.tabActiva eq 'FLOTA' ? 'active-tab' : ''}" />
+                    <p:commandButton value="Alertas Operacionales (#{perfilPilotoBean.notificacionesNoLeidas})"
+                                     icon="pi pi-bell"
+                                     action="#{perfilPilotoBean.cambiarTab('ALERTAS')}"
+                                     update="formPanelPiloto"
+                                     styleClass="tab-pill-btn #{perfilPilotoBean.tabActiva eq 'ALERTAS' ? 'active-tab' : ''}" />
+                    <p:commandButton value="Expediente del Comandante"
+                                     icon="pi pi-id-card"
+                                     action="#{perfilPilotoBean.cambiarTab('EXPEDIENTE')}"
+                                     update="formPanelPiloto"
+                                     styleClass="tab-pill-btn #{perfilPilotoBean.tabActiva eq 'EXPEDIENTE' ? 'active-tab' : ''}" />
+                </div>
+
+                <!-- TAB 1: VUELOS ASIGNADOS -->
+                <h:panelGroup rendered="#{perfilPilotoBean.tabActiva eq 'VUELOS'}" layout="block" styleClass="skyway-card">
+                    <div class="card-header-bar">
+                        <div class="card-header-title">
+                            <i class="pi pi-send"></i> Planificación de Vuelos Asignados
+                        </div>
+                    </div>
+
+                    <div class="filter-bar">
+                        <div class="scope-pills">
+                            <p:commandButton value="Hoy (#{perfilPilotoBean.vuelosHoyCount})"
+                                             action="#{perfilPilotoBean.cambiarScope('HOY')}"
+                                             update="formPanelPiloto"
+                                             styleClass="scope-btn ui-button-sm #{empty perfilPilotoBean.fechaDiaFiltro and perfilPilotoBean.filtroScope eq 'HOY' ? 'active-scope' : ''}" />
+                            <p:commandButton value="Esta Semana (#{perfilPilotoBean.vuelosSemanaCount})"
+                                             action="#{perfilPilotoBean.cambiarScope('SEMANA')}"
+                                             update="formPanelPiloto"
+                                             styleClass="scope-btn ui-button-sm #{empty perfilPilotoBean.fechaDiaFiltro and perfilPilotoBean.filtroScope eq 'SEMANA' ? 'active-scope' : ''}" />
+                            <p:commandButton value="Próximos (#{perfilPilotoBean.kpis.vuelosProximos})"
+                                             action="#{perfilPilotoBean.cambiarScope('PROXIMOS')}"
+                                             update="formPanelPiloto"
+                                             styleClass="scope-btn ui-button-sm #{empty perfilPilotoBean.fechaDiaFiltro and perfilPilotoBean.filtroScope eq 'PROXIMOS' ? 'active-scope' : ''}" />
+                            <p:commandButton value="Historial (#{perfilPilotoBean.kpis.vuelosCompletados})"
+                                             action="#{perfilPilotoBean.cambiarScope('HISTORIAL')}"
+                                             update="formPanelPiloto"
+                                             styleClass="scope-btn ui-button-sm #{empty perfilPilotoBean.fechaDiaFiltro and perfilPilotoBean.filtroScope eq 'HISTORIAL' ? 'active-scope' : ''}" />
+                            <p:commandButton value="Cancelados (#{perfilPilotoBean.kpis.vuelosCancelados})"
+                                             action="#{perfilPilotoBean.cambiarScope('CANCELADOS')}"
+                                             update="formPanelPiloto"
+                                             styleClass="scope-btn ui-button-sm #{empty perfilPilotoBean.fechaDiaFiltro and perfilPilotoBean.filtroScope eq 'CANCELADOS' ? 'active-scope' : ''}" />
+                            <p:commandButton value="Todos (#{perfilPilotoBean.kpis.totalVuelos})"
+                                             action="#{perfilPilotoBean.cambiarScope('TODOS')}"
+                                             update="formPanelPiloto"
+                                             styleClass="scope-btn ui-button-sm #{empty perfilPilotoBean.fechaDiaFiltro and perfilPilotoBean.filtroScope eq 'TODOS' ? 'active-scope' : ''}" />
+                        </div>
+
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <p:inputText type="date"
+                                         value="#{perfilPilotoBean.fechaDiaFiltro}"
+                                         title="Filtrar por día exacto"
+                                         styleClass="date-input-dark">
+                                <p:ajax event="change" listener="#{perfilPilotoBean.aplicarFiltros}" update="formPanelPiloto" />
+                            </p:inputText>
+                            <p:commandButton value="Quitar fecha"
+                                             icon="pi pi-times"
+                                             rendered="#{not empty perfilPilotoBean.fechaDiaFiltro}"
+                                             action="#{perfilPilotoBean.limpiarDiaFiltro}"
+                                             update="formPanelPiloto"
+                                             styleClass="btn-sky-outline ui-button-sm" />
+                            <p:inputText value="#{perfilPilotoBean.filtroTexto}"
+                                         placeholder="Buscar código, IATA, ciudad o matrícula..."
+                                         styleClass="search-input-dark">
+                                <p:ajax event="keyup" delay="250" listener="#{perfilPilotoBean.aplicarFiltros}" update="listaVuelosContainer" />
+                            </p:inputText>
+                        </div>
+                    </div>
+
+                    <p:dataView id="listaVuelosContainer"
+                                value="#{perfilPilotoBean.vuelosFiltrados}"
+                                var="v"
                                 rows="6"
                                 paginator="true"
                                 paginatorPosition="bottom"
-                                emptyMessage="No tienes vuelos asignados actualmente."
+                                emptyMessage="No hay vuelos que coincidan con el filtro seleccionado."
                                 styleClass="skyway-dataview">
 
                         <p:dataViewListItem>
                             <div class="flight-item-card">
+                                <div class="flight-card-top">
+                                    <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+                                        <div>
+                                            <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase;">
+                                                #{v.aerolineaNombre} · #{v.cantidadTramos} tramo(s)
+                                            </div>
+                                            <div class="flight-code">
+                                                #{v.numeroVuelo}
+                                                <span style="color: var(--aviation-cyan); margin-left: 8px; font-weight: 700;">
+                                                    #{v.origenIata} ➔ #{v.destinoIata}
+                                                </span>
+                                            </div>
+                                            <div style="font-size: 12px; color: var(--text-dim);">
+                                                #{v.origenCiudad} → #{v.destinoCiudad} · #{v.distanciaTotalKm} km · #{v.duracionTexto}
+                                            </div>
+                                        </div>
+                                    </div>
 
-                                <div class="flight-route-box">
-                                    <i class="pi pi-plane" style="color: var(--text-dim); font-size: 18px;"></i>
-                                    <div>
-                                        <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase;">Itinerario</div>
-                                        <div class="flight-code">#{vuelo.numeroVuelo}</div>
+                                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                        <span class="badge-piloto badge-#{v.estadoSeveridad}">#{v.estadoDescripcion}</span>
+                                        <span class="badge-piloto badge-secondary">#{v.ventanaOperativa}</span>
+                                        <p:commandButton value="Briefing Completo"
+                                                         icon="pi pi-search"
+                                                         action="#{perfilPilotoBean.abrirBriefing(v)}"
+                                                         update=":dlgBriefingVuelo :growlPiloto"
+                                                         oncomplete="PF('briefingDialog').show();"
+                                                         styleClass="btn-sky-outline ui-button-sm" />
                                     </div>
                                 </div>
 
-                                <div class="flight-date-box">
-                                    <i class="pi pi-calendar"></i>
-                                    <span>
-                                        <h:outputText value="#{vuelo.fechaHoraSalida}">
-                                            <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/Santiago"/>
-                                        </h:outputText>
-                                    </span>
-                                </div>
+                                <div class="flight-meta-strip">
+                                    <div>
+                                        Salida / Llegada
+                                        <span class="meta-strong">
+                                            <h:outputText value="#{v.fechaHoraSalida}">
+                                                <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago" locale="en_US"/>
+                                            </h:outputText>
+                                            —
+                                            <h:outputText value="#{v.fechaHoraLlegada}">
+                                                <f:convertDateTime pattern="hh:mm a" timeZone="America/Santiago" locale="en_US"/>
+                                            </h:outputText>
+                                        </span>
+                                    </div>
 
-                                <div>
-                                    <span class="badge-status">#{vuelo.estadoVuelo.descripcion}</span>
-                                </div>
+                                    <div>
+                                        Aeronave
+                                        <span class="meta-strong">
+                                            #{v.avionMatricula} · #{v.modeloCompleto}
+                                        </span>
+                                    </div>
 
-                                <div>
-                                    <p:commandButton value="Ver Detalles"
-                                                     icon="pi pi-search"
-                                                     styleClass="btn-flight-details ui-button-sm"
-                                                     action="#{perfilPilotoBean.verDetallesVuelo(vuelo)}"
-                                                     update=":dlgVueloDetails"
-                                                     oncomplete="PF('vueloDetailsDialog').show();" />
-                                </div>
+                                    <div>
+                                        Puerta Origen
+                                        <span class="meta-strong">#{v.puertaTerminalTexto}</span>
+                                    </div>
 
+                                    <div>
+                                        Ocupación / Check-in
+                                        <span class="meta-strong">
+                                            #{v.pasajerosReservados}/#{v.avionCapacidadPax} pax (#{v.ocupacionPct}%) · #{v.pasajerosCheckin} chk
+                                        </span>
+                                    </div>
+
+                                    <div>
+                                        Tripulación / Equipaje
+                                        <span class="meta-strong">
+                                            #{v.tripulacionConfirmada}/#{v.tripulacionTotal} trip. · #{v.pesoEquipajeKg} kg
+                                        </span>
+                                    </div>
+                                    <h:panelGroup rendered="#{v.intervaloPrevio ne null}" layout="block">
+                                        Descanso &amp; Jornada Continua
+                                        <span class="meta-strong">
+                                            <span class="badge-piloto badge-#{v.intervaloPrevio.severidad}" style="font-size: 10px; padding: 1px 6px;">#{v.intervaloPrevio.etiqueta}</span>
+                                            · #{v.intervaloPrevio.tiempoDesdeAnteriorTexto}
+                                            <h:panelGroup rendered="#{not empty v.intervaloPrevio.codigoPrevio}">
+                                                libre
+                                            </h:panelGroup>
+                                        </span>
+                                        <div style="font-size: 10.5px; color: #{v.intervaloPrevio.severidad eq 'danger' or v.intervaloPrevio.sobreEsfuerzo ? '#fca5a5' : (v.intervaloPrevio.severidad eq 'warning' ? '#fde68a' : 'var(--text-dim)')};">
+                                            #{v.intervaloPrevio.explicacionCorta} · Acum. #{v.intervaloPrevio.trabajoAcumuladoTexto} (jorn. #{v.intervaloPrevio.amplitudJornadaTexto} / 12h)
+                                        </div>
+                                    </h:panelGroup>
+                                </div>
                             </div>
                         </p:dataViewListItem>
 
                     </p:dataView>
-                </h:form>
-            </div>
+                </h:panelGroup>
 
-            <!-- SECCIÓN 4: MODAL DETALLES DEL VUELO -->
-            <!-- MODAL DE DETALLES TOTALMENTE INTEGRADO AL TEMA OSCURO -->
-            <p:dialog id="dlgVueloDetails"
-                      header="Detalles de Operación de Vuelo"
-                      widgetVar="vueloDetailsDialog"
+                <!-- TAB 2: FLOTA OPERADA -->
+                <h:panelGroup rendered="#{perfilPilotoBean.tabActiva eq 'FLOTA'}" layout="block" styleClass="skyway-card">
+                    <div class="card-header-bar">
+                        <div class="card-header-title">
+                            <i class="pi pi-compass"></i> Aeronaves Asignadas al Comandante
+                        </div>
+                    </div>
+
+                    <p:dataTable value="#{perfilPilotoBean.flotaAsignada}"
+                                 var="av"
+                                 emptyMessage="No hay aeronaves asignadas registradas."
+                                 styleClass="skyway-table">
+                        <p:column headerText="Matrícula">
+                            <strong style="color: var(--aviation-cyan);">#{av.matricula}</strong>
+                        </p:column>
+                        <p:column headerText="Fabricante / Modelo">
+                            #{av.modeloCompleto}
+                        </p:column>
+                        <p:column headerText="Año">
+                            #{av.anoFabricacion}
+                        </p:column>
+                        <p:column headerText="Cap. Pax">
+                            #{av.capacidadPax} asientos
+                        </p:column>
+                        <p:column headerText="Cap. Carga">
+                            #{av.capacidadCargaKg} kg
+                        </p:column>
+                        <p:column headerText="Mantenimiento">
+                            <span class="badge-piloto #{av.alertaMantenimiento ? 'badge-warning' : 'badge-success'}">
+                                #{av.estadoMantenimiento}
+                            </span>
+                        </p:column>
+                        <p:column headerText="Próx. Mantenimiento">
+                            <h:outputText value="#{av.fechaProximoMantenimiento}" rendered="#{not empty av.fechaProximoMantenimiento}">
+                                <f:convertDateTime pattern="dd/MM/yyyy" timeZone="America/Santiago"/>
+                            </h:outputText>
+                            <h:outputText value="Sin fecha" rendered="#{empty av.fechaProximoMantenimiento}" style="color: var(--text-dim);" />
+                        </p:column>
+                        <p:column headerText="Servicios / Horas">
+                            #{av.totalVuelos} vuelo(s) · #{av.horasAsignadasTexto}
+                        </p:column>
+                    </p:dataTable>
+                </h:panelGroup>
+
+                <!-- TAB 3: ALERTAS OPERACIONALES -->
+                <h:panelGroup rendered="#{perfilPilotoBean.tabActiva eq 'ALERTAS'}" layout="block" styleClass="skyway-card">
+                    <div class="card-header-bar">
+                        <div class="card-header-title">
+                            <i class="pi pi-bell"></i> Bandeja de Notificaciones del Piloto
+                        </div>
+                        <p:commandButton value="Marcar todas como leídas"
+                                         icon="pi pi-check-square"
+                                         rendered="#{perfilPilotoBean.notificacionesNoLeidas gt 0}"
+                                         action="#{perfilPilotoBean.marcarTodasLeidas}"
+                                         update="formPanelPiloto :growlPiloto"
+                                         styleClass="btn-sky-outline ui-button-sm" />
+                    </div>
+
+                    <h:panelGroup rendered="#{empty perfilPilotoBean.notificaciones}" layout="block">
+                        <p style="color: var(--text-dim); font-size: 13px; margin: 0;">
+                            No registras notificaciones operacionales en la tabla Notificacion.
+                        </p>
+                    </h:panelGroup>
+
+                    <ui:repeat value="#{perfilPilotoBean.notificaciones}" var="n">
+                        <div class="notif-item #{n.leido ? '' : 'unread'}">
+                            <div style="flex: 1; min-width: 240px;">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap;">
+                                    <strong style="color: var(--glow-white); font-size: 14px;">#{n.titulo}</strong>
+                                    <span class="badge-piloto #{n.leido ? 'badge-secondary' : 'badge-info'}">
+                                        #{n.leido ? 'Leída' : 'Nueva'}
+                                    </span>
+                                    <span class="badge-piloto badge-secondary">#{n.canal}</span>
+                                </div>
+                                <div style="color: var(--text-dim); font-size: 13px; line-height: 1.45;">
+                                    #{n.mensaje}
+                                </div>
+                                <div style="color: #64748b; font-size: 11px; margin-top: 6px;">
+                                    <h:outputText value="#{n.fecha}">
+                                        <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago" locale="en_US"/>
+                                    </h:outputText>
+                                </div>
+                            </div>
+
+                            <p:commandButton value="Marcar leída"
+                                             icon="pi pi-check"
+                                             rendered="#{not n.leido}"
+                                             action="#{perfilPilotoBean.marcarNotificacionLeida(n.idNotificacion)}"
+                                             update="formPanelPiloto :growlPiloto"
+                                             styleClass="btn-sky-outline ui-button-sm" />
+                        </div>
+                    </ui:repeat>
+                </h:panelGroup>
+
+                <!-- TAB 4: EXPEDIENTE DEL COMANDANTE -->
+                <h:panelGroup rendered="#{perfilPilotoBean.tabActiva eq 'EXPEDIENTE'}" layout="block" styleClass="skyway-card">
+                    <div class="card-header-bar">
+                        <div class="card-header-title">
+                            <i class="pi pi-id-card"></i> Expediente del Comandante
+                        </div>
+                        <a href="#{request.contextPath}/perfil/index.xhtml" class="btn btn-sm btn-primary" style="font-size: 12px;">
+                            <i class="pi pi-user-edit"></i> Modificar Contacto o Contraseña
+                        </a>
+                    </div>
+
+                    <div class="pilot-info-grid">
+                        <div class="info-box">
+                            <span class="info-label"><i class="pi pi-user"></i> Nombre Completo</span>
+                            <div class="info-value">#{perfilPilotoBean.piloto.usuario.nombre} #{perfilPilotoBean.piloto.usuario.apellido}</div>
+                        </div>
+
+                        <div class="info-box">
+                            <span class="info-label"><i class="pi pi-shield"></i> RUT / Identificación</span>
+                            <div class="info-value">#{perfilPilotoBean.piloto.rut}</div>
+                        </div>
+
+                        <div class="info-box">
+                            <span class="info-label"><i class="pi pi-verified"></i> N° Licencia Aeronáutica</span>
+                            <div class="info-value" style="color: var(--aviation-cyan); font-weight: 700;">
+                                #{perfilPilotoBean.piloto.licencia}
+                            </div>
+                        </div>
+
+                        <div class="info-box">
+                            <span class="info-label"><i class="pi pi-chart-line"></i> Experiencia de Mando</span>
+                            <div class="info-value">#{perfilPilotoBean.piloto.experienciaAnos} Años de Servicio</div>
+                        </div>
+
+                        <div class="info-box">
+                            <span class="info-label"><i class="pi pi-envelope"></i> Correo Electrónico</span>
+                            <div class="info-value">#{perfilPilotoBean.piloto.usuario.correoElectronico}</div>
+                        </div>
+
+                        <div class="info-box">
+                            <span class="info-label"><i class="pi pi-phone"></i> Teléfono de Contacto</span>
+                            <div class="info-value">#{perfilPilotoBean.piloto.usuario.telefono}</div>
+                        </div>
+
+                        <div class="info-box" style="grid-column: 1 / -1;">
+                            <span class="info-label"><i class="pi pi-briefcase"></i> Especializaciones y Certificaciones de Aeronave</span>
+                            <div class="info-value" style="color: var(--text-dim); font-size: 13px; line-height: 1.45;">
+                                #{perfilPilotoBean.especializaciones}
+                            </div>
+                        </div>
+                    </div>
+                </h:panelGroup>
+
+            </h:form>
+
+            <!-- MODAL BRIEFING OPERACIONAL DEL VUELO -->
+            <p:dialog id="dlgBriefingVuelo"
+                      header="Briefing Operacional de Vuelo"
+                      widgetVar="briefingDialog"
                       modal="true"
                       closable="true"
                       showEffect="fade"
                       hideEffect="fade"
-                      width="480"
+                      width="940"
                       responsive="true"
                       styleClass="skyway-dialog">
 
-                <h:panelGroup rendered="#{not empty perfilPilotoBean.selectedVuelo}" layout="block">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; background-color: var(--deep-space); padding: 18px; border-radius: 6px; border: 1px solid var(--border-ui);">
+                <h:form id="formBriefingModal">
+                    <h:panelGroup rendered="#{not empty perfilPilotoBean.briefingSeleccionado}" layout="block">
 
-                        <div>
-                            <span style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); display: block; margin-bottom: 4px;">Código de Vuelo</span>
-                            <span style="color: var(--glow-white); font-weight: 600; font-size: 15px;">#{perfilPilotoBean.selectedVuelo.numeroVuelo}</span>
+                    <!-- CABECERA DEL VUELO SELECCIONADO -->
+                    <div class="mini-box" style="margin-bottom: 14px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <div style="font-size: 18px; font-weight: 800; color: var(--glow-white);">
+                                    #{perfilPilotoBean.briefingSeleccionado.resumen.numeroVuelo} · #{perfilPilotoBean.briefingSeleccionado.resumen.origenIata} ➔ #{perfilPilotoBean.briefingSeleccionado.resumen.destinoIata}
+                                </div>
+                                <div style="font-size: 12px; color: var(--text-dim); margin-top: 2px;">
+                                    #{perfilPilotoBean.briefingSeleccionado.resumen.aerolineaNombre} · #{perfilPilotoBean.briefingSeleccionado.resumen.avionMatricula} (#{perfilPilotoBean.briefingSeleccionado.resumen.modeloCompleto})
+                                    · #{perfilPilotoBean.briefingSeleccionado.resumen.distanciaTotalKm} km · #{perfilPilotoBean.briefingSeleccionado.resumen.duracionTexto}
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <span class="badge-piloto badge-#{perfilPilotoBean.briefingSeleccionado.resumen.estadoSeveridad}">#{perfilPilotoBean.briefingSeleccionado.resumen.estadoDescripcion}</span>
+                                <span class="badge-piloto badge-info">#{perfilPilotoBean.briefingSeleccionado.resumen.puertaTerminalTexto}</span>
+                            </div>
                         </div>
-
-                        <div>
-                            <span style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); display: block; margin-bottom: 4px;">Estado Actual</span>
-                            <span class="badge-status">#{perfilPilotoBean.selectedVuelo.estadoVuelo.descripcion}</span>
-                        </div>
-
-                        <div style="grid-column: 1 / -1;">
-                            <span style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); display: block; margin-bottom: 4px;">Salida Programada</span>
-                            <span style="color: var(--glow-white); font-weight: 500;">
-                    <h:outputText value="#{perfilPilotoBean.selectedVuelo.fechaHoraSalida}">
-                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/Santiago"/>
-                    </h:outputText>
-                </span>
-                        </div>
-
                     </div>
-                </h:panelGroup>
+
+                    <!-- SUB-TABS DEL MODAL -->
+                    <div class="workspace-tabs" style="margin-bottom: 14px;">
+                        <p:commandButton value="Aeronave &amp; Carga"
+                                         action="#{perfilPilotoBean.cambiarBriefingTab('RESUMEN')}"
+                                         update="formBriefingModal"
+                                         styleClass="tab-pill-btn #{perfilPilotoBean.briefingTabActiva eq 'RESUMEN' ? 'active-tab' : ''}" />
+                        <p:commandButton value="Tramos &amp; Puertas (#{perfilPilotoBean.briefingSeleccionado.tramos.size()})"
+                                         action="#{perfilPilotoBean.cambiarBriefingTab('TRAMOS')}"
+                                         update="formBriefingModal"
+                                         styleClass="tab-pill-btn #{perfilPilotoBean.briefingTabActiva eq 'TRAMOS' ? 'active-tab' : ''}" />
+                        <p:commandButton value="Tripulación (#{perfilPilotoBean.briefingSeleccionado.tripulacion.size()})"
+                                         action="#{perfilPilotoBean.cambiarBriefingTab('TRIPULACION')}"
+                                         update="formBriefingModal"
+                                         styleClass="tab-pill-btn #{perfilPilotoBean.briefingTabActiva eq 'TRIPULACION' ? 'active-tab' : ''}" />
+                        <p:commandButton value="Manifiesto Pax (#{perfilPilotoBean.briefingSeleccionado.manifiestoPasajeros.size()})"
+                                         action="#{perfilPilotoBean.cambiarBriefingTab('MANIFIESTO')}"
+                                         update="formBriefingModal"
+                                         styleClass="tab-pill-btn #{perfilPilotoBean.briefingTabActiva eq 'MANIFIESTO' ? 'active-tab' : ''}" />
+                    </div>
+
+                    <!-- BRIEFING TAB 1: AERONAVE, CABINA Y EQUIPAJE -->
+                    <h:panelGroup rendered="#{perfilPilotoBean.briefingTabActiva eq 'RESUMEN'}" layout="block">
+                        <div class="pilot-info-grid" style="margin-bottom: 14px;">
+                            <div class="info-box">
+                                <span class="info-label">Matrícula &amp; Modelo</span>
+                                <div class="info-value">#{perfilPilotoBean.briefingSeleccionado.resumen.avionMatricula} · #{perfilPilotoBean.briefingSeleccionado.resumen.modeloCompleto} (#{perfilPilotoBean.briefingSeleccionado.resumen.avionAnoFabricacion})</div>
+                            </div>
+                            <div class="info-box">
+                                <span class="info-label">Mantenimiento Aeronave</span>
+                                <div class="info-value" style="color: #{perfilPilotoBean.briefingSeleccionado.resumen.alertaMantenimiento ? 'var(--warn-amber)' : 'var(--ok-green)'};">
+                                    #{perfilPilotoBean.briefingSeleccionado.resumen.avionEstadoMantenimiento}
+                                    <h:panelGroup rendered="#{not empty perfilPilotoBean.briefingSeleccionado.resumen.avionFechaProximoMant}">
+                                        (Próx: <h:outputText value="#{perfilPilotoBean.briefingSeleccionado.resumen.avionFechaProximoMant}"><f:convertDateTime pattern="dd/MM/yyyy" timeZone="America/Santiago"/></h:outputText>)
+                                    </h:panelGroup>
+                                </div>
+                            </div>
+                            <div class="info-box">
+                                <span class="info-label">Pasajeros &amp; Check-in</span>
+                                <div class="info-value">#{perfilPilotoBean.briefingSeleccionado.resumen.pasajerosReservados} / #{perfilPilotoBean.briefingSeleccionado.resumen.avionCapacidadPax} (#{perfilPilotoBean.briefingSeleccionado.resumen.ocupacionPct}%) · Check-in: #{perfilPilotoBean.briefingSeleccionado.resumen.pasajerosCheckin}</div>
+                            </div>
+                            <div class="info-box">
+                                <span class="info-label">Equipaje Reservas Pax</span>
+                                <div class="info-value">#{perfilPilotoBean.briefingSeleccionado.resumen.piezasEquipaje} piezas · #{perfilPilotoBean.briefingSeleccionado.resumen.pesoEquipajeKg} kg / #{perfilPilotoBean.briefingSeleccionado.resumen.avionCapacidadCargaKg} kg</div>
+                            </div>
+                            <h:panelGroup rendered="#{perfilPilotoBean.briefingSeleccionado.resumen.intervaloPrevio ne null}" layout="block" styleClass="info-box" style="grid-column: 1 / -1;">
+                                <span class="info-label">Descanso Previo &amp; Carga de Jornada Continua</span>
+                                <div class="info-value" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                    <span class="badge-piloto badge-#{perfilPilotoBean.briefingSeleccionado.resumen.intervaloPrevio.severidad}">
+                                        #{perfilPilotoBean.briefingSeleccionado.resumen.intervaloPrevio.etiqueta}
+                                    </span>
+                                    <span>
+                                        #{perfilPilotoBean.briefingSeleccionado.resumen.intervaloPrevio.tiempoDesdeAnteriorTexto}
+                                        <h:panelGroup rendered="#{not empty perfilPilotoBean.briefingSeleccionado.resumen.intervaloPrevio.codigoPrevio}">
+                                            libre tras #{perfilPilotoBean.briefingSeleccionado.resumen.intervaloPrevio.codigoPrevio}
+                                        </h:panelGroup>
+                                    </span>
+                                    <span style="color: #{perfilPilotoBean.briefingSeleccionado.resumen.intervaloPrevio.severidad eq 'danger' or perfilPilotoBean.briefingSeleccionado.resumen.intervaloPrevio.sobreEsfuerzo ? '#fca5a5' : (perfilPilotoBean.briefingSeleccionado.resumen.intervaloPrevio.severidad eq 'warning' ? '#fde68a' : 'var(--text-dim)')}; font-weight: 500;">
+                                        · #{perfilPilotoBean.briefingSeleccionado.resumen.intervaloPrevio.explicacionCorta} · Acum. sin 8h: #{perfilPilotoBean.briefingSeleccionado.resumen.intervaloPrevio.trabajoAcumuladoTexto} · Jornada total: #{perfilPilotoBean.briefingSeleccionado.resumen.intervaloPrevio.amplitudJornadaTexto} / 12h
+                                    </span>
+                                </div>
+                            </h:panelGroup>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px;">
+                            <div class="mini-box">
+                                <span class="mini-label">Distribución de Cabina por Clase</span>
+                                <p:dataTable value="#{perfilPilotoBean.briefingSeleccionado.ocupacionPorClase}" var="oc"
+                                             emptyMessage="Sin configuración de clases registrada."
+                                             styleClass="skyway-table">
+                                    <p:column headerText="Clase">#{oc.claseNombre}</p:column>
+                                    <p:column headerText="Cap.">#{oc.capacidadClase}</p:column>
+                                    <p:column headerText="Ocup.">#{oc.asientosOcupados}</p:column>
+                                    <p:column headerText="Chk-in">#{oc.checkinsCompletados}</p:column>
+                                    <p:column headerText="%">#{oc.ocupacionPct}%</p:column>
+                                </p:dataTable>
+                            </div>
+
+                            <div class="mini-box">
+                                <span class="mini-label">Desglose de Equipaje por Tipo</span>
+                                <p:dataTable value="#{perfilPilotoBean.briefingSeleccionado.equipajePorTipo}" var="bag"
+                                             emptyMessage="Sin equipaje registrado para pasajeros de este vuelo."
+                                             styleClass="skyway-table">
+                                    <p:column headerText="Tipo">#{bag.tipoNombre}</p:column>
+                                    <p:column headerText="Piezas">#{bag.piezas}</p:column>
+                                    <p:column headerText="Peso">#{bag.pesoTotalKg} kg</p:column>
+                                </p:dataTable>
+                            </div>
+                        </div>
+                    </h:panelGroup>
+
+                    <!-- BRIEFING TAB 2: TRAMOS Y PUERTAS -->
+                    <h:panelGroup rendered="#{perfilPilotoBean.briefingTabActiva eq 'TRAMOS'}" layout="block">
+                        <p:dataTable value="#{perfilPilotoBean.briefingSeleccionado.tramos}" var="t"
+                                     emptyMessage="No hay segmentos registrados para este vuelo."
+                                     styleClass="skyway-table">
+                            <p:column headerText="#" style="width: 42px;">#{t.ordenSegmento}</p:column>
+                            <p:column headerText="Origen">
+                                <strong>#{t.origenIata}</strong> · #{t.origenCiudad}
+                                <div style="font-size: 11px; color: var(--text-dim);">#{t.origenAeropuerto}</div>
+                            </p:column>
+                            <p:column headerText="Destino">
+                                <strong>#{t.destinoIata}</strong> · #{t.destinoCiudad}
+                                <div style="font-size: 11px; color: var(--text-dim);">#{t.destinoAeropuerto}</div>
+                            </p:column>
+                            <p:column headerText="Salida">
+                                <h:outputText value="#{t.horaSalida}">
+                                    <f:convertDateTime pattern="dd/MM hh:mm a" timeZone="America/Santiago" locale="en_US"/>
+                                </h:outputText>
+                            </p:column>
+                            <p:column headerText="Llegada">
+                                <h:outputText value="#{t.horaLlegada}">
+                                    <f:convertDateTime pattern="dd/MM hh:mm a" timeZone="America/Santiago" locale="en_US"/>
+                                </h:outputText>
+                            </p:column>
+                            <p:column headerText="Dur. / Dist.">
+                                #{t.duracionTexto} · #{t.distanciaKm} km
+                            </p:column>
+                            <p:column headerText="Puerta / Terminal">
+                                <h:outputText value="Sin asignar" rendered="#{empty t.codigoPuerta}" style="color: var(--text-dim);" />
+                                <h:panelGroup rendered="#{not empty t.codigoPuerta}">
+                                    Puerta #{t.codigoPuerta}<h:outputText value=" (#{t.terminal})" rendered="#{not empty t.terminal}" />
+                                </h:panelGroup>
+                            </p:column>
+                        </p:dataTable>
+                    </h:panelGroup>
+
+                    <!-- BRIEFING TAB 3: TRIPULACIÓN -->
+                    <h:panelGroup rendered="#{perfilPilotoBean.briefingTabActiva eq 'TRIPULACION'}" layout="block">
+                        <p:dataTable value="#{perfilPilotoBean.briefingSeleccionado.tripulacion}" var="cr"
+                                     emptyMessage="Sin tripulación de cabina asignada en Turno."
+                                     styleClass="skyway-table">
+                            <p:column headerText="Tripulante">
+                                <strong>#{cr.nombreCompleto}</strong>
+                                <div style="font-size: 11px; color: var(--text-dim);">#{cr.rut}</div>
+                            </p:column>
+                            <p:column headerText="Cargo">#{cr.cargo}</p:column>
+                            <p:column headerText="Turno">
+                                #{cr.tipoTurno}
+                                <div style="font-size: 11px; color: var(--text-dim);">
+                                    <h:outputText value="#{cr.horaInicio}"><f:convertDateTime pattern="dd/MM hh:mm a" timeZone="America/Santiago" locale="en_US"/></h:outputText>
+                                    —
+                                    <h:outputText value="#{cr.horaFin}"><f:convertDateTime pattern="hh:mm a" timeZone="America/Santiago" locale="en_US"/></h:outputText>
+                                </div>
+                            </p:column>
+                            <p:column headerText="Contacto">
+                                #{cr.telefono}
+                                <div style="font-size: 11px; color: var(--text-dim);">#{cr.correoElectronico}</div>
+                            </p:column>
+                            <p:column headerText="Confirmación">
+                                <span class="badge-piloto #{cr.estadoConfirmacion eq 'CONFIRMADO' ? 'badge-success' : (cr.estadoConfirmacion eq 'RECHAZADO' ? 'badge-danger' : 'badge-warning')}">
+                                    #{cr.estadoConfirmacion}
+                                </span>
+                                <h:panelGroup rendered="#{not empty cr.motivoRechazo}" layout="block" style="font-size: 11px; color: #fca5a5; margin-top: 3px;">
+                                    #{cr.motivoRechazo}
+                                </h:panelGroup>
+                            </p:column>
+                        </p:dataTable>
+                    </h:panelGroup>
+
+                    <!-- BRIEFING TAB 4: MANIFIESTO DE PASAJEROS -->
+                    <h:panelGroup rendered="#{perfilPilotoBean.briefingTabActiva eq 'MANIFIESTO'}" layout="block">
+                        <p:dataTable value="#{perfilPilotoBean.briefingSeleccionado.manifiestoPasajeros}" var="px"
+                                     rows="8" paginator="true" paginatorPosition="bottom"
+                                     emptyMessage="No hay pasajeros con asiento asignado en este vuelo."
+                                     styleClass="skyway-table">
+                            <p:column headerText="Asiento" style="width: 72px;">
+                                <strong style="color: var(--aviation-cyan);">#{px.numeroAsiento}</strong>
+                            </p:column>
+                            <p:column headerText="Clase">#{px.claseAsiento}</p:column>
+                            <p:column headerText="Pasajero">
+                                <strong>#{px.nombreCompleto}</strong>
+                                <div style="font-size: 11px; color: var(--text-dim);">#{px.rut}</div>
+                            </p:column>
+                            <p:column headerText="Reserva">
+                                #{px.codigoReserva}
+                                <div style="font-size: 11px; color: var(--text-dim);">#{px.estadoReserva}</div>
+                            </p:column>
+                            <p:column headerText="Check-in">
+                                <span class="badge-piloto #{px.checkinEstado eq 'COMPLETADO' ? 'badge-success' : 'badge-secondary'}">
+                                    #{px.checkinEstado}
+                                </span>
+                                <h:panelGroup rendered="#{not empty px.codigoBoardingPass}" layout="block" style="font-size: 11px; color: var(--text-dim); margin-top: 3px;">
+                                    #{px.checkinMetodo} · #{px.codigoBoardingPass}
+                                </h:panelGroup>
+                            </p:column>
+                            <p:column headerText="Equipaje">
+                                #{px.piezasEquipaje} pz · #{px.pesoEquipajeKg} kg
+                            </p:column>
+                        </p:dataTable>
+                    </h:panelGroup>
+
+                    </h:panelGroup>
+                </h:form>
 
                 <f:facet name="footer">
-                    <p:commandButton value="Cerrar"
-                                     type="button"
-                                     onclick="PF('vueloDetailsDialog').hide()"
-                                     styleClass="btn-flight-details ui-button-sm" />
+                    <button type="button"
+                            class="btn btn-sm btn-outline-light"
+                            style="border-color: var(--border-ui);"
+                            onclick="PF('briefingDialog').hide();">
+                        Cerrar
+                    </button>
                 </f:facet>
             </p:dialog>
 
         </div>
-
     </ui:define>
 </ui:composition>

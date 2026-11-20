@@ -7,27 +7,36 @@
                 template="/template/main.xhtml">
 
     <ui:define name="head">
-        <title>Mis Turnos y Asignaciones - SkyWay</title>
+        <title>Portal de Tripulación de Cabina - SkyWay</title>
         <style type="text/css">
             :root {
                 --deep-space: #080e1a;
                 --midnight-blue: #0b1426;
                 --slate-glass: #1e293b;
                 --border-ui: #334155;
-
                 --aviation-blue: #4c7cf3;
+                --aviation-cyan: #38bdf8;
                 --glow-white: #f8fafc;
                 --text-dim: #94a3b8;
+                --ok-green: #10b981;
+                --warn-amber: #f59e0b;
+                --danger-red: #ef4444;
             }
 
             .crew-wrapper {
-                max-width: 1100px;
+                max-width: 1180px;
                 margin: 0 auto;
-                padding: 24px 12px;
+                padding: 24px 14px 42px 14px;
             }
 
+            /* ENCABEZADO */
             .page-header {
-                margin-bottom: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 14px;
+                margin-bottom: 22px;
                 border-bottom: 1px solid var(--slate-glass);
                 padding-bottom: 16px;
             }
@@ -35,7 +44,7 @@
             .page-title {
                 color: var(--glow-white);
                 font-size: 22px;
-                font-weight: 600;
+                font-weight: 700;
                 margin: 0 0 4px 0;
             }
 
@@ -45,29 +54,667 @@
                 margin: 0;
             }
 
+            .header-actions {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+
+            /* CARDS Y TITULOS */
             .skyway-card {
                 background-color: var(--midnight-blue);
                 border: 1px solid var(--slate-glass);
-                border-radius: 8px;
+                border-radius: 10px;
                 padding: 20px;
-                margin-bottom: 24px;
+                margin-bottom: 22px;
+            }
+
+            .pending-alert-banner {
+                background: linear-gradient(135deg, rgba(245, 158, 11, 0.14), rgba(15, 23, 42, 0.95));
+                border: 1px solid rgba(245, 158, 11, 0.55);
+                border-radius: 10px;
+                padding: 14px 18px;
+                margin-bottom: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            .card-header-bar {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 12px;
+                margin-bottom: 16px;
             }
 
             .card-header-title {
                 color: var(--glow-white);
                 font-size: 15px;
-                font-weight: 600;
-                margin: 0 0 16px 0;
+                font-weight: 700;
+                margin: 0;
                 display: flex;
                 align-items: center;
-                gap: 10px;
+                gap: 9px;
+                flex-wrap: wrap;
             }
 
             .card-header-title i {
+                color: var(--aviation-blue);
+            }
+
+            /* KPIs */
+            .kpi-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+                gap: 14px;
+                margin-bottom: 22px;
+            }
+
+            .kpi-card {
+                background-color: var(--midnight-blue);
+                border: 1px solid var(--slate-glass);
+                border-radius: 10px;
+                padding: 16px;
+                display: flex;
+                align-items: flex-start;
+                gap: 14px;
+            }
+
+            .kpi-icon {
+                width: 44px;
+                height: 44px;
+                flex-shrink: 0;
+                border-radius: 8px;
+                background-color: var(--deep-space);
+                border: 1px solid var(--border-ui);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: var(--aviation-cyan);
+                font-size: 18px;
+            }
+
+            .kpi-label {
+                font-size: 11px;
+                text-transform: uppercase;
+                letter-spacing: 0.6px;
+                color: var(--text-dim);
+                font-weight: 700;
+                display: block;
+                margin-bottom: 3px;
+            }
+
+            .kpi-value {
+                font-size: 20px;
+                font-weight: 800;
+                color: var(--glow-white);
+                line-height: 1.2;
+            }
+
+            .kpi-sub {
+                font-size: 12px;
+                color: var(--text-dim);
+                margin-top: 4px;
+            }
+
+            /* AGENDA SEMANAL (LUN - DOM) */
+            .week-strip-grid {
+                display: grid;
+                grid-template-columns: repeat(7, minmax(0, 1fr));
+                gap: 8px;
+                margin-bottom: 16px;
+            }
+
+            @media (max-width: 980px) {
+                .week-strip-grid {
+                    grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+                }
+            }
+
+            .week-day-card {
+                display: block;
+                text-decoration: none !important;
+                background-color: var(--deep-space);
+                border: 1px solid var(--slate-glass);
+                border-radius: 8px;
+                padding: 10px;
+                min-height: 92px;
+                transition: border-color 0.2s ease, background-color 0.2s ease;
+            }
+
+            .week-day-card:hover {
+                border-color: var(--aviation-blue);
+                background-color: #0e1a30;
+            }
+
+            .week-day-card.has-flights {
+                border-color: #2c4a87;
+                background-color: #0d182e;
+            }
+
+            .week-day-card.is-today {
+                border-top: 3px solid var(--aviation-cyan);
+            }
+
+            .week-day-card.is-selected {
+                border-color: var(--aviation-cyan);
+                box-shadow: 0 0 0 1px var(--aviation-cyan);
+                background-color: #132342;
+            }
+
+            .week-day-head {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 6px;
+                padding-bottom: 5px;
+                border-bottom: 1px solid #162238;
+            }
+
+            .week-day-name {
+                font-size: 10.5px;
+                font-weight: 800;
+                letter-spacing: 0.4px;
                 color: var(--text-dim);
             }
 
-            /* ESTRUCTURA EXPEDIENTE TRIPULANTE */
+            .week-day-date {
+                font-size: 12px;
+                font-weight: 800;
+                color: var(--glow-white);
+            }
+
+            .week-slot-pill {
+                background-color: rgba(76, 124, 243, 0.14);
+                border: 1px solid rgba(76, 124, 243, 0.45);
+                border-radius: 5px;
+                padding: 4px 6px;
+                margin-top: 4px;
+                font-size: 11px;
+                color: var(--glow-white);
+                line-height: 1.25;
+            }
+
+            .week-slot-pill.slot-pending {
+                background-color: rgba(245, 158, 11, 0.14);
+                border-color: rgba(245, 158, 11, 0.55);
+            }
+
+            .week-slot-pill.slot-confirmed {
+                background-color: rgba(16, 185, 129, 0.14);
+                border-color: rgba(16, 185, 129, 0.5);
+            }
+
+            .week-slot-time {
+                color: var(--aviation-cyan);
+                font-weight: 800;
+                display: block;
+            }
+
+            /* HERO PRÓXIMO SERVICIO */
+            .hero-briefing {
+                background: linear-gradient(135deg, #0b1426 0%, #0f1c36 100%);
+                border: 1px solid #2a3f6b;
+                border-radius: 10px;
+                padding: 20px;
+                margin-bottom: 22px;
+            }
+
+            .hero-route-grid {
+                display: grid;
+                grid-template-columns: 1fr auto 1fr;
+                gap: 16px;
+                align-items: center;
+                background-color: var(--deep-space);
+                border: 1px solid var(--slate-glass);
+                border-radius: 8px;
+                padding: 16px 18px;
+                margin-bottom: 14px;
+            }
+
+            .airport-code {
+                font-size: 26px;
+                font-weight: 800;
+                color: var(--glow-white);
+                letter-spacing: 1px;
+                line-height: 1.1;
+            }
+
+            .airport-meta {
+                font-size: 12px;
+                color: var(--text-dim);
+                margin-top: 3px;
+            }
+
+            .hero-metrics-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                gap: 12px;
+            }
+
+            .mini-box {
+                background-color: var(--deep-space);
+                border: 1px solid var(--slate-glass);
+                border-radius: 8px;
+                padding: 12px 14px;
+            }
+
+            .mini-label {
+                font-size: 11px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: var(--text-dim);
+                font-weight: 700;
+                margin-bottom: 5px;
+                display: block;
+            }
+
+            .mini-val {
+                font-size: 14px;
+                color: var(--glow-white);
+                font-weight: 600;
+            }
+
+            .progress-track {
+                width: 100%;
+                height: 6px;
+                background-color: #162238;
+                border-radius: 99px;
+                overflow: hidden;
+                margin-top: 7px;
+            }
+
+            .progress-fill-green {
+                height: 100%;
+                background: linear-gradient(90deg, #10b981, #34d399);
+            }
+
+            /* BADGES */
+            .badge-crew {
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                padding: 4px 10px;
+                border-radius: 5px;
+                font-size: 11px;
+                font-weight: 700;
+                letter-spacing: 0.3px;
+                white-space: nowrap;
+            }
+
+            .badge-info {
+                background-color: rgba(76, 124, 243, 0.14);
+                border: 1px solid #4c7cf3;
+                color: #dbeafe;
+            }
+
+            .badge-success {
+                background-color: rgba(16, 185, 129, 0.15);
+                border: 1px solid #10b981;
+                color: #6ee7b7;
+            }
+
+            .badge-warning {
+                background-color: rgba(245, 158, 11, 0.15);
+                border: 1px solid #f59e0b;
+                color: #fde68a;
+            }
+
+            .badge-danger {
+                background-color: rgba(239, 68, 68, 0.16);
+                border: 1px solid #ef4444;
+                color: #fca5a5;
+            }
+
+            .badge-secondary {
+                background-color: rgba(148, 163, 184, 0.12);
+                border: 1px solid #475569;
+                color: #cbd5e1;
+            }
+
+            /* TABS Y FILTROS */
+            .workspace-tabs {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                margin-bottom: 18px;
+            }
+
+            .tab-pill-btn {
+                background-color: var(--midnight-blue) !important;
+                border: 1px solid var(--slate-glass) !important;
+                color: var(--text-dim) !important;
+                font-size: 13px !important;
+                font-weight: 600 !important;
+                border-radius: 7px !important;
+                padding: 8px 14px !important;
+            }
+
+            .tab-pill-btn.active-tab,
+            .tab-pill-btn:hover {
+                background-color: var(--aviation-blue) !important;
+                border-color: var(--aviation-blue) !important;
+                color: #ffffff !important;
+            }
+
+            .filter-bar {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 12px;
+                margin-bottom: 16px;
+            }
+
+            .scope-pills {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+
+            .scope-btn {
+                background-color: var(--deep-space) !important;
+                border: 1px solid var(--border-ui) !important;
+                color: var(--text-dim) !important;
+                font-size: 12px !important;
+                border-radius: 6px !important;
+            }
+
+            .scope-btn.active-scope {
+                background-color: rgba(76, 124, 243, 0.22) !important;
+                border-color: var(--aviation-blue) !important;
+                color: #ffffff !important;
+                font-weight: 700 !important;
+            }
+
+            .search-input-dark {
+                background-color: var(--deep-space) !important;
+                border: 1px solid var(--border-ui) !important;
+                color: var(--glow-white) !important;
+                border-radius: 6px !important;
+                padding: 7px 12px !important;
+                min-width: 240px;
+                font-size: 13px !important;
+            }
+
+            .search-input-dark::placeholder {
+                color: var(--text-dim) !important;
+                opacity: 0.85 !important;
+            }
+
+            .date-input-dark {
+                background-color: var(--deep-space) !important;
+                border: 1px solid var(--border-ui) !important;
+                color: var(--glow-white) !important;
+                border-radius: 6px !important;
+                padding: 6px 10px !important;
+                font-size: 12px !important;
+                color-scheme: dark;
+            }
+
+            /* BOTONES */
+            .btn-sky-outline {
+                background-color: transparent !important;
+                border: 1px solid var(--border-ui) !important;
+                color: var(--glow-white) !important;
+                font-size: 12px !important;
+                font-weight: 600 !important;
+                border-radius: 6px !important;
+            }
+
+            .btn-sky-outline:hover {
+                background-color: var(--aviation-blue) !important;
+                border-color: var(--aviation-blue) !important;
+                color: #ffffff !important;
+            }
+
+            .btn-sky-primary {
+                background-color: var(--aviation-blue) !important;
+                border: 1px solid var(--aviation-blue) !important;
+                color: #ffffff !important;
+                font-size: 12px !important;
+                font-weight: 700 !important;
+                border-radius: 6px !important;
+            }
+
+            .btn-skyway-accept {
+                background-color: rgba(16, 185, 129, 0.12) !important;
+                border: 1px solid #10b981 !important;
+                color: #34d399 !important;
+                font-size: 12px !important;
+                font-weight: 700 !important;
+                border-radius: 6px !important;
+            }
+
+            .btn-skyway-accept:hover {
+                background-color: #10b981 !important;
+                color: #ffffff !important;
+            }
+
+            .btn-skyway-reject {
+                background-color: rgba(239, 68, 68, 0.12) !important;
+                border: 1px solid #ef4444 !important;
+                color: #f87171 !important;
+                font-size: 12px !important;
+                font-weight: 700 !important;
+                border-radius: 6px !important;
+            }
+
+            .btn-skyway-reject:hover {
+                background-color: #ef4444 !important;
+                color: #ffffff !important;
+            }
+
+            /* TABLAS PRIMEFACES DARK COMPLETO */
+            .skyway-table,
+            .skyway-table .ui-widget-content,
+            .skyway-table .ui-datatable-tablewrapper {
+                background: var(--midnight-blue) !important;
+                background-color: var(--midnight-blue) !important;
+                border: 1px solid var(--slate-glass) !important;
+                border-radius: 8px !important;
+                color: var(--glow-white) !important;
+            }
+
+            .skyway-table table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+                background-color: var(--midnight-blue) !important;
+            }
+
+            .skyway-table thead th,
+            .skyway-table .ui-datatable-thead > tr > th,
+            .skyway-table .ui-state-default {
+                background: var(--deep-space) !important;
+                background-color: var(--deep-space) !important;
+                background-image: none !important;
+                border: none !important;
+                border-bottom: 1px solid var(--border-ui) !important;
+                color: var(--text-dim) !important;
+                font-size: 11px !important;
+                font-weight: 700 !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.6px !important;
+                padding: 11px 12px !important;
+                box-shadow: none !important;
+            }
+
+            .skyway-table tbody tr,
+            .skyway-table .ui-datatable-data > tr,
+            .skyway-table .ui-datatable-odd,
+            .skyway-table .ui-datatable-even,
+            .skyway-table .ui-datatable-empty-message {
+                background: var(--midnight-blue) !important;
+                background-color: var(--midnight-blue) !important;
+                background-image: none !important;
+                border: none !important;
+                color: var(--glow-white) !important;
+            }
+
+            .skyway-table .ui-datatable-data > tr:nth-child(even) {
+                background-color: #0d182d !important;
+            }
+
+            .skyway-table tbody tr:hover,
+            .skyway-table .ui-datatable-data > tr:hover {
+                background-color: #13223d !important;
+            }
+
+            .skyway-table tbody td,
+            .skyway-table .ui-datatable-data > tr > td {
+                background: transparent !important;
+                background-color: transparent !important;
+                border: none !important;
+                border-bottom: 1px solid var(--slate-glass) !important;
+                color: var(--glow-white) !important;
+                font-size: 12.5px !important;
+                padding: 11px 12px !important;
+            }
+
+            .skyway-table .ui-datatable-empty-message > td {
+                color: var(--text-dim) !important;
+                text-align: center !important;
+                padding: 16px !important;
+            }
+
+            .skyway-table .ui-paginator {
+                background: var(--deep-space) !important;
+                background-color: var(--deep-space) !important;
+                background-image: none !important;
+                border: 1px solid var(--slate-glass) !important;
+                border-radius: 6px !important;
+                margin-top: 12px !important;
+                padding: 6px !important;
+                color: var(--text-dim) !important;
+            }
+
+            .skyway-table .ui-paginator .ui-paginator-page,
+            .skyway-table .ui-paginator .ui-paginator-first,
+            .skyway-table .ui-paginator .ui-paginator-prev,
+            .skyway-table .ui-paginator .ui-paginator-next,
+            .skyway-table .ui-paginator .ui-paginator-last {
+                background: var(--midnight-blue) !important;
+                color: var(--text-dim) !important;
+                border: 1px solid var(--border-ui) !important;
+                border-radius: 4px !important;
+            }
+
+            .skyway-table .ui-paginator .ui-paginator-page.ui-state-active {
+                background: var(--aviation-blue) !important;
+                color: #ffffff !important;
+                border-color: var(--aviation-blue) !important;
+            }
+
+            /* CALENDARIO DETALLADO (SCHEDULE) */
+            .skyway-schedule .fc {
+                color: var(--glow-white) !important;
+                font-size: 12.5px !important;
+            }
+
+            .skyway-schedule .fc-toolbar-title {
+                font-size: 1.25rem !important;
+                font-weight: 800 !important;
+                color: var(--aviation-cyan) !important;
+                text-transform: capitalize;
+            }
+
+            .skyway-schedule .fc-button {
+                background: var(--deep-space) !important;
+                border: 1px solid var(--border-ui) !important;
+                color: #cbd5e1 !important;
+                font-size: 12px !important;
+                font-weight: 600 !important;
+                padding: 5px 11px !important;
+                box-shadow: none !important;
+                text-transform: capitalize;
+            }
+
+            .skyway-schedule .fc-button:hover {
+                background: #13223d !important;
+                border-color: var(--aviation-blue) !important;
+                color: #ffffff !important;
+            }
+
+            .skyway-schedule .fc-button-active {
+                background: var(--aviation-blue) !important;
+                border-color: var(--aviation-blue) !important;
+                color: #ffffff !important;
+            }
+
+            .skyway-schedule .fc-theme-standard .fc-scrollgrid,
+            .skyway-schedule .fc-theme-standard td,
+            .skyway-schedule .fc-theme-standard th {
+                border-color: var(--slate-glass) !important;
+            }
+
+            .skyway-schedule .fc-col-header-cell {
+                background: var(--deep-space) !important;
+                padding: 8px 0 !important;
+            }
+
+            .skyway-schedule .fc-col-header-cell-cushion,
+            .skyway-schedule .fc-daygrid-day-number,
+            .skyway-schedule .fc-timegrid-slot-label-cushion,
+            .skyway-schedule .fc-timegrid-axis-cushion {
+                color: #cbd5e1 !important;
+                text-decoration: none !important;
+                font-weight: 600 !important;
+            }
+
+            .skyway-schedule .fc-daygrid-day,
+            .skyway-schedule .fc-timegrid-slot,
+            .skyway-schedule .fc-timegrid-col,
+            .skyway-schedule .fc-timegrid-axis {
+                background-color: var(--deep-space) !important;
+            }
+
+            .skyway-schedule .fc-daygrid-day:hover {
+                background-color: #0e1a30 !important;
+            }
+
+            .skyway-schedule .fc-day-today {
+                background-color: rgba(56, 189, 248, 0.08) !important;
+            }
+
+            .skyway-schedule .fc-daygrid-event {
+                border-radius: 5px !important;
+                padding: 2px 5px !important;
+                font-size: 11px !important;
+                font-weight: 600 !important;
+                cursor: pointer !important;
+            }
+
+            .schedule-legend {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 16px;
+                align-items: center;
+                padding-top: 14px;
+                margin-top: 14px;
+                border-top: 1px solid var(--slate-glass);
+                font-size: 12px;
+                color: var(--text-dim);
+            }
+
+            .legend-item {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .legend-dot {
+                width: 11px;
+                height: 11px;
+                border-radius: 3px;
+                display: inline-block;
+            }
+
+            /* EXPEDIENTE Y NOTIFICACIONES */
             .crew-info-grid {
                 display: grid;
                 grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -86,7 +733,7 @@
                 text-transform: uppercase;
                 letter-spacing: 0.5px;
                 color: var(--text-dim);
-                font-weight: 600;
+                font-weight: 700;
                 margin-bottom: 4px;
                 display: flex;
                 align-items: center;
@@ -99,298 +746,783 @@
                 font-weight: 500;
             }
 
-            /* TABLA CORPORATIVA SOBRIA SIN BORDES VERTICALES */
-            .skyway-table {
-                background: transparent !important;
-                border: none !important;
+            .notif-item {
+                background-color: var(--deep-space);
+                border: 1px solid var(--slate-glass);
+                border-radius: 8px;
+                padding: 14px 16px;
+                margin-bottom: 10px;
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                gap: 14px;
+                flex-wrap: wrap;
             }
 
-            .skyway-table thead th {
-                background-color: var(--deep-space) !important;
-                border-bottom: 1px solid var(--border-ui) !important;
-                border-top: none !important;
-                border-left: none !important;
-                border-right: none !important;
-                color: var(--text-dim) !important;
-                font-size: 11px !important;
-                font-weight: 600 !important;
-                text-transform: uppercase !important;
-                letter-spacing: 0.8px !important;
-                padding: 12px 16px !important;
+            .notif-item.unread {
+                border-left: 3px solid var(--aviation-blue);
+                background-color: #0d1930;
             }
 
-            .skyway-table tbody td {
+            /* MODALES */
+            .skyway-dialog.ui-dialog {
                 background-color: var(--midnight-blue) !important;
-                border-bottom: 1px solid var(--slate-glass) !important;
-                border-top: none !important;
-                border-left: none !important;
-                border-right: none !important;
-                color: var(--glow-white) !important;
-                padding: 14px 16px !important;
-            }
-
-            .skyway-table tbody tr:hover td {
-                background-color: var(--deep-space) !important;
-            }
-
-            /* OCULTAR PAGINADOR SI SOLO HAY UNA PÁGINA */
-            .skyway-table .ui-paginator {
-                background-color: var(--deep-space) !important;
-                border: 1px solid var(--slate-glass) !important;
-                border-radius: 6px !important;
-                margin-top: 16px !important;
-                padding: 4px !important;
-            }
-
-            .skyway-table .ui-paginator .ui-paginator-page,
-            .skyway-table .ui-paginator .ui-paginator-first,
-            .skyway-table .ui-paginator .ui-paginator-prev,
-            .skyway-table .ui-paginator .ui-paginator-next,
-            .skyway-table .ui-paginator .ui-paginator-last {
-                background-color: var(--midnight-blue) !important;
-                color: var(--text-dim) !important;
                 border: 1px solid var(--border-ui) !important;
-                border-radius: 4px !important;
+                box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75) !important;
             }
 
-            .skyway-table .ui-paginator .ui-paginator-page.ui-state-active {
-                background-color: var(--slate-glass) !important;
-                color: var(--glow-white) !important;
-                border-color: var(--border-ui) !important;
-            }
-
-            /* ACCIONES SOBRIAS SIN ROJO NI AZUL LLAMATIVO */
-            .btn-action-minimal {
-                background: transparent !important;
-                border: 1px solid var(--border-ui) !important;
-                color: var(--text-dim) !important;
-                font-size: 12px !important;
-                font-weight: 500 !important;
-                border-radius: 4px !important;
-                padding: 2px 10px !important;
-                transition: all 0.2s ease !important;
-            }
-
-            .btn-action-minimal:hover {
-                border-color: var(--glow-white) !important;
-                color: var(--glow-white) !important;
-                background-color: var(--slate-glass) !important;
-            }
-
-            .btn-action-minimal.danger:hover {
-                border-color: #94a3b8 !important;
-                color: #f8fafc !important;
-                background-color: rgba(239, 68, 68, 0.15) !important;
-            }
-
-            /* MODAL */
             .skyway-dialog .ui-dialog-content,
             .skyway-dialog .ui-dialog-titlebar,
             .skyway-dialog .ui-dialog-footer {
+                background: var(--midnight-blue) !important;
                 background-color: var(--midnight-blue) !important;
-                color: var(--glow-white) !important;
                 border-color: var(--slate-glass) !important;
-            }
-
-            /* BOTÓN ACEPTAR: Verde Esmeralda Corporativo */
-            .btn-skyway-accept {
-                background-color: rgba(16, 185, 129, 0.08) !important;
-                border: 1px solid #10b981 !important;
-                color: #34d399 !important;
-                font-size: 12px !important;
-                font-weight: 600 !important;
-                border-radius: 4px !important;
-                padding: 2px 10px !important;
-                transition: all 0.2s ease !important;
-            }
-
-            .btn-skyway-accept:hover {
-                background-color: #10b981 !important;
-                color: #ffffff !important;
-                box-shadow: 0 0 8px rgba(16, 185, 129, 0.3) !important;
-            }
-
-            /* BOTÓN RECHAZAR: Rojo Carmesí Corporativo */
-            .btn-skyway-reject {
-                background-color: rgba(239, 68, 68, 0.08) !important;
-                border: 1px solid #ef4444 !important;
-                color: #f87171 !important;
-                font-size: 12px !important;
-                font-weight: 600 !important;
-                border-radius: 4px !important;
-                padding: 2px 10px !important;
-                transition: all 0.2s ease !important;
-            }
-
-            .btn-skyway-reject:hover {
-                background-color: #ef4444 !important;
-                color: #ffffff !important;
-                box-shadow: 0 0 8px rgba(239, 68, 68, 0.3) !important;
-            }
-
-            /* BOTÓN BUSCADOR SECUNDARIO */
-            .btn-skyway-search {
-                background-color: transparent !important;
-                border: 1px solid var(--border-ui) !important;
-                color: var(--text-dim) !important;
-                border-radius: 4px !important;
-            }
-
-            .btn-skyway-search:hover {
-                border-color: var(--glow-white) !important;
                 color: var(--glow-white) !important;
-                background-color: var(--slate-glass) !important;
             }
 
+            .skyway-dialog .ui-dialog-titlebar {
+                border-bottom: 1px solid var(--slate-glass) !important;
+            }
+
+            .skyway-dialog .ui-dialog-titlebar-close {
+                color: var(--text-dim) !important;
+            }
+
+            .skyway-dialog .ui-dialog-footer {
+                border-top: 1px solid var(--border-ui) !important;
+                padding: 12px 16px !important;
+            }
+
+            .textarea-dark {
+                width: 100%;
+                background-color: var(--deep-space) !important;
+                border: 1px solid var(--border-ui) !important;
+                color: var(--glow-white) !important;
+                border-radius: 6px !important;
+                padding: 10px !important;
+            }
+
+            @media (max-width: 720px) {
+                .hero-route-grid {
+                    grid-template-columns: 1fr;
+                    text-align: center;
+                }
+            }
         </style>
     </ui:define>
 
     <ui:define name="contenido">
+        <p:growl id="growlTurnos" showDetail="true" life="3800" />
 
         <div class="crew-wrapper">
-            <p:growl id="growlTurnos" showDetail="true" />
 
-            <!-- ENCABEZADO -->
-            <header class="page-header">
-                <h2 class="page-title">Gestión de Turnos y Tripulación</h2>
-                <p class="page-subtitle">Consola de confirmación de servicios de cabina y guardia operacional.</p>
-            </header>
-
-            <!-- DATOS DEL TRIPULANTE -->
-            <div class="skyway-card">
+            <!-- AVISO SI NO EXISTE REGISTRO DE TRIPULANTE -->
+            <h:panelGroup rendered="#{empty misTurnosBean.tripulacion}" layout="block" styleClass="skyway-card">
                 <div class="card-header-title">
-                    <i class="pi pi-user"></i> Expediente del Tripulante
+                    <i class="pi pi-exclamation-triangle" style="color: var(--warn-amber);"></i>
+                    Sin expediente activo de tripulación
                 </div>
+                <p style="color: var(--text-dim); font-size: 13px; margin-bottom: 14px;">
+                    La cuenta actual no registra información operacional en la tabla <strong>Tripulacion</strong> de la base de datos.
+                </p>
+                <a href="#{request.contextPath}/perfil/index.xhtml" class="btn btn-sm btn-primary">
+                    Ir a Mi Perfil de Usuario
+                </a>
+            </h:panelGroup>
 
-                <div class="crew-info-grid">
-                    <div class="info-box">
-                        <span class="info-label"><i class="pi pi-user"></i> Nombre Completo</span>
-                        <div class="info-value">#{misTurnosBean.usuario.nombre} #{misTurnosBean.usuario.apellido}</div>
-                    </div>
+            <!-- PANEL OPERACIONAL COMPLETO DE TRIPULACIÓN DE CABINA -->
+            <h:form id="formTripulacionPanel" rendered="#{not empty misTurnosBean.tripulacion}">
 
-                    <div class="info-box">
-                        <span class="info-label"><i class="pi pi-briefcase"></i> Cargo Asignado</span>
-                        <div class="info-value">
-                            #{empty misTurnosBean.tripulacion.cargo ? 'Tripulante de Cabina' : misTurnosBean.tripulacion.cargo}
-                        </div>
-                    </div>
-
-                    <div class="info-box">
-                        <span class="info-label"><i class="pi pi-shield"></i> RUT / Identificación</span>
-                        <div class="info-value">#{misTurnosBean.usuario.rut}</div>
-                    </div>
-
-                    <div class="info-box">
-                        <span class="info-label"><i class="pi pi-calendar"></i> Fecha de Ingreso</span>
-                        <div class="info-value">
+                <!-- ENCABEZADO -->
+                <header class="page-header">
+                    <div>
+                        <h2 class="page-title">Portal Operacional de Tripulación de Cabina</h2>
+                        <p class="page-subtitle">
+                            <strong>#{misTurnosBean.usuario.nombre} #{misTurnosBean.usuario.apellido}</strong>
+                            · Cargo: <strong style="color: var(--aviation-cyan);">#{empty misTurnosBean.tripulacion.cargo ? 'Tripulante de Cabina' : misTurnosBean.tripulacion.cargo}</strong>
+                            · Ingreso:
                             <h:outputText value="#{misTurnosBean.tripulacion.fechaIngreso}">
-                                <f:convertDateTime pattern="dd/MM/yyyy" />
+                                <f:convertDateTime pattern="dd/MM/yyyy" timeZone="America/Santiago"/>
                             </h:outputText>
+                        </p>
+                    </div>
+                    <div class="header-actions">
+                        <p:commandButton value="Alertas (#{misTurnosBean.notificacionesNoLeidas})"
+                                         icon="pi pi-bell"
+                                         action="#{misTurnosBean.cambiarTab('ALERTAS')}"
+                                         update="formTripulacionPanel"
+                                         styleClass="#{misTurnosBean.notificacionesNoLeidas gt 0 ? 'badge-crew badge-warning' : 'btn-sky-outline'} ui-button-sm" />
+                        <p:commandButton value="Actualizar Datos"
+                                         icon="pi pi-refresh"
+                                         action="#{misTurnosBean.recargarPanel}"
+                                         update="formTripulacionPanel :growlTurnos"
+                                         styleClass="btn-sky-outline ui-button-sm" />
+                        <a href="#{request.contextPath}/perfil/index.xhtml"
+                           class="btn btn-sm btn-outline-light"
+                           style="font-size: 12px; border-color: var(--border-ui);">
+                            <i class="pi pi-user-edit"></i> Editar Perfil / Clave
+                        </a>
+                    </div>
+                </header>
+
+                <!-- ALERTA DE TURNOS PENDIENTES DE CONFIRMACIÓN -->
+                <h:panelGroup rendered="#{misTurnosBean.kpis.turnosPendientes gt 0}" layout="block" styleClass="pending-alert-banner">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <i class="pi pi-exclamation-circle" style="color: var(--warn-amber); font-size: 20px;"></i>
+                        <div>
+                            <strong style="color: var(--glow-white); font-size: 14px;">
+                                Tienes #{misTurnosBean.kpis.turnosPendientes} servicio(s) pendiente(s) de confirmación
+                            </strong>
+                            <div style="color: var(--text-dim); font-size: 12px;">
+                                Confirma o registra un rechazo fundamentado directamente desde la agenda semanal o el listado de turnos.
+                            </div>
+                        </div>
+                    </div>
+                    <p:commandButton value="Revisar Pendientes"
+                                     icon="pi pi-filter"
+                                     action="#{misTurnosBean.cambiarScope('PENDIENTES')}"
+                                     update="formTripulacionPanel"
+                                     styleClass="btn-sky-primary ui-button-sm" />
+                </h:panelGroup>
+
+                <!-- ALERTA DE FATIGA / SOBRE-ESFUERZO (TIEMPO ENTRE TURNOS) -->
+                <h:panelGroup rendered="#{misTurnosBean.resumenFatiga ne null and misTurnosBean.resumenFatiga.alertasCriticas gt 0}"
+                              layout="block"
+                              style="background-color: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.45); border-radius: 10px; padding: 14px 18px; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <i class="pi pi-exclamation-triangle" style="color: #fca5a5; font-size: 20px;"></i>
+                        <div>
+                            <strong style="color: #fca5a5; font-size: 14px;">
+                                Alerta de Fatiga Operacional: #{misTurnosBean.resumenFatiga.tituloEstado}
+                            </strong>
+                            <div style="color: var(--glow-white); font-size: 12.5px; margin-top: 2px;">
+                                #{misTurnosBean.resumenFatiga.detalleTexto}
+                            </div>
+                        </div>
+                    </div>
+                    <span class="badge-crew badge-danger">#{misTurnosBean.resumenFatiga.alertasCriticas} alerta(s) crítica(s)</span>
+                </h:panelGroup>
+
+                <!-- SECCIÓN 1: KPIs REALES CALCULADOS DESDE BD -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-icon"><i class="pi pi-clock"></i></div>
+                        <div>
+                            <span class="kpi-label">Horas de Servicio</span>
+                            <div class="kpi-value">#{misTurnosBean.horasSemanaTexto}</div>
+                            <div class="kpi-sub">
+                                Esta semana · Confirmadas: #{misTurnosBean.kpis.horasConfirmadasTexto} · Pend.: #{misTurnosBean.kpis.horasPendientesTexto}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-icon"><i class="pi pi-check-square"></i></div>
+                        <div>
+                            <span class="kpi-label">Estado de Mis Turnos</span>
+                            <div class="kpi-value">#{misTurnosBean.turnosSemanaCount} esta semana</div>
+                            <div class="kpi-sub">
+                                #{misTurnosBean.kpis.turnosPendientes} pend. · #{misTurnosBean.kpis.turnosConfirmados} conf. · #{misTurnosBean.kpis.turnosRechazados} rech.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-icon">
+                            <i class="pi pi-shield" style="color: #{misTurnosBean.resumenFatiga ne null and misTurnosBean.resumenFatiga.severidad eq 'danger' ? '#fca5a5' : (misTurnosBean.resumenFatiga ne null and misTurnosBean.resumenFatiga.severidad eq 'warning' ? 'var(--warn-amber)' : (misTurnosBean.kpis.descansoReglamentarioOk ? 'var(--ok-green)' : 'var(--warn-amber)'))};"></i>
+                        </div>
+                        <div>
+                            <span class="kpi-label">Descanso Reglamentario (≥8h)</span>
+                            <div class="kpi-value" style="font-size: 15px; color: #{misTurnosBean.resumenFatiga ne null and misTurnosBean.resumenFatiga.severidad eq 'danger' ? '#fca5a5' : (misTurnosBean.resumenFatiga ne null and misTurnosBean.resumenFatiga.severidad eq 'warning' ? 'var(--warn-amber)' : (misTurnosBean.kpis.descansoReglamentarioOk ? 'var(--ok-green)' : 'var(--warn-amber)'))};">
+                                #{misTurnosBean.resumenFatiga ne null ? misTurnosBean.resumenFatiga.tituloEstado : (misTurnosBean.kpis.descansoReglamentarioOk ? 'Reglamentario OK' : 'Revisar Intervalos')}
+                            </div>
+                            <div class="kpi-sub">
+                                <h:panelGroup rendered="#{misTurnosBean.resumenFatiga ne null}">
+                                    Mín. libre entre turnos: <strong>#{misTurnosBean.resumenFatiga.descansoMinimoTexto}</strong> · Carga máx.: #{misTurnosBean.resumenFatiga.maxRotacionTexto}
+                                    <h:panelGroup rendered="#{misTurnosBean.resumenFatiga.enlacesMenores8h gt 0}">
+                                        · #{misTurnosBean.resumenFatiga.enlacesMenores8h} enlace(s) sin 8h desc.
+                                    </h:panelGroup>
+                                </h:panelGroup>
+                                <h:panelGroup rendered="#{misTurnosBean.resumenFatiga eq null}">
+                                    #{misTurnosBean.kpis.detalleDescansoTexto}
+                                </h:panelGroup>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-icon"><i class="pi pi-users"></i></div>
+                        <div>
+                            <span class="kpi-label">Cobertura de Cabina Real</span>
+                            <div class="kpi-value">#{misTurnosBean.kpis.vuelosDistintos} vuelo(s)</div>
+                            <div class="kpi-sub">
+                                #{misTurnosBean.kpis.aeropuertosDistintos} aeropuertos · #{misTurnosBean.kpis.totalPasajerosAtendidos} pax asignados
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- TABLA SOBRIA DE TURNOS -->
+                <!-- SECCIÓN 2: AGENDA DE LA SEMANA COMPLETA (LUNES A DOMINGO) -->
+                <div class="skyway-card">
+                    <div class="card-header-bar">
+                        <div class="card-header-title">
+                            <i class="pi pi-calendar"></i>
+                            Agenda Semanal de Turnos (Lun — Dom)
+                            <span class="badge-crew badge-secondary">#{misTurnosBean.rangoSemanaTexto}</span>
+                            <span class="badge-crew #{misTurnosBean.turnosHoyCount gt 0 ? 'badge-success' : 'badge-secondary'}">
+                                Hoy: #{misTurnosBean.turnosHoyCount}
+                            </span>
+                            <span class="badge-crew badge-info">
+                                Semana: #{misTurnosBean.turnosSemanaCount} turno(s) · #{misTurnosBean.horasSemanaTexto}
+                            </span>
+                        </div>
+                        <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                            <p:commandButton value="« Sem. Anterior"
+                                             action="#{misTurnosBean.semanaAnterior}"
+                                             update="formTripulacionPanel"
+                                             styleClass="btn-sky-outline ui-button-sm" />
+                            <p:commandButton value="Esta Semana"
+                                             action="#{misTurnosBean.semanaActual}"
+                                             update="formTripulacionPanel"
+                                             styleClass="#{misTurnosBean.semanaOffset eq 0 ? 'btn-sky-primary' : 'btn-sky-outline'} ui-button-sm" />
+                            <p:commandButton value="Sem. Siguiente »"
+                                             action="#{misTurnosBean.semanaSiguiente}"
+                                             update="formTripulacionPanel"
+                                             styleClass="btn-sky-outline ui-button-sm" />
+                        </div>
+                    </div>
 
-            <div class="skyway-card">
-                <div class="card-header-title">
-                    <i class="pi pi-clock"></i> Mis Turnos de Servicio Asignados
+                    <div class="week-strip-grid">
+                        <ui:repeat value="#{misTurnosBean.diasAgendaSemana}" var="dia">
+                            <p:commandLink action="#{misTurnosBean.seleccionarDiaAgenda(dia.isoDate)}"
+                                           update="formTripulacionPanel"
+                                           styleClass="week-day-card #{dia.cantidadTurnos gt 0 ? 'has-flights' : ''} #{dia.esHoy ? 'is-today' : ''} #{misTurnosBean.fechaDiaFiltro eq dia.isoDate ? 'is-selected' : ''}">
+                                <div class="week-day-head">
+                                    <span class="week-day-name">#{dia.diaCorto}</span>
+                                    <span class="week-day-date">#{dia.fechaCorta}</span>
+                                </div>
+
+                                <h:panelGroup rendered="#{dia.cantidadTurnos eq 0}" layout="block"
+                                              style="font-size: 11px; color: #64748b; padding-top: 8px;">
+                                    Libre / Sin turno
+                                </h:panelGroup>
+
+                                <ui:repeat value="#{dia.turnos}" var="td">
+                                    <div class="week-slot-pill #{td.esPendiente ? 'slot-pending' : (td.esConfirmado ? 'slot-confirmed' : '')}">
+                                        <span class="week-slot-time">
+                                            <h:outputText value="#{td.horaInicio}">
+                                                <f:convertDateTime pattern="hh:mm a" timeZone="America/Santiago" locale="en_US"/>
+                                            </h:outputText>
+                                            –
+                                            <h:outputText value="#{td.horaFin}">
+                                                <f:convertDateTime pattern="hh:mm a" timeZone="America/Santiago" locale="en_US"/>
+                                            </h:outputText>
+                                        </span>
+                                        <h:outputText value="#{not empty td.idVuelo ? td.origenIata.concat('➔').concat(td.destinoIata) : td.tipoServicio}" />
+                                    </div>
+                                </ui:repeat>
+                            </p:commandLink>
+                        </ui:repeat>
+                    </div>
+
+                    <p:dataTable value="#{misTurnosBean.turnosEstaSemana}"
+                                 var="ts"
+                                 emptyMessage="No tienes turnos activos en la semana #{misTurnosBean.rangoSemanaTexto}."
+                                 styleClass="skyway-table">
+                        <p:column headerText="Fecha">
+                            <strong>
+                                <h:outputText value="#{ts.horaInicio}">
+                                    <f:convertDateTime pattern="EEE dd/MM/yyyy" timeZone="America/Santiago" locale="es_CL"/>
+                                </h:outputText>
+                            </strong>
+                        </p:column>
+                        <p:column headerText="Horario Turno">
+                            <strong style="color: var(--aviation-cyan);">
+                                <h:outputText value="#{ts.horaInicio}"><f:convertDateTime pattern="hh:mm a" timeZone="America/Santiago" locale="en_US"/></h:outputText>
+                                →
+                                <h:outputText value="#{ts.horaFin}"><f:convertDateTime pattern="hh:mm a" timeZone="America/Santiago" locale="en_US"/></h:outputText>
+                            </strong>
+                            <div style="font-size: 11px; color: var(--text-dim);">#{ts.duracionTexto} · #{ts.tipoServicio}</div>
+                        </p:column>
+                        <p:column headerText="Vuelo &amp; Ruta">
+                            <strong>#{ts.numeroVuelo}</strong>
+                            <h:panelGroup rendered="#{not empty ts.idVuelo}" layout="block" style="font-size: 11px; color: var(--text-dim);">
+                                #{ts.origenIata} ➔ #{ts.destinoIata} · #{ts.puertaTerminalTexto}
+                            </h:panelGroup>
+                        </p:column>
+                        <p:column headerText="Aeronave &amp; Comandante">
+                            <div>#{ts.avionMatricula} · #{ts.modeloCompleto}</div>
+                            <div style="font-size: 11px; color: var(--text-dim);">Cmdte: #{ts.pilotoNombre}</div>
+                        </p:column>
+                        <p:column headerText="Descanso / Jornada">
+                            <h:panelGroup rendered="#{ts.intervaloPrevio ne null}">
+                                <span class="badge-crew badge-#{ts.intervaloPrevio.severidad}"
+                                      title="#{ts.intervaloPrevio.explicacionCorta}">#{ts.intervaloPrevio.etiqueta}</span>
+                                <div style="font-size: 11.5px; color: var(--glow-white); margin-top: 4px; font-weight: 600;">
+                                    #{ts.intervaloPrevio.tiempoDesdeAnteriorTexto}
+                                    <h:panelGroup rendered="#{not empty ts.intervaloPrevio.codigoPrevio}">
+                                        <span style="color: var(--text-dim); font-weight: 400;"> libre tras #{ts.intervaloPrevio.codigoPrevio}</span>
+                                    </h:panelGroup>
+                                </div>
+                                <div style="font-size: 11px; margin-top: 2px; color: #{ts.intervaloPrevio.severidad eq 'danger' or ts.intervaloPrevio.sobreEsfuerzo ? '#fca5a5' : (ts.intervaloPrevio.severidad eq 'warning' ? '#fde68a' : (ts.intervaloPrevio.severidad eq 'success' ? '#6ee7b7' : 'var(--text-dim)'))};">
+                                    #{ts.intervaloPrevio.explicacionCorta}
+                                </div>
+                                <div style="font-size: 10.5px; color: #{ts.intervaloPrevio.sobreEsfuerzo ? '#fca5a5' : 'var(--text-dim)'}; margin-top: 1px;">
+                                    Acum. sin 8h: #{ts.intervaloPrevio.trabajoAcumuladoTexto} · Jornada: #{ts.intervaloPrevio.amplitudJornadaTexto} / 12h
+                                </div>
+                            </h:panelGroup>
+                        </p:column>
+                        <p:column headerText="Estado">
+                            <span class="badge-crew badge-#{ts.estadoRespuestaSeveridad}">#{ts.estadoRespuesta}</span>
+                        </p:column>
+                        <p:column headerText="Acciones" style="width: 245px; text-align: right;">
+                            <div style="display: flex; justify-content: flex-end; gap: 6px; flex-wrap: wrap;">
+                                <p:commandButton value="Briefing"
+                                                 icon="pi pi-search"
+                                                 action="#{misTurnosBean.abrirBriefing(ts)}"
+                                                 update=":dlgBriefingTurno :growlTurnos"
+                                                 oncomplete="PF('briefingTurnoDialog').show();"
+                                                 styleClass="btn-sky-outline ui-button-sm" />
+                                <p:commandButton value="Aceptar"
+                                                 icon="pi pi-check"
+                                                 rendered="#{ts.esPendiente}"
+                                                 action="#{misTurnosBean.confirmarAsistenciaPorId(ts.idTurnoTripulacion)}"
+                                                 update=":growlTurnos formTripulacionPanel"
+                                                 styleClass="btn-skyway-accept ui-button-sm" />
+                                <p:commandButton value="Rechazar"
+                                                 icon="pi pi-times"
+                                                 rendered="#{ts.esPendiente}"
+                                                 action="#{misTurnosBean.prepararRechazoPorResumen(ts)}"
+                                                 update=":dlgRechazo"
+                                                 oncomplete="PF('rechazoDialog').show();"
+                                                 styleClass="btn-skyway-reject ui-button-sm" />
+                            </div>
+                        </p:column>
+                    </p:dataTable>
                 </div>
 
-                <h:form id="misTurnosForm">
-                    <p:dataTable value="#{misTurnosBean.turnosTripulante}"
-                                 var="turnoTrip"
-                                 responsiveLayout="scroll"
-                                 styleClass="skyway-table"
-                                 rowKey="#{turnoTrip.idTurnoTripulacion}"
-                                 paginator="true"
+                <!-- SECCIÓN 3: CALENDARIO DETALLADO DE SERVICIOS -->
+                <div class="skyway-card">
+                    <div class="card-header-bar">
+                        <div class="card-header-title">
+                            <i class="pi pi-calendar-plus"></i>
+                            Calendario Operacional de Turnos y Guardias
+                        </div>
+                        <span style="font-size: 12px; color: var(--text-dim);">
+                            Haz clic en cualquier servicio para abrir su Briefing de Cabina y Manifiesto
+                        </span>
+                    </div>
+
+                    <p:schedule id="scheduleTripulacion"
+                                value="#{misTurnosBean.scheduleModel}"
+                                widgetVar="tripulacionSchedule"
+                                timeZone="America/Santiago"
+                                clientTimeZone="local"
+                                locale="es"
+                                view="dayGridMonth"
+                                initialDate="#{misTurnosBean.fechaInicialSchedule}"
+                                height="auto"
+                                leftHeaderTemplate="prev,next today"
+                                centerHeaderTemplate="title"
+                                rightHeaderTemplate="dayGridMonth,timeGridWeek,timeGridDay"
+                                styleClass="skyway-schedule"
+                                tooltip="true"
+                                showWeekNumbers="false">
+                        <p:ajax event="eventSelect"
+                                listener="#{misTurnosBean.onScheduleEventSelect}"
+                                update=":dlgBriefingTurno :growlTurnos"
+                                oncomplete="PF('briefingTurnoDialog').show();" />
+                    </p:schedule>
+
+                    <div class="schedule-legend">
+                        <span class="legend-item"><span class="legend-dot" style="background:#059669;"></span> Confirmado</span>
+                        <span class="legend-item"><span class="legend-dot" style="background:#d97706;"></span> Pendiente de respuesta</span>
+                        <span class="legend-item"><span class="legend-dot" style="background:#991b1b;"></span> Rechazado</span>
+                        <span class="legend-item"><span class="legend-dot" style="background:#1e293b; border:1px solid #475569;"></span> Finalizado</span>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN 4: HERO PRÓXIMO SERVICIO -->
+                <h:panelGroup rendered="#{not empty misTurnosBean.proximoTurno}" layout="block" styleClass="hero-briefing">
+                    <div class="card-header-bar">
+                        <div class="card-header-title">
+                            <i class="pi pi-compass"></i>
+                            Próximo Servicio Asignado — Turno ##{misTurnosBean.proximoTurno.idTurnoTripulacion} (#{misTurnosBean.proximoTurno.tipoServicio})
+                            <span class="badge-crew badge-#{misTurnosBean.proximoTurno.estadoRespuestaSeveridad}">
+                                #{misTurnosBean.proximoTurno.estadoRespuesta}
+                            </span>
+                            <span class="badge-crew badge-info">
+                                #{misTurnosBean.proximoTurno.ventanaOperativa}
+                            </span>
+                        </div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <p:commandButton value="Aceptar Servicio"
+                                             icon="pi pi-check"
+                                             rendered="#{misTurnosBean.proximoTurno.esPendiente}"
+                                             action="#{misTurnosBean.confirmarAsistenciaPorId(misTurnosBean.proximoTurno.idTurnoTripulacion)}"
+                                             update=":growlTurnos formTripulacionPanel"
+                                             styleClass="btn-skyway-accept ui-button-sm" />
+                            <p:commandButton value="Rechazar"
+                                             icon="pi pi-times"
+                                             rendered="#{misTurnosBean.proximoTurno.esPendiente}"
+                                             action="#{misTurnosBean.prepararRechazoPorResumen(misTurnosBean.proximoTurno)}"
+                                             update=":dlgRechazo"
+                                             oncomplete="PF('rechazoDialog').show();"
+                                             styleClass="btn-skyway-reject ui-button-sm" />
+                            <p:commandButton value="Briefing de Cabina"
+                                             icon="pi pi-file-o"
+                                             action="#{misTurnosBean.abrirBriefing(misTurnosBean.proximoTurno)}"
+                                             update=":dlgBriefingTurno :growlTurnos"
+                                             oncomplete="PF('briefingTurnoDialog').show();"
+                                             styleClass="btn-sky-primary ui-button-sm" />
+                        </div>
+                    </div>
+
+                    <h:panelGroup rendered="#{not empty misTurnosBean.proximoTurno.idVuelo}" layout="block" styleClass="hero-route-grid">
+                        <div>
+                            <div class="airport-code">#{misTurnosBean.proximoTurno.origenIata}</div>
+                            <div class="airport-meta">#{misTurnosBean.proximoTurno.origenCiudad} · #{misTurnosBean.proximoTurno.origenAeropuerto}</div>
+                            <div style="margin-top: 6px; font-size: 13px; color: var(--glow-white); font-weight: 700;">
+                                Salida Vuelo:
+                                <h:outputText value="#{misTurnosBean.proximoTurno.vueloSalida}">
+                                    <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago" locale="en_US"/>
+                                </h:outputText>
+                                <span style="color: var(--aviation-cyan); margin-left: 8px;">#{misTurnosBean.proximoTurno.puertaTerminalTexto}</span>
+                            </div>
+                        </div>
+
+                        <div style="text-align: center; padding: 0 10px;">
+                            <div style="font-size: 13px; font-weight: 800; color: var(--glow-white);">#{misTurnosBean.proximoTurno.numeroVuelo}</div>
+                            <div style="font-size: 11px; color: var(--text-dim); margin: 4px 0;">
+                                Turno:
+                                <h:outputText value="#{misTurnosBean.proximoTurno.horaInicio}"><f:convertDateTime pattern="hh:mm a" timeZone="America/Santiago" locale="en_US"/></h:outputText>
+                                –
+                                <h:outputText value="#{misTurnosBean.proximoTurno.horaFin}"><f:convertDateTime pattern="hh:mm a" timeZone="America/Santiago" locale="en_US"/></h:outputText>
+                                (#{misTurnosBean.proximoTurno.duracionTexto})
+                            </div>
+                            <span class="badge-crew badge-#{misTurnosBean.proximoTurno.vueloEstadoSeveridad}">#{misTurnosBean.proximoTurno.vueloEstadoDesc}</span>
+                        </div>
+
+                        <div style="text-align: right;">
+                            <div class="airport-code">#{misTurnosBean.proximoTurno.destinoIata}</div>
+                            <div class="airport-meta">#{misTurnosBean.proximoTurno.destinoCiudad} · #{misTurnosBean.proximoTurno.destinoAeropuerto}</div>
+                            <div style="margin-top: 6px; font-size: 13px; color: var(--glow-white); font-weight: 700;">
+                                Llegada Vuelo:
+                                <h:outputText value="#{misTurnosBean.proximoTurno.vueloLlegada}">
+                                    <f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago" locale="en_US"/>
+                                </h:outputText>
+                            </div>
+                        </div>
+                    </h:panelGroup>
+
+                    <div class="hero-metrics-grid">
+                        <div class="mini-box">
+                            <span class="mini-label">Comandante &amp; Aeronave</span>
+                            <div class="mini-val">Cmdte. #{misTurnosBean.proximoTurno.pilotoNombre}</div>
+                            <div style="font-size: 12px; color: var(--text-dim); margin-top: 4px;">
+                                #{misTurnosBean.proximoTurno.avionMatricula} · #{misTurnosBean.proximoTurno.modeloCompleto}
+                                <h:outputText value=" · Tel: #{misTurnosBean.proximoTurno.pilotoTelefono}" rendered="#{not empty misTurnosBean.proximoTurno.pilotoTelefono}" />
+                            </div>
+                        </div>
+
+                        <div class="mini-box">
+                            <span class="mini-label">Ocupación &amp; Embarque Cabina</span>
+                            <div class="mini-val">
+                                #{misTurnosBean.proximoTurno.pasajerosReservados} / #{misTurnosBean.proximoTurno.avionCapacidadPax} pax (#{misTurnosBean.proximoTurno.ocupacionPct}%)
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-dim); margin-top: 3px;">
+                                Check-in completado: <strong style="color: var(--glow-white);">#{misTurnosBean.proximoTurno.pasajerosCheckin} (#{misTurnosBean.proximoTurno.checkinPct}%)</strong>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-fill-green" style="width: #{misTurnosBean.proximoTurno.checkinPct > 100 ? 100 : misTurnosBean.proximoTurno.checkinPct}%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="mini-box">
+                            <span class="mini-label">Seguridad · Salidas de Emergencia</span>
+                            <div class="mini-val" style="color: var(--aviation-cyan);">
+                                #{misTurnosBean.proximoTurno.pasajerosSalidaEmergencia} pasajero(s) en filas de emergencia
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-dim); margin-top: 4px;">
+                                Equipaje reservas: #{misTurnosBean.proximoTurno.piezasEquipaje} pz · #{misTurnosBean.proximoTurno.pesoEquipajeKg} kg
+                            </div>
+                        </div>
+
+                        <div class="mini-box">
+                            <span class="mini-label">Dotación de Cabina del Vuelo</span>
+                            <div class="mini-val">
+                                #{misTurnosBean.proximoTurno.tripulacionConfirmada} / #{misTurnosBean.proximoTurno.tripulacionTotal} confirmados
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-dim); margin-top: 4px;">
+                                Mant. Aeronave: #{misTurnosBean.proximoTurno.avionEstadoMantenimiento}
+                            </div>
+                        </div>
+                    </div>
+                </h:panelGroup>
+
+                <!-- BARRA DE PESTAÑAS -->
+                <div class="workspace-tabs">
+                    <p:commandButton value="Mis Turnos Asignados (#{misTurnosBean.kpis.totalTurnos})"
+                                     icon="pi pi-clock"
+                                     action="#{misTurnosBean.cambiarTab('TURNOS')}"
+                                     update="formTripulacionPanel"
+                                     styleClass="tab-pill-btn #{misTurnosBean.tabActiva eq 'TURNOS' ? 'active-tab' : ''}" />
+                    <p:commandButton value="Alertas Operacionales (#{misTurnosBean.notificacionesNoLeidas})"
+                                     icon="pi pi-bell"
+                                     action="#{misTurnosBean.cambiarTab('ALERTAS')}"
+                                     update="formTripulacionPanel"
+                                     styleClass="tab-pill-btn #{misTurnosBean.tabActiva eq 'ALERTAS' ? 'active-tab' : ''}" />
+                    <p:commandButton value="Expediente del Tripulante"
+                                     icon="pi pi-id-card"
+                                     action="#{misTurnosBean.cambiarTab('EXPEDIENTE')}"
+                                     update="formTripulacionPanel"
+                                     styleClass="tab-pill-btn #{misTurnosBean.tabActiva eq 'EXPEDIENTE' ? 'active-tab' : ''}" />
+                </div>
+
+                <!-- TAB 1: GESTIÓN COMPLETA DE TURNOS -->
+                <h:panelGroup rendered="#{misTurnosBean.tabActiva eq 'TURNOS'}" layout="block" styleClass="skyway-card">
+                    <div class="card-header-bar">
+                        <div class="card-header-title">
+                            <i class="pi pi-clock"></i> Gestión y Confirmación de Turnos Asignados
+                        </div>
+                    </div>
+
+                    <div class="filter-bar">
+                        <div class="scope-pills">
+                            <p:commandButton value="Pendientes (#{misTurnosBean.kpis.turnosPendientes})"
+                                             action="#{misTurnosBean.cambiarScope('PENDIENTES')}"
+                                             update="formTripulacionPanel"
+                                             styleClass="scope-btn ui-button-sm #{empty misTurnosBean.fechaDiaFiltro and misTurnosBean.filtroScope eq 'PENDIENTES' ? 'active-scope' : ''}" />
+                            <p:commandButton value="Hoy (#{misTurnosBean.turnosHoyCount})"
+                                             action="#{misTurnosBean.cambiarScope('HOY')}"
+                                             update="formTripulacionPanel"
+                                             styleClass="scope-btn ui-button-sm #{empty misTurnosBean.fechaDiaFiltro and misTurnosBean.filtroScope eq 'HOY' ? 'active-scope' : ''}" />
+                            <p:commandButton value="Esta Semana (#{misTurnosBean.turnosSemanaCount})"
+                                             action="#{misTurnosBean.cambiarScope('SEMANA')}"
+                                             update="formTripulacionPanel"
+                                             styleClass="scope-btn ui-button-sm #{empty misTurnosBean.fechaDiaFiltro and misTurnosBean.filtroScope eq 'SEMANA' ? 'active-scope' : ''}" />
+                            <p:commandButton value="Confirmados (#{misTurnosBean.kpis.turnosConfirmados})"
+                                             action="#{misTurnosBean.cambiarScope('CONFIRMADOS')}"
+                                             update="formTripulacionPanel"
+                                             styleClass="scope-btn ui-button-sm #{empty misTurnosBean.fechaDiaFiltro and misTurnosBean.filtroScope eq 'CONFIRMADOS' ? 'active-scope' : ''}" />
+                            <p:commandButton value="Rechazados (#{misTurnosBean.kpis.turnosRechazados})"
+                                             action="#{misTurnosBean.cambiarScope('RECHAZADOS')}"
+                                             update="formTripulacionPanel"
+                                             styleClass="scope-btn ui-button-sm #{empty misTurnosBean.fechaDiaFiltro and misTurnosBean.filtroScope eq 'RECHAZADOS' ? 'active-scope' : ''}" />
+                            <p:commandButton value="Todos (#{misTurnosBean.kpis.totalTurnos})"
+                                             action="#{misTurnosBean.cambiarScope('TODOS')}"
+                                             update="formTripulacionPanel"
+                                             styleClass="scope-btn ui-button-sm #{empty misTurnosBean.fechaDiaFiltro and misTurnosBean.filtroScope eq 'TODOS' ? 'active-scope' : ''}" />
+                        </div>
+
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <p:inputText type="date"
+                                         value="#{misTurnosBean.fechaDiaFiltro}"
+                                         title="Filtrar por fecha"
+                                         styleClass="date-input-dark">
+                                <p:ajax event="change" listener="#{misTurnosBean.aplicarFiltros}" update="formTripulacionPanel" />
+                            </p:inputText>
+                            <p:commandButton value="Quitar fecha"
+                                             icon="pi pi-times"
+                                             rendered="#{not empty misTurnosBean.fechaDiaFiltro}"
+                                             action="#{misTurnosBean.limpiarDiaFiltro}"
+                                             update="formTripulacionPanel"
+                                             styleClass="btn-sky-outline ui-button-sm" />
+                            <p:inputText value="#{misTurnosBean.filtroTexto}"
+                                         placeholder="Buscar turno, vuelo, IATA o comandante..."
+                                         styleClass="search-input-dark">
+                                <p:ajax event="keyup" delay="250" listener="#{misTurnosBean.aplicarFiltros}" update="tablaTurnosFiltrados" />
+                            </p:inputText>
+                        </div>
+                    </div>
+
+                    <p:dataTable id="tablaTurnosFiltrados"
+                                 value="#{misTurnosBean.turnosFiltrados}"
+                                 var="t"
                                  rows="10"
+                                 paginator="true"
                                  paginatorPosition="bottom"
                                  paginatorAlwaysVisible="false"
-                                 emptyMessage="No tienes turnos asignados actualmente.">
+                                 emptyMessage="No hay turnos que coincidan con el filtro seleccionado."
+                                 styleClass="skyway-table">
 
-                        <p:column headerText="ID Turno" style="width: 90px; text-align: center;">
-                            <span style="font-weight: 600; color: var(--text-dim);">##{turnoTrip.idTurnoTripulacion}</span>
+                        <p:column headerText="Turno" style="width: 85px;">
+                            <strong style="color: var(--aviation-cyan);">##{t.idTurnoTripulacion}</strong>
+                            <div style="font-size: 11px; color: var(--text-dim);">#{t.tipoServicio}</div>
                         </p:column>
 
-                        <p:column headerText="Tipo de Servicio">
-                            <span style="font-weight: 500;">#{turnoTrip.turno1.tipoTurno.nombre}</span>
-                        </p:column>
-
-                        <p:column headerText="Inicio de Servicio">
-                            <h:outputText value="#{turnoTrip.turno1.horaInicio}">
-                                <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/Santiago"/>
-                            </h:outputText>
-                        </p:column>
-
-                        <p:column headerText="Fin de Servicio">
-                            <h:outputText value="#{turnoTrip.turno1.horaFin}">
-                                <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/Santiago"/>
-                            </h:outputText>
-                        </p:column>
-
-                        <p:column headerText="Duración" style="width: 100px; text-align: center;">
-                            <span style="font-weight: 500;">#{turnoTrip.turno1.duracionHoras} hrs</span>
-                        </p:column>
-
-                        <p:column headerText="Estado" style="width: 140px; text-align: center;">
-                            <h:panelGroup rendered="#{turnoTrip.estado eq 'CONFIRMADO'}">
-                                <span class="badge-confirmado"><i class="pi pi-check me-1"></i>CONFIRMADO</span>
-                            </h:panelGroup>
-                            <h:panelGroup rendered="#{empty turnoTrip.estado or turnoTrip.estado eq 'PENDIENTE'}">
-                                <span class="badge-pendiente"><i class="pi pi-clock me-1"></i>PENDIENTE</span>
-                            </h:panelGroup>
-                            <h:panelGroup rendered="#{turnoTrip.estado eq 'RECHAZADO'}">
-                                <span class="badge-rechazado" title="Motivo: #{turnoTrip.motivoRechazo}"><i class="pi pi-times me-1"></i>RECHAZADO</span>
-                            </h:panelGroup>
-                        </p:column>
-
-                        <!-- ACCIONES CORPORATIVAS CON SEMÁFORO PROFESIONAL -->
-                        <p:column headerText="Acciones Operativas" styleClass="text-center" style="width: 270px;">
-                            <div class="d-flex justify-content-center align-items-center gap-2">
-                                <p:commandButton icon="pi pi-search"
-                                                 title="Ver Detalles"
-                                                 styleClass="btn-skyway-search ui-button-sm"
-                                                 action="#{misTurnosBean.verDetallesTurno(turnoTrip)}"
-                                                 update=":dlgDetalleTurno"
-                                                 oncomplete="PF('detalleDialog').show();"
-                                                 process="@this" />
-
-                                <h:panelGroup rendered="#{empty turnoTrip.estado or turnoTrip.estado eq 'PENDIENTE'}">
-                                    <p:commandButton value="Aceptar"
-                                                     icon="pi pi-check"
-                                                     styleClass="btn-skyway-accept"
-                                                     action="#{misTurnosBean.confirmarAsistencia(turnoTrip)}"
-                                                     update=":growlTurnos misTurnosForm"
-                                                     process="@this" />
-
-                                    <p:commandButton value="Rechazar"
-                                                     icon="pi pi-times"
-                                                     styleClass="btn-skyway-reject"
-                                                     action="#{misTurnosBean.prepararRechazo(turnoTrip)}"
-                                                     update=":dlgRechazo"
-                                                     oncomplete="PF('rechazoDialog').show();"
-                                                     process="@this" />
-                                </h:panelGroup>
-
-                                <h:panelGroup rendered="#{turnoTrip.estado eq 'CONFIRMADO'}">
-                                    <span style="color: #10b981; font-weight: 600; font-size: 11px;">
-                                        <i class="pi pi-check-circle me-1"></i>Asistencia Confirmada
-                                    </span>
-                                </h:panelGroup>
-
-                                <h:panelGroup rendered="#{turnoTrip.estado eq 'RECHAZADO'}">
-                                    <span style="color: #ef4444; font-weight: 600; font-size: 11px;">
-                                        <i class="pi pi-times-circle me-1"></i>Servicio Rechazado
-                                    </span>
-                                </h:panelGroup>
+                        <p:column headerText="Fecha y Horario">
+                            <strong>
+                                <h:outputText value="#{t.horaInicio}"><f:convertDateTime pattern="dd/MM/yyyy" timeZone="America/Santiago"/></h:outputText>
+                            </strong>
+                            <div style="font-size: 11px; color: var(--aviation-cyan);">
+                                <h:outputText value="#{t.horaInicio}"><f:convertDateTime pattern="hh:mm a" timeZone="America/Santiago" locale="en_US"/></h:outputText>
+                                →
+                                <h:outputText value="#{t.horaFin}"><f:convertDateTime pattern="hh:mm a" timeZone="America/Santiago" locale="en_US"/></h:outputText>
+                                (#{t.duracionTexto})
                             </div>
                         </p:column>
 
+                        <p:column headerText="Vuelo &amp; Ruta">
+                            <strong>#{t.numeroVuelo}</strong>
+                            <h:panelGroup rendered="#{not empty t.idVuelo}" layout="block" style="font-size: 11px; color: var(--text-dim);">
+                                #{t.origenIata} ➔ #{t.destinoIata} · #{t.puertaTerminalTexto}
+                            </h:panelGroup>
+                        </p:column>
+
+                        <p:column headerText="Aeronave &amp; Comandante">
+                            <div>#{t.avionMatricula} · #{t.modeloCompleto}</div>
+                            <div style="font-size: 11px; color: var(--text-dim);">Cmdte: #{t.pilotoNombre}</div>
+                        </p:column>
+
+                        <p:column headerText="Cabina / Pax">
+                            <h:panelGroup rendered="#{not empty t.idVuelo}">
+                                <div>#{t.pasajerosReservados}/#{t.avionCapacidadPax} pax (#{t.ocupacionPct}%)</div>
+                                <div style="font-size: 11px; color: var(--text-dim);">Chk: #{t.pasajerosCheckin} · Emerg: #{t.pasajerosSalidaEmergencia}</div>
+                            </h:panelGroup>
+                            <h:outputText value="Servicio en tierra" rendered="#{empty t.idVuelo}" style="color: var(--text-dim);" />
+                        </p:column>
+
+                        <p:column headerText="Descanso / Jornada">
+                            <h:panelGroup rendered="#{t.intervaloPrevio ne null}">
+                                <span class="badge-crew badge-#{t.intervaloPrevio.severidad}"
+                                      title="#{t.intervaloPrevio.explicacionCorta}">#{t.intervaloPrevio.etiqueta}</span>
+                                <div style="font-size: 11.5px; color: var(--glow-white); margin-top: 4px; font-weight: 600;">
+                                    #{t.intervaloPrevio.tiempoDesdeAnteriorTexto}
+                                    <h:panelGroup rendered="#{not empty t.intervaloPrevio.codigoPrevio}">
+                                        <span style="color: var(--text-dim); font-weight: 400;"> libre tras #{t.intervaloPrevio.codigoPrevio}</span>
+                                    </h:panelGroup>
+                                </div>
+                                <div style="font-size: 11px; margin-top: 2px; color: #{t.intervaloPrevio.severidad eq 'danger' or t.intervaloPrevio.sobreEsfuerzo ? '#fca5a5' : (t.intervaloPrevio.severidad eq 'warning' ? '#fde68a' : (t.intervaloPrevio.severidad eq 'success' ? '#6ee7b7' : 'var(--text-dim)'))};">
+                                    #{t.intervaloPrevio.explicacionCorta}
+                                </div>
+                                <div style="font-size: 10.5px; color: #{t.intervaloPrevio.sobreEsfuerzo ? '#fca5a5' : 'var(--text-dim)'}; margin-top: 1px;">
+                                    Acum. sin 8h: #{t.intervaloPrevio.trabajoAcumuladoTexto} · Jornada: #{t.intervaloPrevio.amplitudJornadaTexto} / 12h
+                                </div>
+                            </h:panelGroup>
+                        </p:column>
+                        <p:column headerText="Estado" style="width: 130px;">
+                            <span class="badge-crew badge-#{t.estadoRespuestaSeveridad}">#{t.estadoRespuesta}</span>
+                            <h:panelGroup rendered="#{not empty t.fechaRespuesta}" layout="block" style="font-size: 10.5px; color: var(--text-dim); margin-top: 3px;">
+                                <h:outputText value="#{t.fechaRespuesta}"><f:convertDateTime pattern="dd/MM hh:mm a" timeZone="America/Santiago" locale="en_US"/></h:outputText>
+                            </h:panelGroup>
+                        </p:column>
+
+                        <p:column headerText="Acciones Operativas" style="width: 265px; text-align: right;">
+                            <div style="display: flex; justify-content: flex-end; gap: 6px; flex-wrap: wrap;">
+                                <p:commandButton value="Briefing"
+                                                 icon="pi pi-search"
+                                                 action="#{misTurnosBean.abrirBriefing(t)}"
+                                                 update=":dlgBriefingTurno :growlTurnos"
+                                                 oncomplete="PF('briefingTurnoDialog').show();"
+                                                 styleClass="btn-sky-outline ui-button-sm" />
+                                <p:commandButton value="Aceptar"
+                                                 icon="pi pi-check"
+                                                 rendered="#{t.esPendiente}"
+                                                 action="#{misTurnosBean.confirmarAsistenciaPorId(t.idTurnoTripulacion)}"
+                                                 update=":growlTurnos formTripulacionPanel"
+                                                 styleClass="btn-skyway-accept ui-button-sm" />
+                                <p:commandButton value="Rechazar"
+                                                 icon="pi pi-times"
+                                                 rendered="#{t.esPendiente}"
+                                                 action="#{misTurnosBean.prepararRechazoPorResumen(t)}"
+                                                 update=":dlgRechazo"
+                                                 oncomplete="PF('rechazoDialog').show();"
+                                                 styleClass="btn-skyway-reject ui-button-sm" />
+                            </div>
+                        </p:column>
                     </p:dataTable>
-                </h:form>
-            </div>
+                </h:panelGroup>
+
+                <!-- TAB 2: ALERTAS OPERACIONALES -->
+                <h:panelGroup rendered="#{misTurnosBean.tabActiva eq 'ALERTAS'}" layout="block" styleClass="skyway-card">
+                    <div class="card-header-bar">
+                        <div class="card-header-title">
+                            <i class="pi pi-bell"></i> Bandeja de Notificaciones de Tripulación
+                        </div>
+                        <p:commandButton value="Marcar todas como leídas"
+                                         icon="pi pi-check-square"
+                                         rendered="#{misTurnosBean.notificacionesNoLeidas gt 0}"
+                                         action="#{misTurnosBean.marcarTodasLeidas}"
+                                         update="formTripulacionPanel :growlTurnos"
+                                         styleClass="btn-sky-outline ui-button-sm" />
+                    </div>
+
+                    <h:panelGroup rendered="#{empty misTurnosBean.notificaciones}" layout="block">
+                        <p style="color: var(--text-dim); font-size: 13px; margin: 0;">
+                            No registras notificaciones operacionales en la tabla Notificacion.
+                        </p>
+                    </h:panelGroup>
+
+                    <ui:repeat value="#{misTurnosBean.notificaciones}" var="n">
+                        <div class="notif-item #{n.leido ? '' : 'unread'}">
+                            <div style="flex: 1; min-width: 240px;">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap;">
+                                    <strong style="color: var(--glow-white); font-size: 14px;">#{n.titulo}</strong>
+                                    <span class="badge-crew #{n.leido ? 'badge-secondary' : 'badge-info'}">#{n.leido ? 'Leída' : 'Nueva'}</span>
+                                    <span class="badge-crew badge-secondary">#{n.canal}</span>
+                                </div>
+                                <div style="color: var(--text-dim); font-size: 13px; line-height: 1.45;">#{n.mensaje}</div>
+                                <div style="color: #64748b; font-size: 11px; margin-top: 6px;">
+                                    <h:outputText value="#{n.fecha}"><f:convertDateTime pattern="dd/MM/yyyy hh:mm a" timeZone="America/Santiago" locale="en_US"/></h:outputText>
+                                </div>
+                            </div>
+                            <p:commandButton value="Marcar leída"
+                                             icon="pi pi-check"
+                                             rendered="#{not n.leido}"
+                                             action="#{misTurnosBean.marcarNotificacionLeida(n.idNotificacion)}"
+                                             update="formTripulacionPanel :growlTurnos"
+                                             styleClass="btn-sky-outline ui-button-sm" />
+                        </div>
+                    </ui:repeat>
+                </h:panelGroup>
+
+                <!-- TAB 3: EXPEDIENTE DEL TRIPULANTE -->
+                <h:panelGroup rendered="#{misTurnosBean.tabActiva eq 'EXPEDIENTE'}" layout="block" styleClass="skyway-card">
+                    <div class="card-header-bar">
+                        <div class="card-header-title">
+                            <i class="pi pi-id-card"></i> Expediente del Tripulante de Cabina
+                        </div>
+                        <a href="#{request.contextPath}/perfil/index.xhtml" class="btn btn-sm btn-primary" style="font-size: 12px;">
+                            <i class="pi pi-user-edit"></i> Modificar Contacto o Contraseña
+                        </a>
+                    </div>
+
+                    <div class="crew-info-grid">
+                        <div class="info-box">
+                            <span class="info-label"><i class="pi pi-user"></i> Nombre Completo</span>
+                            <div class="info-value">#{misTurnosBean.usuario.nombre} #{misTurnosBean.usuario.apellido}</div>
+                        </div>
+                        <div class="info-box">
+                            <span class="info-label"><i class="pi pi-briefcase"></i> Cargo Asignado</span>
+                            <div class="info-value" style="color: var(--aviation-cyan); font-weight: 700;">
+                                #{empty misTurnosBean.tripulacion.cargo ? 'Tripulante de Cabina' : misTurnosBean.tripulacion.cargo}
+                            </div>
+                        </div>
+                        <div class="info-box">
+                            <span class="info-label"><i class="pi pi-shield"></i> RUT / Identificación</span>
+                            <div class="info-value">#{misTurnosBean.usuario.rut}</div>
+                        </div>
+                        <div class="info-box">
+                            <span class="info-label"><i class="pi pi-calendar"></i> Fecha de Ingreso</span>
+                            <div class="info-value">
+                                <h:outputText value="#{misTurnosBean.tripulacion.fechaIngreso}">
+                                    <f:convertDateTime pattern="dd/MM/yyyy" timeZone="America/Santiago"/>
+                                </h:outputText>
+                            </div>
+                        </div>
+                        <div class="info-box">
+                            <span class="info-label"><i class="pi pi-envelope"></i> Correo Electrónico</span>
+                            <div class="info-value">#{misTurnosBean.usuario.correoElectronico}</div>
+                        </div>
+                        <div class="info-box">
+                            <span class="info-label"><i class="pi pi-phone"></i> Teléfono de Contacto</span>
+                            <div class="info-value">#{misTurnosBean.usuario.telefono}</div>
+                        </div>
+                    </div>
+                </h:panelGroup>
+
+            </h:form>
 
             <!-- MODAL RECHAZO CON MOTIVO -->
             <p:dialog id="dlgRechazo"
@@ -400,93 +1532,275 @@
                       closable="true"
                       showEffect="fade"
                       hideEffect="fade"
-                      width="460"
+                      width="470"
                       responsive="true"
                       styleClass="skyway-dialog">
 
                 <h:form id="rechazoForm">
                     <p style="color: var(--text-dim); font-size: 12px; margin-bottom: 14px;">
-                        Al rechazar el servicio, debes fundamentar el motivo conforme a la normativa operacional. La administración de operaciones procederá con la reasignación de la vacante.
+                        Al rechazar el servicio, debes fundamentar el motivo conforme a la normativa operacional para su reasignación.
                     </p>
 
                     <div style="background-color: var(--deep-space); padding: 14px; border-radius: 6px; border: 1px solid var(--slate-glass); margin-bottom: 14px;">
                         <span style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); display: block; margin-bottom: 4px;">Turno Asignado</span>
-                        <span style="color: var(--glow-white); font-weight: 600;">##{misTurnosBean.turnoARechazar.idTurnoTripulacion} — #{misTurnosBean.turnoARechazar.turno1.tipoTurno.nombre}</span>
+                        <span style="color: var(--glow-white); font-weight: 600;">
+                            <h:outputText value="##{misTurnosBean.resumenARechazar.idTurnoTripulacion} — #{misTurnosBean.resumenARechazar.tipoServicio} (#{misTurnosBean.resumenARechazar.numeroVuelo})"
+                                          rendered="#{not empty misTurnosBean.resumenARechazar}" />
+                            <h:outputText value="##{misTurnosBean.turnoARechazar.idTurnoTripulacion} — #{misTurnosBean.turnoARechazar.turno1.tipoTurno.nombre}"
+                                          rendered="#{empty misTurnosBean.resumenARechazar and not empty misTurnosBean.turnoARechazar}" />
+                        </span>
                     </div>
 
                     <div class="mb-3">
                         <label style="color: var(--glow-white); font-size: 12px; font-weight: 600; display: block; margin-bottom: 6px;">Motivo Justificado de Rechazo *</label>
-                        <p:inputTextarea value="#{misTurnosBean.motivoRechazoForm}" rows="3" style="width: 100%;"
+                        <p:inputTextarea value="#{misTurnosBean.motivoRechazoForm}" rows="3" styleClass="textarea-dark"
                                          placeholder="Ej: Licencia médica, descanso obligatorio reglamentario, fuerza mayor..." required="true" />
                     </div>
 
                     <div class="d-flex justify-content-end gap-2 mt-3">
-                        <p:commandButton value="Cancelar" type="button" onclick="PF('rechazoDialog').hide()" styleClass="btn-action-minimal" />
+                        <button type="button" onclick="PF('rechazoDialog').hide()" class="btn btn-sm btn-outline-light" style="border-color: var(--border-ui);">Cancelar</button>
                         <p:commandButton value="Confirmar Rechazo" icon="pi pi-times"
                                          action="#{misTurnosBean.ejecutarRechazo}"
-                                         update=":growlTurnos :misTurnosForm :dlgRechazo"
+                                         update=":growlTurnos :formTripulacionPanel :dlgRechazo"
                                          oncomplete="if (!args.validationFailed) PF('rechazoDialog').hide();"
-                                         styleClass="btn-skyway-reject" />
+                                         styleClass="btn-skyway-reject ui-button-sm" />
                     </div>
                 </h:form>
             </p:dialog>
 
-            <!-- MODAL DETALLES -->
-            <p:dialog id="dlgDetalleTurno"
-                      header="Detalles de Asignación de Turno"
-                      widgetVar="detalleDialog"
+            <!-- MODAL BRIEFING COMPLETO DE CABINA -->
+            <p:dialog id="dlgBriefingTurno"
+                      header="Briefing Operacional de Cabina y Servicio"
+                      widgetVar="briefingTurnoDialog"
                       modal="true"
                       closable="true"
                       showEffect="fade"
                       hideEffect="fade"
-                      width="500"
+                      width="940"
                       responsive="true"
                       styleClass="skyway-dialog">
 
-                <h:panelGroup rendered="#{not empty misTurnosBean.selectedTurno}" layout="block">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; background-color: var(--deep-space); padding: 18px; border-radius: 6px; border: 1px solid var(--slate-glass);">
-                        <div>
-                            <span style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); display: block; margin-bottom: 4px;">Código Turno</span>
-                            <span style="color: var(--glow-white); font-weight: 600;">##{misTurnosBean.selectedTurno.idTurnoTripulacion}</span>
+                <h:form id="formBriefingTurno">
+                    <h:panelGroup rendered="#{not empty misTurnosBean.briefingSeleccionado}" layout="block">
+
+                        <div class="mini-box" style="margin-bottom: 14px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                                <div>
+                                    <div style="font-size: 18px; font-weight: 800; color: var(--glow-white);">
+                                        Turno ##{misTurnosBean.briefingSeleccionado.resumen.idTurnoTripulacion} · #{misTurnosBean.briefingSeleccionado.resumen.numeroVuelo}
+                                        <h:outputText value=" (#{misTurnosBean.briefingSeleccionado.resumen.origenIata} ➔ #{misTurnosBean.briefingSeleccionado.resumen.destinoIata})"
+                                                      rendered="#{not empty misTurnosBean.briefingSeleccionado.resumen.idVuelo}" />
+                                    </div>
+                                    <div style="font-size: 12px; color: var(--text-dim); margin-top: 2px;">
+                                        #{misTurnosBean.briefingSeleccionado.resumen.tipoServicio} · #{misTurnosBean.briefingSeleccionado.resumen.duracionTexto}
+                                        · Cmdte: #{misTurnosBean.briefingSeleccionado.resumen.pilotoNombre}
+                                        · #{misTurnosBean.briefingSeleccionado.resumen.avionMatricula} (#{misTurnosBean.briefingSeleccionado.resumen.modeloCompleto})
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <span class="badge-crew badge-#{misTurnosBean.briefingSeleccionado.resumen.estadoRespuestaSeveridad}">
+                                        #{misTurnosBean.briefingSeleccionado.resumen.estadoRespuesta}
+                                    </span>
+                                    <span class="badge-crew badge-info">#{misTurnosBean.briefingSeleccionado.resumen.puertaTerminalTexto}</span>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <span style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); display: block; margin-bottom: 4px;">Cargo</span>
-                            <span style="color: var(--glow-white); font-weight: 500;">#{misTurnosBean.selectedTurno.tripulacion1.cargo}</span>
+
+                        <div class="workspace-tabs" style="margin-bottom: 14px;">
+                            <p:commandButton value="Cabina &amp; Seguridad"
+                                             action="#{misTurnosBean.cambiarBriefingTab('RESUMEN')}"
+                                             update="formBriefingTurno"
+                                             styleClass="tab-pill-btn #{misTurnosBean.briefingTabActiva eq 'RESUMEN' ? 'active-tab' : ''}" />
+                            <p:commandButton value="Tramos &amp; Puertas (#{misTurnosBean.briefingSeleccionado.tramos.size()})"
+                                             action="#{misTurnosBean.cambiarBriefingTab('TRAMOS')}"
+                                             update="formBriefingTurno"
+                                             styleClass="tab-pill-btn #{misTurnosBean.briefingTabActiva eq 'TRAMOS' ? 'active-tab' : ''}" />
+                            <p:commandButton value="Compañeros (#{misTurnosBean.briefingSeleccionado.companeros.size()})"
+                                             action="#{misTurnosBean.cambiarBriefingTab('COMPANEROS')}"
+                                             update="formBriefingTurno"
+                                             styleClass="tab-pill-btn #{misTurnosBean.briefingTabActiva eq 'COMPANEROS' ? 'active-tab' : ''}" />
+                            <p:commandButton value="Manifiesto Cabina (#{misTurnosBean.briefingSeleccionado.manifiestoCabina.size()})"
+                                             action="#{misTurnosBean.cambiarBriefingTab('MANIFIESTO')}"
+                                             update="formBriefingTurno"
+                                             styleClass="tab-pill-btn #{misTurnosBean.briefingTabActiva eq 'MANIFIESTO' ? 'active-tab' : ''}" />
                         </div>
-                        <div>
-                            <span style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); display: block; margin-bottom: 4px;">Servicio</span>
-                            <span style="color: var(--glow-white); font-weight: 500;">#{misTurnosBean.selectedTurno.turno1.tipoTurno.nombre}</span>
-                        </div>
-                        <div>
-                            <span style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); display: block; margin-bottom: 4px;">Duración</span>
-                            <span style="color: var(--glow-white); font-weight: 500;">#{misTurnosBean.selectedTurno.turno1.duracionHoras} hrs</span>
-                        </div>
-                        <div>
-                            <span style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); display: block; margin-bottom: 4px;">Estado</span>
-                            <span style="color: var(--glow-white); font-weight: 600;">#{misTurnosBean.selectedTurno.estado}</span>
-                        </div>
-                        <div>
-                            <span style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); display: block; margin-bottom: 4px;">Fecha Respuesta</span>
-                            <span style="color: var(--glow-white); font-weight: 500;">
-                                <h:outputText value="#{misTurnosBean.selectedTurno.fechaRespuesta}" rendered="#{not empty misTurnosBean.selectedTurno.fechaRespuesta}">
-                                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/Santiago"/>
-                                </h:outputText>
-                                <h:outputText value="Pendiente" rendered="#{empty misTurnosBean.selectedTurno.fechaRespuesta}" />
-                            </span>
-                        </div>
-                        <h:panelGroup rendered="#{not empty misTurnosBean.selectedTurno.motivoRechazo}" layout="block" style="grid-column: 1 / -1;">
-                            <span style="font-size: 11px; text-transform: uppercase; color: #f87171; display: block; margin-bottom: 4px;">Motivo de Rechazo</span>
-                            <span style="color: #fca5a5; font-size: 13px;">#{misTurnosBean.selectedTurno.motivoRechazo}</span>
+
+                        <!-- TAB 1: CABINA, COMANDANTE, SALIDAS DE EMERGENCIA Y CLASES -->
+                        <h:panelGroup rendered="#{misTurnosBean.briefingTabActiva eq 'RESUMEN'}" layout="block">
+                            <div class="crew-info-grid" style="margin-bottom: 14px;">
+                                <div class="info-box">
+                                    <span class="info-label">Comandante al Mando</span>
+                                    <div class="info-value">
+                                        #{misTurnosBean.briefingSeleccionado.resumen.pilotoNombre}
+                                        <h:outputText value=" · Lic. #{misTurnosBean.briefingSeleccionado.resumen.pilotoLicencia}" rendered="#{not empty misTurnosBean.briefingSeleccionado.resumen.pilotoLicencia}" />
+                                    </div>
+                                </div>
+                                <div class="info-box">
+                                    <span class="info-label">Pasajeros &amp; Check-in</span>
+                                    <div class="info-value">
+                                        #{misTurnosBean.briefingSeleccionado.resumen.pasajerosReservados} / #{misTurnosBean.briefingSeleccionado.resumen.avionCapacidadPax} (#{misTurnosBean.briefingSeleccionado.resumen.ocupacionPct}%) · Check-in: #{misTurnosBean.briefingSeleccionado.resumen.pasajerosCheckin}
+                                    </div>
+                                </div>
+                                <div class="info-box">
+                                    <span class="info-label">Salidas de Emergencia</span>
+                                    <div class="info-value" style="color: var(--aviation-cyan);">
+                                        #{misTurnosBean.briefingSeleccionado.resumen.pasajerosSalidaEmergencia} pasajero(s) en fila de emergencia
+                                    </div>
+                                </div>
+                                <div class="info-box">
+                                    <span class="info-label">Equipaje Reservas Pax</span>
+                                    <div class="info-value">
+                                        #{misTurnosBean.briefingSeleccionado.resumen.piezasEquipaje} piezas · #{misTurnosBean.briefingSeleccionado.resumen.pesoEquipajeKg} kg
+                                    </div>
+                                </div>
+                                <h:panelGroup rendered="#{misTurnosBean.briefingSeleccionado.resumen.intervaloPrevio ne null}" layout="block" styleClass="info-box" style="grid-column: 1 / -1;">
+                                    <span class="info-label">Descanso Previo &amp; Carga de Jornada Continua</span>
+                                    <div class="info-value" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                        <span class="badge-crew badge-#{misTurnosBean.briefingSeleccionado.resumen.intervaloPrevio.severidad}">
+                                            #{misTurnosBean.briefingSeleccionado.resumen.intervaloPrevio.etiqueta}
+                                        </span>
+                                        <span>
+                                            #{misTurnosBean.briefingSeleccionado.resumen.intervaloPrevio.tiempoDesdeAnteriorTexto}
+                                            <h:panelGroup rendered="#{not empty misTurnosBean.briefingSeleccionado.resumen.intervaloPrevio.codigoPrevio}">
+                                                libre tras #{misTurnosBean.briefingSeleccionado.resumen.intervaloPrevio.codigoPrevio}
+                                            </h:panelGroup>
+                                        </span>
+                                        <span style="color: #{misTurnosBean.briefingSeleccionado.resumen.intervaloPrevio.severidad eq 'danger' or misTurnosBean.briefingSeleccionado.resumen.intervaloPrevio.sobreEsfuerzo ? '#fca5a5' : (misTurnosBean.briefingSeleccionado.resumen.intervaloPrevio.severidad eq 'warning' ? '#fde68a' : 'var(--text-dim)')}; font-weight: 500;">
+                                            · #{misTurnosBean.briefingSeleccionado.resumen.intervaloPrevio.explicacionCorta} · Acum. sin 8h: #{misTurnosBean.briefingSeleccionado.resumen.intervaloPrevio.trabajoAcumuladoTexto} · Jornada total: #{misTurnosBean.briefingSeleccionado.resumen.intervaloPrevio.amplitudJornadaTexto} / 12h
+                                        </span>
+                                    </div>
+                                </h:panelGroup>
+                                <h:panelGroup rendered="#{not empty misTurnosBean.briefingSeleccionado.resumen.motivoRechazo}" layout="block" styleClass="info-box" style="grid-column: 1 / -1;">
+                                    <span class="info-label" style="color: #fca5a5;">Motivo de Rechazo Registrado</span>
+                                    <div class="info-value" style="color: #fca5a5;">#{misTurnosBean.briefingSeleccionado.resumen.motivoRechazo}</div>
+                                </h:panelGroup>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px;">
+                                <div class="mini-box">
+                                    <span class="mini-label">Servicio de Cabina por Clase</span>
+                                    <p:dataTable value="#{misTurnosBean.briefingSeleccionado.cabinaPorClase}" var="cc"
+                                                 emptyMessage="Sin configuración de clases registrada."
+                                                 styleClass="skyway-table">
+                                        <p:column headerText="Clase">#{cc.claseNombre}</p:column>
+                                        <p:column headerText="Cap.">#{cc.capacidadClase}</p:column>
+                                        <p:column headerText="Ocup.">#{cc.asientosOcupados}</p:column>
+                                        <p:column headerText="Chk-in">#{cc.checkinsCompletados}</p:column>
+                                        <p:column headerText="%">#{cc.ocupacionPct}%</p:column>
+                                    </p:dataTable>
+                                </div>
+
+                                <div class="mini-box">
+                                    <span class="mini-label">Equipaje por Tipo</span>
+                                    <p:dataTable value="#{misTurnosBean.briefingSeleccionado.equipajePorTipo}" var="bag"
+                                                 emptyMessage="Sin equipaje registrado para este vuelo."
+                                                 styleClass="skyway-table">
+                                        <p:column headerText="Tipo">#{bag.tipoNombre}</p:column>
+                                        <p:column headerText="Piezas">#{bag.piezas}</p:column>
+                                        <p:column headerText="Peso">#{bag.pesoTotalKg} kg</p:column>
+                                    </p:dataTable>
+                                </div>
+                            </div>
                         </h:panelGroup>
-                    </div>
-                </h:panelGroup>
+
+                        <!-- TAB 2: TRAMOS Y PUERTAS -->
+                        <h:panelGroup rendered="#{misTurnosBean.briefingTabActiva eq 'TRAMOS'}" layout="block">
+                            <p:dataTable value="#{misTurnosBean.briefingSeleccionado.tramos}" var="seg"
+                                         emptyMessage="Turno sin vuelo/segmentos asociados."
+                                         styleClass="skyway-table">
+                                <p:column headerText="#" style="width: 42px;">#{seg.ordenSegmento}</p:column>
+                                <p:column headerText="Origen">
+                                    <strong>#{seg.origenIata}</strong> · #{seg.origenCiudad}
+                                    <div style="font-size: 11px; color: var(--text-dim);">#{seg.origenAeropuerto}</div>
+                                </p:column>
+                                <p:column headerText="Destino">
+                                    <strong>#{seg.destinoIata}</strong> · #{seg.destinoCiudad}
+                                    <div style="font-size: 11px; color: var(--text-dim);">#{seg.destinoAeropuerto}</div>
+                                </p:column>
+                                <p:column headerText="Salida">
+                                    <h:outputText value="#{seg.horaSalida}"><f:convertDateTime pattern="dd/MM hh:mm a" timeZone="America/Santiago" locale="en_US"/></h:outputText>
+                                </p:column>
+                                <p:column headerText="Llegada">
+                                    <h:outputText value="#{seg.horaLlegada}"><f:convertDateTime pattern="dd/MM hh:mm a" timeZone="America/Santiago" locale="en_US"/></h:outputText>
+                                </p:column>
+                                <p:column headerText="Puerta / Terminal">
+                                    <h:outputText value="Sin asignar" rendered="#{empty seg.codigoPuerta}" style="color: var(--text-dim);" />
+                                    <h:panelGroup rendered="#{not empty seg.codigoPuerta}">
+                                        Puerta #{seg.codigoPuerta}<h:outputText value=" (#{seg.terminal})" rendered="#{not empty seg.terminal}" />
+                                    </h:panelGroup>
+                                </p:column>
+                            </p:dataTable>
+                        </h:panelGroup>
+
+                        <!-- TAB 3: COMPAÑEROS DE TRIPULACIÓN -->
+                        <h:panelGroup rendered="#{misTurnosBean.briefingTabActiva eq 'COMPANEROS'}" layout="block">
+                            <p:dataTable value="#{misTurnosBean.briefingSeleccionado.companeros}" var="comp"
+                                         emptyMessage="Sin compañeros asignados en este turno/vuelo."
+                                         styleClass="skyway-table">
+                                <p:column headerText="Tripulante">
+                                    <strong>#{comp.nombreCompleto}</strong>
+                                    <h:panelGroup rendered="#{comp.esUsuarioActual}">
+                                        <span class="badge-crew badge-info" style="margin-left: 6px;">Tú</span>
+                                    </h:panelGroup>
+                                    <div style="font-size: 11px; color: var(--text-dim);">#{comp.rut}</div>
+                                </p:column>
+                                <p:column headerText="Cargo">#{comp.cargo}</p:column>
+                                <p:column headerText="Servicio">#{comp.tipoTurno}</p:column>
+                                <p:column headerText="Contacto">
+                                    #{comp.telefono}
+                                    <div style="font-size: 11px; color: var(--text-dim);">#{comp.correoElectronico}</div>
+                                </p:column>
+                                <p:column headerText="Confirmación">
+                                    <span class="badge-crew #{comp.estadoConfirmacion eq 'CONFIRMADO' ? 'badge-success' : (comp.estadoConfirmacion eq 'RECHAZADO' ? 'badge-danger' : 'badge-warning')}">
+                                        #{comp.estadoConfirmacion}
+                                    </span>
+                                </p:column>
+                            </p:dataTable>
+                        </h:panelGroup>
+
+                        <!-- TAB 4: MANIFIESTO DE CABINA (CON FILAS DE EMERGENCIA PRIORIZADAS) -->
+                        <h:panelGroup rendered="#{misTurnosBean.briefingTabActiva eq 'MANIFIESTO'}" layout="block">
+                            <p:dataTable value="#{misTurnosBean.briefingSeleccionado.manifiestoCabina}" var="px"
+                                         rows="8" paginator="true" paginatorPosition="bottom"
+                                         emptyMessage="No hay pasajeros asignados en cabina para este servicio."
+                                         styleClass="skyway-table">
+                                <p:column headerText="Asiento" style="width: 110px;">
+                                    <strong style="color: var(--aviation-cyan);">#{px.numeroAsiento}</strong>
+                                    <h:panelGroup rendered="#{px.salidaEmergencia}">
+                                        <span class="badge-crew badge-warning" style="margin-left: 4px;">EMERG</span>
+                                    </h:panelGroup>
+                                </p:column>
+                                <p:column headerText="Clase">#{px.claseAsiento}</p:column>
+                                <p:column headerText="Pasajero">
+                                    <strong>#{px.nombreCompleto}</strong>
+                                    <div style="font-size: 11px; color: var(--text-dim);">#{px.rut}</div>
+                                </p:column>
+                                <p:column headerText="Reserva">#{px.codigoReserva}</p:column>
+                                <p:column headerText="Check-in">
+                                    <span class="badge-crew #{px.checkinEstado eq 'COMPLETADO' ? 'badge-success' : 'badge-secondary'}">
+                                        #{px.checkinEstado}
+                                    </span>
+                                    <div style="font-size: 11px; color: var(--text-dim);">#{px.checkinMetodo}</div>
+                                </p:column>
+                                <p:column headerText="Equipaje">
+                                    #{px.piezasEquipaje} pz · #{px.pesoEquipajeKg} kg
+                                </p:column>
+                            </p:dataTable>
+                        </h:panelGroup>
+
+                    </h:panelGroup>
+                </h:form>
 
                 <f:facet name="footer">
-                    <button type="button" onclick="PF('detalleDialog').hide()" class="btn-action-minimal">Cerrar</button>
+                    <button type="button"
+                            class="btn btn-sm btn-outline-light"
+                            style="border-color: var(--border-ui);"
+                            onclick="PF('briefingTurnoDialog').hide();">
+                        Cerrar
+                    </button>
                 </f:facet>
             </p:dialog>
 
         </div>
-
     </ui:define>
 </ui:composition>

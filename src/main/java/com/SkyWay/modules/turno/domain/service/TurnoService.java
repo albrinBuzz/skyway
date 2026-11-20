@@ -54,35 +54,36 @@ public class TurnoService {
             return null;
         }
 
-        List<Turno> turnos = findByVueloId(vuelo.getIdVuelo());
-        if (turnos != null && !turnos.isEmpty()) {
-            return turnos.get(0);
-        }
+        Timestamp inicio = vuelo.getFechaHoraSalida();
+        Timestamp fin = vuelo.getFechaHoraLlegada();
 
-        Turno nuevoTurno = new Turno();
-        nuevoTurno.setVuelo(vuelo);
-
-        Timestamp inicio = null;
-        Timestamp fin = null;
-
-        if (vuelo.getSegmentoVuelos() != null && !vuelo.getSegmentoVuelos().isEmpty()) {
+        if ((inicio == null || fin == null) && vuelo.getSegmentoVuelos() != null && !vuelo.getSegmentoVuelos().isEmpty()) {
             SegmentoVuelo primerSeg = vuelo.getSegmentoVuelos().get(0);
             SegmentoVuelo ultimoSeg = vuelo.getSegmentoVuelos().get(vuelo.getSegmentoVuelos().size() - 1);
 
-            if (primerSeg.getHoraSalida() != null) {
+            if (inicio == null && primerSeg.getHoraSalida() != null) {
                 inicio = primerSeg.getHoraSalida();
             }
-            if (ultimoSeg.getHoraLlegada() != null) {
+            if (fin == null && ultimoSeg.getHoraLlegada() != null) {
                 fin = ultimoSeg.getHoraLlegada();
             }
         }
 
-        if (inicio == null && vuelo.getFechaHoraSalida() != null) {
-            inicio = vuelo.getFechaHoraSalida();
+        List<Turno> turnos = findByVueloId(vuelo.getIdVuelo());
+        if (turnos != null && !turnos.isEmpty()) {
+            Turno existente = turnos.get(0);
+            if (inicio != null && fin != null && (
+                    !inicio.equals(existente.getHoraInicio()) || !fin.equals(existente.getHoraFin()))) {
+                existente.setHoraInicio(inicio);
+                existente.setHoraFin(fin);
+                existente.setFecha(new Date(inicio.getTime()));
+                return turnoRepository.save(existente);
+            }
+            return existente;
         }
-        if (fin == null && vuelo.getFechaHoraLlegada() != null) {
-            fin = vuelo.getFechaHoraLlegada();
-        }
+
+        Turno nuevoTurno = new Turno();
+        nuevoTurno.setVuelo(vuelo);
 
         if (inicio == null) {
             inicio = new Timestamp(System.currentTimeMillis());
