@@ -8,8 +8,10 @@ import com.SkyWay.modules.tarifaItinerario.domain.model.ItinerarioTarifa;
 import com.SkyWay.modules.tarifaItinerario.domain.repository.ItinerarioTarifaRepository;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -60,6 +62,7 @@ public class ItinerarioTarifaService {
             List<CaracteristicaDTO> caracteristicasDTO = (tarifa.getTarifaCaracteristicas() != null)
                     ? tarifa.getTarifaCaracteristicas().stream()
                     .filter(tc -> tc.getCaracteristica() != null && Boolean.TRUE.equals(tc.getCaracteristica().getActivo()))
+                    .sorted(Comparator.comparing(tc -> tc.getCaracteristica().getIdCaracteristica(), Comparator.nullsLast(Comparator.naturalOrder())))
                     .map(tc -> new CaracteristicaDTO(
                             tc.getCaracteristica().getNombre(),
                             tc.getValor(),
@@ -79,6 +82,11 @@ public class ItinerarioTarifaService {
 
             resultado.add(dto);
         }
+
+        resultado.sort(Comparator.comparing(
+                TarifaDTO::getPrecio,
+                Comparator.nullsLast(BigDecimal::compareTo)
+        ));
 
         return resultado;
     }

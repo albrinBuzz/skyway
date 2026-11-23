@@ -262,28 +262,404 @@
                 box-sizing: border-box;
             }
 
-            /* SIMULADOR FUSELAJE */
-            .fuselage-box {
-                background: var(--bg-deep);
-                border: 1px solid var(--border-subtle);
-                border-radius: 40px 40px 10px 10px;
-                padding: 20px;
-                max-height: 400px;
-                overflow-y: auto;
+            /* SIMULADOR FUSELAJE REALISTA */
+            .cabin-sim-topbar {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: space-between;
+                align-items: center;
+                gap: 10px;
+                background: #0A1120;
+                border: 1px solid #1E2F4D;
+                border-radius: 10px;
+                padding: 10px 14px;
+                margin-bottom: 12px;
             }
 
-            .seat-item {
-                width: 36px;
+            .cabin-sim-legend {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 12px;
+                font-size: 0.72rem;
+                color: #CBD5E1;
+                font-weight: 600;
+            }
+
+            .legend-chip {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .legend-dot {
+                width: 12px;
+                height: 12px;
+                border-radius: 3px;
+                display: inline-block;
+            }
+
+            .legend-dot.first { background: rgba(245, 158, 11, 0.25); border: 1.5px solid #F59E0B; }
+            .legend-dot.business { background: rgba(59, 130, 246, 0.25); border: 1.5px solid #3B82F6; }
+            .legend-dot.economy { background: #151F30; border: 1.5px solid #64748B; }
+            .legend-dot.exit { background: rgba(239, 68, 68, 0.2); border: 1.5px solid #F87171; }
+
+            .cabin-sim-stage {
+                background: radial-gradient(circle at 50% 35%, #0F1A2E 0%, #060B14 100%);
+                border: 1px solid #1E293B;
+                border-radius: 12px;
+                padding: 24px 12px 30px;
+                max-height: 68vh;
+                overflow-y: auto;
+                overflow-x: auto;
+            }
+
+            .sim-aircraft-row {
+                display: flex;
+                align-items: flex-start;
+                justify-content: center;
+                width: 100%;
+                margin: 0 auto;
+            }
+
+            .sim-fuselage-body {
+                position: relative;
+                z-index: 3;
+                background: linear-gradient(90deg,
+                    #060A13 0%,
+                    #101929 2.5%,
+                    #172338 5.5%,
+                    #0D1524 14%,
+                    #080E18 50%,
+                    #0D1524 86%,
+                    #172338 94.5%,
+                    #101929 97.5%,
+                    #060A13 100%
+                );
+                border: 2px solid #24354D;
+                box-shadow: 0 25px 70px rgba(0, 0, 0, 0.9), 0 0 0 1px #16243A, inset 0 0 40px rgba(6, 11, 20, 0.85);
+                padding: 0 16px 36px;
+                flex-shrink: 0;
+            }
+
+            .sim-fuselage-body.narrow-body {
+                width: 420px;
+                border-radius: 50% 50% 50% 50% / 200px 200px 150px 150px;
+            }
+
+            .sim-fuselage-body.wide-body {
+                width: 575px;
+                border-radius: 50% 50% 50% 50% / 250px 250px 190px 190px;
+            }
+
+            .sim-nose-cone {
+                height: 145px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-end;
+                padding-bottom: 18px;
+                position: relative;
+                border-bottom: 2px solid #1E2F4D;
+            }
+
+            .sim-radome-line {
+                position: absolute;
+                top: 24px;
+                width: 76px;
+                height: 2px;
+                border-radius: 50% 50% 0 0 / 12px 12px 0 0;
+                background: #334E77;
+            }
+
+            .sim-pitot-probe {
+                position: absolute;
+                top: 44px;
+                width: 7px;
+                height: 2px;
+                background: #94A3B8;
+                border-radius: 1px;
+            }
+            .sim-pitot-probe.probe-left { left: 42px; transform: rotate(-25deg); }
+            .sim-pitot-probe.probe-right { right: 42px; transform: rotate(25deg); }
+
+            .sim-cockpit-windshield {
+                display: flex;
+                gap: 5px;
+                align-items: center;
+                margin-bottom: 10px;
+            }
+
+            .sim-cockpit-pane {
+                width: 24px;
+                height: 16px;
+                background: linear-gradient(180deg, #020617 0%, #0C172E 60%, #1E3A8A 100%);
+                border: 1.5px solid #334E77;
+                border-radius: 5px 5px 3px 3px;
+                box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.22);
+            }
+            .sim-cockpit-pane.center-pane {
+                width: 28px;
+                height: 18px;
+            }
+
+            .sim-tail-cone {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                padding-top: 20px;
+                border-top: 2px solid #1E2F4D;
+                margin-top: 18px;
+                color: #64748B;
+                font-size: 0.66rem;
+                font-weight: 700;
+                letter-spacing: 0.9px;
+            }
+            .sim-h-stabs {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                width: 100%;
+            }
+            .sim-h-stab-line {
+                width: 26px;
+                height: 2px;
+                background: #23344D;
+                border-radius: 1px;
+            }
+            .sim-apu {
+                width: 24px;
+                height: 12px;
+                border-radius: 6px 6px 0 0;
+                background: linear-gradient(180deg, #1E293B 0%, #020617 100%);
+                border: 1.5px solid #384C6B;
+                margin-top: 10px;
+                position: relative;
+            }
+            .sim-apu::after {
+                content: '';
+                position: absolute;
+                bottom: -3px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 5px;
+                height: 5px;
+                border-radius: 50%;
+                background: #FFFFFF;
+                box-shadow: 0 0 6px #FFFFFF;
+            }
+
+            .sim-service-area {
+                display: flex;
+                justify-content: space-around;
+                align-items: center;
+                padding: 7px 12px;
+                margin: 8px 0 12px;
+                background: rgba(15, 23, 42, 0.85);
+                border: 1px dashed #2B4266;
+                border-radius: 7px;
+                font-size: 0.66rem;
+                color: #94A3B8;
+                letter-spacing: 0.5px;
+                font-weight: 700;
+            }
+
+            .sim-class-header {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                width: 100%;
+                margin: 14px 0 6px;
+            }
+            .sim-class-header::before, .sim-class-header::after {
+                content: '';
+                flex: 1;
+                height: 1px;
+                background: #223859;
+            }
+
+            .sim-class-pill {
+                padding: 3px 14px;
+                border-radius: 20px;
+                font-size: 0.68rem;
+                font-weight: 800;
+                letter-spacing: 0.7px;
+                text-transform: uppercase;
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+            }
+            .sim-class-pill.first {
+                background: rgba(217, 119, 6, 0.18);
+                border: 1px solid #F59E0B;
+                color: #FCD34D;
+            }
+            .sim-class-pill.business {
+                background: rgba(30, 58, 138, 0.28);
+                border: 1px solid #3B82F6;
+                color: #93C5FD;
+            }
+            .sim-class-pill.economy {
+                background: rgba(51, 65, 85, 0.32);
+                border: 1px solid #64748B;
+                color: #CBD5E1;
+            }
+
+            .sim-col-letters {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 5px;
+                width: 100%;
+                margin: 2px 0 6px;
+            }
+
+            .sim-row-marker {
+                width: 22px;
+                text-align: center;
+                font-size: 0.68rem;
+                font-weight: 800;
+                color: #64748B;
+                user-select: none;
+            }
+
+            .sim-col-letter-pill {
+                width: 34px;
+                text-align: center;
+                font-size: 0.68rem;
+                font-weight: 800;
+                color: #94A3B8;
+                user-select: none;
+            }
+
+            .sim-seating-body {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 5px;
+                width: 100%;
+            }
+
+            .sim-cabin-row {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 5px;
+                width: 100%;
+                position: relative;
+            }
+
+            .sim-blocks-container {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+            }
+
+            .sim-seat-group {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+            }
+
+            .sim-aisle-walkway {
+                width: 18px;
                 height: 36px;
-                background: var(--bg-card);
-                border: 1px solid var(--border-subtle);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                position: relative;
+                background: rgba(15, 28, 52, 0.5);
+                border-radius: 3px;
+            }
+            .sim-aisle-walkway::after {
+                content: '';
+                width: 1px;
+                height: 100%;
+                background: repeating-linear-gradient(to bottom, #3B82F6, #3B82F6 3px, transparent 3px, transparent 7px);
+                opacity: 0.65;
+            }
+
+            .sim-window {
+                width: 5px;
+                height: 11px;
+                border-radius: 3px;
+                background: linear-gradient(180deg, #38BDF8 0%, #1E3A8A 55%, #0F172A 100%);
+                opacity: 0.55;
+                border: 1px solid #47668F;
+                position: absolute;
+            }
+            .sim-window.window-left { left: -9px; }
+            .sim-window.window-right { right: -9px; }
+
+            .sim-exit-marker {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                width: 100%;
+                padding: 3px 12px;
+                margin: 6px 0 4px;
+                background: rgba(239, 68, 68, 0.12);
+                border: 1px solid rgba(239, 68, 68, 0.45);
                 border-radius: 6px;
+                color: #FCA5A5;
+                font-size: 0.64rem;
+                font-weight: 800;
+                letter-spacing: 0.5px;
+            }
+
+            .sim-seat-pod {
+                width: 34px;
+                height: 37px;
+                border-radius: 7px 7px 4px 4px;
+                background: linear-gradient(180deg, #182336 0%, #0E1522 100%);
+                border: 1.5px solid #2D4263;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
                 justify-content: center;
+                padding-top: 4px;
+                position: relative;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.45);
+                cursor: default;
+                transition: transform 0.15s ease, box-shadow 0.15s ease;
+            }
+            .sim-seat-pod::before {
+                content: '';
+                position: absolute;
+                top: 2px;
+                width: 70%;
+                height: 4px;
+                border-radius: 2px;
+                background: rgba(255, 255, 255, 0.18);
+            }
+            .sim-seat-pod:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.65);
+            }
+            .sim-seat-pod.first-class-pod {
+                background: linear-gradient(180deg, rgba(180, 83, 9, 0.34) 0%, #141B29 100%);
+                border-color: rgba(245, 158, 11, 0.8);
+            }
+            .sim-seat-pod.business-class-pod {
+                background: linear-gradient(180deg, rgba(30, 64, 175, 0.38) 0%, #111B2E 100%);
+                border-color: rgba(59, 130, 246, 0.8);
+            }
+            .sim-seat-pod.economy-class-pod {
+                border-color: #3D5273;
+            }
+            .sim-seat-code {
                 font-size: 0.68rem;
-                color: var(--text-heading);
+                font-weight: 800;
+                color: #F8FAFC;
+                line-height: 1.05;
+            }
+            .sim-seat-sub {
+                font-size: 0.5rem;
+                color: #94A3B8;
+                font-weight: 700;
+                text-transform: uppercase;
             }
         </style>
     </ui:define>
@@ -398,7 +774,7 @@
                                     <p:commandButton icon="pi pi-th-large"
                                                      actionListener="#{gestionFlotaIntegradaBean.verMapaAsientos(a)}"
                                                      process="@this"
-                                                     update=":dialogMapa"
+                                                     update=":panelMapaAsientos"
                                                      oncomplete="PF('dlgMapaAsientos').show();"
                                                      styleClass="ui-button-outlined ui-button-secondary ui-button-sm"
                                                      title="Ver Fuselaje de Asientos" />
@@ -622,16 +998,25 @@
                             </div>
 
                             <div class="form-col-6">
-                                <label>Modelo de Avión</label>
-                                <p:selectOneMenu value="#{gestionFlotaIntegradaBean.idModeloParaAvion}">
-                                    <f:selectItem itemLabel="-- Seleccionar Modelo --" itemValue="" />
+                                <label for="formDialogAvion:modeloAvion">Modelo de Avión</label>
+                                <p:selectOneMenu id="modeloAvion"
+                                                 value="#{gestionFlotaIntegradaBean.idModeloParaAvion}"
+                                                 required="true"
+                                                 label="Modelo de Avión"
+                                                 requiredMessage="Debe seleccionar un modelo de avión.">
+                                    <f:selectItem itemLabel="-- Seleccionar Modelo --" itemValue="#{null}" noSelectionOption="true" />
                                     <f:selectItems value="#{gestionFlotaIntegradaBean.listaModelosActivos}" var="m" itemLabel="#{m.fabricante != null ? m.fabricante.nombre.concat(' ') : ''}#{m.nombre}" itemValue="#{m.idModelo}" />
                                 </p:selectOneMenu>
                             </div>
 
                             <div class="form-col-6">
                                 <label>Año de Fabricación</label>
-                                <p:spinner value="#{gestionFlotaIntegradaBean.avionSeleccionado.anoDeFabricacion}" min="1960" max="2030" />
+                                <p:spinner value="#{gestionFlotaIntegradaBean.avionSeleccionado.anoDeFabricacion}"
+                                           min="1950"
+                                           max="#{gestionFlotaIntegradaBean.anoActual}"
+                                           thousandSeparator=""
+                                           required="true"
+                                           requiredMessage="El año de fabricación es obligatorio." />
                             </div>
 
                             <div class="form-col-6">
@@ -655,11 +1040,11 @@
                             </div>
                         </div>
 
-                        <!-- CAPACIDADES POR CLASE (TRIGGER BD) -->
+                        <!-- CAPACIDADES POR CLASE -->
                         <div style="border-top: 1px solid var(--border-subtle); padding-top: 12px;" class="mb-3">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                                 <label style="color: var(--navy-brand); font-size: 0.75rem; font-weight: 700;">
-                                    ASIENTOS POR CLASE (GENERACIÓN AUTOMÁTICA POR TRIGGER)
+                                    ASIENTOS POR CLASE
                                 </label>
                                 <h:panelGroup id="panelTotalPax">
                                     <span style="background: var(--bg-deep); border: 1px solid var(--border-subtle); color: var(--text-heading); font-weight: 700; padding: 3px 10px; border-radius: 4px; font-size: 0.78rem;">
@@ -673,8 +1058,12 @@
                                     <div class="form-col-4">
                                         <div style="background: var(--bg-deep); border: 1px solid var(--border-subtle); padding: 10px; border-radius: 6px;">
                                             <label style="color: var(--text-heading); font-size: 0.7rem; font-weight: 700; display: block;" class="mb-1">#{c.descripcion}</label>
-                                            <p:spinner value="#{gestionFlotaIntegradaBean.capacidadesClaseMap[c.idClase]}" min="0" max="600">
-                                                <p:ajax event="change" listener="#{gestionFlotaIntegradaBean.recalcularTotalAsientos}" update=":formDialogAvion:panelTotalPax" />
+                                            <p:spinner value="#{gestionFlotaIntegradaBean.capacidadesClaseMap[c.idClase]}"
+                                                       converter="jakarta.faces.Integer"
+                                                       thousandSeparator=""
+                                                       min="0"
+                                                       max="600">
+                                                <p:ajax event="change" listener="#{gestionFlotaIntegradaBean.recalcularTotalAsientos}" update=":formDialogAvion:panelTotalPax :msgs" />
                                             </p:spinner>
                                         </div>
                                     </div>
@@ -744,24 +1133,169 @@
             </p:dialog>
 
             <!-- MODAL SIMULADOR FUSELAJE -->
-            <p:dialog header="Simulador de Fuselaje - #{gestionFlotaIntegradaBean.avionSeleccionado.numeroDeRegistro}" widgetVar="dlgMapaAsientos" id="dialogMapa" modal="true" width="680" styleClass="custom-dialog">
-                <div class="fuselage-box">
-                    <div style="text-align: center; color: var(--navy-brand); font-weight: 700; border-bottom: 1px dashed var(--border-subtle); padding-bottom: 8px; margin-bottom: 12px; font-size: 0.8rem;">
-                        <i class="pi pi-compass me-1"></i> CABINA DE MANDO / COCKPIT (PROA)
+            <p:dialog header="Distribución de Cabina"
+                      widgetVar="dlgMapaAsientos"
+                      id="dialogMapa"
+                      modal="true"
+                      responsive="true"
+                      width="960"
+                      styleClass="custom-dialog">
+
+                <h:panelGroup id="panelMapaAsientos" layout="block">
+                    <div class="cabin-sim-topbar">
+                        <div>
+                            <div style="font-size: 0.85rem; font-weight: 800; color: #F8FAFC;">
+                                #{gestionFlotaIntegradaBean.avionSeleccionado != null ? gestionFlotaIntegradaBean.avionSeleccionado.numeroDeRegistro : ''}
+                                #{gestionFlotaIntegradaBean.avionSeleccionado != null and gestionFlotaIntegradaBean.avionSeleccionado.modeloAvion != null ? ' • '.concat(gestionFlotaIntegradaBean.avionSeleccionado.modeloAvion.nombre) : ''}
+                                <span style="margin-left: 8px; padding: 2px 8px; border-radius: 12px; font-size: 0.68rem; background: rgba(59, 130, 246, 0.16); border: 1px solid rgba(59, 130, 246, 0.45); color: #93C5FD;">
+                                    #{gestionFlotaIntegradaBean.avionDoblePasilloSimulador ? 'Doble Pasillo' : 'Monopasillo'}
+                                </span>
+                                <span style="margin-left: 6px; padding: 2px 8px; border-radius: 12px; font-size: 0.68rem; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: #34D399;">
+                                    #{gestionFlotaIntegradaBean.totalAsientosSimulador} Asientos
+                                </span>
+                            </div>
+                            <div style="font-size: 0.72rem; color: #94A3B8; margin-top: 3px;">
+                                <i class="pi pi-sliders-h me-1"></i>#{gestionFlotaIntegradaBean.distribucionResumenSimulador}
+                            </div>
+                        </div>
+
+                        <div class="cabin-sim-legend">
+                            <span class="legend-chip"><span class="legend-dot first"></span>Primera</span>
+                            <span class="legend-chip"><span class="legend-dot business"></span>Ejecutiva</span>
+                            <span class="legend-chip"><span class="legend-dot economy"></span>Económica</span>
+                            <span class="legend-chip"><span class="legend-dot exit"></span>Salida Emergencia</span>
+                        </div>
                     </div>
 
-                    <ui:repeat value="#{gestionFlotaIntegradaBean.asientosPorFilaMap.entrySet().toArray()}" var="entry">
-                        <div style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 6px;">
-                            <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700; width: 30px; text-align: right;">F#{entry.key}</span>
-                            <ui:repeat value="#{entry.value}" var="st">
-                                <div class="seat-item">
-                                    <strong>#{st.numeroAsiento}</strong>
-                                    <span style="font-size: 0.55rem; color: var(--text-muted);">#{st.claseAsiento.descripcion.substring(0, 3)}</span>
+                    <div class="cabin-sim-stage">
+                        <ui:fragment rendered="#{empty gestionFlotaIntegradaBean.filasCabinaSimulador}">
+                            <div style="text-align: center; padding: 36px; color: #94A3B8;">
+                                <i class="pi pi-info-circle me-2"></i>Esta aeronave aún no tiene asientos configurados.
+                            </div>
+                        </ui:fragment>
+
+                        <ui:fragment rendered="#{not empty gestionFlotaIntegradaBean.filasCabinaSimulador}">
+                            <div class="sim-aircraft-row">
+
+                                <!-- FUSELAJE CENTRAL -->
+                                <div class="sim-fuselage-body #{gestionFlotaIntegradaBean.avionDoblePasilloSimulador ? 'wide-body' : 'narrow-body'}">
+
+                                    <!-- MORRO Y COCKPIT -->
+                                    <div class="sim-nose-cone">
+                                        <div class="sim-radome-line"></div>
+                                        <span class="sim-pitot-probe probe-left"></span>
+                                        <span class="sim-pitot-probe probe-right"></span>
+                                        <div class="sim-cockpit-windshield">
+                                            <div class="sim-cockpit-pane" style="transform: skewY(12deg);"></div>
+                                            <div class="sim-cockpit-pane center-pane"></div>
+                                            <div class="sim-cockpit-pane center-pane"></div>
+                                            <div class="sim-cockpit-pane" style="transform: skewY(-12deg);"></div>
+                                        </div>
+                                        <span style="font-size: 0.7rem; font-weight: 800; color: #7B8FA8; letter-spacing: 1.4px; text-transform: uppercase;">
+                                            CABINA DE MANDO • #{gestionFlotaIntegradaBean.avionSeleccionado.numeroDeRegistro}
+                                        </span>
+                                    </div>
+
+                                    <!-- ZONA DE SERVICIO PROA -->
+                                    <div class="sim-service-area">
+                                        <span>PUERTA L1 / R1</span>
+                                        <span>GALLEY PROA</span>
+                                        <span>WC CABINA</span>
+                                    </div>
+
+                                    <!-- FILAS Y BLOQUES SEGÚN CONFIGURACIÓN -->
+                                    <div class="sim-seating-body">
+                                        <ui:repeat value="#{gestionFlotaIntegradaBean.filasCabinaSimulador}" var="fila">
+
+                                            <!-- DIVISOR DE CLASE Y LETRAS DE COLUMNAS -->
+                                            <ui:fragment rendered="#{fila.esPrimerFilaDeClase}">
+                                                <div style="width: 100%;">
+                                                    <div class="sim-class-header">
+                                                        <span class="sim-class-pill #{fila.clase.toLowerCase().contains('primer') ? 'first' : (fila.clase.toLowerCase().contains('ejecut') ? 'business' : 'economy')}">
+                                                            <i class="pi #{fila.clase.toLowerCase().contains('primer') ? 'pi-star-fill' : (fila.clase.toLowerCase().contains('ejecut') ? 'pi-briefcase' : 'pi-users')}"></i>
+                                                            #{fila.clase}
+                                                        </span>
+                                                    </div>
+
+                                                    <div class="sim-col-letters">
+                                                        <span class="sim-row-marker"></span>
+                                                        <div class="sim-blocks-container">
+                                                            <ui:repeat value="#{fila.bloques}" var="bloque" varStatus="bSt">
+                                                                <div class="sim-seat-group">
+                                                                    <ui:repeat value="#{bloque.asientos}" var="a">
+                                                                        <span class="sim-col-letter-pill">#{a.letra}</span>
+                                                                    </ui:repeat>
+                                                                </div>
+                                                                <ui:fragment rendered="#{!bSt.last}">
+                                                                    <div style="width: 18px;"></div>
+                                                                </ui:fragment>
+                                                            </ui:repeat>
+                                                        </div>
+                                                        <span class="sim-row-marker"></span>
+                                                    </div>
+                                                </div>
+                                            </ui:fragment>
+
+                                            <!-- MARCADOR SALIDA DE EMERGENCIA -->
+                                            <ui:fragment rendered="#{fila.esEmergencia}">
+                                                <div class="sim-exit-marker">
+                                                    <span><i class="pi pi-arrow-left me-1"></i> SALIDA DE EMERGENCIA</span>
+                                                    <span>EXIT <i class="pi pi-arrow-right ms-1"></i></span>
+                                                </div>
+                                            </ui:fragment>
+
+                                            <!-- FILA DE ASIENTOS CON VENTANAS Y PASILLOS -->
+                                            <div class="sim-cabin-row">
+                                                <span class="sim-window window-left"></span>
+                                                <span class="sim-row-marker">#{fila.numeroFila}</span>
+
+                                                <div class="sim-blocks-container">
+                                                    <ui:repeat value="#{fila.bloques}" var="bloque" varStatus="bSt">
+                                                        <div class="sim-seat-group">
+                                                            <ui:repeat value="#{bloque.asientos}" var="a">
+                                                                <div class="sim-seat-pod #{a.clase.toLowerCase().contains('primer') ? 'first-class-pod' : (a.clase.toLowerCase().contains('ejecut') ? 'business-class-pod' : 'economy-class-pod')}"
+                                                                     title="#{a.numeroAsiento} • #{a.clase}#{a.esVentana ? ' • Ventana' : (a.esPasillo ? ' • Pasillo' : '')}#{a.esEmergencia ? ' • Salida de Emergencia' : ''}">
+                                                                    <span class="sim-seat-code">#{a.numeroAsiento}</span>
+                                                                    <span class="sim-seat-sub">#{a.esVentana ? 'VEN' : (a.esPasillo ? 'PAS' : a.clase.substring(0, 3))}</span>
+                                                                </div>
+                                                            </ui:repeat>
+                                                        </div>
+                                                        <ui:fragment rendered="#{!bSt.last}">
+                                                            <div class="sim-aisle-walkway"></div>
+                                                        </ui:fragment>
+                                                    </ui:repeat>
+                                                </div>
+
+                                                <span class="sim-row-marker">#{fila.numeroFila}</span>
+                                                <span class="sim-window window-right"></span>
+                                            </div>
+
+                                        </ui:repeat>
+                                    </div>
+
+                                    <!-- ZONA DE SERVICIO POPA -->
+                                    <div class="sim-service-area" style="margin-top: 18px;">
+                                        <span>WC POPA L</span>
+                                        <span>GALLEY TRASERO</span>
+                                        <span>WC POPA R</span>
+                                    </div>
+
+                                    <!-- CONO DE COLA Y APU -->
+                                    <div class="sim-tail-cone">
+                                        <div class="sim-h-stabs">
+                                            <span class="sim-h-stab-line"></span>
+                                            <span>SECCIÓN DE COLA • SKYWAY</span>
+                                            <span class="sim-h-stab-line"></span>
+                                        </div>
+                                        <div class="sim-apu"></div>
+                                    </div>
+
                                 </div>
-                            </ui:repeat>
-                        </div>
-                    </ui:repeat>
-                </div>
+
+                            </div>
+                        </ui:fragment>
+                    </div>
+                </h:panelGroup>
             </p:dialog>
 
             <!-- CONFIRM DIALOG GLOBAL -->

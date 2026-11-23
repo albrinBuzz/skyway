@@ -1425,10 +1425,10 @@
                                                 <p:commandButton icon="pi pi-arrow-circle-up"
                                                                  title="Ascender Tarifa (Upgrade)"
                                                                  styleClass="btn-delta-icon"
-                                                                 disabled="#{perfilPasajeroView.isReservaCanceladaPorItinerario(it.idReserva)}"
+                                                                 rendered="#{!perfilPasajeroView.isReservaCanceladaPorItinerario(it.idReserva)}"
                                                                  actionListener="#{perfilPasajeroView.prepararUpgrade(it)}"
                                                                  update=":formUpgradeTarifa:dlgUpgradeTarifa :globalGrowl"
-                                                                 oncomplete="PF('dlgUpgradeTarifa').show();" />
+                                                                 oncomplete="if (!args || !args.validationFailed) PF('dlgUpgradeTarifa').show();" />
                                             </div>
                                         </div>
 

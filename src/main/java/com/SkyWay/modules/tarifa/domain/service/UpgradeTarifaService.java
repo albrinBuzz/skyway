@@ -62,6 +62,10 @@ public class UpgradeTarifaService implements Serializable {
         }
 
         ReservaItinerario riActual = optRi.get();
+        if (esReservaOItinerarioCancelado(riActual)) {
+            Logger.logWarn("🚫 [UPGRADE BLOQUEADO] La reserva #" + idReserva + " o alguno de sus vuelos está cancelado.");
+            return opciones;
+        }
         ItinerarioTarifa itActual = riActual.getItinerarioTarifa();
         BigDecimal precioActual = itActual.getPrecio() != null ? itActual.getPrecio() : BigDecimal.ZERO;
         Integer idTarifaActual = itActual.getTarifa() != null ? itActual.getTarifa().getIdTarifa() : 0;
@@ -171,6 +175,10 @@ public class UpgradeTarifaService implements Serializable {
         }
 
         ReservaItinerario ri = optRi.get();
+        if (esReservaOItinerarioCancelado(ri)) {
+            Logger.logWarn("🚫 [UPGRADE RECHAZADO] No se puede confirmar ascenso en reserva/vuelo cancelado (Reserva #" + idReserva + ").");
+            return null;
+        }
         ItinerarioTarifa tarifaPrevia = ri.getItinerarioTarifa();
         Optional<ItinerarioTarifa> optTarifaNueva = itinerarioTarifaRepository.findById(idItinerarioTarifaNuevo);
 
@@ -280,5 +288,32 @@ public class UpgradeTarifaService implements Serializable {
                 nombreTarifaPrevia + "' a '" + nombreTarifaNueva + "' (" + motivoOAgente + ")");
 
         return res;
+    }
+
+    private boolean esReservaOItinerarioCancelado(ReservaItinerario ri) {
+        if (ri == null) return true;
+        if (ri.getReserva() != null && ri.getReserva().getEstadoReservaBean() != null) {
+            String desc = ri.getReserva().getEstadoReservaBean().getDescripcion();
+            if (desc != null) {
+                String d = desc.toLowerCase();
+                if (d.contains("cancel") || d.contains("anul")) {
+                    return true;
+                }
+            }
+        }
+        if (ri.getItinerario() != null && ri.getItinerario().getItinerarioVuelos() != null) {
+            for (ItinerarioVuelo iv : ri.getItinerario().getItinerarioVuelos()) {
+                if (iv != null && iv.getVuelo() != null && iv.getVuelo().getEstadoVuelo() != null) {
+                    String evDesc = iv.getVuelo().getEstadoVuelo().getDescripcion();
+                    String evEst = iv.getVuelo().getEstadoVuelo().getEstado();
+                    String d = evDesc != null ? evDesc.toLowerCase() : "";
+                    String e = evEst != null ? evEst.toLowerCase() : "";
+                    if (d.contains("cancel") || e.contains("cancel") || "inactivo".equals(e)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 }

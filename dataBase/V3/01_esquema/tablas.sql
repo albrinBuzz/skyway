@@ -682,7 +682,7 @@ CREATE TABLE Cancelacion (
                              ID_RESERVA INT REFERENCES Reserva(ID_RESERVA),
                              Fecha TIMESTAMP NOT NULL,
                              Motivo TEXT,
-                             Estado VARCHAR(50) CHECK (Estado IN ('Pendiente', 'Procesado', 'Reembolsado')),
+                             Estado VARCHAR(50) CHECK (Estado IN ('Pendiente', 'Procesado', 'Reembolsado', 'Sin Reembolso')),
                              Monto_Reembolso DECIMAL(10, 2) -- Puede ser igual al monto total o un porcentaje
 );
 

@@ -637,10 +637,23 @@ public class CheckInBean implements Serializable {
     // ==========================================
 
     public void prepararUpgradeCheckIn() {
+        if (this.viajeCancelado) {
+            this.opcionesUpgradeCheckIn = new ArrayList<>();
+            this.opcionUpgradeCheckInSeleccionada = null;
+            FacesContext fc = FacesContext.getCurrentInstance();
+            if (fc != null && fc.isPostback()) {
+                fc.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_WARN,
+                        "Reserva Cancelada", "No es posible ascender la tarifa de una reserva o vuelo cancelado."));
+                fc.validationFailed();
+            }
+            return;
+        }
         if (this.idReserva != null && this.idItinerario != null) {
             this.opcionesUpgradeCheckIn = upgradeTarifaService.obtenerOpcionesUpgrade(this.idReserva, this.idItinerario);
             if (this.opcionesUpgradeCheckIn != null && !this.opcionesUpgradeCheckIn.isEmpty()) {
                 this.opcionUpgradeCheckInSeleccionada = this.opcionesUpgradeCheckIn.get(0);
+            } else {
+                this.opcionUpgradeCheckInSeleccionada = null;
             }
         }
     }
@@ -650,6 +663,12 @@ public class CheckInBean implements Serializable {
     }
 
     public void ejecutarUpgradeCheckIn() {
+        if (this.viajeCancelado) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Operación No Permitida",
+                            "No es posible realizar un ascenso de tarifa en una reserva o vuelo cancelado."));
+            return;
+        }
         if (this.idReserva == null || this.idItinerario == null || this.opcionUpgradeCheckInSeleccionada == null) {
             return;
         }
@@ -716,7 +735,7 @@ public class CheckInBean implements Serializable {
     }
 
     public boolean isUpgradeCheckInDisponible() {
-        return opcionesUpgradeCheckIn != null && !opcionesUpgradeCheckIn.isEmpty();
+        return !this.viajeCancelado && opcionesUpgradeCheckIn != null && !opcionesUpgradeCheckIn.isEmpty();
     }
 
     public List<OpcionUpgradeDTO> getOpcionesUpgradeCheckIn() { return opcionesUpgradeCheckIn; }

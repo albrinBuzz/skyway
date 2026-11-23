@@ -76,4 +76,25 @@ public class CaracteristicaDTO {
     public void setTipoDato(String tipoDato) {
         this.tipoDato = tipoDato;
     }
+
+    public boolean isTieneValor() {
+        if ("boolean".equalsIgnoreCase(tipoDato)) {
+            return false;
+        }
+        return valorInt != null || (valor != null && !valor.isBlank());
+    }
+
+    public String getValorFormateado() {
+        if (valorInt != null) {
+            String n = nombre != null ? nombre.toLowerCase() : "";
+            if (n.contains("hora") || n.contains("plazo")) {
+                return valorInt + " hrs antes";
+            }
+            return String.valueOf(valorInt);
+        }
+        if (valor != null && !valor.isBlank()) {
+            return valor.trim();
+        }
+        return "";
+    }
 }
