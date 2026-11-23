@@ -2,8 +2,13 @@ package com.SkyWay.views.avion;
 
 import com.SkyWay.modules.asiento.domain.model.Asiento;
 import com.SkyWay.modules.asiento.domain.repository.AsientoRepository;
+import com.SkyWay.modules.asiento.presentation.dto.BloqueAsientosDTO;
+import com.SkyWay.modules.asiento.presentation.dto.FilaCabinaDTO;
+import com.SkyWay.modules.asiento.presentation.dto.InfoAsientoDTO;
 import com.SkyWay.modules.avion.domain.exception.AvionValidationException;
 import com.SkyWay.modules.avion.domain.model.Avion;
+import com.SkyWay.modules.avion.domain.model.ConfiguracionCabina;
+import com.SkyWay.modules.avion.domain.repository.ConfiguracionCabinaRepository;
 import com.SkyWay.modules.avion.domain.service.AvionService;
 import com.SkyWay.modules.capacidadclase.domain.model.CapacidadClase;
 import com.SkyWay.modules.claseasiento.domain.model.ClaseAsiento;
@@ -49,6 +54,9 @@ public class GestionFlotaIntegradaBean implements Serializable {
     @Autowired
     private AsientoRepository asientoRepository;
 
+    @Autowired
+    private ConfiguracionCabinaRepository configuracionCabinaRepository;
+
     // Listas Administrativas (Traen TODO: Activos e Inactivos para las tablas de gestión)
     private List<Avion> listaAvionesAdmin;
     private List<ModeloAvion> listaModelosAdmin;
@@ -75,6 +83,10 @@ public class GestionFlotaIntegradaBean implements Serializable {
 
     private Map<Integer, Integer> capacidadesClaseMap = new HashMap<>();
     private Map<Integer, List<Asiento>> asientosPorFilaMap = new TreeMap<>();
+    private List<FilaCabinaDTO> filasCabinaSimulador = new ArrayList<>();
+    private boolean avionDoblePasilloSimulador;
+    private int totalAsientosSimulador;
+    private String distribucionResumenSimulador;
     private int tabActiva = 0;
 
     @PostConstruct
@@ -263,6 +275,7 @@ public class GestionFlotaIntegradaBean implements Serializable {
     }
 
     public void recalcularTotalAsientos() {
+        normalizarCapacidadesMap();
         this.totalAsientosCalculados = capacidadesClaseMap.values().stream()
                 .filter(Objects::nonNull)
                 .mapToInt(Integer::intValue)
@@ -281,37 +294,277 @@ public class GestionFlotaIntegradaBean implements Serializable {
                             .findFirst().orElse(null);
                 }
                 avionSeleccionado.setModeloAvion(mod);
+            } else {
+                avionSeleccionado.setModeloAvion(null);
             }
 
             if (fechaMantenimientoAux != null) {
                 avionSeleccionado.setFechaProximoMantenimiento(new Timestamp(fechaMantenimientoAux.getTime()));
             }
 
-            // Ejecuta guardar y dispara el TRIGGER PostgreSQL
+            normalizarCapacidadesMap();
             avionService.saveConCapacidades(avionSeleccionado, capacidadesClaseMap);
 
             cargarTodo();
-            addMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Aeronave certificada y asientos generados por Trigger.");
+            addMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Aeronave guardada y asientos configurados correctamente.");
             PrimeFaces.current().executeScript("PF('dlgAvion').hide();");
         } catch (AvionValidationException ave) {
-            addMessage(FacesMessage.SEVERITY_WARN, "Validación Operativa", ave.getMessage());
+            addMessage(FacesMessage.SEVERITY_WARN, "Validación", ave.getMessage());
         } catch (Exception e) {
-            addMessage(FacesMessage.SEVERITY_ERROR, "Error", e.getMessage());
+            Logger.logError("Error al guardar aeronave: " + e.getMessage());
+            addMessage(FacesMessage.SEVERITY_ERROR, "Error", "No se pudo guardar la aeronave. Verifica los datos ingresados.");
         }
+    }
+
+    private void normalizarCapacidadesMap() {
+        Map<Integer, Integer> normalizado = new HashMap<>();
+        if (capacidadesClaseMap != null) {
+            for (Map.Entry<?, ?> entry : ((Map<?, ?>) capacidadesClaseMap).entrySet()) {
+                Integer idClase = parseEntero(entry.getKey());
+                Integer cantidad = parseEntero(entry.getValue());
+                if (idClase != null) {
+                    normalizado.put(idClase, cantidad != null ? cantidad : 0);
+                }
+            }
+        }
+        this.capacidadesClaseMap = normalizado;
+    }
+
+    private Integer parseEntero(Object valor) {
+        if (valor == null) {
+            return null;
+        }
+        if (valor instanceof Number num) {
+            return num.intValue();
+        }
+        String texto = valor.toString().trim();
+        if (texto.isEmpty()) {
+            return 0;
+        }
+        return Integer.valueOf(texto);
     }
 
     public void verMapaAsientos(Avion a) {
         this.avionSeleccionado = a;
-        List<Asiento> asientos = asientoRepository.findByAvion_IdAvionOrderByFilaAscLetraAsc(a.getIdAvion());
+        this.filasCabinaSimulador = new ArrayList<>();
+        this.avionDoblePasilloSimulador = false;
+        this.totalAsientosSimulador = 0;
+        this.distribucionResumenSimulador = "";
 
-        if (asientos != null) {
+        if (a == null || a.getIdAvion() == null) {
+            this.asientosPorFilaMap.clear();
+            return;
+        }
+
+        List<Asiento> asientos = asientoRepository.findByAvion_IdAvionOrderByFilaAscLetraAsc(a.getIdAvion());
+        List<ConfiguracionCabina> configs = (a.getModeloAvion() != null && a.getModeloAvion().getIdModelo() != null)
+                ? configuracionCabinaRepository.findByModeloAvionIdModelo(a.getModeloAvion().getIdModelo())
+                : List.of();
+
+        this.distribucionResumenSimulador = construirResumenConfiguracion(configs);
+
+        if (asientos != null && !asientos.isEmpty()) {
+            this.totalAsientosSimulador = asientos.size();
             this.asientosPorFilaMap = asientos.stream()
+                    .filter(s -> s.getFila() != null)
                     .collect(Collectors.groupingBy(Asiento::getFila, TreeMap::new, Collectors.toList()));
+            construirCabinaSimulador(this.asientosPorFilaMap, configs);
         } else {
             this.asientosPorFilaMap.clear();
         }
 
         PrimeFaces.current().executeScript("PF('dlgMapaAsientos').show();");
+    }
+
+    private String construirResumenConfiguracion(List<ConfiguracionCabina> configs) {
+        if (configs == null || configs.isEmpty()) {
+            return "Configuración estándar por fila";
+        }
+        Map<String, String> porClase = new LinkedHashMap<>();
+        for (ConfiguracionCabina cc : configs) {
+            String clase = (cc.getClaseAsiento() != null && cc.getClaseAsiento().getDescripcion() != null)
+                    ? cc.getClaseAsiento().getDescripcion()
+                    : "Cabina";
+            String dist = cc.getDistribucionColumnas() != null ? cc.getDistribucionColumnas().trim() : "";
+            if (!dist.isEmpty()) {
+                porClase.putIfAbsent(clase, dist);
+            }
+        }
+        return porClase.entrySet().stream()
+                .map(e -> e.getKey() + " (" + e.getValue() + ")")
+                .collect(Collectors.joining(" • "));
+    }
+
+    private void construirCabinaSimulador(Map<Integer, List<Asiento>> mapaFilas, List<ConfiguracionCabina> configs) {
+        String ultimaClase = "";
+        for (Map.Entry<Integer, List<Asiento>> entry : mapaFilas.entrySet()) {
+            int numFila = entry.getKey();
+            List<Asiento> asientosFila = new ArrayList<>(entry.getValue());
+            ConfiguracionCabina config = buscarConfiguracionParaFila(numFila, configs);
+
+            ordenarAsientosSegunConfig(asientosFila, config);
+
+            String claseFila = !asientosFila.isEmpty() && asientosFila.get(0).getClaseAsiento() != null
+                    ? asientosFila.get(0).getClaseAsiento().getDescripcion()
+                    : (config != null && config.getClaseAsiento() != null ? config.getClaseAsiento().getDescripcion() : "Económica");
+            boolean esEmergencia = (config != null && Boolean.TRUE.equals(config.getEsSalidaEmergencia()))
+                    || asientosFila.stream().anyMatch(s -> Boolean.TRUE.equals(s.getEsEmergencia()));
+
+            FilaCabinaDTO filaDTO = new FilaCabinaDTO(numFila, claseFila, esEmergencia);
+            if (!claseFila.equalsIgnoreCase(ultimaClase)) {
+                filaDTO.setEsPrimerFilaDeClase(true);
+                ultimaClase = claseFila;
+            }
+
+            List<BloqueAsientosDTO> bloques = dividirEnBloques(asientosFila, config);
+            filaDTO.setBloques(bloques);
+            if (bloques.size() >= 3 || asientosFila.size() >= 7) {
+                this.avionDoblePasilloSimulador = true;
+            }
+            this.filasCabinaSimulador.add(filaDTO);
+        }
+    }
+
+    private ConfiguracionCabina buscarConfiguracionParaFila(int numFila, List<ConfiguracionCabina> configs) {
+        if (configs == null) {
+            return null;
+        }
+        for (ConfiguracionCabina cc : configs) {
+            if (cc.getFilaInicio() != null && cc.getFilaFin() != null
+                    && numFila >= cc.getFilaInicio() && numFila <= cc.getFilaFin()) {
+                return cc;
+            }
+        }
+        return null;
+    }
+
+    private void ordenarAsientosSegunConfig(List<Asiento> asientosFila, ConfiguracionCabina config) {
+        if (config != null && config.getLetrasColumnas() != null && !config.getLetrasColumnas().isBlank()) {
+            List<String> orden = Arrays.stream(config.getLetrasColumnas().split(","))
+                    .map(s -> s.trim().toUpperCase())
+                    .filter(s -> !s.isEmpty())
+                    .collect(Collectors.toList());
+            asientosFila.sort(Comparator
+                    .comparingInt((Asiento s) -> {
+                        int idx = s.getLetra() != null ? orden.indexOf(s.getLetra().trim().toUpperCase()) : -1;
+                        return idx >= 0 ? idx : Integer.MAX_VALUE;
+                    })
+                    .thenComparing(s -> s.getLetra() != null ? s.getLetra() : ""));
+            return;
+        }
+        asientosFila.sort(Comparator.comparing(s -> s.getLetra() != null ? s.getLetra() : ""));
+    }
+
+    private List<BloqueAsientosDTO> dividirEnBloques(List<Asiento> asientosFila, ConfiguracionCabina config) {
+        List<Integer> tamanosBloque = parsearDistribucion(config != null ? config.getDistribucionColumnas() : null);
+        List<String> letrasConfig = (config != null && config.getLetrasColumnas() != null)
+                ? Arrays.stream(config.getLetrasColumnas().split(","))
+                        .map(s -> s.trim().toUpperCase())
+                        .filter(s -> !s.isEmpty())
+                        .collect(Collectors.toList())
+                : List.of();
+
+        // Mapear cada letra configurada a su índice de bloque (pasillos según configuración de cabina)
+        if (!tamanosBloque.isEmpty() && !letrasConfig.isEmpty()) {
+            Map<String, Integer> bloquePorLetra = new HashMap<>();
+            int cursorLetra = 0;
+            for (int b = 0; b < tamanosBloque.size(); b++) {
+                int cap = tamanosBloque.get(b);
+                for (int k = 0; k < cap && cursorLetra < letrasConfig.size(); k++) {
+                    bloquePorLetra.put(letrasConfig.get(cursorLetra++), b);
+                }
+            }
+            List<BloqueAsientosDTO> resultado = new ArrayList<>();
+            for (int b = 0; b < tamanosBloque.size(); b++) {
+                resultado.add(new BloqueAsientosDTO());
+            }
+            for (Asiento s : asientosFila) {
+                String letra = s.getLetra() != null ? s.getLetra().trim().toUpperCase() : "";
+                Integer idxBloque = bloquePorLetra.get(letra);
+                if (idxBloque != null && idxBloque < resultado.size()) {
+                    resultado.get(idxBloque).getAsientos().add(convertirAInfoAsiento(s));
+                }
+            }
+            resultado.removeIf(b -> b.getAsientos().isEmpty());
+            if (!resultado.isEmpty()) {
+                return resultado;
+            }
+        }
+
+        // Respaldo si no hay configuración de letras coincidente
+        List<BloqueAsientosDTO> bloques = new ArrayList<>();
+        BloqueAsientosDTO bloqueActual = new BloqueAsientosDTO();
+        int total = asientosFila.size();
+        for (int i = 0; i < total; i++) {
+            Asiento s = asientosFila.get(i);
+            bloqueActual.getAsientos().add(convertirAInfoAsiento(s));
+            boolean cortar = false;
+            if (!tamanosBloque.isEmpty()) {
+                int acumulado = 0;
+                for (int b = 0; b < tamanosBloque.size() - 1; b++) {
+                    acumulado += tamanosBloque.get(b);
+                    if (i == acumulado - 1 && i < total - 1) {
+                        cortar = true;
+                        break;
+                    }
+                }
+            } else if (total == 10) {
+                cortar = (i == 2 || i == 6) && i < total - 1;
+            } else if (total == 9) {
+                cortar = (i == 2 || i == 5) && i < total - 1;
+            } else if (total == 7 || total == 8) {
+                cortar = (i == 1 || i == (total == 8 ? 5 : 4)) && i < total - 1;
+            } else if (total == 6) {
+                cortar = (i == 2) && i < total - 1;
+            } else if (total == 4) {
+                cortar = (i == 1) && i < total - 1;
+            } else if (total == 3) {
+                cortar = (i == 0) && i < total - 1;
+            }
+            if (cortar) {
+                bloques.add(bloqueActual);
+                bloqueActual = new BloqueAsientosDTO();
+            }
+        }
+        if (!bloqueActual.getAsientos().isEmpty()) {
+            bloques.add(bloqueActual);
+        }
+        return bloques;
+    }
+
+    private List<Integer> parsearDistribucion(String distribucion) {
+        List<Integer> resultado = new ArrayList<>();
+        if (distribucion == null || distribucion.isBlank()) {
+            return resultado;
+        }
+        for (String parte : distribucion.split("-")) {
+            try {
+                int n = Integer.parseInt(parte.trim());
+                if (n > 0) {
+                    resultado.add(n);
+                }
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return resultado;
+    }
+
+    private InfoAsientoDTO convertirAInfoAsiento(Asiento s) {
+        String clase = (s.getClaseAsiento() != null && s.getClaseAsiento().getDescripcion() != null)
+                ? s.getClaseAsiento().getDescripcion()
+                : "Económica";
+        return new InfoAsientoDTO(
+                s.getIdAsiento() != null ? s.getIdAsiento() : 0,
+                s.getNumeroAsiento(),
+                "libre",
+                0,
+                clase,
+                s.getFila(),
+                s.getLetra(),
+                Boolean.TRUE.equals(s.getEsVentana()),
+                Boolean.TRUE.equals(s.getEsPasillo()),
+                Boolean.TRUE.equals(s.getEsEmergencia())
+        );
     }
 
     public void eliminarAvion(Integer id) {
@@ -377,4 +630,9 @@ public class GestionFlotaIntegradaBean implements Serializable {
     public Map<Integer, Integer> getCapacidadesClaseMap() { return capacidadesClaseMap; }
     public Map<Integer, List<Asiento>> getAsientosPorFilaMap() { return asientosPorFilaMap; }
     public int getTotalAsientosCalculados() { return totalAsientosCalculados; }
+    public int getAnoActual() { return LocalDate.now().getYear(); }
+    public List<FilaCabinaDTO> getFilasCabinaSimulador() { return filasCabinaSimulador; }
+    public boolean isAvionDoblePasilloSimulador() { return avionDoblePasilloSimulador; }
+    public int getTotalAsientosSimulador() { return totalAsientosSimulador; }
+    public String getDistribucionResumenSimulador() { return distribucionResumenSimulador; }
 }
