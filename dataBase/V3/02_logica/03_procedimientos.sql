@@ -393,7 +393,7 @@ VALUES (
            'CANCELACION_RESERVA',
            'reserva',
            p_id_reserva,
-           FORMAT('CANCELACION EXITOSA | ID_CANCELACION: %s | RESERVA: %s | MONTO: $%s | ASIENTOS_LIBERADOS_CANTIDAD: %s | SOLICITANTE: %s',
+           FORMAT('CANCELACION VOLUNTARIA EXITOSA | ID_CANCELACION: %s | RESERVA: %s | MONTO_RESERVA: $%s | REEMBOLSO: $0 (Sin Reembolso) | ASIENTOS_LIBERADOS_CANTIDAD: %s | SOLICITANTE: %s',
                   v_id_cancelacion, p_id_reserva, v_total_reserva, v_asientos_count, p_rut_pasajero),
            p_ip_usuario
        );
@@ -402,7 +402,13 @@ VALUES (
 DELETE FROM reserva_asiento
 WHERE id_reserva = p_id_reserva;
 
--- 8. Actualizar estado de la Reserva
+-- 8. Anular cualquier Check-In emitido previamente para esta reserva
+UPDATE checkin
+SET estado = 'ANULADO'
+WHERE id_reserva = p_id_reserva
+  AND COALESCE(estado, '') <> 'ANULADO';
+
+-- 9. Actualizar estado de la Reserva
 UPDATE reserva
 SET estado_reserva = v_id_estado_cancelado
 WHERE id_reserva = p_id_reserva;

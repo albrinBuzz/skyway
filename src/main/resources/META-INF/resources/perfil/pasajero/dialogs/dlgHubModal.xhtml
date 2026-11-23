@@ -353,10 +353,10 @@
                                                      icon="pi pi-arrow-circle-up"
                                                      styleClass="btn btn-sm btn-primary font-weight-bold"
                                                      style="background: #2563EB !important; border: 1px solid #1D4ED8 !important; border-radius: 6px !important;"
-                                                     disabled="#{perfilPasajeroView.reservaCancelada}"
+                                                     rendered="#{!perfilPasajeroView.reservaCancelada}"
                                                      actionListener="#{perfilPasajeroView.prepararUpgrade(perfilPasajeroView.itinerarioSeleccionado)}"
                                                      update=":formUpgradeTarifa:dlgUpgradeTarifa :globalGrowl"
-                                                     oncomplete="PF('dlgUpgradeTarifa').show();" />
+                                                     oncomplete="if (!args || !args.validationFailed) PF('dlgUpgradeTarifa').show();" />
                                 </div>
                             </div>
 
@@ -676,7 +676,7 @@
                             <h:panelGroup rendered="#{!perfilPasajeroView.reservaCancelada}">
                                 <div class="alert alert-danger mb-3" style="background: rgba(239,68,68,0.15); border:1px solid #ef4444; border-radius:8px; padding:12px;">
                                     <h6 class="font-weight-bold text-danger"><i class="pi pi-exclamation-triangle me-2"></i>Atención antes de Cancelar</h6>
-                                    <p class="small m-0 text-white-50">La cancelación es irreversible. Se liberarán los asientos para la venta y se registrará la solicitud de reembolso.</p>
+                                    <p class="small m-0 text-white-50">La cancelación voluntaria es irreversible: se liberarán los asientos para la venta y se anulará cualquier tarjeta de embarque emitida. Por política de SkyWay, las cancelaciones realizadas por el pasajero <strong class="text-white">no generan reembolso</strong> (aplica únicamente ante cancelación operacional del vuelo por parte de la aerolínea).</p>
                                 </div>
 
                                 <div class="mb-3">
@@ -688,9 +688,9 @@
                                                  icon="pi pi-trash"
                                                  styleClass="ui-button-danger w-100"
                                                  actionListener="#{perfilPasajeroView.procesarCancelacion}"
-                                                 update=":formVuelos:tablaItinerarios :formVuelos:scheduleItinerarios :globalGrowl"
-                                                 oncomplete="PF('dlgHubModal').hide();">
-                                    <p:confirm header="Confirmar Cancelación" message="¿Estás seguro de que deseas cancelar esta reserva?" icon="pi pi-exclamation-triangle" />
+                                                 update=":formVuelos:tabVuelos :formHubModal:dlgHubModal :globalGrowl"
+                                                 oncomplete="if (args &amp;&amp; !args.validationFailed) PF('dlgHubModal').hide();">
+                                    <p:confirm header="Confirmar Cancelación (Sin Reembolso)" message="¿Estás seguro de que deseas cancelar esta reserva? Esta acción es irreversible y no contempla reembolso." icon="pi pi-exclamation-triangle" />
                                 </p:commandButton>
                             </h:panelGroup>
 

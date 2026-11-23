@@ -864,7 +864,8 @@ DECLARE
 BEGIN
     v_motivo := LOWER(COALESCE(NEW.motivo, ''));
     -- El reembolso aplica únicamente ante cancelación operacional de vuelo por parte de la aerolínea
-    IF (v_motivo NOT LIKE '%cancelación operacional%' AND v_motivo NOT LIKE '%cancelacion operacional%')
+    IF UPPER(COALESCE(NEW.estado, '')) = 'SIN REEMBOLSO'
+       OR (v_motivo NOT LIKE '%cancelación operacional%' AND v_motivo NOT LIKE '%cancelacion operacional%')
        OR COALESCE(NEW.monto_reembolso, 0) <= 0 THEN
         RETURN NEW;
     END IF;

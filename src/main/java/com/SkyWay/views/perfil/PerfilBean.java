@@ -420,21 +420,37 @@ public class PerfilBean implements Serializable {
 		}
 
 		try {
-			reservaService.cancelarReserva(itinerarioSeleccionado.getIdReserva(), usuario.getRut(), motivoCancelacion);
+			Integer idReserva = itinerarioSeleccionado.getIdReserva();
+			reservaService.cancelarReserva(idReserva, usuario.getRut(), motivoCancelacion);
+
+			this.reservaCancelada = true;
+			this.motivoCancelacion = null;
+			if (idReserva != null) {
+				reservaEntityCache.remove(idReserva);
+				pnrCache.remove(idReserva);
+				asientosReservaCache.remove(idReserva);
+				cantidadPasajerosCache.remove(idReserva);
+				nombresPasajerosCache.remove(idReserva);
+			}
 
 			FacesContext.getCurrentInstance().addMessage(null,
 					new FacesMessage(FacesMessage.SEVERITY_INFO,
-							"Reserva Cancelada", "La reserva N° #" + itinerarioSeleccionado.getIdReserva() + " ha sido cancelada exitosamente."));
+							"Reserva Cancelada (Sin Reembolso)",
+							"La reserva N° #" + idReserva + " fue anulada y sus asientos quedaron liberados. La cancelación voluntaria no genera reembolso (solo aplica ante cancelación operacional de la aerolínea)."));
 
 			listaItinerarios = itinerarioService.findResumenByRut(usuario.getRut(), 100, 0);
 			filtrarVuelosFuturos();
 			actualizarSchedule();
+			inicializarMetricasDelta();
 			cargarReembolsosPasajero();
 
 		} catch (Exception e) {
 			Logger.logError("Error al cancelar la reserva: " + e.getMessage());
-			FacesContext.getCurrentInstance().addMessage(null,
-					new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", e.getMessage()));
+			FacesContext fc = FacesContext.getCurrentInstance();
+			if (fc != null) {
+				fc.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error al cancelar", e.getMessage()));
+				fc.validationFailed();
+			}
 		}
 	}
 
@@ -955,6 +971,19 @@ public class PerfilBean implements Serializable {
 	public void prepararUpgrade(ItinerarioResumenDTO it) {
 		if (it == null) return;
 		this.itinerarioSeleccionado = it;
+		if (isReservaCanceladaPorItinerario(it.getIdReserva())
+				|| isCancelacionOperativaReserva(it.getIdReserva(), it.getIdItinerario())) {
+			this.reservaCancelada = true;
+			this.opcionesUpgrade = new ArrayList<>();
+			this.opcionUpgradeSeleccionada = null;
+			FacesContext fc = FacesContext.getCurrentInstance();
+			if (fc != null) {
+				fc.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_WARN,
+						"Reserva Cancelada", "No es posible ascender la tarifa de una reserva o vuelo cancelado."));
+				fc.validationFailed();
+			}
+			return;
+		}
 		this.opcionesUpgrade = upgradeTarifaService.obtenerOpcionesUpgrade(it.getIdReserva(), it.getIdItinerario());
 		if (this.opcionesUpgrade != null && !this.opcionesUpgrade.isEmpty()) {
 			this.opcionUpgradeSeleccionada = this.opcionesUpgrade.get(0);
@@ -971,6 +1000,17 @@ public class PerfilBean implements Serializable {
 		if (itinerarioSeleccionado == null || opcionUpgradeSeleccionada == null) {
 			FacesContext.getCurrentInstance().addMessage(null,
 					new FacesMessage(FacesMessage.SEVERITY_WARN, "Selección Requerida", "Debes seleccionar una tarifa superior para ascender."));
+			return;
+		}
+		if (this.reservaCancelada
+				|| isReservaCanceladaPorItinerario(itinerarioSeleccionado.getIdReserva())
+				|| isCancelacionOperativaReserva(itinerarioSeleccionado.getIdReserva(), itinerarioSeleccionado.getIdItinerario())) {
+			FacesContext fc = FacesContext.getCurrentInstance();
+			if (fc != null) {
+				fc.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
+						"Operación No Permitida", "No es posible ascender la tarifa de una reserva o vuelo cancelado."));
+				fc.validationFailed();
+			}
 			return;
 		}
 

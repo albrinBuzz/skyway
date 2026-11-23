@@ -6,37 +6,37 @@ SET search_path TO public, directus;
 
 -- Limpieza segura previa: solo trunca tablas SkyWay existentes en orden determinista y sin abortar si alguna no existe o hay bloqueo
 DO $$
-DECLARE
-    v_tablas TEXT;
-BEGIN
-    SET LOCAL lock_timeout = '10s';
+    DECLARE
+        v_tablas TEXT;
+    BEGIN
+        SET LOCAL lock_timeout = '10s';
 
-    SELECT string_agg(format('%I.%I', schemaname, tablename), ', ' ORDER BY tablename)
-    INTO v_tablas
-    FROM pg_tables
-    WHERE schemaname = ANY (current_schemas(false))
-      AND lower(tablename) = ANY (ARRAY[
-          'aerolinea', 'aeropuerto', 'asiento', 'asignacion_puerta', 'avion',
-          'cancelacion', 'cancelacion_asiento', 'capacidad_clase', 'caracteristica_tarifa',
-          'checkin', 'checkin_pasajero', 'ciudad', 'clase_asiento', 'configuracion_cabina',
-          'continente', 'cuenta_reembolso', 'equipaje', 'estado_reserva', 'estado_vuelo',
-          'fabricante', 'itinerario', 'itinerario_tarifa', 'itinerario_vuelo',
-          'log_auditoria', 'metodo_pago', 'modelo_avion', 'notificacion', 'pago',
-          'pais', 'pasajero', 'pasajero_reserva', 'personal_administrativo', 'piloto',
-          'precio_asiento', 'puerta_embarque', 'reembolso', 'reserva', 'reserva_asiento',
-          'reserva_itinerario', 'roles', 'rolusuario', 'segmento_vuelo', 'tarifa',
-          'tarifa_caracteristica', 'tipo_equipaje', 'tipo_turno', 'token_recuperacion',
-          'tripulacion', 'turno', 'turno_tripulacion', 'usuario', 'vuelo',
-          'wal_transaccion_pago'
-      ]);
+        SELECT string_agg(format('%I.%I', schemaname, tablename), ', ' ORDER BY tablename)
+        INTO v_tablas
+        FROM pg_tables
+        WHERE schemaname = ANY (current_schemas(false))
+          AND lower(tablename) = ANY (ARRAY[
+            'aerolinea', 'aeropuerto', 'asiento', 'asignacion_puerta', 'avion',
+            'cancelacion', 'cancelacion_asiento', 'capacidad_clase', 'caracteristica_tarifa',
+            'checkin', 'checkin_pasajero', 'ciudad', 'clase_asiento', 'configuracion_cabina',
+            'continente', 'cuenta_reembolso', 'equipaje', 'estado_reserva', 'estado_vuelo',
+            'fabricante', 'itinerario', 'itinerario_tarifa', 'itinerario_vuelo',
+            'log_auditoria', 'metodo_pago', 'modelo_avion', 'notificacion', 'pago',
+            'pais', 'pasajero', 'pasajero_reserva', 'personal_administrativo', 'piloto',
+            'precio_asiento', 'puerta_embarque', 'reembolso', 'reserva', 'reserva_asiento',
+            'reserva_itinerario', 'roles', 'rolusuario', 'segmento_vuelo', 'tarifa',
+            'tarifa_caracteristica', 'tipo_equipaje', 'tipo_turno', 'token_recuperacion',
+            'tripulacion', 'turno', 'turno_tripulacion', 'usuario', 'vuelo',
+            'wal_transaccion_pago'
+            ]);
 
-    IF v_tablas IS NOT NULL THEN
-        EXECUTE 'TRUNCATE TABLE ' || v_tablas || ' RESTART IDENTITY CASCADE';
-    END IF;
-EXCEPTION
-    WHEN lock_not_available OR deadlock_detected THEN
-        RAISE NOTICE 'TRUNCATE previo omitido (%): se continuará con DROP/CREATE.', SQLERRM;
-END $$;
+        IF v_tablas IS NOT NULL THEN
+            EXECUTE 'TRUNCATE TABLE ' || v_tablas || ' RESTART IDENTITY CASCADE';
+        END IF;
+    EXCEPTION
+        WHEN lock_not_available OR deadlock_detected THEN
+            RAISE NOTICE 'TRUNCATE previo omitido (%): se continuará con DROP/CREATE.', SQLERRM;
+    END $$;
 
 
 -- Eliminar Secuencias con CASCADE
@@ -682,7 +682,7 @@ CREATE TABLE Cancelacion (
                              ID_RESERVA INT REFERENCES Reserva(ID_RESERVA),
                              Fecha TIMESTAMP NOT NULL,
                              Motivo TEXT,
-                             Estado VARCHAR(50) CHECK (Estado IN ('Pendiente', 'Procesado', 'Reembolsado')),
+                             Estado VARCHAR(50) CHECK (Estado IN ('Pendiente', 'Procesado', 'Reembolsado', 'Sin Reembolso')),
                              Monto_Reembolso DECIMAL(10, 2) -- Puede ser igual al monto total o un porcentaje
 );
 
@@ -999,6 +999,16 @@ CREATE INDEX IF NOT EXISTS idx_checkin_reserva ON Checkin(ID_RESERVA);
 
 CREATE INDEX IF NOT EXISTS idx_token_rec_hash ON Token_Recuperacion(token_hash);
 CREATE INDEX IF NOT EXISTS idx_token_rec_usuario_estado ON Token_Recuperacion(rut_usuario, usado, revocado, fecha_creacion DESC);
+
+-- Índices de rango temporal para telemetría y reportería rápida en PostgreSQL Free Tier
+CREATE INDEX IF NOT EXISTS idx_reserva_fecha ON Reserva(Fecha_Reserva DESC);
+CREATE INDEX IF NOT EXISTS idx_pago_fecha ON Pago(Fecha DESC);
+CREATE INDEX IF NOT EXISTS idx_checkin_fecha_hora ON Checkin(Fecha_Hora DESC);
+CREATE INDEX IF NOT EXISTS idx_notificacion_fecha_env ON Notificacion(Fecha DESC, enviada);
+
+
+
+
 DO $$
     DECLARE
         reg RECORD;
@@ -1865,7 +1875,8 @@ DECLARE
 BEGIN
     v_motivo := LOWER(COALESCE(NEW.motivo, ''));
     -- El reembolso aplica únicamente ante cancelación operacional de vuelo por parte de la aerolínea
-    IF (v_motivo NOT LIKE '%cancelación operacional%' AND v_motivo NOT LIKE '%cancelacion operacional%')
+    IF UPPER(COALESCE(NEW.estado, '')) = 'SIN REEMBOLSO'
+        OR (v_motivo NOT LIKE '%cancelación operacional%' AND v_motivo NOT LIKE '%cancelacion operacional%')
         OR COALESCE(NEW.monto_reembolso, 0) <= 0 THEN
         RETURN NEW;
     END IF;
@@ -1902,6 +1913,8 @@ CREATE TRIGGER trg_crear_reembolso_al_cancelar
     AFTER INSERT ON Cancelacion
     FOR EACH ROW
 EXECUTE FUNCTION fn_crear_reembolso_automatico();
+
+
 
 
 CREATE OR REPLACE FUNCTION fnBuscarVuelo(
@@ -2726,6 +2739,9 @@ BEGIN
                      v_pasajeros_notificados;
 END;
 $$;
+
+
+
 -- ==========================================
 -- 1. PROCEDIMIENTO: CONFIRMAR RESERVA
 -- ==========================================
@@ -3121,7 +3137,7 @@ BEGIN
                'CANCELACION_RESERVA',
                'reserva',
                p_id_reserva,
-               FORMAT('CANCELACION EXITOSA | ID_CANCELACION: %s | RESERVA: %s | MONTO: $%s | ASIENTOS_LIBERADOS_CANTIDAD: %s | SOLICITANTE: %s',
+               FORMAT('CANCELACION VOLUNTARIA EXITOSA | ID_CANCELACION: %s | RESERVA: %s | MONTO_RESERVA: $%s | REEMBOLSO: $0 (Sin Reembolso) | ASIENTOS_LIBERADOS_CANTIDAD: %s | SOLICITANTE: %s',
                       v_id_cancelacion, p_id_reserva, v_total_reserva, v_asientos_count, p_rut_pasajero),
                p_ip_usuario
            );
@@ -3130,7 +3146,13 @@ BEGIN
     DELETE FROM reserva_asiento
     WHERE id_reserva = p_id_reserva;
 
--- 8. Actualizar estado de la Reserva
+-- 8. Anular cualquier Check-In emitido previamente para esta reserva
+    UPDATE checkin
+    SET estado = 'ANULADO'
+    WHERE id_reserva = p_id_reserva
+      AND COALESCE(estado, '') <> 'ANULADO';
+
+-- 9. Actualizar estado de la Reserva
     UPDATE reserva
     SET estado_reserva = v_id_estado_cancelado
     WHERE id_reserva = p_id_reserva;

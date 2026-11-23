@@ -345,6 +345,8 @@ public class ReembolsoServiceImpl implements ReembolsoService {
                     + "   OR UPPER(COALESCE(rem.rut_solicitante, '')) = :rut "
                     + "   OR EXISTS (SELECT 1 FROM pasajero_reserva pr WHERE pr.id_reserva = r.id_reserva AND UPPER(pr.rut) = :rut) "
                     + "   OR EXISTS (SELECT 1 FROM cancelacion_asiento ca2 WHERE ca2.id_cancelacion = c.id_cancelacion AND UPPER(ca2.rut_pasajero) = :rut)) ")
+                    + "AND UPPER(COALESCE(c.estado, '')) <> 'SIN REEMBOLSO' "
+                    + "AND COALESCE(c.monto_reembolso, 0) > 0 "
                     + "AND (LOWER(COALESCE(c.motivo, '')) LIKE '%cancelación operacional%' "
                     + "     OR LOWER(COALESCE(c.motivo, '')) LIKE '%cancelacion operacional%') ";
 
@@ -444,10 +446,17 @@ public class ReembolsoServiceImpl implements ReembolsoService {
             throw new IllegalStateException("El reembolso aplica únicamente ante cancelación operacional de vuelo por parte de la aerolínea.");
         }
         List<?> res = em.createNativeQuery(
-                "SELECT motivo FROM cancelacion WHERE id_cancelacion = :idCanc LIMIT 1"
+                "SELECT motivo, estado, COALESCE(monto_reembolso, 0) FROM cancelacion WHERE id_cancelacion = :idCanc LIMIT 1"
         ).setParameter("idCanc", idCancelacion).getResultList();
-        String motivo = res.isEmpty() || res.get(0) == null ? "" : res.get(0).toString().toLowerCase();
-        if (!motivo.contains("cancelación operacional") && !motivo.contains("cancelacion operacional")) {
+        if (res.isEmpty()) {
+            throw new IllegalStateException("Solo se consideran reembolsos cuando un vuelo es cancelado operacionalmente por parte de la aerolínea.");
+        }
+        Object[] row = (Object[]) res.get(0);
+        String motivo = row[0] == null ? "" : row[0].toString().toLowerCase();
+        String estado = row[1] == null ? "" : row[1].toString().toUpperCase();
+        BigDecimal monto = row[2] != null ? new BigDecimal(row[2].toString()) : BigDecimal.ZERO;
+        if ("SIN REEMBOLSO".equals(estado) || monto.compareTo(BigDecimal.ZERO) <= 0
+                || (!motivo.contains("cancelación operacional") && !motivo.contains("cancelacion operacional"))) {
             throw new IllegalStateException("Solo se consideran reembolsos cuando un vuelo es cancelado operacionalmente por parte de la aerolínea.");
         }
     }

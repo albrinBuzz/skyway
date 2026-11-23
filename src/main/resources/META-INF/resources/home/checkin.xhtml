@@ -338,7 +338,7 @@
                                 <strong class="d-block text-danger mb-1" style="font-size: 1.05rem;">Vuelo o Reserva Cancelada</strong>
                                 <span class="small text-white-50">
                                     No es posible realizar el Check-In ni descargar tarjetas de embarque porque esta reserva o alguno de los vuelos asociados ha sido cancelado.
-                                    Revisa tu bandeja de notificaciones o correo electrónico para conocer el estado de tu reembolso.
+                                    Si fue cancelado operacionalmente por la aerolínea, revisa tu bandeja de notificaciones o la pestaña Reembolsos en tu perfil; las cancelaciones voluntarias del pasajero no contemplan reembolso.
                                 </span>
                             </div>
                         </h:panelGroup>
@@ -417,7 +417,7 @@
                         </h:panelGroup>
 
                         <!-- LLAMADO A ASCENSO DE TARIFA SI LA TARIFA ACTUAL NO PERMITE CAMBIO DE ASIENTO -->
-                        <h:panelGroup rendered="#{!checkInView.permiteCambioAsiento and !checkInView.checkInExitoso}" layout="block">
+                        <h:panelGroup rendered="#{!checkInView.viajeCancelado and !checkInView.permiteCambioAsiento and !checkInView.checkInExitoso}" layout="block">
                             <div class="p-3 mb-4 rounded d-flex justify-content-between align-items-center flex-wrap gap-3"
                                  style="background: #0E1B2D; border: 1px solid #1E3A5C; border-left: 4px solid #2563EB;">
                                 <div class="d-flex align-items-center gap-3">
@@ -437,12 +437,12 @@
                                                  style="background: #2563EB !important; border: 1px solid #3B82F6 !important; font-size: 0.85rem;"
                                                  actionListener="#{checkInView.prepararUpgradeCheckIn}"
                                                  update=":formUpgradeCheckIn:dlgUpgradeCheckIn :globalGrowl"
-                                                 oncomplete="PF('dlgUpgradeCheckIn').show();" />
+                                                 oncomplete="if (!args || !args.validationFailed) PF('dlgUpgradeCheckIn').show();" />
                             </div>
                         </h:panelGroup>
 
                         <!-- TABLA DE PASAJEROS Y ASIENTOS (CON SOPORTE MULTI-PASAJERO Y NOMBRES REALES) -->
-                        <h:panelGroup rendered="#{checkInView.tieneTicketsDetallados}" layout="block">
+                        <h:panelGroup rendered="#{checkInView.tieneTicketsDetallados and !checkInView.viajeCancelado}" layout="block">
                             <p:dataTable value="#{checkInView.listaTicketsBoardingPass}" var="ticket" lazy="false" styleClass="skyway-datatable mb-4">
                                 <p:column headerText="Pasajero">
                                     <div class="d-flex align-items-center gap-2">
