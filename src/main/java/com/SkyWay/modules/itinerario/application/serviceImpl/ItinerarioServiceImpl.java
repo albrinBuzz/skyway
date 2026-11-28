@@ -113,10 +113,9 @@ public class ItinerarioServiceImpl implements ItinerarioService {
             tsFin = Timestamp.valueOf(fechaFin.atTime(23, 59, 59));
         }
 
-        String sql = "SELECT * FROM fn_getItinerariosPorRutYFechas(:rut, :limit, :offset, :fechaIni, :fechaFin)";
+        String sql = "SELECT * FROM fn_getItinerariosPorRutYFechas(:rut, :limit, :offset, CAST(:fechaIni AS TIMESTAMP), CAST(:fechaFin AS TIMESTAMP))";
 
-        // Se pasa la cadena del ResultSetMapping registrado en el DTO
-        Query query = entityManager.createNativeQuery(sql, "ItinerarioResumenDTOMapping");
+        Query query = entityManager.createNativeQuery(sql, ItinerarioResumenDTO.class);
         query.setParameter("rut", rut);
         query.setParameter("limit", limit);
         query.setParameter("offset", offset);

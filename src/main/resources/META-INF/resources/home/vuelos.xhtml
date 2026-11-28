@@ -768,34 +768,34 @@
                                 <div class="route-line"></div>
                             </div>
 
-                            <h:panelGroup rendered="#{vuelo.cantParadas ne 'sin paradas'}">
-                                <div class="d-flex align-items-center justify-content-center gap-2 mt-1">
+                            <div class="d-flex align-items-center justify-content-center gap-2 mt-1">
+                                <h:panelGroup rendered="#{vuelo.cantParadas ne 'sin paradas'}">
                                     <span class="badge bg-dark border border-secondary text-light" style="font-size: 0.72rem;">
                                         #{vuelo.cantParadas}
                                     </span>
+                                </h:panelGroup>
 
-                                    <p:commandLink action="#{itinerarioDetalleBean.showParadas(vuelo.itinerario)}"
-                                                   update=":vueloForm:sidebarParadas"
-                                                   oncomplete="PF('sidebarParadas').show();"
-                                                   styleClass="action-link-icon"
-                                                   title="Ver itinerario detallado">
-                                        <i class="pi pi-list"/>
-                                    </p:commandLink>
+                                <h:outputText value="Directo"
+                                              rendered="#{vuelo.cantParadas eq 'sin paradas'}"
+                                              styleClass="badge bg-success bg-opacity-10 text-success border border-success" style="font-size:0.72rem;" />
 
-                                    <p:commandLink action="#{itinerarioDetalleBean.showMapa(vuelo.itinerario)}"
-                                                   update="@none"
-                                                   process="@this"
-                                                   oncomplete="PF('sidebarMapa').show();"
-                                                   styleClass="action-link-icon"
-                                                   title="Ver mapa de ruta">
-                                        <i class="pi pi-map"/>
-                                    </p:commandLink>
-                                </div>
-                            </h:panelGroup>
+                                <p:commandLink action="#{itinerarioDetalleBean.showParadas(vuelo.itinerario)}"
+                                               update=":vueloForm:sidebarParadas"
+                                               oncomplete="PF('sidebarParadas').show();"
+                                               styleClass="action-link-icon"
+                                               title="Ver detalle del itinerario">
+                                    <i class="pi pi-list"/>
+                                </p:commandLink>
 
-                            <h:outputText value="Directo"
-                                          rendered="#{vuelo.cantParadas eq 'sin paradas'}"
-                                          styleClass="badge bg-success bg-opacity-10 text-success border border-success mt-1" style="font-size:0.72rem;" />
+                                <p:commandLink action="#{itinerarioDetalleBean.showMapa(vuelo.itinerario)}"
+                                               update="@none"
+                                               process="@this"
+                                               oncomplete="PF('sidebarMapa').show();"
+                                               styleClass="action-link-icon"
+                                               title="Ver mapa de ruta">
+                                    <i class="pi pi-map"/>
+                                </p:commandLink>
+                            </div>
                         </div>
                     </p:column>
 
@@ -1107,7 +1107,8 @@
 
                 L.polyline(latlngs, { color: '#60A5FA', weight: 2.5, dashArray: '6, 6', opacity: 0.85 }).addTo(mapaRutaVuelo);
 
-                document.getElementById('mapPuntosCount').innerText = puntos.length + ' Nodos';
+                var cantEscalas = Math.max(0, puntos.length - 2);
+                document.getElementById('mapPuntosCount').innerText = cantEscalas === 0 ? 'Directo' : (cantEscalas === 1 ? '1 Escala' : cantEscalas + ' Escalas');
                 document.getElementById('mapDistanciaTotal').innerText = distanciaTotal.toLocaleString('es-CL') + ' km';
 
                 setTimeout(function () {

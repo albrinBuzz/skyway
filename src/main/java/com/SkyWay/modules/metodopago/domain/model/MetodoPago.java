@@ -18,8 +18,8 @@ public class MetodoPago implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
-	@GeneratedValue(strategy=GenerationType.SEQUENCE,generator = "estado_vuelo_seq")
-	@SequenceGenerator(name = "estado_vuelo_seq",sequenceName = "estado_vuelo_seq",allocationSize = 1)
+	@GeneratedValue(strategy=GenerationType.SEQUENCE,generator = "metodo_pago_seq")
+	@SequenceGenerator(name = "metodo_pago_seq",sequenceName = "metodo_pago_seq",allocationSize = 1)
 	@Column(name="id_metodo_pago")
 	private Integer idMetodoPago;
 

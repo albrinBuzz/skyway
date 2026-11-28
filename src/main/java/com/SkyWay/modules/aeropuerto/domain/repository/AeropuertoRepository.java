@@ -16,6 +16,15 @@ public interface AeropuertoRepository extends JpaRepository<Aeropuerto, Integer>
 
     boolean existsByCodigoIata(String codigoIata);
 
+    @Query(value = "SELECT COUNT(*) > 0 FROM aeropuerto WHERE UPPER(codigo_iata) = UPPER(:iata)", nativeQuery = true)
+    boolean existeIataGlobal(@Param("iata") String iata);
+
+    @Query(value = "SELECT COUNT(*) > 0 FROM aeropuerto WHERE UPPER(codigo_iata) = UPPER(:iata) AND activo = false", nativeQuery = true)
+    boolean existeIataInactivo(@Param("iata") String iata);
+
+    @Query(value = "SELECT COUNT(*) > 0 FROM aeropuerto WHERE UPPER(codigo_iata) = UPPER(:iata) AND id_aeropuerto <> :id", nativeQuery = true)
+    boolean existeIataGlobalExcluyendoId(@Param("iata") String iata, @Param("id") Integer id);
+
     java.util.List<Aeropuerto> findByActivoTrue();
 
     @Modifying(clearAutomatically = true)
@@ -34,11 +43,15 @@ public interface AeropuertoRepository extends JpaRepository<Aeropuerto, Integer>
             a.codigo_iata       AS codigoIata,
             a.nombre_aeropuerto AS nombreAeropuerto,
             c.nombre            AS ciudad,
+            p.nombre            AS pais,
+            COALESCE(cont.nombre, 'Sin continente') AS continente,
             ST_Y(a.posicion::geometry) AS latitud,
             ST_X(a.posicion::geometry) AS longitud,
             a.activo            AS activo
         FROM aeropuerto a
         JOIN ciudad c ON c.id_ciudad = a.id_ciudad
+        JOIN pais p ON p.id_pais = c.id_pais
+        LEFT JOIN continente cont ON cont.id_continente = p.id_continente
         WHERE a.activo = true AND c.activo = true
         ORDER BY a.nombre_aeropuerto
         """, nativeQuery = true)
@@ -50,21 +63,54 @@ public interface AeropuertoRepository extends JpaRepository<Aeropuerto, Integer>
             a.codigo_iata       AS codigoIata,
             a.nombre_aeropuerto AS nombreAeropuerto,
             c.nombre            AS ciudad,
+            p.nombre            AS pais,
+            COALESCE(cont.nombre, 'Sin continente') AS continente,
             ST_Y(a.posicion::geometry) AS latitud,
             ST_X(a.posicion::geometry) AS longitud,
             a.activo            AS activo
         FROM aeropuerto a
         JOIN ciudad c ON c.id_ciudad = a.id_ciudad
+        JOIN pais p ON p.id_pais = c.id_pais
+        LEFT JOIN continente cont ON cont.id_continente = p.id_continente
         ORDER BY a.activo DESC, a.nombre_aeropuerto
         """, nativeQuery = true)
     List<AeropuertoMapaProjection> findAllConCoordenadasAdmin();
+
+    // Inserción nativa PostGIS retornando ID para crear puertas de embarque en la misma transacción
+    @Query(value = """
+        INSERT INTO aeropuerto (id_aeropuerto, nombre_aeropuerto, codigo_iata, id_ciudad, posicion, activo)
+        VALUES (nextval('aeropuerto_seq'), :nombre, :codigoIata, :idCiudad, ST_SetSRID(ST_MakePoint(:longitud, :latitud), 4326), true)
+        RETURNING id_aeropuerto
+        """, nativeQuery = true)
+    Integer registrarAeropuertoRetornandoId(
+            @Param("nombre") String nombre,
+            @Param("codigoIata") String codigoIata,
+            @Param("idCiudad") Integer idCiudad,
+            @Param("latitud") Double latitud,
+            @Param("longitud") Double longitud
+    );
+
+    @Modifying
+    @Transactional
+    @Query(value = """
+        INSERT INTO puerta_embarque (id_puerta, codigo_puerta, terminal, id_aeropuerto, activo)
+        VALUES (nextval('puerta_seq'), :codigoPuerta, :terminal, :idAeropuerto, true)
+        """, nativeQuery = true)
+    void insertarPuertaEmbarqueNativa(
+            @Param("codigoPuerta") String codigoPuerta,
+            @Param("terminal") String terminal,
+            @Param("idAeropuerto") Integer idAeropuerto
+    );
+
+    @Query(value = "SELECT COUNT(*) FROM puerta_embarque WHERE id_aeropuerto = :idAeropuerto AND COALESCE(activo, true) = true", nativeQuery = true)
+    long contarPuertasActivasPorAeropuerto(@Param("idAeropuerto") Integer idAeropuerto);
 
     // Inserción nativa PostGIS sin modificar el esquema existente
     @Modifying
     @Transactional
     @Query(value = """
-        INSERT INTO aeropuerto (id_aeropuerto, nombre_aeropuerto, codigo_iata, id_ciudad, posicion)
-        VALUES (nextval('aeropuerto_seq'), :nombre, :codigoIata, :idCiudad, ST_SetSRID(ST_MakePoint(:longitud, :latitud), 4326))
+        INSERT INTO aeropuerto (id_aeropuerto, nombre_aeropuerto, codigo_iata, id_ciudad, posicion, activo)
+        VALUES (nextval('aeropuerto_seq'), :nombre, :codigoIata, :idCiudad, ST_SetSRID(ST_MakePoint(:longitud, :latitud), 4326), true)
         """, nativeQuery = true)
     void registrarAeropuertoNativo(
             @Param("nombre") String nombre,

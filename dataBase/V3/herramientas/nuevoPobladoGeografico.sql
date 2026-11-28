@@ -17,7 +17,7 @@ INSERT INTO Pais (ID_PAIS, Nombre, ID_CONTINENTE) VALUES
                                                       (1, 'Chile', 1),
                                                       (2, 'Uruguay', 1),
                                                       (3, 'Brasil', 1),
-                                                      (4, 'USA', 2),
+                                                      (4, 'Estados Unidos', 2),
                                                       (5, 'Perú', 1),
                                                       (6, 'Colombia', 1),
                                                       (7, 'España', 3),
@@ -25,15 +25,15 @@ INSERT INTO Pais (ID_PAIS, Nombre, ID_CONTINENTE) VALUES
                                                       (9, 'Reino Unido', 3),
                                                       (10, 'Alemania', 3),
                                                       (11, 'Italia', 3),
-                                                      (12, 'Canada', 2),
-                                                      (13, 'Mexico', 2),
+                                                      (12, 'Canadá', 2),
+                                                      (13, 'México', 2),
                                                       (14, 'Australia', 5),
                                                       (15, 'China', 4),
-                                                      (16, 'Japon', 4),
+                                                      (16, 'Japón', 4),
                                                       (17, 'Argentina', 1),
-                                                      (18, 'Panama', 2),
-                                                      (19, 'Qatar', 7),
-                                                      (20, 'Emiratos Arabes Unidos', 7),
+                                                      (18, 'Panamá', 2),
+                                                      (19, 'Catar', 7),
+                                                      (20, 'Emiratos Árabes Unidos', 7),
                                                       (21, 'India', 4),
                                                       (22, 'Corea del Sur', 4),
                                                       (23, 'Sudáfrica', 6),
@@ -53,7 +53,7 @@ INSERT INTO Pais (ID_PAIS, Nombre, ID_CONTINENTE) VALUES
                                                       (37, 'Portugal', 3),
                                                       (38, 'Finlandia', 3),
                                                       (39, 'Noruega', 3),
-                                                      (40, 'República Checa', 3),
+                                                      (40, 'Chequia', 3),
                                                       (41, 'Polonia', 3),
                                                       (42, 'Hungría', 3),
                                                       (43, 'Rumanía', 3),
@@ -112,10 +112,10 @@ INSERT INTO Pais (ID_PAIS, Nombre, ID_CONTINENTE) VALUES
                                                       (91, 'Camerún',                 6),
                                                       (92, 'Angola',                  6),
                                                       (93, 'Mozambique',              6),
-                                                      (94, 'Zimbabwe',                6),
+                                                      (94, 'Zimbabue',                6),
                                                       (95, 'Zambia',                  6),
                                                       (96, 'Uganda',                  6),
-                                                      (97, 'Rwanda',                  6),
+                                                      (97, 'Ruanda',                  6),
 
 -- Asia
                                                       (98,  'Vietnam',                4),
@@ -123,7 +123,7 @@ INSERT INTO Pais (ID_PAIS, Nombre, ID_CONTINENTE) VALUES
                                                       (100, 'Myanmar',                4),
                                                       (101, 'Camboya',                4),
                                                       (102, 'Sri Lanka',              4),
-                                                      (103, 'Bangladesh',             4),
+                                                      (103, 'Bangladés',              4),
                                                       (104, 'Nepal',                  4),
                                                       (105, 'Pakistán',               4),
                                                       (106, 'Kazajistán',             4),
@@ -132,7 +132,7 @@ INSERT INTO Pais (ID_PAIS, Nombre, ID_CONTINENTE) VALUES
                                                       (109, 'Georgia',                4),
                                                       (110, 'Armenia',                4),
                                                       (111, 'Mongolia',               4),
-                                                      (112, 'Taiwan',                 4),
+                                                      (112, 'Taiwán',                 4),
                                                       (113, 'Hong Kong',              4),
                                                       (114, 'Macao',                  4),
 
@@ -142,20 +142,20 @@ INSERT INTO Pais (ID_PAIS, Nombre, ID_CONTINENTE) VALUES
                                                       (117, 'Jordania',               7),
                                                       (118, 'Líbano',                 7),
                                                       (119, 'Kuwait',                 7),
-                                                      (120, 'Bahréin',                7),
+                                                      (120, 'Baréin',                 7),
                                                       (121, 'Omán',                   7),
                                                       (122, 'Irak',                   7),
                                                       (123, 'Irán',                   7),
 
 -- Oceanía / Pacífico
                                                       (124, 'Papúa Nueva Guinea',     5),
-                                                      (125, 'Fiji',                   5),
+                                                      (125, 'Fiyi',                   5),
                                                       (126, 'Polinesia Francesa',     5),
 
 -- América del Sur adicional
                                                       (127, 'Guyana',                 1),
                                                       (128, 'Surinam',                1),
-                                                      (129, 'Guyana Francesa',        1);
+                                                      (129, 'Guayana Francesa',       1);
 
 -- =========================================================================
 -- 3. MAESTRO DE CIUDADES

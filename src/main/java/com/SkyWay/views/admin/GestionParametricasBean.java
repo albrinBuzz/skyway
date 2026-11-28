@@ -20,6 +20,7 @@ import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
 import org.primefaces.PrimeFaces;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.io.Serializable;
 import java.util.List;
@@ -36,6 +37,7 @@ public class GestionParametricasBean implements Serializable {
     @Autowired private ClaseAsientoRepository claseAsientoRepository;
     @Autowired private EstadoVueloRepository estadoVueloRepository;
     @Autowired private TipoTurnoRepository tipoTurnoRepository;
+    @Autowired(required = false) private transient JdbcTemplate jdbcTemplate;
 
     private int activeTab = 0;
 
@@ -137,38 +139,61 @@ public class GestionParametricasBean implements Serializable {
         PrimeFaces.current().executeScript("PF('dlgParametrica').show();");
     }
 
+    private void sincronizarSecuencia(String secuencia, String tabla, String columnaPk) {
+        if (jdbcTemplate == null) return;
+        try {
+            jdbcTemplate.queryForObject(
+                    "SELECT setval('" + secuencia + "', GREATEST(COALESCE((SELECT MAX(" + columnaPk + ") FROM " + tabla + "), 0), 1), (SELECT COUNT(*) > 0 FROM " + tabla + "))",
+                    Long.class
+            );
+        } catch (Exception ignored) {
+        }
+    }
+
     public void guardar() {
         try {
+            String nombreLimpio = this.nombreForm != null ? this.nombreForm.trim() : "";
+            String descLimpia = this.descripcionForm != null ? this.descripcionForm.trim() : "";
+
             switch (this.activeTab) {
                 case 0 -> {
+                    if (idEdicion == null) sincronizarSecuencia("tipo_equipaje_seq", "tipo_equipaje", "id_tipo");
                     TipoEquipaje te = (idEdicion != null) ? tipoEquipajeRepository.findById(idEdicion).orElse(new TipoEquipaje()) : new TipoEquipaje();
-                    te.setNombre(this.nombreForm);
+                    te.setNombre(nombreLimpio);
+                    if (te.getActivo() == null) te.setActivo(true);
                     tipoEquipajeRepository.save(te);
                 }
                 case 1 -> {
+                    if (idEdicion == null) sincronizarSecuencia("metodo_pago_seq", "metodo_pago", "id_metodo_pago");
                     MetodoPago mp = (idEdicion != null) ? metodoPagoRepository.findById(idEdicion).orElse(new MetodoPago()) : new MetodoPago();
-                    mp.setDescripcion(this.descripcionForm);
+                    mp.setDescripcion(descLimpia);
                     metodoPagoRepository.save(mp);
                 }
                 case 2 -> {
+                    if (idEdicion == null) sincronizarSecuencia("estado_reserva_seq", "estado_reserva", "id_estado_reserva");
                     EstadoReserva er = (idEdicion != null) ? estadoReservaRepository.findById(idEdicion).orElse(new EstadoReserva()) : new EstadoReserva();
-                    er.setDescripcion(this.descripcionForm);
+                    er.setDescripcion(descLimpia);
                     estadoReservaRepository.save(er);
                 }
                 case 3 -> {
+                    if (idEdicion == null) sincronizarSecuencia("clase_asiento_seq", "clase_asiento", "id_clase");
                     ClaseAsiento ca = (idEdicion != null) ? claseAsientoRepository.findById(idEdicion).orElse(new ClaseAsiento()) : new ClaseAsiento();
-                    ca.setDescripcion(this.descripcionForm);
+                    ca.setDescripcion(descLimpia);
+                    if (ca.getActivo() == null) ca.setActivo(true);
                     claseAsientoRepository.save(ca);
                 }
                 case 4 -> {
+                    if (idEdicion == null) sincronizarSecuencia("estado_vuelo_seq", "estado_vuelo", "id_estado_vuelo");
                     EstadoVuelo ev = (idEdicion != null) ? estadoVueloRepository.findById(idEdicion).orElse(new EstadoVuelo()) : new EstadoVuelo();
-                    ev.setEstado(this.nombreForm);
-                    ev.setDescripcion(this.descripcionForm);
+                    ev.setEstado(nombreLimpio);
+                    ev.setDescripcion(descLimpia);
                     estadoVueloRepository.save(ev);
                 }
                 case 5 -> {
+                    if (idEdicion == null) sincronizarSecuencia("tipo_turno_seq", "tipo_turno", "id_tipo");
                     TipoTurno tt = (idEdicion != null) ? tipoTurnoRepository.findById(idEdicion).orElse(new TipoTurno()) : new TipoTurno();
-                    tt.setNombre(this.nombreForm);
+                    tt.setNombre(nombreLimpio);
+                    if (tt.getActivo() == null) tt.setActivo(true);
                     tipoTurnoRepository.save(tt);
                 }
             }
@@ -180,6 +205,11 @@ public class GestionParametricasBean implements Serializable {
 
         } catch (Exception e) {
             addErrorMessage("Error al guardar", e.getMessage());
+            FacesContext fc = FacesContext.getCurrentInstance();
+            if (fc != null) {
+                fc.validationFailed();
+            }
+            PrimeFaces.current().ajax().update("msgs");
         }
     }
 

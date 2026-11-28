@@ -1869,7 +1869,7 @@ INSERT INTO Pais (ID_PAIS, Nombre, ID_CONTINENTE) VALUES
                                                       (1, 'Chile', 1),
                                                       (2, 'Uruguay', 1),
                                                       (3, 'Brasil', 1),
-                                                      (4, 'USA', 2),
+                                                      (4, 'Estados Unidos', 2),
                                                       (5, 'Perú', 1),
                                                       (6, 'Colombia', 1),
                                                       (7, 'España', 3),
@@ -1877,15 +1877,15 @@ INSERT INTO Pais (ID_PAIS, Nombre, ID_CONTINENTE) VALUES
                                                       (9, 'Reino Unido', 3),
                                                       (10, 'Alemania', 3),
                                                       (11, 'Italia', 3),
-                                                      (12, 'Canada', 2),
-                                                      (13, 'Mexico', 2),
+                                                      (12, 'Canadá', 2),
+                                                      (13, 'México', 2),
                                                       (14, 'Australia', 5),
                                                       (15, 'China', 4),
-                                                      (16, 'Japon', 4),
+                                                      (16, 'Japón', 4),
                                                       (17, 'Argentina', 1),
-                                                      (18, 'Panama', 2),
-                                                      (19, 'Qatar', 7),
-                                                      (20, 'Emiratos Arabes Unidos', 7),
+                                                      (18, 'Panamá', 2),
+                                                      (19, 'Catar', 7),
+                                                      (20, 'Emiratos Árabes Unidos', 7),
                                                       (21, 'India', 4),
                                                       (22, 'Corea del Sur', 4),
                                                       (23, 'Sudáfrica', 6),
@@ -1905,7 +1905,7 @@ INSERT INTO Pais (ID_PAIS, Nombre, ID_CONTINENTE) VALUES
                                                       (37, 'Portugal', 3),
                                                       (38, 'Finlandia', 3),
                                                       (39, 'Noruega', 3),
-                                                      (40, 'República Checa', 3),
+                                                      (40, 'Chequia', 3),
                                                       (41, 'Polonia', 3),
                                                       (42, 'Hungría', 3),
                                                       (43, 'Rumanía', 3),
@@ -1921,19 +1921,19 @@ INSERT INTO Pais (ID_PAIS, Nombre, ID_CONTINENTE) VALUES
 UPDATE Pais SET ID_CONTINENTE = 1 WHERE Nombre IN ('Chile', 'Uruguay', 'Brasil', 'Perú', 'Colombia', 'Argentina');
 
 -- Asignar Continente América del Norte
-UPDATE Pais SET ID_CONTINENTE = 2 WHERE Nombre IN ('USA', 'Canada', 'Mexico', 'Panama');
+UPDATE Pais SET ID_CONTINENTE = 2 WHERE Nombre IN ('Estados Unidos', 'Canadá', 'México', 'Panamá');
 
 -- Asignar Continente Europa
 UPDATE Pais SET ID_CONTINENTE = 3 WHERE Nombre IN ('España', 'Francia', 'Reino Unido', 'Alemania', 'Italia');
 
 -- Asignar Continente Asia
-UPDATE Pais SET ID_CONTINENTE = 4 WHERE Nombre IN ('China', 'Japon', 'India', 'Corea del Sur', 'Rusia', 'Turquía', 'Indonesia', 'Filipinas', 'Tailandia');
+UPDATE Pais SET ID_CONTINENTE = 4 WHERE Nombre IN ('China', 'Japón', 'India', 'Corea del Sur', 'Rusia', 'Turquía', 'Indonesia', 'Filipinas', 'Tailandia');
 
 -- Asignar Continente Oceanía
 UPDATE Pais SET ID_CONTINENTE = 5 WHERE Nombre IN ('Australia', 'Nueva Zelanda');
 
 -- Asignar Continente Oriente Medio
-UPDATE Pais SET ID_CONTINENTE = 7 WHERE Nombre IN ('Qatar', 'Emiratos Arabes Unidos');
+UPDATE Pais SET ID_CONTINENTE = 7 WHERE Nombre IN ('Catar', 'Emiratos Árabes Unidos');
 
 -- Asignar Continente África
 UPDATE Pais SET ID_CONTINENTE = 6 WHERE Nombre IN ('Sudáfrica', 'Egipto');
