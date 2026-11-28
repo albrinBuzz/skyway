@@ -267,23 +267,58 @@ public class PerfilBean implements Serializable {
 	public void buscarPorRangoFechas() {
 		if (usuario == null) return;
 
-		LocalDate inicio = (fechaInicioFiltro != null) ? fechaInicioFiltro : null;
-		LocalDate fin = (fechaFinFiltro != null) ? fechaFinFiltro : null;
+		if (fechaInicioFiltro != null && fechaFinFiltro != null && fechaInicioFiltro.isAfter(fechaFinFiltro)) {
+			FacesContext fc = FacesContext.getCurrentInstance();
+			if (fc != null) {
+				fc.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_WARN,
+						"Rango de fechas inválido",
+						"La fecha 'Desde' no puede ser posterior a la fecha 'Hasta'."));
+			}
+			return;
+		}
 
 		long startTime = System.currentTimeMillis();
 
-		listaItinerariosFiltrados = itinerarioService.buscarConFiltroFechas(
-				usuario.getRut(),
-				inicio,
-				fin,
-				100,
-				0
-		);
+		if (fechaInicioFiltro == null && fechaFinFiltro == null) {
+			this.listaItinerarios = itinerarioService.findResumenByRut(usuario.getRut(), 100, 0);
+			this.listaItinerariosFiltrados = new ArrayList<>(this.listaItinerarios);
+		} else {
+			this.listaItinerariosFiltrados = itinerarioService.buscarConFiltroFechas(
+					usuario.getRut(),
+					fechaInicioFiltro,
+					fechaFinFiltro,
+					100,
+					0
+			);
+		}
 
+		reclasificarListasPorFecha(this.listaItinerariosFiltrados);
 		actualizarSchedule();
 
 		long endTime = System.currentTimeMillis();
 		Logger.logInfo("⏱ Tiempo total en buscarPorRangoFechas(): " + (endTime - startTime) + " ms");
+	}
+
+	private void reclasificarListasPorFecha(List<ItinerarioResumenDTO> fuente) {
+		this.listaItinerariosHoy = new ArrayList<>();
+		this.listaItinerariosFuturos = new ArrayList<>();
+		this.listaItinerariosPasados = new ArrayList<>();
+		if (fuente == null) return;
+
+		LocalDate hoy = LocalDate.now();
+		Date ahora = new Date();
+		for (ItinerarioResumenDTO it : fuente) {
+			if (it == null || it.getHoraSalida() == null) continue;
+			LocalDate fechaSalida = it.getHoraSalida().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+			if (fechaSalida.isEqual(hoy)) {
+				this.listaItinerariosHoy.add(it);
+			}
+			if (it.getHoraSalida().after(ahora)) {
+				this.listaItinerariosFuturos.add(it);
+			} else {
+				this.listaItinerariosPasados.add(it);
+			}
+		}
 	}
 
 	public void limpiarFiltroFechas() {

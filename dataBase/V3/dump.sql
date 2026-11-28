@@ -4433,6 +4433,7 @@ INSERT INTO Tipo_Equipaje (ID_TIPO, Nombre) VALUES
                                                 (1, 'Equipaje de Mano'),
                                                 (2, 'Equipaje Facturado'),
                                                 (3, 'Equipaje Especial');
+SELECT setval('tipo_equipaje_seq', COALESCE((SELECT MAX(ID_TIPO) FROM Tipo_Equipaje), 1), true);
 
 INSERT INTO Tipo_Turno (ID_TIPO, Nombre) VALUES
                                              (1, 'Vuelo'),
@@ -4440,6 +4441,7 @@ INSERT INTO Tipo_Turno (ID_TIPO, Nombre) VALUES
                                              (3, 'Descanso'),
                                              (4, 'diurno'),
                                              (5, 'nocturno');
+SELECT setval('tipo_turno_seq', COALESCE((SELECT MAX(ID_TIPO) FROM Tipo_Turno), 1), true);
 
 
 
