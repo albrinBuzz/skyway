@@ -22,7 +22,9 @@ public interface AeropuertoService {
 
     // Métodos CRUD personalizados
     void registrarAeropuerto(String nombre, String codigoIata, Integer idCiudad, Double latitud, Double longitud) throws Exception;
+    void registrarAeropuerto(String nombre, String codigoIata, Integer idCiudad, Double latitud, Double longitud, int cantidadPuertas, String terminal) throws Exception;
     void actualizarAeropuerto(Integer id, String nombre, String codigoIata, Integer idCiudad, Double latitud, Double longitud) throws Exception;
+    long contarPuertasActivasPorAeropuerto(Integer idAeropuerto);
 
     long contarAeropuertosActivos();
     long contarPaisesActivos();

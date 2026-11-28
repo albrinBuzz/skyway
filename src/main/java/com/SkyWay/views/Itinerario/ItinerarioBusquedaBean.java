@@ -1,5 +1,6 @@
 package com.SkyWay.views.Itinerario;
 
+import com.SkyWay.modules.aeropuerto.application.serviceImpl.GeoNombreResolver;
 import com.SkyWay.modules.aeropuerto.domain.model.Aeropuerto;
 import com.SkyWay.modules.aeropuerto.domain.service.AeropuertoService;
 import com.SkyWay.modules.ciudad.domain.model.Ciudad;
@@ -142,16 +143,67 @@ public class ItinerarioBusquedaBean implements Serializable {
 
 
     public List<Aeropuerto> buscarAeropuertos(String query) {
-        String filtro = query.toLowerCase();
-        //Logger.logInfo(filtro);
+        if (aeropuertos == null || aeropuertos.isEmpty()) {
+            return List.of();
+        }
+
+        String filtroNorm = GeoNombreResolver.normalizarTexto(query);
+        String[] tokens = filtroNorm.isEmpty() ? new String[0] : filtroNorm.split(" ");
 
         return aeropuertos.stream()
-                .filter(a ->
-                        a.getCodigoIata().toLowerCase().contains(filtro) ||
-                                a.getNombreAeropuerto().toLowerCase().contains(filtro) ||
-                                a.getCiudad().getNombre().toLowerCase().contains(filtro)
-                )
+                .filter(a -> a != null && !Boolean.FALSE.equals(a.getActivo()))
+                .filter(a -> {
+                    if (tokens.length == 0) return true;
+                    String textoBuscable = construirTextoBuscable(a);
+                    for (String tok : tokens) {
+                        if (!textoBuscable.contains(tok)) {
+                            return false;
+                        }
+                    }
+                    return true;
+                })
+                .sorted((a, b) -> {
+                    int scoreA = puntuarCoincidenciaAeropuerto(a, filtroNorm);
+                    int scoreB = puntuarCoincidenciaAeropuerto(b, filtroNorm);
+                    if (scoreA != scoreB) {
+                        return Integer.compare(scoreB, scoreA);
+                    }
+                    String ciudadA = (a.getCiudad() != null && a.getCiudad().getNombre() != null) ? a.getCiudad().getNombre() : "";
+                    String ciudadB = (b.getCiudad() != null && b.getCiudad().getNombre() != null) ? b.getCiudad().getNombre() : "";
+                    return ciudadA.compareToIgnoreCase(ciudadB);
+                })
                 .toList();
+    }
+
+    private String construirTextoBuscable(Aeropuerto a) {
+        StringBuilder sb = new StringBuilder();
+        if (a.getCodigoIata() != null) sb.append(a.getCodigoIata()).append(' ');
+        if (a.getNombreAeropuerto() != null) sb.append(a.getNombreAeropuerto()).append(' ');
+        if (a.getCiudad() != null) {
+            if (a.getCiudad().getNombre() != null) sb.append(a.getCiudad().getNombre()).append(' ');
+            try {
+                if (a.getCiudad().getPai() != null && a.getCiudad().getPai().getNombre() != null) {
+                    sb.append(a.getCiudad().getPai().getNombre()).append(' ');
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        return GeoNombreResolver.normalizarTexto(sb.toString());
+    }
+
+    private int puntuarCoincidenciaAeropuerto(Aeropuerto a, String filtroNorm) {
+        if (filtroNorm.isEmpty()) return 0;
+        String iata = GeoNombreResolver.normalizarTexto(a.getCodigoIata());
+        String ciudad = (a.getCiudad() != null) ? GeoNombreResolver.normalizarTexto(a.getCiudad().getNombre()) : "";
+        String nombre = GeoNombreResolver.normalizarTexto(a.getNombreAeropuerto());
+
+        if (iata.equals(filtroNorm)) return 100;
+        if (ciudad.equals(filtroNorm)) return 95;
+        if (ciudad.startsWith(filtroNorm)) return 85;
+        if (iata.startsWith(filtroNorm)) return 75;
+        if (nombre.startsWith(filtroNorm)) return 65;
+        if (ciudad.contains(filtroNorm)) return 50;
+        return 25;
     }
 
     public String getItemLabel(Object item) {
